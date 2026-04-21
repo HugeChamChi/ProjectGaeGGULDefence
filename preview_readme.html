@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>README Preview</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; display: flex; justify-content: center; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; width: 100%; max-width: 860px; overflow: hidden; }
+  .box-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+  .box-header span { color: #58a6ff; font-size: 14px; }
+  .readme-icon { color: #8b949e; font-size: 14px; }
+  .content { padding: 32px 40px; color: #e6edf3; font-size: 16px; line-height: 1.6; }
+  .content h1 { font-size: 2em; border-bottom: 1px solid #30363d; padding-bottom: 0.3em; margin-bottom: 16px; color: #e6edf3; }
+  .content h2 { font-size: 1.5em; border-bottom: 1px solid #30363d; padding-bottom: 0.3em; margin: 24px 0 16px; color: #e6edf3; }
+  .content h3 { font-size: 1.25em; margin: 24px 0 16px; color: #e6edf3; }
+  .content p { margin-bottom: 16px; }
+  .content ul, .content ol { padding-left: 2em; margin-bottom: 16px; }
+  .content li { margin: 4px 0; }
+  .content table { border-collapse: collapse; width: 100%; margin-bottom: 16px; display: block; overflow-x: auto; }
+  .content th, .content td { border: 1px solid #30363d; padding: 6px 13px; }
+  .content th { background: #161b22; font-weight: 600; }
+  .content tr:nth-child(even) { background: #161b22; }
+  .content code { background: #161b22; border-radius: 6px; font-size: 85%; padding: 0.2em 0.4em; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; color: #e6edf3; }
+  .content pre { background: #161b22; border-radius: 6px; padding: 16px; overflow-x: auto; margin-bottom: 16px; border: 1px solid #30363d; }
+  .content pre code { background: none; padding: 0; font-size: 85%; color: #e6edf3; }
+  .content hr { border: none; border-top: 1px solid #30363d; margin: 24px 0; }
+  .content a { color: #58a6ff; text-decoration: none; }
+  .content strong { color: #e6edf3; }
+  .content blockquote { border-left: 4px solid #30363d; color: #8b949e; padding: 0 16px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="box-header">
+    <span class="readme-icon">📄</span>
+    <span>README.md</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+<script>
+const md = `# 🐸 개구리 디펜스 (GaeGGUL Defence)
+
+---
+
+## 📝 커밋 규칙
+
+| 유형 | 내용 |
+|---|---|
+| \`Feat\` | 새로운 기능 추가 |
+| \`Fix\` | 버그 수정 |
+| \`Build\` | 빌드 관련 수정 |
+| \`Test\` | 테스트 씬 또는 코드 추가 |
+| \`Refactor\` | 코드 리팩토링 |
+| \`Docs\` | 주석이나 문서 수정 (README 등) |
+| \`Release\` | 버전 릴리즈 |
+| \`Create\` | 파일 추가 및 프로젝트 생성 |
+| \`Chore\` | 간단한 수정 |
+
+\`\`\`
+예시: [Feat] 개구리 궁수 유닛 공격 로직 추가
+\`\`\`
+
+### Branch 네이밍
+
+| 브랜치 | 용도 | 예시 |
+|---|---|---|
+| \`GGD\` | 기획 Branch | \`GGD_SY\`, \`GGD_기획내용\` |
+| \`Develop\` | 개발 Branch | \`USW_Frog\`, \`KMS_Grid\` |
+
+- **기획 Branch** : \`GGD_\` 뒤에 본인 이니셜 또는 작업 내용을 붙인다.
+- **개발 Branch** : \`이니셜_작업내용\` 형식으로 작성한다.
+
+---
+
+## 📐 기타 규칙
+
+- **작업 위치** : \`Assets/WorkSpace/\` 내 자신의 이니셜 폴더에서 작업한다.
+- **씬 분리** : 팀원 간 서로 다른 씬에서 작업한다.
+- **Unity LifeCycle** : \`Awake\`, \`Start\`, \`Update\` 등은 별도로 모아서 정리한다.
+- **단일 책임 준수**
+- **ScriptableObject 활용** : 게임 밸런스 수치, 설정값, 리소스 정보는 ScriptableObject로 관리한다.
+- **인터페이스로 역할 정의** : 역할은 인터페이스로 정의하고 구현은 클래스에서 한다.
+- **데이터와 로직 분리** : 데이터 보관과 처리 로직을 분리하는 것을 지향한다.
+
+---
+
+## 🎬 테스트 씬 네이밍 규칙
+
+테스트용 씬 파일은 이름 앞에 \`Test_\` 를 붙인다.
+
+\`\`\`
+예시: Test_FrogUnitSpawn, Test_WaveSystem
+\`\`\`
+`;
+document.getElementById('content').innerHTML = marked.parse(md);
+</script>
+</body>
+</html>
