@@ -80,3 +80,4 @@ crashlytics-build.properties
 production/session-logs/
 CLAUDE.md
 /.claude
+/design
