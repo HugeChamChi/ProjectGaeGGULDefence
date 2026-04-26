@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections;
 using BackEnd;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 #if UNITY_ANDROID && !UNITY_EDITOR
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
@@ -17,7 +18,8 @@ public class LoginSceneManager : MonoBehaviour
     [SerializeField] private float loadingFillDuration = 0.5f;
 
     private bool _isLoggingIn = false;
-    private bool _loginDone = false;
+    private bool _loginDone   = false;
+    private CancellationTokenSource _loadingBarCts;
 
     private void Start()
     {
@@ -75,7 +77,17 @@ public class LoginSceneManager : MonoBehaviour
     /// </summary>
     private void StartLogin()
     {
-        StartCoroutine(LoadingBarRoutine());
+        _loginDone                = false;
+        loadingBarFill.fillAmount = 0f;
+
+        _loadingBarCts?.Cancel();
+        _loadingBarCts?.Dispose();
+        // OnLoginFailed()에서 수동 취소 가능하고,
+        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
+        _loadingBarCts = CancellationTokenSource.CreateLinkedTokenSource(
+            this.GetCancellationTokenOnDestroy());
+
+        LoadingBarAsync(_loadingBarCts.Token).Forget(Debug.LogException);
 
 #if UNITY_EDITOR
         EditorLogin();
@@ -170,40 +182,53 @@ public class LoginSceneManager : MonoBehaviour
 #endif
     }
 
-    private IEnumerator LoadingBarRoutine()
+    private async UniTask LoadingBarAsync(CancellationToken token)
     {
-        float elapsed = 0f;
-        float duration = 2f;
-
-        while (loadingBarFill.fillAmount < 0.99f)
+        try
         {
-            elapsed += Time.deltaTime;
-            loadingBarFill.fillAmount = Mathf.Clamp01(elapsed / duration * 0.99f);
-            yield return null;
+            float elapsed  = 0f;
+            float duration = 2f;
+
+            // Phase 1: 0 → 0.99
+            while (loadingBarFill.fillAmount < 0.99f)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.deltaTime;
+                loadingBarFill.fillAmount = Mathf.Clamp01(elapsed / duration * 0.99f);
+                await UniTask.Yield(token);
+            }
+
+            // Phase 2: 로그인 완료 대기 — 실패 시 token 취소로 탈출
+            await UniTask.WaitUntil(() => _loginDone, cancellationToken: token);
+
+            // Phase 3: 0.99 → 1.0
+            elapsed = 0f;
+            float startFill = loadingBarFill.fillAmount;
+
+            while (loadingBarFill.fillAmount < 1f)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.deltaTime;
+                loadingBarFill.fillAmount = Mathf.Lerp(startFill, 1f, elapsed / loadingFillDuration);
+                await UniTask.Yield(token);
+            }
+
+            loadingBarFill.fillAmount = 1f;
+            await UniTask.Delay(300, cancellationToken: token);
+
+            SceneManager.LoadScene("LobbyScene");
         }
-
-        yield return new WaitUntil(() => _loginDone);
-
-        elapsed = 0f;
-        float startFill = loadingBarFill.fillAmount;
-
-        while (loadingBarFill.fillAmount < 1f)
-        {
-            elapsed += Time.deltaTime;
-            loadingBarFill.fillAmount = Mathf.Lerp(startFill, 1f, elapsed / loadingFillDuration);
-            yield return null;
-        }
-
-        loadingBarFill.fillAmount = 1f;
-        yield return new WaitForSeconds(0.3f);
-
-        SceneManager.LoadScene("LobbyScene");
+        catch (OperationCanceledException) { }
     }
 
     private void OnLoginFailed()
     {
-        _isLoggingIn = false;
-        _loginDone = false;
+        _loadingBarCts?.Cancel();
+        _loadingBarCts?.Dispose();
+        _loadingBarCts = null;
+
+        _isLoggingIn              = false;
+        _loginDone                = false;
         loadingBarFill.fillAmount = 0f;
         Debug.LogError("로그인 실패 - 다시 터치해주세요");
     }

@@ -1,9 +1,10 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 레벨업 카드 하나의 UI (스프라이트 애니메이션 방식)
@@ -33,7 +34,7 @@ public class LevelUpCardUI : MonoBehaviour
 
     private LevelUpData           _data;
     private Action<LevelUpCardUI> _onCardClicked;
-    private Coroutine             _animCoroutine;
+    private CancellationTokenSource _animCts;
 
     private void Awake()
     {
@@ -67,10 +68,7 @@ public class LevelUpCardUI : MonoBehaviour
                     && _data.animationFrames.Length > 0;
 
         if (hasAnim)
-        {
-            StopAnim();
-            _animCoroutine = StartCoroutine(PlayAnimation());
-        }
+            StartAnim();
 
         transform.DOKill();
         transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic);
@@ -98,29 +96,46 @@ public class LevelUpCardUI : MonoBehaviour
         _onCardClicked?.Invoke(this);
     }
 
-    private IEnumerator PlayAnimation()
+    private void StartAnim()
     {
-        var   frames   = _data.animationFrames;
-        float interval = 1f / Mathf.Max(_data.frameRate, 1f);
-        int   index    = 0;
-
-        while (true)
-        {
-            if (cardImage != null)
-                cardImage.sprite = frames[index];
-
-            index = (index + 1) % frames.Length;
-            yield return new WaitForSeconds(interval);
-        }
+        StopAnim();
+        // Deselect()에서 수동 취소 가능하고,
+        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
+        _animCts = CancellationTokenSource.CreateLinkedTokenSource(
+            this.GetCancellationTokenOnDestroy());
+        PlayAnimationAsync(_animCts.Token).Forget(Debug.LogException);
     }
 
     private void StopAnim()
     {
-        if (_animCoroutine != null)
+        if (_animCts == null) return;
+        _animCts.Cancel();
+        _animCts.Dispose();
+        _animCts = null;
+    }
+
+    private async UniTask PlayAnimationAsync(CancellationToken token)
+    {
+        try
         {
-            StopCoroutine(_animCoroutine);
-            _animCoroutine = null;
+            var   frames   = _data.animationFrames;
+            float interval = 1f / Mathf.Max(_data.frameRate, 1f);
+            int   index    = 0;
+
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (cardImage != null)
+                    cardImage.sprite = frames[index];
+
+                index = (index + 1) % frames.Length;
+                await UniTask.Delay(
+                    TimeSpan.FromSeconds(interval),
+                    cancellationToken: token);
+            }
         }
+        catch (OperationCanceledException) { }
     }
 
     private void OnDestroy()

@@ -1,6 +1,7 @@
 using System;
-using System.Collections;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 단일 투사체 — 시작 위치에서 목표 위치로 이동 후 풀로 반환.
@@ -8,42 +9,61 @@ using UnityEngine;
 /// </summary>
 public class Projectile : MonoBehaviour
 {
-    private Action<Projectile> _onComplete;
-    private Coroutine          _moveCoroutine;
+    private Action<Projectile>      _onComplete;
+    private CancellationTokenSource _moveCts;
 
     public void Launch(Vector3 from, Vector3 to, Action<Projectile> onComplete)
     {
+        StopMove();
+
         transform.position = from;
         _onComplete        = onComplete;
 
-        if (_moveCoroutine != null)
-            StopCoroutine(_moveCoroutine);
+        // OnDisable에서 수동 취소 가능하고,
+        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
+        _moveCts = CancellationTokenSource.CreateLinkedTokenSource(
+            this.GetCancellationTokenOnDestroy());
 
-        _moveCoroutine = StartCoroutine(Move(to));
+        MoveAsync(to, _moveCts.Token).Forget(Debug.LogException);
     }
 
-    private IEnumerator Move(Vector3 target)
+    private void StopMove()
     {
-        const float Duration = 0.35f;
-        float   elapsed = 0f;
-        Vector3 start   = transform.position;
+        if (_moveCts == null) return;
+        _moveCts.Cancel();
+        _moveCts.Dispose();
+        _moveCts = null;
+    }
 
-        while (elapsed < Duration)
+    private async UniTask MoveAsync(Vector3 target, CancellationToken token)
+    {
+        try
         {
-            elapsed            += Time.deltaTime;
-            transform.position  = Vector3.Lerp(start, target, elapsed / Duration);
-            yield return null;
-        }
+            const float Duration = 0.35f;
+            float   elapsed = 0f;
+            Vector3 start   = transform.position;
 
-        transform.position = target;
-        _moveCoroutine     = null;
-        _onComplete?.Invoke(this);
+            while (elapsed < Duration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed            += Time.deltaTime;
+                transform.position  = Vector3.Lerp(start, target, elapsed / Duration);
+                await UniTask.Yield(token);
+            }
+
+            transform.position = target;
+            _onComplete?.Invoke(this);
+        }
+        catch (OperationCanceledException) { }
     }
 
     private void OnDisable()
     {
-        if (_moveCoroutine == null) return;
-        StopCoroutine(_moveCoroutine);
-        _moveCoroutine = null;
+        StopMove();
+    }
+
+    private void OnDestroy()
+    {
+        StopMove();
     }
 }
