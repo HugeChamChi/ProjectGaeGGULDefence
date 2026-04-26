@@ -81,3 +81,5 @@ production/session-logs/
 CLAUDE.md
 /.claude
 /design
+/.agents
+AGENTS.md
