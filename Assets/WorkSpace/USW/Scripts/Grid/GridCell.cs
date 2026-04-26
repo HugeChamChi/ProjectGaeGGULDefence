@@ -1,5 +1,6 @@
 using UnityEngine;
-using System.Collections;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 그리드 셀 — GridCellModel의 래퍼 역할
@@ -100,12 +101,20 @@ public class GridCell : MonoBehaviour
     public void StartDebuffTimer(float duration, System.Action onExpire)
     {
         if (duration <= 0f) return;
-        StartCoroutine(DebuffTimerRoutine(duration, onExpire));
+        DebuffTimerAsync(duration, onExpire, this.GetCancellationTokenOnDestroy())
+            .Forget(Debug.LogException);
     }
 
-    private IEnumerator DebuffTimerRoutine(float duration, System.Action onExpire)
+    private async UniTask DebuffTimerAsync(
+        float duration, System.Action onExpire, CancellationToken token)
     {
-        yield return new WaitForSeconds(duration);
-        onExpire?.Invoke();
+        try
+        {
+            await UniTask.Delay(
+                TimeSpan.FromSeconds(duration),
+                cancellationToken: token);
+            onExpire?.Invoke();
+        }
+        catch (OperationCanceledException) { }
     }
 }

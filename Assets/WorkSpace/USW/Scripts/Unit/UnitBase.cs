@@ -1,6 +1,7 @@
 using UnityEngine;
-using System.Collections;
 using UnityEngine.Events;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 모든 고블린의 기반 — 게이지 루프, 식량 생산, 선택적 보스 공격
@@ -19,11 +20,9 @@ public abstract class UnitBase : MonoBehaviour
     /// <summary>유닛 배치/제거 시 전역 알림 — TotemProximityBuff 등에서 구독</summary>
     public static event System.Action OnAnyUnitChanged;
 
-    protected CurrencyManager _currency;
-    protected BossBase        _boss;
-    private   Coroutine       _gaugeCoroutine;
-    private   WaitForSeconds  _cachedWait;
-    private   float           _cachedInterval = -1f;
+    protected CurrencyManager        _currency;
+    protected BossBase               _boss;
+    private   CancellationTokenSource _gaugeCts;
 
     // 현재 배치된 셀 참조 (보스 패턴 디버프 체크용)
     protected GridCell _currentCell;
@@ -43,10 +42,9 @@ public abstract class UnitBase : MonoBehaviour
         _boss        = boss;
         _currentCell = cell;
 
-        if (_gaugeCoroutine != null)
-            StopCoroutine(_gaugeCoroutine);
-
-        _gaugeCoroutine = StartCoroutine(GaugeLoop());
+        StopGaugeLoop();
+        _gaugeCts = new CancellationTokenSource();
+        GaugeLoopAsync(_gaugeCts.Token).Forget(Debug.LogException);
         OnUnitPlaced();
         OnAnyUnitChanged?.Invoke();
     }
@@ -65,17 +63,22 @@ public abstract class UnitBase : MonoBehaviour
     public void OnRemoved()
     {
         OnUnitRemoved();
-        if (_gaugeCoroutine != null)
-        {
-            StopCoroutine(_gaugeCoroutine);
-            _gaugeCoroutine = null;
-        }
+        StopGaugeLoop();
         _currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
 
     /// <summary>OnRemoved() 시작 시 호출되는 훅 — 서브클래스에서 제거 시 추가 처리</summary>
     protected virtual void OnUnitRemoved() { }
+
+    private void OnDestroy() => StopGaugeLoop();
+
+    private void StopGaugeLoop()
+    {
+        _gaugeCts?.Cancel();
+        _gaugeCts?.Dispose();
+        _gaugeCts = null;
+    }
 
     // ── 공격력 계산 ────────────────────────────────────────────
 
@@ -113,42 +116,50 @@ public abstract class UnitBase : MonoBehaviour
 
     // ── 게이지 루프 ────────────────────────────────────────────
 
-    private IEnumerator GaugeLoop()
+    private async UniTask GaugeLoopAsync(CancellationToken token)
     {
         if (unitData == null)
         {
             Debug.LogError($"UnitBase({name}): unitData가 null입니다.");
-            yield break;
+            return;
         }
 
-        while (true)
+        try
         {
-            // 셀이 봉인되어 있으면 게이지 정지
-            if (_currentCell != null && _currentCell.Model.IsSealed)
+            while (true)
             {
-                yield return null;
-                continue;
+                token.ThrowIfCancellationRequested();
+
+                // 셀이 봉인되어 있으면 게이지 정지
+                if (_currentCell != null && _currentCell.Model.IsSealed)
+                {
+                    await UniTask.Yield(token);
+                    continue;
+                }
+
+                // 대기 시간 = gaugeDuration × 개인배율 × 속도배율 × 식량속도 × 셀디버프 ÷ 줄별속도배율
+                int   row          = _currentCell != null ? _currentCell.GridPosition.y : 0;
+                float rowSpeedMult = Manager.LevelUp != null ? Manager.LevelUp.GetRowSpeedMultiplier(row) : 1f;
+                rowSpeedMult = Mathf.Max(rowSpeedMult, 0.01f);
+
+                float interval = unitData.gaugeDuration
+                               * unitData.gaugeMultiplier
+                               * Manager.Buff.SpeedMultiplier
+                               * Manager.Buff.FoodSpeedMultiplier
+                               * (_currentCell != null ? _currentCell.Model.SpeedModifier : 1f)
+                               / rowSpeedMult;
+                interval = Mathf.Max(interval, 0.05f);
+
+                await UniTask.Delay(
+                    System.TimeSpan.FromSeconds(interval),
+                    cancellationToken: token);
+
+                token.ThrowIfCancellationRequested();
+
+                OnGaugeFull();
             }
-
-            // 대기 시간 = gaugeDuration × 개인배율 × 속도배율 × 식량속도 × 셀디버프 ÷ 줄별속도배율
-            int   row         = _currentCell != null ? _currentCell.GridPosition.y : 0;
-            float rowSpeedMult = Manager.LevelUp != null ? Manager.LevelUp.GetRowSpeedMultiplier(row) : 1f;
-
-            float interval = unitData.gaugeDuration
-                           * unitData.gaugeMultiplier
-                           * Manager.Buff.SpeedMultiplier
-                           * Manager.Buff.FoodSpeedMultiplier
-                           * (_currentCell != null ? _currentCell.Model.SpeedModifier : 1f)
-                           / rowSpeedMult;
-
-            if (!Mathf.Approximately(interval, _cachedInterval))
-            {
-                _cachedInterval = interval;
-                _cachedWait     = new WaitForSeconds(interval);
-            }
-            yield return _cachedWait;
-            OnGaugeFull();
         }
+        catch (OperationCanceledException) { }
     }
 
     protected virtual void OnGaugeFull()

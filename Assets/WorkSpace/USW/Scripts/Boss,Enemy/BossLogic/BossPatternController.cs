@@ -1,7 +1,8 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 보스 패턴 발동 타이밍 관리
@@ -19,7 +20,7 @@ public class BossPatternController : InGameSingleton<BossPatternController>
     {
         public BossPatternData[]        patterns;
         public HashSet<BossPatternData> firedPhasePatterns = new HashSet<BossPatternData>();
-        public List<Coroutine>          timerCoroutines    = new List<Coroutine>();
+        public CancellationTokenSource  timerCts;
         public Action<int, int>         hpHandler;
     }
 
@@ -45,6 +46,8 @@ public class BossPatternController : InGameSingleton<BossPatternController>
         entry.hpHandler = (cur, max) => CheckPhasePatterns(boss, entry, cur, max);
         boss.OnHpChanged += entry.hpHandler;
 
+        entry.timerCts = new CancellationTokenSource();
+
         foreach (var pattern in patterns)
         {
             if (pattern == null) continue;
@@ -52,8 +55,8 @@ public class BossPatternController : InGameSingleton<BossPatternController>
             if (pattern.triggerType == PatternTriggerType.Timer ||
                 pattern.triggerType == PatternTriggerType.Both)
             {
-                var co = StartCoroutine(TimerPatternRoutine(boss, pattern));
-                entry.timerCoroutines.Add(co);
+                TimerPatternAsync(boss, pattern, entry.timerCts.Token)
+                    .Forget(Debug.LogException);
             }
         }
 
@@ -69,8 +72,8 @@ public class BossPatternController : InGameSingleton<BossPatternController>
         if (entry.hpHandler != null)
             boss.OnHpChanged -= entry.hpHandler;
 
-        foreach (var co in entry.timerCoroutines)
-            if (co != null) StopCoroutine(co);
+        entry.timerCts?.Cancel();
+        entry.timerCts?.Dispose();
 
         _entries.Remove(boss);
     }
@@ -86,8 +89,8 @@ public class BossPatternController : InGameSingleton<BossPatternController>
             if (boss != null && entry.hpHandler != null)
                 boss.OnHpChanged -= entry.hpHandler;
 
-            foreach (var co in entry.timerCoroutines)
-                if (co != null) StopCoroutine(co);
+            entry.timerCts?.Cancel();
+            entry.timerCts?.Dispose();
         }
 
         _entries.Clear();
@@ -98,15 +101,27 @@ public class BossPatternController : InGameSingleton<BossPatternController>
 
     // ── 타이머 기반 패턴 ──────────────────────────────────────────
 
-    private IEnumerator TimerPatternRoutine(BossBase boss, BossPatternData pattern)
+    private async UniTask TimerPatternAsync(
+        BossBase boss, BossPatternData pattern, CancellationToken token)
     {
-        yield return new WaitForSeconds(pattern.interval);
-
-        while (_entries.ContainsKey(boss) && !boss.IsDead)
+        try
         {
-            boss.ExecutePattern(pattern);
-            yield return new WaitForSeconds(pattern.interval);
+            float interval = Mathf.Max(pattern.interval, 0.1f);
+
+            await UniTask.Delay(
+                TimeSpan.FromSeconds(interval),
+                cancellationToken: token);
+
+            while (_entries.ContainsKey(boss) && !boss.IsDead)
+            {
+                token.ThrowIfCancellationRequested();
+                boss.ExecutePattern(pattern);
+                await UniTask.Delay(
+                    TimeSpan.FromSeconds(interval),
+                    cancellationToken: token);
+            }
         }
+        catch (OperationCanceledException) { }
     }
 
     // ── 페이즈 기반 패턴 ──────────────────────────────────────────

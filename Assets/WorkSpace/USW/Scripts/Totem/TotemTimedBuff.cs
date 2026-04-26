@@ -1,6 +1,7 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// #33 주기적 폭발 버프 토템
@@ -15,34 +16,46 @@ public class TotemTimedBuff : TotemBase
     [SerializeField] private float _cycleDuration  = 10f;
     [SerializeField] private float _burstDuration  =  5f;
 
-    private Coroutine _cycleCoroutine;
-    private bool      _burstActive;
+    private CancellationTokenSource _cycleCts;
+    private bool                    _burstActive;
 
     protected override void ApplyBuff()
     {
-        _burstActive      = false;
-        _cycleCoroutine   = StartCoroutine(CycleRoutine());
+        _burstActive = false;
+        _cycleCts    = new CancellationTokenSource();
+        CycleAsync(_cycleCts.Token).Forget(Debug.LogException);
     }
 
     protected override void RemoveBuff()
     {
-        if (_cycleCoroutine != null)
-        {
-            StopCoroutine(_cycleCoroutine);
-            _cycleCoroutine = null;
-        }
+        _cycleCts?.Cancel();
+        _cycleCts?.Dispose();
+        _cycleCts = null;
 
         if (_burstActive) EndBurst();
     }
 
-    private IEnumerator CycleRoutine()
+    private async UniTask CycleAsync(CancellationToken token)
     {
-        while (true)
+        try
         {
-            yield return new WaitForSeconds(_cycleDuration);
-            BeginBurst();
-            yield return new WaitForSeconds(_burstDuration);
-            EndBurst();
+            float cycleDuration = Mathf.Max(_cycleDuration, 0.1f);
+            float burstDuration = Mathf.Max(_burstDuration, 0.1f);
+
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+                await UniTask.Delay(TimeSpan.FromSeconds(cycleDuration), cancellationToken: token);
+                token.ThrowIfCancellationRequested();
+                BeginBurst();
+                await UniTask.Delay(TimeSpan.FromSeconds(burstDuration), cancellationToken: token);
+                token.ThrowIfCancellationRequested();
+                EndBurst();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            if (_burstActive) EndBurst();
         }
     }
 
