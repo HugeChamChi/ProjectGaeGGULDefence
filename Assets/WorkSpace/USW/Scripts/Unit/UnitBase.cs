@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using Cysharp.Threading.Tasks;
@@ -105,7 +106,7 @@ public abstract class UnitBase : MonoBehaviour
 
         // 치명타 판정 — LevelUp 확률 + 토템 보너스 합산
         float critChance = (Manager.LevelUp?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
-        if (critChance > 0f && Random.value < critChance)
+        if (critChance > 0f && UnityEngine.Random.value < critChance)
         {
             float critDmgMult = (Manager.LevelUp?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
             damage *= critDmgMult;
