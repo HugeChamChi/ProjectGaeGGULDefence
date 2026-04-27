@@ -10,10 +10,12 @@ public class TopPanelSystem : MonoBehaviour
 
     [Header("TopPanel UI Elements")]
     [SerializeField] private TextMeshProUGUI _playerNicknameText;
+    [SerializeField] private TextMeshProUGUI _playerLevelText;
     [SerializeField] private TextMeshProUGUI _goldText;
     [SerializeField] private TextMeshProUGUI _diamondText;
     [SerializeField] private TextMeshProUGUI _staminaText;
     [SerializeField] private TextMeshProUGUI _staminaTimerText;
+    [SerializeField] private Image           _expBar;
 
     [Header("Player Profile")]
     [SerializeField] private GameObject      _playerProfilePopup;
@@ -29,6 +31,9 @@ public class TopPanelSystem : MonoBehaviour
         {
             _playerDataController.OnUpdateUI             += UpdateTopPanelUI;
             _playerDataController.OnStaminaRecoveryTimer += UpdateStaminaTimer;
+
+            if (_playerDataController.Data != null)
+                UpdateTopPanelUI(_playerDataController.Data);
         }
 
         if (_playerProfileButton != null)
@@ -51,6 +56,9 @@ public class TopPanelSystem : MonoBehaviour
     {
         if (playerData == null) return;
 
+        if (_playerLevelText != null)
+            _playerLevelText.text = playerData.PlayerLevel.ToString();
+
         if (_goldText != null)
             _goldText.text = playerData.Gold.ToString("N0");
 
@@ -59,6 +67,12 @@ public class TopPanelSystem : MonoBehaviour
 
         if (_staminaText != null)
             _staminaText.text = $"{playerData.Stamina}/{playerData.MaxStamina}";
+
+        if (_expBar != null)
+        {
+            int maxExp = playerData.MaxExp > 0 ? playerData.MaxExp : 500;
+            _expBar.fillAmount = Mathf.Clamp01((float)playerData.PlayerExp / maxExp);
+        }
     }
 
     public void UpdateStaminaTimer(int remainingSeconds)

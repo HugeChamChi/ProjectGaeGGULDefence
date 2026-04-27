@@ -7,8 +7,7 @@ public class BackendGameData : MonoBehaviour
 {
     public static BackendGameData Instance { get; private set; }
 
-    private string _inDate; // 데이터 고유 키
-    public PlayerData userData { get; private set; }
+    private string _inDate;
 
     private void Awake()
     {
@@ -39,12 +38,11 @@ public class BackendGameData : MonoBehaviour
                 return;
             }
 
-            // 데이터 파싱
             _inDate = rows[0]["inDate"].ToString();
-            userData = ParsePlayerData(rows[0]);
+            var data = ParsePlayerData(rows[0]);
 
-            Debug.Log($"PlayerData 불러오기 성공 : {userData.PlayerName}");
-            onComplete?.Invoke(userData);
+            Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
+            onComplete?.Invoke(data);
         }
         else
         {
@@ -57,7 +55,7 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     private void GameDataInsert(Action<PlayerData> onComplete = null)
     {
-        userData = new PlayerData
+        var newData = new PlayerData
         {
             PlayerName = Backend.UserNickName ?? "유저",
             Gold = 0,
@@ -70,14 +68,14 @@ public class BackendGameData : MonoBehaviour
             MaxExp = 500
         };
 
-        Param param = PlayerDataToParam(userData);
+        Param param = PlayerDataToParam(newData);
         var bro = Backend.GameData.Insert("PlayerData", param);
 
         if (bro.IsSuccess())
         {
             _inDate = bro.GetInDate();
             Debug.Log("PlayerData 생성 성공");
-            onComplete?.Invoke(userData);
+            onComplete?.Invoke(newData);
         }
         else
         {
@@ -88,15 +86,15 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     // 데이터 저장
     // -------------------------
-    public void GameDataUpdate(Action onComplete = null)
+    public void GameDataUpdate(PlayerData data, Action onComplete = null)
     {
-        if (userData == null || string.IsNullOrEmpty(_inDate))
+        if (data == null || string.IsNullOrEmpty(_inDate))
         {
             Debug.LogError("저장할 데이터가 없습니다");
             return;
         }
 
-        Param param = PlayerDataToParam(userData);
+        Param param = PlayerDataToParam(data);
         var bro = Backend.GameData.UpdateV2("PlayerData", _inDate, Backend.UserInDate, param);
 
         if (bro.IsSuccess())
@@ -147,16 +145,16 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     // 스태미나 관련
     // -------------------------
-    public (int stamina, long recoveryTime) CalculateStaminaRecovery(int currentStamina, long lastRecoveryTime)
+    public (int stamina, long recoveryTime) CalculateStaminaRecovery(int currentStamina, long lastRecoveryTime, int maxStamina)
     {
         long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         long elapsed = now - lastRecoveryTime;
-        int recoveryInterval = 300; // 5분마다 1 회복
+        int recoveryInterval = 300;
         int recoveredCount = (int)(elapsed / recoveryInterval);
 
         if (recoveredCount <= 0) return (currentStamina, lastRecoveryTime);
 
-        int newStamina = Mathf.Min(currentStamina + recoveredCount, userData.MaxStamina);
+        int newStamina = Mathf.Min(currentStamina + recoveredCount, maxStamina);
         long newRecoveryTime = lastRecoveryTime + (recoveredCount * recoveryInterval);
 
         return (newStamina, newRecoveryTime);
