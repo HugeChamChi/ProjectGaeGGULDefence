@@ -29,7 +29,7 @@ public class MergeManager : InGameSingleton<MergeManager>
 
         _selectedUnit = unit;
         bool canMerge = CanMerge(unit);
-        MergeButtonUI.Instance.Show(unit, canMerge);
+        UnitActionPopupUI.Instance.Show(unit, canMerge);
     }
 
     /// <summary>합성 버튼 클릭 시 MergeButtonUI에서 호출</summary>
@@ -83,8 +83,8 @@ public class MergeManager : InGameSingleton<MergeManager>
     public void HideButton()
     {
         _selectedUnit = null;
-        if (MergeButtonUI.Instance != null)
-            MergeButtonUI.Instance.Hide();
+        if (UnitActionPopupUI.Instance != null)
+            UnitActionPopupUI.Instance.Hide();
     }
 
     // ── 내부 로직 ──────────────────────────────────────────────
