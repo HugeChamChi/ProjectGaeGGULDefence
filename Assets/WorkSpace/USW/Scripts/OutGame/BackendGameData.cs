@@ -18,7 +18,36 @@ public class BackendGameData : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+#if UNITY_EDITOR
+        EditorInitBackend();
+#endif
     }
+
+#if UNITY_EDITOR
+    private static bool _editorInitialized = false;
+
+    private void EditorInitBackend()
+    {
+        if (_editorInitialized) return;
+        _editorInitialized = true;
+
+        var initBro = Backend.Initialize();
+        if (!initBro.IsSuccess())
+        {
+            Debug.LogError("[Editor] Backend 초기화 실패: " + initBro);
+            return;
+        }
+
+        var loginBro = Backend.BMember.CustomLogin("testuser", "testpass");
+        if (!loginBro.IsSuccess())
+        {
+            loginBro = Backend.BMember.CustomSignUp("testuser", "testpass");
+            if (!loginBro.IsSuccess())
+                Debug.LogError("[Editor] Backend 로그인 실패: " + loginBro);
+        }
+    }
+#endif
 
     // -------------------------
     // 데이터 불러오기
@@ -115,17 +144,26 @@ public class BackendGameData : MonoBehaviour
     {
         return new PlayerData
         {
-            PlayerName = data["PlayerName"]?.ToString() ?? "유저",
-            Gold = int.TryParse(data["Gold"]?.ToString(), out int gold) ? gold : 0,
-            Diamond = int.TryParse(data["Diamond"]?.ToString(), out int diamond) ? diamond : 0,
-            Stamina = int.TryParse(data["Stamina"]?.ToString(), out int stamina) ? stamina : 30,
-            MaxStamina = int.TryParse(data["MaxStamina"]?.ToString(), out int maxStamina) ? maxStamina : 30,
-            LastStaminaRecoveryTime = long.TryParse(data["LastStaminaRecoveryTime"]?.ToString(), out long recoveryTime) ? recoveryTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            PlayerLevel = int.TryParse(data["PlayerLevel"]?.ToString(), out int level) ? level : 1,
-            PlayerExp = int.TryParse(data["PlayerExp"]?.ToString(), out int exp) ? exp : 0,
-            MaxExp = int.TryParse(data["MaxExp"]?.ToString(), out int maxExp) ? maxExp : 500
+            PlayerName = GetString(data, "PlayerName", "유저"),
+            Gold       = GetInt(data, "Gold", 0),
+            Diamond    = GetInt(data, "Diamond", 0),
+            Stamina    = GetInt(data, "Stamina", 30),
+            MaxStamina = GetInt(data, "MaxStamina", 30),
+            LastStaminaRecoveryTime = GetLong(data, "LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            PlayerLevel = GetInt(data, "PlayerLevel", 1),
+            PlayerExp   = GetInt(data, "PlayerExp", 0),
+            MaxExp      = GetInt(data, "MaxExp", 500)
         };
     }
+
+    private string GetString(JsonData data, string key, string fallback = "")
+        => data.Keys.Contains(key) ? data[key]?.ToString() ?? fallback : fallback;
+
+    private int GetInt(JsonData data, string key, int fallback = 0)
+        => data.Keys.Contains(key) && int.TryParse(data[key]?.ToString(), out int val) ? val : fallback;
+
+    private long GetLong(JsonData data, string key, long fallback = 0)
+        => data.Keys.Contains(key) && long.TryParse(data[key]?.ToString(), out long val) ? val : fallback;
 
     private Param PlayerDataToParam(PlayerData data)
     {
