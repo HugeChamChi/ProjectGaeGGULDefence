@@ -1,13 +1,10 @@
 using System;
 using UnityEngine;
-using BackEnd;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
 public class PlayerDataController : MonoBehaviour
 {
-    [SerializeField] private PlayerDataView _view;
-
     private PlayerData _data;
     public PlayerData Data => _data;
 
@@ -19,7 +16,6 @@ public class PlayerDataController : MonoBehaviour
 
     private void Start()
     {
-        OnUpdateUI += _view.UpdateUI;
         InitData();
     }
 
@@ -117,20 +113,59 @@ public class PlayerDataController : MonoBehaviour
     private void RecoverStamina()
     {
         var (newStamina, newRecoveryTime) = BackendGameData.Instance.CalculateStaminaRecovery(
-            _data.Stamina, _data.LastStaminaRecoveryTime);
+            _data.Stamina, _data.LastStaminaRecoveryTime, _data.MaxStamina);
 
         if (newStamina != _data.Stamina)
         {
             _data.Stamina = newStamina;
             _data.LastStaminaRecoveryTime = newRecoveryTime;
-
-            BackendGameData.Instance.userData.Stamina = newStamina;
-            BackendGameData.Instance.userData.LastStaminaRecoveryTime = newRecoveryTime;
-            BackendGameData.Instance.GameDataUpdate();
-
-            RefreshUI(_data);
+            SaveAndRefresh();
             Debug.Log($"스태미나 회복: {_data.Stamina}/{_data.MaxStamina}");
         }
+    }
+
+    // -------------------------
+    // 골드
+    // -------------------------
+    public void AddGold(int amount)
+    {
+        if (amount <= 0) return;
+        _data.Gold += amount;
+        SaveAndRefresh();
+    }
+
+    public bool SpendGold(int amount)
+    {
+        if (_data.Gold < amount)
+        {
+            Debug.LogWarning($"골드 부족: 현재 {_data.Gold}, 필요 {amount}");
+            return false;
+        }
+        _data.Gold -= amount;
+        SaveAndRefresh();
+        return true;
+    }
+
+    // -------------------------
+    // 다이아
+    // -------------------------
+    public void AddDiamond(int amount)
+    {
+        if (amount <= 0) return;
+        _data.Diamond += amount;
+        SaveAndRefresh();
+    }
+
+    public bool SpendDiamond(int amount)
+    {
+        if (_data.Diamond < amount)
+        {
+            Debug.LogWarning($"다이아 부족: 현재 {_data.Diamond}, 필요 {amount}");
+            return false;
+        }
+        _data.Diamond -= amount;
+        SaveAndRefresh();
+        return true;
     }
 
     // -------------------------
@@ -143,11 +178,17 @@ public class PlayerDataController : MonoBehaviour
             Debug.LogWarning($"스태미나 부족: 현재 {_data.Stamina}, 필요 {amount}");
             return false;
         }
-
         _data.Stamina -= amount;
-        BackendGameData.Instance.userData.Stamina = _data.Stamina;
-        BackendGameData.Instance.GameDataUpdate();
-        RefreshUI(_data);
+        SaveAndRefresh();
         return true;
+    }
+
+    // -------------------------
+    // 공통
+    // -------------------------
+    private void SaveAndRefresh()
+    {
+        BackendGameData.Instance.GameDataUpdate(_data);
+        RefreshUI(_data);
     }
 }

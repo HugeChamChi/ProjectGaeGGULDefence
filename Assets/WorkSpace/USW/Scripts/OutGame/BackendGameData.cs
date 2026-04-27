@@ -7,8 +7,7 @@ public class BackendGameData : MonoBehaviour
 {
     public static BackendGameData Instance { get; private set; }
 
-    private string _inDate; // 데이터 고유 키
-    public PlayerData userData { get; private set; }
+    private string _inDate;
 
     private void Awake()
     {
@@ -19,7 +18,36 @@ public class BackendGameData : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+#if UNITY_EDITOR
+        EditorInitBackend();
+#endif
     }
+
+#if UNITY_EDITOR
+    private static bool _editorInitialized = false;
+
+    private void EditorInitBackend()
+    {
+        if (_editorInitialized) return;
+        _editorInitialized = true;
+
+        var initBro = Backend.Initialize();
+        if (!initBro.IsSuccess())
+        {
+            Debug.LogError("[Editor] Backend 초기화 실패: " + initBro);
+            return;
+        }
+
+        var loginBro = Backend.BMember.CustomLogin("testuser", "testpass");
+        if (!loginBro.IsSuccess())
+        {
+            loginBro = Backend.BMember.CustomSignUp("testuser", "testpass");
+            if (!loginBro.IsSuccess())
+                Debug.LogError("[Editor] Backend 로그인 실패: " + loginBro);
+        }
+    }
+#endif
 
     // -------------------------
     // 데이터 불러오기
@@ -39,12 +67,11 @@ public class BackendGameData : MonoBehaviour
                 return;
             }
 
-            // 데이터 파싱
             _inDate = rows[0]["inDate"].ToString();
-            userData = ParsePlayerData(rows[0]);
+            var data = ParsePlayerData(rows[0]);
 
-            Debug.Log($"PlayerData 불러오기 성공 : {userData.PlayerName}");
-            onComplete?.Invoke(userData);
+            Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
+            onComplete?.Invoke(data);
         }
         else
         {
@@ -57,7 +84,7 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     private void GameDataInsert(Action<PlayerData> onComplete = null)
     {
-        userData = new PlayerData
+        var newData = new PlayerData
         {
             PlayerName = Backend.UserNickName ?? "유저",
             Gold = 0,
@@ -70,14 +97,14 @@ public class BackendGameData : MonoBehaviour
             MaxExp = 500
         };
 
-        Param param = PlayerDataToParam(userData);
+        Param param = PlayerDataToParam(newData);
         var bro = Backend.GameData.Insert("PlayerData", param);
 
         if (bro.IsSuccess())
         {
             _inDate = bro.GetInDate();
             Debug.Log("PlayerData 생성 성공");
-            onComplete?.Invoke(userData);
+            onComplete?.Invoke(newData);
         }
         else
         {
@@ -88,15 +115,15 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     // 데이터 저장
     // -------------------------
-    public void GameDataUpdate(Action onComplete = null)
+    public void GameDataUpdate(PlayerData data, Action onComplete = null)
     {
-        if (userData == null || string.IsNullOrEmpty(_inDate))
+        if (data == null || string.IsNullOrEmpty(_inDate))
         {
             Debug.LogError("저장할 데이터가 없습니다");
             return;
         }
 
-        Param param = PlayerDataToParam(userData);
+        Param param = PlayerDataToParam(data);
         var bro = Backend.GameData.UpdateV2("PlayerData", _inDate, Backend.UserInDate, param);
 
         if (bro.IsSuccess())
@@ -117,17 +144,26 @@ public class BackendGameData : MonoBehaviour
     {
         return new PlayerData
         {
-            PlayerName = data["PlayerName"]?.ToString() ?? "유저",
-            Gold = int.TryParse(data["Gold"]?.ToString(), out int gold) ? gold : 0,
-            Diamond = int.TryParse(data["Diamond"]?.ToString(), out int diamond) ? diamond : 0,
-            Stamina = int.TryParse(data["Stamina"]?.ToString(), out int stamina) ? stamina : 30,
-            MaxStamina = int.TryParse(data["MaxStamina"]?.ToString(), out int maxStamina) ? maxStamina : 30,
-            LastStaminaRecoveryTime = long.TryParse(data["LastStaminaRecoveryTime"]?.ToString(), out long recoveryTime) ? recoveryTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            PlayerLevel = int.TryParse(data["PlayerLevel"]?.ToString(), out int level) ? level : 1,
-            PlayerExp = int.TryParse(data["PlayerExp"]?.ToString(), out int exp) ? exp : 0,
-            MaxExp = int.TryParse(data["MaxExp"]?.ToString(), out int maxExp) ? maxExp : 500
+            PlayerName = GetString(data, "PlayerName", "유저"),
+            Gold       = GetInt(data, "Gold", 0),
+            Diamond    = GetInt(data, "Diamond", 0),
+            Stamina    = GetInt(data, "Stamina", 30),
+            MaxStamina = GetInt(data, "MaxStamina", 30),
+            LastStaminaRecoveryTime = GetLong(data, "LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            PlayerLevel = GetInt(data, "PlayerLevel", 1),
+            PlayerExp   = GetInt(data, "PlayerExp", 0),
+            MaxExp      = GetInt(data, "MaxExp", 500)
         };
     }
+
+    private string GetString(JsonData data, string key, string fallback = "")
+        => data.Keys.Contains(key) ? data[key]?.ToString() ?? fallback : fallback;
+
+    private int GetInt(JsonData data, string key, int fallback = 0)
+        => data.Keys.Contains(key) && int.TryParse(data[key]?.ToString(), out int val) ? val : fallback;
+
+    private long GetLong(JsonData data, string key, long fallback = 0)
+        => data.Keys.Contains(key) && long.TryParse(data[key]?.ToString(), out long val) ? val : fallback;
 
     private Param PlayerDataToParam(PlayerData data)
     {
@@ -147,16 +183,16 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     // 스태미나 관련
     // -------------------------
-    public (int stamina, long recoveryTime) CalculateStaminaRecovery(int currentStamina, long lastRecoveryTime)
+    public (int stamina, long recoveryTime) CalculateStaminaRecovery(int currentStamina, long lastRecoveryTime, int maxStamina)
     {
         long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         long elapsed = now - lastRecoveryTime;
-        int recoveryInterval = 300; // 5분마다 1 회복
+        int recoveryInterval = 300;
         int recoveredCount = (int)(elapsed / recoveryInterval);
 
         if (recoveredCount <= 0) return (currentStamina, lastRecoveryTime);
 
-        int newStamina = Mathf.Min(currentStamina + recoveredCount, userData.MaxStamina);
+        int newStamina = Mathf.Min(currentStamina + recoveredCount, maxStamina);
         long newRecoveryTime = lastRecoveryTime + (recoveredCount * recoveryInterval);
 
         return (newStamina, newRecoveryTime);
