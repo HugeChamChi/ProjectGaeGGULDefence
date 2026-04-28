@@ -3,11 +3,13 @@ using UnityEngine;
 
 public abstract class UI_Base : MonoBehaviour
 {
+    [Button]
     public virtual void Open()
     {
         OpenAsync().Forget();
     }
 
+    [Button]
     public virtual void Close()
     {
         CloseAsync().Forget();
