@@ -1,14 +1,7 @@
-using System;
 using UnityEngine;
 
-public enum ProfileItemType
-{
-    Icon,
-    Frame
-}
-
-[Serializable]
-public class ProfileItemData : IProfileItem
+[CreateAssetMenu(fileName = "ProfileItemDataSO", menuName = "Data/Profile/ProfileItemDataSO", order = 0)]
+public class ProfileItemDataSO : ScriptableObject, IProfileItem
 {
     public ProfileItemType ProfileItemType => profileItemType;
     public Sprite Sprite => sprite;
@@ -21,15 +14,6 @@ public class ProfileItemData : IProfileItem
     [SerializeField] string key;
     [SerializeField] string unlockDescription;
     [SerializeField] bool isUnlocked;
-
-    public ProfileItemData(Sprite sprite, string key, string unlockDescription, bool isUnlocked, ProfileItemType profileItemType)
-    {
-        this.sprite = sprite;
-        this.key = key;
-        this.unlockDescription = unlockDescription;
-        this.isUnlocked = isUnlocked;
-        this.profileItemType = profileItemType;
-    }
 
     public void Unlock()
     {
