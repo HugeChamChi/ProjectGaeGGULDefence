@@ -17,14 +17,14 @@ public abstract class UI_Base : MonoBehaviour
 
     public virtual async UniTask OpenAsync()
     {
+        gameObject.SetActive(true);
         await OpenAnimationAsync();
-        Open();
     }
 
     public virtual async UniTask CloseAsync()
     {
         await CloseAnimationAsync();
-        Close();
+        gameObject.SetActive(false);
     }
 
     protected virtual async UniTask OpenAnimationAsync()

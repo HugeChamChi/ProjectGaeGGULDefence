@@ -11,7 +11,7 @@ public abstract class UI_ProfilePanelBase : UI_Base
     [SerializeField] protected TextMeshProUGUI playerName;
 
     [Header("Components")]
-    [SerializeField] protected UI_ProfileIconSlot UI_ProfileIconSlot;
+    [SerializeField] protected UI_ProfileIconSlot ui_ProfileIconSlot;
 
     [Header("Animations")]
     [SerializeField] protected Vector2 start;

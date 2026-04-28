@@ -303,6 +303,88 @@ MonoBehaviour:
         m_StretchWidth: 1
         m_StretchHeight: 0
       capturedGroups: []
+    - prefix: '[Test]'
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: '[Test]'
+      font: {fileID: 0}
+      fontSize: 12
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 0.49019608, g: 0.49019608, b: 0.49019608, a: 1}
+        backgroundColour: {r: 0.9607843, g: 0.45882353, b: 0.45882353, a: 1}
+      style:
+        m_Name: New Style
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 1, g: 1, b: 1, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 11
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
     twoToneBackground: 1
     lightMode:
       colorOne: {r: 0.8, g: 0.8, b: 0.8, a: 1}
@@ -4169,6 +4251,70 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: af19ba5fa61612f498a2380feb60b8e0, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfilePanel
+        name: UI_ProfilePanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfilePanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfilePanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 0da0893f244db5445bef76dfe70c9bb6, type: 3}
+        hasToggle: 1
+      - displayName: TextMeshProUGUI
+        name: TMPro.TextMeshProUGUI, Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TextMeshProUGUI
+          m_Image: {fileID: 2800000, guid: 2fd6421f253b4ef1a19526541f9ffc0c, type: 3}
+          m_Tooltip: TextMeshProUGUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfileIconSlot
+        name: UI_ProfileIconSlot, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfileIconSlot
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfileIconSlot
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 1ce39cda6288956488e2868624775cd7, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfileChangePanel
+        name: UI_ProfileChangePanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfileChangePanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfileChangePanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: aaf3704d1007d0f4fbd1d350186f6798, type: 3}
+        hasToggle: 1
+      - displayName: BaseInput
+        name: UnityEngine.EventSystems.BaseInput, UnityEngine.UI, Version=1.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: BaseInput
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BaseInput
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 1511ccae7919cfc46b603b9b337fdc94, type: 3}
         hasToggle: 1
     unityVersion: 2022.3.62f3
     unityCount: 294
