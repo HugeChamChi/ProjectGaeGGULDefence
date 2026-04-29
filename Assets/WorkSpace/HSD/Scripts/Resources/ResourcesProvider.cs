@@ -56,6 +56,7 @@ public class ResourcesProvider : IResourceProvider
     public async UniTask<T[]> LoadAllAsync<T>(string path) where T : Object
     {
         var request = Resources.LoadAll<T>(path);
+        await UniTask.DelayFrame(1);
         return request;
     }
 }

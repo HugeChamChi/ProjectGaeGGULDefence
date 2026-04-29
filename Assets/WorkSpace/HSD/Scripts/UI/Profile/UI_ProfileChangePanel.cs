@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine;
 
 public class UI_ProfileChangePanel : UI_ProfilePanelBase
 {
@@ -70,6 +69,6 @@ public class UI_ProfileSlotController : MonoBehaviour
 
     public void Setup(PlayerData playerData)
     {
-        
+
     }
 }
