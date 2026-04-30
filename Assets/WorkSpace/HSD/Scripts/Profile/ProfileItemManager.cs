@@ -13,8 +13,8 @@ public class ProfileItemManager
     public IEnumerable<IconItemDataSO> GetAllIcons() => iconItems.Values;
     public IEnumerable<FrameItemDataSO> GetAllFrames() => frameItems.Values;
 
-    const string iconKey   = "Data/IconItem";
-    const string frameKey  = "Data/FrameItem";
+    const string iconKey   = "Data/PlayerIcon";
+    const string frameKey  = "Data/PlayerFrame";
 
     public async UniTask InitializeAsync()
     {
