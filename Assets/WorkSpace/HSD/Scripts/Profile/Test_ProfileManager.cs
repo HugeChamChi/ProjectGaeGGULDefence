@@ -9,11 +9,11 @@ namespace WorkSpace.HSD.Test
     /// </summary>
     public class Test_ProfileManager : MonoBehaviour
     {
-        private ProfileManager _profileManager;
+        private ProfileDataManager _profileManager;
 
         private void Start()
         {
-            _profileManager = new ProfileManager();
+            _profileManager = new ProfileDataManager();
             Debug.Log("<color=yellow>ProfileManager 테스트 스크립트 시작</color>");
             Debug.Log("<b>[1]</b>: 더미 데이터 저장 테스트");
             Debug.Log("<b>[2]</b>: 서버 데이터 로드 테스트");

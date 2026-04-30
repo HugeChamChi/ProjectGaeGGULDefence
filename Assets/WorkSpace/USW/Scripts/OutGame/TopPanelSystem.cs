@@ -5,9 +5,6 @@ using BackEnd;
 
 public class TopPanelSystem : MonoBehaviour
 {
-    [Header("PlayerDataController")]
-    [SerializeField] private PlayerDataController _playerDataController;
-
     [Header("TopPanel UI Elements")]
     [SerializeField] private TextMeshProUGUI _playerNicknameText;
     [SerializeField] private TextMeshProUGUI _playerLevelText;
@@ -27,13 +24,13 @@ public class TopPanelSystem : MonoBehaviour
         if (_playerNicknameText != null)
             _playerNicknameText.text = Backend.UserNickName ?? "유저";
 
-        if (_playerDataController != null)
+        if (User.Data != null)
         {
-            _playerDataController.OnUpdateUI             += UpdateTopPanelUI;
-            _playerDataController.OnStaminaRecoveryTimer += UpdateStaminaTimer;
+            User.Data.OnUpdateUI             += UpdateTopPanelUI;
+            User.Data.OnStaminaRecoveryTimer += UpdateStaminaTimer;
 
-            if (_playerDataController.Data != null)
-                UpdateTopPanelUI(_playerDataController.Data);
+            if (User.Data.Data != null)
+                UpdateTopPanelUI(User.Data.Data);
         }
 
         if (_playerProfileButton != null)
@@ -42,10 +39,10 @@ public class TopPanelSystem : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_playerDataController != null)
+        if (User.Data != null)
         {
-            _playerDataController.OnUpdateUI             -= UpdateTopPanelUI;
-            _playerDataController.OnStaminaRecoveryTimer -= UpdateStaminaTimer;
+            User.Data.OnUpdateUI             -= UpdateTopPanelUI;
+            User.Data.OnStaminaRecoveryTimer -= UpdateStaminaTimer;
         }
 
         if (_playerProfileButton != null)
@@ -92,10 +89,10 @@ public class TopPanelSystem : MonoBehaviour
 
     private void ShowPlayerProfilePopup()
     {
-        if (_playerProfilePopup == null || _profilePopup == null || _playerDataController == null)
+        if (_playerProfilePopup == null || _profilePopup == null || User.Data == null)
             return;
 
-        _profilePopup.Init(_playerDataController.Data);
+        _profilePopup.Init(User.Data.Data);
         _profilePopup.EnableDataBind(true);
         _playerProfilePopup.SetActive(true);
     }

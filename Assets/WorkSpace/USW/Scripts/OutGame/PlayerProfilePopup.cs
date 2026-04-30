@@ -3,8 +3,6 @@ using TMPro;
 
 public class PlayerProfilePopup : MonoBehaviour
 {
-    [SerializeField] private PlayerDataController _controller;
-
     [Header("TopUI")]
     [SerializeField] private TMP_Text _playerNameText;
 
@@ -32,16 +30,16 @@ public class PlayerProfilePopup : MonoBehaviour
         _isDataBind = enable;
 
         if (_isDataBind)
-            _controller.OnPlayerProfilePopupUpdated += Apply;
+            User.Data.OnPlayerProfilePopupUpdated += Apply;
         else
-            _controller.OnPlayerProfilePopupUpdated -= Apply;
+            User.Data.OnPlayerProfilePopupUpdated -= Apply;
     }
 
     private void OnDisable()
     {
         if (_isDataBind)
         {
-            _controller.OnPlayerProfilePopupUpdated -= Apply;
+            User.Data.OnPlayerProfilePopupUpdated -= Apply;
             _isDataBind = false;
         }
     }

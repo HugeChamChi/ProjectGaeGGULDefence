@@ -1,13 +1,24 @@
+using System;
 using BackEnd;
+using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-public class ProfileManager
+public class ProfileDataManager
 {
     public ProfileData Data { get; private set; } = new();
     private string rowInDate = string.Empty;
 
     const string TABLE_NAME = "PlayerProfile";
+
+    public async UniTask InitalizeAsync()
+    {
+        bool isInit = false;
+
+        Load(() => isInit = true);
+
+        await UniTask.WaitUntil(() => isInit);
+    }
 
     public void Save()
     {
@@ -44,7 +55,7 @@ public class ProfileManager
         }
     }
 
-    public void Load()
+    public void Load(Action onCompleted = null)
     {
         Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback => {
             if (callback.IsSuccess())
@@ -63,6 +74,8 @@ public class ProfileManager
                     // 데이터가 없는 경우 (신규 유저)
                     Debug.Log("저장된 프로필 데이터가 없습니다. 신규 유저로 처리합니다.");
                 }
+
+                onCompleted?.Invoke();
             }
             else
             {
