@@ -7,7 +7,6 @@ namespace HSD.UI
     /// GridLayoutGroup의 CellSize를 부모의 너비에 맞춰 동적으로 계산하여 
     /// 한 줄에 고정된 개수(columnCount)를 유지하게 해주는 컴포넌트입니다.
     /// </summary>
-    [ExecuteInEditMode]
     [RequireComponent(typeof(GridLayoutGroup))]
     public class DynamicGridLayout : MonoBehaviour
     {
@@ -31,20 +30,12 @@ namespace HSD.UI
         }
 
 #if UNITY_EDITOR
-        private void Update()
+        private void OnValidate()
         {
-            // 에디터 상에서 실시간으로 변화를 확인하기 위함
-            if (!Application.isPlaying)
-            {
-                UpdateCellSize();
-            }
-        }
-#endif
-
-        private void OnRectTransformDimensionsChange()
-        {
+            // 에디터에서 값이 변경될 때마다 셀 크기 업데이트
             UpdateCellSize();
         }
+#endif
 
         public void UpdateCellSize()
         {
@@ -71,12 +62,6 @@ namespace HSD.UI
             float cellHeight = maintainSquareRatio ? cellWidth : cellWidth * aspectRatio;
 
             grid.cellSize = new Vector2(cellWidth, cellHeight);
-        }
-
-        // 인스펙터 값이 수정되었을 때 즉시 반영
-        private void OnValidate()
-        {
-            UpdateCellSize();
         }
     }
 }
