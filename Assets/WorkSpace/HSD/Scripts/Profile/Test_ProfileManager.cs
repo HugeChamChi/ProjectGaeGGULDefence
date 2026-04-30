@@ -46,7 +46,7 @@ namespace WorkSpace.HSD.Test
             _profileManager.Data.frameStatusMap.Add("Basic_Frame", true);
             _profileManager.Data.frameStatusMap.Add("VIP_Frame", false);
 
-            _profileManager.Data.CurrentIconKey = "Frog_Icon_01";
+            _profileManager.Data.CurrentIconId = 0;
 
             _profileManager.Save();
         }

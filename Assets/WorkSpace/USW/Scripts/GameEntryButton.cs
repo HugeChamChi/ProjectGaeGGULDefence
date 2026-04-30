@@ -24,13 +24,13 @@ public class GameEntryButton : MonoBehaviour
 
     private void OnEnterButtonClicked()
     {
-        if (User.Data == null)
+        if (User.PlayerData == null)
         {
             Debug.LogError("PlayerDataController가 연결되지 않았습니다.");
             return;
         }
 
-        bool success = User.Data.UseStamina(STAMINA_COST);
+        bool success = User.PlayerData.UseStamina(STAMINA_COST);
 
         if (success)
         {
@@ -39,8 +39,8 @@ public class GameEntryButton : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"스태미나 부족! 현재: {User.Data.Data.Stamina}, 필요: {STAMINA_COST}");
-            _staminaInsufficientPopup?.Show(User.Data.Data.Stamina, STAMINA_COST);
+            Debug.LogWarning($"스태미나 부족! 현재: {User.PlayerData.Data.Stamina}, 필요: {STAMINA_COST}");
+            _staminaInsufficientPopup?.Show(User.PlayerData.Data.Stamina, STAMINA_COST);
         }
     }
 }

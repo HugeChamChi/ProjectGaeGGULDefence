@@ -8,8 +8,8 @@ public class PlayerProfileData
 {
     public Dictionary<string, bool> iconStatusMap = new();
     public Dictionary<string, bool> frameStatusMap = new();
-    public string CurrentIconKey = string.Empty;
-    public string CurrentFrameKey = string.Empty;
+    public int CurrentIconId = 0;
+    public int CurrentFrameId = 0;
 
     const string IconDataKey = "IconData";
     const string FrameDataKey = "FrameData";
@@ -22,8 +22,8 @@ public class PlayerProfileData
         Param param = new Param();
         param.Add(IconDataKey, iconStatusMap);
         param.Add(FrameDataKey, frameStatusMap);
-        param.Add(CurrentIconDataKey, CurrentIconKey);
-        param.Add(CurrentFrameDataKey, CurrentFrameKey);
+        param.Add(CurrentIconDataKey, CurrentIconId);
+        param.Add(CurrentFrameDataKey, CurrentFrameId);
         return param;
     }
 
@@ -57,13 +57,13 @@ public class PlayerProfileData
             // CurrentIconData 복구
             if (data.ContainsKey(CurrentIconDataKey) && data[CurrentIconDataKey] != null)
             {
-                CurrentIconKey = data[CurrentIconDataKey].ToString();
+                CurrentIconId = (int)data[CurrentIconDataKey];
             }
 
             // CurrentFrameData 복구
             if (data.ContainsKey(CurrentFrameDataKey) && data[CurrentFrameDataKey] != null)
             {
-                CurrentFrameKey = data[CurrentFrameDataKey].ToString();
+                CurrentFrameId = (int)data[CurrentFrameDataKey];
             }
         }
         catch (Exception e)

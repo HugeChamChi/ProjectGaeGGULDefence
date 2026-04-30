@@ -7,11 +7,18 @@ public class ProfileItemManager
     private Dictionary<int, IconItemDataSO> iconItems;
     private Dictionary<int, FrameItemDataSO> frameItems;
 
-    public IconItemDataSO GetIcon(int id) => iconItems.GetValueOrDefault(id);
-    public FrameItemDataSO GetFrame(int id) => frameItems.GetValueOrDefault(id);
+    public IconItemDataSO GetIcon(int id) => iconItems[id];
+    public FrameItemDataSO GetFrame(int id) => frameItems[id];
 
     public IEnumerable<IconItemDataSO> GetAllIcons() => iconItems.Values;
     public IEnumerable<FrameItemDataSO> GetAllFrames() => frameItems.Values;
+    public IEnumerable<IProfileItem> GetItemByType(ProfileItemType type)
+        => type switch
+        {
+            ProfileItemType.Icon => GetAllIcons(),
+            ProfileItemType.Frame => GetAllFrames(),
+            _ => Enumerable.Empty<IProfileItem>()
+        };
 
     const string iconKey   = "Data/PlayerIcon";
     const string frameKey  = "Data/PlayerFrame";

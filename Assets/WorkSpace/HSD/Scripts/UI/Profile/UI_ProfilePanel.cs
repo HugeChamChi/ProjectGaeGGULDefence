@@ -5,9 +5,15 @@ public class UI_ProfilePanel : UI_ProfilePanelBase
     [Header("Components")]
     [SerializeField] UI_ProfileChangePanel UI_ProfileChangePanel;
 
-    public void Setup(PlayerData data)
+    protected override void OnEnable()
     {
-        ui_ProfileIconSlot.Setup(null, () => UI_ProfileChangePanel.gameObject.SetActive(true));
-        playerName.text = data.PlayerName;
+        base.OnEnable();
+        Setup();
+    }
+
+    private void Setup()
+    {
+        ui_ProfileIconSlot.SetButtonEvent(() => UI_ProfileChangePanel.gameObject.SetActive(true));
+        playerName.text = User.PlayerData.Data.PlayerName;
     }
 }
