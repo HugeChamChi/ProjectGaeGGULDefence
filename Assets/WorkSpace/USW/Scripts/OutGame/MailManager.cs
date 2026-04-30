@@ -2,22 +2,15 @@ using UnityEngine;
 using BackEnd;
 using LitJson;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
-public class MailManager : MonoBehaviour
+public class MailManager
 {
-    public static MailManager Instance { get; private set; }
-
     private List<Post> _postList = new List<Post>();
 
-    private void Awake()
+    public async UniTask InitalizeAsync()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        await UniTask.WaitForSeconds(0.5f);
     }
 
     /// <summary>

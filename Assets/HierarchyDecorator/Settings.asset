@@ -21,7 +21,7 @@ MonoBehaviour:
     depthMode: 0
     tagLayerLayout: 0
     tagSettings:
-      show: 1
+      show: 0
       colorSettings:
         useSolidColor: 0
         useRandomColor: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
         brightness: 2
       hideUntagged: 0
     layerSettings:
-      show: 1
+      show: 0
       colorSettings:
         useSolidColor: 0
         useRandomColor: 0
@@ -57,12 +57,12 @@ MonoBehaviour:
     displayLayers: 1
     displayIcons: 1
     styles:
-    - prefix: =
+    - prefix: '[Canvas]'
       noSpaceAfterPrefix: 0
       isRegex: 0
-      name: Header (Centered)
+      name: '[Canvas]'
       font: {fileID: 0}
-      fontSize: 11
+      fontSize: 12
       fontAlignment: 4
       fontStyle: 1
       textFormatting: 0
@@ -70,9 +70,9 @@ MonoBehaviour:
       - fontColour: {r: 0.1764706, g: 0.1764706, b: 0.1764706, a: 1}
         backgroundColour: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
       - fontColour: {r: 1, g: 1, b: 1, a: 1}
-        backgroundColour: {r: 0.1764706, g: 0.1764706, b: 0.1764706, a: 1}
+        backgroundColour: {r: 0.14901961, g: 0.14901961, b: 0.14901961, a: 1}
       style:
-        m_Name: Header (Centered)
+        m_Name: '[Canvas]'
         m_Normal:
           m_Background: {fileID: 0}
           m_ScaledBackgrounds: []
@@ -126,7 +126,7 @@ MonoBehaviour:
           m_Top: 0
           m_Bottom: 0
         m_Font: {fileID: 0}
-        m_FontSize: 11
+        m_FontSize: 12
         m_FontStyle: 1
         m_Alignment: 4
         m_WordWrap: 0
@@ -291,6 +291,334 @@ MonoBehaviour:
           m_Bottom: 0
         m_Font: {fileID: 0}
         m_FontSize: 10
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
+    - prefix: '[Test]'
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: '[Test]'
+      font: {fileID: 0}
+      fontSize: 11
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
+        backgroundColour: {r: 0.5882353, g: 1, b: 0.56078434, a: 1}
+      style:
+        m_Name: '[Test]'
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 12
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
+    - prefix: ///
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: SubUI
+      font: {fileID: 0}
+      fontSize: 11
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
+        backgroundColour: {r: 0.65882355, g: 0.84705883, b: 0.91764706, a: 1}
+      style:
+        m_Name: SubUI
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 11
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
+    - prefix: '#'
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: MainUI
+      font: {fileID: 0}
+      fontSize: 11
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 0.88235295}
+        backgroundColour: {r: 0.6666667, g: 0.5882353, b: 0.85490197, a: 1}
+      style:
+        m_Name: MainUI
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 0.88235295}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 11
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
+    - prefix: '@'
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: Managers
+      font: {fileID: 0}
+      fontSize: 11
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
+        backgroundColour: {r: 0.9882353, g: 0.7294118, b: 0.827451, a: 1}
+      style:
+        m_Name: Managers
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 11
         m_FontStyle: 1
         m_Alignment: 4
         m_WordWrap: 0
@@ -4042,6 +4370,210 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+        hasToggle: 1
+      - displayName: Volume
+        name: UnityEngine.Rendering.Volume, Unity.RenderPipelines.Core.Runtime, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: Volume
+          m_Image: {fileID: 2800000, guid: 188dfe7e559f13248ba2c41eb5a59328, type: 3}
+          m_Tooltip: Volume
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+        hasToggle: 1
+      - displayName: PlayerDataController
+        name: PlayerDataController, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: PlayerDataController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: PlayerDataController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 7fb710da2ef542d459b96a3135aca72a, type: 3}
+        hasToggle: 1
+      - displayName: BackendManager
+        name: BackendManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: BackendManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BackendManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 0b1f93e3a05b8ed4f80596a74d8a12c4, type: 3}
+        hasToggle: 1
+      - displayName: BackendGameData
+        name: BackendGameData, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: BackendGameData
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BackendGameData
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 4ddc5b4271a7c18479ca96e784dc744a, type: 3}
+        hasToggle: 1
+      - displayName: CouponManager
+        name: CouponManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: CouponManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: CouponManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 658d17d37635b3247afa9b606e181503, type: 3}
+        hasToggle: 1
+      - displayName: MailManager
+        name: MailManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: MailManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: MailManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 956b9a5e88d2615458b120efc654ffc1, type: 3}
+        hasToggle: 1
+      - displayName: LoginSceneManager
+        name: LoginSceneManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: LoginSceneManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: LoginSceneManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: a59f8c08b683a2c4f85d18c78f4b16af, type: 3}
+        hasToggle: 1
+      - displayName: SafeAreaApplier
+        name: SafeAreaApplier, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: SafeAreaApplier
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: SafeAreaApplier
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: d3a2d96b423e0994ca84360fe56f90d8, type: 3}
+        hasToggle: 1
+      - displayName: TopPanelSystem
+        name: TopPanelSystem, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TopPanelSystem
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TopPanelSystem
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: aa6b8f399f2feea4e9c07649d78e9d44, type: 3}
+        hasToggle: 1
+      - displayName: BottomPanelController
+        name: BottomPanelController, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: BottomPanelController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BottomPanelController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: af19ba5fa61612f498a2380feb60b8e0, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfilePanel
+        name: UI_ProfilePanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfilePanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfilePanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 0da0893f244db5445bef76dfe70c9bb6, type: 3}
+        hasToggle: 1
+      - displayName: TextMeshProUGUI
+        name: TMPro.TextMeshProUGUI, Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TextMeshProUGUI
+          m_Image: {fileID: 2800000, guid: 2fd6421f253b4ef1a19526541f9ffc0c, type: 3}
+          m_Tooltip: TextMeshProUGUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfileIconSlot
+        name: UI_ProfileIconSlot, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfileIconSlot
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfileIconSlot
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 1ce39cda6288956488e2868624775cd7, type: 3}
+        hasToggle: 1
+      - displayName: UI_ProfileChangePanel
+        name: UI_ProfileChangePanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_ProfileChangePanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_ProfileChangePanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: aaf3704d1007d0f4fbd1d350186f6798, type: 3}
+        hasToggle: 1
+      - displayName: BaseInput
+        name: UnityEngine.EventSystems.BaseInput, UnityEngine.UI, Version=1.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: BaseInput
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BaseInput
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 1511ccae7919cfc46b603b9b337fdc94, type: 3}
+        hasToggle: 1
+      - displayName: Test_ProfileManager
+        name: WorkSpace.HSD.Test.Test_ProfileManager, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: Test_ProfileManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: Test_ProfileManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: e9484ddc6fa71ed4c85f2b968b69c8b8, type: 3}
         hasToggle: 1
     unityVersion: 2022.3.62f3
     unityCount: 294

@@ -3,7 +3,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
-public class PlayerDataController : MonoBehaviour
+public class PlayerDataController : IDisposable
 {
     private PlayerData _data;
     public PlayerData Data => _data;
@@ -13,6 +13,29 @@ public class PlayerDataController : MonoBehaviour
     public Action<int> OnStaminaRecoveryTimer;
 
     private CancellationTokenSource _staminaLoopCts;
+    private bool _disposed = false;
+
+    public async UniTask InitalizeAsync()
+    {
+        bool isInit = false;
+        InitData(() => isInit = true);
+
+        await UniTask.WaitUntil(() => isInit);
+
+        StartStaminaTimer();
+    }
+
+    public PlayerDataController()
+    {
+        
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        StopStaminaTimer();
+    }
 
     private void Start()
     {
@@ -37,12 +60,14 @@ public class PlayerDataController : MonoBehaviour
     // -------------------------
     // 데이터 초기화
     // -------------------------
-    public void InitData()
+    public void InitData(Action onCompleted = null)
     {
         BackendGameData.Instance.GameDataGet((data) =>
         {
             _data = data;
             RefreshUI(_data);
+
+            onCompleted?.Invoke();
         });
     }
 
@@ -62,8 +87,7 @@ public class PlayerDataController : MonoBehaviour
         StopStaminaTimer();
         // OnDisable에서 수동 취소 가능하고,
         // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
-        _staminaLoopCts = CancellationTokenSource.CreateLinkedTokenSource(
-            this.GetCancellationTokenOnDestroy());
+        _staminaLoopCts = new CancellationTokenSource();
         StaminaTimerAsync(_staminaLoopCts.Token).Forget(Debug.LogException);
     }
 
