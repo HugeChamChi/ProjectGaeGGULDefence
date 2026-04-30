@@ -3,6 +3,7 @@ using UnityEngine;
 public interface IProfileItem
 {
     public ProfileItemType ProfileItemType { get; }
+    public int Id { get; }
     public Sprite Sprite { get; }
     public string Key { get; }
     public string UnlockDescription { get; }

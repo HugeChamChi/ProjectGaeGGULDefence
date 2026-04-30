@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ProfileDataManager
 {
-    public ProfileData Data { get; private set; } = new();
+    public PlayerProfileData Data { get; private set; } = new();
     private string rowInDate = string.Empty;
 
     const string TABLE_NAME = "PlayerProfile";

@@ -4,7 +4,7 @@ using BackEnd;
 using LitJson;
 using UnityEngine;
 
-public class ProfileData
+public class PlayerProfileData
 {
     public Dictionary<string, bool> iconStatusMap = new();
     public Dictionary<string, bool> frameStatusMap = new();
