@@ -7,92 +7,64 @@ using UnityEngine;
 
 public class GachaSystem<T> where T : IGachaData
 {
-    private GachaChanceCalculator calculator;
-    private Func<int, T> _dataResolver;
+    protected virtual GachaChanceCalculator _calculator { get; private set; }
+    public IReadOnlyList<GachaChanceCalculator.ProbabilityItem> ProbabilityItems => _calculator.ProbabilityItems;
 
-    public GachaSystem(string gachaTableName, Func<int, T> dataResolver)
+    private Func<int, T> _dataResolver;
+    public int Cost { get; private set; }
+
+    private readonly string _gachaTableName;
+    private readonly string _costChartName;
+
+    public GachaSystem(string gachaTableName, string costChartName, Func<int, T> dataResolver)
     {
-        calculator = new GachaChanceCalculator(gachaTableName);
+        _gachaTableName = gachaTableName;
+        _calculator = new GachaChanceCalculator(gachaTableName);
         _dataResolver = dataResolver;
+        _costChartName = costChartName;
     }
 
     public async UniTask InitializeAsync()
     {
-        await calculator.LoadChanceDataAsync();
+        await UniTask.WhenAll(
+            _calculator.LoadChanceDataAsync(),
+            LoadGachaCostAsync()
+        );
     }
 
-    public T Draw()
-    {
-        int selectedId = calculator.GetRandomId();
-        if (_dataResolver != null)
-        {
-            return _dataResolver(selectedId);
-        }
-        return default;
-    }
-}
-
-public class GachaChanceCalculator
-{
-    private readonly string _gachaTableName;
-    private List<ProbabilityItem> _probabilityItems = new List<ProbabilityItem>();
-    private double _totalProbability = 0;
-
-    public struct ProbabilityItem
-    {
-        public int itemID;
-        public string itemName;
-        public double percent;
-        public double cumulativeProbability;
-    }
-
-    public GachaChanceCalculator(string gachaTableName)
-    {
-        _gachaTableName = gachaTableName;
-    }
-
-    public async UniTask LoadChanceDataAsync()
+    private async UniTask LoadGachaCostAsync()
     {
         bool isCompleted = false;
 
-        Backend.Probability.GetProbability(_gachaTableName, callback =>
+        Backend.Chart.GetChartContents(_costChartName, callback =>
         {
             try
             {
                 if (callback.IsSuccess())
                 {
-                    JsonData json = callback.GetFlattenJSON();
-                    JsonData elements = json["elements"];
-
-                    _probabilityItems.Clear();
-                    _totalProbability = 0;
-
-                    for (int i = 0; i < elements.Count; i++)
+                    JsonData rows = callback.FlattenRows();
+                    for (int i = 0; i < rows.Count; i++)
                     {
-                        ProbabilityItem item = new ProbabilityItem
+                        if (rows[i].ContainsKey("gachaID") && rows[i]["gachaID"].ToString() == _gachaTableName)
                         {
-                            // 뒤끝 확률 테이블의 컬럼명에 맞춰 파싱 (itemID, itemName, percent)
-                            // 뒤끝 데이터는 숫라도 문자열로 들어오는 경우가 많아 안전하게 파싱
-                            itemID = int.Parse(elements[i]["itemID"].ToString()),
-                            itemName = elements[i]["itemName"].ToString(),
-                            percent = double.Parse(elements[i]["percent"].ToString())
-                        };
-
-                        _totalProbability += item.percent;
-                        item.cumulativeProbability = _totalProbability;
-                        _probabilityItems.Add(item);
+                            if (rows[i].ContainsKey("costAmount"))
+                            {
+                                Cost = int.Parse(rows[i]["costAmount"].ToString());
+                                Debug.Log($"[Gacha] {_gachaTableName} 비용 로드 완료: {Cost}");
+                            }
+                            return;
+                        }
                     }
-
-                    Debug.Log($"[Gacha] {_gachaTableName} 확률 데이터 로드 완료. 아이템 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
+                    Debug.LogWarning($"[Gacha] {_costChartName}에서 gachaID '{_gachaTableName}'를 찾을 수 없습니다.");
                 }
                 else
                 {
-                    Debug.LogError($"[Gacha] 확률 데이터 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
+                    Debug.LogError($"[Gacha] 가챠 비용 차트 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"[Gacha] 확률 데이터 파싱 중 오류 발생: {e.Message}");
+                Debug.LogError($"[Gacha] 가챠 비용 파싱 중 오류 발생: {e.Message}");
             }
             finally
             {
@@ -103,24 +75,13 @@ public class GachaChanceCalculator
         await UniTask.WaitUntil(() => isCompleted);
     }
 
-    public int GetRandomId()
+    public T Draw()
     {
-        if (_probabilityItems.Count == 0)
+        int selectedId = _calculator.GetRandomId();
+        if (_dataResolver != null)
         {
-            Debug.LogError("[Gacha] 확률 데이터가 없습니다.");
-            return -1;
+            return _dataResolver(selectedId);
         }
-
-        double randomValue = UnityEngine.Random.value * _totalProbability;
-
-        foreach (var item in _probabilityItems)
-        {
-            if (randomValue <= item.cumulativeProbability)
-            {
-                return item.itemID;
-            }
-        }
-
-        return _probabilityItems[_probabilityItems.Count - 1].itemID;
+        return default;
     }
 }

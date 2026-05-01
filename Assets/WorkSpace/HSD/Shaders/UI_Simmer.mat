@@ -42,7 +42,7 @@ Material:
     - _StencilWriteMask: 255
     - _UseUIAlphaClip: 1
     - _WaveScale: 0.5
-    - _WaveSpeed: -4
+    - _WaveSpeed: -3
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

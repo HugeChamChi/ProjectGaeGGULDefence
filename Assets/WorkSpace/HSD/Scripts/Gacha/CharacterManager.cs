@@ -20,7 +20,7 @@ public class CharacterManager
         }
     }
 
-    public ICharacterData GetCharacter(int id)
+    public ICharacterData GetCharacterData(int id)
     {
         if (_charDict.TryGetValue(id, out var data))
             return data;
