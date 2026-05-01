@@ -779,13 +779,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9212776258410111629}
+  - component: {fileID: 4790362777466078440}
   m_Layer: 5
   m_Name: SubUI_PlayerProfilePanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &9212776258410111629
 RectTransform:
   m_ObjectHideFlags: 0
@@ -809,6 +810,94 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &4790362777466078440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988586348164027500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0da0893f244db5445bef76dfe70c9bb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerName: {fileID: 5784976158002480491}
+  closeButton: {fileID: 3535014376920061665}
+  backgroundCloseButton: {fileID: 6967793635229715572}
+  ui_ProfileIconSlot: {fileID: 984088333815015501}
+  start: {x: 0.6, y: 0.6}
+  end: {x: 1, y: 1}
+  openDuration: 0.2
+  closeDuration: 0.2
+  openEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.73294634
+      value: 1.1661361
+      inSlope: 0.29073432
+      outSlope: 0.29073432
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.24255289
+      outWeight: 1
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -0.6357919
+      outSlope: -0.6357919
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.7887748
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  closeEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: -0.33447576
+      outSlope: -0.33447576
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.77619624
+    - serializedVersion: 3
+      time: 0.23619506
+      value: -0.080073215
+      inSlope: 0.3640567
+      outSlope: 0.3640567
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panel: {fileID: 4243859575472437000}
+  ui_ProfileChangePanel: {fileID: 6093661641134153713}
 --- !u!1 &2116068697043010196
 GameObject:
   m_ObjectHideFlags: 0
@@ -2435,7 +2524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.3529412, g: 0.28627452, b: 0.25882354, a: 0.23921569}
+  m_Color: {r: 0.3529412, g: 0.28627452, b: 0.25882354, a: 0.7058824}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3343,7 +3432,6 @@ GameObject:
   - component: {fileID: 4243859575472437000}
   - component: {fileID: 3556601900567546406}
   - component: {fileID: 2956280985903118139}
-  - component: {fileID: 3025853868894232300}
   m_Layer: 5
   m_Name: ProfilePanel
   m_TagString: Untagged
@@ -3410,93 +3498,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 0.28
---- !u!114 &3025853868894232300
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8591125321455543516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0da0893f244db5445bef76dfe70c9bb6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerName: {fileID: 5784976158002480491}
-  closeButton: {fileID: 3535014376920061665}
-  backgroundCloseButton: {fileID: 6967793635229715572}
-  ui_ProfileIconSlot: {fileID: 984088333815015501}
-  start: {x: 0.6, y: 0.6}
-  end: {x: 1, y: 1}
-  openDuration: 0.2
-  closeDuration: 0.2
-  openEase:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.73294634
-      value: 1.1661361
-      inSlope: 0.29073432
-      outSlope: 0.29073432
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.24255289
-      outWeight: 1
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: -0.6357919
-      outSlope: -0.6357919
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.7887748
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  closeEase:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: -0.33447576
-      outSlope: -0.33447576
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.77619624
-    - serializedVersion: 3
-      time: 0.23619506
-      value: -0.080073215
-      inSlope: 0.3640567
-      outSlope: 0.3640567
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  UI_ProfileChangePanel: {fileID: 6093661641134153713}
 --- !u!1 &8775221628751160745
 GameObject:
   m_ObjectHideFlags: 0

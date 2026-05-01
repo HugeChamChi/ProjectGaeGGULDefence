@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class GachaChanceCalculator
 {
-    private readonly string _gachaTableName;
+    private readonly string _gachaTableID;
     public IReadOnlyList<ProbabilityItem> ProbabilityItems => _probabilityItems;
     private List<ProbabilityItem> _probabilityItems = new List<ProbabilityItem>();
     private double _totalProbability = 0;
@@ -20,81 +20,187 @@ public class GachaChanceCalculator
         public double cumulativeProbability;
     }
 
-    public GachaChanceCalculator(string gachaTableName)
+    public GachaChanceCalculator(string gachaTableID)
     {
-        _gachaTableName = gachaTableName;
+        _gachaTableID = gachaTableID;
     }
 
     public async UniTask LoadChanceDataAsync()
     {
-        bool isCompleted = false;
+        _probabilityItems.Clear();
+        _totalProbability = 0;
 
-        Backend.Probability.GetProbability(_gachaTableName, callback =>
+        var bro = Backend.Probability.GetProbabilityContents(_gachaTableID);
+
+        if (!bro.IsSuccess())
         {
-            try
+            Debug.LogError($"[Gacha] 확률 테이블 로드 실패: {bro}");
+            return;
+        }
+
+        JsonData rows = bro.FlattenRows();
+
+        if (rows == null || !rows.IsArray)
+        {
+            Debug.LogError($"[Gacha] 확률 데이터 형식이 잘못되었거나 비어있습니다.");
+            return;
+        }
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+
+            if (!row.IsObject || 
+                !row.Keys.Contains("itemID") ||
+                !row.Keys.Contains("itemName") ||
+                !row.Keys.Contains("percent"))
             {
-                if (callback.IsSuccess())
-                {
-                    JsonData json = callback.GetFlattenJSON();
-                    JsonData elements = json["elements"];
-
-                    _probabilityItems.Clear();
-                    _totalProbability = 0;
-
-                    for (int i = 0; i < elements.Count; i++)
-                    {
-                        ProbabilityItem item = new ProbabilityItem
-                        {
-                            // 뒤끝 확률 테이블의 컬럼명에 맞춰 파싱 (itemID, itemName, percent)
-                            // 뒤끝 데이터는 숫라도 문자열로 들어오는 경우가 많아 안전하게 파싱
-                            itemID = int.Parse(elements[i]["itemID"].ToString()),
-                            itemName = elements[i]["itemName"].ToString(),
-                            percent = double.Parse(elements[i]["percent"].ToString())
-                        };
-
-                        _totalProbability += item.percent;
-                        item.cumulativeProbability = _totalProbability;
-                        _probabilityItems.Add(item);
-                    }
-
-                    Debug.Log($"[Gacha] {_gachaTableName} 확률 데이터 로드 완료. 아이템 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
-                }
-                else
-                {
-                    Debug.LogError($"[Gacha] 확률 데이터 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
+                Debug.LogWarning($"[Gacha] row[{i}] 데이터 누락 또는 형식 오류, 스킵합니다.");
+                continue;
             }
-            catch (Exception e)
+
+            if (!int.TryParse(row["itemID"].ToString(), out int itemID) ||
+                !double.TryParse(row["percent"].ToString(), out double percent))
             {
-                Debug.LogError($"[Gacha] 확률 데이터 파싱 중 오류 발생: {e.Message}");
+                Debug.LogWarning($"[Gacha] row[{i}] 파싱 실패, 스킵합니다.");
+                continue;
             }
-            finally
+
+            _totalProbability += percent;
+
+            _probabilityItems.Add(new ProbabilityItem
             {
-                isCompleted = true;
+                itemID = itemID,
+                itemName = row["itemName"].ToString(),
+                percent = percent,
+                cumulativeProbability = _totalProbability
+            });
+        }
+
+        Debug.Log($"[Gacha] 로드 완료 | 항목 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
+    }
+
+    // 1회 뽑기 - 서버 확률 사용
+    public UniTask<int> GetRandomIDAsync()
+    {
+        var tcs = new UniTaskCompletionSource<int>();
+
+        Backend.Probability.GetProbability(_gachaTableID, callback =>
+        {
+            if (!callback.IsSuccess())
+            {
+                Debug.LogError($"[Gacha] 뽑기 실패: {callback}");
+                tcs.TrySetResult(-1);
+                return;
+            }
+
+            JsonData result = callback.FlattenRows();
+
+            if (result == null || !result.IsArray || result.Count == 0)
+            {
+                Debug.LogError("[Gacha] 뽑기 결과가 비어있습니다.");
+                tcs.TrySetResult(-1);
+                return;
+            }
+
+            var firstRow = result[0];
+            if (firstRow.IsObject && firstRow.Keys.Contains("itemID") &&
+                int.TryParse(firstRow["itemID"].ToString(), out int itemID))
+            {
+                tcs.TrySetResult(itemID);
+            }
+            else
+            {
+                tcs.TrySetResult(-1);
             }
         });
 
-        await UniTask.WaitUntil(() => isCompleted);
+        return tcs.Task;
     }
 
-    public virtual int GetRandomId()
+    // N회 뽑기 - 서버 확률 사용
+    public UniTask<int[]> GetRandomIDsAsync(int count)
     {
-        if (_probabilityItems.Count == 0)
-        {
-            Debug.LogError("[Gacha] 확률 데이터가 없습니다.");
-            return -1;
-        }
+        var tcs = new UniTaskCompletionSource<int[]>();
 
-        double randomValue = UnityEngine.Random.value * _totalProbability;
-
-        foreach (var item in _probabilityItems)
+        Backend.Probability.GetProbabilitys(_gachaTableID, count, callback =>
         {
-            if (randomValue <= item.cumulativeProbability)
+            if (!callback.IsSuccess())
             {
-                return item.itemID;
+                Debug.LogError($"[Gacha] 다중 뽑기 실패: {callback}");
+                tcs.TrySetResult(new int[count]); 
+                return;
             }
-        }
 
-        return _probabilityItems[_probabilityItems.Count - 1].itemID;
+            string rawJson = callback.GetReturnValue();
+            Debug.Log($"[Gacha] Raw Response: {rawJson}");
+
+            JsonData json = callback.GetReturnValuetoJSON();
+            JsonData results = null;
+
+            if (json.Keys.Contains("elements"))
+            {
+                results = json["elements"];
+            }
+            else
+            {
+                results = callback.FlattenRows();
+            }
+
+            if (results == null || !results.IsArray || results.Count == 0)
+            {
+                Debug.LogError($"[Gacha] 다중 뽑기 결과 데이터 오류. Flattened: {results?.ToJson() ?? "null"}");
+                tcs.TrySetResult(new int[count]);
+                return;
+            }
+
+            var ids = new int[results.Count];
+
+            for (int i = 0; i < results.Count; i++)
+            {
+                var row = results[i];
+                if (row.IsObject)
+                {
+                    // 뒤끝 데이터는 대문자/소문자 구분이 있을 수 있으므로 둘 다 확인
+                    string key = row.Keys.Contains("itemID") ? "itemID" : (row.Keys.Contains("itemid") ? "itemid" : null);
+
+                    if (key != null)
+                    {
+                        string idStr = row[key].ToString();
+                        
+                        // {"N":"123"} 또는 {"S":"123"} 구조 대응
+                        if (row[key].IsObject)
+                        {
+                            if (row[key].Keys.Contains("N")) idStr = row[key]["N"].ToString();
+                            else if (row[key].Keys.Contains("S")) idStr = row[key]["S"].ToString();
+                        }
+                        
+                        if (int.TryParse(idStr, out int itemID))
+                        {
+                            ids[i] = itemID;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[Gacha] row[{i}]의 {key} 파싱 실패: {idStr}");
+                            ids[i] = -1;
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Gacha] row[{i}]에 itemID 필드가 없습니다. Keys: {string.Join(", ", row.Keys)}");
+                        ids[i] = -1;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[Gacha] row[{i}]가 오브젝트 형식이 아닙니다: {row.ToJson()}");
+                    ids[i] = -1;
+                }
+            }
+
+            tcs.TrySetResult(ids);
+        });
+
+        return tcs.Task;
     }
 }

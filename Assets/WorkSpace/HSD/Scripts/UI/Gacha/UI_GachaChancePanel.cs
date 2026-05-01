@@ -23,12 +23,14 @@ public class UI_GachaChancePanel : UI_Base
 
     private void OnEnable()
     {
+        backgroundCloseButton.onClick.AddListener(Close);
         closeButton.onClick.AddListener(Close);
         Refresh();
     }
 
     private void OnDisable()
     {
+        backgroundCloseButton.onClick.RemoveListener(Close);
         closeButton.onClick.RemoveListener(Close);
     }
 

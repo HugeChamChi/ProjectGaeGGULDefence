@@ -4,8 +4,8 @@ public class GachaManager
 {
     public GachaSystem<ICharacterData> CharacterGacha { get; private set; }
 
-    const string CHAR_GACHA_PROBABILITY_ID = "238784";
-    const string CHAR_GACHA_COST_CHART_ID = "19019";
+    const string CHAR_GACHA_PROBABILITY_ID = "19018";
+    const string CHAR_GACHA_COST_CHART_ID = "238784";
 
     public async UniTask InitializeAsync()
     {
@@ -13,7 +13,12 @@ public class GachaManager
         CharacterGacha = new GachaSystem<ICharacterData>(
             CHAR_GACHA_PROBABILITY_ID,
             CHAR_GACHA_COST_CHART_ID,
-            id => Table.Character.GetCharacterData(id)
+            id =>
+            {
+                ICharacterData data = Table.Character.GetCharacterData(id);
+                User.Character.AddOwnedCharacter(id);
+                return data;
+            }
         );
 
         // 가챠 시스템 초기화 (확률 및 비용 로드)

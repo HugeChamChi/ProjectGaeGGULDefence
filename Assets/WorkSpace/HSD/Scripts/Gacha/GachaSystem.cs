@@ -32,10 +32,25 @@ public class GachaSystem<T> where T : IGachaData
         );
     }
 
+    public async UniTask<T[]> GetDatas(int count)
+    {
+        T[] results = new T[count];
+        int[] selectedIds = await _calculator.GetRandomIDsAsync(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (_dataResolver != null)
+            {
+                results[i] = _dataResolver(selectedIds[i]);
+            }
+        }
+
+        return results;
+    }
+
     private async UniTask LoadGachaCostAsync()
     {
         bool isCompleted = false;
-
         Backend.Chart.GetChartContents(_costChartName, callback =>
         {
             try
@@ -45,14 +60,17 @@ public class GachaSystem<T> where T : IGachaData
                     JsonData rows = callback.FlattenRows();
                     for (int i = 0; i < rows.Count; i++)
                     {
-                        if (rows[i].ContainsKey("gachaID") && rows[i]["gachaID"].ToString() == _gachaTableName)
+                        var row = rows[i];
+
+                        // 데이터 존재 여부와 ID 매칭 확인
+                        if (row.ContainsKey("gachaID") && row["gachaID"].ToString() == _gachaTableName)
                         {
-                            if (rows[i].ContainsKey("costAmount"))
+                            if (row.ContainsKey("costAmount"))
                             {
-                                Cost = int.Parse(rows[i]["costAmount"].ToString());
+                                Cost = int.Parse(row["costAmount"].ToString());
                                 Debug.Log($"[Gacha] {_gachaTableName} 비용 로드 완료: {Cost}");
+                                return;
                             }
-                            return;
                         }
                     }
                     Debug.LogWarning($"[Gacha] {_costChartName}에서 gachaID '{_gachaTableName}'를 찾을 수 없습니다.");
@@ -73,15 +91,5 @@ public class GachaSystem<T> where T : IGachaData
         });
 
         await UniTask.WaitUntil(() => isCompleted);
-    }
-
-    public T Draw()
-    {
-        int selectedId = _calculator.GetRandomId();
-        if (_dataResolver != null)
-        {
-            return _dataResolver(selectedId);
-        }
-        return default;
     }
 }

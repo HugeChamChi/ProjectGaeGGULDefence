@@ -27,18 +27,23 @@ public class PlayerCharacterManager
         return _ownedCharacterCounts.TryGetValue(characterId, out int count) ? count : 0;
     }
 
-    public void GetCharacter(int characterId)
+    public void AddOwnedCharacter(int characterId, int count = 1)
     {
         if (_ownedCharacterCounts.ContainsKey(characterId))
         {
-            _ownedCharacterCounts[characterId]++;
+            _ownedCharacterCounts[characterId] += count;
         }
         else
         {
-            _ownedCharacterCounts[characterId] = 1;
+            _ownedCharacterCounts[characterId] = count;
         }
-
-        Save();
+    }
+    public void AddOwnedCharacters(ICharacterData[] characters)
+    {
+        foreach (var character in characters)
+        {
+            AddOwnedCharacter(character.Id, 1);
+        }
     }
 
     public void Save()

@@ -10,9 +10,11 @@ public class UI_GachaButton : MonoBehaviour
     [SerializeField] private Button button;
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color insufficientColor = Color.gray;
+    int cost;
 
     public void Refresh(int cost, Action onClick)
     {
+        this.cost = cost;
         int userDiamond = User.PlayerData.Data.Diamond;
         bool isEnough = userDiamond >= cost;
 
@@ -27,10 +29,18 @@ public class UI_GachaButton : MonoBehaviour
         }
     }
 
+    public void Refresh()
+    {
+        int userDiamond = User.PlayerData.Data.Diamond;
+        bool isEnough = userDiamond >= cost;
+
+        costText.text = $"{userDiamond} / {cost.ToString()}";
+        costText.color = isEnough ? normalColor : insufficientColor;
+    }
+
     public void SetInteractable(bool interactable)
     {
         // 재화가 있을 때만 전체 잠금/해제에 반응하도록 함
-        int cost = int.Parse(costText.text);
         if (User.PlayerData.Data.Diamond >= cost)
         {
             button.interactable = interactable;

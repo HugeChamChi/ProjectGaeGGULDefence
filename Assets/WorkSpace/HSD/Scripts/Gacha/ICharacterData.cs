@@ -1,9 +1,5 @@
 using UnityEngine;
 
-public interface ICharacterData : IGachaData
+public interface ICharacterData : IGachaData, IItemData
 {
-    public int Id { get; }
-    public string Name { get; }
-    public string Description { get; }
-    public Sprite Icon { get; }
 }

@@ -22,7 +22,7 @@ public class UI_GachaProduction : MonoBehaviour
     /// <summary>
     /// 가챠 연출을 실행하고 완료될 때까지 대기합니다.
     /// </summary>
-    public async UniTask PlayAsync()
+    public async UniTask PlayAsync(ICharacterData[] results)
     {
         if (productionRoot != null) productionRoot.gameObject.SetActive(true);
         if (effectLight != null) effectLight.SetActive(false);
