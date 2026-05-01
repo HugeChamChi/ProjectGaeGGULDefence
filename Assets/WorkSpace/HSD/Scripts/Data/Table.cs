@@ -6,6 +6,7 @@ public static class Table
 {
     public static CouponManager Coupon { get; private set; } = new();
     public static ProfileItemManager Profile { get; private set; } = new();
+    public static CharacterManager Character { get; private set; } = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static async UniTask InitializeAsync()
