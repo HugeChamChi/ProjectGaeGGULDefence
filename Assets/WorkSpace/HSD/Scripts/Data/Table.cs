@@ -11,7 +11,11 @@ public static class Table
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static async UniTask InitializeAsync()
     {
-        await Profile.InitializeAsync();
+        await UniTask.WhenAll(
+            Profile.InitializeAsync(),
+            Character.InitializeAsync()
+        );
+        
         Debug.Log("<color=green><b>Table</b></color> initialized successfully.");
     }
 }
