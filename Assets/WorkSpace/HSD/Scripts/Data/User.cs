@@ -6,17 +6,20 @@ public static class User
     public static PlayerDataController PlayerData   { get; private set; }
     public static ProfileDataManager Profile        { get; private set; }
     public static MailManager Mail                  { get; private set; }
+    public static PlayerCharacterManager Character  { get; private set; }
 
     public async static UniTask InitializeAsync()
     {
         PlayerData = new();
         Profile = new();
         Mail = new();
+        Character = new();
 
         await UniTask.WhenAll(
             PlayerData.InitalizeAsync(),
             Profile.InitalizeAsync(),
-            Mail.InitalizeAsync()
+            Mail.InitalizeAsync(),
+            Character.InitalizeAsync()
         );
     }
 }

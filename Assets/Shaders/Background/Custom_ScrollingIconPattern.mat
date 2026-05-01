@@ -25,11 +25,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BgTex:
-        m_Texture: {fileID: 10305, guid: 0000000000000000f000000000000000, type: 0}
+        m_Texture: {fileID: 2800000, guid: c99a391f381fe534c80a193fe9f307a0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _IconTex:
-        m_Texture: {fileID: 2800000, guid: 937fcbae1014b084bb5f67016effb3bc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 28865e3766dc95c45b0a5720af378d53, type: 3}
         m_Scale: {x: 0, y: 0}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -48,15 +48,14 @@ Material:
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
-    - _TargetAspect: 1.77
+    - _TargetAspect: 1
     - _UseUIAlphaClip: 0
     m_Colors:
-    - _BgColor: {r: 1, g: 0.7525431, b: 0.48584908, a: 1}
+    - _BgColor: {r: 0.41960788, g: 0.31764707, b: 0.27450982, a: 1}
     - _Color: {r: 1, g: 0.24056602, b: 0.24056602, a: 0.7607843}
     - _GridCount: {r: 20, g: 15, b: 0, a: 0}
-    - _IconColor: {r: 1, g: 0.34509802, b: 0.7462437, a: 0.4627451}
+    - _IconColor: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0.4627451}
     - _IconGap: {r: 30, g: 40, b: 0, a: 0}
     - _IconTiling: {r: 6, g: 10, b: 0, a: 0}
     - _ScrollSpeed: {r: -40, g: -40, b: 0, a: 0}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1
