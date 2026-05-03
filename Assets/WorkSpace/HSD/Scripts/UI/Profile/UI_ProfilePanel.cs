@@ -19,7 +19,7 @@ public class UI_ProfilePanel : UI_ProfilePanelBase
     private void Setup()
     {
         ui_ProfileIconSlot.SetButtonEvent(() => ui_ProfileChangePanel.gameObject.SetActive(true));
-        playerName.text = User.PlayerData.Data.PlayerName;
+        playerName.text = Player.PlayerData.Data.PlayerName;
     }
 
     public override async UniTask OpenAsync()

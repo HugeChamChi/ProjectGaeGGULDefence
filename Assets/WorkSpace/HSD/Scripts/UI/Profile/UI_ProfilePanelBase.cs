@@ -26,7 +26,7 @@ public abstract class UI_ProfilePanelBase : UI_Base
 
     protected virtual void OnEnable()
     {
-        playerName.text = User.PlayerData.Data.PlayerName;
+        playerName.text = Player.PlayerData.Data.PlayerName;
         closeButton.onClick.AddListener(Close);
         backgroundCloseButton.onClick.AddListener(Close);
     }

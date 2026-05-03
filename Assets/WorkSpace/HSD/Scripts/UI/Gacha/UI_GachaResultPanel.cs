@@ -63,7 +63,8 @@ public class UI_GachaResultPanel : UI_Base
         {
             var slot = itemSlots[i];
             slot.Setup(items[i]);
-            
+            slot.gameObject.SetActive(true);
+
             // 패널에서 직접 슬롯의 트랜스폼을 제어
             slot.transform.localScale = (Vector3)startScale;
             slot.transform.DOKill();
@@ -81,7 +82,9 @@ public class UI_GachaResultPanel : UI_Base
     {
         var newSlot = RM.Instantiate(itemSlotPrefab, scroll.content, true);
         if (newSlot != null) itemSlots.Add(newSlot);
+        newSlot.gameObject.SetActive(false);
     }
+
     public override void Close()
     {
         base.Close();

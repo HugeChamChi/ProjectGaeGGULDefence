@@ -7,6 +7,7 @@ public static class Table
     public static CouponManager Coupon { get; private set; } = new();
     public static ProfileItemManager Profile { get; private set; } = new();
     public static CharacterManager Character { get; private set; } = new();
+    public static ItemManager Item { get; private set; } = new();
     public static GachaManager Gacha { get; private set; } = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -14,7 +15,8 @@ public static class Table
     {
         await UniTask.WhenAll(
             Profile.InitializeAsync(),
-            Character.InitializeAsync()
+            Character.InitializeAsync(),
+            Item.InitializeAsync()
         );
 
         // GachaManager는 CharacterManager의 데이터에 의존할 수 있으므로 (Data Resolver)

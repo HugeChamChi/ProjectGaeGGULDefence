@@ -16,7 +16,7 @@ public class GachaManager
             id =>
             {
                 ICharacterData data = Table.Character.GetCharacterData(id);
-                User.Character.AddOwnedCharacter(id);
+                Player.Character.AddCharacter(id);
                 return data;
             }
         );

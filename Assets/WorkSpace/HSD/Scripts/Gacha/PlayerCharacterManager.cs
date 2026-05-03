@@ -22,12 +22,11 @@ public class PlayerCharacterManager
         await UniTask.WaitUntil(() => isInit);
     }
 
-    public int GetOwnedCount(int characterId)
+    public int GetCount(int characterId)
     {
         return _ownedCharacterCounts.TryGetValue(characterId, out int count) ? count : 0;
     }
-
-    public void AddOwnedCharacter(int characterId, int count = 1)
+    public void AddCharacter(int characterId, int count = 1)
     {
         if (_ownedCharacterCounts.ContainsKey(characterId))
         {
@@ -38,11 +37,22 @@ public class PlayerCharacterManager
             _ownedCharacterCounts[characterId] = count;
         }
     }
-    public void AddOwnedCharacters(ICharacterData[] characters)
+    public void AddCharacters(int[] ids)
+    {
+        foreach (var id in ids)
+        {
+            AddCharacter(id, 1);
+        }
+    }
+    public void AddCharacter(ICharacterData character)
+    {
+        AddCharacter(character.Id, 1);
+    }
+    public void AddCharacters(ICharacterData[] characters)
     {
         foreach (var character in characters)
         {
-            AddOwnedCharacter(character.Id, 1);
+            AddCharacter(character.Id, 1);
         }
     }
 

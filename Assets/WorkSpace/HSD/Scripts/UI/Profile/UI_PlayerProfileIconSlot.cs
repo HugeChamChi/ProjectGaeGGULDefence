@@ -15,8 +15,8 @@ public class UI_PlayerProfileIconSlot : MonoBehaviour
 
     public void SetDefault()
     {
-        icon.sprite = User.Profile.CurrentIconSprite;
-        frame.sprite = User.Profile.CurrentFrameSprite;
+        icon.sprite = Player.Profile.CurrentIconSprite;
+        frame.sprite = Player.Profile.CurrentFrameSprite;
     }
 
     public void Setup(IProfileItem item)

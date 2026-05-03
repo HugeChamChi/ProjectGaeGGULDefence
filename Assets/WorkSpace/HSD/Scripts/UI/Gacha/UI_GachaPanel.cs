@@ -27,7 +27,7 @@ public class UI_GachaPanel : UI_Base
 
     private void OnEnable()
     {
-        User.PlayerData.OnUpdateUI += RefleshUI;
+        Player.PlayerData.OnUpdateUI += RefleshUI;
 
         closeButton.onClick.AddListener(Close);
         chanceButton.onClick.AddListener(ShowChancePopup);
@@ -38,7 +38,7 @@ public class UI_GachaPanel : UI_Base
 
     private void OnDisable()
     {
-        User.PlayerData.OnUpdateUI -= RefleshUI;
+        Player.PlayerData.OnUpdateUI -= RefleshUI;
 
         closeButton.onClick.RemoveListener(Close);
         chanceButton.onClick.RemoveListener(ShowChancePopup);
@@ -77,7 +77,7 @@ public class UI_GachaPanel : UI_Base
     {
         SetInteractable(false);
 
-        if(!User.PlayerData.SpendDiamond(_gachaSystem.Cost * count))
+        if(!Player.PlayerData.SpendDiamond(_gachaSystem.Cost * count))
         {
             SetInteractable(true);
             return;
@@ -86,7 +86,7 @@ public class UI_GachaPanel : UI_Base
         var results = await _gachaSystem.GetDatas(count);
 
         // 획득 처리
-        User.Character.AddOwnedCharacters(results);
+        Player.Character.AddCharacters(results);
 
         // 연출
         if (production != null)
@@ -102,7 +102,7 @@ public class UI_GachaPanel : UI_Base
         SetInteractable(true);
 
         // 저장
-        User.Character.Save();
+        Player.Character.Save();
     }
 
     private void SetInteractable(bool interactable)

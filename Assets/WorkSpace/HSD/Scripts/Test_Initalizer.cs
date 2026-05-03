@@ -5,6 +5,6 @@ public class Test_Initalizer : MonoBehaviour
 {
     void Start()
     {
-        User.InitializeAsync().Forget();
+        Player.InitializeAsync().Forget();
     }
 }
