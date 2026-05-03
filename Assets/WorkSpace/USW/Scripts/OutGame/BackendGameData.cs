@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
+using Cysharp.Threading.Tasks;
 
 public class BackendGameData : MonoBehaviour
 {

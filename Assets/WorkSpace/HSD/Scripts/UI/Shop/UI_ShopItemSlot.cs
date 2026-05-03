@@ -19,6 +19,8 @@ public class UI_ShopItemSlot : MonoBehaviour
     public void Init(ShopItemData data)
     {
         _data = data;
+
+        Debug.Log($"{data.Type.ToString()}, {data.ItemID} Setting");
         UpdateUI();
         RefreshStatus();
     }
@@ -28,6 +30,21 @@ public class UI_ShopItemSlot : MonoBehaviour
         if (_data == null) return;
 
         itemIcon.sprite = _data.GetIcon();
+
+        string itemName = "Unknown";
+
+        switch (_data.Type)
+        {
+            case ItemType.Item:
+                itemName = Table.Item.Get(_data.ItemID).Name;
+                break;
+            case ItemType.Character:
+                itemName = Table.Character.GetCharacterData(_data.ItemID).Name;
+                break;
+            case ItemType.Currency:
+                itemName = _data.CurrencyType.ToString();
+                break;
+        }
 
         var currencySprite = _data.GetCurrencyIcon();
 
@@ -43,9 +60,7 @@ public class UI_ShopItemSlot : MonoBehaviour
             currencyIcon.sprite = currencySprite;
         }
 
-        // 아이템 정보 설정 (아이콘, 이름 등은 데이터 시트나 어드레서블 등을 통해 가져와야 함)
-        // 여기서는 간단하게 텍스트로 표시
-        itemNameText.text = $"{_data.Type.ToString()} {_data.ItemID.ToString()}";
+        itemNameText.text = itemName;
         amountText.text = $"x{_data.Amount.ToString()}";
         priceText.text = _data.Price.ToString();
 
@@ -55,14 +70,14 @@ public class UI_ShopItemSlot : MonoBehaviour
 
     public void RefreshStatus()
     {
-        bool isSoldOut = ShopManager.Instance.IsSoldOut(_data.ShopID);
+        bool isSoldOut = Player.Shop.IsSoldOut(_data.ShopID);
         soldOutObject.SetActive(isSoldOut);
         buyButton.interactable = !isSoldOut;
     }
 
     private async void OnBuyClicked()
     {
-        bool success = await ShopManager.Instance.BuyItem(_data.ShopID);
+        bool success = await Player.Shop.BuyItem(_data.ShopID);
         if (success)
         {
             RefreshStatus();

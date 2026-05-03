@@ -8,6 +8,7 @@ public static class Table
     public static ProfileItemManager Profile { get; private set; } = new();
     public static CharacterManager Character { get; private set; } = new();
     public static ItemManager Item { get; private set; } = new();
+    public static ShopTableManager Shop { get; private set; } = new();
     public static GachaManager Gacha { get; private set; } = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

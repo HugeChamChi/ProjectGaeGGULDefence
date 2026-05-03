@@ -7,6 +7,7 @@ public static class Player
     public static ProfileDataManager Profile        { get; private set; }
     public static MailManager Mail                  { get; private set; }
     public static PlayerCharacterManager Character  { get; private set; }
+    public static ShopDataManager Shop              { get; private set; }
 
     public async static UniTask InitializeAsync()
     {
@@ -14,12 +15,14 @@ public static class Player
         Profile = new();
         Mail = new();
         Character = new();
+        Shop = new();
 
         await UniTask.WhenAll(
             PlayerData.InitalizeAsync(),
             Profile.InitalizeAsync(),
             Mail.InitalizeAsync(),
-            Character.InitalizeAsync()
+            Character.InitalizeAsync(),
+            Shop.InitializeAsync()
         );
     }
 }

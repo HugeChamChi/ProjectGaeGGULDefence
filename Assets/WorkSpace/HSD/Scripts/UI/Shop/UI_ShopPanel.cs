@@ -12,11 +12,8 @@ public class UI_ShopPanel : UI_Base
 
     private async UniTask InitializeShop()
     {
-        // 샵 매니저 초기화 (이미 되어있을 수도 있지만 안전하게)
-        await ShopManager.Instance.InitializeAsync();
-        
         // 일일 상점 UI 설정
-        dailyShopController.Setup(ShopManager.Instance.DailyItems);
+        dailyShopController.Setup(Player.Shop.DailyItems);
     }
 
     public void RefreshUI()

@@ -54,7 +54,7 @@ public class ShopItemData
         if (CurrencyType == CurrencyType.Free)
             return null;
 
-        return Table.Item.Get(ItemID).Icon;
+        return Table.Item.Get((int)CurrencyType).Icon;
     }
 
     public IReward GetReward()
