@@ -10,11 +10,17 @@ public class DailyManager
 {
     public event Action OnDailyReset;
     public bool IsNewDay { get; private set; }
+    const int RESET_HOUR = 5;
 
     public async UniTask InitializeAsync()
     {
-        DateTime serverTime = GetServerTime();
-        string currentDate = serverTime.ToString("yyyy-MM-dd");
+        // 한국 표준시(KST, UTC+9) 기준으로 초기화 시간을 설정합니다.
+        // 현재 KST 시간에서 RESET_HOUR(5시)를 차감했을 때의 날짜를 '현재 정산일'로 간주합니다.
+        // 예: 새벽 4:59(KST) -> 5시간 차감 시 전날 23:59 -> 전날 날짜로 인식
+        //     새벽 5:00(KST) -> 5시간 차감 시 오늘 00:00 -> 오늘 날짜로 인식
+        DateTime nowUtc = GetServerTime();
+        DateTime nowKst = nowUtc.AddHours(9);
+        string currentDate = nowKst.AddHours(-RESET_HOUR).ToString("yyyy-MM-dd");
 
         string lastResetDate = Player.PlayerData.Data.LastResetDate;
 
