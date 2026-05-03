@@ -1,10 +1,18 @@
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class Test_Initalizer : MonoBehaviour
 {
-    void Start()
+    private void Start()
     {
-        User.InitializeAsync().Forget();
+        StartAsync().Forget();
+    }
+
+    private async UniTask StartAsync()
+    {
+        await UniTask.WaitForSeconds(0.1f);
+        Table.Shop.InitializeAsync().Forget();
+        Player.InitializeAsync().Forget();
     }
 }

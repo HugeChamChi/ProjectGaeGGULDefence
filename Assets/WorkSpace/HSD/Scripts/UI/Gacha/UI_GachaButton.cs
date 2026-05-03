@@ -15,7 +15,7 @@ public class UI_GachaButton : MonoBehaviour
     public void Refresh(int cost, Action onClick)
     {
         this.cost = cost;
-        int userDiamond = User.PlayerData.Data.Diamond;
+        int userDiamond = Player.PlayerData.Data.Diamond;
         bool isEnough = userDiamond >= cost;
 
         costText.text = $"{userDiamond} / {cost.ToString()}";
@@ -31,7 +31,7 @@ public class UI_GachaButton : MonoBehaviour
 
     public void Refresh()
     {
-        int userDiamond = User.PlayerData.Data.Diamond;
+        int userDiamond = Player.PlayerData.Data.Diamond;
         bool isEnough = userDiamond >= cost;
 
         costText.text = $"{userDiamond} / {cost.ToString()}";
@@ -41,7 +41,7 @@ public class UI_GachaButton : MonoBehaviour
     public void SetInteractable(bool interactable)
     {
         // 재화가 있을 때만 전체 잠금/해제에 반응하도록 함
-        if (User.PlayerData.Data.Diamond >= cost)
+        if (Player.PlayerData.Data.Diamond >= cost)
         {
             button.interactable = interactable;
         }

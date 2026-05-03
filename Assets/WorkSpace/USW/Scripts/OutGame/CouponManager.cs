@@ -22,7 +22,7 @@ public class CouponManager
         {
             Debug.Log("쿠폰 사용 성공 : " + bro);
             callback?.Invoke(true, "쿠폰 사용 성공! 우편함을 확인해주세요");
-            User.Mail.GetPostList(PostType.Coupon);
+            Player.Mail.GetPostList(PostType.Coupon);
         }
         else
         {

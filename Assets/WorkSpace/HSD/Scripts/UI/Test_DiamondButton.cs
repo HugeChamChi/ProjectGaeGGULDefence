@@ -17,6 +17,6 @@ public class Test_DiamondButton : MonoBehaviour
 
     private void OnButtonClicked()
     {
-        User.PlayerData.AddDiamond(amount);
+        Player.PlayerData.AddDiamond(amount);
     }
 }

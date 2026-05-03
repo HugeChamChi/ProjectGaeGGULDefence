@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class ProfileDataManager
 {
+    private const string TABLE_NAME = "PlayerProfile";
+
     public PlayerProfileData Data { get; private set; } = new();
 
     public Sprite CurrentIconSprite
@@ -39,8 +41,6 @@ public class ProfileDataManager
     public IProfileItem CurrentFrameData => Table.Profile.GetFrame(Data.CurrentFrameId);
 
     private string rowInDate = string.Empty;
-
-    const string TABLE_NAME = "PlayerProfile";
 
     public async UniTask InitalizeAsync()
     {

@@ -46,9 +46,9 @@ public class UI_ProfileSlot : MonoBehaviour
 
         bool isEquipped = false;
         if (data.Type == ProfileItemType.Icon)
-            isEquipped = data.Id == User.Profile.CurrentIconData?.Id;
+            isEquipped = data.Id == Player.Profile.CurrentIconData?.Id;
         else
-            isEquipped = data.Id == User.Profile.CurrentFrameData?.Id;
+            isEquipped = data.Id == Player.Profile.CurrentFrameData?.Id;
 
         equipeedIcon.gameObject.SetActive(isEquipped);
     }

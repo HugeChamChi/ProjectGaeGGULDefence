@@ -24,13 +24,13 @@ public class TopPanelSystem : MonoBehaviour
         if (_playerNicknameText != null)
             _playerNicknameText.text = Backend.UserNickName ?? "유저";
 
-        if (User.PlayerData != null)
+        if (Player.PlayerData != null)
         {
-            User.PlayerData.OnUpdateUI             += UpdateTopPanelUI;
-            User.PlayerData.OnStaminaRecoveryTimer += UpdateStaminaTimer;
+            Player.PlayerData.OnUpdateUI             += UpdateTopPanelUI;
+            Player.PlayerData.OnStaminaRecoveryTimer += UpdateStaminaTimer;
 
-            if (User.PlayerData.Data != null)
-                UpdateTopPanelUI(User.PlayerData.Data);
+            if (Player.PlayerData.Data != null)
+                UpdateTopPanelUI(Player.PlayerData.Data);
         }
 
         if (_playerProfileButton != null)
@@ -39,10 +39,10 @@ public class TopPanelSystem : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (User.PlayerData != null)
+        if (Player.PlayerData != null)
         {
-            User.PlayerData.OnUpdateUI             -= UpdateTopPanelUI;
-            User.PlayerData.OnStaminaRecoveryTimer -= UpdateStaminaTimer;
+            Player.PlayerData.OnUpdateUI             -= UpdateTopPanelUI;
+            Player.PlayerData.OnStaminaRecoveryTimer -= UpdateStaminaTimer;
         }
 
         if (_playerProfileButton != null)
@@ -89,10 +89,10 @@ public class TopPanelSystem : MonoBehaviour
 
     private void ShowPlayerProfilePopup()
     {
-        if (_playerProfilePopup == null || _profilePopup == null || User.PlayerData == null)
+        if (_playerProfilePopup == null || _profilePopup == null || Player.PlayerData == null)
             return;
 
-        _profilePopup.Init(User.PlayerData.Data);
+        _profilePopup.Init(Player.PlayerData.Data);
         _profilePopup.EnableDataBind(true);
         _playerProfilePopup.SetActive(true);
     }

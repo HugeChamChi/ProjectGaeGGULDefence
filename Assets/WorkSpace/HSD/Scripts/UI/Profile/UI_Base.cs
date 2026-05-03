@@ -27,14 +27,14 @@ public abstract class UI_Base : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    protected virtual async UniTask OpenAnimationAsync()
+    protected virtual UniTask OpenAnimationAsync()
     {
-
+        return UniTask.CompletedTask;
     }
 
-    protected virtual async UniTask CloseAnimationAsync()
+    protected virtual UniTask CloseAnimationAsync()
     {
-
+        return UniTask.CompletedTask;
     }
 }
     

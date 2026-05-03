@@ -42,8 +42,8 @@ public class UI_ProfileChangePanel : UI_ProfilePanelBase
 
     private void RefreshData()
     {
-        currentIconData = User.Profile.CurrentIconData;
-        currentFrameData = User.Profile.CurrentFrameData;
+        currentIconData = Player.Profile.CurrentIconData;
+        currentFrameData = Player.Profile.CurrentFrameData;
     }
 
     protected override void OnDisable()
@@ -94,7 +94,7 @@ public class UI_ProfileChangePanel : UI_ProfilePanelBase
     private void ChangeFrameList()
     {
         // Reset icon preview to equipped one when switching to Frame list
-        currentIconData = User.Profile.CurrentIconData;
+        currentIconData = Player.Profile.CurrentIconData;
         profileSlot.Setup(currentIconData);
 
         iconButton.image.color = unselectColor;
@@ -109,11 +109,11 @@ public class UI_ProfileChangePanel : UI_ProfilePanelBase
     private void OnChangeButtonClick()
     {
         // Apply changes to data
-        User.Profile.Data.CurrentIconId = currentIconData.Id;
-        User.Profile.Data.CurrentFrameId = currentFrameData.Id;
+        Player.Profile.Data.CurrentIconId = currentIconData.Id;
+        Player.Profile.Data.CurrentFrameId = currentFrameData.Id;
 
         // Save to backend
-        User.Profile.Save();
+        Player.Profile.Save();
 
         // Refresh slot lists to show new "Equipped" state
         iconController.Refresh();
