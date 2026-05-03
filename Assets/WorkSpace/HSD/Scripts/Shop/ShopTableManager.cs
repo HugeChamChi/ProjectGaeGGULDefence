@@ -10,13 +10,10 @@ public class ShopTableManager
     private Dictionary<int, ShopItemData> _allShopItems = new Dictionary<int, ShopItemData>();
     public IEnumerable<ShopItemData> AllItems => _allShopItems.Values;
 
-    private const string SHOP_DAILY_CHART_ID = "238813"; // 실제 차트 ID
+    private const string SHOP_DAILY_CHART_ID = "238813";
 
     public async UniTask InitializeAsync()
     {
-        // 로컬 캐시 데이터 로드 시도
-        Backend.Chart.GetLocalChartData(SHOP_DAILY_CHART_ID);
-
         var bro = Backend.Chart.GetChartContents(SHOP_DAILY_CHART_ID);
         if (bro.IsSuccess())
         {
@@ -49,49 +46,25 @@ public class ShopTableManager
     {
         ShopItemData item = new ShopItemData();
         
-        item.ShopID = GetInt(data, "ShopID");
-        item.ItemID = GetInt(data, "ItemID");
-        item.Amount = GetInt(data, "Amount");
-        item.Price = GetInt(data, "Price");
+        item.ShopID = data.GetInt("ShopID");
+        item.ItemID = data.GetInt("ItemID");
+        item.Amount = data.GetInt("Amount");
+        item.Price = data.GetInt("Price");
+        string typeStr = data.GetString("ItemType");
+        string currencyStr = data.GetString("CurrencyType");
 
-        string typeStr = GetString(data, "ItemType");
         if (Enum.TryParse(typeStr, true, out ItemType itemType))
-        {
             item.Type = itemType;
-        }
         else
-        {
             Debug.LogWarning($"ShopTable: Failed to parse ItemType from '{typeStr}' for ShopID {item.ShopID}. Defaulting to Item.");
-        }
 
-        string currencyStr = GetString(data, "CurrencyType");
         if (Enum.TryParse(currencyStr, true, out CurrencyType currencyType))
-        {
             item.CurrencyType = currencyType;
-        }
         else
-        {
              Debug.LogWarning($"ShopTable: Failed to parse CurrencyType from '{currencyStr}' for ShopID {item.ShopID}. Defaulting to Gold.");
-        }
 
         Debug.Log($"ShopTable Parsed: ID:{item.ShopID}, Type:{item.Type}, ItemID:{item.ItemID}, Currency:{item.CurrencyType}");
 
         return item;
-    }
-
-    private int GetInt(JsonData data, string key)
-    {
-        if (data.ContainsKey(key)) return int.Parse(data[key].ToString());
-        string lowerKey = key.ToLower();
-        if (data.ContainsKey(lowerKey)) return int.Parse(data[lowerKey].ToString());
-        return 0;
-    }
-
-    private string GetString(JsonData data, string key)
-    {
-        if (data.ContainsKey(key)) return data[key].ToString();
-        string lowerKey = key.ToLower();
-        if (data.ContainsKey(lowerKey)) return data[lowerKey].ToString();
-        return string.Empty;
     }
 }

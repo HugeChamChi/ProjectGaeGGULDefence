@@ -18,39 +18,31 @@ public class ShopDataManager
     public async UniTask InitializeAsync()
     {
         var bro = Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where());
-        if (bro.IsSuccess() && bro.FlattenRows().Count > 0)
-        {
-            JsonData row = bro.FlattenRows()[0];
-            string lastUpdateDate = row["LastUpdateDate"].ToString();
-            
-            if (lastUpdateDate != DateTime.Now.ToString("yyyy-MM-dd"))
-            {
-                GenerateDailyItems();
-                await SaveAsync();
-            }
-            else
-            {
-                _dailyItems.Clear();
-                JsonData dailyItemIds = row["DailyItemIDs"];
-                for (int i = 0; i < dailyItemIds.Count; i++)
-                {
-                    int id = int.Parse(dailyItemIds[i].ToString());
-                    var item = Table.Shop.GetItem(id);
-                    if (item != null) _dailyItems.Add(item);
-                }
+        bool hasData = bro.IsSuccess() && bro.FlattenRows().Count > 0;
 
-                _purchasedItemIDs.Clear();
-                JsonData purchasedIds = row["PurchasedItemIDs"];
-                for (int i = 0; i < purchasedIds.Count; i++)
-                {
-                    _purchasedItemIDs.Add(int.Parse(purchasedIds[i].ToString()));
-                }
-            }
-        }
-        else
+        if (Player.Daily.IsNewDay || !hasData)
         {
             GenerateDailyItems();
             await SaveAsync();
+        }
+        else
+        {
+            JsonData row = bro.FlattenRows()[0];
+            _dailyItems.Clear();
+            JsonData dailyItemIds = row["DailyItemIDs"];
+            for (int i = 0; i < dailyItemIds.Count; i++)
+            {
+                int id = int.Parse(dailyItemIds[i].ToString());
+                var item = Table.Shop.GetItem(id);
+                if (item != null) _dailyItems.Add(item);
+            }
+
+            _purchasedItemIDs.Clear();
+            JsonData purchasedIds = row["PurchasedItemIDs"];
+            for (int i = 0; i < purchasedIds.Count; i++)
+            {
+                _purchasedItemIDs.Add(int.Parse(purchasedIds[i].ToString()));
+            }
         }
     }
 
@@ -91,7 +83,6 @@ public class ShopDataManager
     public async UniTask SaveAsync()
     {
         Param param = new Param();
-        param.Add("LastUpdateDate", DateTime.Now.ToString("yyyy-MM-dd"));
         
         List<int> dailyIds = new List<int>();
         foreach (var item in _dailyItems) dailyIds.Add(item.ShopID);

@@ -145,26 +145,18 @@ public class BackendGameData : MonoBehaviour
     {
         return new PlayerData
         {
-            PlayerName = GetString(data, "PlayerName", "유저"),
-            Gold       = GetInt(data, "Gold", 0),
-            Diamond    = GetInt(data, "Diamond", 0),
-            Stamina    = GetInt(data, "Stamina", 30),
-            MaxStamina = GetInt(data, "MaxStamina", 30),
-            LastStaminaRecoveryTime = GetLong(data, "LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
-            PlayerLevel = GetInt(data, "PlayerLevel", 1),
-            PlayerExp   = GetInt(data, "PlayerExp", 0),
-            MaxExp      = GetInt(data, "MaxExp", 500)
+            PlayerName = data.GetString("PlayerName", "유저"),
+            Gold       = data.GetInt("Gold", 0),
+            Diamond    = data.GetInt("Diamond", 0),
+            Stamina    = data.GetInt("Stamina", 30),
+            MaxStamina = data.GetInt("MaxStamina", 30),
+            LastStaminaRecoveryTime = data.GetLong("LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            PlayerLevel = data.GetInt("PlayerLevel", 1),
+            PlayerExp   = data.GetInt("PlayerExp", 0),
+            MaxExp      = data.GetInt("MaxExp", 500),
+            LastResetDate = data.GetString("LastResetDate", string.Empty)
         };
     }
-
-    private string GetString(JsonData data, string key, string fallback = "")
-        => data.Keys.Contains(key) ? data[key]?.ToString() ?? fallback : fallback;
-
-    private int GetInt(JsonData data, string key, int fallback = 0)
-        => data.Keys.Contains(key) && int.TryParse(data[key]?.ToString(), out int val) ? val : fallback;
-
-    private long GetLong(JsonData data, string key, long fallback = 0)
-        => data.Keys.Contains(key) && long.TryParse(data[key]?.ToString(), out long val) ? val : fallback;
 
     private Param PlayerDataToParam(PlayerData data)
     {
@@ -178,6 +170,7 @@ public class BackendGameData : MonoBehaviour
         param.Add("PlayerLevel", data.PlayerLevel);
         param.Add("PlayerExp", data.PlayerExp);
         param.Add("MaxExp", data.MaxExp);
+        param.Add("LastResetDate", data.LastResetDate);
         return param;
     }
 
