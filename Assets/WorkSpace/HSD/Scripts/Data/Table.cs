@@ -11,7 +11,6 @@ public static class Table
     public static ShopTableManager Shop { get; private set; } = new();
     public static GachaManager Gacha { get; private set; } = new();
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static async UniTask InitializeAsync()
     {
         await UniTask.WhenAll(

@@ -7,13 +7,12 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_ScrollingIconPattern
+  m_Name: 1
   m_Shader: {fileID: 4800000, guid: f9236b973020bcd4394b26666bc1e7bd, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _ENABLESTAGGER_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -29,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _IconTex:
-        m_Texture: {fileID: 2800000, guid: 28865e3766dc95c45b0a5720af378d53, type: 3}
+        m_Texture: {fileID: 2800000, guid: e5da1d880b311497b9ed8213592e283a, type: 3}
         m_Scale: {x: 0, y: 0}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -39,9 +38,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorMask: 15
-    - _EnableStagger: 1
-    - _IconRotation: 45
-    - _IconSize: 30
+    - _EnableStagger: 0
+    - _IconRotation: 0
+    - _IconSize: 10
     - _ResolutionScale: 1000
     - _Stencil: 0
     - _StencilComp: 8
@@ -51,11 +50,11 @@ Material:
     - _TargetAspect: 1
     - _UseUIAlphaClip: 0
     m_Colors:
-    - _BgColor: {r: 0.41960788, g: 0.31764707, b: 0.27450982, a: 1}
+    - _BgColor: {r: 1, g: 0.9846416, b: 0.4481132, a: 1}
     - _Color: {r: 1, g: 0.24056602, b: 0.24056602, a: 0.7607843}
     - _GridCount: {r: 20, g: 15, b: 0, a: 0}
     - _IconColor: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0.4627451}
-    - _IconGap: {r: 30, g: 40, b: 0, a: 0}
-    - _IconTiling: {r: 10, g: 15, b: 0, a: 0}
-    - _ScrollSpeed: {r: -40, g: -40, b: 0, a: 0}
+    - _IconGap: {r: 0, g: 0, b: 0, a: 0}
+    - _IconTiling: {r: 3, g: 1, b: 0, a: 0}
+    - _ScrollSpeed: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

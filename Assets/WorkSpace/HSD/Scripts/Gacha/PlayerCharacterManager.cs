@@ -7,10 +7,10 @@ using UnityEngine;
 
 public class PlayerCharacterManager
 {
+    private const string TABLE_NAME = "PlayerOwnedCharacterData";
+    private const string DATA_KEY = "OwnedCharacterCounts";
     private Dictionary<int, int> _ownedCharacterCounts = new Dictionary<int, int>();
 
-    const string TABLE_NAME = "PlayerOwnedCharacterData";
-    const string DATA_KEY = "OwnedCharacterCounts";
     private string rowInDate = string.Empty;
 
     public async UniTask InitalizeAsync()

@@ -11,19 +11,19 @@ public class PlayerProfileData
     public int CurrentIconId = 0;
     public int CurrentFrameId = 0;
 
-    const string IconDataKey = "IconData";
-    const string FrameDataKey = "FrameData";
-    const string CurrentIconDataKey = "CurrentIconData";
-    const string CurrentFrameDataKey = "CurrentFrameData";
+    const string COLUMN_PROFILE_ICON_DATA = "IconData";
+    const string COLUMN_PROFILE_FRAME_DATA = "FrameData";
+    const string COLUMN_PROFILE_CURRENT_ICON = "CurrentIconData";
+    const string COLUMN_PROFILE_CURRENT_FRAME = "CurrentFrameData";
 
     // 뒤끝 저장을 위한 Param 변환 헬퍼 메서드
     public Param ToParam()
     {
         Param param = new Param();
-        param.Add(IconDataKey, iconStatusMap);
-        param.Add(FrameDataKey, frameStatusMap);
-        param.Add(CurrentIconDataKey, CurrentIconId);
-        param.Add(CurrentFrameDataKey, CurrentFrameId);
+        param.Add(COLUMN_PROFILE_ICON_DATA, iconStatusMap);
+        param.Add(COLUMN_PROFILE_FRAME_DATA, frameStatusMap);
+        param.Add(COLUMN_PROFILE_CURRENT_ICON, CurrentIconId);
+        param.Add(COLUMN_PROFILE_CURRENT_FRAME, CurrentFrameId);
         return param;
     }
 
@@ -33,10 +33,10 @@ public class PlayerProfileData
         try
         {
             // IconData 복구
-            if (data.ContainsKey(IconDataKey) && data[IconDataKey] != null)
+            if (data.ContainsKey(COLUMN_PROFILE_ICON_DATA) && data[COLUMN_PROFILE_ICON_DATA] != null)
             {
                 iconStatusMap.Clear();
-                JsonData iconData = data[IconDataKey];
+                JsonData iconData = data[COLUMN_PROFILE_ICON_DATA];
                 foreach (string key in iconData.Keys)
                 {
                     iconStatusMap.Add(key, bool.Parse(iconData[key].ToString()));
@@ -44,10 +44,10 @@ public class PlayerProfileData
             }
 
             // FrameData 복구
-            if (data.ContainsKey(FrameDataKey) && data[FrameDataKey] != null)
+            if (data.ContainsKey(COLUMN_PROFILE_FRAME_DATA) && data[COLUMN_PROFILE_FRAME_DATA] != null)
             {
                 frameStatusMap.Clear();
-                JsonData frameData = data[FrameDataKey];
+                JsonData frameData = data[COLUMN_PROFILE_FRAME_DATA];
                 foreach (string key in frameData.Keys)
                 {
                     frameStatusMap.Add(key, bool.Parse(frameData[key].ToString()));
@@ -55,15 +55,15 @@ public class PlayerProfileData
             }
 
             // CurrentIconData 복구
-            if (data.ContainsKey(CurrentIconDataKey) && data[CurrentIconDataKey] != null)
+            if (data.ContainsKey(COLUMN_PROFILE_CURRENT_ICON) && data[COLUMN_PROFILE_CURRENT_ICON] != null)
             {
-                CurrentIconId = (int)data[CurrentIconDataKey];
+                CurrentIconId = (int)data[COLUMN_PROFILE_CURRENT_ICON];
             }
 
             // CurrentFrameData 복구
-            if (data.ContainsKey(CurrentFrameDataKey) && data[CurrentFrameDataKey] != null)
+            if (data.ContainsKey(COLUMN_PROFILE_CURRENT_FRAME) && data[COLUMN_PROFILE_CURRENT_FRAME] != null)
             {
-                CurrentFrameId = (int)data[CurrentFrameDataKey];
+                CurrentFrameId = (int)data[COLUMN_PROFILE_CURRENT_FRAME];
             }
         }
         catch (Exception e)

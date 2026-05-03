@@ -446,7 +446,7 @@ RectTransform:
   m_Father: {fileID: 835334390}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.9653875}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6025,6 +6025,36 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -150
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 1300
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821649380062238548, guid: 64538cb368a9d9544a2bcc2ad2979c88,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 3000
       objectReference: {fileID: 0}
     - target: {fileID: 3203405452877990215, guid: 64538cb368a9d9544a2bcc2ad2979c88,
         type: 3}
@@ -13978,7 +14008,7 @@ PrefabInstance:
     - target: {fileID: 344689665361558092, guid: deb1767c1fa77d146a5f8da689d25240,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -17.5
+      value: -17.500061
       objectReference: {fileID: 0}
     - target: {fileID: 1379699065435687203, guid: deb1767c1fa77d146a5f8da689d25240,
         type: 3}

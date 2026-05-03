@@ -7,13 +7,15 @@ using Random = UnityEngine.Random;
 
 public class ShopDataManager
 {
+    private const string PLAYER_SHOP_DATA_TABLE = "PlayerShopData";
+    private const string COLUMN_DAILY_ITEM_IDS = "DailyItemIDs";
+    private const string COLUMN_PURCHASED_ITEM_IDS = "PurchasedItemIDs";
+
     private List<ShopItemData> _dailyItems = new List<ShopItemData>();
     private HashSet<int> _purchasedItemIDs = new HashSet<int>();
 
     public List<ShopItemData> DailyItems => _dailyItems;
     public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
-
-    private const string PLAYER_SHOP_DATA_TABLE = "PlayerShopData";
 
     public async UniTask InitializeAsync()
     {
@@ -29,7 +31,7 @@ public class ShopDataManager
         {
             JsonData row = bro.FlattenRows()[0];
             _dailyItems.Clear();
-            JsonData dailyItemIds = row["DailyItemIDs"];
+            JsonData dailyItemIds = row[COLUMN_DAILY_ITEM_IDS];
             for (int i = 0; i < dailyItemIds.Count; i++)
             {
                 int id = int.Parse(dailyItemIds[i].ToString());
@@ -38,7 +40,7 @@ public class ShopDataManager
             }
 
             _purchasedItemIDs.Clear();
-            JsonData purchasedIds = row["PurchasedItemIDs"];
+            JsonData purchasedIds = row[COLUMN_PURCHASED_ITEM_IDS];
             for (int i = 0; i < purchasedIds.Count; i++)
             {
                 _purchasedItemIDs.Add(int.Parse(purchasedIds[i].ToString()));
@@ -86,10 +88,10 @@ public class ShopDataManager
         
         List<int> dailyIds = new List<int>();
         foreach (var item in _dailyItems) dailyIds.Add(item.ShopID);
-        param.Add("DailyItemIDs", dailyIds);
+        param.Add(COLUMN_DAILY_ITEM_IDS, dailyIds);
 
         List<int> purchasedIds = new List<int>(_purchasedItemIDs);
-        param.Add("PurchasedItemIDs", purchasedIds);
+        param.Add(COLUMN_PURCHASED_ITEM_IDS, purchasedIds);
 
         var bro = Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where());
         if (bro.IsSuccess() && bro.FlattenRows().Count > 0)
