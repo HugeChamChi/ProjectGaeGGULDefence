@@ -14,6 +14,7 @@ public class DynamicShopDataManager
     private HashSet<string> _completedShops = new HashSet<string>();
 
     public event Action<string, bool> OnShopActivated; // shopID, isFirstTime
+    public event Action<string> OnShopCompleted;      // shopID
 
     public bool IsCompleted(string shopID) => _completedShops.Contains(shopID);
     public bool IsActive(string shopID) => _activeShops.ContainsKey(shopID);
@@ -60,6 +61,8 @@ public class DynamicShopDataManager
         }
         _completedShops.Add(shopID);
         await SaveAsync();
+
+        OnShopCompleted?.Invoke(shopID);
     }
 
     private async UniTask SaveAsync()

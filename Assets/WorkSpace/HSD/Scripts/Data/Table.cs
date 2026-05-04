@@ -4,19 +4,20 @@ using UnityEngine;
 // 아이템, 유닛, 스테이지 데이터 등을 관리하는 테이블
 public static class Table
 {
-    public static CouponManager Coupon { get; private set; } = new();
-    public static ProfileItemManager Profile { get; private set; } = new();
-    public static CharacterManager Character { get; private set; } = new();
-    public static ItemManager Item { get; private set; } = new();
-    public static ShopTableManager Shop { get; private set; } = new();
-    public static GachaManager Gacha { get; private set; } = new();
+    public static CouponManager Coupon          { get; private set; } = new();
+    public static ProfileItemManager Profile    { get; private set; } = new();
+    public static CharacterManager Character    { get; private set; } = new();
+    public static ItemManager Item              { get; private set; } = new();
+    public static ShopTableContainer Shop       { get; private set; } = new();
+    public static GachaManager Gacha            { get; private set; } = new();
 
     public static async UniTask InitializeAsync()
     {
         await UniTask.WhenAll(
             Profile.InitializeAsync(),
             Character.InitializeAsync(),
-            Item.InitializeAsync()
+            Item.InitializeAsync(),
+            Shop.InitializeAsync()
         );
 
         // GachaManager는 CharacterManager의 데이터에 의존할 수 있으므로 (Data Resolver)

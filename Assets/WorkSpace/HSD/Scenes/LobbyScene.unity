@@ -122,6 +122,41 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &23192391
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 23192392}
+  m_Layer: 5
+  m_Name: Root
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &23192392
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 23192391}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 411340412}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0.9643939}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &50479887
 GameObject:
   m_ObjectHideFlags: 0
@@ -466,7 +501,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 1
-  m_CellSize: {x: 130, y: 130}
+  m_CellSize: {x: 170, y: 170}
   m_Spacing: {x: 40, y: 50}
   m_Constraint: 2
   m_ConstraintCount: 4
@@ -482,8 +517,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2242fe9dee1ae874eb2ec1bfd065ad4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _shopList: []
   _parent: {fileID: 256736839}
+  _popupManager: {fileID: 411340413}
 --- !u!1 &300981389
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,6 +879,122 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!1 &411340408
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 411340412}
+  - component: {fileID: 411340411}
+  - component: {fileID: 411340410}
+  - component: {fileID: 411340409}
+  - component: {fileID: 411340413}
+  m_Layer: 5
+  m_Name: /// Dyncmic_Popup_Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &411340409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411340408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &411340410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411340408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_UiScaleMode: 1
+  m_ReferencePixelsPerUnit: 100
+  m_ScaleFactor: 1
+  m_ReferenceResolution: {x: 1080, y: 2340}
+  m_ScreenMatchMode: 2
+  m_MatchWidthOrHeight: 1
+  m_PhysicalUnit: 3
+  m_FallbackScreenDPI: 96
+  m_DefaultSpriteDPI: 96
+  m_DynamicPixelsPerUnit: 1
+  m_PresetInfoIsWorld: 0
+--- !u!223 &411340411
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411340408}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 0
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 25
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 100
+  m_TargetDisplay: 0
+--- !u!224 &411340412
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411340408}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 23192392}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
+--- !u!114 &411340413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411340408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdcb9904eaa681246bdcf65a2f42c04b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiRoot: {fileID: 23192392}
 --- !u!1 &521922473
 GameObject:
   m_ObjectHideFlags: 0
@@ -893,7 +1044,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -901,7 +1052,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 4954668651072568721}
+  _main: {fileID: 0}
   _children: []
   _space: 0
   _timeScale: 1
@@ -909,21 +1060,21 @@ MonoBehaviour:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
   _shape: 1
-  _spread: 1
+  _spread: 0
   _spreadLoop: 1
-  _startDelay: 0.3
-  _radius: 1
+  _startDelay: 0
+  _radius: 50
   _width: 100
   _height: 100
   _angle: 45
   _length: 100
   _fitRect: 0
-  _emitOnSurface: 0
+  _emitOnSurface: 1
   _emitterThickness: 0
-  _loop: 0
+  _loop: 1
   _prewarm: 0
-  _duration: 1
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -943,7 +1094,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 10
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -1075,7 +1226,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0.3
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -1092,7 +1243,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 5
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -1226,7 +1377,7 @@ MonoBehaviour:
     to: 1
   _sizeOverLifetime:
     separable: 1
-    separated: 1
+    separated: 0
     mainCurve:
       m_Mode: 1
       m_CurveMultiplier: 1
@@ -1318,15 +1469,6 @@ MonoBehaviour:
           weightedMode: 0
           inWeight: 0
           outWeight: 0
-        - serializedVersion: 3
-          time: 0.4936562
-          value: 10
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 1
@@ -1827,7 +1969,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_ConstantMin: 0
     m_ConstantMax: 1
-  _alignToDirection: 1
+  _alignToDirection: 0
   _gravity:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -2024,19 +2166,16 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 10
-    used: 0
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
   _trailWidth:
-    m_Mode: 0
-    m_CurveMultiplier: 0
+    m_Mode: 1
+    m_CurveMultiplier: 1
     m_CurveMin:
       serializedVersion: 2
       m_Curve: []
@@ -2045,12 +2184,30 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 1
+    m_ConstantMax: 0
   _trailLifetime: 1
   _minimumVertexDistance: 10
   _trailColorOverLifetime:
@@ -2206,7 +2363,7 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
+  moduleEmitterFoldout: 0
   moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
@@ -3241,7 +3398,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a12ddbc47b17cd478cb447d1113a22b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonText: Game Start
+  buttonText: Button
   clickEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -3251,19 +3408,19 @@ MonoBehaviour:
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
   buttonVar: {fileID: 0}
-  normalText: {fileID: 566444829}
+  normalText: {fileID: 0}
   soundSource: {fileID: 0}
-  rippleParent: {fileID: 864281189}
+  rippleParent: {fileID: 0}
   useCustomContent: 0
   enableButtonSounds: 0
   useHoverSound: 1
   useClickSound: 1
   useRipple: 1
   rippleUpdateMode: 1
-  rippleShape: {fileID: 21300000, guid: d25e2ce15dd1c67438e4b70f404fb197, type: 3}
-  speed: 2.4
-  maxSize: 6
-  startColor: {r: 1, g: 1, b: 1, a: 0.15686275}
+  rippleShape: {fileID: 0}
+  speed: 1
+  maxSize: 4
+  startColor: {r: 1, g: 1, b: 1, a: 1}
   transitionColor: {r: 1, g: 1, b: 1, a: 0}
   renderOnTop: 0
   centered: 0
@@ -3416,6 +3573,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1177538485}
   m_CullTransparentMesh: 1
+--- !u!1 &1198116786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1198116787}
+  - component: {fileID: 1198116789}
+  - component: {fileID: 1198116788}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1198116787
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198116786}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1324326733}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1198116788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198116786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.9811321, g: 0.7821289, b: 0.7821289, a: 0.15686275}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1198116789
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198116786}
+  m_CullTransparentMesh: 1
 --- !u!1 &1279356790
 GameObject:
   m_ObjectHideFlags: 0
@@ -3492,6 +3724,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!1 &1292043669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1292043670}
+  - component: {fileID: 1292043671}
+  m_Layer: 0
+  m_Name: Test_Dynamic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1292043670
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292043669}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1623754064}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1292043671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292043669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f28968f73be4d9945817e23370c373a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _testShopID: A
 --- !u!1 &1324326732
 GameObject:
   m_ObjectHideFlags: 0
@@ -3507,7 +3784,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1324326733
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3520,6 +3797,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1198116787}
   - {fileID: 256736839}
   m_Father: {fileID: 300981390}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3747,6 +4025,7 @@ Transform:
   m_Children:
   - {fileID: 1490755413}
   - {fileID: 164749668}
+  - {fileID: 1292043670}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1655699996
@@ -4082,29 +4361,29 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 1838378964}
+  _main: {fileID: 0}
   _children: []
   _space: 0
   _timeScale: 1
   _emitterConstraintEnabled:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
-  _shape: 0
+  _shape: 1
   _spread: 0
   _spreadLoop: 1
   _startDelay: 0
-  _radius: 86.5415
-  _width: 173.083
-  _height: 241.07999
+  _radius: 50
+  _width: 100
+  _height: 100
   _angle: 45
   _length: 100
-  _fitRect: 1
+  _fitRect: 0
   _emitOnSurface: 1
   _emitterThickness: 0
   _loop: 1
   _prewarm: 0
-  _duration: 10
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -4124,7 +4403,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 1100
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -4239,7 +4518,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     m_ColorMin: {r: 0, g: 0, b: 0, a: 1}
-    m_ColorMax: {r: 1, g: 1, b: 1, a: 0.77254903}
+    m_ColorMax: {r: 1, g: 1, b: 1, a: 1}
   _lifetime:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -4256,7 +4535,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 10
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -4273,7 +4552,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -4308,17 +4587,17 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
     m_GradientMax:
       serializedVersion: 2
-      key0: {r: 0.32941177, g: 0.98039216, b: 0.6, a: 1}
-      key1: {r: 0.8867924, g: 0.31372374, b: 0.31372374, a: 1}
-      key2: {r: 0.32858673, g: 0.9811321, b: 0.6008242, a: 0}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
       key5: {r: 0, g: 0, b: 0, a: 0}
       key6: {r: 0, g: 0, b: 0, a: 0}
       key7: {r: 0, g: 0, b: 0, a: 0}
       ctime0: 0
-      ctime1: 31611
-      ctime2: 65535
+      ctime1: 65535
+      ctime2: 0
       ctime3: 0
       ctime4: 0
       ctime5: 0
@@ -4326,15 +4605,15 @@ MonoBehaviour:
       ctime7: 0
       atime0: 0
       atime1: 65535
-      atime2: 65535
-      atime3: 65342
+      atime2: 0
+      atime3: 0
       atime4: 0
       atime5: 0
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: 0
-      m_NumColorKeys: 3
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     m_ColorMin: {r: 0, g: 0, b: 0, a: 1}
     m_ColorMax: {r: 0, g: 0, b: 0, a: 1}
@@ -4425,7 +4704,7 @@ MonoBehaviour:
           value: 1
           inSlope: 0
           outSlope: 0
-          tangentMode: 34
+          tangentMode: 0
           weightedMode: 0
           inWeight: 0
           outWeight: 0
@@ -4434,7 +4713,7 @@ MonoBehaviour:
           value: 1
           inSlope: 0
           outSlope: 0
-          tangentMode: 34
+          tangentMode: 0
           weightedMode: 0
           inWeight: 0
           outWeight: 0
@@ -4784,7 +5063,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 360
+      m_ConstantMax: 0
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -5196,13 +5475,10 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 1
-    used: 1
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
@@ -5396,12 +5672,12 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
-  moduleParticleFoldout: 1
+  moduleEmitterFoldout: 0
+  moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
   moduleAdvancedFoldout: 0
-  m_Sprite: {fileID: 21300000, guid: a978e3bf6a3944c23a38d0ed7832aa2f, type: 3}
+  m_Sprite: {fileID: 0}
   m_Texture: {fileID: 0}
 --- !u!222 &1838378965
 CanvasRenderer:
@@ -7889,7 +8165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -7897,7 +8173,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 4954668651072568721}
+  _main: {fileID: 0}
   _children: []
   _space: 0
   _timeScale: 1
@@ -7905,21 +8181,21 @@ MonoBehaviour:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
   _shape: 1
-  _spread: 1
+  _spread: 0
   _spreadLoop: 1
-  _startDelay: 0.3
-  _radius: 1
+  _startDelay: 0
+  _radius: 50
   _width: 100
   _height: 100
   _angle: 45
   _length: 100
   _fitRect: 0
-  _emitOnSurface: 0
+  _emitOnSurface: 1
   _emitterThickness: 0
-  _loop: 0
+  _loop: 1
   _prewarm: 0
-  _duration: 1
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -7939,7 +8215,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 10
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -8071,7 +8347,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0.3
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -8088,7 +8364,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 5
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -8222,7 +8498,7 @@ MonoBehaviour:
     to: 1
   _sizeOverLifetime:
     separable: 1
-    separated: 1
+    separated: 0
     mainCurve:
       m_Mode: 1
       m_CurveMultiplier: 1
@@ -8314,15 +8590,6 @@ MonoBehaviour:
           weightedMode: 0
           inWeight: 0
           outWeight: 0
-        - serializedVersion: 3
-          time: 0.4936562
-          value: 10
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 1
@@ -8823,7 +9090,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_ConstantMin: 0
     m_ConstantMax: 1
-  _alignToDirection: 1
+  _alignToDirection: 0
   _gravity:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -9020,19 +9287,16 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 10
-    used: 0
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
   _trailWidth:
-    m_Mode: 0
-    m_CurveMultiplier: 0
+    m_Mode: 1
+    m_CurveMultiplier: 1
     m_CurveMin:
       serializedVersion: 2
       m_Curve: []
@@ -9041,12 +9305,30 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 1
+    m_ConstantMax: 0
   _trailLifetime: 1
   _minimumVertexDistance: 10
   _trailColorOverLifetime:
@@ -9202,7 +9484,7 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
+  moduleEmitterFoldout: 0
   moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
@@ -9262,7 +9544,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -9270,33 +9552,29 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 4954668651072568721}
-  _children:
-  - {fileID: 4954668651566143868}
-  - {fileID: 4954668652123549963}
-  - {fileID: 4954668650976005717}
-  - {fileID: 521922475}
+  _main: {fileID: 0}
+  _children: []
   _space: 0
   _timeScale: 1
   _emitterConstraintEnabled:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
   _shape: 1
-  _spread: 1
+  _spread: 0
   _spreadLoop: 1
   _startDelay: 0
-  _radius: 1
+  _radius: 50
   _width: 100
   _height: 100
   _angle: 45
   _length: 100
   _fitRect: 0
-  _emitOnSurface: 0
+  _emitOnSurface: 1
   _emitterThickness: 0
-  _loop: 0
+  _loop: 1
   _prewarm: 0
-  _duration: 1
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -9316,7 +9594,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 10
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -9448,7 +9726,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0.3
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -9465,7 +9743,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 5
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -9599,7 +9877,7 @@ MonoBehaviour:
     to: 1
   _sizeOverLifetime:
     separable: 1
-    separated: 1
+    separated: 0
     mainCurve:
       m_Mode: 1
       m_CurveMultiplier: 1
@@ -9691,15 +9969,6 @@ MonoBehaviour:
           weightedMode: 0
           inWeight: 0
           outWeight: 0
-        - serializedVersion: 3
-          time: 0.4936562
-          value: 10
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 1
@@ -10200,7 +10469,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_ConstantMin: 0
     m_ConstantMax: 1
-  _alignToDirection: 1
+  _alignToDirection: 0
   _gravity:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -10397,19 +10666,16 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 10
-    used: 1
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
   _trailWidth:
-    m_Mode: 0
-    m_CurveMultiplier: 0
+    m_Mode: 1
+    m_CurveMultiplier: 1
     m_CurveMin:
       serializedVersion: 2
       m_Curve: []
@@ -10418,12 +10684,30 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 1
+    m_ConstantMax: 0
   _trailLifetime: 1
   _minimumVertexDistance: 10
   _trailColorOverLifetime:
@@ -10579,8 +10863,8 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
-  moduleParticleFoldout: 1
+  moduleEmitterFoldout: 0
+  moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
   moduleAdvancedFoldout: 0
@@ -10624,7 +10908,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -10632,7 +10916,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 4954668651072568721}
+  _main: {fileID: 0}
   _children: []
   _space: 0
   _timeScale: 1
@@ -10640,21 +10924,21 @@ MonoBehaviour:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
   _shape: 1
-  _spread: 1
+  _spread: 0
   _spreadLoop: 1
-  _startDelay: 0.1
-  _radius: 1
+  _startDelay: 0
+  _radius: 50
   _width: 100
   _height: 100
   _angle: 45
   _length: 100
   _fitRect: 0
-  _emitOnSurface: 0
+  _emitOnSurface: 1
   _emitterThickness: 0
-  _loop: 0
+  _loop: 1
   _prewarm: 0
-  _duration: 1
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -10674,7 +10958,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 10
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -10806,7 +11090,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0.3
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -10823,7 +11107,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 5
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -10957,7 +11241,7 @@ MonoBehaviour:
     to: 1
   _sizeOverLifetime:
     separable: 1
-    separated: 1
+    separated: 0
     mainCurve:
       m_Mode: 1
       m_CurveMultiplier: 1
@@ -11049,15 +11333,6 @@ MonoBehaviour:
           weightedMode: 0
           inWeight: 0
           outWeight: 0
-        - serializedVersion: 3
-          time: 0.4936562
-          value: 10
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 1
@@ -11558,7 +11833,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_ConstantMin: 0
     m_ConstantMax: 1
-  _alignToDirection: 1
+  _alignToDirection: 0
   _gravity:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -11755,19 +12030,16 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 10
-    used: 0
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
   _trailWidth:
-    m_Mode: 0
-    m_CurveMultiplier: 0
+    m_Mode: 1
+    m_CurveMultiplier: 1
     m_CurveMin:
       serializedVersion: 2
       m_Curve: []
@@ -11776,12 +12048,30 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 1
+    m_ConstantMax: 0
   _trailLifetime: 1
   _minimumVertexDistance: 10
   _trailColorOverLifetime:
@@ -11937,7 +12227,7 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
+  moduleEmitterFoldout: 0
   moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
@@ -12028,7 +12318,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -12036,7 +12326,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  _main: {fileID: 4954668651072568721}
+  _main: {fileID: 0}
   _children: []
   _space: 0
   _timeScale: 1
@@ -12044,21 +12334,21 @@ MonoBehaviour:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
   _shape: 1
-  _spread: 1
+  _spread: 0
   _spreadLoop: 1
-  _startDelay: 0.2
-  _radius: 1
+  _startDelay: 0
+  _radius: 50
   _width: 100
   _height: 100
   _angle: 45
   _length: 100
   _fitRect: 0
-  _emitOnSurface: 0
+  _emitOnSurface: 1
   _emitterThickness: 0
-  _loop: 0
+  _loop: 1
   _prewarm: 0
-  _duration: 1
-  _playMode: 1
+  _duration: 5
+  _playMode: 2
   _startSize:
     separable: 1
     separated: 0
@@ -12078,7 +12368,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_ConstantMin: 0
-      m_ConstantMax: 10
+      m_ConstantMax: 40
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -12210,7 +12500,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0.3
+    m_ConstantMax: 1
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -12227,7 +12517,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 5
+    m_ConstantMax: 2
   _colorOverLifetime:
     m_Mode: 1
     m_GradientMin:
@@ -12361,7 +12651,7 @@ MonoBehaviour:
     to: 1
   _sizeOverLifetime:
     separable: 1
-    separated: 1
+    separated: 0
     mainCurve:
       m_Mode: 1
       m_CurveMultiplier: 1
@@ -12453,15 +12743,6 @@ MonoBehaviour:
           weightedMode: 0
           inWeight: 0
           outWeight: 0
-        - serializedVersion: 3
-          time: 0.4936562
-          value: 10
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0.33333334
-          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 1
@@ -12962,7 +13243,7 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_ConstantMin: 0
     m_ConstantMax: 1
-  _alignToDirection: 1
+  _alignToDirection: 0
   _gravity:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -13159,19 +13440,16 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 0
+  _rate: 50
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts:
-  - time: 0
-    count: 10
-    used: 0
+  _bursts: []
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
   _trailWidth:
-    m_Mode: 0
-    m_CurveMultiplier: 0
+    m_Mode: 1
+    m_CurveMultiplier: 1
     m_CurveMin:
       serializedVersion: 2
       m_Curve: []
@@ -13180,12 +13458,30 @@ MonoBehaviour:
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve: []
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 1
+    m_ConstantMax: 0
   _trailLifetime: 1
   _minimumVertexDistance: 10
   _trailColorOverLifetime:
@@ -13341,7 +13637,7 @@ MonoBehaviour:
   _onStop:
     m_PersistentCalls:
       m_Calls: []
-  moduleEmitterFoldout: 1
+  moduleEmitterFoldout: 0
   moduleParticleFoldout: 0
   moduleMovementFoldout: 0
   moduleEventsFoldout: 0
@@ -14120,7 +14416,7 @@ PrefabInstance:
     - target: {fileID: 344689665361558092, guid: deb1767c1fa77d146a5f8da689d25240,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -17.499939
+      value: -17.5
       objectReference: {fileID: 0}
     - target: {fileID: 1379699065435687203, guid: deb1767c1fa77d146a5f8da689d25240,
         type: 3}
@@ -15885,6 +16181,7 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 1554625399}
   - {fileID: 835334390}
+  - {fileID: 411340412}
   - {fileID: 1827778444}
   - {fileID: 754579499}
   - {fileID: 865753913}

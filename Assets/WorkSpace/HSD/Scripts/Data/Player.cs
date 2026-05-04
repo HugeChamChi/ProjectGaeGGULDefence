@@ -1,25 +1,17 @@
 using Cysharp.Threading.Tasks;
-using GaeGGUL.Shop;
 
 // 플레이어와 관련된 플레이어 데이터, 프로필 Unlock여부, 우편 등을 관리하는 클래스
 public static class Player
 {
-    public static PlayerDataController PlayerData   { get; private set; }
-    public static ProfileDataManager Profile        { get; private set; }
-    public static MailManager Mail                  { get; private set; }
-    public static PlayerCharacterManager Character  { get; private set; }
-    public static ShopDataManager Shop              { get; private set; }
-    public static DailyManager Daily                { get; private set; }
+    public static PlayerDataController PlayerData   { get; private set; } = new();
+    public static ProfileDataManager Profile        { get; private set; } = new();
+    public static MailManager Mail                  { get; private set; } = new();
+    public static PlayerCharacterManager Character  { get; private set; } = new();
+    public static ShopDataManager Shop              { get; private set; } = new();
+    public static DailyManager Daily                { get; private set; } = new();
 
     public async static UniTask InitializeAsync()
     {
-        PlayerData = new();
-        Profile = new();
-        Mail = new();
-        Character = new();
-        Shop = new();
-        Daily = new();
-
         // 1. 핵심 데이터(플레이어 정보) 먼저 초기화
         await PlayerData.InitalizeAsync();
 

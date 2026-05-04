@@ -3,23 +3,16 @@ using UnityEngine;
 
 public class DynamicShopSpawner : MonoBehaviour
 {
-    [SerializeField] private List<DynamicShopTable> _shopList;
-    [SerializeField] private Transform _parent;
+    [SerializeField] private Transform _parent; // 버튼이 생성될 위치
+    [SerializeField] private DynamicShopPopupManager _popupManager; // 필드 주입을 위한 참조
 
-    private Dictionary<string, DynamicShopTable> _shopTableDict = new Dictionary<string, DynamicShopTable>();
-
-    private void Awake()
-    {
-        foreach (var shop in _shopList)
-        {
-            _shopTableDict[shop.ShopID] = shop;
-        }
-    }
+    private Dictionary<string, GameObject> _spawnedButtons = new Dictionary<string, GameObject>();
 
     private void Start()
     {
         // 이벤트 구독
         Player.Shop.Dynamic.OnShopActivated += OnShopActivated;
+        Player.Shop.Dynamic.OnShopCompleted += OnShopCompleted;
         
         // 이미 활성화된 상점들 스폰
         Player.Shop.Dynamic.CheckActiveShops();
@@ -28,27 +21,40 @@ public class DynamicShopSpawner : MonoBehaviour
     private void OnDestroy()
     {
         if (Player.Shop.Dynamic != null)
+        {
             Player.Shop.Dynamic.OnShopActivated -= OnShopActivated;
+            Player.Shop.Dynamic.OnShopCompleted -= OnShopCompleted;
+        }
     }
 
     private void OnShopActivated(string shopID, bool isFirstTime)
     {
-        if (!_shopTableDict.TryGetValue(shopID, out var shopTable)) return;
+        // 이미 생성된 버튼이 있다면 무시
+        if (_spawnedButtons.ContainsKey(shopID)) return;
 
-        // 이미 완료된 경우 무시 (DataManager에서 걸러지지만 이중 확인)
+        var shopData = Table.Shop.Dynamic.Get(shopID);
+        if (shopData == null) return;
+
         if (Player.Shop.Dynamic.IsCompleted(shopID)) return;
 
         // 버튼 생성
-        var buttonObj = RM.Instantiate(shopTable.ButtonPrefab, _parent, false);
+        var buttonObj = RM.Instantiate(shopData.ButtonPrefab, _parent, false);
         if (buttonObj.TryGetComponent<UI_DynamicShopButton>(out var btn))
         {
-            btn.Initialize(shopTable);
+            // PopupManager를 버튼에 주입
+            btn.Initialize(shopData, _popupManager);
         }
 
-        // 처음 이벤트로 인한 활성화라면 패널도 즉시 띄움
-        if (isFirstTime)
+        _spawnedButtons[shopID] = buttonObj;
+    }
+
+    private void OnShopCompleted(string shopID)
+    {
+        if (_spawnedButtons.TryGetValue(shopID, out var buttonObj))
         {
-            RM.Instantiate(shopTable.PanelPrefab);
+            // 버튼 제거
+            RM.Destroy(buttonObj);
+            _spawnedButtons.Remove(shopID);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace GaeGGUL.Shop
                 for (int i = 0; i < dailyItemIds.Count; i++)
                 {
                     int id = int.Parse(dailyItemIds[i].ToString());
-                    var item = Table.Shop.GetItem(id);
+                    var item = Table.Shop.Daily.GetItem(id);
                     if (item != null) _dailyItems.Add(item);
                 }
 
@@ -55,14 +55,14 @@ namespace GaeGGUL.Shop
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
 
-            var mandatoryFreeItem = Table.Shop.GetItem(1001);
+            var mandatoryFreeItem = Table.Shop.Daily.GetItem(1001);
             if (mandatoryFreeItem != null)
             {
                 _dailyItems.Add(mandatoryFreeItem);
             }
 
             List<ShopItemData> pool = new List<ShopItemData>();
-            foreach (var item in Table.Shop.AllItems)
+            foreach (var item in Table.Shop.Daily.AllItems)
             {
                 if (item.ShopID == 1001) continue;
                 pool.Add(item);
@@ -102,7 +102,7 @@ namespace GaeGGUL.Shop
 
         public async UniTask<bool> BuyItem(int shopID)
         {
-            var item = Table.Shop.GetItem(shopID);
+            var item = Table.Shop.Daily.GetItem(shopID);
             if (item == null) return false;
             if (_purchasedItemIDs.Contains(shopID)) return false;
 
