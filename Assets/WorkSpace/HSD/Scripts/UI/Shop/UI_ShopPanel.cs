@@ -1,5 +1,4 @@
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 
 public class UI_ShopPanel : UI_Base
 {
@@ -7,7 +6,7 @@ public class UI_ShopPanel : UI_Base
 
     private void OnEnable()
     {
-        dailyShopController.Setup(Player.Shop.DailyItems);
+        dailyShopController.Setup(Player.Shop.Daily.DailyItems);
     }
 
     public void RefreshUI()

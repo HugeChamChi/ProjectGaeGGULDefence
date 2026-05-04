@@ -12,7 +12,7 @@ public class Test_Initalizer : MonoBehaviour
     private async UniTask StartAsync()
     {
         await UniTask.WaitForSeconds(0.1f);
-        Table.Shop.InitializeAsync().Forget();
+        Table.InitializeAsync().Forget();
         Player.InitializeAsync().Forget();
     }
 }

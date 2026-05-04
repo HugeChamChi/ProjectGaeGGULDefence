@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 737ad0496bee50c47aa72caa25d435c9, type: 3}
+  m_Name: A
+  m_EditorClassIdentifier: 
+  ShopID: A
+  ButtonPrefab: {fileID: 1559025755163276019, guid: f68187df9a36d3a4aa9dd13840dba16e,
+    type: 3}
+  PanelPrefab: {fileID: 2694400111804962017, guid: 3f322672a5ec92c4ebef79c617d2c569,
+    type: 3}
+  Day: 1
+  Hour: 1
+  Minute: 1
+  Second: 1

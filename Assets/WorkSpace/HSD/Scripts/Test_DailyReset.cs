@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
+using GaeGGUL.Core;
 
 public class Test_DailyReset : MonoBehaviour
 {
@@ -74,14 +75,14 @@ public class Test_DailyReset : MonoBehaviour
         var shop = Player.Shop;
 
         Debug.Log("========================================");
-        Debug.Log($"<b>[현재 서버 날짜]</b> {daily.GetServerTime():yyyy-MM-dd}");
+        Debug.Log($"<b>[현재 서버 날짜]</b> {Server.GetServerTime():yyyy-MM-dd}");
         Debug.Log($"<b>[마지막 리셋 기록]</b> {data.LastResetDate}");
         Debug.Log($"<b>[오늘 첫 접속 여부]</b> {daily.IsNewDay}");
         
-        if (shop != null && shop.DailyItems != null)
+        if (shop != null && shop.Daily.DailyItems != null)
         {
             string items = "";
-            foreach (var item in shop.DailyItems) items += $"[{item.ShopID}] ";
+            foreach (var item in shop.Daily.DailyItems) items += $"[{item.ShopID}] ";
             Debug.Log($"<b>[상점 아이템 목록]</b> {items}");
         }
         Debug.Log("========================================");
