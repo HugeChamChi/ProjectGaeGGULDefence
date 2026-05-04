@@ -13,10 +13,9 @@ public class DailyShopTable
 
     public async UniTask InitializeAsync()
     {
-        var bro = Backend.Chart.GetChartContents(Chart.GetID(SHOP_DAILIY));
-        if (bro.IsSuccess())
+        JsonData rows = Chart.GetChartByName(SHOP_DAILIY);
+        if (rows != null)
         {
-            JsonData rows = bro.FlattenRows();
             _allShopItems.Clear();
             for (int i = 0; i < rows.Count; i++)
             {
@@ -27,10 +26,6 @@ public class DailyShopTable
                 }
             }
             Debug.Log($"DailyShopTable: Loaded {_allShopItems.Count} items from chart.");
-        }
-        else
-        {
-            Debug.LogError($"Failed to load Shop Chart: {bro}");
         }
     }
 

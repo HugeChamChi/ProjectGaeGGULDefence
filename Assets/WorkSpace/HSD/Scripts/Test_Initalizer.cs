@@ -12,6 +12,8 @@ public class Test_Initalizer : MonoBehaviour
     private async UniTask StartAsync()
     {
         await UniTask.WaitForSeconds(0.1f);
+        await Chart.InitializeAsync();
+
         Table.InitializeAsync().Forget();
         Player.InitializeAsync().Forget();
     }

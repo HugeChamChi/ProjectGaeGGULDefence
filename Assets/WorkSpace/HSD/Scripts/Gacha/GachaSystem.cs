@@ -50,46 +50,32 @@ public class GachaSystem<T> where T : IGachaData
 
     private async UniTask LoadGachaCostAsync()
     {
-        bool isCompleted = false;
-        Backend.Chart.GetChartContents(_costChartName, callback =>
+        try
         {
-            try
+            JsonData rows = Chart.GetChartByName(_costChartName);
+            if (rows != null)
             {
-                if (callback.IsSuccess())
+                for (int i = 0; i < rows.Count; i++)
                 {
-                    JsonData rows = callback.FlattenRows();
-                    for (int i = 0; i < rows.Count; i++)
-                    {
-                        var row = rows[i];
+                    var row = rows[i];
 
-                        // 데이터 존재 여부와 ID 매칭 확인
-                        if (row.ContainsKey("gachaID") && row["gachaID"].ToString() == _gachaTableName)
+                    // 데이터 존재 여부와 ID 매칭 확인
+                    if (row.ContainsKey("gachaID") && row["gachaID"].ToString() == _gachaTableName)
+                    {
+                        if (row.ContainsKey("costAmount"))
                         {
-                            if (row.ContainsKey("costAmount"))
-                            {
-                                Cost = int.Parse(row["costAmount"].ToString());
-                                Debug.Log($"[Gacha] {_gachaTableName} 비용 로드 완료: {Cost}");
-                                return;
-                            }
+                            Cost = int.Parse(row["costAmount"].ToString());
+                            Debug.Log($"[Gacha] {_gachaTableName} 비용 로드 완료: {Cost}");
+                            return;
                         }
                     }
-                    Debug.LogWarning($"[Gacha] {_costChartName}에서 gachaID '{_gachaTableName}'를 찾을 수 없습니다.");
                 }
-                else
-                {
-                    Debug.LogError($"[Gacha] 가챠 비용 차트 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
+                Debug.LogWarning($"[Gacha] {_costChartName}에서 gachaID '{_gachaTableName}'를 찾을 수 없습니다.");
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Gacha] 가챠 비용 파싱 중 오류 발생: {e.Message}");
-            }
-            finally
-            {
-                isCompleted = true;
-            }
-        });
-
-        await UniTask.WaitUntil(() => isCompleted);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[Gacha] 가챠 비용 파싱 중 오류 발생: {e.Message}");
+        }
     }
 }

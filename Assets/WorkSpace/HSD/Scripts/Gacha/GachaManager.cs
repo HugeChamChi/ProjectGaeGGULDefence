@@ -10,8 +10,8 @@ public class GachaManager
     {
         // 캐릭터 가챠 시스템 생성 및 데이터 리졸버 연결
         CharacterGacha = new GachaSystem<ICharacterData>(
-            Chart.GetID(CHAR_GACHA_COST),
-            Chart.GetID(CHAR_GACHA_PROBABILITY),
+            CHAR_GACHA_PROBABILITY,
+            CHAR_GACHA_COST,
             id =>
             {
                 ICharacterData data = Table.Character.GetCharacterData(id);

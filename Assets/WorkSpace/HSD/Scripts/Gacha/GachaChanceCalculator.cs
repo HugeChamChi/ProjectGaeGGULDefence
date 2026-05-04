@@ -7,7 +7,8 @@ using UnityEngine;
 
 public class GachaChanceCalculator
 {
-    private readonly string _gachaTableID;
+    private readonly string _gachaTableName;
+    private string _gachaTableID;
     public IReadOnlyList<ProbabilityItem> ProbabilityItems => _probabilityItems;
     private List<ProbabilityItem> _probabilityItems = new List<ProbabilityItem>();
     private double _totalProbability = 0;
@@ -20,9 +21,9 @@ public class GachaChanceCalculator
         public double cumulativeProbability;
     }
 
-    public GachaChanceCalculator(string gachaTableID)
+    public GachaChanceCalculator(string gachaTableName)
     {
-        _gachaTableID = gachaTableID;
+        _gachaTableName = gachaTableName;
     }
 
     public async UniTask LoadChanceDataAsync()
@@ -30,19 +31,12 @@ public class GachaChanceCalculator
         _probabilityItems.Clear();
         _totalProbability = 0;
 
-        var bro = Backend.Probability.GetProbabilityContents(_gachaTableID);
+        _gachaTableID = Chart.GetProbabilityIdByName(_gachaTableName);
+        JsonData rows = Chart.GetProbabilityDataByName(_gachaTableName);
 
-        if (!bro.IsSuccess())
+        if (rows == null)
         {
-            Debug.LogError($"[Gacha] 확률 테이블 로드 실패: {bro}");
-            return;
-        }
-
-        JsonData rows = bro.FlattenRows();
-
-        if (rows == null || !rows.IsArray)
-        {
-            Debug.LogError($"[Gacha] 확률 데이터 형식이 잘못되었거나 비어있습니다.");
+            Debug.LogError($"[Gacha] 확률 데이터 로드 실패: {_gachaTableName}");
             return;
         }
 
@@ -77,7 +71,7 @@ public class GachaChanceCalculator
             });
         }
 
-        Debug.Log($"[Gacha] 로드 완료 | 항목 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
+        Debug.Log($"[Gacha] {_gachaTableName} 로드 완료 | 항목 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
     }
 
     // 1회 뽑기 - 서버 확률 사용
