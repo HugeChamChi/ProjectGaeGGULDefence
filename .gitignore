@@ -84,3 +84,5 @@ CLAUDE.md
 /.agents
 AGENTS.md
 /Assets/Imports
+/.gemini
+Assets/GEMINI.md

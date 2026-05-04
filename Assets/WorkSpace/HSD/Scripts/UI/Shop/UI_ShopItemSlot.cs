@@ -70,14 +70,14 @@ public class UI_ShopItemSlot : MonoBehaviour
 
     public void RefreshStatus()
     {
-        bool isSoldOut = Player.Shop.IsSoldOut(_data.ShopID);
+        bool isSoldOut = Player.Shop.Daily.IsSoldOut(_data.ShopID);
         soldOutObject.SetActive(isSoldOut);
         buyButton.interactable = !isSoldOut;
     }
 
     private async void OnBuyClicked()
     {
-        bool success = await Player.Shop.BuyItem(_data.ShopID);
+        bool success = await Player.Shop.Daily.BuyItem(_data.ShopID);
         if (success)
         {
             RefreshStatus();
