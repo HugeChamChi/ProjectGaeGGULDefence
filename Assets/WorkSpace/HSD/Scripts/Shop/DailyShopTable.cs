@@ -9,10 +9,11 @@ public class DailyShopTable
 {
     private Dictionary<int, ShopItemData> _allShopItems = new Dictionary<int, ShopItemData>();
     public IEnumerable<ShopItemData> AllItems => _allShopItems.Values;
+    private const string SHOP_DAILIY = "Shop_Daily";
 
     public async UniTask InitializeAsync()
     {
-        var bro = Backend.Chart.GetChartContents(Chart.SHOP_DAILY_ID);
+        var bro = Backend.Chart.GetChartContents(Chart.GetID(SHOP_DAILIY));
         if (bro.IsSuccess())
         {
             JsonData rows = bro.FlattenRows();

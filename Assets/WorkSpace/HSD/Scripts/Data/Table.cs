@@ -13,6 +13,10 @@ public static class Table
 
     public static async UniTask InitializeAsync()
     {
+        // 1. 차트 ID를 먼저 로드합니다.
+        await Chart.InitializeAsync();
+
+        // 2. 로드된 ID를 사용하여 나머지 테이블들을 초기화합니다.
         await UniTask.WhenAll(
             Profile.InitializeAsync(),
             Character.InitializeAsync(),
