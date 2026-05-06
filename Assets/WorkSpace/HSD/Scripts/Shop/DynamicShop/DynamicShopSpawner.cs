@@ -4,7 +4,7 @@ using UnityEngine;
 public class DynamicShopSpawner : MonoBehaviour
 {
     [SerializeField] private Transform _parent; // 버튼이 생성될 위치
-    [SerializeField] private DynamicShopPopupManager _popupManager; // 필드 주입을 위한 참조
+    [SerializeField] private DynamicShopPopupController _popupManager; // 필드 주입을 위한 참조
 
     private Dictionary<string, GameObject> _spawnedButtons = new Dictionary<string, GameObject>();
 
