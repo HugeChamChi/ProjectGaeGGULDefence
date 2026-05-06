@@ -130,8 +130,8 @@ TextureImporter:
         y: 0
         width: 512
         height: 512
-      alignment: 9
-      pivot: {x: 0.42, y: 0.48}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -151,8 +151,8 @@ TextureImporter:
         y: 0
         width: 512
         height: 512
-      alignment: 9
-      pivot: {x: 0.42, y: 0.48}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -168,12 +168,12 @@ TextureImporter:
       name: Frog_Ninja_attack_2
       rect:
         serializedVersion: 2
-        x: 1027
+        x: 1024
         y: 0
         width: 512
         height: 512
-      alignment: 9
-      pivot: {x: 0.42, y: 0.48}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -193,8 +193,8 @@ TextureImporter:
         y: 0
         width: 512
         height: 512
-      alignment: 9
-      pivot: {x: 0.42, y: 0.48}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
