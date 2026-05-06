@@ -36,6 +36,6 @@ Material:
     - _IconMaxScale: 2.5
     - _Progress: 1
     m_Colors:
-    - _Color: {r: 0.03773582, g: 0.03773582, b: 0.03773582, a: 1}
+    - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _GridSize: {r: 6, g: 12, b: 0, a: 0}
   m_BuildTextureStacks: []
