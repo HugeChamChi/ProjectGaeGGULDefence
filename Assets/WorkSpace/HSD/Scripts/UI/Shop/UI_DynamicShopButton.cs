@@ -12,9 +12,9 @@ public class UI_DynamicShopButton : MonoBehaviour
 
     private DynamicShopData _data;
     private DateTime _endTime;
-    private DynamicShopPopupManager _popupManager;
+    private DynamicShopPopupController _popupManager;
 
-    public void Initialize(DynamicShopData data, DynamicShopPopupManager popupManager)
+    public void Initialize(DynamicShopData data, DynamicShopPopupController popupManager)
     {
         _data = data;
         _popupManager = popupManager;

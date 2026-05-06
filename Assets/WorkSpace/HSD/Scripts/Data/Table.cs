@@ -5,11 +5,11 @@ using UnityEngine;
 public static class Table
 {
     public static CouponManager Coupon          { get; private set; } = new();
-    public static ProfileItemManager Profile    { get; private set; } = new();
-    public static CharacterManager Character    { get; private set; } = new();
-    public static ItemManager Item              { get; private set; } = new();
-    public static ShopTableContainer Shop       { get; private set; } = new();
-    public static GachaManager Gacha            { get; private set; } = new();
+    public static ProfileItemTable Profile      { get; private set; } = new();
+    public static CharacterTable Character      { get; private set; } = new();
+    public static ItemTable Item                { get; private set; } = new();
+    public static ShopTables Shop               { get; private set; } = new();
+    public static GachaTable Gacha              { get; private set; } = new();
 
     public static async UniTask InitializeAsync()
     {

@@ -113,7 +113,7 @@ public class UI_ProfileChangePanel : UI_ProfilePanelBase
         Player.Profile.Data.CurrentFrameId = currentFrameData.Id;
 
         // Save to backend
-        Player.Profile.Save();
+        //  Player.Profile.Save();
 
         // Refresh slot lists to show new "Equipped" state
         iconController.Refresh();

@@ -7,7 +7,8 @@ using UnityEngine;
 
 public class GachaChanceCalculator
 {
-    private readonly string _gachaTableID;
+    private readonly string _gachaTableName;
+    private string _gachaTableID;
     public IReadOnlyList<ProbabilityItem> ProbabilityItems => _probabilityItems;
     private List<ProbabilityItem> _probabilityItems = new List<ProbabilityItem>();
     private double _totalProbability = 0;
@@ -20,9 +21,9 @@ public class GachaChanceCalculator
         public double cumulativeProbability;
     }
 
-    public GachaChanceCalculator(string gachaTableID)
+    public GachaChanceCalculator(string gachaTableName)
     {
-        _gachaTableID = gachaTableID;
+        _gachaTableName = gachaTableName;
     }
 
     public async UniTask LoadChanceDataAsync()
@@ -30,39 +31,25 @@ public class GachaChanceCalculator
         _probabilityItems.Clear();
         _totalProbability = 0;
 
-        var bro = Backend.Probability.GetProbabilityContents(_gachaTableID);
+        _gachaTableID = Chart.GetProbabilityIdByName(_gachaTableName);
+        JsonData rows = Chart.GetProbabilityDataByName(_gachaTableName);
 
-        if (!bro.IsSuccess())
+        if (rows == null)
         {
-            Debug.LogError($"[Gacha] 확률 테이블 로드 실패: {bro}");
-            return;
-        }
-
-        JsonData rows = bro.FlattenRows();
-
-        if (rows == null || !rows.IsArray)
-        {
-            Debug.LogError($"[Gacha] 확률 데이터 형식이 잘못되었거나 비어있습니다.");
+            Debug.LogError($"[Gacha] 확률 데이터 로드 실패: {_gachaTableName}");
             return;
         }
 
         for (int i = 0; i < rows.Count; i++)
         {
             var row = rows[i];
+            int itemID = row.GetSafeInt("itemID", -1);
+            double percent = row.GetSafeDouble("percent", 0);
+            string itemName = row.GetSafeString("itemName", "Unknown");
 
-            if (!row.IsObject || 
-                !row.Keys.Contains("itemID") ||
-                !row.Keys.Contains("itemName") ||
-                !row.Keys.Contains("percent"))
+            if (itemID == -1)
             {
-                Debug.LogWarning($"[Gacha] row[{i}] 데이터 누락 또는 형식 오류, 스킵합니다.");
-                continue;
-            }
-
-            if (!int.TryParse(row["itemID"].ToString(), out int itemID) ||
-                !double.TryParse(row["percent"].ToString(), out double percent))
-            {
-                Debug.LogWarning($"[Gacha] row[{i}] 파싱 실패, 스킵합니다.");
+                Debug.LogWarning($"[Gacha] row[{i}] 데이터 누락 또는 파싱 실패, 스킵합니다.");
                 continue;
             }
 
@@ -71,13 +58,13 @@ public class GachaChanceCalculator
             _probabilityItems.Add(new ProbabilityItem
             {
                 itemID = itemID,
-                itemName = row["itemName"].ToString(),
+                itemName = itemName,
                 percent = percent,
                 cumulativeProbability = _totalProbability
             });
         }
 
-        Debug.Log($"[Gacha] 로드 완료 | 항목 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
+        Debug.Log($"[Gacha] {_gachaTableName} 로드 완료 | 항목 수: {_probabilityItems.Count}, 총 확률: {_totalProbability}");
     }
 
     // 1회 뽑기 - 서버 확률 사용
@@ -159,42 +146,12 @@ public class GachaChanceCalculator
             for (int i = 0; i < results.Count; i++)
             {
                 var row = results[i];
-                if (row.IsObject)
+                // GetSafeInt가 내부적으로 "itemID", "N" 필드 등을 모두 처리함
+                ids[i] = row.GetSafeInt("itemID", row.GetSafeInt("itemid", -1));
+                
+                if (ids[i] == -1)
                 {
-                    // 뒤끝 데이터는 대문자/소문자 구분이 있을 수 있으므로 둘 다 확인
-                    string key = row.Keys.Contains("itemID") ? "itemID" : (row.Keys.Contains("itemid") ? "itemid" : null);
-
-                    if (key != null)
-                    {
-                        string idStr = row[key].ToString();
-                        
-                        // {"N":"123"} 또는 {"S":"123"} 구조 대응
-                        if (row[key].IsObject)
-                        {
-                            if (row[key].Keys.Contains("N")) idStr = row[key]["N"].ToString();
-                            else if (row[key].Keys.Contains("S")) idStr = row[key]["S"].ToString();
-                        }
-                        
-                        if (int.TryParse(idStr, out int itemID))
-                        {
-                            ids[i] = itemID;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[Gacha] row[{i}]의 {key} 파싱 실패: {idStr}");
-                            ids[i] = -1;
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[Gacha] row[{i}]에 itemID 필드가 없습니다. Keys: {string.Join(", ", row.Keys)}");
-                        ids[i] = -1;
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"[Gacha] row[{i}]가 오브젝트 형식이 아닙니다: {row.ToJson()}");
-                    ids[i] = -1;
+                    Debug.LogWarning($"[Gacha] row[{i}] 파싱 실패: {row.ToJson()}");
                 }
             }
 

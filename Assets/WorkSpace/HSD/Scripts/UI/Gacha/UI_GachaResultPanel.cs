@@ -58,20 +58,24 @@ public class UI_GachaResultPanel : UI_Base
         appearSequence?.Kill();
         appearSequence = DOTween.Sequence();
 
-        // 3. 중앙 집중식 연출 구성
         for (int i = 0; i < items.Length; i++)
         {
             var slot = itemSlots[i];
             slot.Setup(items[i]);
             slot.gameObject.SetActive(true);
-
-            // 패널에서 직접 슬롯의 트랜스폼을 제어
-            slot.transform.localScale = (Vector3)startScale;
+            slot.transform.localScale = startScale;
             slot.transform.DOKill();
-            
-            appearSequence.Join(slot.transform.DOScale(Vector3.one, animationDuration)
-                .SetEase(appearCurve)
-                .SetDelay(i * animationInterval)).ToUniTask().Forget();
+        }
+
+        // 2. 연출 구성 (Insert를 사용하여 타임라인을 명확히 정의)
+        for (int i = 0; i < items.Length; i++)
+        {
+            var slot = itemSlots[i];
+            float startTime = i * animationInterval;
+
+            appearSequence.Insert(startTime,
+                slot.transform.DOScale(Vector3.one, animationDuration)
+                    .SetEase(appearCurve)).ToUniTask().Forget();
         }
 
         // 4. 연출 대기
@@ -82,7 +86,6 @@ public class UI_GachaResultPanel : UI_Base
     {
         var newSlot = RM.Instantiate(itemSlotPrefab, scroll.content, true);
         if (newSlot != null) itemSlots.Add(newSlot);
-        newSlot.gameObject.SetActive(false);
     }
 
     public override void Close()
