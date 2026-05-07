@@ -1,6 +1,6 @@
-using UnityEngine;
-using DG.Tweening;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using UnityEngine;
 
 namespace GaeGGUL.Animation
 {
@@ -41,15 +41,15 @@ namespace GaeGGUL.Animation
         public async UniTask Play()
         {
             _target.DOKill();
-            Sequence seq = DOTween.Sequence();
 
-            seq.Append(GetSizeTween(_originSize * squashMultiplier, duration * 0.2f).SetEase(Ease.OutQuad));
-            seq.Append(GetSizeTween(_originSize * stretchMultiplier, duration * 0.2f).SetEase(Ease.OutQuad));
-            seq.Join(GetMoveTween(_originPos + new Vector2(0, jumpPower), duration * 0.3f).SetEase(Ease.OutQuad));
-            seq.Append(GetMoveTween(_originPos, duration * 0.3f).SetEase(Ease.InQuad));
-            seq.Join(GetSizeTween(_originSize, duration * 0.3f).SetEase(Ease.OutBack));
-            seq.Append(GetSizeTween(_originSize * new Vector2(1.15f, 0.85f), 0.1f));
-            seq.Append(GetSizeTween(_originSize, 0.1f));
+            Sequence seq = DOTween.Sequence()
+                .Append(GetSizeTween(_originSize * squashMultiplier, duration * 0.2f).SetEase(Ease.OutQuad))
+                .Append(GetSizeTween(_originSize * stretchMultiplier, duration * 0.2f).SetEase(Ease.OutQuad))
+                .Join(GetMoveTween(_originPos + new Vector2(0, jumpPower), duration * 0.3f).SetEase(Ease.OutQuad))
+                .Append(GetMoveTween(_originPos, duration * 0.3f).SetEase(Ease.InQuad))
+                .Join(GetSizeTween(_originSize, duration * 0.3f).SetEase(Ease.OutBack))
+                .Append(GetSizeTween(_originSize * new Vector2(1.15f, 0.85f), 0.1f))
+                .Append(GetSizeTween(_originSize, 0.1f));
 
             await seq.Play().ToUniTask();
         }

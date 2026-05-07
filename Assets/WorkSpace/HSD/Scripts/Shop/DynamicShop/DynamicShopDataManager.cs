@@ -10,6 +10,7 @@ public class DynamicShopDataManager
     private const string PLAYER_DYNAMIC_SHOP_TABLE = "PlayerDynamicShopData";
     private const string COLUMN_SHOPS = "Shops";
 
+    private string _inDate = string.Empty;
     private Dictionary<string, long> _activeShops = new Dictionary<string, long>(); // ShopID -> StartTime (Ticks/Unix)
     private HashSet<string> _completedShops = new HashSet<string>();
 
@@ -25,19 +26,35 @@ public class DynamicShopDataManager
         var bro = Backend.GameData.GetMyData(PLAYER_DYNAMIC_SHOP_TABLE, new Where());
         if (bro.IsSuccess() && bro.FlattenRows().Count > 0)
         {
-            JsonData shops = bro.FlattenRows()[0][COLUMN_SHOPS];
-            for (int i = 0; i < shops.Count; i++)
+            JsonData row = bro.FlattenRows()[0];
+            _inDate = row["inDate"].ToString();
+
+            if (row.ContainsKey(COLUMN_SHOPS))
             {
-                string id = shops[i]["ShopID"].ToString();
-                bool completed = (bool)shops[i]["IsCompleted"];
-                
-                if (completed)
+                JsonData shops = row[COLUMN_SHOPS];
+                if (shops != null && shops.IsArray)
                 {
-                    _completedShops.Add(id);
-                }
-                else if (shops[i].Keys.Contains("StartTime"))
-                {
-                    _activeShops[id] = long.Parse(shops[i]["StartTime"].ToString());
+                    for (int i = 0; i < shops.Count; i++)
+                    {
+                        JsonData shopJson = shops[i];
+                        if (shopJson.ContainsKey("ShopID") && shopJson.ContainsKey("IsCompleted"))
+                        {
+                            string id = shopJson["ShopID"].ToString();
+                            bool completed = shopJson["IsCompleted"].ToString().ToLower() == "true";
+
+                            if (completed)
+                            {
+                                _completedShops.Add(id);
+                            }
+                            else if (shopJson.ContainsKey("StartTime"))
+                            {
+                                if (long.TryParse(shopJson["StartTime"].ToString(), out long time))
+                                {
+                                    _activeShops[id] = time;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -68,36 +85,39 @@ public class DynamicShopDataManager
     private async UniTask SaveAsync()
     {
         Param param = new Param();
-        JsonData shopList = new JsonData();
+        List<Param> shopList = new List<Param>();
         
         foreach (var id in _completedShops)
         {
-            JsonData shop = new JsonData();
-            shop["ShopID"] = id;
-            shop["IsCompleted"] = true;
+            Param shop = new Param();
+            shop.Add("ShopID", id);
+            shop.Add("IsCompleted", true);
             shopList.Add(shop);
         }
 
         foreach (var kvp in _activeShops)
         {
-            JsonData shop = new JsonData();
-            shop["ShopID"] = kvp.Key;
-            shop["IsCompleted"] = false;
-            shop["StartTime"] = kvp.Value.ToString();
+            Param shop = new Param();
+            shop.Add("ShopID", kvp.Key);
+            shop.Add("IsCompleted", false);
+            shop.Add("StartTime", kvp.Value.ToString());
             shopList.Add(shop);
         }
 
         param.Add(COLUMN_SHOPS, shopList);
 
-        var bro = Backend.GameData.GetMyData(PLAYER_DYNAMIC_SHOP_TABLE, new Where());
-        if (bro.IsSuccess() && bro.FlattenRows().Count > 0)
+        if (!string.IsNullOrEmpty(_inDate))
         {
-            string inDate = bro.FlattenRows()[0]["inDate"].ToString();
-            Backend.GameData.UpdateV2(PLAYER_DYNAMIC_SHOP_TABLE, inDate, Backend.UserInDate, param);
+            Backend.GameData.UpdateV2(PLAYER_DYNAMIC_SHOP_TABLE, _inDate, Backend.UserInDate, param);
         }
         else
         {
-            Backend.GameData.Insert(PLAYER_DYNAMIC_SHOP_TABLE, param);
+            // 데이터가 없는 경우 새로 삽입
+            var bro = Backend.GameData.Insert(PLAYER_DYNAMIC_SHOP_TABLE, param);
+            if (bro.IsSuccess())
+            {
+                _inDate = bro.GetInDate();
+            }
         }
     }
 

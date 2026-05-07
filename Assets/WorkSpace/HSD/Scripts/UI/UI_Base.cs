@@ -1,8 +1,12 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public abstract class UI_Base : MonoBehaviour
 {
+    public Action OnClosed;
+    public Action OnOpened;
+
     [Button]
     public virtual void Open()
     {
@@ -19,12 +23,14 @@ public abstract class UI_Base : MonoBehaviour
     {
         gameObject.SetActive(true);
         await OpenAnimationAsync();
+        OnOpened?.Invoke();
     }
 
     public virtual async UniTask CloseAsync()
     {
         await CloseAnimationAsync();
         gameObject.SetActive(false);
+        OnClosed?.Invoke();
     }
 
     protected virtual UniTask OpenAnimationAsync()
