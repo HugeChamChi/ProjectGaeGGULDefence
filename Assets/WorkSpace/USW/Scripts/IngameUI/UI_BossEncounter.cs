@@ -13,7 +13,8 @@ public class UI_BossEncounter : UI_Base
     [Header("UI Elements - Bosses")]
     [SerializeField] private RectTransform currentBoss; // 현재 보스 (낚아채질 대상)
     [SerializeField] private RectTransform nextBoss;    // 다음 보스 (왼쪽에서 등장할 대상)
-    [SerializeField] private Image tongueImage;
+    [SerializeField] private Image tongueImage;         // 혀 몸통 (보스 뒤에 위치)
+    [SerializeField] private Image tongueTip;           // 혀 끝 (보스 앞에 위치하여 샌드위치 효과)
 
     [Header("UI Elements - Text")]
     [SerializeField] private TMP_Text waveText;
@@ -24,13 +25,31 @@ public class UI_BossEncounter : UI_Base
     [SerializeField] private float entranceDuration = 0.5f;
     [SerializeField] private Vector2 tongueDefaultSize = new Vector2(0, 80);
 
-    private Transform _currentBossOriginalParent;
+    private Transform _originalParent;
+    private Vector2 _originalAnchorMin, _originalAnchorMax, _originalPivot, _originalAnchoredPos;
+    private Quaternion _originalRotation;
+    private Transform _tongueTipOriginalParent;
 
     private void Awake()
     {
-        if (currentBoss != null) _currentBossOriginalParent = currentBoss.parent;
+        Setting();
+
         gameObject.SetActive(false); // 초기 비활성화
         ResetElements();
+    }
+
+    private void Setting()
+    {
+        if (currentBoss != null)
+        {
+            _originalParent = currentBoss.parent;
+            _originalAnchorMin = currentBoss.anchorMin;
+            _originalAnchorMax = currentBoss.anchorMax;
+            _originalPivot = currentBoss.pivot;
+            _originalAnchoredPos = currentBoss.anchoredPosition;
+            _originalRotation = currentBoss.rotation;
+        }
+        if (tongueTip != null) _tongueTipOriginalParent = tongueTip.transform.parent;
     }
 
     [Button("보스 교체 연출 최종 테스트")]
@@ -54,7 +73,7 @@ public class UI_BossEncounter : UI_Base
     {
         ResetElements();
 
-        // 1. 초기 등장 연출
+        // 1. 초기 등장 연출 (원래 디자인된 상태로 뿅!)
         if (waveText != null && currentBoss != null)
         {
             // 패널 자체도 뿅 하고 나타남
@@ -66,7 +85,6 @@ public class UI_BossEncounter : UI_Base
             waveText.rectTransform.localScale = Vector3.zero;
             
             currentBoss.gameObject.SetActive(true);
-            currentBoss.anchoredPosition = Vector2.zero;
             currentBoss.localScale = Vector3.zero;
 
             await UniTask.WhenAll(
@@ -77,15 +95,13 @@ public class UI_BossEncounter : UI_Base
 
         await UniTask.Delay(TimeSpan.FromSeconds(0.7f));
 
-        // 2. 낚아서 채가기 (Grab & Pull)
+        // 2. 낚아서 채가기 (Sandwich Grab & Pull)
         if (tongueImage != null && currentBoss != null)
         {
             tongueImage.gameObject.SetActive(true);
             
             // 혀 조준 및 발사
             Vector3 tongueStartWorldPos = tongueImage.rectTransform.position;
-            
-            // 보스의 Pivot 위치와 상관없이 Rect의 정중앙 월드 좌표를 계산하여 조준
             Vector3 targetWorldPos = currentBoss.TransformPoint(currentBoss.rect.center);
             
             Vector2 direction = tongueImage.rectTransform.parent.InverseTransformPoint(targetWorldPos) - 
@@ -97,22 +113,37 @@ public class UI_BossEncounter : UI_Base
             await tongueImage.rectTransform.DOSizeDelta(new Vector2(targetDistance, tongueDefaultSize.y), 0.15f)
                 .SetEase(Ease.OutCubic).ToUniTask();
 
-            // 보스를 혀의 자식으로 편입하여 물리적으로 함께 움직이게 함
+            // [핵심] 낚아채는 '그 순간'에만 연출용 세팅으로 전환
             currentBoss.SetParent(tongueImage.rectTransform, true);
+            currentBoss.anchorMin = new Vector2(1, 0.5f); // 혀의 Pivot이 0일 때, 1이 끝부분(Tip)입니다.
+            currentBoss.anchorMax = new Vector2(1, 0.5f);
+            currentBoss.pivot = new Vector2(0.5f, 0.5f);
+            currentBoss.anchoredPosition = Vector2.zero; // 혀 끝에 밀착
             
-            // 낚아채기 충격
+            if (tongueTip != null)
+            {
+                tongueTip.gameObject.SetActive(true);
+                tongueTip.transform.SetParent(currentBoss, false);
+                tongueTip.rectTransform.anchoredPosition = Vector2.zero;
+                tongueTip.rectTransform.localScale = Vector3.one;
+            }
+
+            // 낚아채기 충격 (Squash)
             currentBoss.DOPunchScale(new Vector3(-0.2f, 0.2f, 0), 0.1f).ToUniTask().Forget();
 
-            // 혀가 감기면서 보스를 완벽하게 끌고 감
-            // 보스가 자식이므로 혀의 Width만 줄여도 자동으로 끌려옴
-            await tongueImage.rectTransform.DOSizeDelta(new Vector2(0, tongueDefaultSize.y), snatchDuration)
-                .SetEase(Ease.InBack).ToUniTask();
+            // 혀 회수 (보스가 혀 끝에 완전히 고정되어 프레임 오차 없이 빨려 들어감)
+            Sequence pullSeq = DOTween.Sequence()
+            .Join(tongueImage.rectTransform.DOSizeDelta(new Vector2(0, tongueDefaultSize.y), snatchDuration).SetEase(Ease.InBack))
+            .Join(currentBoss.DORotate(new Vector3(0, 0, 90f), snatchDuration).SetEase(Ease.InBack));
+            
+            await pullSeq.Play().ToUniTask();
             
             currentBoss.gameObject.SetActive(false);
             tongueImage.gameObject.SetActive(false);
+            if (tongueTip != null) tongueTip.gameObject.SetActive(false);
 
-            // 보스 부모 복구
-            currentBoss.SetParent(_currentBossOriginalParent, false);
+            // 부모 및 레이아웃 복구
+            RestoreBossLayout();
         }
 
         await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
@@ -121,15 +152,12 @@ public class UI_BossEncounter : UI_Base
         if (nextBoss != null)
         {
             nextBoss.gameObject.SetActive(true);
-            nextBoss.anchoredPosition = new Vector2(-1200, 0); // 왼쪽 멀리서 대기
+            nextBoss.anchoredPosition = new Vector2(-1200, 0); 
             nextBoss.localScale = Vector3.one;
 
-            Sequence transitionSeq = DOTween.Sequence();
-            
-            // 왼쪽에서 중앙으로 슬라이드 인
-            transitionSeq.Join(nextBoss.DOAnchorPos(Vector2.zero, entranceDuration).SetEase(Ease.OutBack));
+            Sequence transitionSeq = DOTween.Sequence()
+            .Join(nextBoss.DOAnchorPos(Vector2.zero, entranceDuration).SetEase(Ease.OutBack));
 
-            // WaveText 업데이트
             if (waveText != null)
             {
                 transitionSeq.AppendCallback(() => waveText.text = "WAVE 2");
@@ -148,16 +176,7 @@ public class UI_BossEncounter : UI_Base
     {
         transform.localScale = Vector3.one;
         transform.DOKill();
-
-        if (currentBoss != null)
-        {
-            currentBoss.SetParent(_currentBossOriginalParent, false);
-            currentBoss.anchoredPosition = Vector2.zero;
-            currentBoss.localScale = Vector3.one;
-            currentBoss.rotation = Quaternion.identity;
-            currentBoss.gameObject.SetActive(false);
-            currentBoss.DOKill();
-        }
+        RestoreBossLayout();
 
         if (nextBoss != null)
         {
@@ -174,11 +193,33 @@ public class UI_BossEncounter : UI_Base
             tongueImage.gameObject.SetActive(false);
         }
 
+        if (tongueTip != null)
+        {
+            tongueTip.transform.SetParent(_tongueTipOriginalParent, false);
+            tongueTip.gameObject.SetActive(false);
+        }
+
         if (waveText != null)
         {
             waveText.alpha = 0;
             waveText.rectTransform.localScale = Vector3.one;
             waveText.DOKill();
+        }
+    }
+
+    private void RestoreBossLayout()
+    {
+        if (currentBoss != null)
+        {
+            currentBoss.SetParent(_originalParent, false);
+            currentBoss.anchorMin = _originalAnchorMin;
+            currentBoss.anchorMax = _originalAnchorMax;
+            currentBoss.pivot = _originalPivot;
+            currentBoss.anchoredPosition = _originalAnchoredPos;
+            currentBoss.rotation = _originalRotation;
+            currentBoss.localScale = Vector3.one;
+            currentBoss.gameObject.SetActive(false);
+            currentBoss.DOKill();
         }
     }
 }
