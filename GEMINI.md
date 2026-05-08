@@ -75,8 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **Backend:** TheBackend (뒤끝)
 
 ## Repository Structure
-- `Assets/WorkSpace/`: Primary workspace containing individual team member folders (e.g., `HSD`, `JSY`, `KMS`, `USW`).
-- `Assets/Resources/`: Contains global game assets and settings (e.g., `DOTweenSettings.asset`).
+- `Assets/WorkSpace/`: Primary workspace containing individual team member folders (e.g., `HSD`, `JSY`, `KMS`, `USW`). 전부 다 읽을 필요는 없음 필요하면 물어보는 형식으로, Im HSD
 - `Assets/Scenes/`: Main game scenes (Login, Lobby, Ingame).
 
 ## Development Conventions
