@@ -55,12 +55,12 @@ public class UI_BossEncounter : UI_Base
     [Button("보스 교체 연출 최종 테스트")]
     public void PlayTest()
     {
-        Open();
+        PlayBossTransitionSequence(1).Forget();
     }
 
     protected override async UniTask OpenAnimationAsync()
     {
-        await PlayBossTransitionSequence();
+        
     }
 
     protected override async UniTask CloseAnimationAsync()
@@ -69,8 +69,9 @@ public class UI_BossEncounter : UI_Base
         await transform.DOScale(0f, 0.3f).SetEase(Ease.InBack).ToUniTask();
     }
 
-    private async UniTask PlayBossTransitionSequence()
+    public async UniTask PlayBossTransitionSequence(int currentWave)
     {
+        Open();
         ResetElements();
 
         // 1. 초기 등장 연출 (원래 디자인된 상태로 뿅!)
@@ -80,7 +81,7 @@ public class UI_BossEncounter : UI_Base
             transform.localScale = Vector3.zero;
             transform.DOScale(1f, popDuration).SetEase(Ease.OutBack).ToUniTask().Forget();
 
-            waveText.text = "WAVE 1";
+            waveText.text = $"WAVE {currentWave.ToString()}";
             waveText.alpha = 1f;
             waveText.rectTransform.localScale = Vector3.zero;
             
@@ -160,8 +161,8 @@ public class UI_BossEncounter : UI_Base
 
             if (waveText != null)
             {
-                transitionSeq.AppendCallback(() => waveText.text = "WAVE 2");
-                transitionSeq.Join(waveText.rectTransform.DOPunchScale(Vector3.one * 0.5f, 0.4f, 10, 1f));
+                transitionSeq.AppendCallback(() => waveText.text = $"WAVE {(currentWave + 1).ToString()}")
+                .Join(waveText.rectTransform.DOPunchScale(Vector3.one * 0.5f, 0.4f, 10, 1f));
             }
 
             await transitionSeq.Play().ToUniTask();
