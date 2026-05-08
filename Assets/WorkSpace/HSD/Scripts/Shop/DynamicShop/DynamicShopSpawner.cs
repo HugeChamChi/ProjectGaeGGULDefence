@@ -18,6 +18,11 @@ public class DynamicShopSpawner : MonoBehaviour
         Player.Shop.Dynamic.CheckActiveShops();
     }
 
+    private void OnEnable()
+    {
+        Player.Shop.Dynamic.CheckActiveShops();
+    }
+
     private void OnDestroy()
     {
         if (Player.Shop.Dynamic != null)

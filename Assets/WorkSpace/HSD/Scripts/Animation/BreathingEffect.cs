@@ -19,7 +19,7 @@ namespace GaeGGUL.Animation
         private Vector2 _originSize;
         private Vector2 _originPos;
         private bool _isUI;
-        private Sequence _sequence;
+        private Sequence _seq;
 
         public void Initialize(Transform target)
         {
@@ -42,25 +42,25 @@ namespace GaeGGUL.Animation
         public async UniTask Play()
         {
             Stop();
-            _sequence = DOTween.Sequence();
 
             float jump = useJump ? jumpAmount : 0;
-            
-            _sequence.Append(GetMoveTween(_originPos + new Vector2(0, jump), duration).SetEase(Ease.InOutSine));
-            _sequence.Join(GetSizeTween(_originSize * scaleMultiplier, duration).SetEase(Ease.InOutSine));
-            
-            _sequence.Append(GetMoveTween(_originPos, duration).SetEase(Ease.InOutSine));
-            _sequence.Join(GetSizeTween(_originSize, duration).SetEase(Ease.InOutSine));
 
-            _sequence.SetLoops(-1);
+            _seq = DOTween.Sequence()
+            .Append(GetMoveTween(_originPos + new Vector2(0, jump), duration).SetEase(Ease.InOutSine))
+            .Join(GetSizeTween(_originSize * scaleMultiplier, duration).SetEase(Ease.InOutSine))
+            .Append(GetMoveTween(_originPos, duration).SetEase(Ease.InOutSine))
+            .Join(GetSizeTween(_originSize, duration).SetEase(Ease.InOutSine))
+            .SetLoops(-1);
+
+            await _seq.Play().ToUniTask();
         }
 
         public void Stop()
         {
-            if (_sequence != null)
+            if (_seq != null)
             {
-                _sequence.Kill();
-                _sequence = null;
+                _seq.Kill();
+                _seq = null;
             }
             ResetToOrigin();
         }

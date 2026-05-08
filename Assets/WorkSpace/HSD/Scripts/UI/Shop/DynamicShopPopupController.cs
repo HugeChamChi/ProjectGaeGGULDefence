@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Cysharp.Threading.Tasks;
-using System.Linq;
+using UnityEngine;
 
 public class DynamicShopPopupController : MonoBehaviour
 {
@@ -35,27 +34,37 @@ public class DynamicShopPopupController : MonoBehaviour
         if (_isRoutineRunning) return;
         _isRoutineRunning = true;
 
+        var ct = this.GetCancellationTokenOnDestroy();
+
         while (_popupQueueIDs.Count > 0)
         {
             string shopID = _popupQueueIDs.Dequeue();
-            await ShowPopup(shopID);
+            
+            // SuppressCancellationThrow를 사용하여 예외 비용 없이 취소 처리
+            bool isCanceled = await ShowPopup(shopID, ct).SuppressCancellationThrow();
+            if (isCanceled) break;
         }
 
         _isRoutineRunning = false;
     }
 
-    private async UniTask ShowPopup(string shopID)
+    private async UniTask ShowPopup(string shopID, System.Threading.CancellationToken ct)
     {
         UI_Base panel = GetOrOpenPanel(shopID);
         if (panel == null) return;
 
+        var tcs = new UniTaskCompletionSource();
+        System.Action onClosedAction = null;
+        onClosedAction = () =>
+        {
+            panel.OnClosed -= onClosedAction;
+            tcs.TrySetResult();
+        };
+        panel.OnClosed += onClosedAction;
+
         panel.Open();
 
-        // 패널이 활성화될 때까지 대기
-        await UniTask.WaitUntil(() => panel != null && panel.gameObject.activeSelf, cancellationToken: this.GetCancellationTokenOnDestroy());
-
-        // 패널이 닫힐 때까지(비활성화 또는 파괴) 대기
-        await UniTask.WaitUntil(() => panel == null || !panel.gameObject.activeSelf, cancellationToken: this.GetCancellationTokenOnDestroy());
+        await tcs.Task.AttachExternalCancellation(ct);
     }
 
     private void OnShopActivated(string shopID, bool isFirstTime)
@@ -78,7 +87,7 @@ public class DynamicShopPopupController : MonoBehaviour
         }
 
         _popupQueueIDs.Enqueue(shopID);
-
+        
         // 현재 활성화 상태이고 루틴이 실행 중이 아니라면 루틴 시작
         if (gameObject.activeInHierarchy && !_isRoutineRunning)
         {
@@ -99,12 +108,13 @@ public class DynamicShopPopupController : MonoBehaviour
         {
             // 지정된 _uiRoot 하위에 패널 생성
             GameObject panelObj = RM.Instantiate(data.PanelPrefab, _uiRoot);
+            panelObj.SetActive(false);
 
             // RectTransform을 초기화하여 부모에 꽉 차도록 설정
             if (panelObj.TryGetComponent<RectTransform>(out var rect))
             {
                 SetFull(rect);
-                
+
                 if (panelObj.TryGetComponent<UI_Base>(out var uiBase))
                 {
                     _panelDict[shopID] = uiBase;

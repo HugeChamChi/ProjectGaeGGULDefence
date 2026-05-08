@@ -413,6 +413,7 @@ GameObject:
   - component: {fileID: 139569263}
   - component: {fileID: 139569262}
   - component: {fileID: 139569261}
+  - component: {fileID: 139569264}
   m_Layer: 5
   m_Name: Test_Box_Animation
   m_TagString: Untagged
@@ -525,6 +526,22 @@ MonoBehaviour:
   loopEffect: {fileID: 139569262}
   triggerEffect: {fileID: 139569261}
   playLoopOnEnable: 1
+--- !u!114 &139569264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 139569256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c5230cc83129f9469ece87a1110719c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shrinkScale: 0.92
+  duration: 0.1
+  pressEase: 6
+  releaseEase: 27
 --- !u!1 &164749667
 GameObject:
   m_ObjectHideFlags: 0
@@ -644,7 +661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parent: {fileID: 256736839}
-  _popupManager: {fileID: 411340413}
+  _popupManager: {fileID: 1324326734}
 --- !u!1 &300981389
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,9 +1034,8 @@ GameObject:
   - component: {fileID: 411340411}
   - component: {fileID: 411340410}
   - component: {fileID: 411340409}
-  - component: {fileID: 411340413}
   m_Layer: 5
-  m_Name: /// Dyncmic_Popup_Manager
+  m_Name: /// Test
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1110,19 +1126,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &411340413
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 411340408}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fdcb9904eaa681246bdcf65a2f42c04b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _uiRoot: {fileID: 23192392}
 --- !u!1 &566444827
 GameObject:
   m_ObjectHideFlags: 0
@@ -2565,6 +2568,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1324326733}
+  - component: {fileID: 1324326734}
   m_Layer: 5
   m_Name: Test_Panel
   m_TagString: Untagged
@@ -2593,6 +2597,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1324326734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324326732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdcb9904eaa681246bdcf65a2f42c04b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiRoot: {fileID: 1324326733}
 --- !u!224 &1331301571 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9212776258410111629, guid: deb1767c1fa77d146a5f8da689d25240,
