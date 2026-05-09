@@ -53,7 +53,7 @@ public class BossManager : InGameSingleton<BossManager>
         _currentBosses.Add(boss);
 
         boss.OnHpChanged += (cur, max) => Manager.UI.UpdateBossHp(cur, max);
-        boss.OnDamaged   += amount => Manager.Exp.AddExp(amount);
+        boss.OnDamaged   += amount => Manager.Exp.AddExpFromDamage(amount);
         boss.OnDeath     += () =>
         {
             BossPatternController.Instance.UnregisterBoss(boss);

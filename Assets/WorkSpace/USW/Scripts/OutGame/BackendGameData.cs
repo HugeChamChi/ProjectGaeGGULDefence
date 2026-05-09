@@ -9,6 +9,9 @@ public class BackendGameData : MonoBehaviour
 
     private string _inDate;
 
+    /// <summary>씬 전환 후에도 마지막으로 불러온 PlayerData를 참조할 수 있도록 캐싱</summary>
+    public PlayerData CachedData { get; private set; }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -69,6 +72,7 @@ public class BackendGameData : MonoBehaviour
 
             _inDate = rows[0]["inDate"].ToString();
             var data = ParsePlayerData(rows[0]);
+            CachedData = data;
 
             Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
             onComplete?.Invoke(data);
@@ -103,6 +107,7 @@ public class BackendGameData : MonoBehaviour
         if (bro.IsSuccess())
         {
             _inDate = bro.GetInDate();
+            CachedData = newData;
             Debug.Log("PlayerData 생성 성공");
             onComplete?.Invoke(newData);
         }
@@ -152,7 +157,8 @@ public class BackendGameData : MonoBehaviour
             LastStaminaRecoveryTime = GetLong(data, "LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
             PlayerLevel = GetInt(data, "PlayerLevel", 1),
             PlayerExp   = GetInt(data, "PlayerExp", 0),
-            MaxExp      = GetInt(data, "MaxExp", 500)
+            MaxExp      = GetInt(data, "MaxExp", 500),
+            SelectedChieftainId = GetString(data, "SelectedChieftainId", "")
         };
     }
 
@@ -177,6 +183,7 @@ public class BackendGameData : MonoBehaviour
         param.Add("PlayerLevel", data.PlayerLevel);
         param.Add("PlayerExp", data.PlayerExp);
         param.Add("MaxExp", data.MaxExp);
+        param.Add("SelectedChieftainId", data.SelectedChieftainId);
         return param;
     }
 
