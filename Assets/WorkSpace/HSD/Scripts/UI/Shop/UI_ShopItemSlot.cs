@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
-public class UI_ShopItemSlot : MonoBehaviour
+public class UI_ShopItemSlot : UI_SlotBase<ShopItemData>
 {
     [SerializeField] private Image itemIcon;
     [SerializeField] private TextMeshProUGUI itemNameText;
@@ -14,25 +15,23 @@ public class UI_ShopItemSlot : MonoBehaviour
     [SerializeField] private GameObject freeObject;
     [SerializeField] private Button buyButton;
 
-    private ShopItemData _data;
+    private Action<ShopItemData> _onBuyRequest;
 
-    public void Init(ShopItemData data)
+    private void Awake()
     {
-        _data = data;
-
-        Debug.Log($"{data.Type.ToString()}, {data.ItemID} Setting");
-        UpdateUI();
-        RefreshStatus();
+        if (buyButton != null)
+            buyButton.onClick.AddListener(() => _onBuyRequest?.Invoke(_data));
     }
 
-    private void UpdateUI()
+    public void SetCallback(Action<ShopItemData> onBuyRequest) => _onBuyRequest = onBuyRequest;
+
+    protected override void OnBind()
     {
         if (_data == null) return;
 
-        itemIcon.sprite = _data.GetIcon();
+        if (itemIcon != null) itemIcon.sprite = _data.GetIcon();
 
         string itemName = "Unknown";
-
         switch (_data.Type)
         {
             case ItemType.Item:
@@ -47,45 +46,30 @@ public class UI_ShopItemSlot : MonoBehaviour
         }
 
         var currencySprite = _data.GetCurrencyIcon();
-
         if (currencySprite == null && _data.CurrencyType == CurrencyType.Free)
         {
-            priceObject.gameObject.SetActive(false);
-            freeObject.gameObject.SetActive(true);
+            if (priceObject != null) priceObject.gameObject.SetActive(false);
+            if (freeObject != null) freeObject.gameObject.SetActive(true);
         }
         else
         {
-            priceObject.gameObject.SetActive(true);
-            freeObject.gameObject.SetActive(false);
-            currencyIcon.sprite = currencySprite;
+            if (priceObject != null) priceObject.gameObject.SetActive(true);
+            if (freeObject != null) freeObject.gameObject.SetActive(false);
+            if (currencyIcon != null) currencyIcon.sprite = currencySprite;
         }
 
-        itemNameText.text = itemName;
-        amountText.text = $"x{_data.Amount.ToString()}";
-        priceText.text = _data.Price.ToString();
+        if (itemNameText != null) itemNameText.text = itemName;
+        if (amountText != null) amountText.text = $"x{_data.Amount}";
+        if (priceText != null) priceText.text = _data.Price.ToString();
 
-        buyButton.onClick.RemoveAllListeners();
-        buyButton.onClick.AddListener(OnBuyClicked);
+        RefreshStatus();
     }
 
     public void RefreshStatus()
     {
+        if (_data == null) return;
         bool isSoldOut = Player.Shop.Daily.IsSoldOut(_data.ShopID);
-        soldOutObject.SetActive(isSoldOut);
-        buyButton.interactable = !isSoldOut;
-    }
-
-    private async void OnBuyClicked()
-    {
-        bool success = await Player.Shop.Daily.BuyItem(_data.ShopID);
-        if (success)
-        {
-            RefreshStatus();
-            Debug.Log("Purchase Successful!");
-        }
-        else
-        {
-            Debug.Log("Purchase Failed (Insufficient currency or already bought)");
-        }
+        if (soldOutObject != null) soldOutObject.SetActive(isSoldOut);
+        if (buyButton != null) buyButton.interactable = !isSoldOut;
     }
 }

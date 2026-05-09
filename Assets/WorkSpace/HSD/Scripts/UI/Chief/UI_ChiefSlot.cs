@@ -2,34 +2,32 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
-public class UI_ChiefSlot : MonoBehaviour
+public class UI_ChiefSlot : UI_SlotBase<ChiefData>
 {
     [SerializeField] Image img_Icon;
     [SerializeField] GameObject obj_Selected;
     [SerializeField] Button btn_Select;
 
-    private ChiefData _data;
     private Action<ChiefData> _onClicked;
-
-    public ChiefData Data => _data;
 
     private void Awake()
     {
-        // 람다 대신 직접 함수를 연결하여 GC Alloc 방지
         if (btn_Select != null)
             btn_Select.onClick.AddListener(OnBtnClick);
     }
 
-    public void SetData(ChiefData data, Action<ChiefData> onClicked)
+    public void SetCallback(Action<ChiefData> onClicked)
     {
-        _data = data;
         _onClicked = onClicked;
-        
-        if (img_Icon != null)
-            img_Icon.sprite = data.Icon;
     }
 
-    public void SetSelected(bool isSelected)
+    protected override void OnBind()
+    {
+        if (img_Icon != null && _data != null)
+            img_Icon.sprite = _data.Icon;
+    }
+
+    public override void SetSelected(bool isSelected)
     {
         if (obj_Selected != null && obj_Selected.activeSelf != isSelected)
             obj_Selected.SetActive(isSelected);
