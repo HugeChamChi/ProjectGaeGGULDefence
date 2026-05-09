@@ -3,7 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class UI_PlayerProfileIconSlot : MonoBehaviour
-{ 
+{
     [SerializeField] Image icon;
     [SerializeField] Image frame;
     [SerializeField] Button button;

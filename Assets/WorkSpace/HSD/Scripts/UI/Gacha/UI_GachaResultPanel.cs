@@ -63,7 +63,7 @@ public class UI_GachaResultPanel : UI_Base
 
             appearSequence.Insert(startTime,
                 slot.transform.DOScale(Vector3.one, animationDuration)
-                    .SetEase(appearCurve));
+                    .SetEase(appearCurve)).ToUniTask().Forget();
         }
 
         await appearSequence.Play().ToUniTask();
