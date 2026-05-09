@@ -7,6 +7,7 @@ public static class Player
     public static ProfileDataManager Profile        { get; private set; } = new();
     public static MailManager Mail                  { get; private set; } = new();
     public static PlayerCharacterManager Character  { get; private set; } = new();
+    public static PlayerChiefManager Chief          { get; private set; } = new();
     public static ShopDataManager Shop              { get; private set; } = new();
     public static DailyManager Daily                { get; private set; } = new();
 
@@ -23,6 +24,7 @@ public static class Player
             Profile.InitalizeAsync(),
             Mail.InitalizeAsync(),
             Character.InitalizeAsync(),
+            Chief.InitializeAsync(),
             Shop.InitializeAsync()
         );
 

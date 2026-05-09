@@ -13,7 +13,11 @@ namespace GaeGGUL.Core
 
         public static async UniTask InitializeAsync()
         {
-            if (IsInitialized) return;
+            if (IsInitialized)
+            {
+                Debug.Log("Non Init");
+                return;
+            }
 
             Debug.Log("<color=cyan>[GameInitializer]</color> 시작 중...");
 

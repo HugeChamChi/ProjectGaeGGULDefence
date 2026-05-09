@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 416a17b14fbb0314c9c033c867c28171, type: 3}
+  m_Name: ChiefData
+  m_EditorClassIdentifier: 
+  id: 0
+  icon: {fileID: -817236093, guid: 7a9c1e07b1460c947a5265127776bc8f, type: 3}
+  chiefName: "\uAC1C\uAD6C\uB9AC"
+  description: "\uC77C\uBC18 \uAC1C\uAD6C\uB9AC"
