@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Test_Initalizer : MonoBehaviour
 {
-    private void Start()
+    private void Awake()
     {
         StartAsync().Forget();
     }

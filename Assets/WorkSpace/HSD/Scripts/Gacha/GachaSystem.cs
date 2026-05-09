@@ -15,6 +15,8 @@ public class GachaSystem<T> where T : IGachaData
 
     private readonly string _gachaTableName;
     private readonly string _costChartName;
+    private const string GACHA_TABLE_NAME = "gachaTableName";
+    private const string COST_AMOUNT = "costAmount";
 
     public GachaSystem(string gachaTableName, string costChartName, Func<int, T> dataResolver)
     {
@@ -59,18 +61,18 @@ public class GachaSystem<T> where T : IGachaData
                 {
                     var row = rows[i];
 
-                    // 데이터 존재 여부와 ID 매칭 확인
-                    if (row.ContainsKey("gachaID") && row["gachaID"].ToString() == _gachaTableName)
+                    // 데이터 존재 여부와 매칭 확인
+                    if (row.ContainsKey(GACHA_TABLE_NAME) && row[GACHA_TABLE_NAME].ToString() == _gachaTableName)
                     {
-                        if (row.ContainsKey("costAmount"))
+                        if (row.ContainsKey(COST_AMOUNT))
                         {
-                            Cost = int.Parse(row["costAmount"].ToString());
+                            Cost = int.Parse(row[COST_AMOUNT].ToString());
                             Debug.Log($"[Gacha] {_gachaTableName} 비용 로드 완료: {Cost}");
                             return;
                         }
                     }
                 }
-                Debug.LogWarning($"[Gacha] {_costChartName}에서 gachaID '{_gachaTableName}'를 찾을 수 없습니다.");
+                Debug.LogWarning($"[Gacha] {_costChartName}에서 GACHA_TABLE_NAME '{_gachaTableName}'를 찾을 수 없습니다.");
             }
         }
         catch (Exception e)

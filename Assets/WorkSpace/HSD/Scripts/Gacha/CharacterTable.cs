@@ -8,6 +8,8 @@ public class CharacterTable
     public IEnumerable<ICharacterData> Characters => _charDict.Values;
     public int Count => _charDict.Count;
 
+    public ChiefTable Chief { get; private set; } = new();
+
     const string PATH = "Data/CharacterData";
 
     public async UniTask InitializeAsync()
@@ -18,6 +20,8 @@ public class CharacterTable
         {
             _charDict.TryAdd(charData.Id, charData);
         }
+
+        await Chief.InitializeAsync();
     }
 
     public ICharacterData GetCharacterData(int id)

@@ -23,7 +23,8 @@ public class UI_ProfileSlotController : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var slot = RM.Instantiate(slotPrefab, scroll.content);
-            slot.SetData(items.ElementAt(i), onSelect);
+            slot.SetData(items.ElementAt(i));
+            slot.SetCallback(onSelect);
             slots.Add(slot);
         }
     }

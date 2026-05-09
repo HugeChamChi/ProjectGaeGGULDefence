@@ -4,11 +4,7 @@ using UnityEngine.UI;
 
 public class UI_GachaPanel : UI_Base
 {
-    [Header("Background")]
-    [SerializeField] private GameObject background;
-
     [Header("Buttons")]
-    [SerializeField] private Button closeButton;
     [SerializeField] private Button chanceButton;
     [SerializeField] private UI_GachaChancePanel chancePanel;
     [SerializeField] private UI_GachaResultPanel resultPanel;
@@ -18,96 +14,56 @@ public class UI_GachaPanel : UI_Base
     [Header("Production")]
     [SerializeField] private UI_GachaProduction production;
 
-    private GachaSystem<ICharacterData> _gachaSystem;
+    private UI_GachaPresenter _presenter;
 
-    private void Awake()
+    protected override void Awake()
     {
-        _gachaSystem = Table.Gacha.CharacterGacha;
+        base.Awake();
+        _presenter = new UI_GachaPresenter(this);
     }
 
     private void OnEnable()
     {
-        Player.PlayerData.OnUpdateUI += RefleshUI;
-
-        closeButton.onClick.AddListener(Close);
+        Player.PlayerData.OnUpdateUI += RefreshUI;
         chanceButton.onClick.AddListener(ShowChancePopup);
-
+        
+        _presenter.Initialize();
         if (production != null) production.ResetProduction();
-        RefreshButtons();
     }
 
     private void OnDisable()
     {
-        Player.PlayerData.OnUpdateUI -= RefleshUI;
-
-        closeButton.onClick.RemoveListener(Close);
+        Player.PlayerData.OnUpdateUI -= RefreshUI;
         chanceButton.onClick.RemoveListener(ShowChancePopup);
     }
 
-    private void ShowChancePopup()
+    private void ShowChancePopup() => chancePanel?.Open();
+
+    private void RefreshUI(PlayerData data) => _presenter.RefreshButtons();
+
+    public void UpdateGachaButton(int cost, int count)
     {
-        if (chancePanel != null)
-        {
-            chancePanel.Open();
-        }
+        if (count == 1)
+            gachaButton.Refresh(cost, () => _presenter.StartGachaCycle(1).Forget());
+        else if (gacha10Button != null)
+            gacha10Button.Refresh(cost, () => _presenter.StartGachaCycle(10).Forget());
     }
 
-    public void Setup()
+    public async UniTask PlayProductionAsync(ICharacterData[] results)
     {
-        if (production != null) production.ResetProduction();
-        RefreshButtons();
-    }
-
-    private void RefleshUI(PlayerData data)
-    {
-        gacha10Button.Refresh();
-        gachaButton.Refresh();
-    }
-
-    private void RefreshButtons()
-    {
-        gachaButton.Refresh(_gachaSystem.Cost, () => StartGachaCycle(1).Forget());
-        if (gacha10Button != null)
-        {
-            gacha10Button.Refresh(_gachaSystem.Cost * 10, () => StartGachaCycle(10).Forget());
-        }
-    }
-
-    private async UniTask StartGachaCycle(int count)
-    {
-        SetInteractable(false);
-
-        if(!Player.PlayerData.SpendDiamond(_gachaSystem.Cost * count))
-        {
-            SetInteractable(true);
-            return;
-        }
-
-        var results = await _gachaSystem.GetDatas(count);
-
-        // 획득 처리
-        Player.Character.AddCharacters(results);
-
-        // 연출
         if (production != null)
             await production.PlayAsync(results);
-
-        resultPanel.SetupAsync(results).Forget();
-
-        // 초기화
-        if (production != null)
-            production.ResetProduction();
-
-        RefreshButtons();
-        SetInteractable(true);
-
-        // 저장
-        Player.Character.Save();
     }
 
-    private void SetInteractable(bool interactable)
+    public void ShowResults(ICharacterData[] results)
     {
-        closeButton.interactable = interactable;
+        resultPanel.SetupAsync(results).Forget();
+        if (production != null) production.ResetProduction();
+    }
+
+    public void SetInteractable(bool interactable)
+    {
+        if (btn_Close != null) btn_Close.interactable = interactable;
         chanceButton.interactable = interactable;
         gachaButton?.SetInteractable(interactable);
         gacha10Button?.SetInteractable(interactable);

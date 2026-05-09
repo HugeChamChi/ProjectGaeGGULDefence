@@ -1,16 +1,37 @@
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+
+[System.Serializable]
+public class ShopItemList : UI_ListBase<ShopItemData, UI_ShopItemSlot> { }
 
 public class UI_ShopPanel : UI_Base
 {
-    [SerializeField] private UI_ShopListController dailyShopController;
+    [SerializeField] private ShopItemList dailyShopList;
+    private UI_ShopPresenter _presenter;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        _presenter = new UI_ShopPresenter(this);
+    }
 
     private void OnEnable()
     {
-        dailyShopController.Setup(Player.Shop.Daily.DailyItems);
+        _presenter.Initialize();
     }
 
-    public void RefreshUI()
+    public void SetupShopList(List<ShopItemData> items)
     {
-        dailyShopController.Refresh();
+        dailyShopList.Setup(items);
+        foreach (var slot in dailyShopList.GetActiveSlots())
+        {
+            slot.SetCallback((data) => _presenter.BuyItem(data).Forget());
+        }
+    }
+
+    public void RefreshList()
+    {
+        dailyShopList.RefreshAll();
     }
 }

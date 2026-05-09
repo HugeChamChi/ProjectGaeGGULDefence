@@ -30,7 +30,7 @@ public class UI_ShopListController : MonoBehaviour
                 _slots.Add(slot);
             }
 
-            slot.Init(items[i]);
+            slot.SetData(items[i]);
         }
     }
 

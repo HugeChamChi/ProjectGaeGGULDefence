@@ -4,16 +4,18 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Serializable]
+public class GachaResultList : UI_ListBase<IItemData, UI_ItemSlot> { }
+
 public class UI_GachaResultPanel : UI_Base
 {
     [Header("General Settings")]
     [SerializeField] private Transform resultArea;
-    [SerializeField] private Button backgroundCloseButton;
-    [SerializeField] private UI_ItemSlot itemSlotPrefab;
+    [SerializeField] private GachaResultList resultList;
     [SerializeField] private float animationInterval = 0.05f;
 
     [Header("Slot Animation Settings")]
-    [SerializeField] private Vector2 startScale = Vector2.zero;
+    [SerializeField] private Vector2 slotStartScale = Vector2.zero;
     [SerializeField] private AnimationCurve appearCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     [SerializeField] private float animationDuration = 0.3f;
 
@@ -30,47 +32,33 @@ public class UI_GachaResultPanel : UI_Base
     [Header("Components")]
     [SerializeField] private ScrollRect scroll;
     
-    private List<UI_ItemSlot> itemSlots = new List<UI_ItemSlot>();
     private Sequence appearSequence;
-
-    private void OnEnable()
-    {
-        backgroundCloseButton.onClick.AddListener(Close);
-    }
-
-    private void OnDisable()
-    {
-        backgroundCloseButton.onClick.RemoveListener(Close);
-    }
 
     public async UniTask SetupAsync(IItemData[] items)
     {
         Open();
         if (items == null) return;
 
-        // 1. 슬롯 확보 및 초기화
-        while (itemSlots.Count < items.Length) AddSlot();
-        foreach (var slot in itemSlots) slot.Setup(null);
-
+        // 1. 리스트 셋업 (생성/재사용 로직은 부모가 처리)
+        resultList.Setup(items);
+        
         if (scroll != null) scroll.verticalNormalizedPosition = 1f;
 
-        // 2. 이전 연출 정리
+        // 2. 이전 연출 정리 및 초기 상태 설정
         appearSequence?.Kill();
         appearSequence = DOTween.Sequence();
 
-        for (int i = 0; i < items.Length; i++)
+        var activeSlots = resultList.GetActiveSlots();
+        foreach (var slot in activeSlots)
         {
-            var slot = itemSlots[i];
-            slot.Setup(items[i]);
-            slot.gameObject.SetActive(true);
-            slot.transform.localScale = startScale;
+            slot.transform.localScale = slotStartScale;
             slot.transform.DOKill();
         }
 
-        // 2. 연출 구성 (Insert를 사용하여 타임라인을 명확히 정의)
-        for (int i = 0; i < items.Length; i++)
+        // 3. 연출 구성
+        for (int i = 0; i < activeSlots.Count; i++)
         {
-            var slot = itemSlots[i];
+            var slot = activeSlots[i];
             float startTime = i * animationInterval;
 
             appearSequence.Insert(startTime,
@@ -78,51 +66,22 @@ public class UI_GachaResultPanel : UI_Base
                     .SetEase(appearCurve)).ToUniTask().Forget();
         }
 
-        // 4. 연출 대기
         await appearSequence.Play().ToUniTask();
-    }
-
-    private void AddSlot()
-    {
-        var newSlot = RM.Instantiate(itemSlotPrefab, scroll.content, true);
-        if (newSlot != null) itemSlots.Add(newSlot);
     }
 
     public override void Close()
     {
         base.Close();
         appearSequence?.Kill();
-        foreach (var slot in itemSlots)
-        {
-            if (slot != null)
-            {
-                slot.transform.DOKill();
-                slot.Setup(null);
-            }
-        }
+        // 개별 슬롯의 뒷정리는 다음 Setup 시 UI_ListBase가 처리하므로 최소화
     }
-    public void SkipAnimation()
-    {
-        appearSequence?.Complete();
-    }
-    public void ClearAllSlots()
-    {
-        appearSequence?.Kill();
-        foreach (var slot in itemSlots)
-        {
-            if (slot != null)
-            {
-                slot.transform.DOKill();
-                RM.Destroy(slot.gameObject);
-            }
-        }
-        itemSlots.Clear();
-    }
+
+    public void SkipAnimation() => appearSequence?.Complete();
 
     protected override async UniTask OpenAnimationAsync()
     {
         resultArea.localScale = openStartScale;
-        backgroundCloseButton.gameObject.SetActive(true);
+        if (btn_BackgroundClose != null) btn_BackgroundClose.gameObject.SetActive(true);
 
         await resultArea.DOScale(Vector3.one, openAnimationDuration).SetEase(openEase).ToUniTask();
     }
@@ -130,6 +89,6 @@ public class UI_GachaResultPanel : UI_Base
     protected override async UniTask CloseAnimationAsync()
     {
         await resultArea.DOScale(closeEndScale, closeAnimationDuration).SetEase(closeEase).ToUniTask();
-        backgroundCloseButton.gameObject.SetActive(false);
+        if (btn_BackgroundClose != null) btn_BackgroundClose.gameObject.SetActive(false);
     }
 }

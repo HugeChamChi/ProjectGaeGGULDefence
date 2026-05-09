@@ -30,8 +30,9 @@ public class UI_BossEncounter : UI_Base
     private Quaternion _originalRotation;
     private Transform _tongueTipOriginalParent;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         Setting();
 
         gameObject.SetActive(false); // 초기 비활성화
@@ -162,7 +163,7 @@ public class UI_BossEncounter : UI_Base
             if (waveText != null)
             {
                 transitionSeq.AppendCallback(() => waveText.text = $"WAVE {(currentWave + 1).ToString()}")
-                .Join(waveText.rectTransform.DOPunchScale(Vector3.one * 0.5f, 0.4f, 10, 1f));
+                .Join(waveText.rectTransform.DOPunchScale(Vector3.one * 0.5f, 0.4f, 10, 1f)).ToUniTask().Forget();
             }
 
             await transitionSeq.Play().ToUniTask();

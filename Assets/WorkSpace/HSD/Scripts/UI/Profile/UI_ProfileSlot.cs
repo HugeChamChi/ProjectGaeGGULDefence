@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UI_ProfileSlot : MonoBehaviour
+public class UI_ProfileSlot : UI_SlotBase<IProfileItem>
 {
     [SerializeField] Image iconImage;
     [SerializeField] Image frameImage;
@@ -11,45 +11,48 @@ public class UI_ProfileSlot : MonoBehaviour
     [SerializeField] Image lockIcon;
     [SerializeField] Image lockImage;
     [SerializeField] TextMeshProUGUI nameText;
-
     [SerializeField] Button selectButton;
 
-    private IProfileItem data;
+    private Action<IProfileItem> _onSelect;
 
-    public void SetData(IProfileItem data, Action<IProfileItem> onClick = null)
+    private void Awake()
     {
-        this.data = data;
+        if (selectButton != null)
+            selectButton.onClick.AddListener(() => _onSelect?.Invoke(_data));
+    }
 
-        if(data.Type == ProfileItemType.Icon)
+    public void SetCallback(Action<IProfileItem> onSelect) => _onSelect = onSelect;
+
+    protected override void OnBind()
+    {
+        if (_data == null) return;
+
+        if (_data.Type == ProfileItemType.Icon)
         {
-            iconImage.sprite = data.Sprite;
+            if (iconImage != null) iconImage.sprite = _data.Sprite;
         }
-        else if(data.Type == ProfileItemType.Frame)
+        else if (_data.Type == ProfileItemType.Frame)
         {
-            frameImage.sprite = data.Sprite;
+            if (frameImage != null) frameImage.sprite = _data.Sprite;
         }
 
         Refresh();
-
-        selectButton.onClick.RemoveAllListeners();
-        selectButton.onClick.AddListener(() => onClick?.Invoke(data));
     }
 
     public void Refresh()
     {
-        if (data == null) return;
+        if (_data == null) return;
 
-        nameText.text = data.Name;
-
-        lockImage.gameObject.SetActive(!data.IsUnlocked);
-        lockIcon.gameObject.SetActive(!data.IsUnlocked);
+        if (nameText != null) nameText.text = _data.Name;
+        if (lockImage != null) lockImage.gameObject.SetActive(!_data.IsUnlocked);
+        if (lockIcon != null) lockIcon.gameObject.SetActive(!_data.IsUnlocked);
 
         bool isEquipped = false;
-        if (data.Type == ProfileItemType.Icon)
-            isEquipped = data.Id == Player.Profile.CurrentIconData?.Id;
+        if (_data.Type == ProfileItemType.Icon)
+            isEquipped = _data.Id == Player.Profile.CurrentIconData?.Id;
         else
-            isEquipped = data.Id == Player.Profile.CurrentFrameData?.Id;
+            isEquipped = _data.Id == Player.Profile.CurrentFrameData?.Id;
 
-        equipeedIcon.gameObject.SetActive(isEquipped);
+        if (equipeedIcon != null) equipeedIcon.gameObject.SetActive(isEquipped);
     }
 }
