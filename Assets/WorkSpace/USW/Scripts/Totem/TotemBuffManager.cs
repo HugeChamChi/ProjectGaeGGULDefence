@@ -19,6 +19,10 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
     public float CritChanceBonus      { get; private set; } = 0f;
     // 치명타 데미지 보너스 배율 (기본 0 — LevelUp 배율에 가산)
     public float CritDamageBonus      { get; private set; } = 0f;
+    // 게이지 회복 속도 배율 (기본 1.0 — 낮을수록 게이지 빨라짐)
+    public float GaugeSpeedMultiplier { get; private set; } = 1f;
+    // 투사체 크기 배율 (기본 1.0 — 높을수록 커짐)
+    public float ProjectileSizeMultiplier { get; private set; } = 1f;
     // 토템 효율 보너스 (기본 0 — 레벨업으로 증가, 토템 버프 적용 시 곱해짐)
     private float _totemEfficiencyBonus = 0f;
 
@@ -127,6 +131,24 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
     public void RemoveCritDamageBuff(float percent)
     {
         CritDamageBonus = Mathf.Max(0f, CritDamageBonus - percent * (1f + _totemEfficiencyBonus));
+    }
+
+    // ── 게이지 회복 속도 버프 ──────────────────────────────────
+    public void AddGaugeSpeedBuff(float percent)
+    {
+        GaugeSpeedMultiplier = Mathf.Max(0.1f, GaugeSpeedMultiplier - percent);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[TotemBuff] 게이지속도 +{percent * 100f:F0}% → 배율: {GaugeSpeedMultiplier:F2}x");
+#endif
+    }
+
+    // ── 투사체 크기 버프 ───────────────────────────────────────
+    public void AddProjectileSizeBuff(float percent)
+    {
+        ProjectileSizeMultiplier += percent;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[TotemBuff] 투사체크기 +{percent * 100f:F0}% → 배율: {ProjectileSizeMultiplier:F2}x");
+#endif
     }
 
     // ── 식량 생산량 버프 (토템) ────────────────────────────────

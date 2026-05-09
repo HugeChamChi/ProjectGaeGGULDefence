@@ -16,6 +16,8 @@ public class PlayerData
     public int PlayerExp;
     public int MaxExp = 500;
 
+    public string SelectedChieftainId = "";
+
     // 스테미나 시스템 추가
     public PlayerData()
     {
