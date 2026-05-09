@@ -1,10 +1,7 @@
 using UnityEngine;
 
-public interface IItemData
+public interface IItemData : IMetaData
 {
-    string Name { get; }
-    Sprite Icon { get; }
     Rarity Rarity { get; }
     public int Id { get; }
-    public string Description { get; }
 }
