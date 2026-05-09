@@ -5,28 +5,32 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 
 /// <summary>
-/// 모든 고블린의 기반 — 게이지 루프, 식량 생산, 선택적 보스 공격
+/// 모든 유닛의 기반 클래스
 ///
-/// 변경 사항:
-///   - TotemBuffManager.Instance → Manager.Buff
-///   - 보스 디버프 상태(셀 봉인/공격불가/속도감소) 반영
+/// 루프 구조:
+///   AttackLoopAsync — 1초마다 일반 공격 (atk), 공속 버프 적용
+///   SkillLoopAsync  — skillCooldown마다 스킬 공격 (skillAtk) + 식량 생산, 게이지속도 버프 적용
+///
+/// 서브클래스 훅:
+///   OnUnitPlaced()  — 배치 시 추가 처리
+///   OnUnitRemoved() — 제거 시 추가 처리
+///   OnSkillFull()   — 스킬 발동 시 추가 처리 (식량 생산 로직 오버라이드 가능)
 /// </summary>
 public abstract class UnitBase : MonoBehaviour
 {
     public UnitData unitData;
 
-    public UnityEvent onGaugeFull;  // VFX/애니메이션 훅
-    public UnityEvent onAttack;     // 공격 VFX 훅
+    public UnityEvent onSkillFull; // 스킬 발동 시 VFX/애니메이션 훅
+    public UnityEvent onAttack;    // 일반 공격 시 VFX 훅
 
-    /// <summary>유닛 배치/제거 시 전역 알림 — TotemProximityBuff 등에서 구독</summary>
-    public static event System.Action OnAnyUnitChanged;
+    /// <summary>배치/제거 시 전역 알림 — TotemProximityBuff 등에서 구독</summary>
+    public static event Action OnAnyUnitChanged;
 
-    protected CurrencyManager        _currency;
-    protected BossBase               _boss;
-    private   CancellationTokenSource _gaugeCts;
+    protected CurrencyManager _currency;
+    protected BossBase        _boss;
+    protected GridCell        _currentCell;
 
-    // 현재 배치된 셀 참조 (보스 패턴 디버프 체크용)
-    protected GridCell _currentCell;
+    private CancellationTokenSource _loopCts;
 
     // ── 배치/제거 ──────────────────────────────────────────────
 
@@ -43,20 +47,16 @@ public abstract class UnitBase : MonoBehaviour
         _boss        = boss;
         _currentCell = cell;
 
-        StopGaugeLoop();
-        _gaugeCts = new CancellationTokenSource();
-        GaugeLoopAsync(_gaugeCts.Token).Forget(Debug.LogException);
+        StopLoops();
+        _loopCts = new CancellationTokenSource();
+        AttackLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+
         OnUnitPlaced();
         OnAnyUnitChanged?.Invoke();
     }
 
-    /// <summary>OnPlaced() 완료 후 호출되는 훅 — 서브클래스에서 배치 시 추가 처리</summary>
-    protected virtual void OnUnitPlaced() { }
-
-    /// <summary>
-    /// 하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원
-    /// WaveManager, BossRewardUI, LevelUpUI 등에서 cell 없이 호출 시 사용
-    /// </summary>
+    /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
     public void OnPlaced(CurrencyManager currency, BossBase boss)
         => OnPlaced(currency, boss, null);
 
@@ -64,60 +64,26 @@ public abstract class UnitBase : MonoBehaviour
     public void OnRemoved()
     {
         OnUnitRemoved();
-        StopGaugeLoop();
+        StopLoops();
         _currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
 
-    /// <summary>OnRemoved() 시작 시 호출되는 훅 — 서브클래스에서 제거 시 추가 처리</summary>
+    protected virtual void OnUnitPlaced()  { }
     protected virtual void OnUnitRemoved() { }
 
-    private void OnDestroy() => StopGaugeLoop();
+    private void OnDestroy() => StopLoops();
 
-    private void StopGaugeLoop()
+    private void StopLoops()
     {
-        _gaugeCts?.Cancel();
-        _gaugeCts?.Dispose();
-        _gaugeCts = null;
+        _loopCts?.Cancel();
+        _loopCts?.Dispose();
+        _loopCts = null;
     }
 
-    // ── 공격력 계산 ────────────────────────────────────────────
+    // ── 일반 공격 루프 — 1초마다, 공속 버프 적용 ──────────────
 
-    /// <summary>
-    /// unitData.attackDamage × TotemBuffManager.AttackMultiplier
-    /// × 셀 DamageModifier (보스 패턴 데미지 감소 반영)
-    /// </summary>
-    public int GetAttackDamage()
-    {
-        if (unitData == null) return 0;
-
-        float cellModifier  = _currentCell != null
-            ? (_currentCell.Model.NullifyDamageDebuff ? 1f : _currentCell.Model.DamageModifier)
-            : 1f;
-        float totemModifier = _currentCell != null ? _currentCell.Model.TotemAttackModifier : 1f;
-        int   row           = _currentCell != null ? _currentCell.GridPosition.y            : 0;
-        float rowModifier   = Manager.LevelUp != null ? Manager.LevelUp.GetRowAttackMultiplier(row) : 1f;
-
-        float damage = unitData.attackDamage
-                     * Manager.Buff.AttackMultiplier
-                     * cellModifier
-                     * totemModifier
-                     * rowModifier;
-
-        // 치명타 판정 — LevelUp 확률 + 토템 보너스 합산
-        float critChance = (Manager.LevelUp?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
-        if (critChance > 0f && UnityEngine.Random.value < critChance)
-        {
-            float critDmgMult = (Manager.LevelUp?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
-            damage *= critDmgMult;
-        }
-
-        return Mathf.RoundToInt(damage);
-    }
-
-    // ── 게이지 루프 ────────────────────────────────────────────
-
-    private async UniTask GaugeLoopAsync(CancellationToken token)
+    private async UniTask AttackLoopAsync(CancellationToken token)
     {
         if (unitData == null)
         {
@@ -131,57 +97,130 @@ public abstract class UnitBase : MonoBehaviour
             {
                 token.ThrowIfCancellationRequested();
 
-                // 셀이 봉인되어 있으면 게이지 정지
                 if (_currentCell != null && _currentCell.Model.IsSealed)
                 {
                     await UniTask.Yield(token);
                     continue;
                 }
 
-                // 대기 시간 = gaugeDuration × 개인배율 × 속도배율 × 식량속도 × 셀디버프 ÷ 줄별속도배율
-                int   row          = _currentCell != null ? _currentCell.GridPosition.y : 0;
-                float rowSpeedMult = Manager.LevelUp != null ? Manager.LevelUp.GetRowSpeedMultiplier(row) : 1f;
-                rowSpeedMult = Mathf.Max(rowSpeedMult, 0.01f);
+                int   row          = _currentCell?.GridPosition.y ?? 0;
+                float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
 
-                float interval = unitData.gaugeDuration
-                               * unitData.gaugeMultiplier
+                float interval = 1.0f
                                * Manager.Buff.SpeedMultiplier
-                               * Manager.Buff.FoodSpeedMultiplier
-                               * (_currentCell != null ? _currentCell.Model.SpeedModifier : 1f)
+                               * (_currentCell?.Model.SpeedModifier ?? 1f)
                                / rowSpeedMult;
                 interval = Mathf.Max(interval, 0.05f);
 
-                await UniTask.Delay(
-                    System.TimeSpan.FromSeconds(interval),
-                    cancellationToken: token);
-
+                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
                 token.ThrowIfCancellationRequested();
 
-                OnGaugeFull();
+                bool attackDisabled = _currentCell != null &&
+                    (_currentCell.Model.IsAttackDisabled || _currentCell.Model.TotemAttackDisabled);
+
+                if (!attackDisabled && _boss != null && !_boss.IsDead)
+                {
+                    LaunchProjectile();
+                    _boss.TakeDamage(GetAttackDamage());
+                    onAttack?.Invoke();
+                }
             }
         }
         catch (OperationCanceledException) { }
     }
 
-    protected virtual void OnGaugeFull()
-    {
-        onGaugeFull?.Invoke();
+    // ── 스킬 루프 — skillCooldown마다, 게이지속도 버프 적용 ────
 
-        // 식량 생산 — FoodAmountMultiplier: 마법사 아우라 등으로 감소 가능
+    private async UniTask SkillLoopAsync(CancellationToken token)
+    {
+        if (unitData == null) return;
+
+        try
+        {
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (_currentCell != null && _currentCell.Model.IsSealed)
+                {
+                    await UniTask.Yield(token);
+                    continue;
+                }
+
+                int   row          = _currentCell?.GridPosition.y ?? 0;
+                float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+
+                float interval = unitData.skillCooldown
+                               * Manager.Buff.GaugeSpeedMultiplier
+                               * Manager.Buff.FoodSpeedMultiplier
+                               * (_currentCell?.Model.SpeedModifier ?? 1f)
+                               / rowSpeedMult;
+                interval = Mathf.Max(interval, 0.05f);
+
+                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
+                token.ThrowIfCancellationRequested();
+
+                OnSkillFull();
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    /// <summary>스킬 발동 — 식량 생산 + 스킬 공격. 서브클래스에서 오버라이드 가능</summary>
+    protected virtual void OnSkillFull()
+    {
+        onSkillFull?.Invoke();
+
         _currency.AddCurrency(unitData.foodPerTick * Manager.Buff.FoodAmountMultiplier);
 
-        // 보스 공격 — 공격 불가 상태 체크 (보스 패턴 + OverWelm 토템)
         bool attackDisabled = _currentCell != null &&
             (_currentCell.Model.IsAttackDisabled || _currentCell.Model.TotemAttackDisabled);
 
-        if (unitData.attackDamage > 0 && !attackDisabled && _boss != null && !_boss.IsDead)
+        if (!attackDisabled && _boss != null && !_boss.IsDead)
         {
-            var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
-            if (bossArea != null && Manager.Projectile != null)
-                Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
-
-            _boss.TakeDamage(GetAttackDamage());
-            onAttack?.Invoke();
+            LaunchProjectile();
+            _boss.TakeDamage(GetSkillDamage());
         }
+    }
+
+    // ── 데미지 계산 ────────────────────────────────────────────
+
+    public int GetAttackDamage() => ComputeDamage(unitData.atk);
+    public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);
+
+    private int ComputeDamage(float baseDamage)
+    {
+        if (unitData == null) return 0;
+
+        float cellModifier  = _currentCell != null
+            ? (_currentCell.Model.NullifyDamageDebuff ? 1f : _currentCell.Model.DamageModifier)
+            : 1f;
+        float totemModifier = _currentCell?.Model.TotemAttackModifier ?? 1f;
+        int   row           = _currentCell?.GridPosition.y ?? 0;
+        float rowModifier   = Manager.LevelUp?.GetRowAttackMultiplier(row) ?? 1f;
+
+        float damage = baseDamage
+                     * Manager.Buff.AttackMultiplier
+                     * cellModifier
+                     * totemModifier
+                     * rowModifier;
+
+        float critChance = (Manager.LevelUp?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
+        if (critChance > 0f && UnityEngine.Random.value < critChance)
+        {
+            float critMult = (Manager.LevelUp?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
+            damage *= critMult;
+        }
+
+        return Mathf.RoundToInt(damage);
+    }
+
+    // ── 투사체 ─────────────────────────────────────────────────
+
+    private void LaunchProjectile()
+    {
+        var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        if (bossArea != null && Manager.Projectile != null)
+            Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }
 }

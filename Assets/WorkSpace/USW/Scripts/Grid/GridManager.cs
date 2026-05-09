@@ -73,6 +73,9 @@ public class GridManager : InGameSingleton<GridManager>
 
     public GridCell GetCell(Vector2Int pos) => GetCell(pos.x, pos.y);
 
+    /// <summary>그리드 중앙 셀 반환 — 족장 자동 배치용</summary>
+    public GridCell GetCenterCell() => GetCell(Columns / 2, Rows / 2);
+
     public IEnumerable<GridCell> AllCells()
     {
         foreach (var cell in _grid)

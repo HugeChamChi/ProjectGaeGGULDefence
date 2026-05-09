@@ -115,6 +115,14 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
                 if (rows >= 2) _rowSpeedMult[rows - 1] *= (1f + v);
                 if (rows >= 3) _rowSpeedMult[rows - 2] *= (1f + v);
                 break;
+
+            case LevelUpEffectType.GaugeSpeedPercent:
+                Manager.Buff.AddGaugeSpeedBuff(v);
+                break;
+
+            case LevelUpEffectType.ProjectileSizePercent:
+                Manager.Buff.AddProjectileSizeBuff(v);
+                break;
         }
 
         Debug.Log($"[LevelUp] 효과 적용: {data.description}");
