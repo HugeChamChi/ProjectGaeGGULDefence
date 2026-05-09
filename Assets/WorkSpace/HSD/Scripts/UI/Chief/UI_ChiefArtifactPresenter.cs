@@ -1,16 +1,22 @@
 using System.Linq;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using System;
 
 public class UI_ChiefArtifactPresenter
 {
     private readonly UI_ChiefArtifactPanel _view;
     
     private ChiefData _currentAppliedChief;
-    private ChiefData _selectedChief; // Temporary selection (caching)
+    private ChiefData _selectedChief;
+    
+    // 콜백 델리게이트 캐싱 (이벤트 할당 GC 최적화)
+    private Action<ChiefData> _onChiefSlotClickedDelegate;
 
     public UI_ChiefArtifactPresenter(UI_ChiefArtifactPanel view)
     {
         _view = view;
+        _onChiefSlotClickedDelegate = OnChiefSlotClicked;
     }
 
     public async UniTask Initialize()
@@ -19,7 +25,7 @@ public class UI_ChiefArtifactPresenter
         int currentId = Player.Chief.SelectedChiefId;
         _currentAppliedChief = Table.Character.Chief.GetChief(currentId);
         
-        // 데이터가 없는 경우 첫 번째 족장을 기본값으로 설정하거나 null 처리
+        // 데이터가 없는 경우 첫 번째 족장을 기본값으로 설정
         if (_currentAppliedChief == null)
         {
             _currentAppliedChief = Table.Character.Chief.Chiefs.FirstOrDefault();
@@ -29,7 +35,9 @@ public class UI_ChiefArtifactPresenter
 
         // 2. UI 초기화
         _view.UpdateTabUI(true); // 기본적으로 족장 탭
-        _view.SetupChiefList(Table.Character.Chief.Chiefs, OnChiefSlotClicked);
+        
+        // 캐싱된 델리게이트 전달하여 슬롯 리스트 구성
+        _view.SetupChiefList(Table.Character.Chief.Chiefs, _onChiefSlotClickedDelegate);
         
         RefreshUI();
         
@@ -48,7 +56,7 @@ public class UI_ChiefArtifactPresenter
 
     private void OnChiefSlotClicked(ChiefData data)
     {
-        if (data == null) return;
+        if (data == null || _selectedChief == data) return;
         
         _selectedChief = data;
         RefreshUI();
@@ -56,9 +64,9 @@ public class UI_ChiefArtifactPresenter
 
     public void OnApplyClicked()
     {
-        if (_selectedChief == null) return;
+        if (_selectedChief == null || _selectedChief == _currentAppliedChief) return;
         
-        // 실제 데이터에 적용
+        // 실제 데이터에 적용 및 서버 저장
         _currentAppliedChief = _selectedChief;
         Player.Chief.SetSelectedChief(_currentAppliedChief.Id);
         

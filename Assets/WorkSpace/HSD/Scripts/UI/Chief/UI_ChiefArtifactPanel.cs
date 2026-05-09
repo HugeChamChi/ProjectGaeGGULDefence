@@ -30,11 +30,15 @@ public class UI_ChiefArtifactPanel : UI_Base
     {
         _presenter = new UI_ChiefArtifactPresenter(this);
         
-        btn_ChiefTab.onClick.AddListener(() => _presenter.OnTabChanged(true));
-        btn_ArtifactTab.onClick.AddListener(() => _presenter.OnTabChanged(false));
-        btn_Apply.onClick.AddListener(() => _presenter.OnApplyClicked());
-        btn_Close.onClick.AddListener(Close);
+        // 고정된 함수 참조로 연결하여 GC Alloc 방지
+        if (btn_ChiefTab != null) btn_ChiefTab.onClick.AddListener(OnChiefTabClicked);
+        if (btn_ArtifactTab != null) btn_ArtifactTab.onClick.AddListener(OnArtifactTabClicked);
+        if (btn_Apply != null) btn_Apply.onClick.AddListener(_presenter.OnApplyClicked);
+        if (btn_Close != null) btn_Close.onClick.AddListener(Close);
     }
+
+    private void OnChiefTabClicked() => _presenter.OnTabChanged(true);
+    private void OnArtifactTabClicked() => _presenter.OnTabChanged(false);
 
     public override async UniTask OpenAsync()
     {
@@ -44,24 +48,41 @@ public class UI_ChiefArtifactPanel : UI_Base
 
     public void UpdateTabUI(bool isChiefTab)
     {
-        obj_ChiefGroup.SetActive(isChiefTab);
-        obj_ArtifactGroup.SetActive(!isChiefTab);
+        if(obj_ChiefGroup != null && obj_ChiefGroup.activeSelf != isChiefTab) 
+            obj_ChiefGroup.SetActive(isChiefTab);
+        
+        if(obj_ArtifactGroup != null && obj_ArtifactGroup.activeSelf == isChiefTab) 
+            obj_ArtifactGroup.SetActive(!isChiefTab);
     }
 
     public void SetupChiefList(IEnumerable<ChiefData> chiefs, System.Action<ChiefData> onSelect)
     {
-        // 기존 슬롯 제거 또는 풀링 처리 (여기선 RM.Instantiate 활용 가정)
-        foreach (var slot in _chiefSlots)
-        {
-            RM.Destroy(slot.gameObject);
-        }
-        _chiefSlots.Clear();
-
+        int index = 0;
         foreach (var data in chiefs)
         {
-            var slot = RM.Instantiate(slotPrefab.gameObject, tr_ChiefContent).GetComponent<UI_ChiefSlot>();
+            UI_ChiefSlot slot;
+            if (index < _chiefSlots.Count)
+            {
+                // 1. 재사용 (Reuse)
+                slot = _chiefSlots[index];
+                slot.gameObject.SetActive(true);
+            }
+            else
+            {
+                // 2. 풀링 기반 생성 (Pooling)
+                slot = RM.Instantiate(slotPrefab.gameObject, tr_ChiefContent, isPool: true).GetComponent<UI_ChiefSlot>();
+                _chiefSlots.Add(slot);
+            }
+            
             slot.SetData(data, onSelect);
-            _chiefSlots.Add(slot);
+            index++;
+        }
+
+        // 사용하지 않는 남은 슬롯들은 비활성화 (Destroy 대신 재사용 대기)
+        for (int i = index; i < _chiefSlots.Count; i++)
+        {
+            if(_chiefSlots[i].gameObject.activeSelf)
+                _chiefSlots[i].gameObject.SetActive(false);
         }
     }
 
@@ -70,15 +91,17 @@ public class UI_ChiefArtifactPanel : UI_Base
         if (data != null && img_PreviewChief != null)
         {
             img_PreviewChief.sprite = data.Icon;
-            img_PreviewChief.gameObject.SetActive(true);
+            if(!img_PreviewChief.gameObject.activeSelf) 
+                img_PreviewChief.gameObject.SetActive(true);
         }
     }
 
     public void UpdateSlotSelection(int selectedId)
     {
-        foreach (var slot in _chiefSlots)
+        for (int i = 0; i < _chiefSlots.Count; i++)
         {
-            slot.SetSelected(slot.Data.Id == selectedId);
+            if (!_chiefSlots[i].gameObject.activeSelf) continue;
+            _chiefSlots[i].SetSelected(_chiefSlots[i].Data.Id == selectedId);
         }
     }
 }
