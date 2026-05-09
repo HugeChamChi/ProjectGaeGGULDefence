@@ -1,21 +1,8 @@
 using UnityEngine;
 using BackEnd;
 
-public class CouponManager : MonoBehaviour
+public class CouponManager
 {
-    public static CouponManager Instance { get; private set; }
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
     /// <summary>
     /// 쿠폰 코드 사용. 성공 시 우편함 자동 갱신.
     /// </summary>
@@ -35,7 +22,7 @@ public class CouponManager : MonoBehaviour
         {
             Debug.Log("쿠폰 사용 성공 : " + bro);
             callback?.Invoke(true, "쿠폰 사용 성공! 우편함을 확인해주세요");
-            MailManager.Instance.GetPostList(PostType.Coupon);
+            Player.Mail.GetPostList(PostType.Coupon);
         }
         else
         {

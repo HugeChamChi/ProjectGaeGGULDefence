@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 
 public class GameEntryButton : MonoBehaviour
 {
-    [SerializeField] private PlayerDataController _playerDataController;
     [SerializeField] private Button _enterButton;
     [SerializeField] private string _targetSceneName = "InGameScene";
     [SerializeField] private StaminaInsufficientPopup _staminaInsufficientPopup;
@@ -25,13 +24,13 @@ public class GameEntryButton : MonoBehaviour
 
     private void OnEnterButtonClicked()
     {
-        if (_playerDataController == null)
+        if (Player.PlayerData == null)
         {
             Debug.LogError("PlayerDataController가 연결되지 않았습니다.");
             return;
         }
 
-        bool success = _playerDataController.UseStamina(STAMINA_COST);
+        bool success = Player.PlayerData.UseStamina(STAMINA_COST);
 
         if (success)
         {
@@ -40,8 +39,8 @@ public class GameEntryButton : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"스태미나 부족! 현재: {_playerDataController.Data.Stamina}, 필요: {STAMINA_COST}");
-            _staminaInsufficientPopup?.Show(_playerDataController.Data.Stamina, STAMINA_COST);
+            Debug.LogWarning($"스태미나 부족! 현재: {Player.PlayerData.Data.Stamina}, 필요: {STAMINA_COST}");
+            _staminaInsufficientPopup?.Show(Player.PlayerData.Data.Stamina, STAMINA_COST);
         }
     }
 }

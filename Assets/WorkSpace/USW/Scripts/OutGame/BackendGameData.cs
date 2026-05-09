@@ -2,9 +2,22 @@ using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
+using Cysharp.Threading.Tasks;
 
 public class BackendGameData : MonoBehaviour
 {
+    private const string TABLE_NAME = "PlayerData";
+    private const string COLUMN_PLAYER_NAME = "PlayerName";
+    private const string COLUMN_GOLD = "Gold";
+    private const string COLUMN_DIAMOND = "Diamond";
+    private const string COLUMN_STAMINA = "Stamina";
+    private const string COLUMN_MAX_STAMINA = "MaxStamina";
+    private const string COLUMN_LAST_STAMINA_RECOVERY_TIME = "LastStaminaRecoveryTime";
+    private const string COLUMN_PLAYER_LEVEL = "PlayerLevel";
+    private const string COLUMN_PLAYER_EXP = "PlayerExp";
+    private const string COLUMN_MAX_EXP = "MaxExp";
+    private const string COLUMN_LAST_RESET_DATE = "LastResetDate";
+
     public static BackendGameData Instance { get; private set; }
 
     private string _inDate;
@@ -57,7 +70,7 @@ public class BackendGameData : MonoBehaviour
     // -------------------------
     public void GameDataGet(Action<PlayerData> onComplete = null)
     {
-        var bro = Backend.GameData.GetMyData("PlayerData", new Where());
+        var bro = Backend.GameData.GetMyData(TABLE_NAME, new Where());
 
         if (bro.IsSuccess())
         {
@@ -102,7 +115,7 @@ public class BackendGameData : MonoBehaviour
         };
 
         Param param = PlayerDataToParam(newData);
-        var bro = Backend.GameData.Insert("PlayerData", param);
+        var bro = Backend.GameData.Insert(TABLE_NAME, param);
 
         if (bro.IsSuccess())
         {
@@ -129,7 +142,7 @@ public class BackendGameData : MonoBehaviour
         }
 
         Param param = PlayerDataToParam(data);
-        var bro = Backend.GameData.UpdateV2("PlayerData", _inDate, Backend.UserInDate, param);
+        var bro = Backend.GameData.UpdateV2(TABLE_NAME, _inDate, Backend.UserInDate, param);
 
         if (bro.IsSuccess())
         {
@@ -161,15 +174,6 @@ public class BackendGameData : MonoBehaviour
             SelectedChieftainId = GetString(data, "SelectedChieftainId", "")
         };
     }
-
-    private string GetString(JsonData data, string key, string fallback = "")
-        => data.Keys.Contains(key) ? data[key]?.ToString() ?? fallback : fallback;
-
-    private int GetInt(JsonData data, string key, int fallback = 0)
-        => data.Keys.Contains(key) && int.TryParse(data[key]?.ToString(), out int val) ? val : fallback;
-
-    private long GetLong(JsonData data, string key, long fallback = 0)
-        => data.Keys.Contains(key) && long.TryParse(data[key]?.ToString(), out long val) ? val : fallback;
 
     private Param PlayerDataToParam(PlayerData data)
     {
