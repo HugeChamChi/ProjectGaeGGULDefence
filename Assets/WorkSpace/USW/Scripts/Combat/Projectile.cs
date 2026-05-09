@@ -17,6 +17,7 @@ public class Projectile : MonoBehaviour
         StopMove();
 
         transform.position = from;
+        transform.localScale = Vector3.one * (Manager.Buff?.ProjectileSizeMultiplier ?? 1f);
         _onComplete        = onComplete;
 
         // OnDisable에서 수동 취소 가능하고,

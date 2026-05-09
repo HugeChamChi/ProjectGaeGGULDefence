@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
+  m_Name: Frog_Epic
+  m_EditorClassIdentifier: 
+  characterId: 1003
+  unitType: 1003
+  unitName: Frog
+  unitTier: 2
+  unitTribe: 0
+  prefab: {fileID: 0}
+  description: 
+  atk: 240
+  skillAtk: 700
+  skillCooldown: 10.8
+  foodPerTick: 10

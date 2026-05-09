@@ -75,19 +75,32 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         OnCostChanged?.Invoke(CurrentCost);
     }
 
-    public void OnDeleteButtonPressed()
-    {
-        var occupied  = Manager.Grid.GetOccupiedCells();
-        var unitCells = occupied.FindAll(c => c.OccupyingUnit != null);
-        if (unitCells.Count == 0) return;
+    [SerializeField] private float sellRefundAmount = 5f;
 
-        var cell = unitCells[Random.Range(0, unitCells.Count)];
-        var unit = cell.RemoveUnit();
-        if (unit != null)
+    /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>
+    public void SellUnit(UnitBase unit)
+    {
+        if (unit == null) return;
+
+        var cell = FindCellByUnit(unit);
+        if (cell == null) return;
+
+        cell.RemoveUnit();
+        unit.OnRemoved();
+        Destroy(unit.gameObject);
+
+        if (sellRefundAmount > 0f)
+            Manager.Currency.AddCurrency(sellRefundAmount);
+
+        OnAnyUnitSold?.Invoke();
+    }
+
+    private GridCell FindCellByUnit(UnitBase unit)
+    {
+        foreach (var cell in Manager.Grid.AllCells())
         {
-            unit.OnRemoved();
-            Destroy(unit.gameObject);
-            OnAnyUnitSold?.Invoke();
+            if (cell.OccupyingUnit == unit) return cell;
         }
+        return null;
     }
 }

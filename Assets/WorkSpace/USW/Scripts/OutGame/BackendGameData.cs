@@ -22,6 +22,9 @@ public class BackendGameData : MonoBehaviour
 
     private string _inDate;
 
+    /// <summary>씬 전환 후에도 마지막으로 불러온 PlayerData를 참조할 수 있도록 캐싱</summary>
+    public PlayerData CachedData { get; private set; }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -82,6 +85,7 @@ public class BackendGameData : MonoBehaviour
 
             _inDate = rows[0]["inDate"].ToString();
             var data = ParsePlayerData(rows[0]);
+            CachedData = data;
 
             Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
             onComplete?.Invoke(data);
@@ -116,6 +120,7 @@ public class BackendGameData : MonoBehaviour
         if (bro.IsSuccess())
         {
             _inDate = bro.GetInDate();
+            CachedData = newData;
             Debug.Log("PlayerData 생성 성공");
             onComplete?.Invoke(newData);
         }
@@ -157,32 +162,32 @@ public class BackendGameData : MonoBehaviour
     {
         return new PlayerData
         {
-            PlayerName = data.GetString(COLUMN_PLAYER_NAME, "유저"),
-            Gold       = data.GetInt(COLUMN_GOLD, 0),
-            Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
-            Stamina    = data.GetInt(COLUMN_STAMINA, 30),
-            MaxStamina = data.GetInt(COLUMN_MAX_STAMINA, 30),
-            LastStaminaRecoveryTime = data.GetLong(COLUMN_LAST_STAMINA_RECOVERY_TIME, DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
-            PlayerLevel = data.GetInt(COLUMN_PLAYER_LEVEL, 1),
-            PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),
-            MaxExp      = data.GetInt(COLUMN_MAX_EXP, 500),
-            LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty)
+            PlayerName = GetString(data, "PlayerName", "유저"),
+            Gold       = GetInt(data, "Gold", 0),
+            Diamond    = GetInt(data, "Diamond", 0),
+            Stamina    = GetInt(data, "Stamina", 30),
+            MaxStamina = GetInt(data, "MaxStamina", 30),
+            LastStaminaRecoveryTime = GetLong(data, "LastStaminaRecoveryTime", DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            PlayerLevel = GetInt(data, "PlayerLevel", 1),
+            PlayerExp   = GetInt(data, "PlayerExp", 0),
+            MaxExp      = GetInt(data, "MaxExp", 500),
+            SelectedChieftainId = GetString(data, "SelectedChieftainId", "")
         };
     }
 
     private Param PlayerDataToParam(PlayerData data)
     {
         Param param = new Param();
-        param.Add(COLUMN_PLAYER_NAME, data.PlayerName);
-        param.Add(COLUMN_GOLD, data.Gold);
-        param.Add(COLUMN_DIAMOND, data.Diamond);
-        param.Add(COLUMN_STAMINA, data.Stamina);
-        param.Add(COLUMN_MAX_STAMINA, data.MaxStamina);
-        param.Add(COLUMN_LAST_STAMINA_RECOVERY_TIME, data.LastStaminaRecoveryTime);
-        param.Add(COLUMN_PLAYER_LEVEL, data.PlayerLevel);
-        param.Add(COLUMN_PLAYER_EXP, data.PlayerExp);
-        param.Add(COLUMN_MAX_EXP, data.MaxExp);
-        param.Add(COLUMN_LAST_RESET_DATE, data.LastResetDate);
+        param.Add("PlayerName", data.PlayerName);
+        param.Add("Gold", data.Gold);
+        param.Add("Diamond", data.Diamond);
+        param.Add("Stamina", data.Stamina);
+        param.Add("MaxStamina", data.MaxStamina);
+        param.Add("LastStaminaRecoveryTime", data.LastStaminaRecoveryTime);
+        param.Add("PlayerLevel", data.PlayerLevel);
+        param.Add("PlayerExp", data.PlayerExp);
+        param.Add("MaxExp", data.MaxExp);
+        param.Add("SelectedChieftainId", data.SelectedChieftainId);
         return param;
     }
 

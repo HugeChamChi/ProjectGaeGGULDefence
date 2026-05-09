@@ -10,4 +10,6 @@ public enum LevelUpEffectType
     BackRowAttackPercent,   // 후방 2줄 공격력 N% 증가
     FrontRowSpeedPercent,   // 전방 2줄 공격 속도 N% 증가
     BackRowSpeedPercent,    // 후방 2줄 공격 속도 N% 증가
+    GaugeSpeedPercent,      // 게이지 회복 속도 N% 증가
+    ProjectileSizePercent,  // 투사체 크기 N% 증가
 }
