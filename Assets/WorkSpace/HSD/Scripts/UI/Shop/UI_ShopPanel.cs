@@ -23,11 +23,10 @@ public class UI_ShopPanel : UI_Base
 
     public void SetupShopList(List<ShopItemData> items)
     {
-        dailyShopList.Setup(items);
-        foreach (var slot in dailyShopList.GetActiveSlots())
+        dailyShopList.Render(items, (data, slot) => 
         {
-            slot.SetCallback((data) => _presenter.BuyItem(data).Forget());
-        }
+            slot.SetCallback((d) => _presenter.BuyItem(d).Forget());
+        });
     }
 
     public void RefreshList()

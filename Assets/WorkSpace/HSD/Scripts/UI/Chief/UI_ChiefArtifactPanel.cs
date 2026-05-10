@@ -51,11 +51,10 @@ public class UI_ChiefArtifactPanel : UI_Base
 
     public void SetupChiefList(IEnumerable<ChiefData> chiefs, System.Action<ChiefData> onSelect)
     {
-        chiefList.Setup(chiefs);
-        foreach (var slot in chiefList.GetActiveSlots())
+        chiefList.Render(chiefs, (data, slot) => 
         {
             slot.SetCallback(onSelect);
-        }
+        });
     }
 
     public void UpdatePreview(ChiefData data)

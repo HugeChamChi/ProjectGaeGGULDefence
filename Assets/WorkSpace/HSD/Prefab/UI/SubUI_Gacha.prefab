@@ -32,10 +32,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3203405452877990215}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 1300, y: 3000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5208336013044798641
 CanvasRenderer:
@@ -1482,9 +1482,9 @@ RectTransform:
   - {fileID: 6891428137575941717}
   m_Father: {fileID: 4473316443029040001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 320, y: -150}
   m_SizeDelta: {x: 300, y: 180}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6126680001249192709
@@ -1620,7 +1620,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0.000076293945}
-  m_SizeDelta: {x: 60, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &5322556389693982278
 MonoBehaviour:
@@ -2402,7 +2402,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3203405452877990215
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2441,8 +2441,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89365522000f4b040b6805d42ca86baa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  background: {fileID: 32488418007634163}
-  closeButton: {fileID: 4947523527429334143}
+  btn_Close: {fileID: 4947523527429334143}
+  btn_BackgroundClose: {fileID: 0}
   chanceButton: {fileID: 3150474090155317675}
   chancePanel: {fileID: 5451712562748078193}
   resultPanel: {fileID: 2145512272747858424}
@@ -2485,9 +2485,9 @@ RectTransform:
   - {fileID: 4180052793750223266}
   m_Father: {fileID: 4473316443029040001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 760, y: -150}
   m_SizeDelta: {x: 300, y: 180}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2106868502901041886
@@ -2647,12 +2647,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae86232b89c42e74cad9dda76a9321ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  btn_Close: {fileID: 0}
+  btn_BackgroundClose: {fileID: 3674522212492103189}
   resultArea: {fileID: 4898716718571897384}
-  backgroundCloseButton: {fileID: 3674522212492103189}
-  itemSlotPrefab: {fileID: 5916890477820530048, guid: f042104407e5dc144978cbe09e917d47,
-    type: 3}
+  resultList:
+    rootObject: {fileID: 5214707311860663582}
+    slotPrefab: {fileID: 5916890477820530048, guid: f042104407e5dc144978cbe09e917d47,
+      type: 3}
+    contentParent: {fileID: 1083103551126512898}
   animationInterval: 0.05
-  startScale: {x: 0.2, y: 0.2}
+  slotStartScale: {x: 0, y: 0}
   appearCurve:
     serializedVersion: 2
     m_Curve:
@@ -2723,7 +2727,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   closeEndScale: {x: 1, y: 0.2}
-  closeAnimationDuration: 0.3
+  closeAnimationDuration: 0.15
   closeEase:
     serializedVersion: 2
     m_Curve:
@@ -3103,7 +3107,7 @@ GameObject:
   - component: {fileID: 4998630887380713338}
   - component: {fileID: 8243690526626858630}
   m_Layer: 5
-  m_Name: ChanceList
+  m_Name: Chance_List
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3726,11 +3730,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94c9c2733902ba744b920371904be540, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backgroundCloseButton: {fileID: 7068878542380904616}
-  closeButton: {fileID: 7138559062843314000}
-  slotParent: {fileID: 4514252151860513341}
-  slotPrefab: {fileID: 6780054246661129766, guid: f182bc51474e6cd489164ef06ec27c91,
-    type: 3}
+  btn_Close: {fileID: 7138559062843314000}
+  btn_BackgroundClose: {fileID: 7068878542380904616}
+  chanceList:
+    rootObject: {fileID: 7324614119753289224}
+    slotPrefab: {fileID: 6780054246661129766, guid: f182bc51474e6cd489164ef06ec27c91,
+      type: 3}
+    contentParent: {fileID: 4514252151860513341}
   startScale: {x: 0.8, y: 0.8}
   duration: 0.2
 --- !u!1 &8695527301050765156
@@ -3880,7 +3886,7 @@ GameObject:
   - component: {fileID: 7434939822674944032}
   - component: {fileID: 254230768437290143}
   m_Layer: 5
-  m_Name: ChanceArea
+  m_Name: Chance_ListParent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

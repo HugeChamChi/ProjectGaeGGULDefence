@@ -33,7 +33,7 @@ public class UI_GachaChancePanel : UI_Base
             dataList.Add(new GachaChanceData { rarity = item.itemName, percent = item.percent });
         }
 
-        chanceList.Setup(dataList);
+        chanceList.Render(dataList);
     }
 
     protected override async UniTask OpenAnimationAsync()

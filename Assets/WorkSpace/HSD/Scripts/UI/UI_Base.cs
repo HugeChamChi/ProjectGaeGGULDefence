@@ -8,15 +8,21 @@ public abstract class UI_Base : MonoBehaviour
     public Action OnClosed;
     public Action OnOpened;
 
-    [Header("Common UI")]
+    [Header("Common UI (Optional)")]
     [SerializeField] protected Button btn_Close;
     [SerializeField] protected Button btn_BackgroundClose;
 
+    protected Canvas _canvas;
+
     protected virtual void Awake()
     {
-        // 공통 닫기 버튼 자동 바인딩
-        if (btn_Close != null) btn_Close.onClick.AddListener(Close);
-        if (btn_BackgroundClose != null) btn_BackgroundClose.onClick.AddListener(Close);
+        _canvas = GetComponent<Canvas>();
+
+        // 하위 호환성 유지: 기존에 설정된 버튼이 있다면 자동으로 바인딩
+        if (btn_Close != null || btn_BackgroundClose != null)
+        {
+            BindCloseButton(btn_Close, btn_BackgroundClose);
+        }
     }
 
     [Button]
@@ -33,7 +39,11 @@ public abstract class UI_Base : MonoBehaviour
 
     public virtual async UniTask OpenAsync()
     {
-        gameObject.SetActive(true);
+        if (_canvas != null)
+            _canvas.enabled = true;
+        else
+            gameObject.SetActive(true);
+
         await OpenAnimationAsync();
         OnOpened?.Invoke();
     }
@@ -41,18 +51,31 @@ public abstract class UI_Base : MonoBehaviour
     public virtual async UniTask CloseAsync()
     {
         await CloseAnimationAsync();
-        gameObject.SetActive(false);
+
+        if (_canvas != null)
+            _canvas.enabled = false;
+        else
+            gameObject.SetActive(false);
+
         OnClosed?.Invoke();
     }
 
-    protected virtual UniTask OpenAnimationAsync()
+    /// <summary>
+    /// 전달된 버튼들을 닫기 기능에 연결합니다.
+    /// </summary>
+    protected void BindCloseButton(params Button[] buttons)
     {
-        return UniTask.CompletedTask;
+        foreach (var btn in buttons)
+        {
+            if (btn != null)
+            {
+                // 중복 리스너 방지를 위해 Clear 후 등록
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => CloseAsync().Forget());
+            }
+        }
     }
 
-    protected virtual UniTask CloseAnimationAsync()
-    {
-        return UniTask.CompletedTask;
-    }
+    protected virtual UniTask OpenAnimationAsync() => UniTask.CompletedTask;
+    protected virtual UniTask CloseAnimationAsync() => UniTask.CompletedTask;
 }
-    
