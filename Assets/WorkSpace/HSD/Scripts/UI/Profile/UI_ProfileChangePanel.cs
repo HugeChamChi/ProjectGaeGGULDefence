@@ -54,13 +54,11 @@ public class UI_ProfileChangePanel : UI_ProfilePanelBase
 
     private void SetupLists()
     {
-        iconList.Setup(Table.Profile.GetItemByType(ProfileItemType.Icon));
-        foreach (var slot in iconList.GetActiveSlots())
-            slot.SetCallback(_presenter.OnItemSelected);
+        iconList.Render(Table.Profile.GetItemByType(ProfileItemType.Icon), (data, slot) => 
+            slot.SetCallback(_presenter.OnItemSelected));
 
-        frameList.Setup(Table.Profile.GetItemByType(ProfileItemType.Frame));
-        foreach (var slot in frameList.GetActiveSlots())
-            slot.SetCallback(_presenter.OnItemSelected);
+        frameList.Render(Table.Profile.GetItemByType(ProfileItemType.Frame), (data, slot) => 
+            slot.SetCallback(_presenter.OnItemSelected));
 
         ChangeIconList();
     }

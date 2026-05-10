@@ -40,7 +40,7 @@ public class UI_GachaResultPanel : UI_Base
         if (items == null) return;
 
         // 1. 리스트 셋업 (생성/재사용 로직은 부모가 처리)
-        resultList.Setup(items);
+        resultList.Render(items);
         
         if (scroll != null) scroll.verticalNormalizedPosition = 1f;
 
