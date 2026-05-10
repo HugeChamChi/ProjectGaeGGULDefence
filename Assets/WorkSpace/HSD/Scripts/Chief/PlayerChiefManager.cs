@@ -23,7 +23,8 @@ public class PlayerChiefManager
     private int selectedChiefId;
     private string _rowInDate = string.Empty;
 
-    public Action<int> ChangeSelectId; 
+    public Action<int> ChangeSelectId;
+    public ChiefData SelectChiefData => Table.Character.Chief.GetChief(selectedChiefId);
 
     public async UniTask InitializeAsync()
     {

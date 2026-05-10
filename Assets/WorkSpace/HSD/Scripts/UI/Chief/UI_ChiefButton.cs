@@ -11,7 +11,7 @@ public class UI_ChiefButton : MonoBehaviour
     {
         Player.Chief.ChangeSelectId += ChiefChange;
         btn_Chief.onClick.AddListener(() => ui_Chief_Artifact_Panel.Open());
-        img_Chief.sprite = Table.Character.Chief.GetChief(Player.Chief.SelectedChiefId).Icon;
+        img_Chief.sprite = Player.Chief.SelectChiefData.Icon;
     }
 
     private void ChiefChange(int id)
