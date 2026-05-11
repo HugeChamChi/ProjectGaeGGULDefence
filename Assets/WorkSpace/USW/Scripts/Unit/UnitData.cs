@@ -9,6 +9,7 @@ public class UnitData : ScriptableObject
     public string     unitName;
     public Tier       unitTier;
     public UnitTribe  unitTribe;
+    public Sprite     icon;
     public GameObject prefab;
     [TextArea] public string description;
 

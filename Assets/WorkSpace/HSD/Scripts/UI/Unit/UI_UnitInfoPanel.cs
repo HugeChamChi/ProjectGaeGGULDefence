@@ -1,16 +1,12 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using Cysharp.Threading.Tasks;
+using GaeGGUL.Extension;
 
 namespace GaeGGUL.UI.Unit
 {
-    public class UI_UnitInfoPanel : UI_Base
+    public class UI_UnitInfoPanel : MonoBehaviour
     {
-        [Header("Palettes")]
-        [SerializeField] private UnitStatPalette statPalette;
-        [SerializeField] private UnitTierPalette tierPalette;
-
         [Header("Basic Info")]
         [SerializeField] private Image           img_UnitIcon;
         [SerializeField] private Image           img_TierFrame;
@@ -20,43 +16,51 @@ namespace GaeGGUL.UI.Unit
         [SerializeField] private TextMeshProUGUI txt_SkillDescription;
 
         [Header("Stats")]
-        [SerializeField] private UI_UnitStatSlot[] statSlots; // 고정 4개 예상
+        [SerializeField] private UI_UnitStatSlot[] statSlots; 
 
         private UI_UnitInfoPresenter _presenter;
 
-        protected override void Awake()
+        protected void Awake()
         {
-            base.Awake();
-            _presenter = new UI_UnitInfoPresenter(this, statPalette, tierPalette);
+            EnsurePresenter();
         }
 
         public void SetData(UnitData data)
         {
+            EnsurePresenter();
             _presenter.SetUnitData(data);
+            gameObject.SetActive(true);
         }
 
-        public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, UnitTierUIInfo tierInfo)
+        private void EnsurePresenter()
         {
-            if (txt_UnitName != null)           txt_UnitName.text = unitName;
-            if (txt_SkillNameText != null)      txt_SkillNameText.text = skillName;
-            if (txt_SkillDescription != null)   txt_SkillDescription.text = skillDescription;
-            if (img_UnitIcon != null)           img_UnitIcon.sprite = icon;
-
-            if (tierInfo != null)
+            if (_presenter == null)
             {
-                if (img_TierFrame != null) img_TierFrame.sprite = tierInfo.frameSprite;
-                if (img_TierBG != null)    img_TierBG.color = tierInfo.bgColor;
-                
-                // Tier Name 색상 적용 예시 (Extension 사용)
-                // txt_UnitName.text = unitName.ToColor(tierInfo.textColor);
+                _presenter = new UI_UnitInfoPresenter(this);
             }
         }
 
-        public void UpdateStats((UnitStatType type, string value)[] stats, UnitStatPalette palette)
+        public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, Sprite frame, Color bgColor, Color textColor)
         {
+            if (txt_UnitName != null)         txt_UnitName.text = unitName.ToColor(textColor); // 이름에 등급색 적용
+            if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
+            if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
+            
+            if (img_UnitIcon != null)         img_UnitIcon.sprite = icon;
+            if (img_TierFrame != null)        img_TierFrame.sprite = frame;
+            if (img_TierBG != null)           img_TierBG.color = bgColor;
+        }
+
+        public void UpdateStats((UnitStatType type, string value)[] stats)
+        {
+            if (statSlots == null) return;
+
             for (int i = 0; i < statSlots.Length && i < stats.Length; i++)
             {
-                var visual = palette.GetInfo(stats[i].type);
+                if (statSlots[i] == null) continue;
+                
+                // StatExtension을 사용하여 비주얼 정보를 가져옴
+                var visual = stats[i].type.GetVisual();
                 statSlots[i].Setup(visual, stats[i].value);
             }
         }

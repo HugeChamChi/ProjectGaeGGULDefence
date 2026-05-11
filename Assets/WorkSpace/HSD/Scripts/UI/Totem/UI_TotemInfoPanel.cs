@@ -18,14 +18,19 @@ public class UI_TotemInfoPanel : MonoBehaviour
 
     protected void Awake()
     {
-        _presenter = new TotemInfoPresenter(this);
+        EnsurePresenter();
     }
 
     public void SetData(TotemData data)
     {
-        if (_presenter == null) _presenter = new TotemInfoPresenter(this);
+        EnsurePresenter();
         _presenter.SetData(data);
         gameObject.SetActive(true);
+    }
+
+    private void EnsurePresenter()
+    {
+        if (_presenter == null) _presenter = new TotemInfoPresenter(this);
     }
 
     public void UpdateUI(Sprite icon, string name, string stats, TotemData data)
