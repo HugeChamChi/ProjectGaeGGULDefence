@@ -12,7 +12,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _ENABLESTAGGER_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -24,11 +25,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BgTex:
-        m_Texture: {fileID: 2800000, guid: c99a391f381fe534c80a193fe9f307a0, type: 3}
+        m_Texture: {fileID: 2800000, guid: dfe6e0ac3e5f24740a17e14b65e08406, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _IconTex:
-        m_Texture: {fileID: 2800000, guid: e5da1d880b311497b9ed8213592e283a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9b3f82e684f08734aaa8b0b2f1f5e19b, type: 3}
         m_Scale: {x: 0, y: 0}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -38,9 +39,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorMask: 15
-    - _EnableStagger: 0
+    - _EnableStagger: 1
     - _IconRotation: 0
-    - _IconSize: 10
+    - _IconSize: 6
     - _ResolutionScale: 1000
     - _Stencil: 0
     - _StencilComp: 8
@@ -50,11 +51,11 @@ Material:
     - _TargetAspect: 1
     - _UseUIAlphaClip: 0
     m_Colors:
-    - _BgColor: {r: 1, g: 0.9846416, b: 0.4481132, a: 1}
+    - _BgColor: {r: 0.49886215, g: 0.48393556, b: 0.8207547, a: 1}
     - _Color: {r: 1, g: 0.24056602, b: 0.24056602, a: 0.7607843}
     - _GridCount: {r: 20, g: 15, b: 0, a: 0}
-    - _IconColor: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0.4627451}
-    - _IconGap: {r: 0, g: 0, b: 0, a: 0}
-    - _IconTiling: {r: 3, g: 1, b: 0, a: 0}
-    - _ScrollSpeed: {r: 0, g: 0, b: 0, a: 0}
+    - _IconColor: {r: 0, g: 0, b: 0, a: 0.5019608}
+    - _IconGap: {r: 2, g: 2, b: 0, a: 0}
+    - _IconTiling: {r: 3, g: 3, b: 0, a: 0}
+    - _ScrollSpeed: {r: 10.98, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

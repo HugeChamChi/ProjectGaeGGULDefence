@@ -12,11 +12,11 @@ namespace GaeGGUL.Animation
         [SerializeField] private Transform target;
 
         [Header("Effects")]
-        [SerializeField] private BreathingEffect loopEffect;     // 반복 효과 (Idle)
-        [SerializeField] private BounceJumpEffect triggerEffect; // 트리거 효과 (Action)
+        [SerializeField] private Anim_Breathing loopEffect;     // 반복 효과 (Idle)
+        [SerializeField] private Anim_BounceJump triggerEffect; // 트리거 효과 (Action)
 
         [Header("Settings")]
-        [SerializeField] private bool playLoopOnEnable = true;
+        [SerializeField] private bool playLoopAfterTrigger = true;
         private bool _isTriggerPlaying;
 
         private void Awake()
@@ -24,22 +24,14 @@ namespace GaeGGUL.Animation
             if (target == null) target = transform;
 
             // 컴포넌트 자동 감지 및 초기화
-            if (loopEffect == null) loopEffect = GetComponent<BreathingEffect>();
-            if (triggerEffect == null) triggerEffect = GetComponent<BounceJumpEffect>();
+            if (loopEffect == null) loopEffect = GetComponent<Anim_Breathing>();
+            if (triggerEffect == null) triggerEffect = GetComponent<Anim_BounceJump>();
 
             loopEffect?.Initialize(target);
             triggerEffect?.Initialize(target);
         }
 
-        private void OnEnable()
-        {
-            if (playLoopOnEnable) PlayLoop();
-        }
-
-        private void OnDisable()
-        {
-            StopAll();
-        }
+        // Anim_Base에서 OnEnable을 처리하므로 여기서는 별도의 OnEnable/OnDisable 로직이 단순화됩니다.
 
         public void PlayLoop() => loopEffect?.Play().Forget();
 
@@ -56,7 +48,7 @@ namespace GaeGGUL.Animation
 
             _isTriggerPlaying = false;
 
-            if (playLoopOnEnable) PlayLoop();
+            if (playLoopAfterTrigger) PlayLoop();
         }
 
         public void StopAll()
