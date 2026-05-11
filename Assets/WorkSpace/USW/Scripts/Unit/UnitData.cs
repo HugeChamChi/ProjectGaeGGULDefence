@@ -7,7 +7,7 @@ public class UnitData : ScriptableObject
     public int        characterId;
     public int        unitType;
     public string     unitName;
-    public UnitTier   unitTier;
+    public Tier       unitTier;
     public UnitTribe  unitTribe;
     public GameObject prefab;
     [TextArea] public string description;

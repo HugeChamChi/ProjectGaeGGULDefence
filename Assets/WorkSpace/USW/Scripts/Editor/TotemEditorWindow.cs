@@ -108,11 +108,11 @@ public class TotemEditorWindow : EditorWindow
 
             EditorGUILayout.LabelField("희귀도", GUILayout.Width(50f));
             EditorGUI.BeginChangeCheck();
-            var r = (TotemRarity)EditorGUILayout.EnumPopup(_data.rarity, GUILayout.Width(90f));
+            var r = (Tier)EditorGUILayout.EnumPopup(_data.tier, GUILayout.Width(90f));
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(_data, "Change Rarity");
-                _data.rarity = r;
+                _data.tier = r;
                 EditorUtility.SetDirty(_data);
             }
         }

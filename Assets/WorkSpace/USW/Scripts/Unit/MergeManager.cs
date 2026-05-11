@@ -44,7 +44,7 @@ public class MergeManager : InGameSingleton<MergeManager>
 
         var targets = GetMergeTargets(_selectedUnit);
         var spawnCell = targets[0].cell;
-        var nextTier  = (UnitTier)((int)_selectedUnit.unitData.unitTier + 1);
+        var nextTier  = (Tier)((int)_selectedUnit.unitData.unitTier + 1);
 
         HideButton();
 
@@ -92,7 +92,7 @@ public class MergeManager : InGameSingleton<MergeManager>
     public bool CanMerge(UnitBase unit)
     {
         if (unit?.unitData == null) return false;
-        if (unit.unitData.unitTier == UnitTier.Legend) return false; // 최고 티어는 합성 불가
+        if (unit.unitData.unitTier == Tier.Legend) return false; // 최고 티어는 합성 불가
         return GetMergeTargets(unit).Count >= 3;
     }
 
