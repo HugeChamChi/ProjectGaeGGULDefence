@@ -5,6 +5,20 @@ using GaeGGUL.Extension;
 
 namespace GaeGGUL.UI.Unit
 {
+    public struct UnitStatUIData
+    {
+        public UnitStatType Type;
+        public string Value;
+        public string Bonus;
+
+        public UnitStatUIData(UnitStatType type, string value, string bonus)
+        {
+            Type = type;
+            Value = value;
+            Bonus = bonus;
+        }
+    }
+
     public class UI_UnitInfoPanel : MonoBehaviour
     {
         [Header("Basic Info")]
@@ -23,6 +37,14 @@ namespace GaeGGUL.UI.Unit
         protected void Awake()
         {
             EnsurePresenter();
+        }
+
+        public void SetData(UnitBase unit)
+        {
+            if (unit == null) return;
+            EnsurePresenter();
+            _presenter.SetUnitData(unit);
+            gameObject.SetActive(true);
         }
 
         public void SetData(UnitData data)
@@ -51,17 +73,17 @@ namespace GaeGGUL.UI.Unit
             if (img_TierBG != null)           img_TierBG.color = bgColor;
         }
 
-        public void UpdateStats((UnitStatType type, string value)[] stats)
+        public void UpdateStats(System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
         {
             if (statSlots == null) return;
 
-            for (int i = 0; i < statSlots.Length && i < stats.Length; i++)
+            for (int i = 0; i < statSlots.Length && i < stats.Count; i++)
             {
                 if (statSlots[i] == null) continue;
                 
-                // StatExtension을 사용하여 비주얼 정보를 가져옴
-                var visual = stats[i].type.GetVisual();
-                statSlots[i].Setup(visual, stats[i].value);
+                var statData = stats[i];
+                var visual = statData.Type.GetVisual();
+                statSlots[i].Setup(visual, statData.Value, statData.Bonus);
             }
         }
     }

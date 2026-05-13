@@ -28,7 +28,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected CurrencyManager _currency;
     protected BossBase        _boss;
-    protected GridCell        _currentCell;
+    public GridCell currentCell { get; private set; }
 
     private CancellationTokenSource _loopCts;
 
@@ -45,7 +45,7 @@ public abstract class UnitBase : MonoBehaviour
 
         _currency    = currency;
         _boss        = boss;
-        _currentCell = cell;
+        currentCell = cell;
 
         StopLoops();
         _loopCts = new CancellationTokenSource();
@@ -65,7 +65,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         OnUnitRemoved();
         StopLoops();
-        _currentCell = null;
+        currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
 
@@ -97,26 +97,26 @@ public abstract class UnitBase : MonoBehaviour
             {
                 token.ThrowIfCancellationRequested();
 
-                if (_currentCell != null && _currentCell.Model.IsSealed)
+                if (currentCell != null && currentCell.Model.IsSealed)
                 {
                     await UniTask.Yield(token);
                     continue;
                 }
 
-                int   row          = _currentCell?.GridPosition.y ?? 0;
+                int   row          = currentCell?.GridPosition.y ?? 0;
                 float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
 
                 float interval = 1.0f
                                * Manager.Buff.SpeedMultiplier
-                               * (_currentCell?.Model.SpeedModifier ?? 1f)
+                               * (currentCell?.Model.SpeedModifier ?? 1f)
                                / rowSpeedMult;
                 interval = Mathf.Max(interval, 0.05f);
 
                 await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
                 token.ThrowIfCancellationRequested();
 
-                bool attackDisabled = _currentCell != null &&
-                    (_currentCell.Model.IsAttackDisabled || _currentCell.Model.TotemAttackDisabled);
+                bool attackDisabled = currentCell != null &&
+                    (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
 
                 if (!attackDisabled && _boss != null && !_boss.IsDead)
                 {
@@ -141,19 +141,19 @@ public abstract class UnitBase : MonoBehaviour
             {
                 token.ThrowIfCancellationRequested();
 
-                if (_currentCell != null && _currentCell.Model.IsSealed)
+                if (currentCell != null && currentCell.Model.IsSealed)
                 {
                     await UniTask.Yield(token);
                     continue;
                 }
 
-                int   row          = _currentCell?.GridPosition.y ?? 0;
+                int   row          = currentCell?.GridPosition.y ?? 0;
                 float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
 
                 float interval = unitData.skillCooldown
                                * Manager.Buff.GaugeSpeedMultiplier
                                * Manager.Buff.FoodSpeedMultiplier
-                               * (_currentCell?.Model.SpeedModifier ?? 1f)
+                               * (currentCell?.Model.SpeedModifier ?? 1f)
                                / rowSpeedMult;
                 interval = Mathf.Max(interval, 0.05f);
 
@@ -173,8 +173,8 @@ public abstract class UnitBase : MonoBehaviour
 
         _currency.AddCurrency(unitData.foodPerTick * Manager.Buff.FoodAmountMultiplier);
 
-        bool attackDisabled = _currentCell != null &&
-            (_currentCell.Model.IsAttackDisabled || _currentCell.Model.TotemAttackDisabled);
+        bool attackDisabled = currentCell != null &&
+            (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
 
         if (!attackDisabled && _boss != null && !_boss.IsDead)
         {
@@ -192,11 +192,11 @@ public abstract class UnitBase : MonoBehaviour
     {
         if (unitData == null) return 0;
 
-        float cellModifier  = _currentCell != null
-            ? (_currentCell.Model.NullifyDamageDebuff ? 1f : _currentCell.Model.DamageModifier)
+        float cellModifier  = currentCell != null
+            ? (currentCell.Model.NullifyDamageDebuff ? 1f : currentCell.Model.DamageModifier)
             : 1f;
-        float totemModifier = _currentCell?.Model.TotemAttackModifier ?? 1f;
-        int   row           = _currentCell?.GridPosition.y ?? 0;
+        float totemModifier = currentCell?.Model.TotemAttackModifier ?? 1f;
+        int   row           = currentCell?.GridPosition.y ?? 0;
         float rowModifier   = Manager.LevelUp?.GetRowAttackMultiplier(row) ?? 1f;
 
         float damage = baseDamage

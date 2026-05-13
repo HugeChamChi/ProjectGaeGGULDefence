@@ -6,35 +6,51 @@ namespace GaeGGUL.UI.Unit
     public class UI_UnitInfoPresenter
     {
         private readonly UI_UnitInfoPanel _view;
+        private readonly System.Collections.Generic.List<UnitStatUIData> _statBuffer = new System.Collections.Generic.List<UnitStatUIData>(4);
 
         public UI_UnitInfoPresenter(UI_UnitInfoPanel view)
         {
             _view = view;
         }
 
+        public void SetUnitData(UnitBase unit)
+        {
+            if (unit == null || unit.unitData == null) return;
+
+            var data = unit.unitData;
+            var cell = unit.currentCell;
+
+            _statBuffer.Clear();
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           data.atk.ToString(),            cell.GetAttackBonusText(data.atk)));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      data.skillAtk.ToString(),       cell.GetAttackBonusText(data.skillAtk)));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s",    cell.GetCooldownBonusText(data.skillCooldown)));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{data.foodPerTick:F0}",      cell.GetFoodBonusText()));
+
+            UpdateView(data, _statBuffer);
+        }
+
         public void SetUnitData(UnitData data)
         {
             if (data == null) return;
 
-            // 1. 등급 확장 메서드 활용 (GetFrame, GetBGColor, GetTextColor 등)
-            var tier = data.unitTier;
-            
-            // 2. 스텟 정보 구성
-            var stats = new (UnitStatType type, string value)[]
-            {
-                (UnitStatType.Atk,           data.atk.ToString()),
-                (UnitStatType.SkillAtk,      data.skillAtk.ToString()),
-                (UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s"),
-                (UnitStatType.FoodPerTick,   $"+{data.foodPerTick:F0}")
-            };
+            _statBuffer.Clear();
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           data.atk.ToString(),            ""));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      data.skillAtk.ToString(),       ""));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s",    ""));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{data.foodPerTick:F0}",      ""));
 
-            // 3. View 업데이트
-            // TierExtension을 사용하여 필요한 정보를 직접 뽑아서 넘깁니다.
+            UpdateView(data, _statBuffer);
+        }
+
+        private void UpdateView(UnitData data, System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
+        {
+            var tier = data.unitTier;
+
             _view.UpdateBasicInfo(
                 data.unitName, 
-                data.unitName, // SkillName (데이터에 아직 없으므로 임시)
+                data.unitName,
                 data.description, 
-                data.icon, // UnitData의 아이콘 사용
+                data.icon,
                 tier.GetFrame(),
                 tier.GetBGColor(),
                 tier.GetTextColor()
