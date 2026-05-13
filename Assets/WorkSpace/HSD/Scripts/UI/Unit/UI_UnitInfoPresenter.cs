@@ -21,10 +21,27 @@ namespace GaeGGUL.UI.Unit
             var cell = unit.currentCell;
 
             _statBuffer.Clear();
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           data.atk.ToString(),            cell.GetAttackBonusText(data.atk)));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      data.skillAtk.ToString(),       cell.GetAttackBonusText(data.skillAtk)));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s",    cell.GetCooldownBonusText(data.skillCooldown)));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{data.foodPerTick:F0}",      cell.GetFoodBonusText()));
+
+            // Atk: 최종값 (기본+보너스), 보너스 텍스트 (+N)
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           
+                cell.GetFinalAttack(data.atk).ToString(),            
+                cell.GetAttackBonusText(data.atk)));
+
+            // SkillAtk: 최종값 (기본+보너스), 보너스 텍스트 (+N)
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      
+                cell.GetFinalAttack(data.skillAtk).ToString(),       
+                cell.GetAttackBonusText(data.skillAtk)));
+
+            // SkillCooldown: 최종값 (기본+보너스), 보너스 텍스트 (+0.5s)
+            float finalCooldown = cell.GetFinalCooldown(data.skillCooldown);
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, 
+                $"{finalCooldown:F1}s",    
+                cell.GetCooldownBonusText(data.skillCooldown)));
+
+            // FoodPerTick: 현재는 기본값 표시, 보너스 텍스트 (Buff)
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   
+                $"+{data.foodPerTick:F0}",      
+                cell.GetFoodBonusText()));
 
             UpdateView(data, _statBuffer);
         }
