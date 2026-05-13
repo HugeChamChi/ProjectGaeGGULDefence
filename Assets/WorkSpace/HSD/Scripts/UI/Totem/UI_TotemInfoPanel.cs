@@ -3,11 +3,13 @@ using UnityEngine.UI;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using GaeGGUL.UI.Totem;
+using GaeGGUL.UI.Common;
+using GaeGGUL.Extension;
 
 public class UI_TotemInfoPanel : MonoBehaviour
 {
     [Header("Totem Info")]
-    [SerializeField] private Image img_Icon;
+    [SerializeField] private UI_IconTierSlot iconSlot;
     [SerializeField] private TextMeshProUGUI txt_Name;
     [SerializeField] private TextMeshProUGUI txt_Stats;
 
@@ -33,10 +35,10 @@ public class UI_TotemInfoPanel : MonoBehaviour
         if (_presenter == null) _presenter = new TotemInfoPresenter(this);
     }
 
-    public void UpdateUI(Sprite icon, string name, string stats, TotemData data)
+    public void UpdateUI(Sprite icon, string name, string stats, Tier tier, TotemData data)
     {
-        if (img_Icon != null) img_Icon.sprite = icon;
-        if (txt_Name != null) txt_Name.text = name;
+        if (iconSlot != null) iconSlot.SetData(icon, tier);
+        if (txt_Name != null) txt_Name.text = $"[{name}]"; txt_Name.color = tier.GetTextColor();
         if (txt_Stats != null) txt_Stats.text = stats;
 
         if (rangeGrid != null)

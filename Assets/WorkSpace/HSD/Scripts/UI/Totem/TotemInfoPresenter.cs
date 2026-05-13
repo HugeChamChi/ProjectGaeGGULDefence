@@ -16,7 +16,7 @@ public class TotemInfoPresenter
         _currentData = data;
         
         string statString = BuildStatString(data);
-        _view.UpdateUI(data.icon, data.totemName, statString, data);
+        _view.UpdateUI(data.icon, data.totemName, statString, data.tier, data);
     }
 
     private string BuildStatString(TotemData data)

@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using GaeGGUL.Extension;
+using GaeGGUL.UI.Common;
 
 namespace GaeGGUL.UI.Unit
 {
@@ -22,15 +23,13 @@ namespace GaeGGUL.UI.Unit
     public class UI_UnitInfoPanel : MonoBehaviour
     {
         [Header("Basic Info")]
-        [SerializeField] private Image           img_UnitIcon;
-        [SerializeField] private Image           img_TierFrame;
-        [SerializeField] private Image           img_TierBG;
+        [SerializeField] private UI_IconTierSlot iconSlot;
         [SerializeField] private TextMeshProUGUI txt_UnitName;
         [SerializeField] private TextMeshProUGUI txt_SkillNameText;
         [SerializeField] private TextMeshProUGUI txt_SkillDescription;
 
         [Header("Stats")]
-        [SerializeField] private UI_UnitStatSlot[] statSlots; 
+        [SerializeField] private UI_StatSlot[] statSlots; 
 
         private UI_UnitInfoPresenter _presenter;
 
@@ -62,15 +61,13 @@ namespace GaeGGUL.UI.Unit
             }
         }
 
-        public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, Sprite frame, Color bgColor, Color textColor)
+        public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, Tier tier)
         {
-            if (txt_UnitName != null)         txt_UnitName.text = unitName.ToColor(textColor); // 이름에 등급색 적용
+            if (txt_UnitName != null)         txt_UnitName.text = unitName.ToColor(tier.GetTextColor()); // 이름에 등급색 적용
             if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
             if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
             
-            if (img_UnitIcon != null)         img_UnitIcon.sprite = icon;
-            if (img_TierFrame != null)        img_TierFrame.sprite = frame;
-            if (img_TierBG != null)           img_TierBG.color = bgColor;
+            if (iconSlot != null)             iconSlot.SetData(icon, tier);
         }
 
         public void UpdateStats(System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
@@ -83,7 +80,7 @@ namespace GaeGGUL.UI.Unit
                 
                 var statData = stats[i];
                 var visual = statData.Type.GetVisual();
-                statSlots[i].Setup(visual, statData.Value, statData.Bonus);
+                statSlots[i].Setup(visual.icon, visual.bgColor, statData.Value, statData.Bonus);
             }
         }
     }

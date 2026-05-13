@@ -61,16 +61,12 @@ namespace GaeGGUL.UI.Unit
 
         private void UpdateView(UnitData data, System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
         {
-            var tier = data.unitTier;
-
             _view.UpdateBasicInfo(
                 data.unitName, 
                 data.unitName,
                 data.description, 
                 data.icon,
-                tier.GetFrame(),
-                tier.GetBGColor(),
-                tier.GetTextColor()
+                data.unitTier
             );
 
             _view.UpdateStats(stats);

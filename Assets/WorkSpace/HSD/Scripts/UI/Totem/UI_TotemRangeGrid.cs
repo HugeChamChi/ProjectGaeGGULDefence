@@ -95,7 +95,7 @@ namespace GaeGGUL.UI.Totem
                         _cells[x, y] = existingCells[index++];
                     }
                 }
-                _center = totemPosition;
+                _center = totemPosition - new Vector2Int(1, 1);
                 _isInitialized = true;
             }
         }
@@ -161,7 +161,7 @@ namespace GaeGGUL.UI.Totem
             }
 
             _cells = new UI_TotemRangeCell[gridSize.x, gridSize.y];
-            _center = totemPosition;
+            _center = totemPosition - new Vector2Int(1, 1);
 
             for (int y = 0; y < gridSize.y; y++)
             {
