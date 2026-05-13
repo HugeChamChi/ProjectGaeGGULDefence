@@ -42,4 +42,7 @@ public static class Manager
 
     // ── 투사체 ─────────────────────────────────────────────────
     public static ProjectilePool   Projectile => ProjectilePool.Instance;
+
+    // ── 사운드 ─────────────────────────────────────────────────
+    public static AudioManager     Audio      => AudioManager.Instance;
 }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b9836eb53f5b5458eaa148002a9b26, type: 3}
+  m_Name: TotemDisplaySettings
+  m_EditorClassIdentifier: 
+  fieldColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  fieldLabel: "\uD544\uB4DC"
+  totemColor: {r: 0.5, g: 1, b: 0.5, a: 1}
+  totemLabel: "\uD1A0\uD15C \uC704\uCE58"
+  effectColor: {r: 1, g: 0, b: 0, a: 1}
+  effectLabel: "\uD6A8\uACFC \uBC94\uC704"
+  debuffColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+  debuffLabel: "\uB514\uBC84\uD504 \uC801\uC6A9"

@@ -48,14 +48,14 @@ Material:
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
-    - _TargetAspect: 1
+    - _TargetAspect: 1.77
     - _UseUIAlphaClip: 0
     m_Colors:
     - _BgColor: {r: 0.49886215, g: 0.48393556, b: 0.8207547, a: 1}
     - _Color: {r: 1, g: 0.24056602, b: 0.24056602, a: 0.7607843}
     - _GridCount: {r: 20, g: 15, b: 0, a: 0}
     - _IconColor: {r: 0, g: 0, b: 0, a: 0.5019608}
-    - _IconGap: {r: 2, g: 2, b: 0, a: 0}
-    - _IconTiling: {r: 3, g: 3, b: 0, a: 0}
-    - _ScrollSpeed: {r: 10.98, g: 0, b: 0, a: 0}
+    - _IconGap: {r: 3, g: 3, b: 0, a: 0}
+    - _IconTiling: {r: 7, g: 3, b: 0, a: 0}
+    - _ScrollSpeed: {r: 10, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

@@ -1,4 +1,4 @@
-public enum UnitTier
+public enum Tier
 {
     Normal = 0, // 일반
     Rare   = 1, // 레어

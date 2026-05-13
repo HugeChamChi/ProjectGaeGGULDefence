@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public enum TotemRarity { Normal, Rare, Epic, Special }
-
 // 토템 종류
 public enum TotemType
 {
@@ -20,7 +18,7 @@ public class TotemData : ScriptableObject
 {
     [Header("기본 정보")]
     public TotemType   totemType;
-    public TotemRarity rarity;
+    public Tier        tier;
     public string      totemName;
     public Sprite      icon;
     public GameObject  prefab;

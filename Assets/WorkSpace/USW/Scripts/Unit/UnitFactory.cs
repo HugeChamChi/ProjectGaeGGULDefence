@@ -32,7 +32,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
     }
 
     /// <summary>Normal 티어 유닛만 랜덤 생성 (소환 버튼용)</summary>
-    public UnitBase CreateRandomNormalUnit() => CreateRandomUnitOfTier(UnitTier.Normal);
+    public UnitBase CreateRandomNormalUnit() => CreateRandomUnitOfTier(Tier.Normal);
 
     /// <summary>전체 풀에서 랜덤 생성</summary>
     public UnitBase CreateRandomUnit()
@@ -50,7 +50,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
     }
 
     /// <summary>지정 티어에서 랜덤 유닛 생성 (머지 결과물 스폰에 사용)</summary>
-    public UnitBase CreateRandomUnitOfTier(UnitTier tier)
+    public UnitBase CreateRandomUnitOfTier(Tier tier)
     {
         if (unitDataList == null || unitDataList.Length == 0)
         {
