@@ -40,6 +40,7 @@ public static class Manager
     // ── UI ─────────────────────────────────────────────────────
     public static UIManager        UI         => UIManager.Instance;
     public static LevelUpUI        LevelUpUI  => LevelUpUI.Instance;
+    public static TotemInfoPopupUI TotemInfo  => TotemInfoPopupUI.Instance;
 
     // ── 투사체 ─────────────────────────────────────────────────
     public static ProjectilePool   Projectile => ProjectilePool.Instance;

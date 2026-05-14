@@ -64,13 +64,13 @@ public class WaveManager : InGameSingleton<WaveManager>
 
         Manager.Boss.SpawnSingleBoss(entry, OnSingleBossDefeated);
 
-        // 유닛 타겟 갱신
+        // 유닛 타겟 갱신 — 셀 참조 유지해야 행별 배율/디버프 정상 작동
         var mainBoss = Manager.Boss.CurrentBoss;
         foreach (var cell in Manager.Grid.GetOccupiedCells())
         {
             if (cell.OccupyingUnit == null) continue;
             cell.OccupyingUnit.OnRemoved();
-            cell.OccupyingUnit.OnPlaced(Manager.Currency, mainBoss);
+            cell.OccupyingUnit.OnPlaced(Manager.Currency, mainBoss, cell);
         }
     }
 

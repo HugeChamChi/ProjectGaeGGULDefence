@@ -76,6 +76,19 @@ public abstract class UnitBase : MonoBehaviour
 
     private void OnDestroy() => StopLoops();
 
+    /// <summary>인구수·셀 상태 변경 없이 공격/스킬 루프만 정지. LevelUpUI 등 일시 중단 전용.</summary>
+    public void PauseLoops() => StopLoops();
+
+    /// <summary>PauseLoops 이후 루프 재개. 셀·재화·보스 참조는 기존 값 유지.</summary>
+    public void ResumeLoops()
+    {
+        if (_currency == null) return;
+        StopLoops();
+        _loopCts = new CancellationTokenSource();
+        AttackLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+    }
+
     private void StopLoops()
     {
         _loopCts?.Cancel();
