@@ -14,7 +14,10 @@ public abstract class InGameSingleton<T> : MonoBehaviour where T : MonoBehaviour
         get
         {
             if (_instance == null)
-                Debug.LogError($"[InGameSingleton] {typeof(T).Name} not found in scene. Ensure it is present in the Inspector.");
+            {
+                Instance = new GameObject(typeof(T).Name).AddComponent<T>();
+                Debug.Log($"[InGameSingleton] {typeof(T).Name} not found in scene. Ensure it is present in the Inspector.");
+            }
 
             return _instance;
         }

@@ -15,6 +15,7 @@ namespace HSD.UI.Upgrade
             _view.OnOpened += HandleOpened;
             _model.OnDataChanged += UpdateView;
             _model.OnCurrencyChanged += HandleCurrencyChanged;
+            HandleOpened();
         }
 
         private void HandleOpened()

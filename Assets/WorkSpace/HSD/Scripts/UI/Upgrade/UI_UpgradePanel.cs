@@ -47,17 +47,16 @@ namespace HSD.UI.Upgrade
 
         public void InitItems(List<UpgradeModel.UpgradeItemData> dataList, Action<string> onUpgradeClicked)
         {
-            // Clear existing if needed (though usually Init is called once)
-            foreach (Transform child in itemContainer)
+            // 이미 초기화되었다면 데이터만 업데이트
+            if (_items.Count > 0)
             {
-                // RM.Destroy should be used if they were pooled, but for now we'll assume they are simple
-                Destroy(child.gameObject);
+                UpdateAllItems(dataList);
+                return;
             }
-            _items.Clear();
 
             foreach (var data in dataList)
             {
-                // In a real scenario, use RM.Instantiate if itemPrefab is a prefab path or object
+                // RM.Instantiate를 사용하는 것이 원칙이나, 프리팹 참조가 직접 연결된 경우 대응
                 UI_UpgradeItem item = Instantiate(itemPrefab, itemContainer);
                 item.Init(data, onUpgradeClicked);
                 _items.Add(data.UpgradeTarget, item);
