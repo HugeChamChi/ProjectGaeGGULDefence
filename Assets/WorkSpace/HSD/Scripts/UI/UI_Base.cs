@@ -84,7 +84,7 @@ public abstract class UI_Base : MonoBehaviour
 
     protected virtual async UniTask OpenAnimationAsync()
     {
-        btn_BackgroundClose.gameObject.SetActive(true);
+        btn_BackgroundClose?.gameObject.SetActive(true);
 
         if (targetAnim != null)
         {
@@ -107,6 +107,6 @@ public abstract class UI_Base : MonoBehaviour
             await UniTask.CompletedTask;
         }
 
-        btn_BackgroundClose.gameObject.SetActive(false);
+        btn_BackgroundClose?.gameObject.SetActive(false);
     }
 }

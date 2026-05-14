@@ -26,7 +26,7 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
 
     private readonly Dictionary<string, int> _jobLevel = new()
     {
-        { "Frog", 1 }, { "Frog_Gunner", 1 }, { "Frog_Ninja", 1 }, { "Frog_Magician", 1 }
+        { "Frog", 1 }, { "Frog_Gunner", 1 }, { "Frog_Ninja", 1 }, { "Frog_Wizard", 1 }, { "Frog_Chief", 1 }
     };
     private int _currencyLevel = 1;
 
@@ -77,10 +77,14 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
             var cols = lines[i].Trim().Split(',');
             if (cols.Length < 5 || string.IsNullOrWhiteSpace(cols[0])) continue;
 
+            string target = cols[1].Trim();
+            if (target == "Frog_Magician") target = "Frog_Wizard";
+            else if (target == "All") target = "Frog_Chief";
+
             _costRows.Add(new JobUpgradeCostRow
             {
                 UpgradeType   = cols[0].Trim(),
-                UpgradeTarget = cols[1].Trim(),
+                UpgradeTarget = target,
                 InitialCost   = int.TryParse(cols[2].Trim(), out var ic) ? ic : 0,
                 CostRate      = float.TryParse(cols[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var cr) ? cr : 1f,
                 CostIncrease  = int.TryParse(cols[4].Trim(), out var ci) ? ci : 0,
@@ -100,6 +104,7 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
 
             int    level    = int.TryParse(cols[5].Trim(), out var lv) ? lv : 1;
             string charType = cols[3].Trim();
+            if (charType == "Frog_Magician") charType = "Frog_Wizard";
 
             var row = new CharacterStatRow
             {
@@ -129,6 +134,12 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
     /// <summary>직업 타입의 현재 강화 레벨 반환. 없으면 1.</summary>
     public int GetJobLevel(string jobType)
         => _jobLevel.TryGetValue(jobType, out var lv) ? lv : 1;
+
+    public int GetUpgradeLevel(string upgradeTarget)
+    {
+        if (upgradeTarget == "Frog_Chief") return _currencyLevel;
+        return _jobLevel.TryGetValue(upgradeTarget, out var lv) ? lv : 1;
+    }
 
     /// <summary>현재 강화 레벨 기준 공격력을 반환합니다.</summary>
     public float GetCurrentAtk(int characterId)
@@ -160,7 +171,7 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
         var costRow = _costRows.Find(r => r.UpgradeTarget == upgradeTarget);
         if (costRow == null) return -1;
 
-        int currentLevel = upgradeTarget == "All"
+        int currentLevel = upgradeTarget == "Frog_Chief"
             ? _currencyLevel
             : (_jobLevel.TryGetValue(upgradeTarget, out var lv) ? lv : 1);
 
@@ -183,7 +194,7 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
         if (cost < 0) return false;
         if (!Manager.Currency.Spend(cost)) return false;
 
-        if (upgradeTarget == "All")
+        if (upgradeTarget == "Frog_Chief")
             _currencyLevel = Mathf.Min(_currencyLevel + 1, MaxUpgradeLevel);
         else if (_jobLevel.ContainsKey(upgradeTarget))
             _jobLevel[upgradeTarget] = Mathf.Min(_jobLevel[upgradeTarget] + 1, MaxUpgradeLevel);
