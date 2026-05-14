@@ -44,4 +44,10 @@ public class TotemData : ScriptableObject
     public List<Vector2Int> effectRange         = new List<Vector2Int>();
     [Tooltip("공격 불가 범위 — 토템 위치 기준 상대 오프셋")]
     public List<Vector2Int> attackDisabledRange = new List<Vector2Int>();
+
+    [Header("시트 연동")]
+    [Tooltip("구글 시트 totem_id 컬럼 값. 런타임 시트 데이터 매핑 키.")]
+    public int  totemId     = 0;
+    [Tooltip("회전 가능 여부. 시트 is_rotatable 컬럼이 있으면 런타임에 덮어쓰기됨.")]
+    public bool isRotatable = true;
 }
