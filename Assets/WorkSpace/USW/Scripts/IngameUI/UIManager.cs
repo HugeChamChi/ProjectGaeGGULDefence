@@ -34,11 +34,13 @@ public class UIManager : InGameSingleton<UIManager>
 
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
+    [SerializeField] private HSD.UI.Setting.UI_SettingPanel_InGame settingPanel;
 
     [Header("Result")]
     [SerializeField] private GameObject resultPanel;
     [SerializeField] private TMP_Text   resultText;
     [SerializeField] private Button     retryButton;
+    [SerializeField] private Button     settingButton;
 
     protected override void Awake()
     {
@@ -53,6 +55,9 @@ public class UIManager : InGameSingleton<UIManager>
             summonButton.onClick.AddListener(Manager.Spawner.OnSpawnButtonPressed);
 
         startButton.onClick.AddListener(Manager.Game.OnStartButtonPressed);
+
+        if (settingButton != null && settingPanel != null)
+            settingButton.onClick.AddListener(() => settingPanel.Open());
 
         Manager.Timer.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
         Manager.Currency.OnCurrencyChanged += c => currencyText.text = $"식량: {(int)c}";

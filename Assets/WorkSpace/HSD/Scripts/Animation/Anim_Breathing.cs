@@ -19,13 +19,13 @@ namespace GaeGGUL.Animation
             Stop();
 
             float jump = useJump ? jumpAmount : 0;
-            Vector3 targetSize = new Vector3(_originSize.x * scaleMultiplier.x, _originSize.y * scaleMultiplier.y, _originSize.z);
+            Vector3 targetScale = new Vector3(_originScale.x * scaleMultiplier.x, _originScale.y * scaleMultiplier.y, _originScale.z);
 
             _currentSeq = DOTween.Sequence()
                 .Append(GetMoveTween(_originPos + new Vector3(0, jump, 0), duration).SetEase(ease))
-                .Join(GetSizeTween(targetSize, duration).SetEase(ease))
+                .Join(GetScaleTween(targetScale, duration).SetEase(ease))
                 .Append(GetMoveTween(_originPos, duration).SetEase(ease))
-                .Join(GetSizeTween(_originSize, duration).SetEase(ease))
+                .Join(GetScaleTween(_originScale, duration).SetEase(ease))
                 .SetDelay(delay);
 
             if (isLoop)

@@ -59,7 +59,7 @@ public class UnityAudioProvider : IAudioProvider
             // Master는 볼륨 제어용이므로 Source를 생성하지 않음
             if (groupType != AudioGroup.Master)
             {
-                var source = _owner.GetOrAddComponent<AudioSource>();
+                var source = _owner.AddComponent<AudioSource>();
                 source.playOnAwake = false;
                 source.outputAudioMixerGroup = mixerGroup;
                 source.loop = (groupType == AudioGroup.BGM);

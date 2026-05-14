@@ -18,18 +18,18 @@ namespace GaeGGUL.Animation
         {
             Stop();
 
-            Vector3 squashSize = new Vector3(_originSize.x * squashMultiplier.x, _originSize.y * squashMultiplier.y, _originSize.z);
-            Vector3 stretchSize = new Vector3(_originSize.x * stretchMultiplier.x, _originSize.y * stretchMultiplier.y, _originSize.z);
+            Vector3 squashScale = new Vector3(_originScale.x * squashMultiplier.x, _originScale.y * squashMultiplier.y, _originScale.z);
+            Vector3 stretchScale = new Vector3(_originScale.x * stretchMultiplier.x, _originScale.y * stretchMultiplier.y, _originScale.z);
             Vector3 jumpPos = _originPos + new Vector3(0, jumpPower, 0);
 
             _currentSeq = DOTween.Sequence()
-                .Append(GetSizeTween(squashSize, duration * 0.2f).SetEase(Ease.OutQuad))
-                .Append(GetSizeTween(stretchSize, duration * 0.2f).SetEase(Ease.OutQuad))
+                .Append(GetScaleTween(squashScale, duration * 0.2f).SetEase(Ease.OutQuad))
+                .Append(GetScaleTween(stretchScale, duration * 0.2f).SetEase(Ease.OutQuad))
                 .Join(GetMoveTween(jumpPos, duration * 0.3f).SetEase(Ease.OutQuad))
                 .Append(GetMoveTween(_originPos, duration * 0.3f).SetEase(Ease.InQuad))
-                .Join(GetSizeTween(_originSize, duration * 0.3f).SetEase(Ease.OutBack))
-                .Append(GetSizeTween(new Vector3(_originSize.x * 1.15f, _originSize.y * 0.85f, _originSize.z), 0.1f))
-                .Append(GetSizeTween(_originSize, 0.1f))
+                .Join(GetScaleTween(_originScale, duration * 0.3f).SetEase(Ease.OutBack))
+                .Append(GetScaleTween(new Vector3(_originScale.x * 1.15f, _originScale.y * 0.85f, _originScale.z), 0.1f))
+                .Append(GetScaleTween(_originScale, 0.1f))
                 .SetDelay(delay);
 
             if (isLoop)
