@@ -20,4 +20,7 @@ public class UnitData : ScriptableObject
 
     [Header("Skill")]
     public float foodPerTick = 10f; // 스킬 발동 시 식량 생산량
+
+    [Header("Population")]
+    public int populationCost = 1;
 }

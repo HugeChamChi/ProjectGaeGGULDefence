@@ -26,6 +26,7 @@ public static class Manager
     public static GridManager      Grid       => GridManager.Instance;
     public static UnitFactory      UnitFactory => UnitFactory.Instance;
     public static UnitSpawner      Spawner    => UnitSpawner.Instance;
+    public static PopulationManager Population => PopulationManager.Instance;
 
     // ── 보스 / 토템 ────────────────────────────────────────────
     public static BossManager      Boss       => BossManager.Instance;
@@ -45,4 +46,10 @@ public static class Manager
 
     // ── 사운드 ─────────────────────────────────────────────────
     public static AudioManager     Audio      => AudioManager.Instance;
+
+    // ── 강화 ───────────────────────────────────────────────────
+    public static UpgradeManager   Upgrade    => UpgradeManager.Instance;
+
+    // ── 게임 데이터 (시트 연동) ────────────────────────────────
+    public static GameDataManager  GameData   => GameDataManager.Instance;
 }

@@ -13,8 +13,9 @@ public abstract class TotemBase : MonoBehaviour
 {
     [SerializeField] protected TotemData totemData;
 
-    public TotemData Data     => totemData;
-    public bool      IsActive { get; private set; } = false;
+    public TotemData Data        => totemData;
+    public bool      IsActive    { get; private set; } = false;
+    public int       RotationStep { get; private set; } = 0;
 
     public GridCell CurrentCell { get; private set; }
 
@@ -54,6 +55,26 @@ public abstract class TotemBase : MonoBehaviour
         Manager.Buff.RebuildCellBuffFlags();
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
+    }
+
+    // ── 회전 ───────────────────────────────────────────────────
+
+    /// <summary>클릭 시 90° CW 회전. 셀 버프 플래그를 즉시 재계산.</summary>
+    public void Rotate()
+    {
+        if (!IsActive) return;
+        RotationStep = (RotationStep + 1) % 4;
+        transform.localEulerAngles = new Vector3(0f, 0f, -90f * RotationStep);
+        Manager.Buff.RebuildCellBuffFlags();
+    }
+
+    /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>
+    protected Vector2Int RotateOffset(Vector2Int offset)
+    {
+        var o = offset;
+        for (int i = 0; i < RotationStep; i++)
+            o = new Vector2Int(o.y, -o.x);
+        return o;
     }
 
     // ── 자식 구현 ──────────────────────────────────────────────

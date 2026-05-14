@@ -34,6 +34,18 @@ public class UnitFactory : InGameSingleton<UnitFactory>
     /// <summary>Normal 티어 유닛만 랜덤 생성 (소환 버튼용)</summary>
     public UnitBase CreateRandomNormalUnit() => CreateRandomUnitOfTier(Tier.Normal);
 
+    /// <summary>characterId 기준 유닛 생성 (소환 확률 시트 연동용). 없으면 Normal 랜덤 폴백.</summary>
+    public UnitBase CreateUnitByCharacterId(int characterId)
+    {
+        var data = System.Array.Find(unitDataList, d => d != null && d.characterId == characterId);
+        if (data == null)
+        {
+            Debug.LogWarning($"UnitFactory: characterId={characterId} 미등록 — Normal 랜덤 폴백");
+            return CreateRandomNormalUnit();
+        }
+        return InstantiateFromData(data);
+    }
+
     /// <summary>전체 풀에서 랜덤 생성</summary>
     public UnitBase CreateRandomUnit()
     {

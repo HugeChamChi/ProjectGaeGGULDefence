@@ -50,6 +50,9 @@ public class WaveManager : InGameSingleton<WaveManager>
             return;
         }
 
+        // GameDataManager에 현재 라운드 ID 전달 (Normal 기준: 100 + wave 인덱스)
+        Manager.GameData?.SetCurrentBossRound(100 + CurrentWave);
+
         _bossIndex = 0;
         SpawnNextBoss();
     }

@@ -53,6 +53,7 @@ public abstract class UnitBase : MonoBehaviour
         SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
 
         OnUnitPlaced();
+        Manager.Population?.Add(unitData?.populationCost ?? 1);
         OnAnyUnitChanged?.Invoke();
     }
 
@@ -65,6 +66,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         OnUnitRemoved();
         StopLoops();
+        Manager.Population?.Remove(unitData?.populationCost ?? 1);
         currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
@@ -106,7 +108,7 @@ public abstract class UnitBase : MonoBehaviour
                 int   row          = currentCell?.GridPosition.y ?? 0;
                 float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
 
-                float interval = 1.0f
+                float interval = UpgradedAttackInterval
                                * Manager.Buff.SpeedMultiplier
                                * (currentCell?.Model.SpeedModifier ?? 1f)
                                / rowSpeedMult;
@@ -171,7 +173,11 @@ public abstract class UnitBase : MonoBehaviour
     {
         onSkillFull?.Invoke();
 
-        _currency.AddCurrency(unitData.foodPerTick * Manager.Buff.FoodAmountMultiplier);
+        // 재화 생산량: 시트 currency_per_second × skillCooldown. 미로드 시 SO foodPerTick 폴백
+        float foodAmount = Manager.GameData != null && Manager.GameData.IsLoaded
+            ? Manager.GameData.GetCurrencyPerSecond(unitData.characterId) * unitData.skillCooldown
+            : unitData.foodPerTick;
+        _currency.AddCurrency(foodAmount * Manager.Buff.FoodAmountMultiplier);
 
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
@@ -185,7 +191,16 @@ public abstract class UnitBase : MonoBehaviour
 
     // ── 데미지 계산 ────────────────────────────────────────────
 
-    public int GetAttackDamage() => ComputeDamage(unitData.atk);
+    // 강화 데이터 로드 전에는 SO 기본값으로 폴백
+    private float UpgradedAtk => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
+        ? Manager.Upgrade.GetCurrentAtk(unitData.characterId)
+        : unitData.atk;
+
+    private float UpgradedAttackInterval => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
+        ? Manager.Upgrade.GetCurrentAttackSpeed(unitData.characterId)
+        : 1.0f;
+
+    public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
     public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);
 
     private int ComputeDamage(float baseDamage)
