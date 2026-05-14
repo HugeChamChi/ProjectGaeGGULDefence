@@ -73,6 +73,30 @@ public class AudioManager : Singleton<AudioManager>
 
     #endregion
 
+    #region Mute Control
+
+    private Dictionary<AudioGroup, bool> _muteStates = new Dictionary<AudioGroup, bool>();
+
+    public void SetMute(AudioGroup group, bool isMute)
+    {
+        _muteStates[group] = isMute;
+        
+        // Mute 상태에 따라 볼륨 직접 제어
+        if (isMute)
+            _provider?.SetVolume(group, 0);
+        else
+            _provider?.SetVolume(group, GetVolume(group));
+        
+        Debug.Log($"[AudioManager] {group} Mute: {isMute}");
+    }
+
+    public bool IsMuted(AudioGroup group)
+    {
+        return _muteStates.TryGetValue(group, out bool isMute) && isMute;
+    }
+
+    #endregion
+
     #region BGM Methods
 
     public void PlayBGM(string address)

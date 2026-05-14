@@ -15,6 +15,9 @@ namespace GaeGGUL.Animation
     /// </summary>
     public abstract class Anim_Base : MonoBehaviour, ITweenEffect
     {
+        [Header("Target Settings")]
+        [SerializeField] protected Transform animationTarget;
+
         [Header("Common Settings")]
         [SerializeField] protected AnimTriggerType triggerType = AnimTriggerType.OnEnable;
         [SerializeField] protected bool isLoop;
@@ -26,12 +29,12 @@ namespace GaeGGUL.Animation
         protected RectTransform _rect;
         protected bool _isUI;
         protected Vector3 _originPos;
-        protected Vector3 _originSize;
+        protected Vector3 _originScale;
         protected Sequence _currentSeq;
 
         protected virtual void Awake()
         {
-            Initialize(transform);
+            Initialize(animationTarget != null ? animationTarget : transform);
         }
 
         protected virtual void OnEnable()
@@ -53,21 +56,22 @@ namespace GaeGGUL.Animation
             _rect = target as RectTransform;
             _isUI = _rect != null;
 
-            if (_isUI)
-            {
-                _originPos = _rect.anchoredPosition;
-                _originSize = _rect.sizeDelta;
-            }
-            else
-            {
-                _originPos = target.localPosition;
-                _originSize = target.localScale;
-            }
+            _originPos = _isUI ? _rect.anchoredPosition : target.localPosition;
+            _originScale = target.localScale;
         }
 
         public abstract UniTask Play();
 
         public virtual void Stop()
+        {
+            KillCurrentTween();
+            ResetToOrigin();
+        }
+
+        /// <summary>
+        /// 현재 실행 중인 트윈을 즉시 중단합니다. (상태 리셋 없음)
+        /// </summary>
+        protected void KillCurrentTween()
         {
             if (_currentSeq != null)
             {
@@ -79,8 +83,6 @@ namespace GaeGGUL.Animation
             {
                 _target.DOKill();
             }
-
-            ResetToOrigin();
         }
 
         protected virtual void ResetToOrigin()
@@ -90,16 +92,16 @@ namespace GaeGGUL.Animation
             if (_isUI)
             {
                 _rect.anchoredPosition = _originPos;
-                _rect.sizeDelta = _originSize;
             }
             else
             {
                 _target.localPosition = _originPos;
-                _target.localScale = _originSize;
             }
+
+            _target.localScale = _originScale;
         }
 
         protected Tweener GetMoveTween(Vector3 pos, float dur) => _isUI ? _rect.DOAnchorPos(pos, dur) : _target.DOLocalMove(pos, dur);
-        protected Tweener GetSizeTween(Vector3 size, float dur) => _isUI ? _rect.DOSizeDelta(size, dur) : _target.DOScale(size, dur);
+        protected Tweener GetScaleTween(Vector3 scale, float dur) => _target.DOScale(scale, dur);
     }
 }

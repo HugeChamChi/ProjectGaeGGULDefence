@@ -13,10 +13,16 @@ public abstract class UI_Base : MonoBehaviour
     [SerializeField] protected Button btn_BackgroundClose;
 
     protected Canvas _canvas;
+    [Header("Animation")]
+    [SerializeField] protected GaeGGUL.Animation.Anim_InOutBase targetAnim;
 
     protected virtual void Awake()
     {
         _canvas = GetComponent<Canvas>();
+        
+        // 인스펙터에서 할당하지 않았다면 현재 오브젝트에서 검색 (하위 호환성)
+        if (targetAnim == null)
+            targetAnim = GetComponent<GaeGGUL.Animation.Anim_InOutBase>();
 
         // 하위 호환성 유지: 기존에 설정된 버튼이 있다면 자동으로 바인딩
         if (btn_Close != null || btn_BackgroundClose != null)
@@ -76,6 +82,31 @@ public abstract class UI_Base : MonoBehaviour
         }
     }
 
-    protected virtual UniTask OpenAnimationAsync() => UniTask.CompletedTask;
-    protected virtual UniTask CloseAnimationAsync() => UniTask.CompletedTask;
+    protected virtual async UniTask OpenAnimationAsync()
+    {
+        btn_BackgroundClose.gameObject.SetActive(true);
+
+        if (targetAnim != null)
+        {
+            await targetAnim.PlayIn();
+        }
+        else
+        {
+            await UniTask.CompletedTask;
+        }
+    }
+
+    protected virtual async UniTask CloseAnimationAsync()
+    {
+        if (targetAnim != null)
+        {
+            await targetAnim.PlayOut();
+        }
+        else
+        {
+            await UniTask.CompletedTask;
+        }
+
+        btn_BackgroundClose.gameObject.SetActive(false);
+    }
 }
