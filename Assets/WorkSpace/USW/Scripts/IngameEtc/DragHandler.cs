@@ -51,8 +51,8 @@ public class DragHandler : MonoBehaviour,
     // ── 클릭 (드래그 없을 때만 발생) ──────────────────────────
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_unit != null && Manager.Merge != null)
-            Manager.Merge.OnUnitClicked(_unit);
+        if (_unit  != null && Manager.Merge != null) Manager.Merge.OnUnitClicked(_unit);
+        if (_totem != null) _totem.Rotate();
     }
 
     // ── 드래그 시작 ────────────────────────────────────────────

@@ -48,7 +48,12 @@ public class BossManager : InGameSingleton<BossManager>
         }
 
         SetupRectTransform(go);
-        boss.Init(entry.hp);
+
+        // 시트 HP 우선 — 미로드 시 WaveData SO의 hp 폴백
+        int hp = Manager.GameData != null && Manager.GameData.IsLoaded
+            ? Manager.GameData.GetBossMaxHp(100 + Manager.Wave.CurrentWave, entry.hp)
+            : entry.hp;
+        boss.Init(hp);
 
         _currentBosses.Add(boss);
 
