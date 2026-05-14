@@ -22,6 +22,7 @@ namespace HSD.UI.Utils
         [SerializeField] private float duration = 0.25f;
         [SerializeField] private Ease easeType = Ease.OutQuart;
 
+        private bool _isInitialized;
         private bool _isOn;
         private Action<bool> _onValueChanged;
 
@@ -29,16 +30,28 @@ namespace HSD.UI.Utils
 
         private void Awake()
         {
+            EnsureInitialized();
+            
+            // 오브젝트가 활성화될 때 현재 상태(_isOn)에 맞춰 비주얼 동기화
+            UpdateVisual(true);
+        }
+
+        private void EnsureInitialized()
+        {
+            if (_isInitialized) return;
+            
             _slider = GetComponent<Slider>();
-            
-            // Slider 기본 설정 강제: 코드 레벨에서 실수 방지 (Defensive Programming)
-            _slider.minValue = 0f;
-            _slider.maxValue = 1f;
-            _slider.wholeNumbers = false;
-            _slider.interactable = false; // 기본적으로 클릭/드래그는 이 스크립트에서 제어
-            
-            // Transition이 None이 아니면 예기치 못한 색상 변경이 일어날 수 있음
-            _slider.transition = Selectable.Transition.None;
+            if (_slider != null)
+            {
+                // Slider 기본 설정 강제: 코드 레벨에서 실수 방지 (Defensive Programming)
+                _slider.minValue = 0f;
+                _slider.maxValue = 1f;
+                _slider.wholeNumbers = false;
+                _slider.interactable = false; // 기본적으로 클릭/드래그는 이 스크립트에서 제어
+                _slider.transition = Selectable.Transition.None;
+            }
+
+            _isInitialized = true;
         }
 
         /// <summary>
@@ -46,6 +59,8 @@ namespace HSD.UI.Utils
         /// </summary>
         public void Init(bool startState, Action<bool> onValueChanged)
         {
+            EnsureInitialized();
+
             _isOn = startState;
             _onValueChanged = onValueChanged;
 
