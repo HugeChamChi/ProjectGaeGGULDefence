@@ -54,7 +54,8 @@ public class GenericBuffTotem : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var rotated = RotateOffset(offset);
+            var cell = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -78,7 +79,8 @@ public class GenericBuffTotem : TotemBase
         // 효과 범위 — 시각 플래그
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var rotated = RotateOffset(offset);
+            var cell = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(
@@ -91,7 +93,8 @@ public class GenericBuffTotem : TotemBase
         // 공격불가 범위 — 셀별 기능 효과
         foreach (var offset in totemData.attackDisabledRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var rotated = RotateOffset(offset);
+            var cell = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell != null) cell.SetTotemAttackDisabled(true);
         }
     }

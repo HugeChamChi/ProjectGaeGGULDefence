@@ -50,6 +50,9 @@ public class WaveManager : InGameSingleton<WaveManager>
             return;
         }
 
+        // GameDataManager에 현재 라운드 ID 전달 (Normal 기준: 100 + wave 인덱스)
+        Manager.GameData?.SetCurrentBossRound(100 + CurrentWave);
+
         _bossIndex = 0;
         SpawnNextBoss();
     }
@@ -61,13 +64,13 @@ public class WaveManager : InGameSingleton<WaveManager>
 
         Manager.Boss.SpawnSingleBoss(entry, OnSingleBossDefeated);
 
-        // 유닛 타겟 갱신
+        // 유닛 타겟 갱신 — 셀 참조 유지해야 행별 배율/디버프 정상 작동
         var mainBoss = Manager.Boss.CurrentBoss;
         foreach (var cell in Manager.Grid.GetOccupiedCells())
         {
             if (cell.OccupyingUnit == null) continue;
             cell.OccupyingUnit.OnRemoved();
-            cell.OccupyingUnit.OnPlaced(Manager.Currency, mainBoss);
+            cell.OccupyingUnit.OnPlaced(Manager.Currency, mainBoss, cell);
         }
     }
 

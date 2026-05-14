@@ -53,6 +53,7 @@ public abstract class UnitBase : MonoBehaviour
         SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
 
         OnUnitPlaced();
+        Manager.Population?.Add(unitData?.populationCost ?? 1);
         OnAnyUnitChanged?.Invoke();
     }
 
@@ -65,6 +66,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         OnUnitRemoved();
         StopLoops();
+        Manager.Population?.Remove(unitData?.populationCost ?? 1);
         currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
@@ -73,6 +75,19 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void OnUnitRemoved() { }
 
     private void OnDestroy() => StopLoops();
+
+    /// <summary>인구수·셀 상태 변경 없이 공격/스킬 루프만 정지. LevelUpUI 등 일시 중단 전용.</summary>
+    public void PauseLoops() => StopLoops();
+
+    /// <summary>PauseLoops 이후 루프 재개. 셀·재화·보스 참조는 기존 값 유지.</summary>
+    public void ResumeLoops()
+    {
+        if (_currency == null) return;
+        StopLoops();
+        _loopCts = new CancellationTokenSource();
+        AttackLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+    }
 
     private void StopLoops()
     {
@@ -106,7 +121,7 @@ public abstract class UnitBase : MonoBehaviour
                 int   row          = currentCell?.GridPosition.y ?? 0;
                 float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
 
-                float interval = 1.0f
+                float interval = UpgradedAttackInterval
                                * Manager.Buff.SpeedMultiplier
                                * (currentCell?.Model.SpeedModifier ?? 1f)
                                / rowSpeedMult;
@@ -171,7 +186,11 @@ public abstract class UnitBase : MonoBehaviour
     {
         onSkillFull?.Invoke();
 
-        _currency.AddCurrency(unitData.foodPerTick * Manager.Buff.FoodAmountMultiplier);
+        // 재화 생산량: 시트 currency_per_second × skillCooldown. 미로드 시 SO foodPerTick 폴백
+        float foodAmount = Manager.GameData != null && Manager.GameData.IsLoaded
+            ? Manager.GameData.GetCurrencyPerSecond(unitData.characterId) * unitData.skillCooldown
+            : unitData.foodPerTick;
+        _currency.AddCurrency(foodAmount * Manager.Buff.FoodAmountMultiplier);
 
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
@@ -185,7 +204,16 @@ public abstract class UnitBase : MonoBehaviour
 
     // ── 데미지 계산 ────────────────────────────────────────────
 
-    public int GetAttackDamage() => ComputeDamage(unitData.atk);
+    // 강화 데이터 로드 전에는 SO 기본값으로 폴백
+    private float UpgradedAtk => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
+        ? Manager.Upgrade.GetCurrentAtk(unitData.characterId)
+        : unitData.atk;
+
+    private float UpgradedAttackInterval => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
+        ? Manager.Upgrade.GetCurrentAttackSpeed(unitData.characterId)
+        : 1.0f;
+
+    public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
     public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);
 
     private int ComputeDamage(float baseDamage)

@@ -5,9 +5,6 @@ using UnityEngine;
 // ════════════════════════════════════════════════════════
 public class UnitSpawner : InGameSingleton<UnitSpawner>
 {
-    [SerializeField] private float baseCost      = 10f;
-    [SerializeField] private float costIncrement = 5f;
-
     public float CurrentCost { get; private set; }
 
     // UIManager가 구독해서 비용 텍스트 갱신
@@ -19,7 +16,16 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
     protected override void Awake()
     {
         base.Awake();
-        CurrentCost = baseCost;
+        // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
+        CurrentCost = 20f;
+        if (Manager.GameData != null)
+            Manager.GameData.OnLoaded += SyncInitialCost;
+    }
+
+    private void SyncInitialCost()
+    {
+        CurrentCost = Manager.GameData.SummonInitialCost;
+        OnCostChanged?.Invoke(CurrentCost);
     }
 
     public void OnSpawnButtonPressed()
@@ -27,6 +33,12 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         if (Manager.Game.CurrentState != GameManager.GameState.Playing)
         {
             Debug.Log("게임 시작 후 배치 가능합니다.");
+            return;
+        }
+
+        if (Manager.Population != null && !Manager.Population.CanAdd(1))
+        {
+            Debug.Log("인구수가 부족합니다.");
             return;
         }
 
@@ -44,7 +56,19 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
             return;
         }
 
-        var unit = Manager.UnitFactory.CreateRandomNormalUnit();
+        // 소환 확률 시트 기반 랜덤 — 미로드 시 Normal 랜덤 폴백
+        UnitBase unit;
+        if (Manager.GameData != null && Manager.GameData.IsLoaded)
+        {
+            int charId = Manager.GameData.GetRandomSpawnCharacterId();
+            unit = charId >= 0
+                ? Manager.UnitFactory.CreateUnitByCharacterId(charId)
+                : Manager.UnitFactory.CreateRandomNormalUnit();
+        }
+        else
+        {
+            unit = Manager.UnitFactory.CreateRandomNormalUnit();
+        }
         if (unit == null)
         {
             Debug.LogError("UnitSpawner: 유닛 생성 실패");
@@ -70,12 +94,13 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
 
         unit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, cell);
 
-        // 소환 성공 시 비용 증가
-        CurrentCost += costIncrement;
+        // 소환 성공 시 비용 증가 (시트 값 우선, 폴백 20)
+        float increment = Manager.GameData != null && Manager.GameData.IsLoaded
+            ? Manager.GameData.SummonCostIncrease
+            : 20f;
+        CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
     }
-
-    [SerializeField] private float sellRefundAmount = 5f;
 
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>
     public void SellUnit(UnitBase unit)
@@ -85,12 +110,25 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         var cell = FindCellByUnit(unit);
         if (cell == null) return;
 
+        // 강화 레벨 조회 (UpgradeManager 기준)
+        int charId  = unit.unitData != null ? unit.unitData.characterId : -1;
+        string jobType = unit.unitData != null
+            ? Manager.Upgrade?.GetJobType(charId) ?? string.Empty
+            : string.Empty;
+        int upgradeLevel = Manager.Upgrade != null && !string.IsNullOrEmpty(jobType)
+            ? Manager.Upgrade.GetJobLevel(jobType)
+            : 1;
+
+        float refund = Manager.GameData != null && Manager.GameData.IsLoaded && charId >= 0
+            ? Manager.GameData.GetSellPrice(charId, upgradeLevel)
+            : 5f;
+
         cell.RemoveUnit();
         unit.OnRemoved();
         Destroy(unit.gameObject);
 
-        if (sellRefundAmount > 0f)
-            Manager.Currency.AddCurrency(sellRefundAmount);
+        if (refund > 0f)
+            Manager.Currency.AddCurrency(refund);
 
         OnAnyUnitSold?.Invoke();
     }

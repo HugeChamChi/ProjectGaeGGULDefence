@@ -23,6 +23,9 @@ public class UIManager : InGameSingleton<UIManager>
     [Header("Wave")]
     [SerializeField] private TMP_Text waveText;
 
+    [Header("Population")]
+    [SerializeField] private TMP_Text populationText;
+
     [Header("Slider Tween")]
     [SerializeField] private float sliderTweenDuration = 0.4f;
 
@@ -76,6 +79,13 @@ public class UIManager : InGameSingleton<UIManager>
 
         if (retryButton != null)
             retryButton.onClick.AddListener(OnRetryButtonPressed);
+
+        if (populationText != null && Manager.Population != null)
+        {
+            populationText.text = $"0 / {Manager.Population.Max}";
+            Manager.Population.OnPopulationChanged += (cur, max) =>
+                populationText.text = $"{cur} / {max}";
+        }
 
         resultPanel.SetActive(false);
     }
