@@ -1,56 +1,40 @@
 using UnityEngine;
 
-// ════════════════════════════════════════════════════════
-// TotemSpawner — InGameSingleton 교체 + Manager 접근 통일
-// ════════════════════════════════════════════════════════
+/// <summary>
+/// 토템 소환 서비스. 배치 로직만 담당.
+///
+/// Inspector:
+///   genericPrefab — GenericBuffTotem + SpriteRenderer + DragHandler 가 붙은 프리팹 1개
+///
+/// 흐름:
+///   Instantiate(genericPrefab) → SetTotemData(data) → OnPlaced(cell)
+///   → UpdateSprite()가 rotationSprites[0] or icon 으로 스프라이트 설정
+/// </summary>
 public class TotemSpawner : InGameSingleton<TotemSpawner>
 {
-    [Header("토템 프리팹 배열 (인덱스 순서대로 등록)")]
-    [SerializeField] private GameObject[] totemPrefabs;
+    [SerializeField] private GameObject genericPrefab;
 
-    protected override void Awake()
+    /// <summary>
+    /// TotemData SO를 기반으로 토템을 소환하고 빈 셀에 배치한다.
+    /// data.prefab이 있으면 그 프리팹을 사용 (특수 동작 토템).
+    /// 없으면 genericPrefab을 사용하고 SO 데이터를 주입 (일반 수치 토템).
+    /// </summary>
+    public bool SpawnTotemByData(TotemData data)
     {
-        base.Awake();
-        ValidatePrefabs();
-    }
-
-    public int TotemPrefabCount => totemPrefabs != null ? totemPrefabs.Length : 0;
-
-    public TotemData GetTotemData(int index)
-    {
-        if (totemPrefabs == null || index < 0 || index >= totemPrefabs.Length) return null;
-        var go = totemPrefabs[index];
-        if (go == null) return null;
-        var totem = go.GetComponent<TotemBase>();
-        return totem != null ? totem.Data : null;
-    }
-
-    public bool SpawnTotemByIndex(int index)
-    {
-        if (totemPrefabs == null || index < 0 || index >= totemPrefabs.Length)
+        if (data == null)
         {
-            Debug.LogError($"TotemSpawner: 인덱스 {index}에 해당하는 프리팹 없음");
-            return false;
-        }
-        return SpawnTotem(totemPrefabs[index]);
-    }
-
-    /// <summary>랜덤 토템 1개 자동 소환 (보스 처치 보상용)</summary>
-    public bool SpawnRandomTotem()
-    {
-        if (totemPrefabs == null || totemPrefabs.Length == 0)
-        {
-            Debug.LogError("TotemSpawner: 토템 프리팹 없음");
+            Debug.LogError("TotemSpawner: data null");
             return false;
         }
 
-        int index = Random.Range(0, totemPrefabs.Length);
-        return SpawnTotem(totemPrefabs[index]);
-    }
+        bool useGeneric = data.prefab == null;
+        var  prefab     = useGeneric ? genericPrefab : data.prefab;
 
-    private bool SpawnTotem(GameObject prefab)
-    {
-        if (prefab == null) { Debug.LogError("TotemSpawner: prefab null"); return false; }
+        if (prefab == null)
+        {
+            Debug.LogError($"TotemSpawner: '{data.totemName}' — prefab 미연결 (genericPrefab도 없음)");
+            return false;
+        }
 
         var empty = Manager.Grid.GetEmptyCells();
         if (empty.Count == 0) return false;
@@ -60,10 +44,12 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
 
         if (totem == null)
         {
-            Debug.LogError($"TotemSpawner: {prefab.name}에 TotemBase 없음");
+            Debug.LogError($"TotemSpawner: {prefab.name}에 TotemBase 컴포넌트 없음");
             Destroy(go);
             return false;
         }
+
+        if (useGeneric) totem.SetTotemData(data);
 
         var cell = empty[Random.Range(0, empty.Count)];
         cell.TryPlaceTotem(totem);
@@ -83,28 +69,5 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
 
         totem.OnPlaced(cell);
         return true;
-    }
-
-    private void ValidatePrefabs()
-    {
-        if (totemPrefabs == null || totemPrefabs.Length == 0)
-        {
-            Debug.LogError("TotemSpawner: totemPrefabs 배열 비어있음");
-            return;
-        }
-
-        for (int i = 0; i < totemPrefabs.Length; i++)
-        {
-            if (totemPrefabs[i] == null)
-            { Debug.LogError($"TotemSpawner: totemPrefabs[{i}] null"); continue; }
-
-            if (totemPrefabs[i].GetComponent<TotemBase>() == null)
-                Debug.LogError($"TotemSpawner: totemPrefabs[{i}]에 TotemBase 없음");
-
-            if (totemPrefabs[i].GetComponent<DragHandler>() == null)
-                Debug.LogWarning($"TotemSpawner: totemPrefabs[{i}]에 DragHandler 없음");
-        }
-
-        Debug.Log($"TotemSpawner: 토템 프리팹 {totemPrefabs.Length}종 등록 완료");
     }
 }

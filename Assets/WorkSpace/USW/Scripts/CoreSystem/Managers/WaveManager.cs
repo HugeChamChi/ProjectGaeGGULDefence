@@ -74,12 +74,14 @@ public class WaveManager : InGameSingleton<WaveManager>
         }
     }
 
-    /// <summary>보스 1마리 처치 시 호출</summary>
+    /// <summary>보스 1마리 처치 시 호출 — 토템 선택 UI 표시 후 흐름 재개</summary>
     private void OnSingleBossDefeated()
     {
-        // 랜덤 토템 즉시 지급
-        GiveRandomTotem();
+        Manager.TotemSelect.Show(OnTotemSelectionDone);
+    }
 
+    private void OnTotemSelectionDone()
+    {
         _bossIndex++;
 
         if (_bossIndex < _pendingBosses.Count)
@@ -100,12 +102,5 @@ public class WaveManager : InGameSingleton<WaveManager>
         }
 
         SpawnWaveBosses();
-    }
-
-    private void GiveRandomTotem()
-    {
-        bool placed = Manager.Totem.SpawnRandomTotem();
-        if (!placed)
-            Debug.Log("[WaveManager] 빈 셀 없음 — 토템 지급 스킵");
     }
 }

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: TD_4030
+  m_EditorClassIdentifier: 
+  totemType: 4
+  tier: 2
+  totemName: "\uB300 \uCD95\uBCF5"
+  icon: {fileID: 21300000, guid: 5c8881a5a8158e648864934a3d8b90cd, type: 3}
+  prefab: {fileID: 0}
+  rotationSprites:
+  - {fileID: 21300000, guid: 5c8881a5a8158e648864934a3d8b90cd, type: 3}
+  - {fileID: 21300000, guid: 4b70dfdcac84f2148929900d288b745e, type: 3}
+  - {fileID: 21300000, guid: 53cf98ac7584e144aafac27d1430245f, type: 3}
+  - {fileID: 21300000, guid: 954b8e88a851c934e9be6360edb250ad, type: 3}
+  description: "\uACF5\uACA9\uB825 10%, \uACF5\uACA9 \uC18D\uB3C4 10%, \uCFE8\uD0C0\uC784
+    10% \uAC10\uC18C"
+  attackBuffAmount: 0.1
+  speedBuffAmount: 0.1
+  foodSpeedBuffAmount: 0
+  foodAmountBuffAmount: 0
+  critDamageBuffAmount: 0
+  critChanceBuffAmount: 0
+  effectRange:
+  - {x: -3, y: -2}
+  - {x: -3, y: -1}
+  - {x: -3, y: 0}
+  - {x: -3, y: 1}
+  - {x: -2, y: -2}
+  - {x: -2, y: -1}
+  - {x: -2, y: 0}
+  - {x: -2, y: 1}
+  - {x: -1, y: -2}
+  - {x: -1, y: -1}
+  - {x: -1, y: 0}
+  - {x: -1, y: 1}
+  - {x: 0, y: -2}
+  - {x: 0, y: -1}
+  - {x: 0, y: 1}
+  - {x: 1, y: -2}
+  - {x: 1, y: -1}
+  - {x: 1, y: 0}
+  - {x: 1, y: 1}
+  - {x: 2, y: -2}
+  - {x: 2, y: -1}
+  - {x: 2, y: 0}
+  - {x: 2, y: 1}
+  attackDisabledRange: []
+  totemId: 4030
+  isRotatable: 1
