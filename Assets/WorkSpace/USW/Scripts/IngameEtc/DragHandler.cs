@@ -52,7 +52,7 @@ public class DragHandler : MonoBehaviour,
     public void OnPointerClick(PointerEventData eventData)
     {
         if (_unit  != null && Manager.Merge != null) Manager.Merge.OnUnitClicked(_unit);
-        if (_totem != null) _totem.Rotate();
+        if (_totem != null) Manager.TotemInfo?.Toggle(_totem);
     }
 
     // ── 드래그 시작 ────────────────────────────────────────────

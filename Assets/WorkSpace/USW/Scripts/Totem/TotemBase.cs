@@ -69,7 +69,7 @@ public abstract class TotemBase : MonoBehaviour
     }
 
     /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>
-    protected Vector2Int RotateOffset(Vector2Int offset)
+    public Vector2Int RotateOffset(Vector2Int offset)
     {
         var o = offset;
         for (int i = 0; i < RotationStep; i++)
