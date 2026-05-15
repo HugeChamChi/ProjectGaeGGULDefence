@@ -82,6 +82,7 @@ public abstract class UnitBase : MonoBehaviour
         OnUnitPlaced();
         Manager.Population?.Add(unitData?.populationCost ?? 1);
         OnAnyUnitChanged?.Invoke();
+        _animator.Initalize(this);
     }
 
     /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>

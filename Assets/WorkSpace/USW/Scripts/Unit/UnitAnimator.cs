@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using GaeGGUL.Animation;
 
 /// <summary>
 /// 유닛의 애니메이션을 제어하는 클래스.
@@ -11,7 +12,8 @@ using System.Threading;
 public class UnitAnimator : MonoBehaviour
 {
     private Animator _animator;
-    
+    private Anim_Base _breathingAnim;
+
     // 파라미터 캐싱 (Performance Optimization)
     private static readonly int AnimStateHash = Animator.StringToHash("State");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
@@ -28,6 +30,15 @@ public class UnitAnimator : MonoBehaviour
     private void Awake()
     {
         _animator = GetComponent<Animator>();
+        _breathingAnim = GetComponent<Anim_Base>();
+    }
+
+    public void Initalize(UnitBase unit)
+    {
+        if(_animator == null) _animator = GetComponent<Animator>();
+        if(_breathingAnim == null) _breathingAnim = GetComponent<Anim_Base>();
+        _breathingAnim.Initialize(unit.transform);
+        _breathingAnim.Play();
     }
 
     /// <summary>

@@ -10,27 +10,22 @@ namespace GaeGGUL.Animation
     public class Anim_Breathing : Anim_Base
     {
         [Header("Breathing Settings")]
-        [SerializeField] private bool useJump = false;
-        [SerializeField] private float jumpAmount = 10f;
         [SerializeField] private Vector2 scaleMultiplier = new Vector2(1.05f, 0.95f);
 
         public override async UniTask Play()
         {
             Stop();
 
-            float jump = useJump ? jumpAmount : 0;
             Vector3 targetScale = new Vector3(_originScale.x * scaleMultiplier.x, _originScale.y * scaleMultiplier.y, _originScale.z);
 
             _currentSeq = DOTween.Sequence()
-                .Append(GetMoveTween(_originPos + new Vector3(0, jump, 0), duration).SetEase(ease))
                 .Join(GetScaleTween(targetScale, duration).SetEase(ease))
-                .Append(GetMoveTween(_originPos, duration).SetEase(ease))
                 .Join(GetScaleTween(_originScale, duration).SetEase(ease))
                 .SetDelay(delay);
 
             if (isLoop)
             {
-                _currentSeq.SetLoops(-1);
+                _currentSeq.SetLoops(-1).ToUniTask().Forget();
             }
 
             await _currentSeq.Play().ToUniTask();
