@@ -135,53 +135,51 @@ public abstract class UnitBase : MonoBehaviour
         _attackTimer = GetCurrentAttackInterval(); // 첫 공격은 즉시 혹은 짧은 대기 후 가능하도록 설정
         _skillTimer = 0f;
 
-        try
+        // 비용 최적화: try-catch 대신 cancellationToken 상태 직접 체크
+        while (!token.IsCancellationRequested)
         {
-            while (true)
+            if (currentCell != null && currentCell.Model.IsSealed)
             {
-                token.ThrowIfCancellationRequested();
+                CurrentState = UnitState.Sealed;
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                    return;
+                continue;
+            }
 
-                if (currentCell != null && currentCell.Model.IsSealed)
-                {
-                    CurrentState = UnitState.Sealed;
-                    await UniTask.Yield(token);
-                    continue;
-                }
+            // UI 대응: 게임 일시정지(Time.timeScale=0)에 영향을 받지 않도록 unscaledDeltaTime 사용
+            float dt = Time.unscaledDeltaTime;
+            _attackTimer += dt;
+            _skillTimer += dt;
 
-                // 쿨다운 계산
-                float dt = Time.deltaTime;
-                _attackTimer += dt;
-                _skillTimer += dt;
+            float attackInterval = GetCurrentAttackInterval();
+            float skillInterval = GetCurrentSkillInterval();
 
-                float attackInterval = GetCurrentAttackInterval();
-                float skillInterval = GetCurrentSkillInterval();
-
-                // 우선순위 결정: Skill > Attack > Idle
-                if (_skillTimer >= skillInterval)
-                {
-                    CurrentState = UnitState.Skilling;
-                    if (_animator != null) await _animator.PlaySkillAsync(token);
-                    ExecuteSkill();
-                    
-                    _skillTimer = 0f;
-                }
-                else if (_attackTimer >= attackInterval)
-                {
-                    CurrentState = UnitState.Attacking;
-                    if (_animator != null) await _animator.PlayAttackAsync(token);
-                    ExecuteAttack();
-                    
-                    _attackTimer = 0f;
-                }
-                else
-                {
-                    CurrentState = UnitState.Idle;
-                    if (_animator != null) _animator.PlayIdle();
-                    await UniTask.Yield(token);
-                }
+            // 우선순위 결정: Skill > Attack > Idle
+            if (_skillTimer >= skillInterval)
+            {
+                CurrentState = UnitState.Skilling;
+                if (_animator != null) await _animator.PlaySkillAsync(token);
+                ExecuteSkill();
+                
+                _skillTimer = 0f;
+            }
+            else if (_attackTimer >= attackInterval)
+            {
+                CurrentState = UnitState.Attacking;
+                if (_animator != null) await _animator.PlayAttackAsync(token);
+                ExecuteAttack();
+                
+                _attackTimer = 0f;
+            }
+            else
+            {
+                CurrentState = UnitState.Idle;
+                if (_animator != null) _animator.PlayIdle();
+                
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                    return;
             }
         }
-        catch (OperationCanceledException) { }
     }
 
     private float GetCurrentAttackInterval()

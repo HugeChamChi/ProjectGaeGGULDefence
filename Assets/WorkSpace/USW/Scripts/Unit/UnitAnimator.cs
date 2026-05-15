@@ -70,7 +70,8 @@ public class UnitAnimator : MonoBehaviour
         while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
         {
             if (token.IsCancellationRequested) return;
-            await UniTask.Yield(token);
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                return;
         }
 
         // 2. 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
@@ -80,7 +81,8 @@ public class UnitAnimator : MonoBehaviour
             if (token.IsCancellationRequested) return;
             
             stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-            await UniTask.Yield(token);
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                return;
         }
     }
 }
