@@ -15,8 +15,10 @@ public abstract class InGameSingleton<T> : MonoBehaviour where T : MonoBehaviour
         {
             if (_instance == null)
             {
-                Instance = new GameObject(typeof(T).Name).AddComponent<T>();
-                Debug.Log($"[InGameSingleton] {typeof(T).Name} not found in scene. Ensure it is present in the Inspector.");
+                _instance = FindAnyObjectByType<T>();
+
+                if(_instance == null)
+                    Debug.LogError($"[InGameSingleton] {typeof(T).Name} not found in scene. Ensure it is present in the Inspector.");
             }
 
             return _instance;
@@ -26,6 +28,17 @@ public abstract class InGameSingleton<T> : MonoBehaviour where T : MonoBehaviour
 
     protected virtual void Awake()
     {
+        Initialize();
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (_instance == this)
+            _instance = null;
+    }
+
+    public void Initialize()
+    {
         if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
@@ -33,11 +46,5 @@ public abstract class InGameSingleton<T> : MonoBehaviour where T : MonoBehaviour
         }
 
         _instance = this as T;
-    }
-
-    protected virtual void OnDestroy()
-    {
-        if (_instance == this)
-            _instance = null;
     }
 }
