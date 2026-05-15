@@ -70,4 +70,24 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
         totem.OnPlaced(cell);
         return true;
     }
+
+    /// <summary>
+    /// 배치된 토템을 판매(제거)하고 환급금을 지급한다.
+    /// TotemInfoPopupUI의 판매 버튼에서 호출.
+    /// </summary>
+    public void SellTotem(TotemBase totem)
+    {
+        if (totem == null) return;
+
+        var cell = totem.CurrentCell;
+
+        totem.OnRemoved();
+        if (cell != null) cell.RemoveTotem();
+        Destroy(totem.gameObject);
+
+        // 환급금: 추후 GameDataManager 또는 TotemData에 sellPrice 필드 추가 후 교체
+        float refund = 0f;
+        if (refund > 0f)
+            Manager.Currency.AddCurrency(refund);
+    }
 }

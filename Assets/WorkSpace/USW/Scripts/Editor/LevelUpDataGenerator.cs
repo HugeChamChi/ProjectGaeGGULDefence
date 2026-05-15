@@ -238,7 +238,7 @@ public static class LevelUpDataGenerator
             var asset = ScriptableObject.CreateInstance<LevelUpData>();
             asset.chooseId        = item.id;
             asset.chooseName      = item.name;
-            asset.grade           = item.grade;
+            asset.tier            = item.grade;
             asset.spawnRate       = item.rate;
             asset.description     = item.desc;
             asset.applicableTribes = item.tribes ?? AllTribes;
