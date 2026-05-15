@@ -61,6 +61,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     // ─── Buttons ──────────────────────────────────────────────────────
     [Header("Buttons")]
     [SerializeField] private Button rotateButton;
+    [SerializeField] private Button sellButton;
     [SerializeField] private Button closeButton;
 
     // ─── Grid Colors ──────────────────────────────────────────────────
@@ -91,6 +92,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         base.Awake();
         rotateButton?.onClick.AddListener(OnRotateClicked);
+        sellButton?.onClick.AddListener(OnSellClicked);
         closeButton?.onClick.AddListener(Hide);
         BuildGrid();
         gameObject.SetActive(false);
@@ -241,6 +243,13 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         _currentTotem?.Rotate();
         Refresh();
+    }
+
+    private void OnSellClicked()
+    {
+        var totem = _currentTotem;
+        Hide();
+        Manager.Totem.SellTotem(totem);
     }
 
     // ─── Effect Text ──────────────────────────────────────────────────

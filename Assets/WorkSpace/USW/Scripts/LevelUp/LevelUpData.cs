@@ -16,7 +16,7 @@ public class LevelUpData : ScriptableObject
     [Header("Identity")]
     public int              chooseId;
     public string           chooseName;
-    public Tier             grade;
+    public Tier             tier;
     public float            spawnRate;
     [TextArea] public string description;
 
