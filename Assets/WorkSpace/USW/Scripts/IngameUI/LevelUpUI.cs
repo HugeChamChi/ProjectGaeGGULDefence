@@ -17,6 +17,14 @@ using UnityEngine.UI;
 //
 // ─ Inspector 연결 ─────────────────────────────────────
 //   cardContainer, cardPrefab, selectionTimerText 연결 필요
+//
+// ─ 흐름 ─────────────────────────────────────────────
+//   ExpManager.OnLevelUp
+//     → GameManager.HandleLevelUp()
+//     → Manager.LevelUpUI.Show(onChoiceMade)
+//     → 카드 3장 표시 + 30초 타이머
+//     → 선택(또는 타임아웃) → LevelUpManager.ApplyEffect()
+//     → onChoiceMade 콜백 → 게임 재개
 // ════════════════════════════════════════════════════════
 public class LevelUpUI : InGameSingleton<LevelUpUI>
 {
@@ -33,6 +41,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     private readonly List<LevelUpCardUI> _spawnedCards = new();
     private          LevelUpCardUI       _selectedCard;
     private          CancellationTokenSource _selectionCts;
+    private          Action              _onChoiceMade;
 
     protected override void Awake()
     {
@@ -46,8 +55,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     // ── 열기 ───────────────────────────────────────────────────
 
-    public void Show()
+    public void Show(Action onChoiceMade)
     {
+        _onChoiceMade = onChoiceMade;
         ClearCards();
         _selectedCard = null;
         SetConfirmInteractable(false);
@@ -147,7 +157,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         foreach (var cell in Manager.Grid.GetOccupiedCells())
             cell.OccupyingUnit?.ResumeLoops();
 
-        Manager.Game.OnLevelUpChoiceMade();
+        var cb = _onChoiceMade;
+        _onChoiceMade = null;
+        cb?.Invoke();
     }
 
     // ── 유틸 ───────────────────────────────────────────────────

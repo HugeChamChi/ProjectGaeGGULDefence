@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// 레벨업 선택지 하나의 데이터 (시트 choose_id 3000~3059 대응)
@@ -16,6 +17,7 @@ public class LevelUpData : ScriptableObject
     [Header("Identity")]
     public int              chooseId;
     public string           chooseName;
+    [FormerlySerializedAs("grade")]
     public Tier             tier;
     public float            spawnRate;
     [TextArea] public string description;

@@ -32,13 +32,11 @@ public class GameManager : InGameSingleton<GameManager>
     {
         if (CurrentState != GameState.Playing) return;
         CurrentState = GameState.LevelUp;
-        Manager.LevelUpUI.Show();
-    }
-
-    public void OnLevelUpChoiceMade()
-    {
-        CurrentState = GameState.Playing;
-        Manager.Exp.FlushPendingLevelUp();
+        Manager.LevelUpUI.Show(() =>
+        {
+            CurrentState = GameState.Playing;
+            Manager.Exp.FlushPendingLevelUp();
+        });
     }
 
     public void OnAllWavesCleared()
