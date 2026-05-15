@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridColumns: 6
   gridRows: 4
-  countdownSeconds: 30
+  countdownSeconds: 120
   cellSize: 1.5
   startingFood: 100
   placeCost: 30
+  maxPopulation: 21
+  tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}

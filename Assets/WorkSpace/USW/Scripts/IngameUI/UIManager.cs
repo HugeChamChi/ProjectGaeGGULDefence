@@ -20,9 +20,6 @@ public class UIManager : InGameSingleton<UIManager>
     [SerializeField] private TMP_Text bossHpText;
     [SerializeField] private Slider   bossHpSlider;
 
-    [Header("Wave")]
-    [SerializeField] private TMP_Text waveText;
-
     [Header("Population")]
     [SerializeField] private TMP_Text populationText;
 
@@ -34,13 +31,11 @@ public class UIManager : InGameSingleton<UIManager>
 
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
-    [SerializeField] private HSD.UI.Setting.UI_SettingPanel_InGame settingPanel;
 
     [Header("Result")]
     [SerializeField] private GameObject resultPanel;
-    [SerializeField] private TMP_Text   resultText;
     [SerializeField] private Button     retryButton;
-    [SerializeField] private Button     settingButton;
+    [SerializeField] private Button     homeButton;
 
     protected override void Awake()
     {
@@ -55,9 +50,6 @@ public class UIManager : InGameSingleton<UIManager>
             summonButton.onClick.AddListener(Manager.Spawner.OnSpawnButtonPressed);
 
         startButton.onClick.AddListener(Manager.Game.OnStartButtonPressed);
-
-        if (settingButton != null && settingPanel != null)
-            settingButton.onClick.AddListener(() => settingPanel.Open());
 
         Manager.Timer.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
         Manager.Currency.OnCurrencyChanged += c => currencyText.text = $"식량: {(int)c}";
@@ -80,6 +72,9 @@ public class UIManager : InGameSingleton<UIManager>
         if (retryButton != null)
             retryButton.onClick.AddListener(OnRetryButtonPressed);
 
+        if (homeButton != null)
+            homeButton.onClick.AddListener(OnHomeButtonPressed);
+
         if (populationText != null && Manager.Population != null)
         {
             populationText.text = $"0 / {Manager.Population.Max}";
@@ -89,9 +84,6 @@ public class UIManager : InGameSingleton<UIManager>
 
         resultPanel.SetActive(false);
     }
-
-    public void UpdateWaveText(int current, int total) =>
-        waveText.text = $"WAVE {current} / {total}";
 
     public void UpdateBossHp(int current, int max)
     {
@@ -125,8 +117,7 @@ public class UIManager : InGameSingleton<UIManager>
     public void ShowResult(bool isWin)
     {
         resultPanel.SetActive(true);
-        resultText.text = isWin ? "승리!" : "게임 오버";
-        Time.timeScale  = 0f;
+        Time.timeScale = 0f;
     }
 
     public void HideStartButton()
@@ -139,5 +130,11 @@ public class UIManager : InGameSingleton<UIManager>
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    private void OnHomeButtonPressed()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("LobbyScene");
     }
 }

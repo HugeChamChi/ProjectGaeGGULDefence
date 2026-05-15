@@ -36,7 +36,6 @@ public class WaveManager : InGameSingleton<WaveManager>
         }
 
         var wave = stageData.waves[CurrentWave];
-        Manager.UI.UpdateWaveText(CurrentWave + 1, TotalWaves);
 
         // 유효한 보스만 추림
         _pendingBosses.Clear();

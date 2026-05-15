@@ -73,12 +73,12 @@ public class ProjectilePool : InGameSingleton<ProjectilePool>
             return inst;
         }
 
-        // 내장 Knob 스프라이트로 원형 투사체 자동 생성
+        // 원형 투사체 자동 생성
         var go  = new GameObject("Projectile");
         go.transform.SetParent(_container, false);
 
         var img    = go.AddComponent<Image>();
-        img.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        img.sprite = CreateCircleSprite(64);
         img.color  = _projectileColor;
 
         var rt          = go.GetComponent<RectTransform>();
@@ -86,5 +86,25 @@ public class ProjectilePool : InGameSingleton<ProjectilePool>
         rt.localScale   = Vector3.one;
 
         return go.AddComponent<Projectile>();
+    }
+
+    private static Sprite CreateCircleSprite(int size)
+    {
+        var tex    = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var pixels = new Color32[size * size];
+        float r    = size * 0.5f;
+        var center = new Vector2(r, r);
+
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+        {
+            float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center);
+            float alpha = Mathf.Clamp01((r - dist) / 1.5f);
+            pixels[y * size + x] = new Color32(255, 255, 255, (byte)(alpha * 255));
+        }
+
+        tex.SetPixels32(pixels);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "LevelUpData_3052_\uACE0\uC18D_\uAC00\uB3D9"
   m_EditorClassIdentifier: 
   chooseId: 3052
-  chooseName: "\uACE0\uC18D \uAC00\uB3D9"
+  chooseName: "\uACE0\uC18D \uAE30"
   grade: 2
   spawnRate: 0.015
   description: "\uACF5\uACA9\uB825 -50%, \uACF5\uACA9\uC18D\uB3C4 100% \uC99D\uAC00"
@@ -24,6 +24,6 @@ MonoBehaviour:
   secondaryValue: 100
   specialEffect: 0
   specialValue: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8a3728f9b08b6e440b83dc88ac1c2798, type: 3}
   animationFrames: []
   frameRate: 12

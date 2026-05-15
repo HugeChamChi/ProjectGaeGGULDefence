@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageName: StageData
   waves:
-  - {fileID: 11400000, guid: bc6696bced62c444da518fc6197ed249, type: 2}
   - {fileID: 11400000, guid: 810df8b3b1fb214478a55719cb44f2f9, type: 2}
+  - {fileID: 11400000, guid: bc6696bced62c444da518fc6197ed249, type: 2}
   - {fileID: 11400000, guid: 143e1fe08df08a243bb45e02de4e3b07, type: 2}
   - {fileID: 11400000, guid: 5b8941667af93334ebc5a7a4f26e573e, type: 2}
   - {fileID: 11400000, guid: 3679caace4af27248bab025549f31594, type: 2}
