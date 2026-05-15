@@ -82,7 +82,7 @@ public class LevelUpCardUI : MonoBehaviour
             StartAnim();
 
         transform.DOKill();
-        transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic);
+        transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic).SetUpdate(true);
     }
 
     public void Deselect()
@@ -93,7 +93,7 @@ public class LevelUpCardUI : MonoBehaviour
             iconImage.sprite = _data.icon;
 
         transform.DOKill();
-        transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad);
+        transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad).SetUpdate(true);
     }
 
     public LevelUpData GetData() => _data;
