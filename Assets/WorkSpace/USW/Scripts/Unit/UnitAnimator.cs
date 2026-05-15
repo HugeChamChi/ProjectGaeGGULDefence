@@ -33,12 +33,13 @@ public class UnitAnimator : MonoBehaviour
         _breathingAnim = GetComponent<Anim_Base>();
     }
 
-    public void Initalize(UnitBase unit)
+    public void Initialize(UnitBase unit)
     {
         if(_animator == null) _animator = GetComponent<Animator>();
         if(_breathingAnim == null) _breathingAnim = GetComponent<Anim_Base>();
+        
         _breathingAnim.Initialize(unit.transform);
-        _breathingAnim.Play();
+        _breathingAnim.Play().Forget();
     }
 
     /// <summary>
