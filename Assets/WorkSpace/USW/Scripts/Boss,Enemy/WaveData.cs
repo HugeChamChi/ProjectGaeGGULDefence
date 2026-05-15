@@ -8,6 +8,9 @@ using UnityEngine;
 [System.Serializable]
 public class BossEntry
 {
+    [Tooltip("보스 아이콘")]
+    public Sprite bossIcon;
+
     [Tooltip("보스 프리팹 — 프리팹 내 BossBase 서브클래스에 patterns 설정")]
     public GameObject prefab;
 

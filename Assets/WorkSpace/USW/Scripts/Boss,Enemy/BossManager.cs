@@ -18,6 +18,7 @@ public class BossManager : InGameSingleton<BossManager>
 
     public IReadOnlyList<BossBase> CurrentBosses => _currentBosses;
     public BossBase CurrentBoss => _currentBosses.Count > 0 ? _currentBosses[0] : null;
+    public Action<BossEntry> OnBossEntryed;
 
     // ── 외부 API ──────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ public class BossManager : InGameSingleton<BossManager>
         BossPatternController.Instance.RegisterBoss(boss, boss.Patterns);
         Manager.UI.UpdateBossHp(boss.CurrentHp, boss.MaxHp);
 
+        OnBossEntryed?.Invoke(entry);
         Debug.Log($"[BossManager] 보스 소환: {entry.prefab.name} (HP: {entry.hp})");
     }
 

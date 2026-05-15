@@ -63,7 +63,7 @@ namespace GaeGGUL.UI.Unit
 
         public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, Tier tier)
         {
-            if (txt_UnitName != null)         txt_UnitName.text = unitName.ToColor(tier.GetTextColor()); // 이름에 등급색 적용
+            if (txt_UnitName != null) txt_UnitName.text = $"[{tier.ToString().ToColor(tier.GetTextColor())}] {unitName}";
             if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
             if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
             
