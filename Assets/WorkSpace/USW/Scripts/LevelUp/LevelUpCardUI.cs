@@ -11,22 +11,29 @@ using System.Threading;
 ///
 /// ─ 프리팹 구성 ────────────────────────────────────────
 ///   CardRoot  (LevelUpCardUI + Button)
-///     ├── CardImage      (Image — 커버 & 애니메이션 표시)
+///     ├── BorderImage    (Image — 등급 테두리)
+///     ├── IconBorderImage(Image — 아이콘 테두리)
+///     ├── IconImage      (Image — 카드 아이콘 & 애니메이션)
 ///     └── DescriptionText(TMP_Text — 설명 텍스트)
 ///
 /// ─ Inspector 연결 ─────────────────────────────────────
-///   cardImage, descriptionText, button
-///
-/// ─ 동작 ───────────────────────────────────────────────
-///   클릭        → 스프라이트 애니메이션 루프 재생
-///   Deselect()  → 애니메이션 정지, 커버 이미지 복귀
-///   확인 버튼   → LevelUpUI.OnConfirmClicked() (별도 버튼)
+///   iconImage, iconBorderImage, borderImage, descriptionText, button
+///   borderSprites[4], iconBorderSprites[4] (0=Normal 1=Rare 2=Epic 3=Legend)
 /// </summary>
 public class LevelUpCardUI : MonoBehaviour
 {
-    [SerializeField] private Image    cardImage;
+    [SerializeField] private Image    iconImage;
+    [SerializeField] private Image    iconBorderImage;
+    [SerializeField] private Image    borderImage;
     [SerializeField] private TMP_Text descriptionText;
+    [SerializeField] private TMP_Text tierText;
     [SerializeField] private Button   button;
+
+    [Header("Tier Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
+    [SerializeField] private Sprite[] borderSprites;
+
+    [Header("Tier Icon Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
+    [SerializeField] private Sprite[] iconBorderSprites;
 
     [Header("Scale Animation")]
     [SerializeField] private float selectedScale  = 1.3f;
@@ -51,16 +58,20 @@ public class LevelUpCardUI : MonoBehaviour
         _data          = data;
         _onCardClicked = onCardClicked;
 
-        if (cardImage != null)
-            cardImage.sprite = data?.icon;
+        if (iconImage != null)
+            iconImage.sprite = data?.icon;
 
         if (descriptionText != null)
             descriptionText.text = data?.description ?? string.Empty;
+
+        if (tierText != null)
+            tierText.text = TierToLabel(data?.tier ?? Tier.Normal);
+
+        ApplyTierSprites(data?.tier ?? Tier.Normal);
     }
 
     // ── 선택/해제 ──────────────────────────────────────────────
 
-    /// <summary>이 카드가 선택됨 → 스프라이트 애니메이션 재생</summary>
     public void Select()
     {
         bool hasAnim = _data != null
@@ -74,13 +85,12 @@ public class LevelUpCardUI : MonoBehaviour
         transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic);
     }
 
-    /// <summary>다른 카드가 선택됨 → 애니메이션 정지 + 커버 복귀</summary>
     public void Deselect()
     {
         StopAnim();
 
-        if (cardImage != null && _data?.icon != null)
-            cardImage.sprite = _data.icon;
+        if (iconImage != null && _data?.icon != null)
+            iconImage.sprite = _data.icon;
 
         transform.DOKill();
         transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad);
@@ -90,17 +100,31 @@ public class LevelUpCardUI : MonoBehaviour
 
     // ── 내부 ───────────────────────────────────────────────────
 
-    private void OnClick()
+    private void OnClick() => _onCardClicked?.Invoke(this);
+
+    private static string TierToLabel(Tier tier) => tier switch
     {
-        Debug.Log($"[LevelUpCardUI] 카드 클릭됨 : {_data?.description}");
-        _onCardClicked?.Invoke(this);
+        Tier.Normal => "노말",
+        Tier.Rare   => "레어",
+        Tier.Epic   => "에픽",
+        Tier.Legend => "전설",
+        _           => "노말",
+    };
+
+    private void ApplyTierSprites(Tier tier)
+    {
+        int idx = (int)tier;
+
+        if (borderImage != null && borderSprites != null && idx < borderSprites.Length)
+            borderImage.sprite = borderSprites[idx];
+
+        if (iconBorderImage != null && iconBorderSprites != null && idx < iconBorderSprites.Length)
+            iconBorderImage.sprite = iconBorderSprites[idx];
     }
 
     private void StartAnim()
     {
         StopAnim();
-        // Deselect()에서 수동 취소 가능하고,
-        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
         _animCts = CancellationTokenSource.CreateLinkedTokenSource(
             this.GetCancellationTokenOnDestroy());
         PlayAnimationAsync(_animCts.Token).Forget(Debug.LogException);
@@ -126,8 +150,8 @@ public class LevelUpCardUI : MonoBehaviour
             {
                 token.ThrowIfCancellationRequested();
 
-                if (cardImage != null)
-                    cardImage.sprite = frames[index];
+                if (iconImage != null)
+                    iconImage.sprite = frames[index];
 
                 index = (index + 1) % frames.Length;
                 await UniTask.Delay(
