@@ -10,8 +10,16 @@ public class PopulationManager : InGameSingleton<PopulationManager>
 {
     [SerializeField] private GameConfig _config;
 
-    public int Current { get; private set; }
-    public int Max => _config != null ? _config.maxPopulation : 21;
+    public int Current    { get; private set; }
+    public int MaxBonus   { get; private set; }
+    public int Max        => (_config != null ? _config.maxPopulation : 21) + MaxBonus;
+
+    /// <summary>레벨업 선택지(풍요로운 영토 등)가 최대 인구수를 증가시킬 때 호출</summary>
+    public void AddMaxBonus(int amount)
+    {
+        MaxBonus += amount;
+        OnPopulationChanged?.Invoke(Current, Max);
+    }
 
     public event System.Action<int, int> OnPopulationChanged;
 

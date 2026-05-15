@@ -81,6 +81,27 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         return InstantiateFromData(pool[Random.Range(0, pool.Length)]);
     }
 
+    /// <summary>부족 + 티어로 랜덤 유닛 생성 (GainUnit 레벨업 효과용)</summary>
+    public UnitBase CreateRandomUnitByTribeAndTier(UnitTribe tribe, Tier tier)
+    {
+        if (unitDataList == null || unitDataList.Length == 0)
+        {
+            Debug.LogError("UnitFactory: unitDataList가 비어있습니다.");
+            return null;
+        }
+
+        var pool = System.Array.FindAll(unitDataList,
+            d => d != null && d.unitTribe == tribe && d.unitTier == tier);
+
+        if (pool.Length == 0)
+        {
+            Debug.LogWarning($"UnitFactory: tribe={tribe} tier={tier} 유닛 없음 — tier 폴백");
+            return CreateRandomUnitOfTier(tier);
+        }
+
+        return InstantiateFromData(pool[Random.Range(0, pool.Length)]);
+    }
+
     // ── 공통 인스턴스화 ────────────────────────────────────────
     private UnitBase InstantiateFromData(UnitData data)
     {

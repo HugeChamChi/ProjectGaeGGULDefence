@@ -33,6 +33,9 @@ public static class Manager
     public static TotemSpawner     Totem      => TotemSpawner.Instance;
     public static TotemBuffManager Buff       => TotemBuffManager.Instance;
 
+    // ── 족장 ───────────────────────────────────────────────────
+    public static ChieftainSpawner Chieftain  => ChieftainSpawner.Instance;
+
     // ── 합성 / 레벨업 ──────────────────────────────────────────
     public static MergeManager     Merge      => MergeManager.Instance;
     public static LevelUpManager   LevelUp    => LevelUpManager.Instance;

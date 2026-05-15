@@ -12,6 +12,9 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
 {
     [SerializeField] private ChieftainData[] chieftainDataList;
 
+    /// <summary>현재 배치된 족장 유닛 — 족장 전용 버프 적용에 사용</summary>
+    public UnitBase ChieftainUnit { get; private set; }
+
     private void Start()
     {
         int selectedId = Player.Chief.SelectedChiefId;
@@ -47,6 +50,7 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
         var unit = Manager.UnitFactory.CreateUnit(data.unitType);
         if (unit == null) return;
 
+        ChieftainUnit = unit;
         cell.TryPlaceUnit(unit);
         unit.transform.SetParent(cell.transform, false);
 

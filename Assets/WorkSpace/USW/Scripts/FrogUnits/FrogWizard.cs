@@ -24,4 +24,10 @@ public class FrogWizard : UnitBase
     {
         Manager.Buff.RemoveFoodAmountDebuff(foodReduction);
     }
+
+    protected override void OnSkillFull()
+    {
+        if (Manager.LevelUp?.HasWizardPhysicalMode == true) return;
+        base.OnSkillFull();
+    }
 }

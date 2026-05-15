@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: "LevelUpData_3036_\uCE58\uBA85\uC801_\uC77C\uACA9"
+  m_EditorClassIdentifier: 
+  chooseId: 3036
+  chooseName: "\uCE58\uBA85\uC801 \uC77C\uACA9"
+  grade: 1
+  spawnRate: 0.015
+  description: "\uCE58\uBA85\uD0C0 \uB370\uBBF8\uC9C0 20% \uC99D\uAC00"
+  applicableTribes: 
+  primaryEffect: 5
+  primaryValue: 20
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  icon: {fileID: 0}
+  animationFrames: []
+  frameRate: 12

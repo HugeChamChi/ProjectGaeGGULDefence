@@ -32,6 +32,11 @@ public abstract class UnitBase : MonoBehaviour
 
     private CancellationTokenSource _loopCts;
 
+    // ── 레벨업 특수 효과용 ─────────────────────────────────────
+    private int   _hitCount;                      // 공격 횟수 (AttackEveryNHits용)
+    private float _burstEndTime;                  // 버스트 버프 종료 시각 (Time.time 기준)
+    protected float _unemployedAtkBonus = 0f;     // 3056 식충이 — 스킬마다 누적 공격력
+
     // ── 배치/제거 ──────────────────────────────────────────────
 
     /// <summary>UnitSpawner 또는 DragHandler.PlaceSelfAt() 이 셀에 배치한 뒤 호출</summary>
@@ -138,6 +143,8 @@ public abstract class UnitBase : MonoBehaviour
                     LaunchProjectile();
                     _boss.TakeDamage(GetAttackDamage());
                     onAttack?.Invoke();
+                    _hitCount++;
+                    TriggerBonusAttacks(attackDisabled);
                 }
             }
         }
@@ -200,6 +207,19 @@ public abstract class UnitBase : MonoBehaviour
             LaunchProjectile();
             _boss.TakeDamage(GetSkillDamage());
         }
+
+        // ── 레벨업 스킬 특수 효과 ─────────────────────────────
+        var lu = Manager.LevelUp;
+        if (lu == null) return;
+
+        if (lu.HasBurstOnSkillFull)
+            _burstEndTime = Time.time + lu.BurstDurationSeconds;
+
+        if (lu.HasExtraAttackOnSkillFull && !attackDisabled && _boss != null && !_boss.IsDead)
+        {
+            LaunchProjectile();
+            _boss.TakeDamage(GetAttackDamage());
+        }
     }
 
     // ── 데미지 계산 ────────────────────────────────────────────
@@ -225,27 +245,89 @@ public abstract class UnitBase : MonoBehaviour
             : 1f;
         float totemModifier = currentCell?.Model.TotemAttackModifier ?? 1f;
         int   row           = currentCell?.GridPosition.y ?? 0;
-        float rowModifier   = Manager.LevelUp?.GetRowAttackMultiplier(row) ?? 1f;
+        var   lu            = Manager.LevelUp;
+        float rowModifier   = lu?.GetRowAttackMultiplier(row) ?? 1f;
 
-        float damage = baseDamage
+        // 부족별 공격력 보너스
+        float tribeAtk     = 1f + (lu?.GetTribeAtkBonus(unitData.unitTribe) ?? 0f);
+
+        // 투사체 크기 → 공격력 보너스
+        float projAtk      = 1f + (lu?.GetProjectileSizeAtkBonus() ?? 0f);
+
+        // 버스트 버프 (스킬 풀 시 일시적)
+        float burstAtk     = (Time.time < _burstEndTime && lu != null)
+            ? (1f + lu.BurstAttackBonus)
+            : 1f;
+
+        // 족장 전용 공격력 버프 (3008 위엄)
+        float chieftainAtk = (Manager.Chieftain?.ChieftainUnit == this)
+            ? 1f + (lu?.ChieftainAttackBonus ?? 0f)
+            : 1f;
+
+        float damage = (baseDamage + _unemployedAtkBonus)
                      * Manager.Buff.AttackMultiplier
                      * cellModifier
                      * totemModifier
-                     * rowModifier;
+                     * rowModifier
+                     * tribeAtk
+                     * projAtk
+                     * burstAtk
+                     * chieftainAtk;
 
-        float critChance = (Manager.LevelUp?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
+        float critChance = (lu?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
         if (critChance > 0f && UnityEngine.Random.value < critChance)
         {
-            float critMult = (Manager.LevelUp?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
+            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
             damage *= critMult;
         }
 
         return Mathf.RoundToInt(damage);
     }
 
+    // ── 보너스 공격 (레벨업 특수 효과) ───────────────────────
+
+    private void TriggerBonusAttacks(bool attackDisabled)
+    {
+        if (attackDisabled || _boss == null || _boss.IsDead) return;
+
+        var lu = Manager.LevelUp;
+        if (lu == null) return;
+
+        // N회마다 추가 공격 (연속 공격, 정밀 연타, 폭풍 연격)
+        foreach (int n in lu.BonusAttackEveryNHits)
+        {
+            if (n > 0 && _hitCount % n == 0)
+            {
+                LaunchProjectile();
+                _boss.TakeDamage(GetAttackDamage());
+            }
+        }
+
+        // 30% 확률 추가 공격 (연쇄 타격)
+        if (lu.RandomExtraAttackChance > 0f && UnityEngine.Random.value < lu.RandomExtraAttackChance)
+        {
+            LaunchProjectile();
+            _boss.TakeDamage(GetAttackDamage());
+        }
+
+        // 5% 확률 50% 데미지 (변칙 타격)
+        if (lu.HasRandomProcAttack && UnityEngine.Random.value < lu.RandomProcChance)
+        {
+            LaunchProjectile();
+            _boss.TakeDamage(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
+        }
+
+        // 매 공격마다 추가 공격 (양손잡이)
+        if (lu.HasExtraAttackEveryAttack)
+        {
+            LaunchProjectile();
+            _boss.TakeDamage(GetAttackDamage());
+        }
+    }
+
     // ── 투사체 ─────────────────────────────────────────────────
 
-    private void LaunchProjectile()
+    protected void LaunchProjectile()
     {
         var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
         if (bossArea != null && Manager.Projectile != null)
