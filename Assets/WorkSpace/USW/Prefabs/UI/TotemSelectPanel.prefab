@@ -613,7 +613,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardContainer: {fileID: 2558957376583084041}
-  cardPrefab: {fileID: 7165921827156124973, guid: bd8970f4584bfd143b0dfd549411f544,
+  cardPrefab: {fileID: 6289575543821323555, guid: bd8970f4584bfd143b0dfd549411f544,
     type: 3}
   confirmButton: {fileID: 7036348718116270668}
   selectionTimerText: {fileID: 3273091942528893309}
