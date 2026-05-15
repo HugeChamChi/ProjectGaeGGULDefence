@@ -71,11 +71,13 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
-        if (_selectedCard == clicked) return;
-
-        _selectedCard?.Deselect();
         _selectedCard = clicked;
-        _selectedCard.Select();
+
+        var data = clicked.GetData();
+        if (data != null)
+            Manager.LevelUp.ApplyEffect(data);
+
+        Hide();
     }
 
     // ── 확인 버튼 ──────────────────────────────────────────────
@@ -111,13 +113,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
                 remaining -= 0.1f;
             }
 
-            // 시간 초과 — 첫 번째 카드 자동 선택 후 확인
-            if (_selectedCard == null && _spawnedCards.Count > 0)
-            {
-                _selectedCard = _spawnedCards[0];
-                _selectedCard.Select();
-            }
-            OnConfirmClicked();
+            // 시간 초과 — 첫 번째 카드 자동 선택
+            if (_spawnedCards.Count > 0)
+                OnCardClicked(_spawnedCards[0]);
         }
         catch (OperationCanceledException) { }
     }
@@ -135,6 +133,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         StopSelectionTimer();
         ClearCards();
+        obj.SetActive(false);
         gameObject.SetActive(false);
         Time.timeScale = 1f;
         Manager.Timer.ResumeTimer();

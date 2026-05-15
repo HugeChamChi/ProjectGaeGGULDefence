@@ -98,13 +98,13 @@ public class TotemSelectCardUI : MonoBehaviour
     public void Select()
     {
         transform.DOKill();
-        transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic);
+        transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic).SetUpdate(true);
     }
 
     public void Deselect()
     {
         transform.DOKill();
-        transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad);
+        transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad).SetUpdate(true);
     }
 
     // ── 등급 스프라이트 ────────────────────────────────────────
