@@ -66,15 +66,15 @@ public class UnitAnimator : MonoBehaviour
     /// </summary>
     private async UniTask WaitUntilAnimationComplete(string stateName, CancellationToken token)
     {
-        // Animator가 현재 상태로 전환될 때까지 잠시 대기 (Transition 시간 고려)
-        await UniTask.NextFrame(token);
+        // 1. 해당 스테이트로 전환될 때까지 대기
+        while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
+        {
+            if (token.IsCancellationRequested) return;
+            await UniTask.Yield(token);
+        }
 
-        // 현재 재생 중인 애니메이션 정보 확인
+        // 2. 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        
-        // 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
-        // 주의: 루프 애니메이션인 경우 1.0을 넘어가므로, 상태 이름을 체크하거나 이벤트를 사용하는 것이 더 정확할 수 있음
-        // 여기서는 비동기 제어를 위해 normalizedTime을 기준으로 함
         while (stateInfo.IsName(stateName) && stateInfo.normalizedTime < 1.0f)
         {
             if (token.IsCancellationRequested) return;

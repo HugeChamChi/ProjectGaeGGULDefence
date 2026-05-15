@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// UnitBase와 UnitAnimator의 동작을 검증하기 위한 테스트 스크립트입니다.
@@ -14,8 +15,8 @@ public class Test_UnitAnimation : MonoBehaviour
     {
         if (_targetUnit == null) return;
         Debug.Log("[Test] 일반 공격 수동 트리거");
-        // 실제 루프를 타지 않고 애니메이션만 테스트하고 싶을 경우
-        // _targetUnit.GetComponentInChildren<UnitAnimator>().PlayAttackAsync(default).Forget();
+        var animator = _targetUnit.GetComponentInChildren<UnitAnimator>();
+        if (animator != null) animator.PlayAttackAsync(destroyCancellationToken).Forget();
     }
 
     [Button]
@@ -23,6 +24,8 @@ public class Test_UnitAnimation : MonoBehaviour
     {
         if (_targetUnit == null) return;
         Debug.Log("[Test] 스킬 발동 수동 트리거");
+        var animator = _targetUnit.GetComponentInChildren<UnitAnimator>();
+        if (animator != null) animator.PlaySkillAsync(destroyCancellationToken).Forget();
     }
 
     [Button]
