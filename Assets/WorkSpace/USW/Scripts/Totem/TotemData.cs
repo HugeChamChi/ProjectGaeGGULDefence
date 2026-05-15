@@ -21,7 +21,12 @@ public class TotemData : ScriptableObject
     public Tier        tier;
     public string      totemName;
     public Sprite      icon;
+    [Tooltip("특수 동작 스크립트가 필요한 토템만 연결. 비워두면 TotemSpawner의 genericPrefab 사용.")]
     public GameObject  prefab;
+
+    [Header("회전 스프라이트 (0°/90°/180°/270°)")]
+    [Tooltip("각 90° 회전 상태별 스프라이트. null이면 icon 사용.")]
+    public Sprite[] rotationSprites = new Sprite[4];
     [TextArea] public string description;
 
     [Header("버프 수치")]
@@ -44,4 +49,10 @@ public class TotemData : ScriptableObject
     public List<Vector2Int> effectRange         = new List<Vector2Int>();
     [Tooltip("공격 불가 범위 — 토템 위치 기준 상대 오프셋")]
     public List<Vector2Int> attackDisabledRange = new List<Vector2Int>();
+
+    [Header("시트 연동")]
+    [Tooltip("구글 시트 totem_id 컬럼 값. 런타임 시트 데이터 매핑 키.")]
+    public int  totemId     = 0;
+    [Tooltip("회전 가능 여부. 시트 is_rotatable 컬럼이 있으면 런타임에 덮어쓰기됨.")]
+    public bool isRotatable = true;
 }

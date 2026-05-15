@@ -822,6 +822,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0da0893f244db5445bef76dfe70c9bb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  btn_Close: {fileID: 0}
+  btn_BackgroundClose: {fileID: 0}
+  targetAnim: {fileID: 0}
   playerName: {fileID: 5784976158002480491}
   closeButton: {fileID: 3535014376920061665}
   backgroundCloseButton: {fileID: 6967793635229715572}
@@ -1788,6 +1791,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf3704d1007d0f4fbd1d350186f6798, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  btn_Close: {fileID: 0}
+  btn_BackgroundClose: {fileID: 0}
+  targetAnim: {fileID: 0}
   playerName: {fileID: 6497088404848121424}
   closeButton: {fileID: 9176567153966918796}
   backgroundCloseButton: {fileID: 2923682864699108573}
@@ -1863,8 +1869,14 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   profileSlot: {fileID: 5432512608034882989}
-  iconController: {fileID: 5287973915296258342}
-  frameController: {fileID: 3431977039266815963}
+  iconList:
+    rootObject: {fileID: 0}
+    slotPrefab: {fileID: 0}
+    contentParent: {fileID: 0}
+  frameList:
+    rootObject: {fileID: 0}
+    slotPrefab: {fileID: 0}
+    contentParent: {fileID: 0}
   changeButton: {fileID: 6698516249221592351}
   iconButton: {fileID: 6312443748775636743}
   frameButton: {fileID: 5594420120273614184}
@@ -2483,7 +2495,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1411586652925056481
 RectTransform:
   m_ObjectHideFlags: 0

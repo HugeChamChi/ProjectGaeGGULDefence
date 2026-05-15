@@ -42,7 +42,11 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
             return;
         }
 
-        if (!Manager.Currency.Spend(CurrentCost))
+        // 소환 할인 (할인 티켓 레벨업 효과)
+        float discountRate  = Manager.LevelUp?.SummonDiscountRate ?? 0f;
+        float effectiveCost = CurrentCost * Mathf.Max(0f, 1f - discountRate);
+
+        if (!Manager.Currency.Spend(effectiveCost))
         {
             Debug.Log("식량이 부족합니다.");
             return;
@@ -52,7 +56,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         if (empty.Count == 0)
         {
             Debug.Log("빈 셀이 없습니다.");
-            Manager.Currency.AddCurrency(CurrentCost);
+            Manager.Currency.AddCurrency(effectiveCost);
             return;
         }
 
@@ -72,10 +76,11 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         if (unit == null)
         {
             Debug.LogError("UnitSpawner: 유닛 생성 실패");
-            Manager.Currency.AddCurrency(CurrentCost);
+            Manager.Currency.AddCurrency(effectiveCost);
             return;
         }
 
+        // 환급 처리(소환 실패 시)는 effectiveCost 기준
         var cell = empty[Random.Range(0, empty.Count)];
         cell.TryPlaceUnit(unit);
         unit.transform.SetParent(cell.transform, false);
@@ -129,6 +134,29 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
 
         if (refund > 0f)
             Manager.Currency.AddCurrency(refund);
+
+        // 판매 보너스 식량 (서비스 레벨업 효과)
+        float bonusFood = Manager.LevelUp?.SellBonusFoodAmount ?? 0f;
+        if (bonusFood > 0f)
+            Manager.Currency.AddCurrency(bonusFood);
+
+        // 판매 시 보스 피해 (자폭병 레벨업 효과)
+        var lu = Manager.LevelUp;
+        if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
+        {
+            int dmg = Mathf.RoundToInt(unit.GetAttackDamage() * lu.SellDamagePct);
+            Manager.Boss?.CurrentBoss?.TakeDamage(dmg);
+        }
+
+        // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
+        if (lu != null && lu.HasChieftainGainOnSell)
+        {
+            Manager.Buff.AddAttackBuff(lu.ChieftainSellAtkGain);
+            int   excessPop     = (Manager.Population?.Current ?? 0) - 2;
+            float popPenalty    = excessPop > 0 ? excessPop * lu.ChieftainSellPopPenalty : 0f;
+            if (popPenalty > 0f)
+                Manager.Buff.AddAttackBuff(-popPenalty);
+        }
 
         OnAnyUnitSold?.Invoke();
     }

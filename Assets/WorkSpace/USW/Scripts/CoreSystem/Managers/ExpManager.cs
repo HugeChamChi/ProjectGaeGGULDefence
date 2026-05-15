@@ -37,10 +37,11 @@ public class ExpManager : InGameSingleton<ExpManager>
     /// <summary>보스 데미지로부터 EXP 획득. GameDataManager 우선, 폴백은 damage/100.</summary>
     public void AddExpFromDamage(float damage)
     {
-        float multiplier = Manager.GameData != null && Manager.GameData.IsLoaded
+        float multiplier    = Manager.GameData != null && Manager.GameData.IsLoaded
             ? Manager.GameData.GetCurrentExpMultiplier()
             : 0.01f;
-        AddExp(damage * multiplier);
+        float levelUpMult   = Manager.LevelUp?.ExpGainMultiplier ?? 1f;
+        AddExp(damage * multiplier * levelUpMult);
     }
 
     /// <summary>EXP 직접 추가. 초과분은 다음 레벨로 이월.</summary>

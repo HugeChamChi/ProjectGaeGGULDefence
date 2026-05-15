@@ -33,14 +33,18 @@ public static class Manager
     public static TotemSpawner     Totem      => TotemSpawner.Instance;
     public static TotemBuffManager Buff       => TotemBuffManager.Instance;
 
+    // ── 족장 ───────────────────────────────────────────────────
+    public static ChieftainSpawner Chieftain  => ChieftainSpawner.Instance;
+
     // ── 합성 / 레벨업 ──────────────────────────────────────────
     public static MergeManager     Merge      => MergeManager.Instance;
     public static LevelUpManager   LevelUp    => LevelUpManager.Instance;
 
     // ── UI ─────────────────────────────────────────────────────
     public static UIManager        UI         => UIManager.Instance;
-    public static LevelUpUI        LevelUpUI  => LevelUpUI.Instance;
-    public static TotemInfoPopupUI TotemInfo  => TotemInfoPopupUI.Instance;
+    public static LevelUpUI        LevelUpUI    => LevelUpUI.Instance;
+    public static TotemInfoPopupUI TotemInfo    => TotemInfoPopupUI.Instance;
+    public static TotemSelectUI    TotemSelect  => TotemSelectUI.Instance;
 
     // ── 투사체 ─────────────────────────────────────────────────
     public static ProjectilePool   Projectile => ProjectilePool.Instance;

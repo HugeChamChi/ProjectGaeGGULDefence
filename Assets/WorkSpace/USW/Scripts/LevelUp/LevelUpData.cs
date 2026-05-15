@@ -1,20 +1,42 @@
 using UnityEngine;
 
 /// <summary>
-/// 레벨업 선택지 하나의 데이터
+/// 레벨업 선택지 하나의 데이터 (시트 choose_id 3000~3059 대응)
 ///
-/// 생성: 우클릭 → Create → Game/LevelUpData
-/// animationFrames: 선택 시 재생할 스프라이트 시트 프레임 배열
-/// icon: 기본 커버 이미지 (선택 전 표시)
-/// frameRate: 초당 재생할 프레임 수 (기본 12)
+/// grade     : Normal/Rare/Epic/Legend (Tier 재사용)
+/// spawnRate : 등장 가중치 (Normal 0.020, Rare 0.015, Legend 0.010)
+/// applicableTribes : 해당 부족이 그리드에 존재할 때만 선택지에 등장 (비어있으면 항상 등장)
+/// primaryEffect/primaryValue   : 주 스탯 효과
+/// secondaryEffect/secondaryValue : 부 스탯 효과 (다중강화 전용)
+/// specialEffect/specialValue   : 특수 로직 효과
 /// </summary>
 [CreateAssetMenu(fileName = "LevelUpData", menuName = "Game/LevelUpData")]
 public class LevelUpData : ScriptableObject
 {
-    public LevelUpEffectType effectType;
-    public float             value;            // 퍼센트 값 (예: 10 = 10%)
-    public Sprite            icon;             // 선택 전 커버 이미지
-    public Sprite[]          animationFrames;  // 선택 시 재생할 스프라이트 배열
-    public float             frameRate = 12f;  // 초당 프레임 수
+    [Header("Identity")]
+    public int              chooseId;
+    public string           chooseName;
+    public Tier             grade;
+    public float            spawnRate;
     [TextArea] public string description;
+
+    [Header("Tribe Filter (비어있으면 항상 등장)")]
+    public UnitTribe[]      applicableTribes;
+
+    [Header("Primary Effect")]
+    public LevelUpEffectType primaryEffect;
+    public float             primaryValue;   // 양수=증가, 음수=감소
+
+    [Header("Secondary Effect (다중강화 전용)")]
+    public LevelUpEffectType secondaryEffect;
+    public float             secondaryValue;
+
+    [Header("Special Effect")]
+    public LevelUpSpecialEffect specialEffect;
+    public float                specialValue;
+
+    [Header("Display")]
+    public Sprite   icon;
+    public Sprite[] animationFrames;
+    public float    frameRate = 12f;
 }

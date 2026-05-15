@@ -45,6 +45,7 @@ public class MergeManager : InGameSingleton<MergeManager>
         var targets = GetMergeTargets(_selectedUnit);
         var spawnCell = targets[0].cell;
         var nextTier  = (Tier)((int)_selectedUnit.unitData.unitTier + 1);
+        var tribe     = _selectedUnit.unitData.unitTribe;
 
         HideButton();
 
@@ -56,8 +57,10 @@ public class MergeManager : InGameSingleton<MergeManager>
             Object.Destroy(unit.gameObject);
         }
 
-        // 다음 티어 랜덤 유닛 스폰
-        var newUnit = Manager.UnitFactory.CreateRandomUnitOfTier(nextTier);
+        // 다음 티어 유닛 스폰 — 진로 계승(3041) 활성화 시 같은 직업 유지
+        var newUnit = Manager.LevelUp?.HasMergeKeepsTribe == true
+            ? Manager.UnitFactory.CreateRandomUnitByTribeAndTier(tribe, nextTier)
+            : Manager.UnitFactory.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return;
 
         spawnCell.TryPlaceUnit(newUnit);

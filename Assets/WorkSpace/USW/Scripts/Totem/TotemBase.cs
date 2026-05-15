@@ -11,13 +11,23 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class TotemBase : MonoBehaviour
 {
-    [SerializeField] protected TotemData totemData;
+    [SerializeField] protected TotemData     totemData;
+    [SerializeField] private   SpriteRenderer _spriteRenderer;
 
     public TotemData Data        => totemData;
+
+    /// <summary>소환 직후 SO 데이터를 주입한다. TotemSpawner에서 호출.</summary>
+    public void SetTotemData(TotemData data) => totemData = data;
     public bool      IsActive    { get; private set; } = false;
     public int       RotationStep { get; private set; } = 0;
 
     public GridCell CurrentCell { get; private set; }
+
+    protected virtual void Awake()
+    {
+        if (_spriteRenderer == null)
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+    }
 
     // ── 배치/제거 ──────────────────────────────────────────────
 
@@ -32,6 +42,7 @@ public abstract class TotemBase : MonoBehaviour
         CurrentCell = cell;
         IsActive    = true;
 
+        UpdateSprite();
         ApplyBuff();
 
         // 토템 목록에 등록 (FindObjectsOfType 대체)
@@ -59,13 +70,24 @@ public abstract class TotemBase : MonoBehaviour
 
     // ── 회전 ───────────────────────────────────────────────────
 
-    /// <summary>클릭 시 90° CW 회전. 셀 버프 플래그를 즉시 재계산.</summary>
+    /// <summary>클릭 시 90° CW 회전. 스프라이트를 다음 회전 이미지로 교체하고 버프 플래그 재계산.</summary>
     public void Rotate()
     {
         if (!IsActive) return;
         RotationStep = (RotationStep + 1) % 4;
-        transform.localEulerAngles = new Vector3(0f, 0f, -90f * RotationStep);
+        UpdateSprite();
         Manager.Buff.RebuildCellBuffFlags();
+    }
+
+    private void UpdateSprite()
+    {
+        if (_spriteRenderer == null || totemData == null) return;
+        var arr = totemData.rotationSprites;
+        Sprite s = null;
+        if (arr != null && arr.Length > RotationStep) s = arr[RotationStep];
+        if (s == null && arr != null && arr.Length > 0) s = arr[0];
+        if (s == null) s = totemData.icon;
+        if (s != null) _spriteRenderer.sprite = s;
     }
 
     /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>
