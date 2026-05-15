@@ -15,17 +15,17 @@ namespace GaeGGUL.Animation
         public override async UniTask Play()
         {
             Stop();
-
+            
             Vector3 targetScale = new Vector3(_originScale.x * scaleMultiplier.x, _originScale.y * scaleMultiplier.y, _originScale.z);
 
             _currentSeq = DOTween.Sequence()
-                .Join(GetScaleTween(targetScale, duration).SetEase(ease))
-                .Join(GetScaleTween(_originScale, duration).SetEase(ease))
+                .Append(GetScaleTween(targetScale, duration).SetEase(ease))
+                .Append(GetScaleTween(_originScale, duration).SetEase(ease))
                 .SetDelay(delay);
 
             if (isLoop)
             {
-                _currentSeq.SetLoops(-1).ToUniTask().Forget();
+                _currentSeq.SetLoops(-1);
             }
 
             await _currentSeq.Play().ToUniTask();
