@@ -17,9 +17,11 @@ MonoBehaviour:
   unitName: Frog_Gunner
   unitTier: 3
   unitTribe: 1
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9d09cbadb705dbc4ab1de11aeec74d0f, type: 3}
+  prefab: {fileID: 3152003459702567059, guid: e9bd65e88ca656f40b3b51a49868af38, type: 3}
   description: 
   atk: 450
   skillAtk: 1200
   skillCooldown: 8
   foodPerTick: 10
+  populationCost: 1

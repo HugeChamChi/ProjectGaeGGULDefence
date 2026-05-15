@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 8679721411341875528}
   - component: {fileID: 5197670326736858124}
   - component: {fileID: 8075034091606230986}
+  - component: {fileID: -6517556353249654820}
+  - component: {fileID: -5659851027560978049}
   m_Layer: 5
   m_Name: Frog_Ninja
   m_TagString: Untagged
@@ -95,3 +97,34 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 91e9441875f7b1f46be6b0944e9500fd, type: 3}
   - {fileID: 21300000, guid: 4d5bcb8e1ba87034fb4708f28484efff, type: 3}
   fps: 8
+--- !u!114 &-6517556353249654820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4588077261745195020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae10e6483d3381a4a9048eed6d81085d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitData: {fileID: 0}
+  onSkillFull:
+    m_PersistentCalls:
+      m_Calls: []
+  onAttack:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &-5659851027560978049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4588077261745195020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

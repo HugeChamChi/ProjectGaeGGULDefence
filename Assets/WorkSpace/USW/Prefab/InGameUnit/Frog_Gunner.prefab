@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 1796607562701485481}
   - component: {fileID: 252767383310132638}
   - component: {fileID: 7181446575421970749}
+  - component: {fileID: 7945094794970011651}
+  - component: {fileID: 7091069610533498274}
   m_Layer: 5
   m_Name: Frog_Gunner
   m_TagString: Untagged
@@ -95,3 +97,34 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e4bc278f1e1ca374ca26de4364392a0d, type: 3}
   - {fileID: 21300000, guid: d3a2670a1c2c2934fab17ff4e5a61bcd, type: 3}
   fps: 8
+--- !u!114 &7945094794970011651
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3152003459702567059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae10e6483d3381a4a9048eed6d81085d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitData: {fileID: 0}
+  onSkillFull:
+    m_PersistentCalls:
+      m_Calls: []
+  onAttack:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &7091069610533498274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3152003459702567059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

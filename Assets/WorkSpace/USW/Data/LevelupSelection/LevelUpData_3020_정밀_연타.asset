@@ -24,6 +24,6 @@ MonoBehaviour:
   secondaryValue: 0
   specialEffect: 12
   specialValue: 10
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6fd17d4b14c29e54cb1028ddbf73318d, type: 3}
   animationFrames: []
   frameRate: 12

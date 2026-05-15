@@ -17,9 +17,11 @@ MonoBehaviour:
   unitName: Frog_Ninja
   unitTier: 1
   unitTribe: 2
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 6bb38eeb365982247bdb30b806bbbaba, type: 3}
+  prefab: {fileID: 4588077261745195020, guid: 545911b03495c254780fb650aa2a060e, type: 3}
   description: 
   atk: 210
   skillAtk: 630
   skillCooldown: 8.5
   foodPerTick: 10
+  populationCost: 1

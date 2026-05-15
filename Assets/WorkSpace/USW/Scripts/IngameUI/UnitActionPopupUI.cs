@@ -36,13 +36,15 @@ public class UnitActionPopupUI : InGameSingleton<UnitActionPopupUI>
     {
         base.Awake();
         _rect = GetComponent<RectTransform>();
-        _rect.localScale = Vector3.zero;
+        if (_rect != null)
+            _rect.localScale = Vector3.zero;
     }
 
     // ── 표시 ───────────────────────────────────────────────────
 
     public void Show(UnitBase unit, bool canMerge)
     {
+        if (_rect == null) return;
         _justShown = true;
 
         mergeButton.SetState(canMerge);
