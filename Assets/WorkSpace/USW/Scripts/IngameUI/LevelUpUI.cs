@@ -20,9 +20,9 @@ using UnityEngine.UI;
 // ════════════════════════════════════════════════════════
 public class LevelUpUI : InGameSingleton<LevelUpUI>
 {
+    [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
-    [SerializeField] private Button        confirmButton;
 
     [Header("Selection Timer")]
     [SerializeField] private TMP_Text selectionTimerText;
@@ -38,9 +38,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         base.Awake();
 
-        confirmButton?.onClick.AddListener(OnConfirmClicked);
-        SetConfirmInteractable(false);
-
         gameObject.SetActive(false);
     }
 
@@ -50,7 +47,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         ClearCards();
         _selectedCard = null;
-        SetConfirmInteractable(false);
 
         var choices = Manager.LevelUp.GetRandomChoices(ChoiceCount);
         foreach (var data in choices)
@@ -60,6 +56,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
             _spawnedCards.Add(card);
         }
 
+        obj.SetActive(true);
         gameObject.SetActive(true);
         Time.timeScale = 0f;
         Manager.Timer.StopTimer();
@@ -79,8 +76,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         _selectedCard?.Deselect();
         _selectedCard = clicked;
         _selectedCard.Select();
-
-        SetConfirmInteractable(true);
     }
 
     // ── 확인 버튼 ──────────────────────────────────────────────
@@ -159,11 +154,5 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
         _spawnedCards.Clear();
         _selectedCard = null;
-    }
-
-    private void SetConfirmInteractable(bool on)
-    {
-        if (confirmButton != null)
-            confirmButton.interactable = on;
     }
 }
