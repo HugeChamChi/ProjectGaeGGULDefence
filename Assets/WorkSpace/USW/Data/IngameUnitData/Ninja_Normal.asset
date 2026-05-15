@@ -18,7 +18,7 @@ MonoBehaviour:
   unitTier: 0
   unitTribe: 2
   icon: {fileID: 21300000, guid: e42cbf8b1b1703e45842cfe3a5fc438f, type: 3}
-  prefab: {fileID: 4588077261745195020, guid: 545911b03495c254780fb650aa2a060e, type: 3}
+  prefab: {fileID: 4914462842172424252, guid: d7709e26f5c9f8c4cb2f1c51561bfae4, type: 3}
   description: 
   atk: 140
   skillAtk: 420

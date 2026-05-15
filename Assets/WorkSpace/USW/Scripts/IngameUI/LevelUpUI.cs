@@ -20,9 +20,9 @@ using UnityEngine.UI;
 // ════════════════════════════════════════════════════════
 public class LevelUpUI : InGameSingleton<LevelUpUI>
 {
+    [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
-    [SerializeField] private Button        confirmButton;
 
     [Header("Selection Timer")]
     [SerializeField] private TMP_Text selectionTimerText;
@@ -38,9 +38,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         base.Awake();
 
-        confirmButton?.onClick.AddListener(OnConfirmClicked);
-        SetConfirmInteractable(false);
-
         gameObject.SetActive(false);
     }
 
@@ -50,7 +47,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         ClearCards();
         _selectedCard = null;
-        SetConfirmInteractable(false);
 
         var choices = Manager.LevelUp.GetRandomChoices(ChoiceCount);
         foreach (var data in choices)
@@ -60,6 +56,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
             _spawnedCards.Add(card);
         }
 
+        obj.SetActive(true);
         gameObject.SetActive(true);
         Time.timeScale = 0f;
         Manager.Timer.StopTimer();
@@ -74,13 +71,13 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
-        if (_selectedCard == clicked) return;
-
-        _selectedCard?.Deselect();
         _selectedCard = clicked;
-        _selectedCard.Select();
 
-        SetConfirmInteractable(true);
+        var data = clicked.GetData();
+        if (data != null)
+            Manager.LevelUp.ApplyEffect(data);
+
+        Hide();
     }
 
     // ── 확인 버튼 ──────────────────────────────────────────────
@@ -116,13 +113,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
                 remaining -= 0.1f;
             }
 
-            // 시간 초과 — 첫 번째 카드 자동 선택 후 확인
-            if (_selectedCard == null && _spawnedCards.Count > 0)
-            {
-                _selectedCard = _spawnedCards[0];
-                _selectedCard.Select();
-            }
-            OnConfirmClicked();
+            // 시간 초과 — 첫 번째 카드 자동 선택
+            if (_spawnedCards.Count > 0)
+                OnCardClicked(_spawnedCards[0]);
         }
         catch (OperationCanceledException) { }
     }
@@ -140,14 +133,20 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     {
         StopSelectionTimer();
         ClearCards();
+        obj.SetActive(false);
         gameObject.SetActive(false);
         Time.timeScale = 1f;
         Manager.Timer.ResumeTimer();
 
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
-            cell.OccupyingUnit?.ResumeLoops();
-
+        // 연쇄 레벨업 여부를 먼저 확인 — FlushPendingLevelUp이 새 Show()를 열 수 있음
         Manager.Game.OnLevelUpChoiceMade();
+
+        // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
+        if (Manager.Game.CurrentState != GameManager.GameState.LevelUp)
+        {
+            foreach (var cell in Manager.Grid.GetOccupiedCells())
+                cell.OccupyingUnit?.ResumeLoops();
+        }
     }
 
     // ── 유틸 ───────────────────────────────────────────────────
@@ -159,11 +158,5 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
         _spawnedCards.Clear();
         _selectedCard = null;
-    }
-
-    private void SetConfirmInteractable(bool on)
-    {
-        if (confirmButton != null)
-            confirmButton.interactable = on;
     }
 }
