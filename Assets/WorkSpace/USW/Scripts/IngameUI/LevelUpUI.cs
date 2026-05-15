@@ -138,10 +138,15 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         Time.timeScale = 1f;
         Manager.Timer.ResumeTimer();
 
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
-            cell.OccupyingUnit?.ResumeLoops();
-
+        // 연쇄 레벨업 여부를 먼저 확인 — FlushPendingLevelUp이 새 Show()를 열 수 있음
         Manager.Game.OnLevelUpChoiceMade();
+
+        // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
+        if (Manager.Game.CurrentState != GameManager.GameState.LevelUp)
+        {
+            foreach (var cell in Manager.Grid.GetOccupiedCells())
+                cell.OccupyingUnit?.ResumeLoops();
+        }
     }
 
     // ── 유틸 ───────────────────────────────────────────────────
