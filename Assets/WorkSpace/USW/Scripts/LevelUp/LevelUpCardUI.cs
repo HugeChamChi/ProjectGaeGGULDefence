@@ -27,6 +27,7 @@ public class LevelUpCardUI : MonoBehaviour
     [SerializeField] private Image    borderImage;
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private TMP_Text tierText;
+    [SerializeField] private TMP_Text nameText;
     [SerializeField] private Button   button;
 
     [Header("Tier Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
@@ -66,6 +67,9 @@ public class LevelUpCardUI : MonoBehaviour
 
         if (tierText != null)
             tierText.text = TierToLabel(data?.tier ?? Tier.Normal);
+
+        if (nameText != null)
+            nameText.text = data.chooseName;
 
         ApplyTierSprites(data?.tier ?? Tier.Normal);
     }
