@@ -30,12 +30,35 @@ public abstract class UnitBase : MonoBehaviour
     protected BossBase        _boss;
     public GridCell currentCell { get; private set; }
 
+    protected UnitAnimator _animator;
     private CancellationTokenSource _loopCts;
+
+    // ── 상태 및 타이머 (관찰 가능) ──────────────────────────────
+    public enum UnitState { Idle, Attacking, Skilling, Sealed }
+    public UnitState CurrentState { get; private set; } = UnitState.Idle;
+
+    private float _attackTimer;
+    private float _skillTimer;
+
+    public float SkillGaugeProgress 
+    {
+        get 
+        {
+            if (unitData == null) return 0f;
+            float interval = GetCurrentSkillInterval();
+            return Mathf.Clamp01(_skillTimer / interval);
+        }
+    }
 
     // ── 레벨업 특수 효과용 ─────────────────────────────────────
     private int   _hitCount;                      // 공격 횟수 (AttackEveryNHits용)
     private float _burstEndTime;                  // 버스트 버프 종료 시각 (Time.time 기준)
     protected float _unemployedAtkBonus = 0f;     // 3056 식충이 — 스킬마다 누적 공격력
+
+    protected virtual void Awake()
+    {
+        _animator = GetComponentInChildren<UnitAnimator>();
+    }
 
     // ── 배치/제거 ──────────────────────────────────────────────
 
@@ -54,8 +77,7 @@ public abstract class UnitBase : MonoBehaviour
 
         StopLoops();
         _loopCts = new CancellationTokenSource();
-        AttackLoopAsync(_loopCts.Token).Forget(Debug.LogException);
-        SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
 
         OnUnitPlaced();
         Manager.Population?.Add(unitData?.populationCost ?? 1);
@@ -90,8 +112,7 @@ public abstract class UnitBase : MonoBehaviour
         if (_currency == null) return;
         StopLoops();
         _loopCts = new CancellationTokenSource();
-        AttackLoopAsync(_loopCts.Token).Forget(Debug.LogException);
-        SkillLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
     }
 
     private void StopLoops()
@@ -101,62 +122,19 @@ public abstract class UnitBase : MonoBehaviour
         _loopCts = null;
     }
 
-    // ── 일반 공격 루프 — 1초마다, 공속 버프 적용 ──────────────
+    // ── 통합 제어 루프 ──────────────────────────────────────────
 
-    private async UniTask AttackLoopAsync(CancellationToken token)
-    {
-        if (unitData == null)
-        {
-            Debug.LogError($"UnitBase({name}): unitData가 null입니다.");
-            return;
-        }
-
-        try
-        {
-            while (true)
-            {
-                token.ThrowIfCancellationRequested();
-
-                if (currentCell != null && currentCell.Model.IsSealed)
-                {
-                    await UniTask.Yield(token);
-                    continue;
-                }
-
-                int   row          = currentCell?.GridPosition.y ?? 0;
-                float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
-
-                float interval = UpgradedAttackInterval
-                               * Manager.Buff.SpeedMultiplier
-                               * (currentCell?.Model.SpeedModifier ?? 1f)
-                               / rowSpeedMult;
-                interval = Mathf.Max(interval, 0.05f);
-
-                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
-                token.ThrowIfCancellationRequested();
-
-                bool attackDisabled = currentCell != null &&
-                    (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
-
-                if (!attackDisabled && _boss != null && !_boss.IsDead)
-                {
-                    LaunchProjectile();
-                    _boss.TakeDamage(GetAttackDamage());
-                    onAttack?.Invoke();
-                    _hitCount++;
-                    TriggerBonusAttacks(attackDisabled);
-                }
-            }
-        }
-        catch (OperationCanceledException) { }
-    }
-
-    // ── 스킬 루프 — skillCooldown마다, 게이지속도 버프 적용 ────
-
-    private async UniTask SkillLoopAsync(CancellationToken token)
+    /// <summary>
+    /// 유닛의 행동을 제어하는 메인 루프.
+    /// Idle 상태에서 스킬 게이지(쿨다운)와 공격 쿨다운을 확인하여 우선순위에 따라 행동을 결정합니다.
+    /// </summary>
+    private async UniTask UnitControlLoopAsync(CancellationToken token)
     {
         if (unitData == null) return;
 
+        _attackTimer = GetCurrentAttackInterval(); // 첫 공격은 즉시 혹은 짧은 대기 후 가능하도록 설정
+        _skillTimer = 0f;
+
         try
         {
             while (true)
@@ -165,28 +143,92 @@ public abstract class UnitBase : MonoBehaviour
 
                 if (currentCell != null && currentCell.Model.IsSealed)
                 {
+                    CurrentState = UnitState.Sealed;
                     await UniTask.Yield(token);
                     continue;
                 }
 
-                int   row          = currentCell?.GridPosition.y ?? 0;
-                float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+                // 쿨다운 계산
+                float dt = Time.deltaTime;
+                _attackTimer += dt;
+                _skillTimer += dt;
 
-                float interval = unitData.skillCooldown
-                               * Manager.Buff.GaugeSpeedMultiplier
-                               * Manager.Buff.FoodSpeedMultiplier
-                               * (currentCell?.Model.SpeedModifier ?? 1f)
-                               / rowSpeedMult;
-                interval = Mathf.Max(interval, 0.05f);
+                float attackInterval = GetCurrentAttackInterval();
+                float skillInterval = GetCurrentSkillInterval();
 
-                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
-                token.ThrowIfCancellationRequested();
-
-                OnSkillFull();
+                // 우선순위 결정: Skill > Attack > Idle
+                if (_skillTimer >= skillInterval)
+                {
+                    CurrentState = UnitState.Skilling;
+                    if (_animator != null) await _animator.PlaySkillAsync(token);
+                    ExecuteSkill();
+                    
+                    _skillTimer = 0f;
+                }
+                else if (_attackTimer >= attackInterval)
+                {
+                    CurrentState = UnitState.Attacking;
+                    if (_animator != null) await _animator.PlayAttackAsync(token);
+                    ExecuteAttack();
+                    
+                    _attackTimer = 0f;
+                }
+                else
+                {
+                    CurrentState = UnitState.Idle;
+                    if (_animator != null) _animator.PlayIdle();
+                    await UniTask.Yield(token);
+                }
             }
         }
         catch (OperationCanceledException) { }
     }
+
+    private float GetCurrentAttackInterval()
+    {
+        int row = currentCell?.GridPosition.y ?? 0;
+        float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float interval = UpgradedAttackInterval
+                       * Manager.Buff.SpeedMultiplier
+                       * (currentCell?.Model.SpeedModifier ?? 1f)
+                       / rowSpeedMult;
+        return Mathf.Max(interval, 0.05f);
+    }
+
+    private float GetCurrentSkillInterval()
+    {
+        int row = currentCell?.GridPosition.y ?? 0;
+        float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float interval = unitData.skillCooldown
+                       * Manager.Buff.GaugeSpeedMultiplier
+                       * Manager.Buff.FoodSpeedMultiplier
+                       * (currentCell?.Model.SpeedModifier ?? 1f)
+                       / rowSpeedMult;
+        return Mathf.Max(interval, 0.05f);
+    }
+
+    private void ExecuteAttack()
+    {
+        bool attackDisabled = currentCell != null &&
+            (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
+
+        if (!attackDisabled && _boss != null && !_boss.IsDead)
+        {
+            LaunchProjectile();
+            _boss.TakeDamage(GetAttackDamage());
+            onAttack?.Invoke();
+            _hitCount++;
+            TriggerBonusAttacks(attackDisabled);
+        }
+    }
+
+    private void ExecuteSkill()
+    {
+        OnSkillFull();
+    }
+
+    // 기존 AttackLoopAsync와 SkillLoopAsync는 제거됨
+
 
     /// <summary>스킬 발동 — 식량 생산 + 스킬 공격. 서브클래스에서 오버라이드 가능</summary>
     protected virtual void OnSkillFull()
