@@ -23,6 +23,7 @@ namespace GaeGGUL.Animation
             Vector3 jumpPos = _originPos + new Vector3(0, jumpPower, 0);
 
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetScaleTween(squashScale, duration * 0.2f).SetEase(Ease.OutQuad))
                 .Append(GetScaleTween(stretchScale, duration * 0.2f).SetEase(Ease.OutQuad))
                 .Join(GetMoveTween(jumpPos, duration * 0.3f).SetEase(Ease.OutQuad))

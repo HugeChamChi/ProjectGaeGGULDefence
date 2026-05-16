@@ -31,6 +31,7 @@ namespace GaeGGUL.Animation
 
             // 2. 원래 위치(_originPos)로 이동하는 시퀀스 구성
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetMoveTween(_originPos, duration).SetEase(ease))
                 .SetDelay(delay);
 

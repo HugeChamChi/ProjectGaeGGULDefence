@@ -20,6 +20,7 @@ namespace GaeGGUL.Animation
 
         [Header("Common Settings")]
         [SerializeField] protected AnimTriggerType triggerType = AnimTriggerType.OnEnable;
+        [SerializeField] protected bool ignoreTimeScale = false;
         [SerializeField] protected bool isLoop;
         [SerializeField] protected Ease ease = Ease.OutQuad;
         [SerializeField] protected float duration = 0.5f;
@@ -35,6 +36,14 @@ namespace GaeGGUL.Animation
         protected virtual void Awake()
         {
             Initialize(animationTarget != null ? animationTarget : transform);
+        }
+
+        protected virtual void Reset()
+        {
+            if (animationTarget == null) animationTarget = transform;
+            
+            // UI 요소(RectTransform)가 있으면 기본적으로 ignoreTimeScale을 true로 설정
+            ignoreTimeScale = GetComponent<RectTransform>() != null;
         }
 
         protected virtual void OnEnable()
