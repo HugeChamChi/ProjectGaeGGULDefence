@@ -25,6 +25,7 @@ namespace GaeGGUL.Animation
 
             // 2. 원래 위치로 이동
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetMoveTween(_originPos, durationIn).SetEase(easeIn))
                 .SetDelay(delayIn);
 
@@ -40,6 +41,7 @@ namespace GaeGGUL.Animation
 
             // 2. 목표 위치로 이동
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetMoveTween(endPos, durationOut).SetEase(easeOut))
                 .SetDelay(delayOut);
 

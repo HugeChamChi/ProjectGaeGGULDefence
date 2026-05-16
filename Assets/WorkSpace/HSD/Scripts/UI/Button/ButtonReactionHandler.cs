@@ -39,7 +39,8 @@ public class ButtonReactionHandler : MonoBehaviour, IPointerDownHandler, IPointe
     {
         _currentTween?.Kill();
         _currentTween = transform.DOScale(targetScale, time)
-            .SetEase(curve);
+            .SetEase(curve)
+            .SetUpdate(true);
     }
 
     private void OnDisable()

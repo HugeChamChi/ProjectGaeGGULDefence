@@ -20,5 +20,15 @@ namespace HSD.UI.Setting
             if (btn_Restart != null) btn_Restart.onClick.AddListener(_presenter.OnRestartClicked);
             if (btn_GoToLobby != null) btn_GoToLobby.onClick.AddListener(_presenter.OnGoToLobbyClicked);
         }
+
+        private void OnEnable()
+        {
+            Time.timeScale = 0;
+        }
+
+        private void OnDisable()
+        {
+            Time.timeScale = 1;
+        }
     }
 }

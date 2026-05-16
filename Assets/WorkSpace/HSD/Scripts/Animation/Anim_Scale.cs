@@ -28,6 +28,7 @@ namespace GaeGGUL.Animation
 
             // 2. 원래 배율(_originScale)로 복구되는 시퀀스 구성
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetScaleTween(_originScale, duration).SetEase(ease))
                 .SetDelay(delay);
 

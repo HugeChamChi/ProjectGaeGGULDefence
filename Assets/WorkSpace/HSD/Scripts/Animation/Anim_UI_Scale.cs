@@ -22,6 +22,7 @@ namespace GaeGGUL.Animation
 
             // 2. 원래 크기로 커지는 애니메이션
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetScaleTween(_originScale, durationIn).SetEase(easeIn))
                 .SetDelay(delayIn);
 
@@ -37,6 +38,7 @@ namespace GaeGGUL.Animation
 
             // 2. 목표 크기로 작아지는 애니메이션
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetScaleTween(endScale, durationOut).SetEase(easeOut))
                 .SetDelay(delayOut);
 

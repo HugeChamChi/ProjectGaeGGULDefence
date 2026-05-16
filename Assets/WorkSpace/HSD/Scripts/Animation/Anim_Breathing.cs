@@ -19,6 +19,7 @@ namespace GaeGGUL.Animation
             Vector3 targetScale = new Vector3(_originScale.x * scaleMultiplier.x, _originScale.y * scaleMultiplier.y, _originScale.z);
 
             _currentSeq = DOTween.Sequence()
+                .SetUpdate(ignoreTimeScale)
                 .Append(GetScaleTween(targetScale, duration).SetEase(ease))
                 .Append(GetScaleTween(_originScale, duration).SetEase(ease))
                 .SetDelay(delay);
