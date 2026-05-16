@@ -58,7 +58,7 @@ public class ProjectilePool : InGameSingleton<ProjectilePool>
 
         var canvas           = canvasGO.AddComponent<Canvas>();
         canvas.renderMode    = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder  = 200;
+        canvas.sortingOrder  = 2;
 
         canvasGO.AddComponent<CanvasScaler>();
 
