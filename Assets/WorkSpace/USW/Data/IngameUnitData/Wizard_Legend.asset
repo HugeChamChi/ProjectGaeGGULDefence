@@ -20,6 +20,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 14075db5768936e4e99db99e3a3d70a6, type: 3}
   prefab: {fileID: 6420751813791673423, guid: 0963f26c8c90c8b46897cbfeda3529a2, type: 3}
   description: 
+  attackSoundAddress: 03.Wizard_attack
   atk: 270
   skillAtk: 1650
   skillCooldown: 11.2

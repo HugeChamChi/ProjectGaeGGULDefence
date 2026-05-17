@@ -1,8 +1,9 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
-using Cysharp.Threading.Tasks;
-using System.Threading;
 
 /// <summary>
 /// 모든 유닛의 기반 클래스
@@ -31,6 +32,7 @@ public abstract class UnitBase : MonoBehaviour
     public GridCell currentCell { get; private set; }
 
     protected UnitAnimator _animator;
+    protected UnitSoundController _sound;
     private CancellationTokenSource _loopCts;
 
     // ── 상태 및 타이머 (관찰 가능) ──────────────────────────────
@@ -82,6 +84,8 @@ public abstract class UnitBase : MonoBehaviour
         OnUnitPlaced();
         Manager.Population?.Add(unitData?.populationCost ?? 1);
         OnAnyUnitChanged?.Invoke();
+
+        _sound = new(this);
         _animator.Initialize(this);
     }
 

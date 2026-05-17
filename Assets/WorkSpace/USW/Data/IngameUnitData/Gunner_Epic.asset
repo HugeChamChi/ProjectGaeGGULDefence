@@ -20,6 +20,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 05a05dab70ffe7045a01a8ff6071014a, type: 3}
   prefab: {fileID: 319455943723871855, guid: 3f25299148718034c8eab73a61d7aa4f, type: 3}
   description: 
+  attackSoundAddress: 03.Gunner_attack
   atk: 300
   skillAtk: 800
   skillCooldown: 9

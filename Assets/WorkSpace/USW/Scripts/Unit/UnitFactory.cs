@@ -122,6 +122,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         }
 
         unit.unitData = data;
+
         return unit;
     }
 

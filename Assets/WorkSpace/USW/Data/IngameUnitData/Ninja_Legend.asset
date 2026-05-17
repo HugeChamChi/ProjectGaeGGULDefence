@@ -20,6 +20,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 67f1b5a1b2a3a3d40820570fe4e7cc23, type: 3}
   prefab: {fileID: 4914462842172424252, guid: d7709e26f5c9f8c4cb2f1c51561bfae4, type: 3}
   description: 
+  attackSoundAddress: 03.Ninja_attack
   atk: 420
   skillAtk: 1260
   skillCooldown: 7.2
