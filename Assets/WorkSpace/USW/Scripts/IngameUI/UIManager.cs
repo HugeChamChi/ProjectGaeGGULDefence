@@ -1,8 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using TMPro;
+using AssetKits.ParticleImage;
 using DG.Tweening;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 // ════════════════════════════════════════════════════════
 // UIManager — InGameSingleton 교체 + Manager 접근 통일
@@ -25,6 +26,12 @@ public class UIManager : InGameSingleton<UIManager>
 
     [Header("Slider Tween")]
     [SerializeField] private float sliderTweenDuration = 0.4f;
+    [SerializeField] private float bossBarShakePower = 15f;
+    [SerializeField] private int   bossBarShakeVibrato = 25;
+
+    [Header("Effect")]
+    [SerializeField] private ParticleImage hitEffectPrefab;   // 보스 피격 시 생성될 ParticleImage 프리팹
+    [SerializeField] private Transform particleTarget;
 
     private int _displayedHp;
     private int _displayedHpMax;
@@ -94,9 +101,22 @@ public class UIManager : InGameSingleton<UIManager>
         // 슬라이더 부드럽게
         if (bossHpSlider != null)
         {
+            // 데미지를 입었을 때만 이펙트 재생 (현재 HP가 이전 HP보다 작을 때)
+            if (current < _displayedHp && hitEffectPrefab != null && particleTarget != null)
+            {
+                var particle = RM.Instantiate(hitEffectPrefab, particleTarget.position, hitEffectPrefab.transform.rotation, particleTarget, true);
+                if (particle != null)
+                {
+                    particle.Play();
+                    RM.Destroy(particle, particle.duration + 0.5f);
+                }
+            }
+
             bossHpSlider.DOKill();
             bossHpSlider.DOValue((float)current / max, sliderTweenDuration)
                         .SetEase(Ease.OutCubic);
+            
+            BossHpShakeAnimation();
         }
 
         // HP 텍스트 숫자 부드럽게
@@ -112,6 +132,20 @@ public class UIManager : InGameSingleton<UIManager>
         }
 
         _displayedHp = current;
+    }
+
+    private void BossHpShakeAnimation()
+    {
+        if (bossHpSlider == null) return;
+
+        RectTransform target = bossHpSlider.transform as RectTransform;
+        if (target == null) return;
+        
+        // 이전 위치 트윈 제거 및 위치 초기화
+        target.DOKill(true);
+
+        // UI 요소이므로 DOShakeAnchorPos 사용
+        target.DOShakeAnchorPos(0.2f, bossBarShakePower, bossBarShakeVibrato, 90, false, true);
     }
 
     public void ShowResult(bool isWin)

@@ -17,14 +17,14 @@ MonoBehaviour:
     displayName: "\uAC1C\uAD6C\uB9AC"
     icon: {fileID: 21300000, guid: 531f72a1c5e76fc42aa0aef2412bca9b, type: 3}
   - targetKey: Frog_Gunner
-    displayName: "\uAC1C\uAD6C\uB9AC"
+    displayName: "\uCD1D\uC7A1\uC774"
     icon: {fileID: 21300000, guid: ac3727e83ce83b44c9ccfdb47d3c2783, type: 3}
   - targetKey: Frog_Ninja
-    displayName: "\uAC1C\uAD6C\uB9AC"
+    displayName: "\uB2CC\uC790"
     icon: {fileID: 21300000, guid: 8b2623e1eaa16b04587e0a8308df3e30, type: 3}
   - targetKey: Frog_Wizard
-    displayName: "\uAC1C\uAD6C\uB9AC"
+    displayName: "\uB9C8\uBC95\uC0AC"
     icon: {fileID: 21300000, guid: a90abc9c19c7b8a43a8a4669e8e92210, type: 3}
   - targetKey: Frog_Chief
-    displayName: "\uAC1C\uAD6C\uB9AC"
+    displayName: "\uC871\uC7A5"
     icon: {fileID: 21300000, guid: d48406fb15f7def419f7481e78d22dee, type: 3}
