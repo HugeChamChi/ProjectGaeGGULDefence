@@ -128,6 +128,7 @@ public class AudioManager : Singleton<AudioManager>
             PlaySFX(clip);
         else
             Debug.LogWarning($"[AudioManager] SFX 로드 실패: {fullPath}");
+
     }
 
     public void PlaySFX(AudioClip clip) => _provider?.PlaySFX(clip);
