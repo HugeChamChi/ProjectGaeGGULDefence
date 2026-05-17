@@ -37,12 +37,14 @@ public class ExpBarUI : MonoBehaviour
 
     private void OnExpChanged(float _)
     {
+        Manager.Audio.PlaySFX("2.Expup");
         Refresh(levelUp: false);
         ScaleAnimation();
     }
 
     private void OnLevelUp()
     {
+        Manager.Audio.PlaySFX("2.Levelup");
         Refresh(levelUp: true);
     }
 

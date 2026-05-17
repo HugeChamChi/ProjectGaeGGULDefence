@@ -10,6 +10,7 @@ using UnityEngine;
 public class ExpEffectController : MonoBehaviour
 {
     [SerializeField] private ParticleImage particleImage;
+    [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform attractorTarget;
 
     private BossBase _subscribedBoss;
@@ -70,7 +71,7 @@ public class ExpEffectController : MonoBehaviour
         // 보스 위치(혹은 지정된 위치)에서 파티클 생성
         // UI 좌표계이므로 bossSpawnPoint 근처에서 생성되도록 설정 가능하나 
         // 여기서는 기존처럼 현재 위치 혹은 파티클 자체 설정에 맡김
-        var particle = RM.Instantiate(particleImage, transform.position, Quaternion.identity, transform, true);
+        var particle = RM.Instantiate(particleImage, spawnPoint.position, Quaternion.identity, transform, true);
 
         particle.attractorTarget = attractorTarget;
 
