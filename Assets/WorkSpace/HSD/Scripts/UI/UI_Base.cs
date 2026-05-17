@@ -8,6 +8,8 @@ public abstract class UI_Base : MonoBehaviour
     public Action OnClosed;
     public Action OnOpened;
 
+    [SerializeField] private string openSoundName = "01.Popup";
+
     [Header("Common UI (Optional)")]
     [SerializeField] protected Button btn_Close;
     [SerializeField] protected Button btn_BackgroundClose;
@@ -34,6 +36,7 @@ public abstract class UI_Base : MonoBehaviour
     [Button]
     public virtual void Open()
     {
+        Manager.Audio.PlaySFX(openSoundName);
         OpenAsync().Forget();
     }
 

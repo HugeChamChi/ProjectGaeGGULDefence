@@ -13,6 +13,9 @@ public class UnitData : ScriptableObject
     public GameObject prefab;
     [TextArea] public string description;
 
+    [Header("Sound")]
+    public string attackSoundAddress;
+
     [Header("Attack")]
     public int   atk;           // 일반 공격력 — 1초마다
     public int   skillAtk;      // 스킬 공격력 — skillCooldown마다

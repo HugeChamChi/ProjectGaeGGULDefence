@@ -119,6 +119,8 @@ public class AudioManager : Singleton<AudioManager>
 
     public void PlaySFX(string address)
     {
+        if (string.IsNullOrEmpty(address)) return;
+
         string fullPath = $"{SFX_PATH_ROOT}{address}";
         AudioClip clip = RM.Load<AudioClip>(fullPath);
 
@@ -126,6 +128,7 @@ public class AudioManager : Singleton<AudioManager>
             PlaySFX(clip);
         else
             Debug.LogWarning($"[AudioManager] SFX 로드 실패: {fullPath}");
+
     }
 
     public void PlaySFX(AudioClip clip) => _provider?.PlaySFX(clip);

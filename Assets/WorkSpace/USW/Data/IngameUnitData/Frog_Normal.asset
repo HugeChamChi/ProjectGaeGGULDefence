@@ -20,6 +20,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   prefab: {fileID: 7106599845109891056, guid: 665793f07c435bf4c82d73ab42bc5626, type: 3}
   description: 
+  attackSoundAddress: 03.Frog_attack
   atk: 120
   skillAtk: 350
   skillCooldown: 12

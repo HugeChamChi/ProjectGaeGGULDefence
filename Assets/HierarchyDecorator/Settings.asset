@@ -322,7 +322,7 @@ MonoBehaviour:
         m_Normal:
           m_Background: {fileID: 0}
           m_ScaledBackgrounds: []
-          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+          m_TextColor: {r: 0.21568628, g: 0.21568628, b: 0.21568628, a: 1}
         m_Hover:
           m_Background: {fileID: 0}
           m_ScaledBackgrounds: []
@@ -372,7 +372,7 @@ MonoBehaviour:
           m_Top: 0
           m_Bottom: 0
         m_Font: {fileID: 0}
-        m_FontSize: 12
+        m_FontSize: 11
         m_FontStyle: 1
         m_Alignment: 4
         m_WordWrap: 0
@@ -4395,7 +4395,7 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 7fb710da2ef542d459b96a3135aca72a, type: 3}
-        hasToggle: 1
+        hasToggle: 0
       - displayName: BackendManager
         name: BackendManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
           PublicKeyToken=null
@@ -4433,7 +4433,7 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 658d17d37635b3247afa9b606e181503, type: 3}
-        hasToggle: 1
+        hasToggle: 0
       - displayName: MailManager
         name: MailManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
         content:
@@ -4445,7 +4445,7 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 956b9a5e88d2615458b120efc654ffc1, type: 3}
-        hasToggle: 1
+        hasToggle: 0
       - displayName: LoginSceneManager
         name: LoginSceneManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
           PublicKeyToken=null
@@ -4523,14 +4523,14 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
         hasToggle: 1
-      - displayName: UI_ProfileIconSlot
-        name: UI_ProfileIconSlot, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      - displayName: UI_PlayerProfileIconSlot
+        name: UI_PlayerProfileIconSlot, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
           PublicKeyToken=null
         content:
-          m_Text: UI_ProfileIconSlot
+          m_Text: UI_PlayerProfileIconSlot
           m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
             type: 0}
-          m_Tooltip: UI_ProfileIconSlot
+          m_Tooltip: UI_PlayerProfileIconSlot
         shown: 0
         excluded: 0
         isBuiltIn: 0
@@ -4574,6 +4574,294 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: e9484ddc6fa71ed4c85f2b968b69c8b8, type: 3}
+        hasToggle: 1
+      - displayName: InGame_UI_Controller
+        name: InGame_UI_Controller, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: InGame_UI_Controller
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: InGame_UI_Controller
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: ee974ed4184511d4695d212ed69af0a4, type: 3}
+        hasToggle: 1
+      - displayName: GridManager
+        name: GridManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: GridManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GridManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3961981ee9d177c47a508d1cc38527ed, type: 3}
+        hasToggle: 1
+      - displayName: GameManager
+        name: GameManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: GameManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GameManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 5abfecde05d485847b2e81ec01b62559, type: 3}
+        hasToggle: 1
+      - displayName: WaveManager
+        name: WaveManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: WaveManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: WaveManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: b71ed579f47479e418764b4c975aca8c, type: 3}
+        hasToggle: 1
+      - displayName: MergeManager
+        name: MergeManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: MergeManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: MergeManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 56073ad8de5b3e545bbf2df1dc02838b, type: 3}
+        hasToggle: 1
+      - displayName: CurrencyManager
+        name: CurrencyManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: CurrencyManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: CurrencyManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 8ec353362c303c243a593400ffa6dadf, type: 3}
+        hasToggle: 1
+      - displayName: BossManager
+        name: BossManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: BossManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BossManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: fc7f1908f26fc75449add758fed6aff4, type: 3}
+        hasToggle: 1
+      - displayName: GameDataManager
+        name: GameDataManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: GameDataManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GameDataManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 5ded65f822c3e7d4ea8b8c68ff4bb7cf, type: 3}
+        hasToggle: 1
+      - displayName: UIManager
+        name: UIManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UIManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UIManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 21485d7b1f842bb4c89dfe0cc44d1db0, type: 3}
+        hasToggle: 1
+      - displayName: UpgradeManager
+        name: UpgradeManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UpgradeManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UpgradeManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: e59c56f51a939934795aecf980b15393, type: 3}
+        hasToggle: 1
+      - displayName: LevelUpManager
+        name: LevelUpManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: LevelUpManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: LevelUpManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: d340d4964c425dd49a882ea60c18af15, type: 3}
+        hasToggle: 1
+      - displayName: TotemBuffManager
+        name: TotemBuffManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TotemBuffManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TotemBuffManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: e4088a8180f83b2458f475509d6e49e7, type: 3}
+        hasToggle: 1
+      - displayName: PopulationManager
+        name: PopulationManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: PopulationManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: PopulationManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 04522306d1077f444a3fa89b6d8c02eb, type: 3}
+        hasToggle: 1
+      - displayName: ExpManager
+        name: ExpManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: ExpManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ExpManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: c4964df4b9845074b9e3775b86ca78ac, type: 3}
+        hasToggle: 1
+      - displayName: AudioManager
+        name: AudioManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: AudioManager
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: AudioManager
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: f3563d4051d1fe749ab38de574bf623d, type: 3}
+        hasToggle: 1
+      - displayName: ProjectilePool
+        name: ProjectilePool, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: ProjectilePool
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ProjectilePool
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 12dd482e22c433149a0280ac5598fac2, type: 3}
+        hasToggle: 1
+      - displayName: TimerController
+        name: TimerController, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TimerController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TimerController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 163f1362eaca4264e87102c76cfb677e, type: 3}
+        hasToggle: 1
+      - displayName: BossPatternController
+        name: BossPatternController, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: BossPatternController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: BossPatternController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 79abe73b138f3104e9d3b1445a0d5eae, type: 3}
+        hasToggle: 1
+      - displayName: UnitFactory
+        name: UnitFactory, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UnitFactory
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UnitFactory
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 938b36a4597b6704aa1bbb04536d8e4f, type: 3}
+        hasToggle: 1
+      - displayName: TotemSpawner
+        name: TotemSpawner, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: TotemSpawner
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TotemSpawner
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 92133048a4d8f3f42a0310f93958d75f, type: 3}
+        hasToggle: 1
+      - displayName: UnitSpawner
+        name: UnitSpawner, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UnitSpawner
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UnitSpawner
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 59cef89eab338934b85d2e96c31223fe, type: 3}
+        hasToggle: 1
+      - displayName: UI_UpgradePanel
+        name: HSD.UI.Upgrade.UI_UpgradePanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_UpgradePanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_UpgradePanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 9e5ea9387c24c3a4cb97fe38267e2dc7, type: 3}
+        hasToggle: 1
+      - displayName: Anim_UI_Slide
+        name: GaeGGUL.Animation.Anim_UI_Slide, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: Anim_UI_Slide
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: Anim_UI_Slide
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: be5a998b79113704c81ac86b6d11a469, type: 3}
         hasToggle: 1
     unityVersion: 2022.3.62f3
     unityCount: 294
