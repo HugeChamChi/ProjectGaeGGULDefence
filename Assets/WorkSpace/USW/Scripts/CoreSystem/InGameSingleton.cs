@@ -15,7 +15,7 @@ public abstract class InGameSingleton<T> : MonoBehaviour where T : MonoBehaviour
         {
             if (_instance == null)
             {
-                _instance = FindAnyObjectByType<T>();
+                _instance = FindAnyObjectByType<T>(FindObjectsInactive.Include);
 
                 if(_instance == null)
                     Debug.LogError($"[InGameSingleton] {typeof(T).Name} not found in scene. Ensure it is present in the Inspector.");
