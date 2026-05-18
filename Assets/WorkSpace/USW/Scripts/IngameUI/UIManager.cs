@@ -29,12 +29,21 @@ public class UIManager : InGameSingleton<UIManager>
     [SerializeField] private float bossBarShakePower = 15f;
     [SerializeField] private int   bossBarShakeVibrato = 25;
 
+    [Header("Currency Tween")]
+    [SerializeField] private float currencyTweenDuration = 0.18f;
+    [SerializeField] private float currencyPunchScale = 0.12f;
+    [SerializeField] private Color currencyFlashColor = new Color(1f, 0.86f, 0.35f);
+
     [Header("Effect")]
     [SerializeField] private ParticleImage hitEffectPrefab;   // 보스 피격 시 생성될 ParticleImage 프리팹
     [SerializeField] private Transform particleTarget;
 
     private int _displayedHp;
     private int _displayedHpMax;
+    private int _displayedCurrency;
+    private RectTransform _currencyTextRect;
+    private Vector3 _currencyTextBaseScale = Vector3.one;
+    private Color _currencyTextBaseColor = Color.white;
 
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
@@ -59,7 +68,15 @@ public class UIManager : InGameSingleton<UIManager>
         startButton.onClick.AddListener(Manager.Game.OnStartButtonPressed);
 
         Manager.Timer.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
-        Manager.Currency.OnCurrencyChanged += c => currencyText.text = $"식량: {(int)c}";
+        if (currencyText != null)
+        {
+            _currencyTextRect = currencyText.rectTransform;
+            _currencyTextBaseScale = _currencyTextRect.localScale;
+            _currencyTextBaseColor = currencyText.color;
+            _displayedCurrency = Mathf.FloorToInt(Manager.Currency.Currency);
+            currencyText.text = $"식량: {_displayedCurrency}";
+            Manager.Currency.OnCurrencyChanged += UpdateCurrencyDisplay;
+        }
 
         // 소환 비용 텍스트 초기값 + 변경 구독
         if (spawnCostText != null)
@@ -132,6 +149,40 @@ public class UIManager : InGameSingleton<UIManager>
         }
 
         _displayedHp = current;
+    }
+
+    private void UpdateCurrencyDisplay(float current)
+    {
+        if (currencyText == null) return;
+
+        int target = Mathf.FloorToInt(current);
+        if (target == _displayedCurrency)
+        {
+            currencyText.text = $"식량: {target}";
+            return;
+        }
+
+        DOTween.Kill(currencyText);
+        DOTween.To(() => _displayedCurrency, value =>
+        {
+            _displayedCurrency = value;
+            currencyText.text = $"식량: {value}";
+        }, target, currencyTweenDuration).SetEase(Ease.OutCubic).SetTarget(currencyText);
+
+        if (_currencyTextRect == null) return;
+
+        _currencyTextRect.DOKill(true);
+        _currencyTextRect.localScale = _currencyTextBaseScale;
+        currencyText.color = _currencyTextBaseColor;
+
+        _currencyTextRect
+            .DOPunchScale(Vector3.one * currencyPunchScale, currencyTweenDuration, 6, 0.6f)
+            .SetEase(Ease.OutCubic);
+
+        currencyText
+            .DOColor(currencyFlashColor, currencyTweenDuration * 0.45f)
+            .SetLoops(2, LoopType.Yoyo)
+            .OnComplete(() => currencyText.color = _currencyTextBaseColor);
     }
 
     private void BossHpShakeAnimation()
