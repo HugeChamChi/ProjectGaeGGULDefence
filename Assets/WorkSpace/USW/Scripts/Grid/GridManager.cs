@@ -12,6 +12,7 @@ public class GridManager : InGameSingleton<GridManager>
     [SerializeField] private GridLayoutGroup  gridLayout;
 
     private GridCell[,] _grid;
+    private TotemBase _previewedTotem;
 
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
@@ -80,5 +81,53 @@ public class GridManager : InGameSingleton<GridManager>
     {
         foreach (var cell in _grid)
             yield return cell;
+    }
+
+    public bool IsPreviewingTotem(TotemBase totem)
+    {
+        return _previewedTotem == totem;
+    }
+
+    public void ShowTotemRangePreview(TotemBase totem)
+    {
+        ClearTotemRangePreview();
+
+        if (totem == null || !totem.IsActive || totem.CurrentCell == null || totem.Data == null)
+            return;
+
+        _previewedTotem = totem;
+        var origin = totem.CurrentCell.GridPosition;
+
+        foreach (var offset in totem.Data.effectRange)
+        {
+            var rotated = totem.RotateOffset(offset);
+            var cell = GetCell(origin.x + rotated.x, origin.y + rotated.y);
+            if (cell == null) continue;
+
+            cell.Model.SetTotemRangePreview(effectRange: true, disabledRange: false);
+        }
+
+        foreach (var offset in totem.Data.attackDisabledRange)
+        {
+            var rotated = totem.RotateOffset(offset);
+            var cell = GetCell(origin.x + rotated.x, origin.y + rotated.y);
+            if (cell == null) continue;
+
+            cell.Model.SetTotemRangePreview(
+                effectRange: cell.Model.IsTotemRangePreviewed,
+                disabledRange: true);
+        }
+    }
+
+    public void ClearTotemRangePreview()
+    {
+        _previewedTotem = null;
+
+        if (_grid == null) return;
+
+        foreach (var cell in _grid)
+        {
+            cell?.Model?.ClearTotemRangePreview();
+        }
     }
 }

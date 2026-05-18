@@ -202,18 +202,29 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     private void BuildGrid()
     {
         ClearGrid();
-        if (rangeCellPrefab == null || rangeGridContainer == null) return;
+        if (rangeGridContainer == null) return;
 
         for (int i = 0; i < GridCols * GridRows; i++)
-            _cells.Add(Instantiate(rangeCellPrefab, rangeGridContainer));
+        {
+            Image cellImage;
+            if (rangeCellPrefab != null)
+            {
+                cellImage = Instantiate(rangeCellPrefab, rangeGridContainer);
+            }
+            else
+            {
+                var go = new GameObject($"RangeCell_{i}", typeof(RectTransform), typeof(Image));
+                go.transform.SetParent(rangeGridContainer, false);
+                cellImage = go.GetComponent<Image>();
+            }
+            cellImage.color = colorDefault;
+            _cells.Add(cellImage);
+        }
     }
 
     private void EnsureGridBuilt()
     {
-        int expectedCount = GridCols * GridRows;
-        if (_cells.Count == expectedCount && rangeGridContainer != null && rangeGridContainer.childCount == expectedCount)
-            return;
-
+        if (_cells.Count == GridCols * GridRows) return;
         BuildGrid();
     }
 

@@ -101,13 +101,31 @@ public class InGameInstaller : MonoBehaviour
         _sellTotemButton.SetPopup(_totemActionPopup);
 
         // DragHandler static 이벤트 → 팝업 Show
-        DragHandler.OnTotemClickedGlobal        += _totemActionPopup.Show;
+        DragHandler.OnTotemClickedGlobal        += HandleTotemClicked;
 
         // 판매 이벤트 → TotemSpawner
-        _totemActionPopup.OnSellTotemRequested  += Manager.Totem.SellTotem;
+        _totemActionPopup.OnSellTotemRequested  += OnSellTotemRequested;
 
         // 외부 클릭 → 팝업 닫기
+        _totemActionPopup.OnDismissRequested    += ClearTotemRangePreview;
         _totemActionPopup.OnDismissRequested    += _totemActionPopup.Hide;
+    }
+
+    private void HandleTotemClicked(TotemBase totem)
+    {
+        _totemActionPopup.Show(totem);
+        Manager.Grid?.ShowTotemRangePreview(totem);
+    }
+
+    private void OnSellTotemRequested(TotemBase totem)
+    {
+        Manager.Grid?.ClearTotemRangePreview();
+        Manager.Totem.SellTotem(totem);
+    }
+
+    private void ClearTotemRangePreview()
+    {
+        Manager.Grid?.ClearTotemRangePreview();
     }
 
     // ── 정리 ───────────────────────────────────────────────────
@@ -136,8 +154,9 @@ public class InGameInstaller : MonoBehaviour
         }
 
         _sellButton.OnSellRequested                 -= OnSellUnitRequested;
-        DragHandler.OnTotemClickedGlobal            -= _totemActionPopup.Show;
-        _totemActionPopup.OnSellTotemRequested      -= Manager.Totem.SellTotem;
+        DragHandler.OnTotemClickedGlobal            -= HandleTotemClicked;
+        _totemActionPopup.OnSellTotemRequested      -= OnSellTotemRequested;
+        _totemActionPopup.OnDismissRequested        -= ClearTotemRangePreview;
         _totemActionPopup.OnDismissRequested        -= _totemActionPopup.Hide;
     }
 }

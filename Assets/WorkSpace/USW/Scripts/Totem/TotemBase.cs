@@ -61,6 +61,9 @@ public abstract class TotemBase : MonoBehaviour
     {
         if (!IsActive) return;
 
+        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
+            Manager.Grid.ClearTotemRangePreview();
+
         IsActive    = false;
         CurrentCell = null;
 
@@ -83,6 +86,9 @@ public abstract class TotemBase : MonoBehaviour
         RotationStep = (RotationStep + 1) % 4;
         UpdateSprite();
         Manager.Buff.RebuildCellBuffFlags();
+
+        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
+            Manager.Grid.ShowTotemRangePreview(this);
     }
 
     private void UpdateSprite()

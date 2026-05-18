@@ -63,7 +63,7 @@ public class TotemSelectCardUI : MonoBehaviour
     private void Awake()
     {
         button?.onClick.AddListener(() => _onClicked?.Invoke(this));
-        BuildGrid();
+        CollectOrBuildGrid();
     }
 
     // ── 초기화 ─────────────────────────────────────────────────
@@ -120,6 +120,27 @@ public class TotemSelectCardUI : MonoBehaviour
 
     // ── 범위 그리드 ────────────────────────────────────────────
 
+    /// <summary>프리팹에 미리 구성된 셀을 재사용하거나, 없으면 동적으로 생성.</summary>
+    private void CollectOrBuildGrid()
+    {
+        if (rangeGridContainer == null) return;
+
+        int expected = GridCols * GridRows;
+
+        // 기존 자식 Image 수집 시도 (파괴 없이 재사용)
+        _cells.Clear();
+        for (int i = 0; i < rangeGridContainer.childCount; i++)
+        {
+            var img = rangeGridContainer.GetChild(i).GetComponent<Image>();
+            if (img != null) _cells.Add(img);
+        }
+
+        if (_cells.Count == expected) return;
+
+        // 수가 맞지 않으면 새로 빌드
+        BuildGrid();
+    }
+
     private void BuildGrid()
     {
         if (rangeGridContainer == null) return;
@@ -139,11 +160,8 @@ public class TotemSelectCardUI : MonoBehaviour
 
     private void EnsureGridBuilt()
     {
-        int expectedCount = GridCols * GridRows;
-        if (_cells.Count == expectedCount && rangeGridContainer != null && rangeGridContainer.childCount == expectedCount)
-            return;
-
-        BuildGrid();
+        if (_cells.Count == GridCols * GridRows) return;
+        CollectOrBuildGrid();
     }
 
     private void ClearGrid()

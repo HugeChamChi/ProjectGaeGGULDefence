@@ -56,7 +56,11 @@ public class DragHandler : MonoBehaviour,
     {
         if (eventData.dragging) return;
 
-        if (_unit  != null && Manager.Merge != null) Manager.Merge.OnUnitClicked(_unit);
+        if (_unit != null)
+        {
+            Manager.Grid?.ClearTotemRangePreview();
+            if (Manager.Merge != null) Manager.Merge.OnUnitClicked(_unit);
+        }
         if (_totem != null) OnTotemClickedGlobal?.Invoke(_totem);
     }
 
@@ -65,6 +69,7 @@ public class DragHandler : MonoBehaviour,
     {
         // 드래그 시작 시 합성 버튼 닫기
         Manager.Merge?.HideButton();
+        Manager.Grid?.ClearTotemRangePreview();
 
         _isDragging = false;
         if (_originCell == null) return;
