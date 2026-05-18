@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 판매 버튼 뷰.
@@ -12,11 +13,15 @@ public class SellButtonUI : MonoBehaviour
 
     public event Action<UnitBase> OnSellRequested;
 
+    private void Awake()
+    {
+        GetComponent<Button>().onClick.AddListener(OnSellButtonClicked);
+    }
+
     /// <summary>UnitActionPopupUI.Show()에서 호출 — 판매 대상 유닛 설정</summary>
     public void SetUnit(UnitBase unit) => _targetUnit = unit;
 
-    /// <summary>Inspector Button.OnClick에서 연결</summary>
-    public void OnSellButtonClicked()
+    private void OnSellButtonClicked()
     {
         if (_targetUnit == null) return;
         OnSellRequested?.Invoke(_targetUnit);

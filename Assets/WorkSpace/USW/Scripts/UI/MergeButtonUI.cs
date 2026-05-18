@@ -15,12 +15,14 @@ public class MergeButtonUI : MonoBehaviour
 
     public event Action OnMergeRequested;
 
+    private void Awake()
+    {
+        GetComponent<Button>().onClick.AddListener(() => OnMergeRequested?.Invoke());
+    }
+
     /// <summary>UnitActionPopupUI.Show()에서 호출 — 합성 가능 여부에 따라 색상 변경</summary>
     public void SetState(bool canMerge)
     {
         buttonImage.color = canMerge ? colorActive : colorInactive;
     }
-
-    /// <summary>Inspector Button.OnClick에서 연결</summary>
-    public void OnMergeButtonClicked() => OnMergeRequested?.Invoke();
 }
