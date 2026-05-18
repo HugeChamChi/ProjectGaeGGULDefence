@@ -234,11 +234,13 @@ public abstract class UnitBase : MonoBehaviour
     private float GetCurrentAttackInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float rowSpeedMult   = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float tribeSpeedMult = Mathf.Max(1f + (Manager.LevelUp?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
         float interval = UpgradedAttackInterval
                        * Manager.Buff.SpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
-                       / rowSpeedMult;
+                       / rowSpeedMult
+                       / tribeSpeedMult;
         return Mathf.Max(interval, 0.05f);
     }
 

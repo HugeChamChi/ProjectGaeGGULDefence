@@ -50,6 +50,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
     public float GunnerAtkBonus      { get; private set; } = 0f;
     public float GunnerSpeedBonus    { get; private set; } = 0f;
     public float WizardAtkBonus      { get; private set; } = 0f;
+    public float WizardSpeedBonus    { get; private set; } = 0f;
     public float WizardCooldownBonus { get; private set; } = 0f; // 양수=쿨타임 감소(빠름)
 
     public float GetTribeAtkBonus(UnitTribe tribe) => tribe switch
@@ -62,9 +63,10 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
     public float GetTribeSpeedBonus(UnitTribe tribe) => tribe switch
     {
-        UnitTribe.Ninja  => NinjaSpeedBonus,
-        UnitTribe.Gunner => GunnerSpeedBonus,
-        _                => 0f,
+        UnitTribe.Ninja   => NinjaSpeedBonus,
+        UnitTribe.Gunner  => GunnerSpeedBonus,
+        UnitTribe.Wizard  => WizardSpeedBonus,
+        _                 => 0f,
     };
 
     public float GetWizardCooldownBonus() => WizardCooldownBonus;
@@ -382,8 +384,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
             case LevelUpSpecialEffect.WizardPhysicalMode:
                 HasWizardPhysicalMode = true;
-                Manager.Buff.AddLevelUpAttackBuff(data.primaryValue / 100f);
-                Manager.Buff.AddLevelUpSpeedBuff(data.primaryValue  / 100f);
+                WizardAtkBonus   += data.primaryValue / 100f;
+                WizardSpeedBonus += data.primaryValue / 100f;
                 break;
 
             case LevelUpSpecialEffect.UnemployedFoodNegate:
