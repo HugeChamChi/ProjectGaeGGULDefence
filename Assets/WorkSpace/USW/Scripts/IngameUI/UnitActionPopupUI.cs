@@ -46,7 +46,10 @@ public class UnitActionPopupUI : MonoBehaviour
 
         mergeButton.SetState(canMerge);
         sellButton.SetUnit(unit);
-        PositionAtCenter(unit.GetComponent<RectTransform>());
+
+        RectTransform targetRect = unit.transform as RectTransform;
+
+        PositionAtCenter(targetRect);
 
         _tween?.Kill();
         _rect.localScale = Vector3.zero;

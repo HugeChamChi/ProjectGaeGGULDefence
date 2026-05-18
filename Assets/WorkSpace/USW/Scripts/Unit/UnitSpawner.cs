@@ -85,14 +85,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         cell.TryPlaceUnit(unit);
         unit.transform.SetParent(cell.transform, false);
 
-        var rt = unit.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new Vector2(0.5f, 0.5f);
-            rt.pivot            = new Vector2(0.5f, 0f);
-            rt.anchoredPosition = Vector2.zero;
-        }
+        Manager.UnitFactory.InitUnitRectTransform(unit);
 
         var drag = unit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(cell);

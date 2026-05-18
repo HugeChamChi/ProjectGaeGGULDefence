@@ -126,6 +126,19 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         return unit;
     }
 
+    /// <summary>유닛의 RectTransform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
+    public void InitUnitRectTransform(UnitBase unit)
+    {
+        var rt = unit.GetComponent<RectTransform>();
+        if (rt == null) return;
+
+        rt.anchorMin        = new Vector2(0.5f, 0.5f);
+        rt.anchorMax        = new Vector2(0.5f, 0.5f);
+        rt.pivot            = new Vector2(0.5f, 0f); // 하단 중앙 피벗 (셀 위에 서 있는 형태)
+        rt.anchoredPosition = Vector2.zero;
+        rt.localScale       = Vector3.one;
+    }
+
     private void ValidateUnitDataList()
     {
         if (unitDataList == null || unitDataList.Length == 0)

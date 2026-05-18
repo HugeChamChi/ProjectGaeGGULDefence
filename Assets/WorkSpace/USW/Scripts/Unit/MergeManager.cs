@@ -60,14 +60,7 @@ public class MergeManager : InGameSingleton<MergeManager>
         spawnCell.TryPlaceUnit(newUnit);
         newUnit.transform.SetParent(spawnCell.transform, false);
 
-        var rt = newUnit.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new Vector2(0.5f, 0.5f);
-            rt.pivot            = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = Vector2.zero;
-        }
+        Manager.UnitFactory.InitUnitRectTransform(newUnit);
 
         var drag = newUnit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(spawnCell);
