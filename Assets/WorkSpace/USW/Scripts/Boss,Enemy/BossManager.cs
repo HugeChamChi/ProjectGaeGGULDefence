@@ -63,6 +63,7 @@ public class BossManager : InGameSingleton<BossManager>
         {
             BossPatternController.Instance.UnregisterBoss(boss);
             _currentBosses.Remove(boss);
+            Destroy(boss.gameObject);
             onDefeated?.Invoke();
         };
 
