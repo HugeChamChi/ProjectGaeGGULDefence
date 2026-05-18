@@ -98,7 +98,6 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
             : 20f;
         CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
-        unit.animator.Initialize(unit);
     }
 
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>

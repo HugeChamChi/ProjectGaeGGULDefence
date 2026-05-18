@@ -101,6 +101,7 @@ public abstract class UnitBase : MonoBehaviour
         _boss        = boss;
         currentCell = cell;
         ApplyFacingByCell();
+        animator?.Initialize(this);
 
         StopLoops();
         _paused = false;
