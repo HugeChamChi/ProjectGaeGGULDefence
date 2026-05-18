@@ -37,8 +37,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     protected override void Awake()
     {
         base.Awake();
-
-        gameObject.SetActive(false);
     }
 
     // ── 열기 ───────────────────────────────────────────────────
