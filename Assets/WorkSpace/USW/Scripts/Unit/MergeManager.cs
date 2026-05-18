@@ -73,8 +73,6 @@ public class MergeManager : InGameSingleton<MergeManager>
         if (drag != null) drag.SetOriginCell(spawnCell);
 
         newUnit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, spawnCell);
-
-        Debug.Log($"[Merge] 합성 완료 → {nextTier} 유닛 스폰");
     }
 
     /// <summary>선택 해제 및 OnSelectionCleared 이벤트 발행</summary>

@@ -41,6 +41,7 @@ public class TotemActionPopupUI : MonoBehaviour
 
     public void Show(TotemBase totem)
     {
+        if (_rect == null) _rect = GetComponent<RectTransform>();
         if (_rect == null) return;
         _justShown    = true;
         _currentTotem = totem;
@@ -48,6 +49,7 @@ public class TotemActionPopupUI : MonoBehaviour
         rotateButton.SetTotem(totem);
         sellButton.SetTotem(totem);
 
+        gameObject.SetActive(true);
         PositionAtCenter(totem.GetComponent<RectTransform>());
 
         _tween?.Kill();
@@ -68,7 +70,8 @@ public class TotemActionPopupUI : MonoBehaviour
         _tween?.Kill();
         _tween = _rect.DOScale(Vector3.zero, 0.18f)
                       .SetEase(Ease.InBack)
-                      .SetUpdate(true);
+                      .SetUpdate(true)
+                      .OnComplete(() => gameObject.SetActive(false));
     }
 
     internal void RaiseSellRequested(TotemBase totem)

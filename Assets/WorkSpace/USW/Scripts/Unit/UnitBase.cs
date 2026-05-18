@@ -168,8 +168,7 @@ public abstract class UnitBase : MonoBehaviour
                 continue;
             }
 
-            // UI 대응: 게임 일시정지(Time.timeScale=0)에 영향을 받지 않도록 unscaledDeltaTime 사용
-            float dt = Time.unscaledDeltaTime;
+            float dt = Time.deltaTime;
             _attackTimer += dt;
             _skillTimer += dt;
 
