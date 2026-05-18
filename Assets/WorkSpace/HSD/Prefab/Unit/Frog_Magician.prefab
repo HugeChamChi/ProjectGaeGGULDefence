@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8819608698009237758}
   - component: {fileID: 6063210266471765294}
   - component: {fileID: 8345617709850765446}
+  - component: {fileID: -959880775404330449}
   m_Layer: 0
   m_Name: Frog_Magician
   m_TagString: Untagged
@@ -137,6 +138,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationTarget: {fileID: 0}
   triggerType: 1
+  ignoreTimeScale: 0
   isLoop: 1
   ease: 7
   duration: 0.8
@@ -150,3 +152,15 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6420751813791673423}
   m_CullTransparentMesh: 1
+--- !u!114 &-959880775404330449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6420751813791673423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 936695491793399160}
   - component: {fileID: 1621599950155980501}
   - component: {fileID: 721108887456284381}
+  - component: {fileID: -7193518862913492518}
   m_Layer: 0
   m_Name: Frog_Gunner
   m_TagString: Untagged
@@ -137,6 +138,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationTarget: {fileID: 0}
   triggerType: 1
+  ignoreTimeScale: 0
   isLoop: 1
   ease: 7
   duration: 0.8
@@ -150,3 +152,15 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 319455943723871855}
   m_CullTransparentMesh: 1
+--- !u!114 &-7193518862913492518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319455943723871855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
