@@ -29,6 +29,11 @@ public class TotemData : ScriptableObject
     public Sprite[] rotationSprites = new Sprite[4];
     [TextArea] public string description;
 
+    public Sprite DisplaySprite
+        => rotationSprites != null && rotationSprites.Length > 0 && rotationSprites[0] != null
+            ? rotationSprites[0]
+            : icon;
+
     [Header("버프 수치")]
     // AttackBuff/AttackTop/Berserk/United: 공격력 버프 비율 (0.1 = 10%)
     // OverWelm: 하1칸 공격력 증폭 비율 (0.7 = +70% → modifier 1.7)

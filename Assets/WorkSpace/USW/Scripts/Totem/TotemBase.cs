@@ -85,10 +85,8 @@ public abstract class TotemBase : MonoBehaviour
     {
         if (_spriteRenderer == null || totemData == null) return;
         var arr = totemData.rotationSprites;
-        Sprite s = null;
+        Sprite s = totemData.DisplaySprite;
         if (arr != null && arr.Length > RotationStep) s = arr[RotationStep];
-        if (s == null && arr != null && arr.Length > 0) s = arr[0];
-        if (s == null) s = totemData.icon;
         if (s != null) _spriteRenderer.sprite = s;
     }
 

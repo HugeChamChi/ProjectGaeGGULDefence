@@ -315,9 +315,24 @@ public class TotemEditorWindow : EditorWindow
                 if (_data != null) LoadFromData();
             }
 
-            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Clear", GUILayout.Width(80f), GUILayout.Height(32f)))
+            {
+                ResetGrid();
+            }
 
             bool canSave = _data != null;
+            GUI.enabled = canSave;
+
+            if (GUILayout.Button("Clear + Save", GUILayout.Width(110f), GUILayout.Height(32f)))
+            {
+                ResetGrid();
+                SaveToData();
+            }
+
+            GUI.enabled = true;
+
+            GUILayout.FlexibleSpace();
+
             GUI.enabled         = canSave;
             GUI.backgroundColor = canSave ? new Color(0.25f, 0.65f, 0.3f) : Color.gray;
 

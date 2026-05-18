@@ -63,10 +63,6 @@ public class TotemSelectCardUI : MonoBehaviour
     private void Awake()
     {
         button?.onClick.AddListener(() => _onClicked?.Invoke(this));
-    }
-
-    private void Start()
-    {
         BuildGrid();
     }
 
@@ -76,11 +72,13 @@ public class TotemSelectCardUI : MonoBehaviour
     {
         _data      = data;
         _onClicked = onClicked;
+        EnsureGridBuilt();
 
         if (iconImage != null)
         {
-            iconImage.sprite  = data?.icon;
-            iconImage.enabled = data?.icon != null;
+            var sprite = data != null ? data.DisplaySprite : null;
+            iconImage.sprite  = sprite;
+            iconImage.enabled = sprite != null;
         }
 
         if (nameText        != null) nameText.text        = data?.totemName   ?? string.Empty;
@@ -126,6 +124,8 @@ public class TotemSelectCardUI : MonoBehaviour
     {
         if (rangeGridContainer == null) return;
 
+        ClearGrid();
+
         for (int i = 0; i < GridCols * GridRows; i++)
         {
             var go  = new GameObject($"Cell_{i}", typeof(RectTransform), typeof(Image));
@@ -135,6 +135,28 @@ public class TotemSelectCardUI : MonoBehaviour
             img.color  = colorDefault;
             _cells.Add(img);
         }
+    }
+
+    private void EnsureGridBuilt()
+    {
+        int expectedCount = GridCols * GridRows;
+        if (_cells.Count == expectedCount && rangeGridContainer != null && rangeGridContainer.childCount == expectedCount)
+            return;
+
+        BuildGrid();
+    }
+
+    private void ClearGrid()
+    {
+        if (rangeGridContainer == null) return;
+
+        for (int i = rangeGridContainer.childCount - 1; i >= 0; i--)
+        {
+            var child = rangeGridContainer.GetChild(i).gameObject;
+            if (Application.isPlaying) Destroy(child);
+            else DestroyImmediate(child);
+        }
+        _cells.Clear();
     }
 
     private void RefreshGrid(TotemData data)
