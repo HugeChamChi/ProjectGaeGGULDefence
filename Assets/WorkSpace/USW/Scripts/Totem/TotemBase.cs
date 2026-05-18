@@ -48,6 +48,7 @@ public abstract class TotemBase : MonoBehaviour
         // 토템 목록에 등록 (FindObjectsOfType 대체)
         Manager.Buff.RegisterTotem(this);
         Manager.Buff.RebuildCellBuffFlags();
+        Manager.Population?.Add(1);
 
         Debug.Log($"[토템] {totemData.totemName} 배치 @ {cell.GridPosition}");
     }
@@ -64,6 +65,7 @@ public abstract class TotemBase : MonoBehaviour
         // 토템 목록에서 해제
         Manager.Buff.UnregisterTotem(this);
         Manager.Buff.RebuildCellBuffFlags();
+        Manager.Population?.Remove(1);
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
     }

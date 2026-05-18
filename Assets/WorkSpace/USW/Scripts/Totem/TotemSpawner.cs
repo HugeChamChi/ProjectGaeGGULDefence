@@ -38,6 +38,7 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
 
         var empty = Manager.Grid.GetEmptyCells();
         if (empty.Count == 0) return false;
+        if (Manager.Population != null && !Manager.Population.CanAdd(1)) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
         var go    = Instantiate(prefab, cell.transform);
@@ -51,7 +52,11 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
         }
 
         if (useGeneric) totem.SetTotemData(data);
-        cell.TryPlaceTotem(totem);
+        if (!cell.TryPlaceTotem(totem))
+        {
+            Destroy(go);
+            return false;
+        }
 
         var rt = go.GetComponent<RectTransform>();
         if (rt != null)
