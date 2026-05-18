@@ -31,7 +31,7 @@ public abstract class UnitBase : MonoBehaviour
     protected BossBase        _boss;
     public GridCell currentCell { get; private set; }
 
-    protected UnitAnimator _animator;
+    public UnitAnimator animator;
     protected UnitSoundController _sound;
     private CancellationTokenSource _loopCts;
     private bool _paused = false;
@@ -60,7 +60,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        _animator = GetComponentInChildren<UnitAnimator>();
+        animator = GetComponentInChildren<UnitAnimator>();
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -96,7 +96,6 @@ public abstract class UnitBase : MonoBehaviour
         OnAnyUnitChanged?.Invoke();
 
         _sound = new(this);
-        _animator.Initialize(this);
     }
 
     /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
@@ -181,7 +180,7 @@ public abstract class UnitBase : MonoBehaviour
                 if (CurrentState != UnitState.Idle)
                 {
                     CurrentState = UnitState.Idle;
-                    _animator?.PlayIdle();
+                    animator?.PlayIdle();
                 }
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                     return;
@@ -207,7 +206,7 @@ public abstract class UnitBase : MonoBehaviour
             if (_skillTimer >= skillInterval)
             {
                 CurrentState = UnitState.Skilling;
-                if (_animator != null) await _animator.PlaySkillAsync(token);
+                if (animator != null) await animator.PlaySkillAsync(token);
                 ExecuteSkill();
                 
                 _skillTimer = 0f;
@@ -215,7 +214,7 @@ public abstract class UnitBase : MonoBehaviour
             else if (_attackTimer >= attackInterval)
             {
                 CurrentState = UnitState.Attacking;
-                if (_animator != null) await _animator.PlayAttackAsync(token);
+                if (animator != null) await animator.PlayAttackAsync(token);
                 ExecuteAttack();
                 
                 _attackTimer = 0f;
@@ -223,7 +222,7 @@ public abstract class UnitBase : MonoBehaviour
             else
             {
                 CurrentState = UnitState.Idle;
-                if (_animator != null) _animator.PlayIdle();
+                if (animator != null) animator.PlayIdle();
                 
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                     return;
