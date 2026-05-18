@@ -1434,7 +1434,7 @@ MonoBehaviour:
   _noiseFrequency: 0.4
   _noiseStrength: 2
   _multithreadModule:
-    enabled: 1
+    enabled: 0
   _multithreadEnabled: 1
   _onStart:
     m_PersistentCalls:
@@ -1455,6 +1455,6 @@ MonoBehaviour:
   moduleParticleFoldout: 1
   moduleMovementFoldout: 1
   moduleEventsFoldout: 0
-  moduleAdvancedFoldout: 0
+  moduleAdvancedFoldout: 1
   m_Sprite: {fileID: 0}
   m_Texture: {fileID: 0}

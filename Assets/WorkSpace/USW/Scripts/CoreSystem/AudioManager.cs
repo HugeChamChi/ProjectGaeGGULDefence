@@ -64,35 +64,67 @@ public class AudioManager : Singleton<AudioManager>
         // 2. 구현체 초기화
         _provider = new UnityAudioProvider(gameObject, mainMixer);
         _provider.Init();
+
+        // 3. 저장된 데이터 로드
+        LoadSettings();
     }
 
     #region Volume Control
 
-    public void SetVolume(AudioGroup group, int volume) => _provider?.SetVolume(group, volume);
+    public void SetVolume(AudioGroup group, int volume)
+    {
+        _provider?.SetVolume(group, volume);
+        SaveSettings();
+    }
+
     public int GetVolume(AudioGroup group) => _provider?.GetVolume(group) ?? 0;
 
     #endregion
 
     #region Mute Control
 
-    private Dictionary<AudioGroup, bool> _muteStates = new Dictionary<AudioGroup, bool>();
-
     public void SetMute(AudioGroup group, bool isMute)
     {
-        _muteStates[group] = isMute;
-        
-        // Mute 상태에 따라 볼륨 직접 제어
-        if (isMute)
-            _provider?.SetVolume(group, 0);
-        else
-            _provider?.SetVolume(group, GetVolume(group));
+        _provider?.SetMute(group, isMute);
+        SaveSettings();
         
         Debug.Log($"[AudioManager] {group} Mute: {isMute}");
     }
 
     public bool IsMuted(AudioGroup group)
     {
-        return _muteStates.TryGetValue(group, out bool isMute) && isMute;
+        return _provider?.IsMuted(group) ?? false;
+    }
+
+    #endregion
+
+    #region Persistence
+
+    private const string VOL_KEY_PREFIX = "Audio_Vol_";
+    private const string MUTE_KEY_PREFIX = "Audio_Mute_";
+
+    private void SaveSettings()
+    {
+        foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
+        {
+            PlayerPrefs.SetInt($"{VOL_KEY_PREFIX}{group}", GetVolume(group));
+            PlayerPrefs.SetInt($"{MUTE_KEY_PREFIX}{group}", IsMuted(group) ? 1 : 0);
+        }
+        PlayerPrefs.Save();
+    }
+
+    private void LoadSettings()
+    {
+        foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
+        {
+            // 볼륨 로드 (기본값 100)
+            int savedVol = PlayerPrefs.GetInt($"{VOL_KEY_PREFIX}{group}", 100);
+            _provider?.SetVolume(group, savedVol);
+
+            // 뮤트 로드 (기본값 0=false)
+            bool savedMute = PlayerPrefs.GetInt($"{MUTE_KEY_PREFIX}{group}", 0) == 1;
+            _provider?.SetMute(group, savedMute);
+        }
     }
 
     #endregion

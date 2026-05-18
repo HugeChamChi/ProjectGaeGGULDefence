@@ -28,7 +28,13 @@ namespace HSD.UI.Setting
             _onMuteChanged = onMuteChanged;
 
             _slider.onValueChanged.RemoveAllListeners();
-            _slider.onValueChanged.AddListener(val => _onVolumeChanged?.Invoke(_group, (int)val));
+            _slider.onValueChanged.AddListener(val => 
+            {
+                // Slider가 0~1 범위면 100을 곱해서 전달, 0~100 범위면 그대로 전달
+                // 시니어 팁: UI 컴포넌트의 설정값에 유연하게 대응하도록 설계
+                int volume = _slider.maxValue <= 1.01f ? (int)(val * 100) : (int)val;
+                _onVolumeChanged?.Invoke(_group, volume);
+            });
 
             _muteToggle.onValueChanged.RemoveAllListeners();
             _muteToggle.onValueChanged.AddListener(isOn => 
@@ -40,7 +46,8 @@ namespace HSD.UI.Setting
 
         public void SetState(int volume, bool isMuted)
         {
-            _slider.value = volume;
+            // Slider 범위에 맞춰 값 보정하여 설정 (정수 나눗셈 방지를 위해 100f 사용)
+            _slider.value = _slider.maxValue <= 1.01f ? volume / 100f : volume;
             _muteToggle.SetIsOnWithoutNotify(!isMuted);
             UpdateVisual(!isMuted);
         }

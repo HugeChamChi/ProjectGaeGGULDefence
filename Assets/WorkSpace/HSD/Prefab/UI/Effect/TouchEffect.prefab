@@ -1239,7 +1239,7 @@ MonoBehaviour:
   _bursts:
   - time: 0
     count: 15
-    used: 0
+    used: 1
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
@@ -1416,7 +1416,7 @@ MonoBehaviour:
   _noiseFrequency: 0.3
   _noiseStrength: 2
   _multithreadModule:
-    enabled: 1
+    enabled: 0
   _multithreadEnabled: 1
   _onStart:
     m_PersistentCalls:

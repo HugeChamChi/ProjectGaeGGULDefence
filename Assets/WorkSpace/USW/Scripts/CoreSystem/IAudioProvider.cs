@@ -12,4 +12,6 @@ public interface IAudioProvider
     void StopBGM();
     void SetVolume(AudioGroup group, int volume);
     int GetVolume(AudioGroup group);
+    void SetMute(AudioGroup group, bool isMute);
+    bool IsMuted(AudioGroup group);
 }

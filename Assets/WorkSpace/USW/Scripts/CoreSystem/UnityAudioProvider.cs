@@ -117,4 +117,17 @@ public class UnityAudioProvider : IAudioProvider
     {
         return _groups.TryGetValue(group, out var data) ? data.Volume : 0;
     }
+
+    public void SetMute(AudioGroup group, bool isMute)
+    {
+        if (!_groups.TryGetValue(group, out var data)) return;
+
+        data.IsMuted = isMute;
+        data.Apply(_mainMixer);
+    }
+
+    public bool IsMuted(AudioGroup group)
+    {
+        return _groups.TryGetValue(group, out var data) && data.IsMuted;
+    }
 }
