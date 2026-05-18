@@ -66,17 +66,17 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     // ─── Grid Colors ──────────────────────────────────────────────────
     [Header("Grid Colors")]
-    [SerializeField] private Color colorDefault  = new Color(0.85f, 0.85f, 0.85f, 1f); // 빈 필드
-    [SerializeField] private Color colorCenter   = new Color(0.57f, 0.82f, 0.31f, 1f); // 토템 위치 #92d050
-    [SerializeField] private Color colorBuff     = new Color(0.64f, 0.00f, 0.00f, 1f); // 효과 범위 #a20000
-    [SerializeField] private Color colorDisabled = new Color(0.10f, 0.10f, 0.10f, 1f); // 공격 불가
+    [SerializeField] private Color colorDefault  = new Color(0.85f, 0.85f, 0.85f, 1f);
+    [SerializeField] private Color colorCenter   = new Color(0.57f, 0.82f, 0.31f, 1f);
+    [SerializeField] private Color colorBuff     = new Color(0.64f, 0.00f, 0.00f, 1f);
+    [SerializeField] private Color colorDisabled = new Color(0.10f, 0.10f, 0.10f, 1f);
 
     // ─── Grade Colors ─────────────────────────────────────────────────
     [Header("Grade Colors")]
-    [SerializeField] private Color colorNormal    = new Color(0.600f, 0.773f, 1.000f, 1f); // #99c5ff
-    [SerializeField] private Color colorRare      = new Color(0.753f, 0.627f, 0.976f, 1f); // #c0a0f9
-    [SerializeField] private Color colorEpic      = new Color(0.859f, 0.588f, 0.016f, 1f); // #db9604
-    [SerializeField] private Color colorLegendary = new Color(0.859f, 0.588f, 0.016f, 1f); // #db9604
+    [SerializeField] private Color colorNormal    = new Color(0.600f, 0.773f, 1.000f, 1f);
+    [SerializeField] private Color colorRare      = new Color(0.753f, 0.627f, 0.976f, 1f);
+    [SerializeField] private Color colorEpic      = new Color(0.859f, 0.588f, 0.016f, 1f);
+    [SerializeField] private Color colorLegendary = new Color(0.859f, 0.588f, 0.016f, 1f);
 
     // ─── Constants ────────────────────────────────────────────────────
     private const int GridHalf = 3;
@@ -85,17 +85,19 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     private readonly List<Image> _cells = new();
     private TotemBase       _currentTotem;
     private GameDataManager _gameData;
+    private Canvas          _selfCanvas;
 
     // ─── Lifecycle ────────────────────────────────────────────────────
 
     protected override void Awake()
     {
         base.Awake();
+        _selfCanvas = GetComponent<Canvas>();
         rotateButton?.onClick.AddListener(OnRotateClicked);
         sellButton?.onClick.AddListener(OnSellClicked);
         closeButton?.onClick.AddListener(Hide);
         BuildGrid();
-        gameObject.SetActive(false);
+        _selfCanvas.enabled = false;
     }
 
     private void Start()
@@ -114,7 +116,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     private void OnSheetDataLoaded()
     {
-        if (gameObject.activeSelf && _currentTotem != null)
+        if (_selfCanvas.enabled && _currentTotem != null)
             Refresh();
     }
 
@@ -122,21 +124,21 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     public void Toggle(TotemBase totem)
     {
-        if (_currentTotem == totem && gameObject.activeSelf) Hide();
+        if (_currentTotem == totem && _selfCanvas.enabled) Hide();
         else Show(totem);
     }
 
     public void Show(TotemBase totem)
     {
-        _currentTotem = totem;
+        _currentTotem       = totem;
+        _selfCanvas.enabled = true;
         Refresh();
-        gameObject.SetActive(true);
     }
 
     public void Hide()
     {
-        _currentTotem = null;
-        gameObject.SetActive(false);
+        _currentTotem       = null;
+        _selfCanvas.enabled = false;
     }
 
     // ─── Refresh ──────────────────────────────────────────────────────
@@ -174,8 +176,8 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var c = TierToColor(grade);
 
-        if (totemNameText  != null) { totemNameText.text  = name;             totemNameText.color  = c; }
-        if (gradeText      != null) { gradeText.text      = TierToLabel(grade); gradeText.color    = c; }
+        if (totemNameText  != null) { totemNameText.text  = name;              totemNameText.color  = c; }
+        if (gradeText      != null) { gradeText.text      = TierToLabel(grade); gradeText.color     = c; }
         if (tierBorderImage!= null)   tierBorderImage.color = c;
     }
 
@@ -207,7 +209,6 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
         _cells[GridHalf * GridDim + GridHalf].color = colorCenter;
 
-        // 효과 범위: 시트 우선, 비어있으면 SO fallback
         var effectRange   = (sheet?.EffectRange?.Count   > 0) ? sheet.EffectRange   : data.effectRange;
         var disabledRange = (sheet?.AttackDisabledRange?.Count > 0) ? sheet.AttackDisabledRange : data.attackDisabledRange;
 
@@ -237,7 +238,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
         return true;
     }
 
-    // ─── Rotate Button ────────────────────────────────────────────────
+    // ─── Buttons ──────────────────────────────────────────────────────
 
     private void OnRotateClicked()
     {
@@ -264,35 +265,31 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var sb = new StringBuilder();
 
-        // 수치 버프: 시트 우선 → SO fallback
-        float atk      = sheet != null ? sheet.AttackBuff        : data.attackBuffAmount;
-        float spd      = sheet != null ? sheet.SpeedBuff         : data.speedBuffAmount;
-        float fProd    = sheet != null ? sheet.FoodProductionBuff: data.foodSpeedBuffAmount;
-        float fAmt     = sheet != null ? sheet.FoodAmountBuff    : data.foodAmountBuffAmount;
-        float cCh      = sheet != null ? sheet.CritChanceBuff    : data.critChanceBuffAmount;
-        float cDmg     = sheet != null ? sheet.CritDamageBuff    : data.critDamageBuffAmount;
+        float atk      = sheet != null ? sheet.AttackBuff         : data.attackBuffAmount;
+        float spd      = sheet != null ? sheet.SpeedBuff          : data.speedBuffAmount;
+        float fProd    = sheet != null ? sheet.FoodProductionBuff : data.foodSpeedBuffAmount;
+        float fAmt     = sheet != null ? sheet.FoodAmountBuff     : data.foodAmountBuffAmount;
+        float cCh      = sheet != null ? sheet.CritChanceBuff     : data.critChanceBuffAmount;
+        float cDmg     = sheet != null ? sheet.CritDamageBuff     : data.critDamageBuffAmount;
 
-        // 시트 전용 추가 스탯 (SO에 대응 필드 없음)
-        float atkDeb   = sheet?.AttackDebuff     ?? 0f;
-        float spdDeb   = sheet?.SpeedDebuff      ?? 0f;
-        float cooldown = sheet?.CooldownDecrease ?? 0f;
-        float projSize = sheet?.ProjectileSizeRate?? 0f;
-        float expGain  = sheet?.ExpGainRate      ?? 0f;
+        float atkDeb   = sheet?.AttackDebuff      ?? 0f;
+        float spdDeb   = sheet?.SpeedDebuff       ?? 0f;
+        float cooldown = sheet?.CooldownDecrease  ?? 0f;
+        float projSize = sheet?.ProjectileSizeRate ?? 0f;
+        float expGain  = sheet?.ExpGainRate       ?? 0f;
 
         if (atk    > 0f) sb.AppendLine($"공격력 +{atk    * 100f:F0}%");
         if (atkDeb > 0f) sb.AppendLine($"공격력 -{atkDeb * 100f:F0}%");
-        if (spd    > 0f) sb.AppendLine($"공격속도 +{spd   * 100f:F0}%");
-        if (spdDeb > 0f) sb.AppendLine($"공격속도 -{spdDeb* 100f:F0}%");
-        if (fProd  > 0f) sb.AppendLine($"식량 생산 간격 -{fProd * 100f:F0}%");
+        if (spd    > 0f) sb.AppendLine($"공격속도 +{spd    * 100f:F0}%");
+        if (spdDeb > 0f) sb.AppendLine($"공격속도 -{spdDeb * 100f:F0}%");
+        if (fProd  > 0f) sb.AppendLine($"식량 생산 간격 -{fProd  * 100f:F0}%");
         if (fAmt   > 0f) sb.AppendLine($"식량 생산량 +{fAmt:F0}");
-        if (cCh    > 0f) sb.AppendLine($"치명타 확률 +{cCh   * 100f:F0}%");
-        if (cDmg   > 0f) sb.AppendLine($"치명타 피해 +{cDmg  * 100f:F0}%");
+        if (cCh    > 0f) sb.AppendLine($"치명타 확률 +{cCh    * 100f:F0}%");
+        if (cDmg   > 0f) sb.AppendLine($"치명타 피해 +{cDmg   * 100f:F0}%");
         if (cooldown>0f) sb.AppendLine($"쿨타임 -{cooldown * 100f:F0}%");
-        if (projSize>0f) sb.AppendLine($"투사체 크기 +{projSize* 100f:F0}%");
-        if (expGain > 0f) sb.AppendLine($"경험치 획득 +{expGain* 100f:F0}%");
+        if (projSize>0f) sb.AppendLine($"투사체 크기 +{projSize * 100f:F0}%");
+        if (expGain > 0f) sb.AppendLine($"경험치 획득 +{expGain  * 100f:F0}%");
 
-        // 설명 텍스트: 시트 effect 우선 → SO description fallback
-        // 시트의 "{10}" 같은 템플릿 중괄호를 제거해서 "10"만 표시
         string desc = sheet != null && !string.IsNullOrEmpty(sheet.Effect)
                       ? sheet.Effect : data.description;
         if (!string.IsNullOrEmpty(desc))

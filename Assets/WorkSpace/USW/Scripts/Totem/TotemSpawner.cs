@@ -73,7 +73,7 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
 
     /// <summary>
     /// 배치된 토템을 판매(제거)하고 환급금을 지급한다.
-    /// TotemInfoPopupUI의 판매 버튼에서 호출.
+    /// TotemActionPopupUI의 판매 버튼에서 호출.
     /// </summary>
     public void SellTotem(TotemBase totem)
     {

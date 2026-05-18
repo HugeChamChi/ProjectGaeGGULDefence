@@ -5,27 +5,33 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// 유닛 클릭 시 나타나는 액션 팝업.
+/// 토템 클릭 시 나타나는 액션 팝업.
 ///
 /// 외부 API
-///   Show(unit, canMerge) — 팝업 표시
+///   Show(totem)          — 팝업 표시
 ///   Hide()               — 팝업 숨기기
-///   OnDismissRequested   — 외부 클릭으로 닫힘 요청 시 발행 (InGameInstaller가 구독)
+///   OnDismissRequested   — 외부 클릭으로 닫힘 요청 시 발행
+///   OnSellTotemRequested — 판매 버튼 클릭 시 발행
 ///
-/// 내부 구현(애니메이션·위치·클릭 감지)은 외부에 노출하지 않음.
+/// 씬 구조
+///   TotemActionPopup  ← 이 컴포넌트, Pivot (0.5, 0.5)
+///     ├── RotateButton  ← Button, anchoredPosition (-60, -100) = 7시
+///     └── SellButton    ← Button, anchoredPosition ( 60, -100) = 5시
 /// </summary>
-public class UnitActionPopupUI : MonoBehaviour
+public class TotemActionPopupUI : MonoBehaviour
 {
-    [SerializeField] private MergeButtonUI mergeButton;
-    [SerializeField] private SellButtonUI  sellButton;
-    [SerializeField] private Canvas        rootCanvas;
+    [SerializeField] private RotateButtonUI rotateButton;
+    [SerializeField] private SellTotemButtonUI sellButton;
+    [SerializeField] private Canvas rootCanvas;
 
-    public event Action OnDismissRequested;
+    public event Action              OnDismissRequested;
+    public event Action<TotemBase>   OnSellTotemRequested;
 
     private RectTransform _rect;
     private Tweener       _tween;
     private bool          _isShowing;
     private bool          _justShown;
+    private TotemBase     _currentTotem;
 
     private void Awake()
     {
@@ -33,14 +39,16 @@ public class UnitActionPopupUI : MonoBehaviour
         _rect.localScale = Vector3.zero;
     }
 
-    public void Show(UnitBase unit, bool canMerge)
+    public void Show(TotemBase totem)
     {
         if (_rect == null) return;
-        _justShown = true;
+        _justShown    = true;
+        _currentTotem = totem;
 
-        mergeButton.SetState(canMerge);
-        sellButton.SetUnit(unit);
-        PositionAtCenter(unit.GetComponent<RectTransform>());
+        rotateButton.SetTotem(totem);
+        sellButton.SetTotem(totem);
+
+        PositionAtCenter(totem.GetComponent<RectTransform>());
 
         _tween?.Kill();
         _rect.localScale = Vector3.zero;
@@ -54,12 +62,18 @@ public class UnitActionPopupUI : MonoBehaviour
     public void Hide()
     {
         if (!_isShowing) return;
-        _isShowing = false;
+        _isShowing    = false;
+        _currentTotem = null;
 
         _tween?.Kill();
         _tween = _rect.DOScale(Vector3.zero, 0.18f)
                       .SetEase(Ease.InBack)
                       .SetUpdate(true);
+    }
+
+    internal void RaiseSellRequested(TotemBase totem)
+    {
+        OnSellTotemRequested?.Invoke(totem);
     }
 
     private void LateUpdate()
@@ -81,7 +95,7 @@ public class UnitActionPopupUI : MonoBehaviour
 
     private void PositionAtCenter(RectTransform targetRect)
     {
-        if (targetRect == null || rootCanvas == null) return;
+        if (targetRect == null || rootCanvas == null || _rect == null) return;
 
         Vector3[] corners = new Vector3[4];
         targetRect.GetWorldCorners(corners);
