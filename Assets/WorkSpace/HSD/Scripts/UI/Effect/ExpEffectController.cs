@@ -25,7 +25,7 @@ public class ExpEffectController : MonoBehaviour
             // 이미 소환된 보스가 있다면 바로 구독
             if (BossManager.Instance.CurrentBoss != null)
             {
-                SubscribeBoss(null); // entry는 사용하지 않으므로 null 전달
+                SubscribeBoss(null, null); // entry는 사용하지 않으므로 null 전달
             }
         }
     }
@@ -40,7 +40,7 @@ public class ExpEffectController : MonoBehaviour
         UnsubscribeBoss();
     }
 
-    private void SubscribeBoss(BossEntry _)
+    private void SubscribeBoss(BossEntry _, BossEntry _1)
     {
         UnsubscribeBoss();
 

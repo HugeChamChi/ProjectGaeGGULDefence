@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -15,10 +16,50 @@ public class InGameInstaller : MonoBehaviour
     [SerializeField] private TotemActionPopupUI  _totemActionPopup;
     [SerializeField] private SellTotemButtonUI   _sellTotemButton;
 
+    [Header("Boss Encounter")]
+    [SerializeField] private UI_BossEncounter    _bossEncounterUI;
+
+    [Header("Wave Info")]
+    [SerializeField] private UI_WaveText         _waveTextUI;
+
     private void Start()
     {
         WireUnitActionPopup();
         WireTotemActionPopup();
+        WireBossEncounter();
+        WireWaveUI();
+    }
+
+    // ── Wave UI ────────────────────────────────────────────────
+
+    private void WireWaveUI()
+    {
+        if (_waveTextUI == null) return;
+        if (Manager.Wave == null) return;
+
+        Manager.Wave.OnWaveChanged += OnWaveChanged;
+    }
+
+    private void OnWaveChanged(int waveNum)
+    {
+        _waveTextUI.UpdateWaveText(waveNum);
+    }
+
+    // ── Boss Encounter ─────────────────────────────────────────
+
+    private void WireBossEncounter()
+    {
+        if (_bossEncounterUI == null) return;
+        if (Manager.Boss == null) return;
+
+        Manager.Boss.OnBossEntryed += OnBossSpawned;
+    }
+
+    private void OnBossSpawned(BossEntry prevEntry, BossEntry nextEntry)
+    {
+        int waveNum = Manager.Wave != null ? Manager.Wave.CurrentWave + 1 : 1;
+
+        _bossEncounterUI.PlayBossTransitionSequence(prevEntry?.bossIcon, nextEntry?.bossIcon, waveNum).Forget();
     }
 
     // ── Unit Action ────────────────────────────────────────────
@@ -73,6 +114,16 @@ public class InGameInstaller : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (Manager.Wave != null)
+        {
+            Manager.Wave.OnWaveChanged -= OnWaveChanged;
+        }
+
+        if (Manager.Boss != null)
+        {
+            Manager.Boss.OnBossEntryed -= OnBossSpawned;
+        }
+
         var merge = Manager.Merge;
         if (merge != null)
         {

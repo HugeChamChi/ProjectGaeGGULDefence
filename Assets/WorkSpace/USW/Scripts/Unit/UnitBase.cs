@@ -487,6 +487,9 @@ public abstract class UnitBase : MonoBehaviour
     protected void LaunchProjectile()
     {
         var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
+
+        if (gameObject == null) return;
+
         if (bossArea != null && Manager.Projectile != null)
             Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }
