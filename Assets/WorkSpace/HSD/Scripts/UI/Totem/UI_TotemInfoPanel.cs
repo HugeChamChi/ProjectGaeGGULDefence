@@ -6,7 +6,7 @@ using GaeGGUL.UI.Totem;
 using GaeGGUL.UI.Common;
 using GaeGGUL.Extension;
 
-public class UI_TotemInfoPanel : MonoBehaviour
+public class UI_TotemInfoPanel : UI_Base
 {
     [Header("Totem Info")]
     [SerializeField] private UI_IconTierSlot iconSlot;

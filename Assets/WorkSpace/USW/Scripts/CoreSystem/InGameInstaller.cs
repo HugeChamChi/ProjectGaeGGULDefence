@@ -8,19 +8,20 @@ public class InGameInstaller : MonoBehaviour
 {
     [Header("Unit Action Popup")]
     [SerializeField] private UnitActionPopupUI _unitActionPopup;
-    [SerializeField] private MergeButtonUI     _mergeButton;
-    [SerializeField] private SellButtonUI      _sellButton;
+    [SerializeField] private MergeButtonUI _mergeButton;
+    [SerializeField] private SellButtonUI _sellButton;
     [SerializeField] private GaeGGUL.UI.Unit.UI_UnitInfoPanel _unitInfoPanel;
 
     [Header("Totem Action Popup")]
-    [SerializeField] private TotemActionPopupUI  _totemActionPopup;
-    [SerializeField] private SellTotemButtonUI   _sellTotemButton;
+    [SerializeField] private TotemActionPopupUI _totemActionPopup;
+    [SerializeField] private SellTotemButtonUI _sellTotemButton;
+    [SerializeField] private UI_TotemInfoPanel _totemInfoPanel;
 
     [Header("Boss Encounter")]
-    [SerializeField] private UI_BossEncounter    _bossEncounterUI;
+    [SerializeField] private UI_BossEncounter _bossEncounterUI;
 
     [Header("Wave Info")]
-    [SerializeField] private UI_WaveText         _waveTextUI;
+    [SerializeField] private UI_WaveText _waveTextUI;
 
     private void Start()
     {
@@ -67,19 +68,19 @@ public class InGameInstaller : MonoBehaviour
     private void WireUnitActionPopup()
     {
         if (_unitActionPopup == null) { Debug.LogError("[InGameInstaller] _unitActionPopup 미연결"); return; }
-        if (_mergeButton     == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
-        if (_sellButton      == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
-        if (_unitInfoPanel   == null) Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결");
-        if (Manager.Merge    == null) { Debug.LogError("[InGameInstaller] Manager.Merge null — MergeManager 씬에 없음"); return; }
+        if (_mergeButton == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
+        if (_sellButton == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
+        if (_unitInfoPanel == null) Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결");
+        if (Manager.Merge == null) { Debug.LogError("[InGameInstaller] Manager.Merge null — MergeManager 씬에 없음"); return; }
 
-        Manager.Merge.OnUnitSelected     += _unitActionPopup.Show;
-        Manager.Merge.OnUnitSelected     += HandleUnitSelected;
+        Manager.Merge.OnUnitSelected += _unitActionPopup.Show;
+        Manager.Merge.OnUnitSelected += HandleUnitSelected;
         Manager.Merge.OnSelectionCleared += _unitActionPopup.Hide;
         Manager.Merge.OnSelectionCleared += _unitInfoPanel.Close;
 
-        _mergeButton.OnMergeRequested           += Manager.Merge.ExecuteMerge;
-        _sellButton.OnSellRequested             += OnSellUnitRequested;
-        _unitActionPopup.OnDismissRequested     += Manager.Merge.ClearSelection;
+        _mergeButton.OnMergeRequested += Manager.Merge.ExecuteMerge;
+        _sellButton.OnSellRequested += OnSellUnitRequested;
+        _unitActionPopup.OnDismissRequested += Manager.Merge.ClearSelection;
     }
 
     private void HandleUnitSelected(UnitBase unit, bool canMerge)
@@ -101,19 +102,21 @@ public class InGameInstaller : MonoBehaviour
         _sellTotemButton.SetPopup(_totemActionPopup);
 
         // DragHandler static 이벤트 → 팝업 Show
-        DragHandler.OnTotemClickedGlobal        += HandleTotemClicked;
+        DragHandler.OnTotemClickedGlobal += HandleTotemClicked;
 
         // 판매 이벤트 → TotemSpawner
-        _totemActionPopup.OnSellTotemRequested  += OnSellTotemRequested;
+        _totemActionPopup.OnSellTotemRequested += OnSellTotemRequested;
 
         // 외부 클릭 → 팝업 닫기
-        _totemActionPopup.OnDismissRequested    += ClearTotemRangePreview;
-        _totemActionPopup.OnDismissRequested    += _totemActionPopup.Hide;
+        _totemActionPopup.OnDismissRequested += ClearTotemRangePreview;
+        _totemActionPopup.OnDismissRequested += _totemActionPopup.Hide;
+        _totemActionPopup.OnDismissRequested += _totemInfoPanel.Close;
     }
 
     private void HandleTotemClicked(TotemBase totem)
     {
         _totemActionPopup.Show(totem);
+        _totemInfoPanel.SetData(totem.Data);
         Manager.Grid?.ShowTotemRangePreview(totem);
     }
 
@@ -145,18 +148,18 @@ public class InGameInstaller : MonoBehaviour
         var merge = Manager.Merge;
         if (merge != null)
         {
-            merge.OnUnitSelected                    -= _unitActionPopup.Show;
-            merge.OnUnitSelected                    -= HandleUnitSelected;
-            merge.OnSelectionCleared                -= _unitActionPopup.Hide;
-            merge.OnSelectionCleared                -= _unitInfoPanel.Close;
-            _mergeButton.OnMergeRequested           -= merge.ExecuteMerge;
-            _unitActionPopup.OnDismissRequested     -= merge.ClearSelection;
+            merge.OnUnitSelected -= _unitActionPopup.Show;
+            merge.OnUnitSelected -= HandleUnitSelected;
+            merge.OnSelectionCleared -= _unitActionPopup.Hide;
+            merge.OnSelectionCleared -= _unitInfoPanel.Close;
+            _mergeButton.OnMergeRequested -= merge.ExecuteMerge;
+            _unitActionPopup.OnDismissRequested -= merge.ClearSelection;
         }
 
-        _sellButton.OnSellRequested                 -= OnSellUnitRequested;
-        DragHandler.OnTotemClickedGlobal            -= HandleTotemClicked;
-        _totemActionPopup.OnSellTotemRequested      -= OnSellTotemRequested;
-        _totemActionPopup.OnDismissRequested        -= ClearTotemRangePreview;
-        _totemActionPopup.OnDismissRequested        -= _totemActionPopup.Hide;
+        _sellButton.OnSellRequested -= OnSellUnitRequested;
+        DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
+        _totemActionPopup.OnSellTotemRequested -= OnSellTotemRequested;
+        _totemActionPopup.OnDismissRequested -= ClearTotemRangePreview;
+        _totemActionPopup.OnDismissRequested -= _totemActionPopup.Hide;
     }
 }
