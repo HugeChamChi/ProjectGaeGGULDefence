@@ -35,14 +35,17 @@ public class UnitActionPopupUI : MonoBehaviour
 
     public void Show(UnitBase unit, bool canMerge)
     {
-        if (_rect == null) { Debug.LogError("[UnitActionPopupUI] _rect is null — RectTransform 없음"); return; }
+        // 오브젝트가 비활성 상태로 시작했을 때 Awake가 안 돌아 _rect가 null일 수 있음
+        if (_rect == null) _rect = GetComponent<RectTransform>();
+        if (_rect == null) { Debug.LogError("[UnitActionPopupUI] RectTransform 없음"); return; }
         if (mergeButton == null) { Debug.LogError("[UnitActionPopupUI] mergeButton 미연결 (Inspector 확인)"); return; }
         if (sellButton  == null) { Debug.LogError("[UnitActionPopupUI] sellButton 미연결 (Inspector 확인)"); return; }
+
+        gameObject.SetActive(true);
         _justShown = true;
 
         mergeButton.SetState(canMerge);
         sellButton.SetUnit(unit);
-        if (rootCanvas == null) Debug.LogWarning("[UnitActionPopupUI] rootCanvas 미연결 — 팝업 위치 (0,0) 고정");
         PositionAtCenter(unit.GetComponent<RectTransform>());
 
         _tween?.Kill();
@@ -62,7 +65,8 @@ public class UnitActionPopupUI : MonoBehaviour
         _tween?.Kill();
         _tween = _rect.DOScale(Vector3.zero, 0.18f)
                       .SetEase(Ease.InBack)
-                      .SetUpdate(true);
+                      .SetUpdate(true)
+                      .OnComplete(() => gameObject.SetActive(false));
     }
 
     private void LateUpdate()
