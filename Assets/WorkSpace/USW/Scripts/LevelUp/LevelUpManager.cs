@@ -428,7 +428,9 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         var rt = unit.GetComponent<UnityEngine.RectTransform>();
         if (rt != null)
         {
-            rt.anchorMin = rt.anchorMax = rt.pivot = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.anchorMin        = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.pivot            = new UnityEngine.Vector2(0.5f, 0f);
             rt.anchoredPosition = UnityEngine.Vector2.zero;
         }
 
