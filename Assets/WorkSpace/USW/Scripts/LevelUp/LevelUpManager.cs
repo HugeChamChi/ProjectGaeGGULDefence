@@ -201,12 +201,12 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         switch (effectType)
         {
             case LevelUpEffectType.AttackPercent:
-                Manager.Buff.AddAttackBuff(v);
+                Manager.Buff.AddLevelUpAttackBuff(v);
                 break;
 
             case LevelUpEffectType.AttackSpeedPercent:
-                // AddSpeedBuff(양수) → SpeedMultiplier 감소 → interval 감소 → 더 빠름
-                Manager.Buff.AddSpeedBuff(v);
+                // AddLevelUpSpeedBuff(양수) → SpeedMultiplier 감소 → interval 감소 → 더 빠름
+                Manager.Buff.AddLevelUpSpeedBuff(v);
                 break;
 
             case LevelUpEffectType.TotemEfficiencyPercent:
@@ -382,8 +382,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
             case LevelUpSpecialEffect.WizardPhysicalMode:
                 HasWizardPhysicalMode = true;
-                Manager.Buff.AddAttackBuff(data.primaryValue / 100f);
-                Manager.Buff.AddSpeedBuff(data.primaryValue  / 100f);
+                Manager.Buff.AddLevelUpAttackBuff(data.primaryValue / 100f);
+                Manager.Buff.AddLevelUpSpeedBuff(data.primaryValue  / 100f);
                 break;
 
             case LevelUpSpecialEffect.UnemployedFoodNegate:

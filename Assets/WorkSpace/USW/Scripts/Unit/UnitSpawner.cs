@@ -151,11 +151,11 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
         if (lu != null && lu.HasChieftainGainOnSell)
         {
-            Manager.Buff.AddAttackBuff(lu.ChieftainSellAtkGain);
+            Manager.Buff.AddLevelUpAttackBuff(lu.ChieftainSellAtkGain);
             int   excessPop     = (Manager.Population?.Current ?? 0) - 2;
             float popPenalty    = excessPop > 0 ? excessPop * lu.ChieftainSellPopPenalty : 0f;
             if (popPenalty > 0f)
-                Manager.Buff.AddAttackBuff(-popPenalty);
+                Manager.Buff.AddLevelUpAttackBuff(-popPenalty);
         }
 
         OnAnyUnitSold?.Invoke();

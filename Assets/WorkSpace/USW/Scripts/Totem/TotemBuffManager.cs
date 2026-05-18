@@ -7,10 +7,15 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemBuffManager : InGameSingleton<TotemBuffManager>
 {
-    // 공격력 배율 (기본 1.0)
-    public float AttackMultiplier    { get; private set; } = 1f;
-    // 속도 배율 (기본 1.0 — 낮을수록 게이지 빨라짐)
-    public float SpeedMultiplier     { get; private set; } = 1f;
+    // 공격력 배율 = 1 + 토템 누산 + 레벨업 누산
+    private float _totemAttackBonus   = 0f;
+    private float _levelUpAttackBonus = 0f;
+    public float AttackMultiplier => 1f + _totemAttackBonus + _levelUpAttackBonus;
+
+    // 속도 배율 (낮을수록 빠름) = Max(0.1, 1 - 토템 누산 - 레벨업 누산)
+    private float _totemSpeedBonus   = 0f;
+    private float _levelUpSpeedBonus = 0f;
+    public float SpeedMultiplier => Mathf.Max(0.1f, 1f - _totemSpeedBonus - _levelUpSpeedBonus);
     // 식량 생산 속도 배율 (기본 1.0 — 낮을수록 식량 틱 빨라짐)
     public float FoodSpeedMultiplier { get; private set; } = 1f;
     // 식량 생산량 배율 (기본 1.0 — 고블린 마법사가 낮춤, 토템이 높임)
@@ -46,10 +51,10 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
         _activeTotem.Remove(totem);
     }
 
-    // ── 공격력 버프 ────────────────────────────────────────────
+    // ── 공격력 버프 (토템 전용 — 토템효율 적용) ───────────────
     public void AddAttackBuff(float percent)
     {
-        AttackMultiplier += percent * (1f + _totemEfficiencyBonus);
+        _totemAttackBonus += percent * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemBuff] 공격력 +{percent * 100f:F0}% → 배율: {AttackMultiplier:F2}x");
 #endif
@@ -57,16 +62,25 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
 
     public void RemoveAttackBuff(float percent)
     {
-        AttackMultiplier = Mathf.Max(1f, AttackMultiplier - percent * (1f + _totemEfficiencyBonus));
+        _totemAttackBonus = Mathf.Max(0f, _totemAttackBonus - percent * (1f + _totemEfficiencyBonus));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemBuff] 공격력 -{percent * 100f:F0}% 해제 → 배율: {AttackMultiplier:F2}x");
 #endif
     }
 
-    // ── 속도 버프 ──────────────────────────────────────────────
+    // ── 공격력 버프 (레벨업/판매 전용 — 토템효율 미적용) ──────
+    public void AddLevelUpAttackBuff(float percent)
+    {
+        _levelUpAttackBonus += percent;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[LevelUp] 공격력 +{percent * 100f:F0}% → 배율: {AttackMultiplier:F2}x");
+#endif
+    }
+
+    // ── 속도 버프 (토템 전용 — 토템효율 적용) ─────────────────
     public void AddSpeedBuff(float percent)
     {
-        SpeedMultiplier = Mathf.Max(0.1f, SpeedMultiplier - percent * (1f + _totemEfficiencyBonus));
+        _totemSpeedBonus += percent * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemBuff] 속도 +{percent * 100f:F0}% → 배율: {SpeedMultiplier:F2}x");
 #endif
@@ -74,9 +88,18 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
 
     public void RemoveSpeedBuff(float percent)
     {
-        SpeedMultiplier = Mathf.Min(1f, SpeedMultiplier + percent * (1f + _totemEfficiencyBonus));
+        _totemSpeedBonus = Mathf.Max(0f, _totemSpeedBonus - percent * (1f + _totemEfficiencyBonus));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemBuff] 속도 -{percent * 100f:F0}% 해제 → 배율: {SpeedMultiplier:F2}x");
+#endif
+    }
+
+    // ── 속도 버프 (레벨업 전용 — 토템효율 미적용) ─────────────
+    public void AddLevelUpSpeedBuff(float percent)
+    {
+        _levelUpSpeedBonus += percent;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[LevelUp] 속도 +{percent * 100f:F0}% → 배율: {SpeedMultiplier:F2}x");
 #endif
     }
 
