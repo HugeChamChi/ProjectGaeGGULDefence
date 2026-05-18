@@ -42,6 +42,7 @@ public abstract class UnitBase : MonoBehaviour
 
     private float _attackTimer;
     private float _skillTimer;
+    private float _foodTimer;
 
     public float SkillGaugeProgress 
     {
@@ -171,6 +172,7 @@ public abstract class UnitBase : MonoBehaviour
 
         _attackTimer = GetCurrentAttackInterval(); // 첫 공격은 즉시 혹은 짧은 대기 후 가능하도록 설정
         _skillTimer = 0f;
+        _foodTimer = 0f;
 
         // 비용 최적화: try-catch 대신 cancellationToken 상태 직접 체크
         while (!token.IsCancellationRequested)
@@ -198,6 +200,7 @@ public abstract class UnitBase : MonoBehaviour
             float dt = Time.deltaTime;
             _attackTimer += dt;
             _skillTimer += dt;
+            TickFoodProduction(dt);
 
             float attackInterval = GetCurrentAttackInterval();
             float skillInterval = GetCurrentSkillInterval();
@@ -249,7 +252,6 @@ public abstract class UnitBase : MonoBehaviour
         float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float interval = unitData.skillCooldown
                        * Manager.Buff.GaugeSpeedMultiplier
-                       * Manager.Buff.FoodSpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
         return Mathf.Max(interval, 0.05f);
@@ -278,16 +280,46 @@ public abstract class UnitBase : MonoBehaviour
     // 기존 AttackLoopAsync와 SkillLoopAsync는 제거됨
 
 
-    /// <summary>스킬 발동 — 식량 생산 + 스킬 공격. 서브클래스에서 오버라이드 가능</summary>
+    /// <summary>Adds food once per second based on the sheet currency_per_second value.</summary>
+    private void TickFoodProduction(float deltaTime)
+    {
+        if (_currency == null || unitData == null || deltaTime <= 0f) return;
+
+        _foodTimer += deltaTime;
+        if (_foodTimer < 1f) return;
+
+        float foodPerSecond = GetBaseFoodPerSecond();
+        if (foodPerSecond <= 0f)
+        {
+            _foodTimer = 0f;
+            return;
+        }
+
+        float speedMultiplier = Mathf.Max(Manager.Buff.FoodSpeedMultiplier, 0.01f);
+        int elapsedSeconds = Mathf.FloorToInt(_foodTimer);
+        float amount = foodPerSecond
+                     / speedMultiplier
+                     * Manager.Buff.FoodAmountMultiplier
+                     * elapsedSeconds;
+
+        _foodTimer -= elapsedSeconds;
+
+        if (amount > 0f)
+            _currency.AddCurrency(amount);
+    }
+
+    private float GetBaseFoodPerSecond()
+    {
+        if (Manager.GameData != null && Manager.GameData.IsLoaded)
+            return Manager.GameData.GetCurrencyPerSecond(unitData.characterId);
+
+        float cooldown = Mathf.Max(unitData.skillCooldown, 0.01f);
+        return unitData.foodPerTick / cooldown;
+    }
+
     protected virtual void OnSkillFull()
     {
         onSkillFull?.Invoke();
-
-        // 재화 생산량: 시트 currency_per_second × skillCooldown. 미로드 시 SO foodPerTick 폴백
-        float foodAmount = Manager.GameData != null && Manager.GameData.IsLoaded
-            ? Manager.GameData.GetCurrencyPerSecond(unitData.characterId) * unitData.skillCooldown
-            : unitData.foodPerTick;
-        _currency.AddCurrency(foodAmount * Manager.Buff.FoodAmountMultiplier);
 
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
