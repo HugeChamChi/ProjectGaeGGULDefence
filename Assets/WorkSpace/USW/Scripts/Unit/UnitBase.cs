@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 /// <summary>
 /// 모든 유닛의 기반 클래스
@@ -31,8 +32,11 @@ public abstract class UnitBase : MonoBehaviour
     protected BossBase        _boss;
     public GridCell currentCell { get; private set; }
 
-    protected UnitAnimator _animator;
+    public UnitAnimator animator;
     protected UnitSoundController _sound;
+    protected UnitVisualController _visual;
+
+    private Image _unitImage;
     private CancellationTokenSource _loopCts;
     private bool _paused = false;
 
@@ -42,6 +46,7 @@ public abstract class UnitBase : MonoBehaviour
 
     private float _attackTimer;
     private float _skillTimer;
+    private float _foodTimer;
 
     public float SkillGaugeProgress 
     {
@@ -60,7 +65,11 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        _animator = GetComponentInChildren<UnitAnimator>();
+        animator = GetComponentInChildren<UnitAnimator>();
+        
+        _unitImage = GetComponent<Image>();
+        if (_unitImage == null) _unitImage = GetComponentInChildren<Image>();
+        if (_unitImage != null) _visual = new UnitVisualController(_unitImage);
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -74,9 +83,25 @@ public abstract class UnitBase : MonoBehaviour
             return;
         }
 
+        // ── 시트 데이터 적용 (강화 레벨 반영) ──────────────────
+        if (unitData != null && Manager.GameData != null && Manager.GameData.IsLoaded)
+        {
+            // ScriptableObject 에셋 직접 수정을 방지하기 위해 인스턴스 복제 (필요 시)
+            // 여기서는 런타임에만 값을 유지하면 되므로, 데이터 동기화 수행
+            SyncStatsWithSheet();
+        }
+
+        // ── 비주얼 업데이트 (등급별 외곽선) ──────────────────
+        if (_visual != null && unitData != null)
+        {
+            _visual.UpdateVisual(unitData.unitTier);
+        }
+
         _currency    = currency;
         _boss        = boss;
         currentCell = cell;
+        ApplyFacingByCell();
+        animator?.Initialize(this);
 
         StopLoops();
         _paused = false;
@@ -88,7 +113,6 @@ public abstract class UnitBase : MonoBehaviour
         OnAnyUnitChanged?.Invoke();
 
         _sound = new(this);
-        _animator.Initialize(this);
     }
 
     /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
@@ -108,7 +132,26 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void OnUnitPlaced()  { }
     protected virtual void OnUnitRemoved() { }
 
-    private void OnDestroy() => StopLoops();
+    private void ApplyFacingByCell()
+    {
+        if (_unitImage == null || currentCell == null || Manager.Grid == null) return;
+
+        int halfColumn = Manager.Grid.Columns / 2;
+        bool faceLeft = currentCell.GridPosition.x >= halfColumn;
+
+        var imageTransform = _unitImage.rectTransform;
+        var scale = imageTransform.localScale;
+        float x = Mathf.Abs(scale.x);
+        if (x <= 0f) x = 1f;
+
+        imageTransform.localScale = new Vector3(faceLeft ? -x : x, scale.y, scale.z);
+    }
+
+    private void OnDestroy() 
+    {
+        _visual?.Cleanup();
+        StopLoops();
+    }
 
     /// <summary>인구수·셀 상태 변경 없이 공격/스킬을 일시 중단. LevelUpUI 등 전용.</summary>
     public void PauseLoops() => _paused = true;
@@ -132,6 +175,26 @@ public abstract class UnitBase : MonoBehaviour
         _loopCts = null;
     }
 
+    /// <summary>족장 전용 공격력 버프 (3008 위엄) 추가 처리 등</summary>
+    protected virtual void SyncStatsWithSheet()
+    {
+        if (unitData == null || Manager.GameData == null || !Manager.GameData.IsLoaded) return;
+
+        // UpgradeManager에서 현재 직업의 강화 레벨 조회
+        string jobType = Manager.Upgrade?.GetJobType(unitData.characterId) ?? string.Empty;
+        int level = Manager.Upgrade != null && !string.IsNullOrEmpty(jobType)
+            ? Manager.Upgrade.GetJobLevel(jobType)
+            : 1;
+
+        // 시트 데이터 가져오기
+        var sheetRow = Manager.GameData.GetCharacterRow(unitData.characterId, level);
+        if (sheetRow != null)
+        {
+            // UnitData 인스턴스에 시트 스탯 적용
+            unitData.ApplySheetData(sheetRow);
+        }
+    }
+
     // ── 통합 제어 루프 ──────────────────────────────────────────
 
     /// <summary>
@@ -144,6 +207,7 @@ public abstract class UnitBase : MonoBehaviour
 
         _attackTimer = GetCurrentAttackInterval(); // 첫 공격은 즉시 혹은 짧은 대기 후 가능하도록 설정
         _skillTimer = 0f;
+        _foodTimer = 0f;
 
         // 비용 최적화: try-catch 대신 cancellationToken 상태 직접 체크
         while (!token.IsCancellationRequested)
@@ -153,7 +217,7 @@ public abstract class UnitBase : MonoBehaviour
                 if (CurrentState != UnitState.Idle)
                 {
                     CurrentState = UnitState.Idle;
-                    _animator?.PlayIdle();
+                    animator?.PlayIdle();
                 }
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                     return;
@@ -171,6 +235,7 @@ public abstract class UnitBase : MonoBehaviour
             float dt = Time.deltaTime;
             _attackTimer += dt;
             _skillTimer += dt;
+            TickFoodProduction(dt);
 
             float attackInterval = GetCurrentAttackInterval();
             float skillInterval = GetCurrentSkillInterval();
@@ -179,7 +244,7 @@ public abstract class UnitBase : MonoBehaviour
             if (_skillTimer >= skillInterval)
             {
                 CurrentState = UnitState.Skilling;
-                if (_animator != null) await _animator.PlaySkillAsync(token);
+                if (animator != null) await animator.PlaySkillAsync(token);
                 ExecuteSkill();
                 
                 _skillTimer = 0f;
@@ -187,7 +252,7 @@ public abstract class UnitBase : MonoBehaviour
             else if (_attackTimer >= attackInterval)
             {
                 CurrentState = UnitState.Attacking;
-                if (_animator != null) await _animator.PlayAttackAsync(token);
+                if (animator != null) await animator.PlayAttackAsync(token);
                 ExecuteAttack();
                 
                 _attackTimer = 0f;
@@ -195,7 +260,7 @@ public abstract class UnitBase : MonoBehaviour
             else
             {
                 CurrentState = UnitState.Idle;
-                if (_animator != null) _animator.PlayIdle();
+                if (animator != null) animator.PlayIdle();
                 
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                     return;
@@ -206,11 +271,13 @@ public abstract class UnitBase : MonoBehaviour
     private float GetCurrentAttackInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float rowSpeedMult   = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float tribeSpeedMult = Mathf.Max(1f + (Manager.LevelUp?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
         float interval = UpgradedAttackInterval
                        * Manager.Buff.SpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
-                       / rowSpeedMult;
+                       / rowSpeedMult
+                       / tribeSpeedMult;
         return Mathf.Max(interval, 0.05f);
     }
 
@@ -220,7 +287,6 @@ public abstract class UnitBase : MonoBehaviour
         float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float interval = unitData.skillCooldown
                        * Manager.Buff.GaugeSpeedMultiplier
-                       * Manager.Buff.FoodSpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
         return Mathf.Max(interval, 0.05f);
@@ -249,16 +315,46 @@ public abstract class UnitBase : MonoBehaviour
     // 기존 AttackLoopAsync와 SkillLoopAsync는 제거됨
 
 
-    /// <summary>스킬 발동 — 식량 생산 + 스킬 공격. 서브클래스에서 오버라이드 가능</summary>
+    /// <summary>Adds food once per second based on the sheet currency_per_second value.</summary>
+    private void TickFoodProduction(float deltaTime)
+    {
+        if (_currency == null || unitData == null || deltaTime <= 0f) return;
+
+        _foodTimer += deltaTime;
+        if (_foodTimer < 1f) return;
+
+        float foodPerSecond = GetBaseFoodPerSecond();
+        if (foodPerSecond <= 0f)
+        {
+            _foodTimer = 0f;
+            return;
+        }
+
+        float speedMultiplier = Mathf.Max(Manager.Buff.FoodSpeedMultiplier, 0.01f);
+        int elapsedSeconds = Mathf.FloorToInt(_foodTimer);
+        float amount = foodPerSecond
+                     / speedMultiplier
+                     * Manager.Buff.FoodAmountMultiplier
+                     * elapsedSeconds;
+
+        _foodTimer -= elapsedSeconds;
+
+        if (amount > 0f)
+            _currency.AddCurrency(amount);
+    }
+
+    private float GetBaseFoodPerSecond()
+    {
+        if (Manager.GameData != null && Manager.GameData.IsLoaded)
+            return Manager.GameData.GetCurrencyPerSecond(unitData.characterId);
+
+        float cooldown = Mathf.Max(unitData.skillCooldown, 0.01f);
+        return unitData.foodPerTick / cooldown;
+    }
+
     protected virtual void OnSkillFull()
     {
         onSkillFull?.Invoke();
-
-        // 재화 생산량: 시트 currency_per_second × skillCooldown. 미로드 시 SO foodPerTick 폴백
-        float foodAmount = Manager.GameData != null && Manager.GameData.IsLoaded
-            ? Manager.GameData.GetCurrencyPerSecond(unitData.characterId) * unitData.skillCooldown
-            : unitData.foodPerTick;
-        _currency.AddCurrency(foodAmount * Manager.Buff.FoodAmountMultiplier);
 
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
@@ -391,6 +487,9 @@ public abstract class UnitBase : MonoBehaviour
     protected void LaunchProjectile()
     {
         var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
+
+        if (gameObject == null) return;
+
         if (bossArea != null && Manager.Projectile != null)
             Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }

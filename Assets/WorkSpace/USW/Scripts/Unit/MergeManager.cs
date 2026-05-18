@@ -5,8 +5,8 @@ using UnityEngine;
 /// <summary>
 /// 합성 시스템.
 ///
-/// 조건: 동일 unitType + 동일 UnitTier 유닛이 필드에 3마리 이상
-/// 결과: 3마리 제거 → 다음 tier 랜덤 유닛 1마리 스폰 (첫 번째 빈 칸)
+/// 조건: 동일 unitType + 동일 UnitTier 유닛이 필드에 2마리 이상
+/// 결과: 2마리 제거 → 다음 tier 랜덤 유닛 1마리 스폰 (첫 번째 빈 칸)
 ///
 /// 도메인 이벤트 (InGameInstaller가 UI에 연결)
 ///   OnUnitSelected(unit, canMerge) — 유닛 선택됨
@@ -60,14 +60,7 @@ public class MergeManager : InGameSingleton<MergeManager>
         spawnCell.TryPlaceUnit(newUnit);
         newUnit.transform.SetParent(spawnCell.transform, false);
 
-        var rt = newUnit.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new Vector2(0.5f, 0.5f);
-            rt.pivot            = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = Vector2.zero;
-        }
+        Manager.UnitFactory.InitUnitRectTransform(newUnit);
 
         var drag = newUnit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(spawnCell);
@@ -91,7 +84,7 @@ public class MergeManager : InGameSingleton<MergeManager>
     {
         if (unit?.unitData == null) return false;
         if (unit.unitData.unitTier == Tier.Legend) return false;
-        return GetMergeTargets(unit).Count >= 3;
+        return GetMergeTargets(unit).Count >= 2;
     }
 
     private List<(UnitBase unit, GridCell cell)> GetMergeTargets(UnitBase unit)
@@ -106,7 +99,7 @@ public class MergeManager : InGameSingleton<MergeManager>
                 u.unitData.unitTier == unit.unitData.unitTier)
             {
                 result.Add((u, cell));
-                if (result.Count >= 3) break;
+                if (result.Count >= 2) break;
             }
         }
         return result;

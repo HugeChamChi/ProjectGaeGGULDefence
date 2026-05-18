@@ -54,7 +54,6 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         base.Awake();
         confirmButton?.onClick.AddListener(OnConfirmClicked);
         SetConfirmInteractable(false);
-        gameObject.SetActive(false);
     }
 
     // ── 열기 ───────────────────────────────────────────────────
@@ -67,6 +66,12 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         SetConfirmInteractable(false);
 
         var choices = GetRandomChoices(ChoiceCount);
+        if (choices.Count == 0)
+        {
+            onChoiceMade?.Invoke();
+            return;
+        }
+
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);
@@ -136,7 +141,13 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             }
 
             // 타임아웃 — 첫 번째 카드 자동 선택
-            if (_selectedCard == null && _spawnedCards.Count > 0)
+            if (_spawnedCards.Count == 0)
+            {
+                Hide();
+                return;
+            }
+
+            if (_selectedCard == null)
             {
                 _selectedCard = _spawnedCards[0];
                 _selectedCard.Select();

@@ -17,8 +17,8 @@ public class UI_BossIcon : MonoBehaviour
         Manager.Boss.OnBossEntryed -= ChangeIcon;
     }
 
-    private void ChangeIcon(BossEntry entry)
+    private void ChangeIcon(BossEntry currentEntry, BossEntry nextEntry)
     {
-        _imgBossIcon.sprite = entry.bossIcon;
+        _imgBossIcon.sprite = nextEntry.bossIcon;
     }
 }

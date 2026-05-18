@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 /// <summary>
 /// 모든 토템의 기반 클래스
@@ -13,6 +14,7 @@ public abstract class TotemBase : MonoBehaviour
 {
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
+    [SerializeField] private   Image          _image;
 
     public TotemData Data        => totemData;
 
@@ -27,6 +29,8 @@ public abstract class TotemBase : MonoBehaviour
     {
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (_image == null)
+            _image = GetComponentInChildren<Image>();
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -48,6 +52,7 @@ public abstract class TotemBase : MonoBehaviour
         // 토템 목록에 등록 (FindObjectsOfType 대체)
         Manager.Buff.RegisterTotem(this);
         Manager.Buff.RebuildCellBuffFlags();
+        Manager.Population?.Add(1);
 
         Debug.Log($"[토템] {totemData.totemName} 배치 @ {cell.GridPosition}");
     }
@@ -55,6 +60,9 @@ public abstract class TotemBase : MonoBehaviour
     public void OnRemoved()
     {
         if (!IsActive) return;
+
+        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
+            Manager.Grid.ClearTotemRangePreview();
 
         IsActive    = false;
         CurrentCell = null;
@@ -64,6 +72,7 @@ public abstract class TotemBase : MonoBehaviour
         // 토템 목록에서 해제
         Manager.Buff.UnregisterTotem(this);
         Manager.Buff.RebuildCellBuffFlags();
+        Manager.Population?.Remove(1);
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
     }
@@ -77,17 +86,27 @@ public abstract class TotemBase : MonoBehaviour
         RotationStep = (RotationStep + 1) % 4;
         UpdateSprite();
         Manager.Buff.RebuildCellBuffFlags();
+
+        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
+            Manager.Grid.ShowTotemRangePreview(this);
     }
 
     private void UpdateSprite()
     {
-        if (_spriteRenderer == null || totemData == null) return;
+        if (totemData == null) return;
         var arr = totemData.rotationSprites;
-        Sprite s = null;
+        Sprite s = totemData.DisplaySprite;
         if (arr != null && arr.Length > RotationStep) s = arr[RotationStep];
-        if (s == null && arr != null && arr.Length > 0) s = arr[0];
-        if (s == null) s = totemData.icon;
-        if (s != null) _spriteRenderer.sprite = s;
+        if (s == null) return;
+
+        if (_spriteRenderer != null)
+            _spriteRenderer.sprite = s;
+
+        if (_image != null)
+        {
+            _image.sprite = s;
+            _image.preserveAspect = true;
+        }
     }
 
     /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>

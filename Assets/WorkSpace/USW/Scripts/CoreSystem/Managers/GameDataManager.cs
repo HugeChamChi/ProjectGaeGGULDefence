@@ -49,6 +49,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     private const string GidBoss       = "1622284954";
     private const string GidExpTable   = "499762901";
     private const string GidTotem      = "660087267";
+    private const string GidCharacter  = "1454519483";
 
     public bool   IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -77,6 +78,9 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     // ── 토템 데이터 ───────────────────────────────────────
     private readonly Dictionary<int, TotemSheetRow> _totemRows = new();
 
+    // ── 캐릭터 데이터 (성장) ───────────────────────────────
+    private readonly Dictionary<(int, int), CharacterSheetRow> _characterData = new();
+
     // ── 초기화 ────────────────────────────────────────────
 
     private async UniTaskVoid Start()
@@ -87,14 +91,15 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
     private async UniTask LoadAllAsync(CancellationToken token)
     {
-        var (csv0, csv1, csv2, csv3, csv4, csv5, csv6) = await UniTask.WhenAll(
+        var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7) = await UniTask.WhenAll(
             FetchCsvAsync(GidSummonCost, token),
             FetchCsvAsync(GidSpawnRate,  token),
             FetchCsvAsync(GidSellPrice,  token),
             FetchCsvAsync(GidCurrency,   token),
             FetchCsvAsync(GidBoss,       token),
             FetchCsvAsync(GidExpTable,   token),
-            FetchCsvAsync(GidTotem,      token)
+            FetchCsvAsync(GidTotem,      token),
+            FetchCsvAsync(GidCharacter,  token)
         );
 
         if (csv0 != null) ParseSummonCost(csv0);
@@ -104,6 +109,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         if (csv4 != null) ParseBossData(csv4);
         if (csv5 != null) ParseExpTable(csv5);
         if (csv6 != null) ParseTotemData(csv6);
+        if (csv7 != null) ParseCharacterData(csv7);
 
         IsLoaded = true;
         OnLoaded?.Invoke();
@@ -456,6 +462,46 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     public TotemSheetRow GetTotemRow(int totemId)
         => _totemRows.TryGetValue(totemId, out var row) ? row : null;
 
+    /// <summary>캐릭터ID와 레벨 기준 시트 데이터 반환</summary>
+    public CharacterSheetRow GetCharacterRow(int charId, int level)
+        => _characterData.TryGetValue((charId, level), out var row) ? row : null;
+
+    // ── 캐릭터 데이터 파싱 ──────────────────────────────────
+
+    private void ParseCharacterData(string csv)
+    {
+        var lines = csv.Split('\n');
+
+        for (int i = 5; i < lines.Length; i++)
+        {
+            var cols = ParseCsvRow(lines[i]);
+            if (cols.Length < 12 || string.IsNullOrWhiteSpace(cols[0])) continue;
+
+            if (!int.TryParse(cols[0], out int id)) continue;
+            if (!int.TryParse(cols[5], out int level)) continue;
+
+            var row = new CharacterSheetRow
+            {
+                CharacterId      = id,
+                Name             = cols[1],
+                Grade            = cols[4],
+                Level            = level,
+                Atk              = ParseFloat(cols[6]),
+                AttackSpeed      = ParseFloat(cols[7]),
+                SkillAtk         = ParseFloat(cols[8]),
+                SkillCooldown    = ParseFloat(cols[9]),
+                SkillName        = cols[10],
+                SkillDescription = cols[11],
+            };
+
+            _characterData[(id, level)] = row;
+        }
+        Debug.Log($"[GameDataManager] 캐릭터 데이터 {_characterData.Count}행 로드 완료");
+    }
+
+    private static float ParseFloat(string v)
+        => float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f) ? f : 0f;
+
     // ── 내부 데이터 클래스 ────────────────────────────────
 
     private class BossSheetRow
@@ -465,6 +511,20 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         public int   MaxHealth;
         public float DropExpPerHealth;
         public float DropExpAmount;
+    }
+
+    public class CharacterSheetRow
+    {
+        public int    CharacterId;
+        public string Name;
+        public string Grade;
+        public int    Level;
+        public float  Atk;
+        public float  AttackSpeed;
+        public float  SkillAtk;
+        public float  SkillCooldown;
+        public string SkillName;
+        public string SkillDescription;
     }
 
     /// <summary>

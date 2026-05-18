@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Ninja_Rare
   m_EditorClassIdentifier: 
-  characterId: 1010
-  unitType: 1010
+  characterId: 1009
+  unitType: 1009
   unitName: Frog_Ninja
   unitTier: 1
   unitTribe: 2
@@ -22,7 +22,9 @@ MonoBehaviour:
   description: 
   attackSoundAddress: 03.Ninja_attack
   atk: 210
+  attackSpeed: 0
   skillAtk: 630
   skillCooldown: 8.5
+  skillName: 
   foodPerTick: 10
   populationCost: 1

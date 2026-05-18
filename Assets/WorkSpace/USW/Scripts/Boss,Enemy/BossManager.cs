@@ -15,10 +15,12 @@ public class BossManager : InGameSingleton<BossManager>
     [SerializeField] private Vector2 bossSize = new Vector2(300f, 300f);
 
     private readonly List<BossBase> _currentBosses = new List<BossBase>();
+    private BossEntry _prevBossEntry;
 
     public IReadOnlyList<BossBase> CurrentBosses => _currentBosses;
     public BossBase CurrentBoss => _currentBosses.Count > 0 ? _currentBosses[0] : null;
-    public Action<BossEntry> OnBossEntryed;
+    public BossEntry PrevBossEntry => _prevBossEntry;
+    public Action<BossEntry, BossEntry> OnBossEntryed; // Changed to pass both prev and current
 
     // ── 외부 API ──────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ public class BossManager : InGameSingleton<BossManager>
         {
             BossPatternController.Instance.UnregisterBoss(boss);
             _currentBosses.Remove(boss);
+            Destroy(boss.gameObject);
             onDefeated?.Invoke();
         };
 
@@ -71,7 +74,8 @@ public class BossManager : InGameSingleton<BossManager>
         BossPatternController.Instance.RegisterBoss(boss, boss.Patterns);
         Manager.UI.UpdateBossHp(boss.CurrentHp, boss.MaxHp);
 
-        OnBossEntryed?.Invoke(entry);
+        OnBossEntryed?.Invoke(_prevBossEntry, entry);
+        _prevBossEntry = entry;
         Debug.Log($"[BossManager] 보스 소환: {entry.prefab.name} (HP: {entry.hp})");
     }
 

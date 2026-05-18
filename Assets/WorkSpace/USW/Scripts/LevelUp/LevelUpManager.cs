@@ -26,6 +26,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 {
     [SerializeField] private LevelUpData[] levelUpPool;
 
+    private readonly HashSet<int> _chosenIds = new();
+
     // ── 기본 스탯 ──────────────────────────────────────────────
     public float CritChance           { get; private set; } = 0f;
     public float CritDamageMultiplier { get; private set; } = 1.5f;
@@ -50,6 +52,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
     public float GunnerAtkBonus      { get; private set; } = 0f;
     public float GunnerSpeedBonus    { get; private set; } = 0f;
     public float WizardAtkBonus      { get; private set; } = 0f;
+    public float WizardSpeedBonus    { get; private set; } = 0f;
     public float WizardCooldownBonus { get; private set; } = 0f; // 양수=쿨타임 감소(빠름)
 
     public float GetTribeAtkBonus(UnitTribe tribe) => tribe switch
@@ -62,9 +65,10 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
     public float GetTribeSpeedBonus(UnitTribe tribe) => tribe switch
     {
-        UnitTribe.Ninja  => NinjaSpeedBonus,
-        UnitTribe.Gunner => GunnerSpeedBonus,
-        _                => 0f,
+        UnitTribe.Ninja   => NinjaSpeedBonus,
+        UnitTribe.Gunner  => GunnerSpeedBonus,
+        UnitTribe.Wizard  => WizardSpeedBonus,
+        _                 => 0f,
     };
 
     public float GetWizardCooldownBonus() => WizardCooldownBonus;
@@ -121,7 +125,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
         foreach (var data in levelUpPool)
         {
-            if (data != null && IsApplicable(data, presentTribes))
+            if (data != null && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
         }
 
@@ -185,6 +189,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
     public void ApplyEffect(LevelUpData data)
     {
+        _chosenIds.Add(data.chooseId);
         ApplyStatEffect(data.primaryEffect,   data.primaryValue);
         ApplyStatEffect(data.secondaryEffect, data.secondaryValue);
         ApplySpecialEffect(data);
@@ -382,8 +387,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
             case LevelUpSpecialEffect.WizardPhysicalMode:
                 HasWizardPhysicalMode = true;
-                Manager.Buff.AddLevelUpAttackBuff(data.primaryValue / 100f);
-                Manager.Buff.AddLevelUpSpeedBuff(data.primaryValue  / 100f);
+                WizardAtkBonus   += data.primaryValue / 100f;
+                WizardSpeedBonus += data.primaryValue / 100f;
                 break;
 
             case LevelUpSpecialEffect.UnemployedFoodNegate:
@@ -426,7 +431,9 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         var rt = unit.GetComponent<UnityEngine.RectTransform>();
         if (rt != null)
         {
-            rt.anchorMin = rt.anchorMax = rt.pivot = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.anchorMin        = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new UnityEngine.Vector2(0.5f, 0.5f);
+            rt.pivot            = new UnityEngine.Vector2(0.5f, 0f);
             rt.anchoredPosition = UnityEngine.Vector2.zero;
         }
 

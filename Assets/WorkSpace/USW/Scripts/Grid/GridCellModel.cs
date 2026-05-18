@@ -27,6 +27,8 @@ public class GridCellModel
     public bool  TotemAttackDisabled  { get; private set; }         // OverWelm 상3칸 공격불가
     public float TotemAttackModifier  { get; private set; } = 1f;   // OverWelm 하1칸 공격력 증폭
     public bool  NullifyDamageDebuff  { get; private set; }         // 제한해제 토템 — 보스 데미지 감소 무효
+    public bool  IsTotemRangePreviewed         { get; private set; }
+    public bool  IsTotemDisabledRangePreviewed { get; private set; }
 
     // ── 보스 패턴 상태 (신규) ──────────────────────────────────
     public bool  IsSealed         { get; private set; }  // 셀 봉인 — 배치 불가
@@ -73,6 +75,22 @@ public class GridCellModel
         TotemAttackDisabled = false;
         TotemAttackModifier = 1f;
         NullifyDamageDebuff = false;
+        OnStateChanged?.Invoke();
+    }
+
+    public void SetTotemRangePreview(bool effectRange, bool disabledRange)
+    {
+        IsTotemRangePreviewed         = effectRange;
+        IsTotemDisabledRangePreviewed = disabledRange;
+        OnStateChanged?.Invoke();
+    }
+
+    public void ClearTotemRangePreview()
+    {
+        if (!IsTotemRangePreviewed && !IsTotemDisabledRangePreviewed) return;
+
+        IsTotemRangePreviewed         = false;
+        IsTotemDisabledRangePreviewed = false;
         OnStateChanged?.Invoke();
     }
 

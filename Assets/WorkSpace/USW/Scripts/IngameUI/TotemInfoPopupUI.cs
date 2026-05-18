@@ -79,8 +79,10 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     [SerializeField] private Color colorLegendary = new Color(0.859f, 0.588f, 0.016f, 1f);
 
     // ─── Constants ────────────────────────────────────────────────────
-    private const int GridHalf = 3;
-    private const int GridDim  = 7;
+    private const int GridCols = 6;
+    private const int GridRows = 4;
+    private const int TotemCol = 3;
+    private const int TotemRow = 2;
 
     private readonly List<Image> _cells = new();
     private TotemBase       _currentTotem;
@@ -148,6 +150,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
         if (_currentTotem == null) return;
         var data = _currentTotem.Data;
         if (data == null) return;
+        EnsureGridBuilt();
 
         var sheet = _gameData?.GetTotemRow(data.totemId);
 
@@ -168,8 +171,9 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     private void ApplyIcon(TotemData data)
     {
         if (totemIconImage == null) return;
-        totemIconImage.sprite  = data.icon;
-        totemIconImage.enabled = data.icon != null;
+        var sprite = data.DisplaySprite;
+        totemIconImage.sprite  = sprite;
+        totemIconImage.enabled = sprite != null;
     }
 
     private void ApplyNameAndGrade(string name, Tier grade)
@@ -197,9 +201,48 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     private void BuildGrid()
     {
-        if (rangeCellPrefab == null) return;
-        for (int i = 0; i < GridDim * GridDim; i++)
-            _cells.Add(Instantiate(rangeCellPrefab, rangeGridContainer));
+        ClearGrid();
+        if (rangeGridContainer == null) return;
+
+        for (int i = 0; i < GridCols * GridRows; i++)
+        {
+            Image cellImage;
+            if (rangeCellPrefab != null)
+            {
+                cellImage = Instantiate(rangeCellPrefab, rangeGridContainer);
+            }
+            else
+            {
+                var go = new GameObject($"RangeCell_{i}", typeof(RectTransform), typeof(Image));
+                go.transform.SetParent(rangeGridContainer, false);
+                cellImage = go.GetComponent<Image>();
+            }
+            cellImage.color = colorDefault;
+            _cells.Add(cellImage);
+        }
+    }
+
+    private void EnsureGridBuilt()
+    {
+        if (_cells.Count == GridCols * GridRows) return;
+        BuildGrid();
+    }
+
+    private void ClearGrid()
+    {
+        _cells.Clear();
+        if (rangeGridContainer == null) return;
+
+        for (int i = rangeGridContainer.childCount - 1; i >= 0; i--)
+        {
+            var child = rangeGridContainer.GetChild(i).gameObject;
+            if (Application.isPlaying)
+            {
+                child.SetActive(false);
+                Destroy(child);
+            }
+            else DestroyImmediate(child);
+        }
     }
 
     private void RefreshGrid(TotemData data, GameDataManager.TotemSheetRow sheet)
@@ -207,7 +250,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
         for (int i = 0; i < _cells.Count; i++)
             _cells[i].color = colorDefault;
 
-        _cells[GridHalf * GridDim + GridHalf].color = colorCenter;
+        _cells[TotemRow * GridCols + TotemCol].color = colorCenter;
 
         var effectRange   = (sheet?.EffectRange?.Count   > 0) ? sheet.EffectRange   : data.effectRange;
         var disabledRange = (sheet?.AttackDisabledRange?.Count > 0) ? sheet.AttackDisabledRange : data.attackDisabledRange;
@@ -227,14 +270,14 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     private bool TryGetIndex(Vector2Int offset, out int index)
     {
-        int col = GridHalf + offset.x;
-        int row = GridHalf + offset.y;
-        if (col < 0 || col >= GridDim || row < 0 || row >= GridDim)
+        int col = TotemCol + offset.x;
+        int row = TotemRow + offset.y;
+        if (col < 0 || col >= GridCols || row < 0 || row >= GridRows)
         {
             index = -1;
             return false;
         }
-        index = row * GridDim + col;
+        index = row * GridCols + col;
         return true;
     }
 

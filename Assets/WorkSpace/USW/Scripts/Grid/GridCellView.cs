@@ -16,13 +16,9 @@ public class GridCellView : MonoBehaviour
     [SerializeField] private Image cellImage;
 
     // ── 색상 정의 ──────────────────────────────────────────────
-    // 토템 버프
-    private static readonly Color ColorAtk    = new Color(1.0f, 0.15f, 0.15f, 0.85f); // 빨강 (공격력)
-    private static readonly Color ColorSpd    = new Color(1.0f, 0.55f, 0.0f,  0.85f); // 주황 (속도)
-    private static readonly Color ColorBoth   = new Color(1.0f, 0.39f, 0.0f,  0.85f); // 중간 (둘 다)
-    private static readonly Color ColorFood   = new Color(0.1f, 0.8f,  0.1f,  0.85f); // 초록 (식량 속도)
-    private static readonly Color ColorTotemBoost   = new Color(1.0f, 0.85f, 0.0f,  0.85f); // 금색 (OverWelm 하1칸 공격력 증폭)
-    private static readonly Color ColorTotemDisable = new Color(0.0f, 0.75f, 0.75f, 0.85f); // 청록 (OverWelm 상3칸 공격불가)
+    // 토템 범위 프리뷰
+    private static readonly Color ColorTotemPreviewEffect   = new Color(1.0f, 0.0f, 0.0f, 0.85f);
+    private static readonly Color ColorTotemPreviewDisabled = new Color(0.0f, 0.0f, 0.0f, 0.85f);
 
     // 보스 패턴 디버프
     private static readonly Color ColorSealed  = new Color(0.3f, 0.3f, 0.3f, 0.90f); // 짙은 회색 (봉인)
@@ -83,6 +79,18 @@ public class GridCellView : MonoBehaviour
     {
         if (cellImage == null || _model == null) return;
 
+        if (_model.IsTotemDisabledRangePreviewed)
+        {
+            cellImage.color = ColorTotemPreviewDisabled;
+            return;
+        }
+
+        if (_model.IsTotemRangePreviewed)
+        {
+            cellImage.color = ColorTotemPreviewEffect;
+            return;
+        }
+
         // 보스 패턴 디버프 우선순위 높음
         if (_model.IsSealed)
         {
@@ -102,29 +110,6 @@ public class GridCellView : MonoBehaviour
             return;
         }
 
-        // 토템 전용 효과 (보스 패턴 없을 때)
-        if (_model.TotemAttackDisabled)
-        {
-            cellImage.color = ColorTotemDisable;
-            return;
-        }
-
-        if (_model.TotemAttackModifier > 1f)
-        {
-            cellImage.color = ColorTotemBoost;
-            return;
-        }
-
-        if (_model.HasFoodBuff)
-        {
-            cellImage.color = ColorFood;
-            return;
-        }
-
-        // 기존 공격력/속도 버프
-        if      (_model.HasAttackBuff && _model.HasSpeedBuff) cellImage.color = ColorBoth;
-        else if (_model.HasAttackBuff)                        cellImage.color = ColorAtk;
-        else if (_model.HasSpeedBuff)                         cellImage.color = ColorSpd;
-        else                                                  cellImage.color = _originalColor;
+        cellImage.color = _originalColor;
     }
 }

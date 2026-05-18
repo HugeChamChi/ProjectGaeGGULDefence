@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Frog_Rare
   m_EditorClassIdentifier: 
-  characterId: 1002
-  unitType: 1002
+  characterId: 1001
+  unitType: 1001
   unitName: Frog
   unitTier: 1
   unitTribe: 0
@@ -22,7 +22,9 @@ MonoBehaviour:
   description: 
   attackSoundAddress: 03.Frog_attack
   atk: 180
+  attackSpeed: 0
   skillAtk: 525
   skillCooldown: 11.4
+  skillName: 
   foodPerTick: 10
   populationCost: 1

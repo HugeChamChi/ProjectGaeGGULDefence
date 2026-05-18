@@ -10,7 +10,7 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
     // 공격력 배율 = 1 + 토템 누산 + 레벨업 누산
     private float _totemAttackBonus   = 0f;
     private float _levelUpAttackBonus = 0f;
-    public float AttackMultiplier => 1f + _totemAttackBonus + _levelUpAttackBonus;
+    public float AttackMultiplier => Mathf.Max(0.01f, 1f + _totemAttackBonus + _levelUpAttackBonus);
 
     // 속도 배율 (낮을수록 빠름) = Max(0.1, 1 - 토템 누산 - 레벨업 누산)
     private float _totemSpeedBonus   = 0f;

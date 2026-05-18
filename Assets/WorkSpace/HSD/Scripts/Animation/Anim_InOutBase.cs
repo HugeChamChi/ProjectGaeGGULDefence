@@ -30,6 +30,13 @@ namespace GaeGGUL.Animation
         [Button]
         public abstract UniTask PlayOut();
 
+        [Button]
+        public async UniTask PlayInOut()
+        {
+            await PlayIn();
+            await PlayOut();
+        }
+
         public override void Stop()
         {
             KillCurrentTween();

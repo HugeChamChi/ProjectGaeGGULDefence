@@ -63,8 +63,8 @@ namespace GaeGGUL.UI.Unit
         {
             _view.UpdateBasicInfo(
                 data.unitName, 
-                data.unitName,
-                data.description, 
+                data.skillName,
+                data.description,
                 data.icon,
                 data.unitTier
             );

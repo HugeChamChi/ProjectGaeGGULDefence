@@ -63,11 +63,7 @@ public class TotemSelectCardUI : MonoBehaviour
     private void Awake()
     {
         button?.onClick.AddListener(() => _onClicked?.Invoke(this));
-    }
-
-    private void Start()
-    {
-        BuildGrid();
+        CollectOrBuildGrid();
     }
 
     // ── 초기화 ─────────────────────────────────────────────────
@@ -76,11 +72,13 @@ public class TotemSelectCardUI : MonoBehaviour
     {
         _data      = data;
         _onClicked = onClicked;
+        EnsureGridBuilt();
 
         if (iconImage != null)
         {
-            iconImage.sprite  = data?.icon;
-            iconImage.enabled = data?.icon != null;
+            var sprite = data != null ? data.DisplaySprite : null;
+            iconImage.sprite  = sprite;
+            iconImage.enabled = sprite != null;
         }
 
         if (nameText        != null) nameText.text        = data?.totemName   ?? string.Empty;
@@ -122,9 +120,32 @@ public class TotemSelectCardUI : MonoBehaviour
 
     // ── 범위 그리드 ────────────────────────────────────────────
 
+    /// <summary>프리팹에 미리 구성된 셀을 재사용하거나, 없으면 동적으로 생성.</summary>
+    private void CollectOrBuildGrid()
+    {
+        if (rangeGridContainer == null) return;
+
+        int expected = GridCols * GridRows;
+
+        // 기존 자식 Image 수집 시도 (파괴 없이 재사용)
+        _cells.Clear();
+        for (int i = 0; i < rangeGridContainer.childCount; i++)
+        {
+            var img = rangeGridContainer.GetChild(i).GetComponent<Image>();
+            if (img != null) _cells.Add(img);
+        }
+
+        if (_cells.Count == expected) return;
+
+        // 수가 맞지 않으면 새로 빌드
+        BuildGrid();
+    }
+
     private void BuildGrid()
     {
         if (rangeGridContainer == null) return;
+
+        ClearGrid();
 
         for (int i = 0; i < GridCols * GridRows; i++)
         {
@@ -135,6 +156,29 @@ public class TotemSelectCardUI : MonoBehaviour
             img.color  = colorDefault;
             _cells.Add(img);
         }
+    }
+
+    private void EnsureGridBuilt()
+    {
+        if (_cells.Count == GridCols * GridRows) return;
+        CollectOrBuildGrid();
+    }
+
+    private void ClearGrid()
+    {
+        if (rangeGridContainer == null) return;
+
+        for (int i = rangeGridContainer.childCount - 1; i >= 0; i--)
+        {
+            var child = rangeGridContainer.GetChild(i).gameObject;
+            if (Application.isPlaying)
+            {
+                child.SetActive(false);
+                Destroy(child);
+            }
+            else DestroyImmediate(child);
+        }
+        _cells.Clear();
     }
 
     private void RefreshGrid(TotemData data)
