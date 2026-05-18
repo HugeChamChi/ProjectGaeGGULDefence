@@ -23,6 +23,7 @@ public class GameManager : InGameSingleton<GameManager>
 
         Manager.Timer.OnTimeUp += HandleTimeUp;
         Manager.Timer.StartTimer(config.countdownSeconds);
+        BossBase.OnAnyBossDied += HandleBossKilled;
 
         Manager.Currency.AddCurrency(config.startingFood);
         Manager.Exp.OnLevelUp += HandleLevelUp;
@@ -48,6 +49,8 @@ public class GameManager : InGameSingleton<GameManager>
         EndGame(true);
     }
 
+    private void HandleBossKilled() => Manager.Timer.StartTimer(config.countdownSeconds);
+
     private void HandleTimeUp()
     {
         if (CurrentState != GameState.Playing) return;
@@ -57,6 +60,7 @@ public class GameManager : InGameSingleton<GameManager>
 
     private void EndGame(bool isWin)
     {
+        BossBase.OnAnyBossDied -= HandleBossKilled;
         Manager.Timer.StopTimer();
         StopAllUnits();
         Manager.UI.ShowResult(isWin);
