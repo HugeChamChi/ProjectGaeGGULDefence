@@ -20,7 +20,7 @@ namespace GaeGGUL.UI.Unit
         }
     }
 
-    public class UI_UnitInfoPanel : MonoBehaviour
+    public class UI_UnitInfoPanel : UI_Base
     {
         [Header("Basic Info")]
         [SerializeField] private UI_IconTierSlot iconSlot;
@@ -33,8 +33,9 @@ namespace GaeGGUL.UI.Unit
 
         private UI_UnitInfoPresenter _presenter;
 
-        protected void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             EnsurePresenter();
         }
 
@@ -43,14 +44,14 @@ namespace GaeGGUL.UI.Unit
             if (unit == null) return;
             EnsurePresenter();
             _presenter.SetUnitData(unit);
-            gameObject.SetActive(true);
+            Open();
         }
 
         public void SetData(UnitData data)
         {
             EnsurePresenter();
             _presenter.SetUnitData(data);
-            gameObject.SetActive(true);
+            Open();
         }
 
         private void EnsurePresenter()

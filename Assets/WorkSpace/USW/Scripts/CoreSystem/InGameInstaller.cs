@@ -9,6 +9,7 @@ public class InGameInstaller : MonoBehaviour
     [SerializeField] private UnitActionPopupUI _unitActionPopup;
     [SerializeField] private MergeButtonUI     _mergeButton;
     [SerializeField] private SellButtonUI      _sellButton;
+    [SerializeField] private GaeGGUL.UI.Unit.UI_UnitInfoPanel _unitInfoPanel;
 
     [Header("Totem Action Popup")]
     [SerializeField] private TotemActionPopupUI  _totemActionPopup;
@@ -27,14 +28,22 @@ public class InGameInstaller : MonoBehaviour
         if (_unitActionPopup == null) { Debug.LogError("[InGameInstaller] _unitActionPopup 미연결"); return; }
         if (_mergeButton     == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
         if (_sellButton      == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
+        if (_unitInfoPanel   == null) Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결");
         if (Manager.Merge    == null) { Debug.LogError("[InGameInstaller] Manager.Merge null — MergeManager 씬에 없음"); return; }
 
         Manager.Merge.OnUnitSelected     += _unitActionPopup.Show;
+        Manager.Merge.OnUnitSelected     += HandleUnitSelected;
         Manager.Merge.OnSelectionCleared += _unitActionPopup.Hide;
+        Manager.Merge.OnSelectionCleared += _unitInfoPanel.Close;
 
         _mergeButton.OnMergeRequested           += Manager.Merge.ExecuteMerge;
         _sellButton.OnSellRequested             += OnSellUnitRequested;
         _unitActionPopup.OnDismissRequested     += Manager.Merge.ClearSelection;
+    }
+
+    private void HandleUnitSelected(UnitBase unit, bool canMerge)
+    {
+        _unitInfoPanel.SetData(unit);
     }
 
     private void OnSellUnitRequested(UnitBase unit)
@@ -68,7 +77,9 @@ public class InGameInstaller : MonoBehaviour
         if (merge != null)
         {
             merge.OnUnitSelected                    -= _unitActionPopup.Show;
+            merge.OnUnitSelected                    -= HandleUnitSelected;
             merge.OnSelectionCleared                -= _unitActionPopup.Hide;
+            merge.OnSelectionCleared                -= _unitInfoPanel.Close;
             _mergeButton.OnMergeRequested           -= merge.ExecuteMerge;
             _unitActionPopup.OnDismissRequested     -= merge.ClearSelection;
         }
