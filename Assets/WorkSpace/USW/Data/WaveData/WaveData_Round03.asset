@@ -17,4 +17,4 @@ MonoBehaviour:
   - bossIcon: {fileID: 21300000, guid: 34bbc0041e0a3294fa5ba4a0d17c7bc2, type: 3}
     prefab: {fileID: 5441809936297658164, guid: 30a3b786912d99944886887d220fc159,
       type: 3}
-    hp: 80000
+    hp: 34560
