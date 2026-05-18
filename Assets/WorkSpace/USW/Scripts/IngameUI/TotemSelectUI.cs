@@ -54,7 +54,6 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         base.Awake();
         confirmButton?.onClick.AddListener(OnConfirmClicked);
         SetConfirmInteractable(false);
-        gameObject.SetActive(false);
     }
 
     // ── 열기 ───────────────────────────────────────────────────
