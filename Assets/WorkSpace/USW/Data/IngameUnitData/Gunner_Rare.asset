@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Gunner_Rare
   m_EditorClassIdentifier: 
-  characterId: 1006
-  unitType: 1006
+  characterId: 1005
+  unitType: 1005
   unitName: Frog_Gunner
   unitTier: 1
   unitTribe: 1
@@ -22,7 +22,9 @@ MonoBehaviour:
   description: 
   attackSoundAddress: 03.Gunner_attack
   atk: 225
+  attackSpeed: 0
   skillAtk: 600
   skillCooldown: 9.5
+  skillName: 
   foodPerTick: 10
   populationCost: 1

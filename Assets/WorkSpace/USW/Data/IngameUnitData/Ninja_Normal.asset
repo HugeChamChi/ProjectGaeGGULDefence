@@ -12,17 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Ninja_Normal
   m_EditorClassIdentifier: 
-  characterId: 1009
-  unitType: 1009
-  unitName: Frog_Ninja
+  characterId: 1008
+  unitType: 1008
+  unitName: "\uB808\uC5B4 \uB2CC\uAD74\uC774"
   unitTier: 0
   unitTribe: 2
   icon: {fileID: 21300000, guid: e42cbf8b1b1703e45842cfe3a5fc438f, type: 3}
   prefab: {fileID: 4914462842172424252, guid: d7709e26f5c9f8c4cb2f1c51561bfae4, type: 3}
-  description: 
+  description: "\uB098\uC0DD\uAC01 \uC218\uB9AC\uAC80!"
   attackSoundAddress: 03.Ninja_attack
-  atk: 140
-  skillAtk: 420
-  skillCooldown: 9
+  atk: 5
+  attackSpeed: 0.5
+  skillAtk: 10
+  skillCooldown: 11
+  skillName: "\uB300\uD615 \uC218\uB9AC\uAC80"
   foodPerTick: 10
   populationCost: 1

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Wizard_Normal
   m_EditorClassIdentifier: 
-  characterId: 1013
-  unitType: 1013
+  characterId: 1012
+  unitType: 1012
   unitName: Frog_Wizard
   unitTier: 0
   unitTribe: 3
@@ -22,7 +22,9 @@ MonoBehaviour:
   description: 
   attackSoundAddress: 03.Wizard_attack
   atk: 90
+  attackSpeed: 0
   skillAtk: 550
   skillCooldown: 14
+  skillName: 
   foodPerTick: 10
   populationCost: 1

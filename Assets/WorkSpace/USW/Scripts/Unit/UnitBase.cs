@@ -74,6 +74,14 @@ public abstract class UnitBase : MonoBehaviour
             return;
         }
 
+        // ── 시트 데이터 적용 (강화 레벨 반영) ──────────────────
+        if (unitData != null && Manager.GameData != null && Manager.GameData.IsLoaded)
+        {
+            // ScriptableObject 에셋 직접 수정을 방지하기 위해 인스턴스 복제 (필요 시)
+            // 여기서는 런타임에만 값을 유지하면 되므로, 데이터 동기화 수행
+            SyncStatsWithSheet();
+        }
+
         _currency    = currency;
         _boss        = boss;
         currentCell = cell;
@@ -130,6 +138,26 @@ public abstract class UnitBase : MonoBehaviour
         _loopCts?.Cancel();
         _loopCts?.Dispose();
         _loopCts = null;
+    }
+
+    /// <summary>족장 전용 공격력 버프 (3008 위엄) 추가 처리 등</summary>
+    protected virtual void SyncStatsWithSheet()
+    {
+        if (unitData == null || Manager.GameData == null || !Manager.GameData.IsLoaded) return;
+
+        // UpgradeManager에서 현재 직업의 강화 레벨 조회
+        string jobType = Manager.Upgrade?.GetJobType(unitData.characterId) ?? string.Empty;
+        int level = Manager.Upgrade != null && !string.IsNullOrEmpty(jobType)
+            ? Manager.Upgrade.GetJobLevel(jobType)
+            : 1;
+
+        // 시트 데이터 가져오기
+        var sheetRow = Manager.GameData.GetCharacterRow(unitData.characterId, level);
+        if (sheetRow != null)
+        {
+            // UnitData 인스턴스에 시트 스탯 적용
+            unitData.ApplySheetData(sheetRow);
+        }
     }
 
     // ── 통합 제어 루프 ──────────────────────────────────────────
