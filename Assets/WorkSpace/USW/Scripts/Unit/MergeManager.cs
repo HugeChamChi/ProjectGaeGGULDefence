@@ -1,18 +1,22 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
-/// 합성 시스템
+/// 합성 시스템.
 ///
 /// 조건: 동일 unitType + 동일 UnitTier 유닛이 필드에 3마리 이상
 /// 결과: 3마리 제거 → 다음 tier 랜덤 유닛 1마리 스폰 (첫 번째 빈 칸)
 ///
-/// Scene 구성:
-///   인게임 씬에 빈 GameObject + 이 컴포넌트 추가
+/// 도메인 이벤트 (InGameInstaller가 UI에 연결)
+///   OnUnitSelected(unit, canMerge) — 유닛 선택됨
+///   OnSelectionCleared             — 선택 해제됨
 /// </summary>
 public class MergeManager : InGameSingleton<MergeManager>
 {
-    // 현재 버튼이 열려있는 유닛 (toggle용)
+    public event Action<UnitBase, bool> OnUnitSelected;
+    public event Action                 OnSelectionCleared;
+
     private UnitBase _selectedUnit;
 
     // ── 외부 호출 ──────────────────────────────────────────────
@@ -20,44 +24,34 @@ public class MergeManager : InGameSingleton<MergeManager>
     /// <summary>DragHandler.OnPointerClick에서 호출</summary>
     public void OnUnitClicked(UnitBase unit)
     {
-        // 같은 유닛 재클릭 → 버튼 닫기
-        if (_selectedUnit == unit)
-        {
-            HideButton();
-            return;
-        }
+        if (unit == Manager.Chieftain?.ChieftainUnit) return;
+
+        if (_selectedUnit == unit) { ClearSelection(); return; }
 
         _selectedUnit = unit;
-        bool canMerge = CanMerge(unit);
-        UnitActionPopupUI.Instance.Show(unit, canMerge);
+        OnUnitSelected?.Invoke(unit, CanMerge(unit));
     }
 
-    /// <summary>합성 버튼 클릭 시 MergeButtonUI에서 호출</summary>
+    /// <summary>MergeButtonUI.OnMergeRequested → InGameInstaller → 이 메서드</summary>
     public void ExecuteMerge()
     {
         if (_selectedUnit == null) return;
-        if (!CanMerge(_selectedUnit))
-        {
-            HideButton();
-            return;
-        }
+        if (!CanMerge(_selectedUnit)) { ClearSelection(); return; }
 
-        var targets = GetMergeTargets(_selectedUnit);
+        var targets   = GetMergeTargets(_selectedUnit);
         var spawnCell = targets[0].cell;
         var nextTier  = (Tier)((int)_selectedUnit.unitData.unitTier + 1);
         var tribe     = _selectedUnit.unitData.unitTribe;
 
-        HideButton();
+        ClearSelection();
 
-        // 3마리 제거
         foreach (var (unit, cell) in targets)
         {
             unit.OnRemoved();
             cell.RemoveUnit();
-            Object.Destroy(unit.gameObject);
+            UnityEngine.Object.Destroy(unit.gameObject);
         }
 
-        // 다음 티어 유닛 스폰 — 진로 계승(3041) 활성화 시 같은 직업 유지
         var newUnit = Manager.LevelUp?.HasMergeKeepsTribe == true
             ? Manager.UnitFactory.CreateRandomUnitByTribeAndTier(tribe, nextTier)
             : Manager.UnitFactory.CreateRandomUnitOfTier(nextTier);
@@ -80,22 +74,25 @@ public class MergeManager : InGameSingleton<MergeManager>
 
         newUnit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, spawnCell);
 
-        Debug.Log($"[Merge] {_selectedUnit?.unitData?.unitName} 합성 완료 → {nextTier} 유닛 스폰");
+        Debug.Log($"[Merge] 합성 완료 → {nextTier} 유닛 스폰");
     }
 
-    public void HideButton()
+    /// <summary>선택 해제 및 OnSelectionCleared 이벤트 발행</summary>
+    public void ClearSelection()
     {
         _selectedUnit = null;
-        if (UnitActionPopupUI.Instance != null)
-            UnitActionPopupUI.Instance.Hide();
+        OnSelectionCleared?.Invoke();
     }
+
+    /// <summary>DragHandler 호환용 — ClearSelection 위임</summary>
+    public void HideButton() => ClearSelection();
 
     // ── 내부 로직 ──────────────────────────────────────────────
 
     public bool CanMerge(UnitBase unit)
     {
         if (unit?.unitData == null) return false;
-        if (unit.unitData.unitTier == Tier.Legend) return false; // 최고 티어는 합성 불가
+        if (unit.unitData.unitTier == Tier.Legend) return false;
         return GetMergeTargets(unit).Count >= 3;
     }
 
