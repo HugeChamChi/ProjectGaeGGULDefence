@@ -1,10 +1,8 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using Cysharp.Threading.Tasks;
-using GaeGGUL.UI.Totem;
-using GaeGGUL.UI.Common;
 using GaeGGUL.Extension;
+using GaeGGUL.UI.Common;
+using GaeGGUL.UI.Totem;
+using TMPro;
+using UnityEngine;
 
 public class UI_TotemInfoPanel : UI_Base
 {
@@ -38,7 +36,7 @@ public class UI_TotemInfoPanel : UI_Base
     public void UpdateUI(Sprite icon, string name, string stats, Tier tier, TotemData data)
     {
         if (iconSlot != null) iconSlot.SetData(icon, tier);
-        if (txt_Name != null) txt_Name.text = $"[{name}]"; txt_Name.color = tier.GetTextColor();
+        if (txt_Name != null) { txt_Name.text = $"[{name}]"; txt_Name.color = tier.GetTextColor(); }
         if (txt_Stats != null) txt_Stats.text = stats;
 
         if (rangeGrid != null)
