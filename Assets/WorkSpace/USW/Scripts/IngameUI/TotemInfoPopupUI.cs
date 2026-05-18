@@ -225,7 +225,11 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
         for (int i = rangeGridContainer.childCount - 1; i >= 0; i--)
         {
             var child = rangeGridContainer.GetChild(i).gameObject;
-            if (Application.isPlaying) Destroy(child);
+            if (Application.isPlaying)
+            {
+                child.SetActive(false);
+                Destroy(child);
+            }
             else DestroyImmediate(child);
         }
     }

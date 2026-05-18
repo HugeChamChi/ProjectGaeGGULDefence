@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 /// <summary>
 /// 모든 유닛의 기반 클래스
@@ -35,6 +36,7 @@ public abstract class UnitBase : MonoBehaviour
     protected UnitSoundController _sound;
     protected UnitVisualController _visual;
 
+    private Image _unitImage;
     private CancellationTokenSource _loopCts;
     private bool _paused = false;
 
@@ -65,9 +67,9 @@ public abstract class UnitBase : MonoBehaviour
     {
         animator = GetComponentInChildren<UnitAnimator>();
         
-        var img = GetComponent<UnityEngine.UI.Image>();
-        if (img == null) img = GetComponentInChildren<UnityEngine.UI.Image>();
-        if (img != null) _visual = new UnitVisualController(img);
+        _unitImage = GetComponent<Image>();
+        if (_unitImage == null) _unitImage = GetComponentInChildren<Image>();
+        if (_unitImage != null) _visual = new UnitVisualController(_unitImage);
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -98,6 +100,7 @@ public abstract class UnitBase : MonoBehaviour
         _currency    = currency;
         _boss        = boss;
         currentCell = cell;
+        ApplyFacingByCell();
 
         StopLoops();
         _paused = false;
@@ -127,6 +130,21 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void OnUnitPlaced()  { }
     protected virtual void OnUnitRemoved() { }
+
+    private void ApplyFacingByCell()
+    {
+        if (_unitImage == null || currentCell == null || Manager.Grid == null) return;
+
+        int halfColumn = Manager.Grid.Columns / 2;
+        bool faceLeft = currentCell.GridPosition.x >= halfColumn;
+
+        var imageTransform = _unitImage.rectTransform;
+        var scale = imageTransform.localScale;
+        float x = Mathf.Abs(scale.x);
+        if (x <= 0f) x = 1f;
+
+        imageTransform.localScale = new Vector3(faceLeft ? -x : x, scale.y, scale.z);
+    }
 
     private void OnDestroy() 
     {
