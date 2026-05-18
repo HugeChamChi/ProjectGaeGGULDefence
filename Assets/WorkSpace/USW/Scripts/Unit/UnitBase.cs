@@ -33,6 +33,8 @@ public abstract class UnitBase : MonoBehaviour
 
     public UnitAnimator animator;
     protected UnitSoundController _sound;
+    protected UnitVisualController _visual;
+
     private CancellationTokenSource _loopCts;
     private bool _paused = false;
 
@@ -61,6 +63,10 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void Awake()
     {
         animator = GetComponentInChildren<UnitAnimator>();
+        
+        var img = GetComponent<UnityEngine.UI.Image>();
+        if (img == null) img = GetComponentInChildren<UnityEngine.UI.Image>();
+        if (img != null) _visual = new UnitVisualController(img);
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -80,6 +86,12 @@ public abstract class UnitBase : MonoBehaviour
             // ScriptableObject 에셋 직접 수정을 방지하기 위해 인스턴스 복제 (필요 시)
             // 여기서는 런타임에만 값을 유지하면 되므로, 데이터 동기화 수행
             SyncStatsWithSheet();
+        }
+
+        // ── 비주얼 업데이트 (등급별 외곽선) ──────────────────
+        if (_visual != null && unitData != null)
+        {
+            _visual.UpdateVisual(unitData.unitTier);
         }
 
         _currency    = currency;
@@ -115,7 +127,11 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void OnUnitPlaced()  { }
     protected virtual void OnUnitRemoved() { }
 
-    private void OnDestroy() => StopLoops();
+    private void OnDestroy() 
+    {
+        _visual?.Cleanup();
+        StopLoops();
+    }
 
     /// <summary>인구수·셀 상태 변경 없이 공격/스킬을 일시 중단. LevelUpUI 등 전용.</summary>
     public void PauseLoops() => _paused = true;
