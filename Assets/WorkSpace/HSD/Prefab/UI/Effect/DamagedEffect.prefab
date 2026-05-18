@@ -124,8 +124,8 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-      m_ConstantMin: 15
-      m_ConstantMax: 20
+      m_ConstantMin: 6
+      m_ConstantMax: 12
     xCurve:
       m_Mode: 0
       m_CurveMultiplier: 0
@@ -1256,8 +1256,8 @@ MonoBehaviour:
   _rateOverDistance: 0
   _bursts:
   - time: 0
-    count: 10
-    used: 1
+    count: 5
+    used: 0
   _particleTrailRenderer: {fileID: 0}
   _trailModule:
     enabled: 0
@@ -1456,5 +1456,5 @@ MonoBehaviour:
   moduleMovementFoldout: 1
   moduleEventsFoldout: 0
   moduleAdvancedFoldout: 1
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 5ba5c3bd2eea84b7383a3d372c6fc579, type: 3}
   m_Texture: {fileID: 0}
