@@ -26,6 +26,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 {
     [SerializeField] private LevelUpData[] levelUpPool;
 
+    private readonly HashSet<int> _chosenIds = new();
+
     // ── 기본 스탯 ──────────────────────────────────────────────
     public float CritChance           { get; private set; } = 0f;
     public float CritDamageMultiplier { get; private set; } = 1.5f;
@@ -123,7 +125,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
         foreach (var data in levelUpPool)
         {
-            if (data != null && IsApplicable(data, presentTribes))
+            if (data != null && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
         }
 
@@ -187,6 +189,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
     public void ApplyEffect(LevelUpData data)
     {
+        _chosenIds.Add(data.chooseId);
         ApplyStatEffect(data.primaryEffect,   data.primaryValue);
         ApplyStatEffect(data.secondaryEffect, data.secondaryValue);
         ApplySpecialEffect(data);
