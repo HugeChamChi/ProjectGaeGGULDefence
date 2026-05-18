@@ -34,6 +34,7 @@ public abstract class UnitBase : MonoBehaviour
     protected UnitAnimator _animator;
     protected UnitSoundController _sound;
     private CancellationTokenSource _loopCts;
+    private bool _paused = false;
 
     // ── 상태 및 타이머 (관찰 가능) ──────────────────────────────
     public enum UnitState { Idle, Attacking, Skilling, Sealed }
@@ -78,6 +79,7 @@ public abstract class UnitBase : MonoBehaviour
         currentCell = cell;
 
         StopLoops();
+        _paused = false;
         _loopCts = new CancellationTokenSource();
         UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
 
@@ -108,16 +110,19 @@ public abstract class UnitBase : MonoBehaviour
 
     private void OnDestroy() => StopLoops();
 
-    /// <summary>인구수·셀 상태 변경 없이 공격/스킬 루프만 정지. LevelUpUI 등 일시 중단 전용.</summary>
-    public void PauseLoops() => StopLoops();
+    /// <summary>인구수·셀 상태 변경 없이 공격/스킬을 일시 중단. LevelUpUI 등 전용.</summary>
+    public void PauseLoops() => _paused = true;
 
     /// <summary>PauseLoops 이후 루프 재개. 셀·재화·보스 참조는 기존 값 유지.</summary>
     public void ResumeLoops()
     {
         if (_currency == null) return;
-        StopLoops();
-        _loopCts = new CancellationTokenSource();
-        UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        _paused = false;
+        if (_loopCts == null)
+        {
+            _loopCts = new CancellationTokenSource();
+            UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        }
     }
 
     private void StopLoops()
@@ -143,6 +148,18 @@ public abstract class UnitBase : MonoBehaviour
         // 비용 최적화: try-catch 대신 cancellationToken 상태 직접 체크
         while (!token.IsCancellationRequested)
         {
+            if (_paused)
+            {
+                if (CurrentState != UnitState.Idle)
+                {
+                    CurrentState = UnitState.Idle;
+                    _animator?.PlayIdle();
+                }
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                    return;
+                continue;
+            }
+
             if (currentCell != null && currentCell.Model.IsSealed)
             {
                 CurrentState = UnitState.Sealed;
