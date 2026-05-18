@@ -24,6 +24,11 @@ public class InGameInstaller : MonoBehaviour
 
     private void WireUnitActionPopup()
     {
+        if (_unitActionPopup == null) { Debug.LogError("[InGameInstaller] _unitActionPopup 미연결"); return; }
+        if (_mergeButton     == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
+        if (_sellButton      == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
+        if (Manager.Merge    == null) { Debug.LogError("[InGameInstaller] Manager.Merge null — MergeManager 씬에 없음"); return; }
+
         Manager.Merge.OnUnitSelected     += _unitActionPopup.Show;
         Manager.Merge.OnSelectionCleared += _unitActionPopup.Hide;
 

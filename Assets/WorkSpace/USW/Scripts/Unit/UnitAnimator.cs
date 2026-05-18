@@ -78,20 +78,24 @@ public class UnitAnimator : MonoBehaviour
     /// </summary>
     private async UniTask WaitUntilAnimationComplete(string stateName, CancellationToken token)
     {
+        // Animator 전환 블렌딩(0.25s) 동안 IsName이 false일 수 있으므로 최대 대기 프레임 제한
+        const int MaxWaitFrames = 60;
+        int waited = 0;
+
         // 1. 해당 스테이트로 전환될 때까지 대기
         while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
         {
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested || ++waited > MaxWaitFrames) return;
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                 return;
         }
 
         // 2. 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
+        waited = 0;
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
         while (stateInfo.IsName(stateName) && stateInfo.normalizedTime < 1.0f)
         {
-            if (token.IsCancellationRequested) return;
-            
+            if (token.IsCancellationRequested || ++waited > MaxWaitFrames) return;
             stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                 return;

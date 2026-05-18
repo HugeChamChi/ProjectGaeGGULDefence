@@ -35,11 +35,14 @@ public class UnitActionPopupUI : MonoBehaviour
 
     public void Show(UnitBase unit, bool canMerge)
     {
-        if (_rect == null) return;
+        if (_rect == null) { Debug.LogError("[UnitActionPopupUI] _rect is null — RectTransform 없음"); return; }
+        if (mergeButton == null) { Debug.LogError("[UnitActionPopupUI] mergeButton 미연결 (Inspector 확인)"); return; }
+        if (sellButton  == null) { Debug.LogError("[UnitActionPopupUI] sellButton 미연결 (Inspector 확인)"); return; }
         _justShown = true;
 
         mergeButton.SetState(canMerge);
         sellButton.SetUnit(unit);
+        if (rootCanvas == null) Debug.LogWarning("[UnitActionPopupUI] rootCanvas 미연결 — 팝업 위치 (0,0) 고정");
         PositionAtCenter(unit.GetComponent<RectTransform>());
 
         _tween?.Kill();
