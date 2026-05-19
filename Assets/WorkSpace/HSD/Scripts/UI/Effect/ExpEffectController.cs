@@ -60,23 +60,45 @@ public class ExpEffectController : MonoBehaviour
         }
     }
 
+    private float _accumulatedExp = 0f;
+    private float _effectCooldown = 0.15f; 
+    private float _lastEffectTime = 0f;
+
+    private void Update()
+    {
+        if (_accumulatedExp > 0f && Time.unscaledTime - _lastEffectTime >= _effectCooldown)
+        {
+            float expToApply = _accumulatedExp;
+            _accumulatedExp = 0f;
+            _lastEffectTime = Time.unscaledTime;
+
+            SpawnParticleAndApplyExp(expToApply);
+        }
+    }
+
     private void OnBossDamaged(int damage)
     {
         if (particleImage == null) return;
 
-        // 획득할 경험치량 미리 계산
         float expAmount = Manager.Exp.CalculateExpFromDamage(damage);
         if (expAmount <= 0) return;
 
-        // 보스 위치(혹은 지정된 위치)에서 파티클 생성
-        // UI 좌표계이므로 bossSpawnPoint 근처에서 생성되도록 설정 가능하나 
-        // 여기서는 기존처럼 현재 위치 혹은 파티클 자체 설정에 맡김
-        var particle = RM.Instantiate(particleImage, spawnPoint.position, Quaternion.identity, spawnPoint, true);
+        _accumulatedExp += expAmount;
+    }
 
+    private void SpawnParticleAndApplyExp(float expAmount)
+    {
+        // 타임스케일이 0이거나(토템 선택창 등), 파티클 오브젝트가 없으면 에러를 막기 위해 파티클 생성 생략
+        if (Time.timeScale == 0f || particleImage == null)
+        {
+            Manager.Exp.AddExp(expAmount);
+            return;
+        }
+
+        var particle = RM.Instantiate(particleImage, spawnPoint.position, Quaternion.identity, spawnPoint, true);
         particle.attractorTarget = attractorTarget;
 
         particle.onAnyParticleFinished.RemoveAllListeners();
-        // 파티클이 목적지(ExpBar)에 처음 도달했을 때 실제 경험치 추가 (중복 방지를 위해 flag 사용)
         bool isAdded = false;
         particle.onAnyParticleFinished.AddListener(() => 
         {
@@ -87,7 +109,6 @@ public class ExpEffectController : MonoBehaviour
 
         particle.Play();
 
-        // 파티클 시스템 수명 주기에 맞춰 제거
         RM.Destroy(particle, particle.duration + 0.5f);
     }
 }

@@ -33,13 +33,28 @@ public class UnitAnimator : MonoBehaviour
         _breathingAnim = GetComponent<Anim_Base>();
     }
 
+    private void OnEnable()
+    {
+        // 유닛이 SetActive(false) -> SetActive(true) 될 때(스폰 이펙트 후 등) 애니메이션이 죽어있는 것을 방지
+        if (_breathingAnim != null)
+        {
+            _breathingAnim.Play().Forget();
+        }
+    }
+
     public void Initialize(UnitBase unit)
     {
         if(_animator == null) _animator = GetComponent<Animator>();
         if(_breathingAnim == null) _breathingAnim = GetComponent<Anim_Base>();
+
+        // 강제로 unit.transform을 타겟으로 잡으면 DOTween의_originScale 기록 시점이나 
+        // Animator의 Root Scale Lock과 충돌할 수 있으므로, Anim_Base 자체의 초기화(Awake)를 존중합니다.
+        // 필요에 따라 Prefab의 Anim_Base 인스펙터에서 Animation Target을 할당하세요.
         
-        _breathingAnim.Initialize(unit.transform);
-        _breathingAnim.Play().Forget();
+        if (_breathingAnim != null)
+        {
+            _breathingAnim.Play().Forget();
+        }
     }
 
     /// <summary>

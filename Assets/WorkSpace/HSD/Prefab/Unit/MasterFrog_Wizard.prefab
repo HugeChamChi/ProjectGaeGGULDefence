@@ -137,13 +137,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animationTarget: {fileID: 0}
-  triggerType: 1
+  triggerType: 0
   ignoreTimeScale: 0
   isLoop: 1
   ease: 7
   duration: 0.8
   delay: 0
   scaleMultiplier: {x: 1.05, y: 0.95}
+  useCustomBaseScale: 1
+  customBaseScale: {x: 1, y: 1, z: 1}
 --- !u!222 &7081019883845896914
 CanvasRenderer:
   m_ObjectHideFlags: 0

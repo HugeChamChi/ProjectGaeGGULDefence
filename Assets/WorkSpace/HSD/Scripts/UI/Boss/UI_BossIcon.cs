@@ -14,7 +14,10 @@ public class UI_BossIcon : MonoBehaviour
 
     private void OnDestroy()
     {
-        Manager.Boss.OnBossEntryed -= ChangeIcon;
+        if (BossManager.HasInstance)
+        {
+            Manager.Boss.OnBossEntryed -= ChangeIcon;
+        }
     }
 
     private void ChangeIcon(BossEntry currentEntry, BossEntry nextEntry)
