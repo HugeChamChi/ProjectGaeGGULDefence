@@ -39,6 +39,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] totemPool;
 
+    public TotemData[] TotemPool => totemPool;
+
     [Header("빈 셀 없을 때 대체 식량")]
     [SerializeField] private float fallbackFood = 500f;
 

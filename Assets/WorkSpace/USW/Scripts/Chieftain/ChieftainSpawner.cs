@@ -25,6 +25,23 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
             return;
         }
 
+        SpawnChieftainById(selectedId);
+    }
+
+    public void ChangeChieftain(int selectedId)
+    {
+        if (ChieftainUnit != null)
+        {
+            var cell = ChieftainUnit.currentCell;
+            if (cell != null) cell.RemoveUnit();
+            Destroy(ChieftainUnit.gameObject);
+            ChieftainUnit = null;
+        }
+        SpawnChieftainById(selectedId);
+    }
+
+    private void SpawnChieftainById(int selectedId)
+    {
         var data = System.Array.Find(
             chieftainDataList,
             d => d != null && d.chieftainId == selectedId);
