@@ -31,13 +31,23 @@ public class ExpBarUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        Manager.Exp.OnExpChanged -= OnExpChanged;
-        Manager.Exp.OnLevelUp   -= OnLevelUp;
+        if (ExpManager.HasInstance)
+        {
+            Manager.Exp.OnExpChanged -= OnExpChanged;
+            Manager.Exp.OnLevelUp   -= OnLevelUp;
+        }
     }
+
+    private float _lastSoundTime = 0f;
 
     private void OnExpChanged(float _)
     {
-        Manager.Audio.PlaySFX("02.Expup");
+        if (Time.unscaledTime - _lastSoundTime > 0.05f)
+        {
+            Manager.Audio.PlaySFX("02.Expup");
+            _lastSoundTime = Time.unscaledTime;
+        }
+
         Refresh(levelUp: false);
         ScaleAnimation();
     }

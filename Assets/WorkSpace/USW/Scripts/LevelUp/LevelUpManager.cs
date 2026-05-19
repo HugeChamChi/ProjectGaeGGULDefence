@@ -26,6 +26,9 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 {
     [SerializeField] private LevelUpData[] levelUpPool;
 
+    public IEnumerable<int> ChosenIds => _chosenIds;
+    public LevelUpData[] LevelUpPool => levelUpPool;
+
     private readonly HashSet<int> _chosenIds = new();
 
     // ── 기본 스탯 ──────────────────────────────────────────────
@@ -194,6 +197,158 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         ApplyStatEffect(data.secondaryEffect, data.secondaryValue);
         ApplySpecialEffect(data);
         Debug.Log($"[LevelUp] 적용: {data.chooseName} ({data.chooseId})");
+    }
+
+    public void RemoveEffect(LevelUpData data)
+    {
+        if (_chosenIds.Remove(data.chooseId))
+        {
+            RemoveStatEffect(data.primaryEffect, data.primaryValue);
+            RemoveStatEffect(data.secondaryEffect, data.secondaryValue);
+            RemoveSpecialEffect(data);
+            Debug.Log($"[LevelUp] 제거: {data.chooseName} ({data.chooseId})");
+        }
+    }
+
+    private void RemoveStatEffect(LevelUpEffectType effectType, float value)
+    {
+        if (effectType == LevelUpEffectType.None || value == 0f) return;
+
+        float v = value / 100f;
+        int rows = Manager.Grid != null ? Manager.Grid.Rows : 4;
+
+        switch (effectType)
+        {
+            case LevelUpEffectType.AttackPercent:
+                // LevelUpAttackBuff adds to a sum. Remove requires subtracting. 
+                // TotemBuffManager needs RemoveLevelUpAttackBuff, but we can do a negative add for now.
+                Manager.Buff.AddLevelUpAttackBuff(-v);
+                break;
+            case LevelUpEffectType.AttackSpeedPercent:
+                Manager.Buff.AddLevelUpSpeedBuff(-v);
+                break;
+            case LevelUpEffectType.TotemEfficiencyPercent:
+                Manager.Buff.AddTotemEfficiency(-v);
+                break;
+            case LevelUpEffectType.CritChancePercent:
+                CritChance = Mathf.Clamp01(CritChance - v);
+                break;
+            case LevelUpEffectType.CritDamagePercent:
+                CritDamageMultiplier -= v;
+                break;
+            case LevelUpEffectType.FoodProductionPercent:
+                Manager.Buff.AddFoodSpeedBuff(-v);
+                break;
+            case LevelUpEffectType.ProjectileSizePercent:
+                Manager.Buff.AddProjectileSizeBuff(-v);
+                break;
+            case LevelUpEffectType.GaugeSpeedPercent:
+                Manager.Buff.AddGaugeSpeedBuff(-v);
+                break;
+            case LevelUpEffectType.ExpGainPercent:
+                ExpGainMultiplier /= (1f + v);
+                break;
+            case LevelUpEffectType.FrontRowAttackPercent:
+                _rowAttackMult[0] -= v;
+                if (rows > 1) _rowAttackMult[1] -= v;
+                break;
+            case LevelUpEffectType.BackRowAttackPercent:
+                if (rows >= 2) _rowAttackMult[rows - 1] -= v;
+                if (rows >= 3) _rowAttackMult[rows - 2] -= v;
+                break;
+            case LevelUpEffectType.FrontRowSpeedPercent:
+                _rowSpeedMult[0] /= (1f + v);
+                if (rows > 1) _rowSpeedMult[1] /= (1f + v);
+                break;
+            case LevelUpEffectType.BackRowSpeedPercent:
+                if (rows >= 2) _rowSpeedMult[rows - 1] /= (1f + v);
+                if (rows >= 3) _rowSpeedMult[rows - 2] /= (1f + v);
+                break;
+            case LevelUpEffectType.ChieftainAttackPercent:
+                ChieftainAttackBonus -= v;
+                break;
+        }
+    }
+
+    private void RemoveSpecialEffect(LevelUpData data)
+    {
+        switch (data.specialEffect)
+        {
+            case LevelUpSpecialEffect.None: break;
+
+            case LevelUpSpecialEffect.BuffNinjaTribe:
+                NinjaAtkBonus -= data.primaryValue / 100f;
+                NinjaSpeedBonus -= data.secondaryValue / 100f;
+                break;
+            case LevelUpSpecialEffect.BuffGunnerTribe:
+                GunnerAtkBonus -= data.primaryValue / 100f;
+                GunnerSpeedBonus -= data.secondaryValue / 100f;
+                break;
+            case LevelUpSpecialEffect.BuffWizardTribe:
+                WizardAtkBonus -= data.primaryValue / 100f;
+                WizardCooldownBonus -= data.secondaryValue / 100f;
+                break;
+            case LevelUpSpecialEffect.AttackEveryNHits:
+                BonusAttackEveryNHits.Remove((int)data.specialValue);
+                break;
+            case LevelUpSpecialEffect.RandomBonusAttack:
+                RandomExtraAttackChance -= data.specialValue / 100f;
+                break;
+            case LevelUpSpecialEffect.RandomProcAttack:
+                // It's hard to revert HasRandomProcAttack if multiple are added, assuming 1 for now.
+                HasRandomProcAttack = false;
+                RandomProcChance -= data.specialValue / 100f;
+                RandomProcDamagePct = 0f;
+                break;
+            case LevelUpSpecialEffect.ExtraAttackEveryAttack:
+                HasExtraAttackEveryAttack = false;
+                break;
+            case LevelUpSpecialEffect.ExtraAttackOnSkillFull:
+                HasExtraAttackOnSkillFull = false;
+                break;
+            case LevelUpSpecialEffect.BurstOnSkillFull:
+                HasBurstOnSkillFull = false;
+                BurstAttackBonus = 0f;
+                BurstDurationSeconds = 0f;
+                break;
+            case LevelUpSpecialEffect.SummonDiscount:
+                SummonDiscountRate -= data.specialValue / 100f;
+                break;
+            case LevelUpSpecialEffect.SellBonusFood:
+                SellBonusFoodAmount -= data.specialValue;
+                break;
+            case LevelUpSpecialEffect.SellDealsDamage:
+                HasSellDealsDamage = false;
+                SellDamagePct = 0f;
+                break;
+            case LevelUpSpecialEffect.ChieftainGainOnSell:
+                HasChieftainGainOnSell = false;
+                ChieftainSellAtkGain -= data.primaryValue / 100f;
+                ChieftainSellPopPenalty -= data.secondaryValue / 100f;
+                break;
+            case LevelUpSpecialEffect.MergeKeepsTribe:
+                HasMergeKeepsTribe = false;
+                break;
+            case LevelUpSpecialEffect.AllowTotemOverlap:
+                HasAllowTotemOverlap = false;
+                break;
+            case LevelUpSpecialEffect.WizardLightningMode:
+                HasWizardLightningMode = false;
+                break;
+            case LevelUpSpecialEffect.WizardPhysicalMode:
+                HasWizardPhysicalMode = false;
+                WizardAtkBonus -= data.primaryValue / 100f;
+                WizardSpeedBonus -= data.primaryValue / 100f;
+                break;
+            case LevelUpSpecialEffect.UnemployedFoodNegate:
+                HasUnemployedFoodNegate = false;
+                UnemployedSkillAtkGain = 0f;
+                break;
+            case LevelUpSpecialEffect.ProjectileSizeScalesAtk:
+                HasProjectileSizeScalesAtk = false;
+                ProjectileSizeAtkPerUnit = 0f;
+                break;
+        }
     }
 
     private void ApplyStatEffect(LevelUpEffectType effectType, float value)
@@ -425,22 +580,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
         if (unit == null) return;
 
-        cell.TryPlaceUnit(unit);
-        unit.transform.SetParent(cell.transform, false);
-
-        var rt = unit.GetComponent<UnityEngine.RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.pivot            = new UnityEngine.Vector2(0.5f, 0f);
-            rt.anchoredPosition = UnityEngine.Vector2.zero;
-        }
-
-        var drag = unit.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(cell);
-
-        unit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, cell);
+        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
     }
 
     // ── 투사체 크기 → 공격력 스케일 계산 ─────────────────────

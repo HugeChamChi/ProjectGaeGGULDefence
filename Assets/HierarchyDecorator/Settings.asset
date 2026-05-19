@@ -631,6 +631,88 @@ MonoBehaviour:
         m_StretchWidth: 1
         m_StretchHeight: 0
       capturedGroups: []
+    - prefix: Debug
+      noSpaceAfterPrefix: 0
+      isRegex: 0
+      name: Debug
+      font: {fileID: 0}
+      fontSize: 11
+      fontAlignment: 4
+      fontStyle: 1
+      textFormatting: 0
+      modes:
+      - fontColour: {r: 0, g: 0, b: 0, a: 1}
+        backgroundColour: {r: 1, g: 1, b: 1, a: 1}
+      - fontColour: {r: 1, g: 1, b: 1, a: 1}
+        backgroundColour: {r: 0.21176471, g: 0.22745098, b: 1, a: 1}
+      style:
+        m_Name: Debug
+        m_Normal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 1, g: 1, b: 1, a: 1}
+        m_Hover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Active:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Focused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnNormal:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnHover:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnActive:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_OnFocused:
+          m_Background: {fileID: 0}
+          m_ScaledBackgrounds: []
+          m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+        m_Border:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Margin:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Padding:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Overflow:
+          m_Left: 0
+          m_Right: 0
+          m_Top: 0
+          m_Bottom: 0
+        m_Font: {fileID: 0}
+        m_FontSize: 11
+        m_FontStyle: 1
+        m_Alignment: 4
+        m_WordWrap: 0
+        m_RichText: 1
+        m_TextClipping: 0
+        m_ImagePosition: 0
+        m_ContentOffset: {x: 0, y: 0}
+        m_FixedWidth: 0
+        m_FixedHeight: 0
+        m_StretchWidth: 1
+        m_StretchHeight: 0
+      capturedGroups: []
     twoToneBackground: 1
     lightMode:
       colorOne: {r: 0.8, g: 0.8, b: 0.8, a: 1}
@@ -4862,6 +4944,358 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: be5a998b79113704c81ac86b6d11a469, type: 3}
+        hasToggle: 1
+      - displayName: UI_RootScaler
+        name: UI_RootScaler, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_RootScaler
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_RootScaler
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+        hasToggle: 1
+      - displayName: UIFeedbackController
+        name: UIFeedbackController, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UIFeedbackController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UIFeedbackController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 55ce804052e461e4fa5bb0b9bba9a09a, type: 3}
+        hasToggle: 1
+      - displayName: ChieftainSpawner
+        name: ChieftainSpawner, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: ChieftainSpawner
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ChieftainSpawner
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: ad23c31b67bc1854e8305a971e818171, type: 3}
+        hasToggle: 1
+      - displayName: InGameInstaller
+        name: InGameInstaller, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: InGameInstaller
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: InGameInstaller
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 6ce16b046183ac749b2acfa622b70c6b, type: 3}
+        hasToggle: 1
+      - displayName: Anim_UI_Scale
+        name: GaeGGUL.Animation.Anim_UI_Scale, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: Anim_UI_Scale
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: Anim_UI_Scale
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 01aa09b1d364b6547b395e8450d822d9, type: 3}
+        hasToggle: 1
+      - displayName: UI_BossIcon
+        name: UI_BossIcon, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_BossIcon
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_BossIcon
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 8517a509009a2a1489699038bbfdaaaa, type: 3}
+        hasToggle: 1
+      - displayName: ExpBarUI
+        name: ExpBarUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: ExpBarUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ExpBarUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 4951216f3ee5d6f4a9c1080ec5168f60, type: 3}
+        hasToggle: 1
+      - displayName: UI_BossEncounter
+        name: UI_BossEncounter, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_BossEncounter
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_BossEncounter
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 799f2153463131d4fb9dfd91de1ac905, type: 3}
+        hasToggle: 1
+      - displayName: UISpawnLine
+        name: UISpawnLine, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UISpawnLine
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UISpawnLine
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 79196acecfc4cce4f8ecf69a6326706a, type: 3}
+        hasToggle: 1
+      - displayName: ParticleImage
+        name: AssetKits.ParticleImage.ParticleImage, ParticleImage, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: ParticleImage
+          m_Image: {fileID: 2800000, guid: f2a24a7a0c48d4e70a0b998eb27af35e, type: 3}
+          m_Tooltip: ParticleImage
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: a0ce80c06832d4a49a2a30ece9fb2df6, type: 3}
+        hasToggle: 1
+      - displayName: UI_Peekthrough
+        name: UI_Peekthrough, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_Peekthrough
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_Peekthrough
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 53af06b9674988d4692804f1fee025c4, type: 3}
+        hasToggle: 1
+      - displayName: LevelUpCardUI
+        name: LevelUpCardUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: LevelUpCardUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: LevelUpCardUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: cf7dfdd7e440a3c44b13434dfb2ae6bf, type: 3}
+        hasToggle: 1
+      - displayName: TotemSelectUI
+        name: TotemSelectUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: TotemSelectUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TotemSelectUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 6b6e4f9796267b6468d77d1e04bd3dd0, type: 3}
+        hasToggle: 1
+      - displayName: UI_SettingPanel_InGame
+        name: HSD.UI.Setting.UI_SettingPanel_InGame, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_SettingPanel_InGame
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_SettingPanel_InGame
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 4726a18a82dd96f40ac74a7e1cb0506c, type: 3}
+        hasToggle: 1
+      - displayName: LevelUpUI
+        name: LevelUpUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: LevelUpUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: LevelUpUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3d43d054c71489941a120651d9753f1f, type: 3}
+        hasToggle: 1
+      - displayName: UI_UnitInfoPanel
+        name: GaeGGUL.UI.Unit.UI_UnitInfoPanel, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_UnitInfoPanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_UnitInfoPanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 2984c51ca40ce8441b645e26332cd021, type: 3}
+        hasToggle: 1
+      - displayName: Anim_Slide
+        name: GaeGGUL.Animation.Anim_Slide, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: Anim_Slide
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: Anim_Slide
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 51bd4aa76776e6d44a1e7289cf468d79, type: 3}
+        hasToggle: 1
+      - displayName: UnitActionPopupUI
+        name: UnitActionPopupUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UnitActionPopupUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UnitActionPopupUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 58d2d27f7de8faf43877cd694fe23942, type: 3}
+        hasToggle: 1
+      - displayName: UI_TotemInfoPanel
+        name: UI_TotemInfoPanel, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_TotemInfoPanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_TotemInfoPanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 4f1e408223aea6248b257adb687f7c1c, type: 3}
+        hasToggle: 1
+      - displayName: TotemActionPopupUI
+        name: TotemActionPopupUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: TotemActionPopupUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TotemActionPopupUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 5431021ffe1548a4c958afe815783ee8, type: 3}
+        hasToggle: 1
+      - displayName: GenericBuffTotem
+        name: GenericBuffTotem, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: GenericBuffTotem
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GenericBuffTotem
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: b9faa7460fc0e7f4e928dd5bce7ab28d, type: 3}
+        hasToggle: 1
+      - displayName: DragHandler
+        name: DragHandler, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: DragHandler
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: DragHandler
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
+        hasToggle: 1
+      - displayName: GridCell
+        name: GridCell, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: GridCell
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GridCell
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 98b230ca1d76504419ee0b7c9ecd4b4e, type: 3}
+        hasToggle: 1
+      - displayName: GridCellView
+        name: GridCellView, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: GridCellView
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: GridCellView
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 5d1f331edf1c2c2459abb586eddb2044, type: 3}
+        hasToggle: 1
+      - displayName: FrogUnemployed
+        name: FrogUnemployed, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: FrogUnemployed
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: FrogUnemployed
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: ae10e6483d3381a4a9048eed6d81085d, type: 3}
+        hasToggle: 1
+      - displayName: UnitAnimator
+        name: UnitAnimator, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UnitAnimator
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UnitAnimator
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3af0d71a20255e74fb8ab10c87041045, type: 3}
+        hasToggle: 1
+      - displayName: Anim_Breathing
+        name: GaeGGUL.Animation.Anim_Breathing, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: Anim_Breathing
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: Anim_Breathing
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 0ab0a4bb94a8c8a4bbadf5abd0bfbc7a, type: 3}
+        hasToggle: 1
+      - displayName: UI_DebugConsole
+        name: UI_DebugConsole, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_DebugConsole
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_DebugConsole
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 85314d3dfb5f4ef4b8945fc53691d5ee, type: 3}
         hasToggle: 1
     unityVersion: 2022.3.62f3
     unityCount: 294

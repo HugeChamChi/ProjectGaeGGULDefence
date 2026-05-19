@@ -7,6 +7,8 @@ public class UnitFactory : InGameSingleton<UnitFactory>
 {
     [SerializeField] private UnitData[] unitDataList;
 
+    public UnitData[] UnitDataList => unitDataList;
+
     protected override void Awake()
     {
         base.Awake();
@@ -122,6 +124,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         }
 
         unit.unitData = data;
+        unit.animator.Initialize(unit);
 
         return unit;
     }

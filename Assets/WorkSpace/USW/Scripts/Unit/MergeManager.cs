@@ -57,15 +57,8 @@ public class MergeManager : InGameSingleton<MergeManager>
             : Manager.UnitFactory.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return;
 
-        spawnCell.TryPlaceUnit(newUnit);
-        newUnit.transform.SetParent(spawnCell.transform, false);
-
-        Manager.UnitFactory.InitUnitRectTransform(newUnit);
-
-        var drag = newUnit.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(spawnCell);
-
-        newUnit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, spawnCell);
+        // Use PlaceUnitWithEffect with the spawnCell as origin (so the effect plays without a long line traversal)
+        Manager.Spawner.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
     }
 
     /// <summary>선택 해제 및 OnSelectionCleared 이벤트 발행</summary>

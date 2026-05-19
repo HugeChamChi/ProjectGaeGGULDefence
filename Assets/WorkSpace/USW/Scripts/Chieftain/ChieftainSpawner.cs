@@ -25,6 +25,23 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
             return;
         }
 
+        SpawnChieftainById(selectedId);
+    }
+
+    public void ChangeChieftain(int selectedId)
+    {
+        if (ChieftainUnit != null)
+        {
+            var cell = ChieftainUnit.currentCell;
+            if (cell != null) cell.RemoveUnit();
+            Destroy(ChieftainUnit.gameObject);
+            ChieftainUnit = null;
+        }
+        SpawnChieftainById(selectedId);
+    }
+
+    private void SpawnChieftainById(int selectedId)
+    {
         var data = System.Array.Find(
             chieftainDataList,
             d => d != null && d.chieftainId == selectedId);
@@ -51,21 +68,7 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
         if (unit == null) return;
 
         ChieftainUnit = unit;
-        cell.TryPlaceUnit(unit);
-        unit.transform.SetParent(cell.transform, false);
-
-        var rt = unit.GetComponent<UnityEngine.RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.pivot            = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = UnityEngine.Vector2.zero;
-        }
-
-        var drag = unit.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(cell);
-
-        unit.OnPlaced(Manager.Currency, Manager.Boss?.CurrentBoss, cell);
+        
+        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
     }
 }
