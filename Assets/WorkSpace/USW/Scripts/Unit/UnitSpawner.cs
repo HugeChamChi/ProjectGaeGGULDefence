@@ -1,10 +1,18 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+using AssetKits.ParticleImage;
 
 // ════════════════════════════════════════════════════════
 // UnitSpawner — InGameSingleton 교체 + Manager 접근 통일
 // ════════════════════════════════════════════════════════
 public class UnitSpawner : InGameSingleton<UnitSpawner>
 {
+    [Header("Spawn Effects")]
+    [SerializeField] private UISpawnLine spawnLinePrefab;
+    [SerializeField] private ParticleImage spawnEffectPrefab;
+    [SerializeField] private RectTransform defaultSpawnOrigin;
+    [SerializeField] private Transform effectParent;
+
     public float CurrentCost { get; private set; }
 
     // UIManager가 구독해서 비용 텍스트 갱신
@@ -82,15 +90,8 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
 
         // 환급 처리(소환 실패 시)는 effectiveCost 기준
         var cell = empty[Random.Range(0, empty.Count)];
-        cell.TryPlaceUnit(unit);
-        unit.transform.SetParent(cell.transform, false);
-
-        Manager.UnitFactory.InitUnitRectTransform(unit);
-
-        var drag = unit.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(cell);
-
-        unit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, cell);
+        
+        PlaceUnitWithEffect(unit, cell);
 
         // 소환 성공 시 비용 증가 (시트 값 우선, 폴백 20)
         float increment = Manager.GameData != null && Manager.GameData.IsLoaded
@@ -98,6 +99,99 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
             : 20f;
         CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
+    }
+
+    /// <summary>
+    /// 지정된 셀에 유닛을 배치하며 스폰 이펙트(SpawnLine, ParticleImage)를 재생합니다.
+    /// 외부 요인(레벨업 보상 등)에 의한 스폰 시에도 동일하게 사용합니다.
+    /// </summary>
+    public void PlaceUnitWithEffect(UnitBase unit, GridCell cell, Vector3? originWorldPos = null)
+    {
+        // 1. 점유 상태 설정 (다른 스폰과 겹치지 않도록 미리 점유)
+        cell.TryPlaceUnit(unit);
+        unit.transform.SetParent(cell.transform, false);
+        
+        Manager.UnitFactory.InitUnitRectTransform(unit);
+        
+        var drag = unit.GetComponent<DragHandler>();
+        if (drag != null) drag.SetOriginCell(cell);
+
+        // 2. 비동기 이펙트 재생 (끝나면 OnPlaced 호출 및 활성화)
+        SpawnProcessAsync(unit, cell, originWorldPos).Forget();
+    }
+
+    private async UniTaskVoid SpawnProcessAsync(UnitBase unit, GridCell cell, Vector3? originWorldPos)
+    {
+        if (unit == null || cell == null) return;
+        
+        // 이펙트 재생 동안 유닛을 숨김
+        unit.gameObject.SetActive(false);
+        
+        Transform lineParent = effectParent != null ? effectParent : transform;
+
+        // 1. Line Effect (UI Space)
+        if (spawnLinePrefab != null)
+        {
+            var lineObj = RM.Instantiate(spawnLinePrefab.gameObject, lineParent, true);
+            var line = lineObj.GetComponent<UISpawnLine>();
+            if (line != null)
+            {
+                // UI는 생성 직후 Scale과 Position을 초기화해주어야 좌표계가 틀어지지 않습니다.
+                var rt = line.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchoredPosition3D = Vector3.zero;
+                    rt.localScale = Vector3.one;
+                    rt.localRotation = Quaternion.identity;
+                }
+
+                // UI Coordinate (Local Space relative to effectParent)
+                Vector2 startLocal = originWorldPos.HasValue 
+                    ? (Vector2)lineParent.InverseTransformPoint(originWorldPos.Value)
+                    : (defaultSpawnOrigin != null ? (Vector2)lineParent.InverseTransformPoint(defaultSpawnOrigin.position) : Vector2.zero);
+                
+                Vector2 endLocal = (Vector2)lineParent.InverseTransformPoint(cell.transform.position);
+
+                line.Fire(startLocal, endLocal);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: false);
+            }
+        }
+
+        // 2. Particle Effect (UI Space - ParticleImage)
+        if (spawnEffectPrefab != null)
+        {
+            // If effectParent is specified, we use it to avoid being clipped by Grid/Cell
+            Transform pParent = effectParent != null ? effectParent : cell.transform;
+            var particleObj = RM.Instantiate(spawnEffectPrefab.gameObject, cell.transform.position, spawnEffectPrefab.transform.rotation, pParent, true);
+            var particle = particleObj.GetComponent<ParticleImage>();
+            if (particle != null) particle.Play();
+            RM.Destroy(particleObj, 2f);
+        }
+
+        if (unit != null && unit.gameObject != null)
+        {
+            unit.gameObject.SetActive(true);
+            unit.OnPlaced(Manager.Currency, Manager.Boss?.CurrentBoss, cell);
+        }
+    }
+
+    private Vector3 GetWorldPosition(RectTransform rectTransform)
+    {
+        if (rectTransform == null) return Vector3.zero;
+
+        Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
+        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            Vector3 screenPos = rectTransform.position;
+            if (Camera.main != null)
+            {
+                screenPos.z = Mathf.Abs(Camera.main.transform.position.z);
+                if (screenPos.z == 0) screenPos.z = 10f;
+                return Camera.main.ScreenToWorldPoint(screenPos);
+            }
+        }
+        
+        return rectTransform.position;
     }
 
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>

@@ -425,22 +425,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
         if (unit == null) return;
 
-        cell.TryPlaceUnit(unit);
-        unit.transform.SetParent(cell.transform, false);
-
-        var rt = unit.GetComponent<UnityEngine.RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new UnityEngine.Vector2(0.5f, 0.5f);
-            rt.pivot            = new UnityEngine.Vector2(0.5f, 0f);
-            rt.anchoredPosition = UnityEngine.Vector2.zero;
-        }
-
-        var drag = unit.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(cell);
-
-        unit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, cell);
+        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
     }
 
     // ── 투사체 크기 → 공격력 스케일 계산 ─────────────────────

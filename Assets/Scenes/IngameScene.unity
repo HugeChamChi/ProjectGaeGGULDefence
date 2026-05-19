@@ -4586,6 +4586,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59cef89eab338934b85d2e96c31223fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  spawnLinePrefab: {fileID: 3390887687262422643, guid: 37b51b10483b68b4099c6978a184babd,
+    type: 3}
+  spawnEffectPrefab: {fileID: 0}
+  defaultSpawnOrigin: {fileID: 1636846596}
+  effectParent: {fileID: 1196889861}
 --- !u!4 &993732468
 Transform:
   m_ObjectHideFlags: 0
@@ -4595,7 +4600,7 @@ Transform:
   m_GameObject: {fileID: 993732466}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 544.36743, y: 904.9527, z: -11.78576}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
