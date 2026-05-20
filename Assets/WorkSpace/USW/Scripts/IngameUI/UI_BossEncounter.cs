@@ -71,7 +71,7 @@ public class UI_BossEncounter : UI_Base
     protected override async UniTask CloseAnimationAsync()
     {
         // 패널 전체가 뿅 하고 작아지며 닫히는 연출
-        await transform.DOScale(0f, 0.3f).SetEase(Ease.InBack).ToUniTask();
+        await transform.DOScaleY(0f, 0.3f).SetEase(Ease.InBack).ToUniTask();
     }
 
     public async UniTask PlayBossTransitionSequence(Sprite currentBossIcon, Sprite nextBossIcon, int currentWave)
@@ -90,7 +90,7 @@ public class UI_BossEncounter : UI_Base
         {
             // 패널 자체도 뿅 하고 나타남
             transform.localScale = Vector3.zero;
-            transform.DOScale(1f, popDuration).SetEase(Ease.OutBack).ToUniTask().Forget();
+            transform.DOScaleY(1f, popDuration).SetEase(Ease.OutBack).ToUniTask().Forget();
 
             var tasks = new List<UniTask>();
 
