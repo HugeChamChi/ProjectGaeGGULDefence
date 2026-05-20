@@ -13,6 +13,10 @@ namespace HSD.InGameDebug
         [SerializeField] private Button btn_Action;
         [SerializeField] private TextMeshProUGUI txt_ActionBtn; // 'X' for remove, '+' for add, 'Apply' for Chief
 
+        [Header("Button Sprites")]
+        [SerializeField] private Sprite spr_Add;
+        [SerializeField] private Sprite spr_Remove;
+
         private object _data;
         private Action<object> _onClickAction;
 
@@ -27,7 +31,25 @@ namespace HSD.InGameDebug
                 img_Icon.sprite = icon;
                 img_Icon.gameObject.SetActive(icon != null);
             }
-            if (txt_ActionBtn != null) txt_ActionBtn.text = btnText;
+            
+            if (txt_ActionBtn != null)
+            {
+                txt_ActionBtn.text = btnText;
+                // 기호일 경우 텍스트보다는 아이콘을 우선시함 (아이콘이 설정되어 있다면)
+                bool isSymbol = btnText == "X" || btnText == "+";
+                txt_ActionBtn.gameObject.SetActive(!isSymbol);
+            }
+
+            // 버튼 스프라이트 변경
+            if (btn_Action != null)
+            {
+                var btnImg = btn_Action.GetComponent<Image>();
+                if (btnImg != null)
+                {
+                    if (btnText == "+" && spr_Add != null) btnImg.sprite = spr_Add;
+                    else if (btnText == "X" && spr_Remove != null) btnImg.sprite = spr_Remove;
+                }
+            }
 
             _onClickAction = onClickAction;
 
