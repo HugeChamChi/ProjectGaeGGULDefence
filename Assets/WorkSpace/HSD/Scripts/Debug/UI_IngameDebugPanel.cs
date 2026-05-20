@@ -56,6 +56,8 @@ namespace HSD.InGameDebug
 
             btn_ShowAddView?.onClick.AddListener(() => _presenter.OpenAddView());
             btn_CloseAddView?.onClick.AddListener(() => HideAddView());
+
+            
         }
 
         public override void Open()
