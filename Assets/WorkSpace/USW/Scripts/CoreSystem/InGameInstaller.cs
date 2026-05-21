@@ -23,6 +23,14 @@ public class InGameInstaller : MonoBehaviour
     [Header("Wave Info")]
     [SerializeField] private UI_WaveText _waveTextUI;
 
+
+    // 임시
+    private void Awake()
+    {
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
+    }
+
     private void Start()
     {
         WireUnitActionPopup();

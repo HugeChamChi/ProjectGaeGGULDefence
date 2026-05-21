@@ -8,7 +8,7 @@ public interface IAudioProvider
 {
     void Init();
     void PlayBGM(AudioClip clip);
-    void PlaySFX(AudioClip clip);
+    void PlaySFX(AudioClip clip, float pitchRandomness = 0.1f);
     void StopBGM();
     void SetVolume(AudioGroup group, int volume);
     int GetVolume(AudioGroup group);

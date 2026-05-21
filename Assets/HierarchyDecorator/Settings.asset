@@ -5297,5 +5297,185 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 85314d3dfb5f4ef4b8945fc53691d5ee, type: 3}
         hasToggle: 1
+      - displayName: TweenController
+        name: GaeGGUL.Animation.TweenController, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: TweenController
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: TweenController
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: c3ef035c461d8fa4293689dd7cab4a1f, type: 3}
+        hasToggle: 1
+      - displayName: ShaderCompiler
+        name: ShaderCompiler, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: ShaderCompiler
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ShaderCompiler
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 38d79d8fc069d704d855a300e679ccf3, type: 3}
+        hasToggle: 1
+      - displayName: ButtonReactionHandler
+        name: ButtonReactionHandler, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: ButtonReactionHandler
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ButtonReactionHandler
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 1c5230cc83129f9469ece87a1110719c, type: 3}
+        hasToggle: 1
+      - displayName: UI_UpgradeItem
+        name: HSD.UI.Upgrade.UI_UpgradeItem, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_UpgradeItem
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_UpgradeItem
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 561a939144c69874693d9a05077d64b6, type: 3}
+        hasToggle: 1
+      - displayName: MergeButtonUI
+        name: MergeButtonUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: MergeButtonUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: MergeButtonUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: e4626ffcf0b4b9c42b20928f0386e9cc, type: 3}
+        hasToggle: 1
+      - displayName: SellButtonUI
+        name: SellButtonUI, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: SellButtonUI
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: SellButtonUI
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: ba7bf63dc371cbd4e827a0a9a24e4606, type: 3}
+        hasToggle: 1
+      - displayName: UI_TotemRangeGrid
+        name: GaeGGUL.UI.Totem.UI_TotemRangeGrid, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_TotemRangeGrid
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_TotemRangeGrid
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 7c61dd8f264703e4283ed2770c6460db, type: 3}
+        hasToggle: 1
+      - displayName: UI_IconTierSlot
+        name: GaeGGUL.UI.Common.UI_IconTierSlot, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_IconTierSlot
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_IconTierSlot
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3503705be26e22d4f88189d67d35c648, type: 3}
+        hasToggle: 1
+      - displayName: UI_Popup_Confirm
+        name: HSD.UI.Setting.UI_Popup_Confirm, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_Popup_Confirm
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_Popup_Confirm
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3fa0ad67dda25f74cb48bf6d53a92a9f, type: 3}
+        hasToggle: 1
+      - displayName: UI_IngameDebugPanel
+        name: HSD.InGameDebug.UI_IngameDebugPanel, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_IngameDebugPanel
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_IngameDebugPanel
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 81b2132f5e1b22a499ce5a1e5fa9949b, type: 3}
+        hasToggle: 1
+      - displayName: HiddenDebugActivator
+        name: HSD.InGameDebug.HiddenDebugActivator, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: HiddenDebugActivator
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: HiddenDebugActivator
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 3a1c4a326f7f9a74e80acfe7ad1bb369, type: 3}
+        hasToggle: 1
+      - displayName: UI_DebugItemSlot
+        name: HSD.InGameDebug.UI_DebugItemSlot, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_DebugItemSlot
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_DebugItemSlot
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: a960ff0793ed1c940962d84d13490018, type: 3}
+        hasToggle: 1
+      - displayName: UI_Debug_TimeScale
+        name: UI_Debug_TimeScale, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: UI_Debug_TimeScale
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_Debug_TimeScale
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: af3ae66da3f3fc74e9f7a2ad147a38ae, type: 3}
+        hasToggle: 1
+      - displayName: UI_OpenDebugButton
+        name: HSD.InGameDebug.UI_OpenDebugButton, Assembly-CSharp, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+        content:
+          m_Text: UI_OpenDebugButton
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: UI_OpenDebugButton
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 5eb5c00b03352344284172f512390a44, type: 3}
+        hasToggle: 1
     unityVersion: 2022.3.62f3
     unityCount: 294

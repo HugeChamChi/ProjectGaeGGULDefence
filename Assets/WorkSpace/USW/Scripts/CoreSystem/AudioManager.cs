@@ -149,7 +149,7 @@ public class AudioManager : Singleton<AudioManager>
 
     #region SFX Methods
 
-    public void PlaySFX(string address)
+    public void PlaySFX(string address, float pitchRandomness = 0.1f)
     {
         if (string.IsNullOrEmpty(address)) return;
 
@@ -157,13 +157,13 @@ public class AudioManager : Singleton<AudioManager>
         AudioClip clip = RM.Load<AudioClip>(fullPath);
 
         if (clip != null)
-            PlaySFX(clip);
+            PlaySFX(clip, pitchRandomness);
         else
             Debug.LogWarning($"[AudioManager] SFX 로드 실패: {fullPath}");
 
     }
 
-    public void PlaySFX(AudioClip clip) => _provider?.PlaySFX(clip);
+    public void PlaySFX(AudioClip clip, float pitchRandomness = 0.1f) => _provider?.PlaySFX(clip, pitchRandomness);
 
     #endregion
 }

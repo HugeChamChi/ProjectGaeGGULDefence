@@ -13,6 +13,15 @@ public class UnityAudioProvider : IAudioProvider
     private readonly Dictionary<AudioGroup, AudioGroupData> _groups = new();
     private readonly GameObject _owner;
 
+    // SFX Pool 최적화 관련 필드
+    private const int SFX_POOL_SIZE = 20;
+    private readonly List<AudioSource> _sfxPool = new();
+    private int _sfxPoolIndex = 0;
+
+    // 동시 발음 수 제한(Throttling) 관련 필드
+    private readonly Dictionary<AudioClip, float> _lastPlayedTime = new();
+    private const float SFX_THROTTLE_TIME = 0.05f;
+
     public UnityAudioProvider(GameObject owner, AudioMixer mixer)
     {
         _owner = owner;
@@ -59,11 +68,27 @@ public class UnityAudioProvider : IAudioProvider
             // Master는 볼륨 제어용이므로 Source를 생성하지 않음
             if (groupType != AudioGroup.Master)
             {
-                var source = _owner.AddComponent<AudioSource>();
-                source.playOnAwake = false;
-                source.outputAudioMixerGroup = mixerGroup;
-                source.loop = (groupType == AudioGroup.BGM);
-                data.Source = source;
+                if (groupType == AudioGroup.SFX)
+                {
+                    // SFX는 오브젝트 풀링을 위해 다수의 Source 생성
+                    for (int i = 0; i < SFX_POOL_SIZE; i++)
+                    {
+                        var source = _owner.AddComponent<AudioSource>();
+                        source.playOnAwake = false;
+                        source.outputAudioMixerGroup = mixerGroup;
+                        source.loop = false;
+                        _sfxPool.Add(source);
+                    }
+                    data.Source = _sfxPool[0]; // fallback용 참조
+                }
+                else
+                {
+                    var source = _owner.AddComponent<AudioSource>();
+                    source.playOnAwake = false;
+                    source.outputAudioMixerGroup = mixerGroup;
+                    source.loop = (groupType == AudioGroup.BGM);
+                    data.Source = source;
+                }
             }
 
             _groups[groupType] = data;
@@ -85,13 +110,36 @@ public class UnityAudioProvider : IAudioProvider
         group.Source.Play();
     }
 
-    public void PlaySFX(AudioClip clip)
+    public void PlaySFX(AudioClip clip, float pitchRandomness = 0.1f)
     {
         if (clip == null) return;
         if (!_groups.TryGetValue(AudioGroup.SFX, out var group)) return;
 
-        // PlayOneShot은 가볍고 여러 클립을 겹쳐서 재생하기에 최적화됨
-        group.Source.PlayOneShot(clip);
+        // 1. Throttling (동시 발음 수 제한)
+        float currentTime = Time.unscaledTime;
+        if (_lastPlayedTime.TryGetValue(clip, out float lastTime))
+        {
+            if (currentTime - lastTime < SFX_THROTTLE_TIME) return;
+        }
+        _lastPlayedTime[clip] = currentTime;
+
+        // 2. Pooling (오브젝트 풀에서 꺼내기)
+        AudioSource source = _sfxPool[_sfxPoolIndex];
+        _sfxPoolIndex = (_sfxPoolIndex + 1) % SFX_POOL_SIZE;
+
+        // 3. Pitch Randomization (기계음 방지용 피치 랜덤화)
+        if (pitchRandomness > 0f)
+        {
+            source.pitch = 1f + UnityEngine.Random.Range(-pitchRandomness, pitchRandomness);
+        }
+        else
+        {
+            source.pitch = 1f;
+        }
+
+        // 4. Play (PlayOneShot 대신 직접 할당하여 이전 소리 Stealing)
+        source.clip = clip;
+        source.Play();
     }
 
     public void StopBGM()
