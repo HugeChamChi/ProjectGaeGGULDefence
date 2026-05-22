@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace HSD.Test
 {
-    public class Test_WindLinesHarness : MonoBehaviour
+    public class Test_WindLines : MonoBehaviour
     {
         [Header("Target UI")]
         public Image targetImage;

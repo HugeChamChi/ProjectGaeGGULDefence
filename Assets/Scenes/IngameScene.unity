@@ -11670,14 +11670,13 @@ GameObject:
   - component: {fileID: 1703457864}
   - component: {fileID: 1703457866}
   - component: {fileID: 1703457867}
-  - component: {fileID: 1703457868}
   m_Layer: 5
   m_Name: ChiefSkillAction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1703457864
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11748,20 +11747,6 @@ MonoBehaviour:
   pachingMaxAlpha: 0.4
   pachingFadeInDuration: 0.15
   pachingFadeOutDuration: 0.2
---- !u!114 &1703457868
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1703457863}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 791ef979b7992574ea0c49ee7be49626, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  effectView: {fileID: 1703457867}
-  testChiefSprite: {fileID: -530481450, guid: ac981f690dded07448b7f937bdc6b3f1, type: 3}
 --- !u!1 &1706926335
 GameObject:
   m_ObjectHideFlags: 0

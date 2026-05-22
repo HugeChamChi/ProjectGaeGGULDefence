@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 
 namespace HSD.UI.Effect.Tests
 {
-    public class Test_ChiefSkillEffectHarness : MonoBehaviour
+    public class Test_ChiefSkillEffect : MonoBehaviour
     {
         [Header("References")]
         public UI_ChiefSkillEffect effectView;
@@ -28,13 +28,13 @@ namespace HSD.UI.Effect.Tests
         {
             if (_presenter == null)
             {
-                Debug.LogError("Test_ChiefSkillEffectHarness: Presenter or View is not assigned.");
+                Debug.LogError("Test_ChiefSkillEffect: Presenter or View is not assigned.");
                 return;
             }
             
             _presenter.ExecuteSkillEffectAsync(testChiefSprite, this.GetCancellationTokenOnDestroy()).ContinueWith(() =>
             {
-                Debug.Log("Test_ChiefSkillEffectHarness: Chief Skill Effect Test Completed Successfully.");
+                Debug.Log("Test_ChiefSkillEffect: Chief Skill Effect Test Completed Successfully.");
             }).Forget();
         }
     }

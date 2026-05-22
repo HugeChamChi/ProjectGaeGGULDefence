@@ -57,24 +57,29 @@ namespace HSD.UI.Effect
 
         public async UniTask PlayEffectAsync(Sprite chiefSprite, CancellationToken ct)
         {
-            // 1. 필요한 모든 요소 선제 활성화 (레이아웃 계산을 위해 필수)
-            if (img_ChiefIcon != null) img_ChiefIcon.gameObject.SetActive(true);
-            if (rect_Paching != null) rect_Paching.gameObject.SetActive(true);
-            if (rect_Line != null) rect_Line.gameObject.SetActive(true);
-            if (img_Background != null) img_Background.gameObject.SetActive(true);
-            
-            if (img_Pachings != null)
+            // 0. 루트 오브젝트 및 부모 캔버스 활성화 확인
+            if (!gameObject.activeSelf)
             {
-                foreach (var pachingImg in img_Pachings)
-                {
-                    if (pachingImg != null) pachingImg.gameObject.SetActive(true);
-                }
+                gameObject.SetActive(true);
+                // SetActive(true) 호출 시 Awake()가 동기적으로 실행됨
             }
 
-            // 2. 레이아웃 강제 갱신 및 1프레임 대기
-            // Inactive 상태에서 Active가 된 직후에는 한 프레임이 지나야 RectTransform의 정확한 World Position이 계산됩니다.
+            // 1. 필요한 모든 요소 활성화 (레이아웃 계산을 위해 필수)
+            // 초기 상태는 투명하게 하여 레이아웃 계산 중 잔상이 보이지 않게 함
+            PrepareInitialVisibility();
+
+            // 2. 레이아웃이 잡힐 때까지 대기
+            // Inactive 상태였던 오브젝트는 활성화 직후 1~2프레임 정도 위치값이 (0,0,0)일 수 있음
             Canvas.ForceUpdateCanvases();
-            await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: ct);
+            
+            // 위치값이 제대로 잡힐 때까지 최대 3프레임 대기 (보통 1프레임이면 충분)
+            int timeout = 0;
+            while (timeout < 3)
+            {
+                if (rect_Target != null && rect_Target.position != Vector3.zero) break;
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: ct);
+                timeout++;
+            }
 
             if (img_ChiefIcon == null || rect_Line == null || img_Background == null || rect_Paching == null || img_Pachings == null || img_Pachings.Length == 0)
             {
@@ -88,35 +93,21 @@ namespace HSD.UI.Effect
                 return;
             }
 
-            // 3. 이제 정확해진 목표 위치 획득
+            // 3. 정확해진 목표 위치 획득 및 초기 위치 설정
             Vector3 finalTargetPos = rect_Target.position;
             Vector3 startPos = finalTargetPos + new Vector3(spawnOffsetX, 0, 0);
 
-            // 4. 초기 상태 명시적 세팅
+            // 데이터 적용 및 초기 위치 강제 이동
             img_ChiefIcon.sprite = chiefSprite;
             img_ChiefIcon.transform.position = startPos;
-
             rect_Line.sizeDelta = new Vector2(rect_Line.sizeDelta.x, 0);
-
-            Color bgColor = img_Background.color;
-            bgColor.a = 0f;
-            img_Background.color = bgColor;
-
+            
             rect_Paching.localRotation = Quaternion.identity;
             rect_Paching.position = rect_PachingTarget != null ? rect_PachingTarget.position : finalTargetPos;
-            
-            foreach (var pachingImg in img_Pachings)
-            {
-                if (pachingImg == null) continue;
-                Color pColor = pachingImg.color;
-                pColor.a = 0f;
-                pachingImg.color = pColor;
-            }
 
-            // 5. 애니메이션 시퀀스 생성 및 실행
+            // 4. 애니메이션 시퀀스 생성 및 실행
             var masterSeq = DOTween.Sequence();
 
-            // 애니메이션 재생 중 타겟 위치가 변할 경우를 대비한 추적 (OnUpdate)
             masterSeq.OnUpdate(() =>
             {
                 if (rect_Paching != null && rect_Paching.gameObject.activeSelf)
@@ -155,11 +146,41 @@ namespace HSD.UI.Effect
             // 시퀀스 완료 대기
             await masterSeq.ToUniTask(cancellationToken: ct);
             
-            // 6. Cleanup (자식 오브젝트들 비활성화)
+            // 5. Cleanup (자식 오브젝트들 비활성화)
             img_ChiefIcon.gameObject.SetActive(false);
             img_Background.gameObject.SetActive(false);
             rect_Paching.gameObject.SetActive(false);
             rect_Line.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 레이아웃 계산을 위해 요소를 활성화하되, 잔상이 보이지 않도록 투명하게 설정합니다.
+        /// </summary>
+        private void PrepareInitialVisibility()
+        {
+            if (img_ChiefIcon != null) img_ChiefIcon.gameObject.SetActive(true);
+            if (rect_Paching != null) rect_Paching.gameObject.SetActive(true);
+            if (rect_Line != null) rect_Line.gameObject.SetActive(true);
+            
+            if (img_Background != null)
+            {
+                img_Background.gameObject.SetActive(true);
+                Color c = img_Background.color;
+                c.a = 0f;
+                img_Background.color = c;
+            }
+
+            if (img_Pachings != null)
+            {
+                foreach (var pachingImg in img_Pachings)
+                {
+                    if (pachingImg == null) continue;
+                    pachingImg.gameObject.SetActive(true);
+                    Color c = pachingImg.color;
+                    c.a = 0f;
+                    pachingImg.color = c;
+                }
+            }
         }
     }
 }

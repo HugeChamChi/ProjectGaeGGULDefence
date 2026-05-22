@@ -24,7 +24,6 @@ namespace HSD.UI.Effect.Tests
         {
             if (effectView != null)
             {
-                effectView.gameObject.SetActive(false);
                 _presenter = new ChiefSkillEffectPresenter(effectView);
             }
             else
