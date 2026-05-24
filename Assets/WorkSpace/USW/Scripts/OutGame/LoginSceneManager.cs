@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using BackEnd;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR && !DISABLE_GPGS
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 #endif
@@ -51,7 +51,7 @@ public class LoginSceneManager : MonoBehaviour
     /// </summary>
     private void InitGPGS()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR && !DISABLE_GPGS
         PlayGamesPlatform.DebugLogEnabled = true;
         PlayGamesPlatform.Activate();
 #endif
@@ -131,7 +131,7 @@ public class LoginSceneManager : MonoBehaviour
     /// </summary>
     private void GoogleLogin()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR && !DISABLE_GPGS
         PlayGamesPlatform.Instance.Authenticate((status) =>
         {
             if (status == SignInStatus.Success)
@@ -157,8 +157,8 @@ public class LoginSceneManager : MonoBehaviour
             }
         });
 #else
-        Debug.LogWarning("GoogleLogin: GPGS 플러그인 없음 — 에디터에서는 EditorLogin 사용");
-        OnLoginFailed();
+        Debug.LogWarning("GoogleLogin: GPGS 비활성화 상태 — EditorLogin으로 우회 시도");
+        EditorLogin();
 #endif
     }
 
@@ -167,7 +167,7 @@ public class LoginSceneManager : MonoBehaviour
     /// </summary>
     private void BackendGoogleLogin(string authCode)
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR && !DISABLE_GPGS
         var bro = Backend.BMember.AuthorizeFederation(authCode, FederationType.Google);
 
         if (bro.IsSuccess())

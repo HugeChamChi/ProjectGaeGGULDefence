@@ -55,7 +55,7 @@ Material:
     - _BgColor: {r: 0.41960788, g: 0.31764707, b: 0.27450982, a: 1}
     - _Color: {r: 1, g: 0.24056602, b: 0.24056602, a: 0.7607843}
     - _GridCount: {r: 20, g: 15, b: 0, a: 0}
-    - _IconColor: {r: 0, g: 0, b: 0, a: 0.53333336}
+    - _IconColor: {r: 0, g: 0, b: 0, a: 0.14117648}
     - _IconGap: {r: 30, g: 40, b: 0, a: 0}
     - _IconTiling: {r: 6, g: 12, b: 0, a: 0}
     - _ScrollDirection: {r: 1, g: 1, b: 0, a: 0}

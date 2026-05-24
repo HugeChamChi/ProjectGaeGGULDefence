@@ -12867,7 +12867,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectView: {fileID: 1703457867}
-  autoPlayOnStart: 0
+  autoPlayOnStart: 1
   playIntervalSeconds: 4
   testChiefSprite: {fileID: -817236093, guid: 7a9c1e07b1460c947a5265127776bc8f, type: 3}
 --- !u!114 &1906155819 stripped

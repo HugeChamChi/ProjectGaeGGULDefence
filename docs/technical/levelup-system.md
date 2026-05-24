@@ -57,6 +57,20 @@ interval = gaugeDuration
 
 ---
 
+## 연출 및 이펙트 (Visual Effects)
+
+### UI 파티클 시스템
+- **사용 에셋**: `ParticleImage` (UI 전용 파티클 시스템)
+- **적용 위치**:
+    - 레벨업 배너 등장 시 배경 버스트 효과
+    - 카드 선택 시 테두리 발광 및 강조 효과
+    - 선택된 카드 아이콘이 스탯 UI로 비행할 때의 꼬리 효과 (Trail)
+- **설정 주의사항**:
+    - `Canvas`의 `Render Mode`가 `Screen Space - Overlay`인 경우에도 정상적으로 출력되도록 `ParticleImage` 컴포넌트의 레이어 설정을 확인한다.
+    - 성능을 위해 동시 재생되는 파티클 개수를 최적화한다.
+
+---
+
 ## 미구현 항목
 
 | 카드 | 효과 | 이유 |
