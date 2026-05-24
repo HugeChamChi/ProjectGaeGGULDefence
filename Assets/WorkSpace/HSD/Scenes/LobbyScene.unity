@@ -2193,7 +2193,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 234.19125, y: 234.19125}
+  m_CellSize: {x: 156.53221, y: 156.53221}
   m_Spacing: {x: 70, y: 50}
   m_Constraint: 0
   m_ConstraintCount: 2
@@ -3154,7 +3154,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 234.19125, y: 234.19125}
+  m_CellSize: {x: 156.53221, y: 156.53221}
   m_Spacing: {x: 70, y: 50}
   m_Constraint: 0
   m_ConstraintCount: 2
@@ -8950,6 +8950,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: PlayerProfilePanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 732220480386939598, guid: b749598c13afc9344ae423a563607749,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1102917297237220276, guid: b749598c13afc9344ae423a563607749,
         type: 3}
