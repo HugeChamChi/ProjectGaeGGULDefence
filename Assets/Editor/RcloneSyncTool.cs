@@ -117,7 +117,8 @@ public class RcloneSyncTool : EditorWindow
         ProcessStartInfo startInfo = new ProcessStartInfo
         {
             FileName = "cmd.exe",
-            Arguments = $"/k \"{rcloneExec} {rcloneArgs}\"",
+            // 성공 시(/c) 자동 종료, 실패 시(||) 창 유지(pause)
+            Arguments = $"/c \"{rcloneExec} {rcloneArgs} || pause\"",
             UseShellExecute = true, 
             CreateNoWindow = false
         };
