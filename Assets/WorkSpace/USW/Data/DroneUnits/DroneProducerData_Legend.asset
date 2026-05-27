@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6b0839578130124a821b1c2e3edf5bc, type: 3}
   m_Name: DroneProducerData_Legend
   m_EditorClassIdentifier: 
-  normalDroneCount: 0
-  selfDestructCount: 0
-  droneAtk: 0
-  droneAttackInterval: 0
-  selfDestructDamage: 0
+  maxDroneCount: 4
+  selfDestructCount: 2
+  droneAtk: 20
+  droneAttackInterval: 1.2
+  selfDestructDamage: 80

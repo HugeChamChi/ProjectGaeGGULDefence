@@ -9,9 +9,12 @@ using UnityEngine;
 /// </summary>
 public class DroneUnit : MonoBehaviour
 {
-    public float   Atk            { get; private set; }
-    public float   AttackInterval { get; private set; }
-    public Vector3 HomePosition   { get; private set; }
+    public float     Atk            { get; private set; }
+    public float     AttackInterval { get; private set; }
+    public Vector3   HomePosition   => _ownerTransform != null ? _ownerTransform.position : _homePositionFallback;
+
+    private Transform _ownerTransform;
+    private Vector3   _homePositionFallback;
 
     [Header("궤도 반경 (px)")]
     [SerializeField] private float _orbitRadiusMin = 25f;
@@ -27,11 +30,12 @@ public class DroneUnit : MonoBehaviour
     // ── 초기화 ──────────────────────────────────────────────────────
 
     /// <summary>DronePool.GetDrone() 에서 호출 — 스탯 주입 후 공격·궤도 루프 시작</summary>
-    public void Initialize(float atk, float attackInterval)
+    public void Initialize(float atk, float attackInterval, Transform ownerTransform = null)
     {
-        Atk            = atk;
-        AttackInterval = attackInterval;
-        HomePosition   = transform.position;
+        Atk                  = atk;
+        AttackInterval       = attackInterval;
+        _ownerTransform      = ownerTransform;
+        _homePositionFallback = transform.position;
 
         StopAll();
         Manager.Drone?.RegisterDrone(this);

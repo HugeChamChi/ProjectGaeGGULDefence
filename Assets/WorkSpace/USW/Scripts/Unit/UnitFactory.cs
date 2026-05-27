@@ -124,7 +124,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         }
 
         unit.unitData = data;
-        unit.animator.Initialize(unit);
+        unit.animator?.Initialize(unit);
 
         return unit;
     }

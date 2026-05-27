@@ -18,7 +18,7 @@ public class DebuffDroneUnit : UnitBase
     protected override void OnUnitPlaced()
     {
         if (Data == null || Manager.DronePool == null) return;
-        _ownedDrone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position);
+        _ownedDrone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
     }
 
     protected override void OnUnitRemoved()

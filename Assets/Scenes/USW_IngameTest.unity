@@ -210,10 +210,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee158225ee1e59f4791627785501d950, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentShaderType: 0
-  normalStrength: 5
-  normalSmoothing: 1
-  computingNormal: 0
 --- !u!1 &94264817
 GameObject:
   m_ObjectHideFlags: 0
@@ -1456,10 +1452,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e0f68e6ca54a5b4695a0c91302b587c, type: 2}
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: dbbc1525002c1454883df4988a576b4e, type: 2}
-  - {fileID: 11400000, guid: ff4aa9447ba7dba4f99d6fa13de5d45b, type: 2}
-  - {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
-  - {fileID: 11400000, guid: 9c3d0db946239ca4bbbd6ec54d3d430d, type: 2}
-  - {fileID: 11400000, guid: f86948ff03f0b13489b262cec058c781, type: 2}
   - {fileID: 11400000, guid: 22e7ea8178e288b49ba1e3bc2306ee49, type: 2}
   - {fileID: 11400000, guid: 1418c0b230f8af442839b23b393aebc2, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
@@ -5902,6 +5894,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chieftainDataList:
   - {fileID: 0}
+  _useTestSpawn: 1
+  _testUnitData: {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
 --- !u!4 &810861387
 Transform:
   m_ObjectHideFlags: 0
@@ -9122,8 +9116,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdfcf71c258c39b45b4b9a0e62af894d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dronePrefab: {fileID: 0}
-  _selfDestructPrefab: {fileID: 0}
+  _dronePrefab: {fileID: 209249745133969426, guid: 78dd10562d3fbe84bb1c1a746c14961f,
+    type: 3}
+  _selfDestructPrefab: {fileID: 6251222446630422850, guid: ffc761a047444e446a97aebc507137a9,
+    type: 3}
+  _droneContainer: {fileID: 0}
   _dronePoolSize: 80
   _selfDestructPoolSize: 20
 --- !u!4 &1162155006
@@ -9134,12 +9131,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1162155004}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -540, y: -1170, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1196889861}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1167798513 stripped
 MonoBehaviour:
@@ -9403,6 +9400,7 @@ RectTransform:
   - {fileID: 1026647503}
   - {fileID: 1633819305}
   - {fileID: 608419416}
+  - {fileID: 1162155006}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -13261,7 +13259,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectView: {fileID: 1703457867}
-  autoPlayOnStart: 1
+  autoPlayOnStart: 0
   playIntervalSeconds: 4
   testChiefSprite: {fileID: -817236093, guid: 7a9c1e07b1460c947a5265127776bc8f, type: 3}
 --- !u!114 &1906155819 stripped
@@ -14765,7 +14763,7 @@ GameObject:
   - component: {fileID: 2105480799}
   - component: {fileID: 2105480798}
   m_Layer: 0
-  m_Name: DronePool
+  m_Name: DroneManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15100,7 +15098,6 @@ SceneRoots:
   - {fileID: 1161898287}
   - {fileID: 1823091139}
   - {fileID: 776270062}
-  - {fileID: 1162155006}
   - {fileID: 2105480799}
   - {fileID: 2068514273}
   - {fileID: 1714553164}

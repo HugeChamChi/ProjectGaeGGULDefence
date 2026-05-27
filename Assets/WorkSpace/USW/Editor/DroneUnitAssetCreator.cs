@@ -35,18 +35,22 @@ public static class DroneUnitAssetCreator
         var n = GetOrCreate<DroneProducerData>($"{OutputPath}/DroneProducerData_Normal.asset");
         n.maxDroneCount = 1; n.selfDestructCount = 0;
         n.droneAtk = 8f;  n.droneAttackInterval = 1.5f; n.selfDestructDamage = 0f;
+        EditorUtility.SetDirty(n);
 
         var r = GetOrCreate<DroneProducerData>($"{OutputPath}/DroneProducerData_Rare.asset");
         r.maxDroneCount = 2; r.selfDestructCount = 0;
         r.droneAtk = 12f; r.droneAttackInterval = 1.4f; r.selfDestructDamage = 0f;
+        EditorUtility.SetDirty(r);
 
         var e = GetOrCreate<DroneProducerData>($"{OutputPath}/DroneProducerData_Epic.asset");
         e.maxDroneCount = 3; e.selfDestructCount = 0;
         e.droneAtk = 17f; e.droneAttackInterval = 1.3f; e.selfDestructDamage = 0f;
+        EditorUtility.SetDirty(e);
 
         var l = GetOrCreate<DroneProducerData>($"{OutputPath}/DroneProducerData_Legend.asset");
         l.maxDroneCount = 4; l.selfDestructCount = 2;
         l.droneAtk = 20f; l.droneAttackInterval = 1.2f; l.selfDestructDamage = 80f;
+        EditorUtility.SetDirty(l);
     }
 
     // ── 드론 버퍼 ───────────────────────────────────────────────────
@@ -55,15 +59,19 @@ public static class DroneUnitAssetCreator
     {
         var n = GetOrCreate<DroneBufferData>($"{OutputPath}/DroneBufferData_Normal.asset");
         n.atkBuffMultiplier = 1.15f; n.speedBuffMultiplier = 1.12f; n.buffDuration = 5f;
+        EditorUtility.SetDirty(n);
 
         var r = GetOrCreate<DroneBufferData>($"{OutputPath}/DroneBufferData_Rare.asset");
         r.atkBuffMultiplier = 1.25f; r.speedBuffMultiplier = 1.20f; r.buffDuration = 7f;
+        EditorUtility.SetDirty(r);
 
         var e = GetOrCreate<DroneBufferData>($"{OutputPath}/DroneBufferData_Epic.asset");
         e.atkBuffMultiplier = 1.38f; e.speedBuffMultiplier = 1.30f; e.buffDuration = 10f;
+        EditorUtility.SetDirty(e);
 
         var l = GetOrCreate<DroneBufferData>($"{OutputPath}/DroneBufferData_Legend.asset");
         l.atkBuffMultiplier = 1.55f; l.speedBuffMultiplier = 1.45f; l.buffDuration = 12f;
+        EditorUtility.SetDirty(l);
     }
 
     // ── 디버프 드론 ─────────────────────────────────────────────────
@@ -72,15 +80,19 @@ public static class DroneUnitAssetCreator
     {
         var n = GetOrCreate<DebuffDroneData>($"{OutputPath}/DebuffDroneData_Normal.asset");
         n.damageAmplificationMultiplier = 1.15f; n.debuffDuration = 6f;
+        EditorUtility.SetDirty(n);
 
         var r = GetOrCreate<DebuffDroneData>($"{OutputPath}/DebuffDroneData_Rare.asset");
         r.damageAmplificationMultiplier = 1.25f; r.debuffDuration = 9f;
+        EditorUtility.SetDirty(r);
 
         var e = GetOrCreate<DebuffDroneData>($"{OutputPath}/DebuffDroneData_Epic.asset");
         e.damageAmplificationMultiplier = 1.38f; e.debuffDuration = 12f;
+        EditorUtility.SetDirty(e);
 
         var l = GetOrCreate<DebuffDroneData>($"{OutputPath}/DebuffDroneData_Legend.asset");
         l.damageAmplificationMultiplier = 1.52f; l.debuffDuration = 14f;
+        EditorUtility.SetDirty(l);
     }
 
     // ── 드론 식량 생산자 ────────────────────────────────────────────
@@ -89,15 +101,19 @@ public static class DroneUnitAssetCreator
     {
         var n = GetOrCreate<DroneFoodProducerData>($"{OutputPath}/DroneFoodProducerData_Normal.asset");
         n.fixedFoodPerSec = 1.5f; n.foodPerDronePerSec = 0.40f;
+        EditorUtility.SetDirty(n);
 
         var r = GetOrCreate<DroneFoodProducerData>($"{OutputPath}/DroneFoodProducerData_Rare.asset");
         r.fixedFoodPerSec = 2.5f; r.foodPerDronePerSec = 0.55f;
+        EditorUtility.SetDirty(r);
 
         var e = GetOrCreate<DroneFoodProducerData>($"{OutputPath}/DroneFoodProducerData_Epic.asset");
         e.fixedFoodPerSec = 4.0f; e.foodPerDronePerSec = 0.75f;
+        EditorUtility.SetDirty(e);
 
         var l = GetOrCreate<DroneFoodProducerData>($"{OutputPath}/DroneFoodProducerData_Legend.asset");
         l.fixedFoodPerSec = 6.0f; l.foodPerDronePerSec = 1.00f;
+        EditorUtility.SetDirty(l);
     }
 
     // ── 족장 ────────────────────────────────────────────────────────
@@ -106,15 +122,19 @@ public static class DroneUnitAssetCreator
     {
         var n = GetOrCreate<DroneChieftainData>($"{OutputPath}/DroneChieftainData_Normal.asset");
         n.damagePerDrone = 25f;
+        EditorUtility.SetDirty(n);
 
         var r = GetOrCreate<DroneChieftainData>($"{OutputPath}/DroneChieftainData_Rare.asset");
         r.damagePerDrone = 42f;
+        EditorUtility.SetDirty(r);
 
         var e = GetOrCreate<DroneChieftainData>($"{OutputPath}/DroneChieftainData_Epic.asset");
         e.damagePerDrone = 68f;
+        EditorUtility.SetDirty(e);
 
         var l = GetOrCreate<DroneChieftainData>($"{OutputPath}/DroneChieftainData_Legend.asset");
         l.damagePerDrone = 110f;
+        EditorUtility.SetDirty(l);
     }
 
     // ── UnitData (UnitBase / UnitFactory 공통) ──────────────────────
@@ -159,12 +179,13 @@ public static class DroneUnitAssetCreator
         string path = $"{OutputPath}/UnitData_{fileName}.asset";
         var data = GetOrCreate<UnitData>(path);
 
-        data.characterId  = characterId;
-        data.unitType     = unitType;
-        data.unitTier     = tier;
-        data.unitTribe    = UnitTribe.UnEmployed; // 임시 — 드론 tribe 추가 시 교체
-        data.unitName     = unitName;
-        data.atk          = atk;
+        data.characterId   = characterId;
+        data.unitType      = unitType;
+        data.unitTier      = tier;
+        data.unitTribe     = UnitTribe.UnEmployed; // 임시 — 드론 tribe 추가 시 교체
+        data.unitName      = unitName;
+        data.atk           = atk;
+        data.attackSpeed   = 9999f; // 드론 유닛은 직접 공격 없음
         data.skillCooldown = skillCooldown;
         // prefab, icon 은 Unity Inspector에서 직접 연결
         EditorUtility.SetDirty(data);

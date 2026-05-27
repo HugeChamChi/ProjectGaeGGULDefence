@@ -12,5 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642c95ef3e16360478b76611b4887e63, type: 3}
   m_Name: DebuffDroneData_Normal
   m_EditorClassIdentifier: 
-  damageAmplificationMultiplier: 1
-  debuffDuration: 0
+  damageAmplificationMultiplier: 1.15
+  debuffDuration: 6
+  droneAtk: 8
+  droneAttackInterval: 1.5

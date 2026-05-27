@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9034ff038169f8042b9b055fb3d160f0, type: 3}
   m_Name: DroneFoodProducerData_Normal
   m_EditorClassIdentifier: 
-  fixedFoodPerSec: 0
-  foodPerDronePerSec: 0
+  fixedFoodPerSec: 1.5
+  foodPerDronePerSec: 0.4

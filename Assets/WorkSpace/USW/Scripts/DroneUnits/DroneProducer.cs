@@ -16,19 +16,28 @@ public class DroneProducer : UnitBase
 
     private readonly List<DroneUnit> _ownedDrones = new();
 
+    protected override void OnUnitPlaced()
+    {
+        SpawnOneDrone();
+    }
+
     protected override void OnSkillFull()
     {
         onSkillFull?.Invoke();
+        SpawnOneDrone();
+
         if (Data == null || Manager.DronePool == null) return;
-
-        if (_ownedDrones.Count < Data.maxDroneCount)
-        {
-            var drone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position);
-            _ownedDrones.Add(drone);
-        }
-
         for (int i = 0; i < Data.selfDestructCount; i++)
             Manager.DronePool.GetSelfDestruct(Data.selfDestructDamage, transform.position);
+    }
+
+    private void SpawnOneDrone()
+    {
+        if (Data == null || Manager.DronePool == null) return;
+        if (_ownedDrones.Count >= Data.maxDroneCount) return;
+
+        var drone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
+        if (drone != null) _ownedDrones.Add(drone);
     }
 
     protected override void OnUnitRemoved()

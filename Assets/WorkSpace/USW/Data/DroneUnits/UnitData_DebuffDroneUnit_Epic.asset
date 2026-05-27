@@ -17,12 +17,12 @@ MonoBehaviour:
   unitName: "\uB514\uBC84\uD504 \uB4DC\uB860 (\uC5D0\uD53D)"
   unitTier: 2
   unitTribe: 0
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2e3d19f734c6f8a4e9cf982ebb806997, type: 3}
+  prefab: {fileID: 8592549132893361823, guid: 875376496d093484f8a5fd2aca2c2789, type: 3}
   description: 
   attackSoundAddress: 
   atk: 0
-  attackSpeed: 0
+  attackSpeed: 9999
   skillAtk: 0
   skillCooldown: 19
   skillName: 

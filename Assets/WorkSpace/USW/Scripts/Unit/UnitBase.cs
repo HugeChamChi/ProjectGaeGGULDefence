@@ -293,6 +293,8 @@ public abstract class UnitBase : MonoBehaviour
 
     private void ExecuteAttack()
     {
+        if (unitData == null || unitData.atk <= 0) return;
+
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
 

@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3497fbcdbe25b5b4f969909d93dbcda5, type: 3}
   m_Name: DroneChieftainData_Rare
   m_EditorClassIdentifier: 
-  damagePerDrone: 0
+  damagePerDrone: 42

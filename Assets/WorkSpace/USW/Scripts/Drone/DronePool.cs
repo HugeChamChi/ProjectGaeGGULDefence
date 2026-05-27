@@ -9,8 +9,11 @@ using UnityEngine.Pool;
 public class DronePool : InGameSingleton<DronePool>
 {
     [Header("프리팹")]
-    [SerializeField] private DroneUnit         _dronePrefab;
-    [SerializeField] private SelfDestructDrone _selfDestructPrefab;
+    [SerializeField] private GameObject _dronePrefab;
+    [SerializeField] private GameObject _selfDestructPrefab;
+
+    [Header("Canvas 컨테이너 (드론 프리팹이 UI Image인 경우 Canvas 하위 Transform 연결)")]
+    [SerializeField] private Transform _droneContainer;
 
     [Header("풀 크기")]
     [SerializeField] private int _dronePoolSize        = 50;
@@ -23,8 +26,16 @@ public class DronePool : InGameSingleton<DronePool>
     {
         base.Awake();
 
+        if (_dronePrefab == null || _dronePrefab.GetComponent<DroneUnit>() == null)
+        {
+            Debug.LogError("DronePool: _dronePrefab 미연결 또는 DroneUnit 컴포넌트 없음 — Inspector에서 DronePrefab.prefab을 연결하세요.");
+            return;
+        }
+
+        var droneParent = _droneContainer != null ? _droneContainer : transform;
+
         _dronePool = new ObjectPool<DroneUnit>(
-            createFunc:      () => Instantiate(_dronePrefab, transform),
+            createFunc:      () => Instantiate(_dronePrefab, droneParent).GetComponent<DroneUnit>(),
             actionOnGet:     d => d.gameObject.SetActive(true),
             actionOnRelease: d => d.gameObject.SetActive(false),
             actionOnDestroy: d => Destroy(d.gameObject),
@@ -33,8 +44,14 @@ public class DronePool : InGameSingleton<DronePool>
             maxSize:         _dronePoolSize
         );
 
+        if (_selfDestructPrefab == null || _selfDestructPrefab.GetComponent<SelfDestructDrone>() == null)
+        {
+            Debug.LogWarning("DronePool: _selfDestructPrefab 미연결 또는 SelfDestructDrone 컴포넌트 없음 — 자폭 드론 비활성화.");
+            return;
+        }
+
         _selfDestructPool = new ObjectPool<SelfDestructDrone>(
-            createFunc:      () => Instantiate(_selfDestructPrefab, transform),
+            createFunc:      () => Instantiate(_selfDestructPrefab, droneParent).GetComponent<SelfDestructDrone>(),
             actionOnGet:     b => b.gameObject.SetActive(true),
             actionOnRelease: b => b.gameObject.SetActive(false),
             actionOnDestroy: b => Destroy(b.gameObject),
@@ -47,28 +64,31 @@ public class DronePool : InGameSingleton<DronePool>
     // ── 일반 드론 ────────────────────────────────────────────────────
 
     /// <summary>풀에서 드론을 꺼내 초기화 후 반환. parent 미지정 시 DronePool 하위에 배치.</summary>
-    public DroneUnit GetDrone(float atk, float attackInterval, Vector3 position, Transform parent = null)
+    /// <param name="ownerTransform">드론이 맴돌 기준 유닛 Transform. null이면 생성 위치 고정.</param>
+    public DroneUnit GetDrone(float atk, float attackInterval, Vector3 position, Transform ownerTransform = null)
     {
+        if (_dronePool == null) return null;
         var drone = _dronePool.Get();
-        drone.transform.SetParent(parent != null ? parent : transform, worldPositionStays: false);
+        drone.transform.SetParent(_droneContainer != null ? _droneContainer : transform, worldPositionStays: false);
         drone.transform.position = position;
-        drone.Initialize(atk, attackInterval);
+        drone.Initialize(atk, attackInterval, ownerTransform);
         return drone;
     }
 
-    public void ReturnDrone(DroneUnit drone) => _dronePool.Release(drone);
+    public void ReturnDrone(DroneUnit drone) => _dronePool?.Release(drone);
 
     // ── 자폭 드론 ────────────────────────────────────────────────────
 
     /// <summary>풀에서 자폭 드론을 꺼내 초기화. 자폭 후 스스로 ReturnSelfDestruct를 호출한다.</summary>
     public SelfDestructDrone GetSelfDestruct(float damage, Vector3 position)
     {
+        if (_selfDestructPool == null) return null;
         var bomb = _selfDestructPool.Get();
-        bomb.transform.SetParent(transform, worldPositionStays: false);
+        bomb.transform.SetParent(_droneContainer != null ? _droneContainer : transform, worldPositionStays: false);
         bomb.transform.position = position;
         bomb.Initialize(damage);
         return bomb;
     }
 
-    public void ReturnSelfDestruct(SelfDestructDrone bomb) => _selfDestructPool.Release(bomb);
+    public void ReturnSelfDestruct(SelfDestructDrone bomb) => _selfDestructPool?.Release(bomb);
 }

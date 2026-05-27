@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e82978c4afa31154fb505aa4f4444e13, type: 3}
   m_Name: DroneBufferData_Legend
   m_EditorClassIdentifier: 
-  atkBuffMultiplier: 1
-  speedBuffMultiplier: 1
-  buffDuration: 0
+  atkBuffMultiplier: 1.55
+  speedBuffMultiplier: 1.45
+  buffDuration: 12
+  droneAtk: 8
+  droneAttackInterval: 1.5
