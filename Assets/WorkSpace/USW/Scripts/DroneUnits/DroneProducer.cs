@@ -14,7 +14,18 @@ public class DroneProducer : UnitBase
         unitData != null && _dataByTier != null && (int)unitData.unitTier < _dataByTier.Length
             ? _dataByTier[(int)unitData.unitTier] : null;
 
-    [SerializeField] private float _droneSpreadRadius = 35f;
+    [SerializeField] private float _spreadX      = 35f;
+    [SerializeField] private float _spreadXUpper = 50f; // 위 슬롯 X — 아래보다 넓어서 V자
+    [SerializeField] private float _spreadY      = 20f;
+
+    // 소환 순서: 좌하단 → 우하단 → 좌중단 → 우중단
+    private Vector2[] SlotOffsets => new[]
+    {
+        new Vector2(-_spreadX,      -_spreadY), // 0: 좌하단
+        new Vector2( _spreadX,      -_spreadY), // 1: 우하단
+        new Vector2(-_spreadXUpper,  _spreadY), // 2: 좌중단
+        new Vector2( _spreadXUpper,  _spreadY), // 3: 우중단
+    };
 
     private readonly List<DroneUnit> _ownedDrones = new();
 
@@ -40,24 +51,10 @@ public class DroneProducer : UnitBase
         if (Data == null || Manager.DronePool == null) return;
         if (_ownedDrones.Count >= Data.maxDroneCount) return;
 
-        var offset = CalcSlotOffset(_ownedDrones.Count, Data.maxDroneCount);
+        var slots  = SlotOffsets;
+        var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];
         var drone  = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform, offset);
         if (drone != null) _ownedDrones.Add(drone);
-    }
-
-    /// <summary>총 total 개 슬롯을 원형으로 균등 배치. index 번째 슬롯 오프셋 반환.</summary>
-    private Vector2 CalcSlotOffset(int index, int total)
-    {
-        // 3개: 90° 시작 → 꼭짓점이 위인 정삼각형
-        // 4개: 90° 시작 → 다이아몬드, 반지름 1.4배로 더 벌림
-        float startDeg = 90f;
-        float radius   = total >= 4 ? _droneSpreadRadius * 1.4f : _droneSpreadRadius;
-        float angle    = Mathf.Deg2Rad * (startDeg + 360f / Mathf.Max(total, 1) * index);
-
-        return new Vector2(
-            Mathf.Cos(angle) * radius,
-            Mathf.Sin(angle) * radius * 0.6f
-        );
     }
 
     protected override void OnUnitRemoved()

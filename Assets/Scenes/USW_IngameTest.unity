@@ -14770,7 +14770,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rallySpacing: 50
-  _rallyBossOffset: 200
+  _rallyBossOffset: 450
+  _testRallyDamage: 50
 --- !u!4 &2105480799
 Transform:
   m_ObjectHideFlags: 0
