@@ -37,7 +37,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 70, y: 70}
+  m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7574341758329407283
 CanvasRenderer:
@@ -89,10 +89,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c4db0b609b2114f9ba567db40c7418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _hoverAmplitude: 8
-  _hoverDuration: 1.2
-  _tiltAngle: 4
-  _tiltDuration: 1.6
+  _hoverAmplitude: 10
+  _hoverDuration: 0.6
+  _tiltAngle: 2
+  _tiltDuration: 2.2
   _randomPhase: 1
 --- !u!114 &-1013402522113950437
 MonoBehaviour:
@@ -106,7 +106,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7714c3bb41448c4298d84970e50e247, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _orbitRadiusMin: 25
-  _orbitRadiusMax: 45
-  _orbitSpeedMin: 0.8
-  _orbitSpeedMax: 1.4
+  _offsetRangeX: 12
+  _offsetRangeY: 10

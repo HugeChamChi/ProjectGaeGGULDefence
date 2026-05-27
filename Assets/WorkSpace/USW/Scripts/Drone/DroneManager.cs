@@ -40,6 +40,9 @@ public class DroneManager : InGameSingleton<DroneManager>
     [Tooltip("보스 중심 기준 아래 방향 오프셋 (px)")]
     [SerializeField] private float _rallyBossOffset = 200f;
 
+    [Header("테스트")]
+    [SerializeField] private float _testRallyDamage = 50f;
+
     // ── 드론 등록 ───────────────────────────────────────────────────
 
     public void RegisterDrone(DroneUnit drone)
@@ -132,6 +135,19 @@ public class DroneManager : InGameSingleton<DroneManager>
         {
             _isRallying = false;
         }
+    }
+
+    // ── 테스트 ──────────────────────────────────────────────────────
+
+    [ContextMenu("테스트: 집결 발동")]
+    public void TriggerTestRally()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("DroneManager: 플레이 모드에서만 테스트 가능합니다.");
+            return;
+        }
+        ExecuteRallyAsync(_testRallyDamage, this.GetCancellationTokenOnDestroy()).Forget(Debug.LogException);
     }
 
     // ── 초기화 ──────────────────────────────────────────────────────

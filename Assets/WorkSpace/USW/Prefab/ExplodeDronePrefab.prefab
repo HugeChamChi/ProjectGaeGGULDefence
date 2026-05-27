@@ -102,8 +102,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c4db0b609b2114f9ba567db40c7418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _hoverAmplitude: 8
-  _hoverDuration: 1.2
-  _tiltAngle: 4
-  _tiltDuration: 1.6
+  _hoverAmplitude: 10
+  _hoverDuration: 0.6
+  _tiltAngle: 2
+  _tiltDuration: 2.2
   _randomPhase: 1

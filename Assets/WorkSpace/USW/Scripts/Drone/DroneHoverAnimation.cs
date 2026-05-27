@@ -8,12 +8,12 @@ using UnityEngine;
 public class DroneHoverAnimation : MonoBehaviour
 {
     [Header("부유 (상하)")]
-    [SerializeField] private float _hoverAmplitude = 8f;   // px 단위 이동 폭
-    [SerializeField] private float _hoverDuration  = 1.2f; // 위→아래 한 번 시간(초)
+    [SerializeField] private float _hoverAmplitude = 3f;   // px 단위 이동 폭
+    [SerializeField] private float _hoverDuration  = 1.8f; // 위→아래 한 번 시간(초)
 
     [Header("회전 흔들림")]
-    [SerializeField] private float _tiltAngle    = 4f;   // 최대 기울기(도)
-    [SerializeField] private float _tiltDuration = 1.6f;
+    [SerializeField] private float _tiltAngle    = 2f;   // 최대 기울기(도)
+    [SerializeField] private float _tiltDuration = 2.2f;
 
     [Header("위상 랜덤 오프셋")]
     [Tooltip("드론마다 타이밍을 다르게 해 동기화 어색함 방지")]
@@ -28,6 +28,12 @@ public class DroneHoverAnimation : MonoBehaviour
     }
 
     private void OnEnable()
+    {
+        PlayHover();
+    }
+
+    /// <summary>Initialize 등 외부에서 위치 확정 후 명시적으로 호출 — basePos를 현재 위치로 리셋.</summary>
+    public void Play()
     {
         PlayHover();
     }
@@ -72,4 +78,12 @@ public class DroneHoverAnimation : MonoBehaviour
     {
         _seq?.Kill();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (Application.isPlaying && _rt != null)
+            PlayHover();
+    }
+#endif
 }

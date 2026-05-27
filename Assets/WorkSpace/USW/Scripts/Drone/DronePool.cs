@@ -65,13 +65,13 @@ public class DronePool : InGameSingleton<DronePool>
 
     /// <summary>풀에서 드론을 꺼내 초기화 후 반환. parent 미지정 시 DronePool 하위에 배치.</summary>
     /// <param name="ownerTransform">드론이 맴돌 기준 유닛 Transform. null이면 생성 위치 고정.</param>
-    public DroneUnit GetDrone(float atk, float attackInterval, Vector3 position, Transform ownerTransform = null)
+    public DroneUnit GetDrone(float atk, float attackInterval, Vector3 position, Transform ownerTransform = null, Vector2? fixedOffset = null)
     {
         if (_dronePool == null) return null;
         var drone = _dronePool.Get();
         drone.transform.SetParent(_droneContainer != null ? _droneContainer : transform, worldPositionStays: false);
         drone.transform.position = position;
-        drone.Initialize(atk, attackInterval, ownerTransform);
+        drone.Initialize(atk, attackInterval, ownerTransform, fixedOffset);
         return drone;
     }
 

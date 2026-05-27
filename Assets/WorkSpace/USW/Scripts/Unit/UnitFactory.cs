@@ -104,6 +104,9 @@ public class UnitFactory : InGameSingleton<UnitFactory>
         return InstantiateFromData(pool[Random.Range(0, pool.Length)]);
     }
 
+    /// <summary>UnitData SO를 직접 넘겨 생성 — unitDataList 등록 없이도 동작 (테스트 소환 등)</summary>
+    public UnitBase CreateUnitFromData(UnitData data) => InstantiateFromData(data);
+
     // ── 공통 인스턴스화 ────────────────────────────────────────
     private UnitBase InstantiateFromData(UnitData data)
     {

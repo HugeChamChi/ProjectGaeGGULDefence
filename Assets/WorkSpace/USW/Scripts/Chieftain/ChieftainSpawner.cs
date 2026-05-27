@@ -83,7 +83,18 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
 
     private void SpawnChieftainByUnitData(UnitData unitData)
     {
-        SpawnToCenter(unitData.unitType);
+        var cell = Manager.Grid.GetCenterCell();
+        if (cell == null || !cell.IsAvailable)
+        {
+            Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
+            return;
+        }
+
+        var unit = Manager.UnitFactory.CreateUnitFromData(unitData);
+        if (unit == null) return;
+
+        ChieftainUnit = unit;
+        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
     }
 
     private void SpawnToCenter(int unitType)
