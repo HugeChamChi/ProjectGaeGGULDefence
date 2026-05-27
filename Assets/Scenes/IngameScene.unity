@@ -1074,7 +1074,7 @@ MonoBehaviour:
   m_text: Home
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_sharedMaterial: {fileID: -9091290411403306134, guid: 539691cd3e821c14aa56931f7ccafef9,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -3465,13 +3465,13 @@ Material:
   m_Shader: {fileID: 4800000, guid: a36b7719ff0465b42ab1407d67672c5f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_ValidKeywords:
   - DISTORT_ON
-  - ETC1_EXTERNAL_ALPHA
   - HSV_ON
   - TEXTURESCROLL_ON
   - WAVEUV_ON
+  m_InvalidKeywords:
+  - ETC1_EXTERNAL_ALPHA
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -6009,6 +6009,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chieftainDataList:
   - {fileID: 0}
+  _useTestSpawn: 1
+  _testUnitData: {fileID: 0}
 --- !u!4 &810861387
 Transform:
   m_ObjectHideFlags: 0
@@ -9594,6 +9596,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dronePrefab: {fileID: 0}
   _selfDestructPrefab: {fileID: 0}
+  _droneContainer: {fileID: 0}
   _dronePoolSize: 80
   _selfDestructPoolSize: 20
 --- !u!4 &1162155006
@@ -13221,7 +13224,7 @@ MonoBehaviour:
   m_text: Retry
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_sharedMaterial: {fileID: -9091290411403306134, guid: 539691cd3e821c14aa56931f7ccafef9,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

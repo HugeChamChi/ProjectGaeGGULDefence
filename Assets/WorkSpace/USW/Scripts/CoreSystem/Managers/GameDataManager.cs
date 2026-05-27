@@ -469,8 +469,12 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
     public float GetExpMultiplierForRound(int roundId)
     {
-        if (!_bossByRoundId.TryGetValue(roundId, out var row)) return 0.01f;
-        return row.DropExpAmount / row.DropExpPerHealth;
+        if (!_bossByRoundId.TryGetValue(roundId, out var row) || row.MaxHealth <= 0) return 0.01f;
+        
+        // (DropExpAmount / DropExpPerHealth)는 보스를 100% 잡았을 때 줄 총 경험치 양입니다.
+        // 이를 MaxHealth로 나누어 데미지 1당 줄 경험치 수치를 계산합니다.
+        float totalExpForBoss = row.DropExpAmount / Mathf.Max(row.DropExpPerHealth, 0.001f);
+        return totalExpForBoss / row.MaxHealth;
     }
 
     public void SetCurrentBossRound(int roundId) => _currentBossRoundId = roundId;
