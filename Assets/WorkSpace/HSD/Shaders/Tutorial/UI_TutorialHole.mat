@@ -43,7 +43,7 @@ Material:
     - _StencilWriteMask: 255
     m_Colors:
     - _Center: {r: -460.00003, g: -832, b: 0, a: 0}
-    - _Color: {r: 0, g: 0, b: 0, a: 0.6666667}
+    - _Color: {r: 0, g: 0, b: 0, a: 0.67}
     - _HighlightColor: {r: 1, g: 1, b: 1, a: 1}
     - _HighlightUV: {r: 0, g: 0, b: 1, a: 1}
     - _Size: {r: 110.00001, g: 109.999985, b: 0, a: 0}

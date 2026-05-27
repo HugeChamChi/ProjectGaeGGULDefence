@@ -1,65 +1,93 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GaeGGUL.Tutorial
 {
     /// <summary>
-    /// UI/TutorialHole 쉐이더의 파라미터를 조절하여 화면에 구멍을 뚫어주는 하이라이터입니다.
+    /// UI/TutorialHole 쉐이더의 파라미터를 애니메이션하여 타겟을 강조하는 하이라이터입니다.
+    /// 최대 Alpha 값을 고정하여 항상 일정한 어둡기를 유지합니다.
     /// </summary>
     public class UI_TutorialHighlighter : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private Material _holeMaterial; // UI/TutorialHole 쉐이더가 적용된 재질
-        [SerializeField] private Image _maskImage;      // 쉐이더 재질이 입혀진 배경 이미지 (Full Screen Stretch 권장)
+        [SerializeField] private Material _holeMaterial; 
+        [SerializeField] private Image _maskImage;      
+
+        [Header("Focus Animation")]
+        [SerializeField] private float _focusDuration = 0.4f;      
+        [SerializeField] private float _startSizeMultiplier = 3.0f; 
+        
+        [Header("Alpha Settings")]
+        [Range(0f, 1f)]
+        [SerializeField] private float _targetAlpha = 0.67f; // 170/255 = 약 0.67
 
         private static readonly int CenterID = Shader.PropertyToID("_Center");
         private static readonly int SizeID = Shader.PropertyToID("_Size");
         private static readonly int SoftnessID = Shader.PropertyToID("_Softness");
+        private static readonly int ColorID = Shader.PropertyToID("_Color");
 
-        /// <summary>
-        /// 타겟 UI의 위치와 크기를 계산하여 쉐이더 구멍을 뚫습니다. (Pivot 위치에 상관없이 기하학적 중앙 계산)
-        /// </summary>
+        private Tween _focusTween;
+
         public void SetTarget(RectTransform target, Vector2 sizeOffset, float softness)
         {
             if (_maskImage == null || _holeMaterial == null || target == null) return;
 
+            _focusTween?.Kill();
             _maskImage.gameObject.SetActive(true);
+
             RectTransform maskRect = _maskImage.rectTransform;
 
-            // 1. 타겟의 월드 사각형 코너 정보 가져오기
+            // 1. 최종 목표값 계산
             Vector3[] corners = new Vector3[4];
             target.GetWorldCorners(corners);
-            
-            // 2. 기하학적 중앙 계산: Pivot 설정에 상관없이 실제 사각형의 중앙 좌표를 구함
-            // corners[0]: Bottom-Left, corners[2]: Top-Right
             Vector3 worldCenter = (corners[0] + corners[2]) * 0.5f;
-
-            // 3. 위치 변환: 타겟의 중앙 월드 좌표를 하이라이트 배경의 로컬 좌표계로 변환
             Vector3 localCenter = maskRect.InverseTransformPoint(worldCenter);
 
-            // 4. 크기 계산: 월드 공간에서의 가로, 세로 길이 측정
             float worldWidth = Vector3.Distance(corners[0], corners[3]);
             float worldHeight = Vector3.Distance(corners[0], corners[1]);
-
-            // 마스크 이미지의 월드 스케일로 나누어 로컬 공간에서의 크기로 보정
-            Vector2 localSize = new Vector2(
+            Vector2 finalLocalSize = new Vector2(
                 worldWidth / maskRect.lossyScale.x, 
                 worldHeight / maskRect.lossyScale.y
-            );
-            
-            localSize += sizeOffset;
+            ) + sizeOffset;
 
-            // 5. 쉐이더 파라미터 업데이트
+            // 2. 초기 상태 설정
             _holeMaterial.SetVector(CenterID, new Vector4(localCenter.x, localCenter.y, 0, 0));
-            _holeMaterial.SetVector(SizeID, new Vector4(localSize.x, localSize.y, 0, 0));
             _holeMaterial.SetFloat(SoftnessID, softness);
             
-            Debug.Log($"[TutorialHighlighter] Target: {target.name}, Pivot-Adjusted LocalCenter: {localCenter}, LocalSize: {localSize}");
+            // RGB는 Image의 값을 유지
+            Color baseColor = _maskImage.color;
+            _holeMaterial.SetColor(ColorID, new Color(baseColor.r, baseColor.g, baseColor.b, 0f));
+
+            // 시작 크기
+            Vector2 startLocalSize = finalLocalSize * _startSizeMultiplier;
+            _holeMaterial.SetVector(SizeID, new Vector4(startLocalSize.x, startLocalSize.y, 0, 0));
+
+            // 3. 애니메이션 실행
+            _focusTween = DOTween.To(() => 0f, lerp => {
+                // Alpha를 0에서 _targetAlpha(170 수준)까지 페이드
+                float currentAlpha = lerp * _targetAlpha;
+                _holeMaterial.SetColor(ColorID, new Color(baseColor.r, baseColor.g, baseColor.b, currentAlpha));
+
+                // Size 수축
+                Vector2 currentSize = Vector2.Lerp(startLocalSize, finalLocalSize, lerp);
+                _holeMaterial.SetVector(SizeID, new Vector4(currentSize.x, currentSize.y, 0, 0));
+            }, 1f, _focusDuration)
+            .SetEase(Ease.OutQuart)
+            .SetUpdate(true);
+
+            Debug.Log($"[Highlighter] Focus Animation: TargetAlpha={_targetAlpha}");
         }
 
         public void Hide()
         {
+            _focusTween?.Kill();
             if (_maskImage != null) _maskImage.gameObject.SetActive(false);
+        }
+
+        private void OnDestroy()
+        {
+            _focusTween?.Kill();
         }
     }
 }

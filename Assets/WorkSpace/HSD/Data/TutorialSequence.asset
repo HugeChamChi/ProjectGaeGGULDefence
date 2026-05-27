@@ -46,7 +46,7 @@ MonoBehaviour:
     - rid: 4412322086626525199
       type: {class: WaitButtonClickStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
       data:
-        delayBeforeExecute: 0.3
+        delayBeforeExecute: 0.5
         useDim: 0
         targetID: GachaResultPanelClose
     - rid: 4412322086626525201

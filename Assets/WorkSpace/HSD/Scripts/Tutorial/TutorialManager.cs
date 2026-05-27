@@ -67,8 +67,13 @@ namespace GaeGGUL.Tutorial
             _dimCanvasGroup.blocksRaycasts = active;
         }
 
+        /// <summary>
+        /// 물리적인 클릭 구멍(Raycast Hole)만 엽니다.
+        /// </summary>
         public void SetInteractionTarget(string id)
         {
+            // 동적 생성 대응을 위해 갱신 후 검색
+            RefreshRegistry();
             var target = TutorialRegistry.GetUI(id);
             if (target != null && _raycastFilter != null)
             {
@@ -116,7 +121,6 @@ namespace GaeGGUL.Tutorial
             Debug.Log($"[TutorialManager] Sequence Start: {sequence.tutorialID}");
             
             SetBlockInteraction(true);
-            
             await sequence.PlayAsync(this);
             
             // 완료 상태 저장
@@ -136,13 +140,10 @@ namespace GaeGGUL.Tutorial
             else await UniTask.Delay(1000);
         }
 
-        /// <summary>
-        /// 특정 버튼 클릭을 대기합니다. 안전을 위해 0.1초 대기 및 레지스트리 자동 갱신을 수행합니다.
-        /// </summary>
         public async UniTask WaitTargetClick(string targetID)
         {
             // 1. 안전 대기 (UI 생성 및 레이아웃 갱신 시간)
-            await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+            await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
 
             // 2. 동적 생성된 UI를 위해 레지스트리 최신화
             RefreshRegistry();
