@@ -35,17 +35,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _HighlightScale: 1.2828261
-    - _Softness: 20
+    - _Softness: 10
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
     m_Colors:
-    - _Center: {r: -824, g: 382, b: 0, a: 0}
-    - _Color: {r: 0, g: 0, b: 0, a: 0.5}
+    - _Center: {r: -460.00003, g: -832, b: 0, a: 0}
+    - _Color: {r: 0, g: 0, b: 0, a: 0.6666667}
     - _HighlightColor: {r: 1, g: 1, b: 1, a: 1}
     - _HighlightUV: {r: 0, g: 0, b: 1, a: 1}
-    - _Size: {r: 100, g: 100, b: 0, a: 0}
+    - _Size: {r: 110.00001, g: 109.999985, b: 0, a: 0}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1
