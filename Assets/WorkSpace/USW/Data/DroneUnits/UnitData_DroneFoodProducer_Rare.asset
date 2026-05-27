@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
+  m_Name: UnitData_DroneFoodProducer_Rare
+  m_EditorClassIdentifier: 
+  characterId: 5014
+  unitType: 8
+  unitName: "\uB4DC\uB860 \uC2DD\uB7C9 \uC0DD\uC0B0\uC790 (\uB808\uC5B4)"
+  unitTier: 1
+  unitTribe: 0
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  description: 
+  attackSoundAddress: 
+  atk: 0
+  attackSpeed: 0
+  skillAtk: 0
+  skillCooldown: 999
+  skillName: 
+  foodPerTick: 10
+  populationCost: 1

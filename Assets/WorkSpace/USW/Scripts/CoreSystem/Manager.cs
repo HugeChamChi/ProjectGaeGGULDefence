@@ -55,6 +55,10 @@ public static class Manager
     // ── 강화 ───────────────────────────────────────────────────
     public static UpgradeManager   Upgrade    => UpgradeManager.Instance;
 
+    // ── 드론 ───────────────────────────────────────────────────
+    public static DroneManager     Drone      => DroneManager.Instance;
+    public static DronePool        DronePool  => DronePool.Instance;
+
     // ── 게임 데이터 (시트 연동) ────────────────────────────────
     public static GameDataManager  GameData   => GameDataManager.Instance;
 }

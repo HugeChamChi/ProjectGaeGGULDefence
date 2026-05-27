@@ -342,7 +342,7 @@ public abstract class UnitBase : MonoBehaviour
             _currency.AddCurrency(amount);
     }
 
-    private float GetBaseFoodPerSecond()
+    protected virtual float GetBaseFoodPerSecond()
     {
         if (Manager.GameData != null && Manager.GameData.IsLoaded)
             return Manager.GameData.GetCurrencyPerSecond(unitData.characterId);

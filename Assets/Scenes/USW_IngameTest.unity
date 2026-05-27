@@ -1448,22 +1448,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitDataList:
-  - {fileID: 11400000, guid: c3bb090a590c87248abc5561ef2833cd, type: 2}
-  - {fileID: 11400000, guid: a3171cc8ad3d7124d8803d4720d5efaa, type: 2}
-  - {fileID: 11400000, guid: 921ecd073721bb44b8ae2585b6f1ef20, type: 2}
-  - {fileID: 11400000, guid: f1c73a5d331cbe54391d031dab33ffec, type: 2}
-  - {fileID: 11400000, guid: 2afbc4a8555572b4782de99875470d47, type: 2}
-  - {fileID: 11400000, guid: 6fda0ad9b6fb4954a94655cb62c78cc5, type: 2}
-  - {fileID: 11400000, guid: 450c68fb72582564b9a9cac8dfc39910, type: 2}
-  - {fileID: 11400000, guid: 7e0134e61fee5754aa24846fed555350, type: 2}
-  - {fileID: 11400000, guid: 059e292697c373547a35058aeb5133f0, type: 2}
-  - {fileID: 11400000, guid: 883c4b3a0360bd842aa7536fdbd81abb, type: 2}
-  - {fileID: 11400000, guid: 65429e12034a42844bc4faed04d1975b, type: 2}
-  - {fileID: 11400000, guid: 91b64b70c62c630499f9a53d80a68a7a, type: 2}
-  - {fileID: 11400000, guid: 438f1da2acc20044b80eeefc7332a02c, type: 2}
-  - {fileID: 11400000, guid: 7472622295d3c4b429c3cc6924913d94, type: 2}
-  - {fileID: 11400000, guid: 76d33db32cb170c44a7441a5c33f8023, type: 2}
-  - {fileID: 11400000, guid: b24cb10852489bd45a2382933cf47f63, type: 2}
+  - {fileID: 11400000, guid: d93f83520434d014fa0616819c6d95bd, type: 2}
+  - {fileID: 11400000, guid: 894afdf21c5e44447b6fe63fce1f00d9, type: 2}
+  - {fileID: 11400000, guid: 8ff5f3f4c238125409999a555e201aad, type: 2}
+  - {fileID: 11400000, guid: d809951a103cdd442af2a127ff6e5cea, type: 2}
+  - {fileID: 11400000, guid: 01a810c55514d68489c206c5adad5cb9, type: 2}
+  - {fileID: 11400000, guid: 7e0f68e6ca54a5b4695a0c91302b587c, type: 2}
+  - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
+  - {fileID: 11400000, guid: dbbc1525002c1454883df4988a576b4e, type: 2}
+  - {fileID: 11400000, guid: ff4aa9447ba7dba4f99d6fa13de5d45b, type: 2}
+  - {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
+  - {fileID: 11400000, guid: 9c3d0db946239ca4bbbd6ec54d3d430d, type: 2}
+  - {fileID: 11400000, guid: f86948ff03f0b13489b262cec058c781, type: 2}
+  - {fileID: 11400000, guid: 22e7ea8178e288b49ba1e3bc2306ee49, type: 2}
+  - {fileID: 11400000, guid: 1418c0b230f8af442839b23b393aebc2, type: 2}
+  - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
+  - {fileID: 11400000, guid: 0a933980e221ba146a96058f4a0bad00, type: 2}
+  - {fileID: 11400000, guid: f1f390c0958a41b42be7d8d9a87dc697, type: 2}
+  - {fileID: 11400000, guid: 16362edd6359b2a43957e943baa705fd, type: 2}
+  - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+  - {fileID: 11400000, guid: d2b861ed62e927249b018664b3e47395, type: 2}
 --- !u!4 &248640386
 Transform:
   m_ObjectHideFlags: 0
@@ -14750,6 +14754,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2098380102}
   m_CullTransparentMesh: 1
+--- !u!1 &2105480797
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2105480799}
+  - component: {fileID: 2105480798}
+  m_Layer: 0
+  m_Name: DronePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2105480798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105480797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dc29f78dbb11024ca756eb7bdec7665, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rallySpacing: 50
+  _rallyBossOffset: 200
+--- !u!4 &2105480799
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105480797}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2125251324
 GameObject:
   m_ObjectHideFlags: 0
@@ -15051,6 +15101,7 @@ SceneRoots:
   - {fileID: 1823091139}
   - {fileID: 776270062}
   - {fileID: 1162155006}
+  - {fileID: 2105480799}
   - {fileID: 2068514273}
   - {fileID: 1714553164}
   - {fileID: 1138111725}
