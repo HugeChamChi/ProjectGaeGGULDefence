@@ -105,11 +105,28 @@ namespace GaeGGUL.Tutorial
         public async UniTask PlaySequenceAsync(TutorialSequence sequence)
         {
             if (sequence == null) return;
+            
+            // 이미 완료된 튜토리얼인지 체크
+            if (Player.Tutorial.IsCompleted(sequence.tutorialID))
+            {
+                Debug.Log($"[TutorialManager] Sequence '{sequence.tutorialID}' is already completed. Skipping.");
+                return;
+            }
+
+            Debug.Log($"[TutorialManager] Sequence Start: {sequence.tutorialID}");
+            
             SetBlockInteraction(true);
+            
             await sequence.PlayAsync(this);
+            
+            // 완료 상태 저장
+            Player.Tutorial.MarkAsCompleted(sequence.tutorialID);
+
             await SetDimAsync(false);
             SetBlockInteraction(false);
             HideHighlight();
+
+            Debug.Log($"[TutorialManager] Sequence End: {sequence.tutorialID}");
         }
 
         public async UniTask WaitAnyClick()
