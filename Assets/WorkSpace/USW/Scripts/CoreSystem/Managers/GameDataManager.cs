@@ -43,20 +43,21 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     private const string BaseUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=";
 
     private const string GidSummonCost = "1607115777";
-    private const string GidSpawnRate  = "1984586417";
-    private const string GidSellPrice  = "284585537";
-    private const string GidCurrency   = "1326045266";
-    private const string GidBoss       = "1622284954";
-    private const string GidExpTable   = "499762901";
-    private const string GidTotem      = "660087267";
-    private const string GidCharacter  = "1454519483";
+    private const string GidSpawnRate = "1984586417";
+    private const string GidSellPrice = "284585537";
+    private const string GidCurrency = "1326045266";
+    private const string GidBoss = "1622284954";
+    private const string GidExpTable = "499762901";
+    private const string GidTotem = "660087267";
+    private const string GidCharacter = "1454519483";
+    private const string GidConfig = "2094930366";
 
-    public bool   IsLoaded { get; private set; }
+    public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
 
     // ── 소환 비용 ─────────────────────────────────────────
-    public int SummonInitialCost   { get; private set; } = 20;
-    public int SummonCostIncrease  { get; private set; } = 20;
+    public int SummonInitialCost { get; private set; } = 20;
+    public int SummonCostIncrease { get; private set; } = 20;
 
     // ── 소환 등장 확률 ────────────────────────────────────
     private readonly Dictionary<int, float> _spawnRates = new();
@@ -91,15 +92,16 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
     private async UniTask LoadAllAsync(CancellationToken token)
     {
-        var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7) = await UniTask.WhenAll(
+        var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8) = await UniTask.WhenAll(
             FetchCsvAsync(GidSummonCost, token),
-            FetchCsvAsync(GidSpawnRate,  token),
-            FetchCsvAsync(GidSellPrice,  token),
-            FetchCsvAsync(GidCurrency,   token),
-            FetchCsvAsync(GidBoss,       token),
-            FetchCsvAsync(GidExpTable,   token),
-            FetchCsvAsync(GidTotem,      token),
-            FetchCsvAsync(GidCharacter,  token)
+            FetchCsvAsync(GidSpawnRate, token),
+            FetchCsvAsync(GidSellPrice, token),
+            FetchCsvAsync(GidCurrency, token),
+            FetchCsvAsync(GidBoss, token),
+            FetchCsvAsync(GidExpTable, token),
+            FetchCsvAsync(GidTotem, token),
+            FetchCsvAsync(GidCharacter, token),
+            FetchCsvAsync(GidConfig, token)
         );
 
         if (csv0 != null) ParseSummonCost(csv0);
@@ -110,6 +112,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         if (csv5 != null) ParseExpTable(csv5);
         if (csv6 != null) ParseTotemData(csv6);
         if (csv7 != null) ParseCharacterData(csv7);
+        if (csv8 != null) ParseWaveTime(csv8);
 
         IsLoaded = true;
         OnLoaded?.Invoke();
@@ -143,7 +146,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         {
             var cols = lines[i].Trim().Split(',');
             if (cols.Length < 2 || string.IsNullOrWhiteSpace(cols[0])) continue;
-            if (int.TryParse(cols[0].Trim(), out var ic)) SummonInitialCost  = ic;
+            if (int.TryParse(cols[0].Trim(), out var ic)) SummonInitialCost = ic;
             if (int.TryParse(cols[1].Trim(), out var ci)) SummonCostIncrease = ci;
             break;
         }
@@ -159,7 +162,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
             if (cols.Length < 4 || !int.TryParse(cols[0].Trim(), out var id)) continue;
             if (!float.TryParse(cols[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var rate)) continue;
 
-            _spawnRates[id]    = rate;
+            _spawnRates[id] = rate;
             _totalSpawnWeight += rate;
         }
     }
@@ -191,6 +194,30 @@ public class GameDataManager : InGameSingleton<GameDataManager>
             _currencyPerSecond[id] = cps;
         }
     }
+    private void ParseWaveTime(string csv)
+    {
+        var lines = csv.Split('\n');
+
+        if (lines.Length >= 2)
+        {
+            var cols = lines[1].Trim().Split(',');
+
+            if (cols.Length >= 2)
+            {
+                var data = RM.Load<GameConfig>("Data/GameConfig");
+
+                if (float.TryParse(cols[0].Trim(), out var waveTime))
+                {
+                    data.countdownSeconds = waveTime;
+                }
+
+                if (int.TryParse(cols[1].Trim(), out var startFood))
+                {
+                    data.startingFood = startFood;
+                }
+            }
+        }
+    }
 
     private void ParseBossData(string csv)
     {
@@ -207,11 +234,11 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
             _bossByRoundId[roundId] = new BossSheetRow
             {
-                BossId           = bossId,
-                RoundId          = roundId,
-                MaxHealth        = hp,
+                BossId = bossId,
+                RoundId = roundId,
+                MaxHealth = hp,
                 DropExpPerHealth = expPerHp,
-                DropExpAmount    = expAmt,
+                DropExpAmount = expAmt,
             };
         }
     }
@@ -242,24 +269,24 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         var headers = ParseCsvRow(lines[0]);
 
         // ── 컬럼 인덱스 감지 ──
-        int iId        = FindCol(headers, "totem_id");
-        int iName      = FindCol(headers, "totem_name");
-        int iGrade     = FindCol(headers, "grade");
-        int iEffect    = FindCol(headers, "effect");
-        int iRange     = FindCol(headers, "effect_range");
-        int iDisabled  = FindCol(headers, "attack_disabled_range");
+        int iId = FindCol(headers, "totem_id");
+        int iName = FindCol(headers, "totem_name");
+        int iGrade = FindCol(headers, "grade");
+        int iEffect = FindCol(headers, "effect");
+        int iRange = FindCol(headers, "effect_range");
+        int iDisabled = FindCol(headers, "attack_disabled_range");
         int iRotatable = FindCol(headers, "is_rotatable");
-        int iAtkUp     = FindCol(headers, "atk_increase_rate");
-        int iAtkDown   = FindCol(headers, "atk_decrease_rate");
-        int iSpdUp     = FindCol(headers, "attack_speed_increase_rate");
-        int iSpdDown   = FindCol(headers, "attack_speed_decrease_rate");
-        int iCritCh    = FindCol(headers, "critical_chance_rate");
-        int iCritDmg   = FindCol(headers, "critical_damage_rate");
-        int iCooldown  = FindCol(headers, "cooldown_decrease_rate");
-        int iProj      = FindCol(headers, "projectile_size_rate");
-        int iFoodProd  = FindCol(headers, "food_production_rate");
-        int iFoodAmt   = FindCol(headers, "food_amount");
-        int iExpGain   = FindCol(headers, "exp_gain_rate");
+        int iAtkUp = FindCol(headers, "atk_increase_rate");
+        int iAtkDown = FindCol(headers, "atk_decrease_rate");
+        int iSpdUp = FindCol(headers, "attack_speed_increase_rate");
+        int iSpdDown = FindCol(headers, "attack_speed_decrease_rate");
+        int iCritCh = FindCol(headers, "critical_chance_rate");
+        int iCritDmg = FindCol(headers, "critical_damage_rate");
+        int iCooldown = FindCol(headers, "cooldown_decrease_rate");
+        int iProj = FindCol(headers, "projectile_size_rate");
+        int iFoodProd = FindCol(headers, "food_production_rate");
+        int iFoodAmt = FindCol(headers, "food_amount");
+        int iExpGain = FindCol(headers, "exp_gain_rate");
 
         if (iId < 0)
         {
@@ -280,10 +307,10 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
             var row = new TotemSheetRow { TotemId = id };
 
-            if (iName     >= 0 && iName     < cols.Length) row.TotemName    = cols[iName];
-            if (iGrade    >= 0 && iGrade    < cols.Length) row.Grade        = ParseTotemTier(cols[iGrade]);
-            if (iEffect   >= 0 && iEffect   < cols.Length) row.Effect       = cols[iEffect];
-            if (iRange    >= 0 && iRange    < cols.Length) row.EffectRange  = ParseOffsets(cols[iRange]);
+            if (iName >= 0 && iName < cols.Length) row.TotemName = cols[iName];
+            if (iGrade >= 0 && iGrade < cols.Length) row.Grade = ParseTotemTier(cols[iGrade]);
+            if (iEffect >= 0 && iEffect < cols.Length) row.Effect = cols[iEffect];
+            if (iRange >= 0 && iRange < cols.Length) row.EffectRange = ParseOffsets(cols[iRange]);
             if (iDisabled >= 0 && iDisabled < cols.Length) row.AttackDisabledRange = ParseOffsets(cols[iDisabled]);
 
             // is_rotatable: 헤더 기반 → 없으면 위치 기반 (index 6)
@@ -295,17 +322,17 @@ public class GameDataManager : InGameSingleton<GameDataManager>
             }
 
             // 수치 컬럼: 정수 퍼센트(10 = 10%) → ÷100 → 소수 비율(0.1)
-            TrySetPct(cols, iAtkUp,    ref row.AttackBuff);
-            TrySetPct(cols, iAtkDown,  ref row.AttackDebuff);
-            TrySetPct(cols, iSpdUp,    ref row.SpeedBuff);
-            TrySetPct(cols, iSpdDown,  ref row.SpeedDebuff);
-            TrySetPct(cols, iCritCh,   ref row.CritChanceBuff);
-            TrySetPct(cols, iCritDmg,  ref row.CritDamageBuff);
+            TrySetPct(cols, iAtkUp, ref row.AttackBuff);
+            TrySetPct(cols, iAtkDown, ref row.AttackDebuff);
+            TrySetPct(cols, iSpdUp, ref row.SpeedBuff);
+            TrySetPct(cols, iSpdDown, ref row.SpeedDebuff);
+            TrySetPct(cols, iCritCh, ref row.CritChanceBuff);
+            TrySetPct(cols, iCritDmg, ref row.CritDamageBuff);
             TrySetPct(cols, iCooldown, ref row.CooldownDecrease);
-            TrySetPct(cols, iProj,     ref row.ProjectileSizeRate);
+            TrySetPct(cols, iProj, ref row.ProjectileSizeRate);
             TrySetPct(cols, iFoodProd, ref row.FoodProductionBuff);
-            TrySetFloat(cols, iFoodAmt,  ref row.FoodAmountBuff);
-            TrySetPct(cols, iExpGain,  ref row.ExpGainRate);
+            TrySetFloat(cols, iFoodAmt, ref row.FoodAmountBuff);
+            TrySetPct(cols, iExpGain, ref row.ExpGainRate);
 
             _totemRows[id] = row;
         }
@@ -361,7 +388,7 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     public static string[] ParseCsvRow(string line)
     {
         line = line.TrimEnd('\r');
-        var fields  = new List<string>();
+        var fields = new List<string>();
         var current = new StringBuilder();
         bool inQuotes = false;
 
@@ -406,8 +433,8 @@ public class GameDataManager : InGameSingleton<GameDataManager>
         grade.Trim().ToLowerInvariant() switch
         {
             "normal" or "노말" or "common" or "0" => Tier.Normal,
-            "rare"   or "레어" or "1"              => Tier.Rare,
-            "epic"   or "에픽" or "2"              => Tier.Epic,
+            "rare" or "레어" or "1" => Tier.Rare,
+            "epic" or "에픽" or "2" => Tier.Epic,
             "legend" or "legendary" or "전설" or "special" or "3" => Tier.Legend,
             _ => Tier.Normal,
         };
@@ -482,15 +509,15 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
             var row = new CharacterSheetRow
             {
-                CharacterId      = id,
-                Name             = cols[1],
-                Grade            = cols[4],
-                Level            = level,
-                Atk              = ParseFloat(cols[6]),
-                AttackSpeed      = ParseFloat(cols[7]),
-                SkillAtk         = ParseFloat(cols[8]),
-                SkillCooldown    = ParseFloat(cols[9]),
-                SkillName        = cols[10],
+                CharacterId = id,
+                Name = cols[1],
+                Grade = cols[4],
+                Level = level,
+                Atk = ParseFloat(cols[6]),
+                AttackSpeed = ParseFloat(cols[7]),
+                SkillAtk = ParseFloat(cols[8]),
+                SkillCooldown = ParseFloat(cols[9]),
+                SkillName = cols[10],
                 SkillDescription = cols[11],
             };
 
@@ -506,23 +533,23 @@ public class GameDataManager : InGameSingleton<GameDataManager>
 
     private class BossSheetRow
     {
-        public int   BossId;
-        public int   RoundId;
-        public int   MaxHealth;
+        public int BossId;
+        public int RoundId;
+        public int MaxHealth;
         public float DropExpPerHealth;
         public float DropExpAmount;
     }
 
     public class CharacterSheetRow
     {
-        public int    CharacterId;
+        public int CharacterId;
         public string Name;
         public string Grade;
-        public int    Level;
-        public float  Atk;
-        public float  AttackSpeed;
-        public float  SkillAtk;
-        public float  SkillCooldown;
+        public int Level;
+        public float Atk;
+        public float AttackSpeed;
+        public float SkillAtk;
+        public float SkillCooldown;
         public string SkillName;
         public string SkillDescription;
     }
@@ -534,14 +561,14 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     /// </summary>
     public class TotemSheetRow
     {
-        public int    TotemId;
+        public int TotemId;
         public string TotemName;
-        public Tier   Grade;
+        public Tier Grade;
         public string Effect;
-        public bool   IsRotatable = true;
+        public bool IsRotatable = true;
 
         // 범위 좌표 (+x=우 / -x=좌 / -y=상 / +y=하)
-        public List<Vector2Int> EffectRange         = new();
+        public List<Vector2Int> EffectRange = new();
         public List<Vector2Int> AttackDisabledRange = new();
 
         // 버프/디버프 수치 (0.1 = 10%)

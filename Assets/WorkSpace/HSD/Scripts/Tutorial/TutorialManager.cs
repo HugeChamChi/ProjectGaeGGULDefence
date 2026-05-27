@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace GaeGGUL.Tutorial
@@ -28,7 +28,7 @@ namespace GaeGGUL.Tutorial
         }
 
         [Header("Background Control")]
-        [SerializeField] private CanvasGroup _dimCanvasGroup; 
+        [SerializeField] private CanvasGroup _dimCanvasGroup;
         [SerializeField] private float _dimFadeDuration = 0.2f;
 
         [Header("Highlighting (Raycast Hole)")]
@@ -44,12 +44,44 @@ namespace GaeGGUL.Tutorial
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 씬 전환 이벤트 구독
+            SceneManager.sceneLoaded += OnSceneLoaded;
+
             RefreshRegistry();
         }
 
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Debug.Log($"[TutorialManager] Scene Loaded: {scene.name}. Refreshing UI and Registry.");
+
+            // 1. 새로운 씬의 타겟들 자동 등록
+            RefreshRegistry();
+
+            // 2. 만약 현재 UI 레퍼런스들이 사라졌다면(씬 로컬 UI 사용 시), 새로 검색하여 할당
+            TryFindSceneLocalUI();
+        }
+
         /// <summary>
-        /// 씬 내의 모든 TutorialTarget과 Actor를 검색하여 등록합니다.
+        /// 씬에 배치된 튜토리얼용 UI 요소들을 자동으로 찾아 연결합니다.
         /// </summary>
+        private void TryFindSceneLocalUI()
+        {
+            if (_highlighter == null) _highlighter = FindObjectOfType<UI_TutorialHighlighter>(true);
+            if (_raycastFilter == null) _raycastFilter = FindObjectOfType<UI_TutorialRaycastFilter>(true);
+            if (_dimCanvasGroup == null)
+            {
+                // 특정 태그나 이름을 가진 객체를 찾도록 규칙을 정할 수 있습니다.
+                var dimObj = GameObject.Find("Tutorial_DimBackground");
+                if (dimObj != null) _dimCanvasGroup = dimObj.GetComponent<CanvasGroup>();
+            }
+        }
+
         [Button]
         public void RefreshRegistry()
         {
@@ -58,7 +90,7 @@ namespace GaeGGUL.Tutorial
             foreach (var target in uiTargets) TutorialRegistry.RegisterUI(target.UITargetID, target);
             var actors = FindObjectsOfType<TutorialActor>(true);
             foreach (var actor in actors) TutorialRegistry.RegisterActor(actor.ActorID, actor);
-            Debug.Log($"[TutorialManager] Registry Refreshed: {uiTargets.Length} UI Targets, {actors.Length} Actors.");
+            Debug.Log($"[TutorialManager] Registry Refreshed: {uiTargets.Length} UI Targets, {actors.Length} Actors found in current scene.");
         }
 
         public void SetBlockInteraction(bool active)
@@ -67,17 +99,12 @@ namespace GaeGGUL.Tutorial
             _dimCanvasGroup.blocksRaycasts = active;
         }
 
-        /// <summary>
-        /// 물리적인 클릭 구멍(Raycast Hole)만 엽니다.
-        /// </summary>
         public void SetInteractionTarget(string id)
         {
-            // 동적 생성 대응을 위해 갱신 후 검색
-            RefreshRegistry();
             var target = TutorialRegistry.GetUI(id);
             if (target != null && _raycastFilter != null)
             {
-                SetBlockInteraction(true); 
+                SetBlockInteraction(true);
                 _raycastFilter.SetTarget(target.GetComponent<RectTransform>());
             }
         }
@@ -92,9 +119,6 @@ namespace GaeGGUL.Tutorial
 
         public void ShowHighlight(string id)
         {
-            // 하이라이트 전에도 한 번 갱신하여 방금 생성된 UI를 찾을 수 있게 함
-            RefreshRegistry();
-
             var target = TutorialRegistry.GetUI(id);
             if (target == null) return;
             if (_highlighter != null) _highlighter.SetTarget(target.GetComponent<RectTransform>(), target.SizeOffset, target.Softness);
@@ -110,27 +134,20 @@ namespace GaeGGUL.Tutorial
         public async UniTask PlaySequenceAsync(TutorialSequence sequence)
         {
             if (sequence == null) return;
-            
-            // 이미 완료된 튜토리얼인지 체크
+
             if (Player.Tutorial.IsCompleted(sequence.tutorialID))
             {
                 Debug.Log($"[TutorialManager] Sequence '{sequence.tutorialID}' is already completed. Skipping.");
                 return;
             }
 
-            Debug.Log($"[TutorialManager] Sequence Start: {sequence.tutorialID}");
-            
             SetBlockInteraction(true);
             await sequence.PlayAsync(this);
-            
-            // 완료 상태 저장
-            Player.Tutorial.MarkAsCompleted(sequence.tutorialID);
 
+            Player.Tutorial.MarkAsCompleted(sequence.tutorialID);
             await SetDimAsync(false);
             SetBlockInteraction(false);
             HideHighlight();
-
-            Debug.Log($"[TutorialManager] Sequence End: {sequence.tutorialID}");
         }
 
         public async UniTask WaitAnyClick()
@@ -142,44 +159,21 @@ namespace GaeGGUL.Tutorial
 
         public async UniTask WaitTargetClick(string targetID)
         {
-            // 1. 안전 대기 (UI 생성 및 레이아웃 갱신 시간)
             await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
 
-            // 2. 동적 생성된 UI를 위해 레지스트리 최신화
-            RefreshRegistry();
-
             var target = TutorialRegistry.GetUI(targetID);
-            if (target == null)
-            {
-                Debug.LogError($"[Tutorial] WaitTargetClick 실패: ID '{targetID}'를 찾을 수 없습니다.");
-                return;
-            }
+            if (target == null) return;
 
-            if (!target.TryGetComponent<Button>(out var button))
-            {
-                Debug.LogError($"[Tutorial] WaitTargetClick 실패: '{targetID}'에 Button 컴포넌트가 없습니다.");
-                return;
-            }
+            if (!target.TryGetComponent<Button>(out var button)) return;
 
-            // 3. 물리적 클릭 구멍 열기
             SetInteractionTarget(targetID);
-            
-            try 
+            try
             {
-                if (!button.gameObject.activeInHierarchy || !button.interactable)
-                {
-                    Debug.LogWarning($"[Tutorial] '{targetID}'이 비활성 상태입니다. 대기를 스킵합니다.");
-                    return;
-                }
-
+                if (!button.gameObject.activeInHierarchy || !button.interactable) return;
                 await button.OnClickAsync(button.GetCancellationTokenOnDestroy());
-                Debug.Log($"[TutorialManager] Target clicked: {targetID}");
             }
-            catch (OperationCanceledException) 
-            {
-                Debug.Log($"[TutorialManager] Target {targetID} was destroyed after click.");
-            }
-            finally 
+            catch (OperationCanceledException) { }
+            finally
             {
                 if (_raycastFilter != null) _raycastFilter.Clear();
             }

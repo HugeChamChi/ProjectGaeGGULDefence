@@ -204,18 +204,23 @@ public abstract class UnitBase : MonoBehaviour
     {
         if (unitData == null) return;
 
-        _attackTimer = GetCurrentAttackInterval(); // 첫 공격은 즉시 혹은 짧은 대기 후 가능하도록 설정
+        _attackTimer = GetCurrentAttackInterval(); 
         _skillTimer = 0f;
         _foodTimer = 0f;
 
-        // 비용 최적화: try-catch 대신 cancellationToken 상태 직접 체크
+        float lastUpdateTime = Time.time;
+
         while (!token.IsCancellationRequested)
         {
-            if (_paused)
+            float currentTime = Time.time;
+            float dt = currentTime - lastUpdateTime;
+            lastUpdateTime = currentTime;
+
+            if (_paused || (currentCell != null && currentCell.Model.IsSealed))
             {
-                if (CurrentState != UnitState.Idle)
+                if (CurrentState != UnitState.Idle && CurrentState != UnitState.Sealed)
                 {
-                    CurrentState = UnitState.Idle;
+                    CurrentState = _paused ? UnitState.Idle : UnitState.Sealed;
                     animator?.PlayIdle();
                 }
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
@@ -223,43 +228,52 @@ public abstract class UnitBase : MonoBehaviour
                 continue;
             }
 
-            if (currentCell != null && currentCell.Model.IsSealed)
-            {
-                CurrentState = UnitState.Sealed;
-                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
-                    return;
-                continue;
-            }
-
-            float dt = Time.deltaTime;
             _attackTimer += dt;
             _skillTimer += dt;
             TickFoodProduction(dt);
 
             float attackInterval = GetCurrentAttackInterval();
             float skillInterval = GetCurrentSkillInterval();
+            
+            bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && _boss != null && !_boss.IsDead;
 
             // 우선순위 결정: Skill > Attack > Idle
             if (_skillTimer >= skillInterval)
             {
                 CurrentState = UnitState.Skilling;
-                if (animator != null) await animator.PlaySkillAsync(token);
+                _skillTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 발동 방지)
+                
                 ExecuteSkill();
                 
-                _skillTimer = 0f;
+                if (animator != null) 
+                {
+                    animator.SetSpeed(1f);
+                    await animator.PlaySkillAsync(token);
+                }
             }
-            else if (_attackTimer >= attackInterval)
+            else if (_attackTimer >= attackInterval && canAttack)
             {
                 CurrentState = UnitState.Attacking;
-                if (animator != null) await animator.PlayAttackAsync(token);
-                ExecuteAttack();
+                _attackTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 공격 방지)
                 
-                _attackTimer = 0f;
+                ExecuteAttack(); // 애니메이션 시작과 동시에 즉각적인 공격 판정
+                
+                if (animator != null) 
+                {
+                    await animator.PlayAttackAsync(token, attackInterval);
+                }
+                else
+                {
+                    await UniTask.Delay(TimeSpan.FromSeconds(attackInterval), cancellationToken: token);
+                }
             }
             else
             {
-                CurrentState = UnitState.Idle;
-                if (animator != null) animator.PlayIdle();
+                if (CurrentState != UnitState.Idle && _attackTimer < attackInterval)
+                {
+                    CurrentState = UnitState.Idle;
+                    if (animator != null) animator.PlayIdle();
+                }
                 
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
                     return;
@@ -272,7 +286,11 @@ public abstract class UnitBase : MonoBehaviour
         int row = currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult   = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float tribeSpeedMult = Mathf.Max(1f + (Manager.LevelUp?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
-        float interval = UpgradedAttackInterval
+        
+        // AttackSpeed는 초당 공격 횟수 (값이 클수록 공격 간격이 짧아져 더 빨라짐)
+        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
+
+        float interval = baseInterval
                        * Manager.Buff.SpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult

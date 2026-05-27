@@ -2,6 +2,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using GaeGGUL.Animation;
+using System;
 
 /// <summary>
 /// 유닛의 애니메이션을 제어하는 클래스.
@@ -66,15 +67,49 @@ public class UnitAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// 일반 공격 애니메이션을 재생하고 완료될 때까지 대기합니다.
+    /// 애니메이션 재생 속도를 설정합니다.
     /// </summary>
-    public async UniTask PlayAttackAsync(CancellationToken token)
+    public void SetSpeed(float speed)
+    {
+        if (_animator != null) _animator.speed = speed;
+    }
+
+    /// <summary>
+    /// 일반 공격 애니메이션을 재생하고 완료될 때까지 대기합니다.
+    /// targetDuration이 지정되면 해당 시간 내에 애니메이션이 완료되도록 속도를 조절합니다.
+    /// </summary>
+    public async UniTask PlayAttackAsync(CancellationToken token, float targetDuration = 0f)
     {
         _animator.SetInteger(AnimStateHash, (int)VisualState.Attack);
-        _animator.SetTrigger(AttackTriggerHash);
+        
+        // Trigger 대신 Play를 사용하여 즉시 첫 프레임부터 재생 (삐걱거림 방지)
+        _animator.Play("Attack", 0, 0f);
 
-        // 애니메이션 시작 및 완료 대기
-        await WaitUntilAnimationComplete("Attack", token);
+        if (targetDuration > 0)
+        {
+            // 정확한 타이밍을 맞추기 위해 전체 대기 시간을 미리 시작
+            var delayTask = UniTask.Delay(TimeSpan.FromSeconds(targetDuration), cancellationToken: token);
+            
+            // 1프레임 대기 후 Animator 상태 정보 갱신
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+            if (stateInfo.IsName("Attack"))
+            {
+                _animator.speed = stateInfo.length / targetDuration;
+            }
+            
+            // 남은 시간만큼 정확히 대기 (프레임 밀림으로 인한 오차 방지)
+            await delayTask;
+        }
+        else
+        {
+            // 완료 대기 (Fallback)
+            await WaitUntilAnimationComplete("Attack", token);
+        }
+        
+        // 재생 완료 후 속도 복구
+        _animator.speed = 1.0f;
     }
 
     /// <summary>
@@ -83,9 +118,25 @@ public class UnitAnimator : MonoBehaviour
     public async UniTask PlaySkillAsync(CancellationToken token)
     {
         _animator.SetInteger(AnimStateHash, (int)VisualState.Skill);
-        _animator.SetTrigger(SkillTriggerHash);
+        _animator.Play("Skill", 0, 0f);
 
         await WaitUntilAnimationComplete("Skill", token);
+    }
+
+    /// <summary>
+    /// 특정 스테이트가 활성화될 때까지 대기합니다.
+    /// </summary>
+    private async UniTask WaitUntilStateActive(string stateName, CancellationToken token)
+    {
+        const int MaxWaitFrames = 60;
+        int waited = 0;
+
+        while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
+        {
+            if (token.IsCancellationRequested || ++waited > MaxWaitFrames) return;
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                return;
+        }
     }
 
     /// <summary>
@@ -93,20 +144,13 @@ public class UnitAnimator : MonoBehaviour
     /// </summary>
     private async UniTask WaitUntilAnimationComplete(string stateName, CancellationToken token)
     {
-        // Animator 전환 블렌딩(0.25s) 동안 IsName이 false일 수 있으므로 최대 대기 프레임 제한
-        const int MaxWaitFrames = 60;
-        int waited = 0;
-
         // 1. 해당 스테이트로 전환될 때까지 대기
-        while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
-        {
-            if (token.IsCancellationRequested || ++waited > MaxWaitFrames) return;
-            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
-                return;
-        }
+        await WaitUntilStateActive(stateName, token);
 
         // 2. 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
-        waited = 0;
+        int waited = 0;
+        const int MaxWaitFrames = 600; // 완료는 좀 더 길게 대기 가능하도록 (배속 고려)
+        
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
         while (stateInfo.IsName(stateName) && stateInfo.normalizedTime < 1.0f)
         {
