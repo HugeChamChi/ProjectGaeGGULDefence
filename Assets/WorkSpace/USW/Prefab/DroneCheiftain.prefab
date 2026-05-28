@@ -97,11 +97,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   animator: {fileID: 0}
-  _dataByTier:
-  - {fileID: 11400000, guid: 581b425c231d0c143962e93647bdd7b7, type: 2}
-  - {fileID: 11400000, guid: 4fae541220bc14d43a325d83d8881da7, type: 2}
-  - {fileID: 11400000, guid: fa2d2c1196e331e47b2d599d066c4d07, type: 2}
-  - {fileID: 11400000, guid: 714bbe24b1415404b930a748db8c3530, type: 2}
+  _data: {fileID: 11400000, guid: 714bbe24b1415404b930a748db8c3530, type: 2}
 --- !u!114 &4934754073861769645
 MonoBehaviour:
   m_ObjectHideFlags: 0
