@@ -9,9 +9,9 @@ public class RcloneSyncTool : EditorWindow
     private string localPath = "";
     private string remotePath = "gdrive_ggd:GGD_Imports";
 
-    // 성능 옵션은 팀원들이 건드릴 필요 없도록 최적화된 값으로 고정
-    private const int Transfers = 16;
-    private const int Checkers = 64;
+    // 성능 옵션
+    private int transfers = 16;
+    private int checkers = 64;
     private const string ChunkSize = "64M";
     private const string BufferSize = "32M";
 
@@ -19,7 +19,7 @@ public class RcloneSyncTool : EditorWindow
     public static void ShowWindow()
     {
         var window = GetWindow<RcloneSyncTool>("Rclone Sync");
-        window.minSize = new Vector2(400, 300);
+        window.minSize = new Vector2(400, 450);
         window.Show();
     }
 
@@ -28,6 +28,8 @@ public class RcloneSyncTool : EditorWindow
         rclonePath = EditorPrefs.GetString("Rclone_ExecutablePath", "rclone");
         localPath = EditorPrefs.GetString("Rclone_LocalPath", Application.dataPath + "/Imports");
         remotePath = EditorPrefs.GetString("Rclone_RemotePath", "gdrive_ggd:GGD_Imports");
+        transfers = EditorPrefs.GetInt("Rclone_Transfers", 16);
+        checkers = EditorPrefs.GetInt("Rclone_Checkers", 64);
     }
 
     private void OnDisable()
@@ -35,6 +37,8 @@ public class RcloneSyncTool : EditorWindow
         EditorPrefs.SetString("Rclone_ExecutablePath", rclonePath);
         EditorPrefs.SetString("Rclone_LocalPath", localPath);
         EditorPrefs.SetString("Rclone_RemotePath", remotePath);
+        EditorPrefs.SetInt("Rclone_Transfers", transfers);
+        EditorPrefs.SetInt("Rclone_Checkers", checkers);
     }
 
     private void OnGUI()
@@ -63,7 +67,16 @@ public class RcloneSyncTool : EditorWindow
         remotePath = EditorGUILayout.TextField("구글 드라이브 경로", remotePath);
 
         GUILayout.Space(20);
-        EditorGUILayout.HelpBox("성능 최적화(Size Only, Fast List 등)가 자동으로 적용되어 있습니다.", MessageType.Info);
+        GUILayout.Label("🚀 성능 설정", EditorStyles.boldLabel);
+        
+        transfers = EditorGUILayout.IntSlider("동시 전송 (Transfers)", transfers, 1, 64);
+        EditorGUILayout.HelpBox("동시에 업로드/다운로드할 파일의 개수입니다. 숫자가 높을수록 속도가 빨라지지만, 구글 드라이브 API 제한에 걸릴 확률이 높아집니다. (기본: 16)", MessageType.None);
+        
+        checkers = EditorGUILayout.IntSlider("체크 작업 (Checkers)", checkers, 1, 128);
+        EditorGUILayout.HelpBox("파일 변경 여부를 확인하기 위해 동시에 체크할 작업 수입니다. 파일이 많을 때 성능에 큰 영향을 줍니다. (기본: 64)", MessageType.None);
+
+        GUILayout.Space(20);
+        EditorGUILayout.HelpBox("Size Only, Fast List 등 최적화 옵션이 기본적으로 적용되어 있습니다.", MessageType.Info);
 
         GUILayout.Space(20);
 
@@ -106,10 +119,9 @@ public class RcloneSyncTool : EditorWindow
         string rcloneExec = rclonePath;
         if (!rcloneExec.Contains("\"") && rcloneExec.Contains(" ")) rcloneExec = $"\"{rcloneExec}\"";
 
-        // 팀원용은 복잡한 옵션 없이 최적화 값 고정 적용
         string rcloneArgs = $"{command} \"{src}\" \"{dest}\" " +
-                            $"--transfers {Transfers} " +
-                            $"--checkers {Checkers} " +
+                            $"--transfers {transfers} " +
+                            $"--checkers {checkers} " +
                             $"--drive-chunk-size {ChunkSize} " +
                             $"--buffer-size {BufferSize} " +
                             $"--fast-list --size-only --progress";
