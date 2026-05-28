@@ -16,7 +16,7 @@ MonoBehaviour:
   tier: 2
   totemName: "\uC804\uC7A5\uC758 \uC9C0\uD718\uAD00"
   icon: {fileID: 21300000, guid: 19f1ce40ad69de54fa522995833a37ba, type: 3}
-  prefab: {fileID: 0}
+  prefab: {fileID: 2617104415731177961, guid: d7113f2e884f1a745b0fde642d211a4f, type: 3}
   rotationSprites:
   - {fileID: 21300000, guid: 19f1ce40ad69de54fa522995833a37ba, type: 3}
   - {fileID: 21300000, guid: 1612a82d0a08cbe4f9b27ca078ca91a5, type: 3}
