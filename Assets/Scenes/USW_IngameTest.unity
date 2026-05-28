@@ -7489,9 +7489,9 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_Spacing: 30
   m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
+  m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
-  m_ChildControlHeight: 1
+  m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
@@ -13666,7 +13666,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5abfecde05d485847b2e81ec01b62559, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: 5e6046dea10939145ab417c348179702, type: 2}
+  config: {fileID: 11400000, guid: b1572184994a24e4c8da447ef2335f15, type: 2}
 --- !u!4 &2014823005
 Transform:
   m_ObjectHideFlags: 0

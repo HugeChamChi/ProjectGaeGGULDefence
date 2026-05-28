@@ -77,6 +77,7 @@ public class MergeManager : InGameSingleton<MergeManager>
     {
         if (unit?.unitData == null) return false;
         if (unit.unitData.unitTier == Tier.Legend) return false;
+        if (unit.unitData.unitTier == Tier.Chieftain) return false;
         return GetMergeTargets(unit).Count >= 2;
     }
 

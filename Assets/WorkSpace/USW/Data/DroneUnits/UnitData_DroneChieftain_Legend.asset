@@ -15,7 +15,7 @@ MonoBehaviour:
   characterId: 5020
   unitType: 9
   unitName: "\uB4DC\uB860 \uC871\uC7A5 (\uC804\uC124)"
-  unitTier: 3
+  unitTier: 4
   unitTribe: 0
   icon: {fileID: 21300000, guid: 2e3d19f734c6f8a4e9cf982ebb806997, type: 3}
   prefab: {fileID: 3717258970254922025, guid: dc07e7fd43b13954e9796c7484ea6ab3, type: 3}
