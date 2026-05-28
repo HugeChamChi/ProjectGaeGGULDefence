@@ -293,6 +293,7 @@ public abstract class UnitBase : MonoBehaviour
         float interval = baseInterval
                        * Manager.Buff.SpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
+                       * (currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
                        / tribeSpeedMult;
         return Mathf.Max(interval, 0.05f);

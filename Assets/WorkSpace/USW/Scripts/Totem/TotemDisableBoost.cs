@@ -41,17 +41,26 @@ public class TotemDisableBoost : TotemBase
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos       = CurrentCell.GridPosition;
-        float modifier = 1f + totemData.attackBuffAmount;
+        var pos = CurrentCell.GridPosition;
 
-        // effectRange → 공격력 배율 증폭
+        // effectRange → 공격력 또는 공격속도 증폭 (셀 단위)
         foreach (var offset in totemData.effectRange)
         {
             var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
-            cell.SetTotemAttackModifier(modifier);
-            cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);
+            if (totemData.attackBuffAmount > 0f)
+            {
+                cell.SetTotemAttackModifier(1f + totemData.attackBuffAmount);
+                cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
+            }
+
+            if (totemData.speedBuffAmount > 0f)
+            {
+                // 전역 SpeedMultiplier와 동일한 공식: 1 - percent → 낮을수록 빠름
+                cell.SetTotemSpeedModifier(Mathf.Max(0.1f, 1f - totemData.speedBuffAmount));
+                cell.SetBuffFlags(atk: cell.HasAttackBuff, spd: true);
+            }
         }
 
         // attackDisabledRange → 공격불가

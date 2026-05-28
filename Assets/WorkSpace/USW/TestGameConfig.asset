@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b58dc411f1400848aad9e50fcd4c478, type: 3}
-  m_Name: GameConfig
+  m_Name: TestGameConfig
   m_EditorClassIdentifier: 
   gridColumns: 6
   gridRows: 4
