@@ -35,6 +35,18 @@ namespace GaeGGUL.Tutorial
         [SerializeField] private UI_TutorialHighlighter _highlighter;
         [SerializeField] private UI_TutorialRaycastFilter _raycastFilter;
 
+        [Header("Default Target Settings")]
+        [SerializeField] private Vector2 _defaultSizeOffset = new Vector2(10, 10);
+        [SerializeField] private float _defaultSoftness = 10f;
+
+        [Header("Focus Frame (Corners)")]
+        [SerializeField] private RectTransform _focusFrame;
+        [SerializeField] private Vector2 _focusFramePadding = new Vector2(20, 20);
+
+        [Header("Guide Arrow")]
+        [SerializeField] private RectTransform _guideArrow;
+        [SerializeField] private Vector3 _guideArrowOffset = Vector3.zero;
+
         private void Awake()
         {
             if (_instance != null && _instance != this)
@@ -121,14 +133,43 @@ namespace GaeGGUL.Tutorial
         {
             var target = TutorialRegistry.GetUI(id);
             if (target == null) return;
-            if (_highlighter != null) _highlighter.SetTarget(target.GetComponent<RectTransform>(), target.SizeOffset, target.Softness);
+            
+            RectTransform targetRect = target.GetComponent<RectTransform>();
+            
+            if (_highlighter != null) _highlighter.SetTarget(targetRect, _defaultSizeOffset, _defaultSoftness);
             SetInteractionTarget(id);
+
+            if (_focusFrame != null)
+            {
+                _focusFrame.gameObject.SetActive(true);
+                
+                Vector3[] corners = new Vector3[4];
+                targetRect.GetWorldCorners(corners);
+                
+                Vector3 center = (corners[0] + corners[2]) * 0.5f;
+                _focusFrame.position = center;
+                _focusFrame.sizeDelta = targetRect.rect.size + _focusFramePadding;
+            }
+
+            if (_guideArrow != null)
+            {
+                _guideArrow.gameObject.SetActive(true);
+                
+                Vector3[] corners = new Vector3[4];
+                targetRect.GetWorldCorners(corners);
+                
+                // corners[1] is Top-Left, corners[2] is Top-Right
+                Vector3 topCenter = (corners[1] + corners[2]) * 0.5f;
+                _guideArrow.position = topCenter + _guideArrowOffset;
+            }
         }
 
         public void HideHighlight()
         {
             if (_highlighter != null) _highlighter.Hide();
             if (_raycastFilter != null) _raycastFilter.Clear();
+            if (_focusFrame != null) _focusFrame.gameObject.SetActive(false);
+            if (_guideArrow != null) _guideArrow.gameObject.SetActive(false);
         }
 
         public async UniTask PlaySequenceAsync(TutorialSequence sequence)
