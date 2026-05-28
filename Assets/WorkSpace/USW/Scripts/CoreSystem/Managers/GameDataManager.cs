@@ -142,13 +142,19 @@ public class GameDataManager : InGameSingleton<GameDataManager>
     private void ParseSummonCost(string csv)
     {
         var lines = csv.Split('\n');
-        for (int i = 3; i < lines.Length; i++)
+
+        for (int i = 5; i < lines.Length; i++)
         {
             var cols = lines[i].Trim().Split(',');
+
             if (cols.Length < 2 || string.IsNullOrWhiteSpace(cols[0])) continue;
-            if (int.TryParse(cols[0].Trim(), out var ic)) SummonInitialCost = ic;
-            if (int.TryParse(cols[1].Trim(), out var ci)) SummonCostIncrease = ci;
-            break;
+
+            if (int.TryParse(cols[0].Trim(), out var ic) && int.TryParse(cols[1].Trim(), out var ci))
+            {
+                SummonInitialCost = ic;
+                SummonCostIncrease = ci;
+                break;
+            }
         }
     }
 
