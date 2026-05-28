@@ -198,6 +198,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
     public void SellUnit(UnitBase unit)
     {
         if (unit == null) return;
+        if (unit.unitData?.unitTier == Tier.Chieftain) return;
 
         var cell = FindCellByUnit(unit);
         if (cell == null) return;

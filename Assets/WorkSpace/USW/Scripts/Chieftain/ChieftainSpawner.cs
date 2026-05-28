@@ -12,12 +12,26 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
 {
     [SerializeField] private ChieftainData[] chieftainDataList;
 
+    [Header("테스트 소환 (아웃게임 미구현 시)")]
+    [SerializeField] private bool     _useTestSpawn  = true;
+    [Tooltip("테스트로 소환할 족장 UnitData SO — 비워두면 chieftainDataList 첫 번째 사용")]
+    [SerializeField] private UnitData _testUnitData;
+
     /// <summary>현재 배치된 족장 유닛 — 족장 전용 버프 적용에 사용</summary>
     public UnitBase ChieftainUnit { get; private set; }
 
     private void Start()
     {
+        if (_useTestSpawn && _testUnitData != null)
+        {
+            SpawnChieftainByUnitData(_testUnitData);
+            return;
+        }
+
         int selectedId = Player.Chief.SelectedChiefId;
+
+        if (selectedId == 0 && _useTestSpawn)
+            selectedId = GetTestChieftainId();
 
         if (selectedId == 0)
         {
@@ -26,6 +40,13 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
         }
 
         SpawnChieftainById(selectedId);
+    }
+
+    private int GetTestChieftainId()
+    {
+        if (chieftainDataList != null && chieftainDataList.Length > 0 && chieftainDataList[0] != null)
+            return chieftainDataList[0].chieftainId;
+        return 0;
     }
 
     public void ChangeChieftain(int selectedId)
@@ -57,6 +78,11 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
 
     private void PlaceChieftain(ChieftainData data)
     {
+        SpawnToCenter(data.unitType);
+    }
+
+    private void SpawnChieftainByUnitData(UnitData unitData)
+    {
         var cell = Manager.Grid.GetCenterCell();
         if (cell == null || !cell.IsAvailable)
         {
@@ -64,11 +90,26 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
             return;
         }
 
-        var unit = Manager.UnitFactory.CreateUnit(data.unitType);
+        var unit = Manager.UnitFactory.CreateUnitFromData(unitData);
         if (unit == null) return;
 
         ChieftainUnit = unit;
-        
+        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
+    }
+
+    private void SpawnToCenter(int unitType)
+    {
+        var cell = Manager.Grid.GetCenterCell();
+        if (cell == null || !cell.IsAvailable)
+        {
+            Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
+            return;
+        }
+
+        var unit = Manager.UnitFactory.CreateUnit(unitType);
+        if (unit == null) return;
+
+        ChieftainUnit = unit;
         Manager.Spawner.PlaceUnitWithEffect(unit, cell);
     }
 }

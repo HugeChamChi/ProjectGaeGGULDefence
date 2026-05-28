@@ -10,6 +10,7 @@ public static class Player
     public static PlayerChiefManager Chief          { get; private set; } = new();
     public static ShopDataManager Shop              { get; private set; } = new();
     public static DailyManager Daily                { get; private set; } = new();
+    public static GaeGGUL.Tutorial.PlayerTutorialManager Tutorial { get; private set; } = new();
 
     public async static UniTask InitializeAsync()
     {
@@ -25,7 +26,8 @@ public static class Player
             Mail.InitalizeAsync(),
             Character.InitalizeAsync(),
             Chief.InitializeAsync(),
-            Shop.InitializeAsync()
+            Shop.InitializeAsync(),
+            Tutorial.InitializeAsync()
         );
 
         // 4. 새로운 날이었다면 갱신된 LastResetDate를 포함해 서버에 저장

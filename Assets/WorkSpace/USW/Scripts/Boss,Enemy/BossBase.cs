@@ -61,10 +61,13 @@ public abstract class BossBase : MonoBehaviour
     {
         if (IsDead) return;
 
-        _currentHp = Mathf.Max(0, _currentHp - amount);
+        float amplification = Manager.Drone?.BossDebuffMultiplier ?? 1f;
+        int actualAmount = Mathf.RoundToInt(amount * amplification);
+
+        _currentHp = Mathf.Max(0, _currentHp - actualAmount);
 
         OnHpChanged?.Invoke(_currentHp, _maxHp);
-        OnDamaged?.Invoke(amount);
+        OnDamaged?.Invoke(actualAmount);
 
         if (IsDead)
         {

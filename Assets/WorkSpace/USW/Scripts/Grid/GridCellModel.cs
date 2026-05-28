@@ -25,7 +25,8 @@ public class GridCellModel
     // ── 토템 전용 추가 효과 ────────────────────────────────────
     public bool  HasFoodBuff          { get; private set; }         // FoodBuff 장판
     public bool  TotemAttackDisabled  { get; private set; }         // OverWelm 상3칸 공격불가
-    public float TotemAttackModifier  { get; private set; } = 1f;   // OverWelm 하1칸 공격력 증폭
+    public float TotemAttackModifier  { get; private set; } = 1f;   // 하1칸 공격력 증폭
+    public float TotemSpeedModifier  { get; private set; } = 1f;   // 하1칸 공격속도 증폭 (낮을수록 빠름)
     public bool  NullifyDamageDebuff  { get; private set; }         // 제한해제 토템 — 보스 데미지 감소 무효
     public bool  IsTotemRangePreviewed         { get; private set; }
     public bool  IsTotemDisabledRangePreviewed { get; private set; }
@@ -62,6 +63,12 @@ public class GridCellModel
         OnStateChanged?.Invoke();
     }
 
+    public void SetTotemSpeedModifier(float value)
+    {
+        TotemSpeedModifier = Mathf.Max(0.1f, value);
+        OnStateChanged?.Invoke();
+    }
+
     public void SetNullifyDamageDebuff(bool value)
     {
         NullifyDamageDebuff = value;
@@ -74,6 +81,7 @@ public class GridCellModel
         HasFoodBuff         = false;
         TotemAttackDisabled = false;
         TotemAttackModifier = 1f;
+        TotemSpeedModifier  = 1f;
         NullifyDamageDebuff = false;
         OnStateChanged?.Invoke();
     }

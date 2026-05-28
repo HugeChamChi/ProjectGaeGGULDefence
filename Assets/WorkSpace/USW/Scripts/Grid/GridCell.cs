@@ -89,6 +89,7 @@ public class GridCell : MonoBehaviour
     public void SetFoodBuff(bool value)              => Model.SetFoodBuff(value);
     public void SetTotemAttackDisabled(bool value)   => Model.SetTotemAttackDisabled(value);
     public void SetTotemAttackModifier(float value)  => Model.SetTotemAttackModifier(value);
+    public void SetTotemSpeedModifier(float value)   => Model.SetTotemSpeedModifier(value);
     public void SetNullifyDamageDebuff(bool value)   => Model.SetNullifyDamageDebuff(value);
 
     /// <summary>RebuildCellBuffFlags()에서 토템 전용 효과 일괄 초기화 시 호출</summary>

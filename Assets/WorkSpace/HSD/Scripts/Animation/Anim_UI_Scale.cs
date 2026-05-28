@@ -13,6 +13,10 @@ namespace GaeGGUL.Animation
         [SerializeField] private Vector2 startMultiplier = Vector2.zero;
         [SerializeField] private Vector2 endMultiplier = Vector2.zero;
 
+        public void SetDurationIn(float duration) => durationIn = duration;
+        public void SetEaseIn(Ease ease) => easeIn = ease;
+        public void SetStartMultiplier(Vector2 multiplier) => startMultiplier = multiplier;
+
         public override async UniTask PlayIn()
         {
             KillCurrentTween();

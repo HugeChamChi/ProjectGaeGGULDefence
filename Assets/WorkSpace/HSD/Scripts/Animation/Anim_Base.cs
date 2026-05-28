@@ -78,6 +78,18 @@ namespace GaeGGUL.Animation
         }
 
         /// <summary>
+        /// 현재 실행 중인 트윈을 즉시 완료 상태로 만듭니다.
+        /// </summary>
+        public virtual void Complete()
+        {
+            if (_currentSeq != null && _currentSeq.IsActive())
+            {
+                _currentSeq.Complete();
+                _currentSeq = null;
+            }
+        }
+
+        /// <summary>
         /// 현재 실행 중인 트윈을 즉시 중단합니다. (상태 리셋 없음)
         /// </summary>
         protected void KillCurrentTween()

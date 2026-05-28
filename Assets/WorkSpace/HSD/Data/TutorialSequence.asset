@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 614e66b1d02bd1a42a10adb9f1797eb3, type: 3}
+  m_Name: TutorialSequence
+  m_EditorClassIdentifier: 
+  tutorialID: GachaOpen
+  steps:
+  - rid: 4412322086626525195
+  - rid: 4412322086626525197
+  - rid: 4412322086626525198
+  - rid: 4412322086626525199
+  - rid: 4412322086626525201
+  references:
+    version: 2
+    RefIds:
+    - rid: 4412322086626525195
+      type: {class: AnimationStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 1
+        targetID: GachaOpen
+        waitForFinish: 1
+    - rid: 4412322086626525197
+      type: {class: ButtonGuideStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        targetID: GachaPanelOpen
+        waitForClick: 1
+    - rid: 4412322086626525198
+      type: {class: ButtonGuideStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        targetID: Gacha10
+        waitForClick: 1
+    - rid: 4412322086626525199
+      type: {class: WaitButtonClickStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0.5
+        useDim: 0
+        targetID: GachaResultPanelClose
+    - rid: 4412322086626525201
+      type: {class: ButtonGuideStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        targetID: GachaPanelClose
+        waitForClick: 1
