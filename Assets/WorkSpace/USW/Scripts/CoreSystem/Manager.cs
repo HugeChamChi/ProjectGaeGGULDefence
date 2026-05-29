@@ -46,6 +46,7 @@ public static class Manager
     public static TotemInfoPopupUI TotemInfo    => TotemInfoPopupUI.Instance;
     public static TotemSelectUI    TotemSelect  => TotemSelectUI.Instance;
     public static DamageFloaterManager DamageFloater => DamageFloaterManager.Instance;
+    public static CurrencyFloaterManager CurrencyFloater => CurrencyFloaterManager.Instance;
 
     // ── 투사체 ─────────────────────────────────────────────────
     public static ProjectilePool   Projectile => ProjectilePool.Instance;

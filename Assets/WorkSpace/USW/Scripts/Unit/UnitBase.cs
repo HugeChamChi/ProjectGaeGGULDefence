@@ -335,38 +335,47 @@ public abstract class UnitBase : MonoBehaviour
     // 기존 AttackLoopAsync와 SkillLoopAsync는 제거됨
 
 
-    /// <summary>Adds food once per second based on the sheet currency_per_second value.</summary>
+    /// <summary>Adds food based on CPS, speed multiplier (frequency), and amount multiplier.</summary>
     private void TickFoodProduction(float deltaTime)
     {
         if (_currency == null || unitData == null || deltaTime <= 0f) return;
 
-        _foodTimer += deltaTime;
+        // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
+        float speedMultiplier = Mathf.Max(Manager.Buff.FoodSpeedMultiplier, 0.01f);
+        _foodTimer += deltaTime / speedMultiplier;
+
+        // 표준 간격(1초)에 도달할 때까지 누적
         if (_foodTimer < 1f) return;
 
-        float foodPerSecond = GetBaseFoodPerSecond();
-        if (foodPerSecond <= 0f)
+        float baseAmount = GetBaseFoodPerSecond();
+        if (baseAmount <= 0f)
         {
             _foodTimer = 0f;
             return;
         }
 
-        float speedMultiplier = Mathf.Max(Manager.Buff.FoodSpeedMultiplier, 0.01f);
-        int elapsedSeconds = Mathf.FloorToInt(_foodTimer);
-        float amount = foodPerSecond
-                     / speedMultiplier
-                     * Manager.Buff.FoodAmountMultiplier
-                     * elapsedSeconds;
+        // 2. 누적된 시간 동안 발생한 틱 횟수 계산
+        int elapsedTicks = Mathf.FloorToInt(_foodTimer);
+        _foodTimer -= elapsedTicks;
 
-        _foodTimer -= elapsedSeconds;
+        // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
+        float amountPerTick = baseAmount * Manager.Buff.FoodAmountMultiplier;
 
-        if (amount > 0f)
-            _currency.AddCurrency(amount);
+        if (amountPerTick > 0f)
+        {
+            for (int i = 0; i < elapsedTicks; i++)
+            {
+                _currency.AddCurrency(amountPerTick);
+                
+                // 각 틱마다 플로터 생성 (1 미만의 소수점도 시각적 확인을 위해 표시 가능)
+                Manager.CurrencyFloater?.SpawnCurrencyText(transform.position + Vector3.up * 1.5f, amountPerTick);
+            }
+        }
     }
 
     protected virtual float GetBaseFoodPerSecond()
     {
-        float cooldown = Mathf.Max(unitData.skillCooldown, 0.01f);
-        return unitData.foodPerTick / cooldown;
+        return unitData.foodPerTick;
     }
 
     protected virtual void OnSkillFull()
