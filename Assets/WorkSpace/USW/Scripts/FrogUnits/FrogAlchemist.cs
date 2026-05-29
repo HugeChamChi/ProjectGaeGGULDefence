@@ -20,7 +20,5 @@ public class FrogAlchemist : UnitBase
         float mult = roll < JackpotChance ? 4f
                    : roll < BonusChance   ? Random.Range(1, 4)
                    : 1f;
-
-        _currency.AddCurrency(unitData.foodPerTick * mult * Manager.Buff.FoodAmountMultiplier);
     }
 }

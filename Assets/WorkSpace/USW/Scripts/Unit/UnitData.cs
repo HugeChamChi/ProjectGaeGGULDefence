@@ -4,12 +4,12 @@ using UnityEngine;
 public class UnitData : ScriptableObject
 {
     [Header("Info")]
-    public int        characterId;
-    public int        unitType;
-    public string     unitName;
-    public Tier       unitTier;
-    public UnitTribe  unitTribe;
-    public Sprite     icon;
+    public int characterId;
+    public int unitType;
+    public string unitName;
+    public Tier unitTier;
+    public UnitTribe unitTribe;
+    public Sprite icon;
     public GameObject prefab;
     [TextArea] public string description;
 
@@ -24,7 +24,13 @@ public class UnitData : ScriptableObject
 
     [Header("Skill")]
     public string skillName;    // 스킬 이름
-    public float foodPerTick = 10f; // 스킬 발동 시 식량 생산량
+    public float foodPerTick
+    {
+        get
+        {
+            return Manager.GameData.GetCurrencyPerSecond(characterId);
+        }
+    }
 
     [Header("Population")]
     public int populationCost = 1;
@@ -37,12 +43,12 @@ public class UnitData : ScriptableObject
     {
         if (row == null) return;
 
-        unitName      = row.Name;
-        atk           = row.Atk;
-        attackSpeed   = row.AttackSpeed;
-        skillAtk      = row.SkillAtk;
+        unitName = row.Name;
+        atk = row.Atk;
+        attackSpeed = row.AttackSpeed;
+        skillAtk = row.SkillAtk;
         skillCooldown = row.SkillCooldown;
-        skillName     = row.SkillName;
-        description   = row.SkillDescription;
+        skillName = row.SkillName;
+        description = row.SkillDescription;
     }
 }

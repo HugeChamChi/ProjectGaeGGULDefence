@@ -365,9 +365,6 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual float GetBaseFoodPerSecond()
     {
-        if (Manager.GameData != null && Manager.GameData.IsLoaded)
-            return Manager.GameData.GetCurrencyPerSecond(unitData.characterId);
-
         float cooldown = Mathf.Max(unitData.skillCooldown, 0.01f);
         return unitData.foodPerTick / cooldown;
     }

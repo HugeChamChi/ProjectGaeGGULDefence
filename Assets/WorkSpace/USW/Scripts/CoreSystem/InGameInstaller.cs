@@ -85,6 +85,7 @@ public class InGameInstaller : MonoBehaviour
         Manager.Merge.OnUnitSelected += HandleUnitSelected;
         Manager.Merge.OnSelectionCleared += _unitActionPopup.Hide;
         Manager.Merge.OnSelectionCleared += _unitInfoPanel.Close;
+        Manager.Merge.OnSelectionCleared += _totemInfoPanel.Close;
 
         _mergeButton.OnMergeRequested += Manager.Merge.ExecuteMerge;
         _sellButton.OnSellRequested += OnSellUnitRequested;
@@ -119,6 +120,7 @@ public class InGameInstaller : MonoBehaviour
         _totemActionPopup.OnDismissRequested += ClearTotemRangePreview;
         _totemActionPopup.OnDismissRequested += _totemActionPopup.Hide;
         _totemActionPopup.OnDismissRequested += _totemInfoPanel.Close;
+        _totemActionPopup.OnDismissRequested += _unitInfoPanel.Close;
     }
 
     private void HandleTotemClicked(TotemBase totem)
