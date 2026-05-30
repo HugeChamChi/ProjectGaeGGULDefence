@@ -4,7 +4,8 @@ apply plugin: 'com.android.library'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
-    implementation 'com.google.games:gpgs-plugin-support:2.1.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:11
+// gpgs-plugin-support:2.1.0 is included as a local AAR by Unity (unityLibrary/libs/).
+// Do NOT add the Maven dependency here — it causes duplicate class errors.
 // Android Resolver Dependencies End
 **DEPS**}
 
