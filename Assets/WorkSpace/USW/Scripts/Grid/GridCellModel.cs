@@ -28,6 +28,14 @@ public class GridCellModel
     public float TotemAttackModifier  { get; private set; } = 1f;   // 하1칸 공격력 증폭
     public float TotemSpeedModifier  { get; private set; } = 1f;   // 하1칸 공격속도 증폭 (낮을수록 빠름)
     public bool  NullifyDamageDebuff  { get; private set; }         // 제한해제 토템 — 보스 데미지 감소 무효
+
+    // ── 셀별 토템 버프 보너스 (GenericBuffTotem effectRange 기반 누산) ──
+    public float TotemCellAttackBonus     { get; private set; }
+    public float TotemCellSpeedBonus      { get; private set; }
+    public float TotemCellFoodSpeedBonus  { get; private set; }
+    public float TotemCellFoodAmountBonus { get; private set; }
+    public float TotemCellCritChanceBonus { get; private set; }
+    public float TotemCellCritDamageBonus { get; private set; }
     public bool  IsTotemRangePreviewed         { get; private set; }
     public bool  IsTotemDisabledRangePreviewed { get; private set; }
 
@@ -75,6 +83,13 @@ public class GridCellModel
         OnStateChanged?.Invoke();
     }
 
+    public void AddTotemCellAttackBonus(float v)     => TotemCellAttackBonus    += v;
+    public void AddTotemCellSpeedBonus(float v)      => TotemCellSpeedBonus     += v;
+    public void AddTotemCellFoodSpeedBonus(float v)  => TotemCellFoodSpeedBonus += v;
+    public void AddTotemCellFoodAmountBonus(float v) => TotemCellFoodAmountBonus += v;
+    public void AddTotemCellCritChanceBonus(float v) => TotemCellCritChanceBonus += v;
+    public void AddTotemCellCritDamageBonus(float v) => TotemCellCritDamageBonus += v;
+
     /// <summary>토템 제거 시 RebuildCellBuffFlags()에서 호출 — 토템 전용 효과 초기화</summary>
     public void ClearTotemEffects()
     {
@@ -83,6 +98,14 @@ public class GridCellModel
         TotemAttackModifier = 1f;
         TotemSpeedModifier  = 1f;
         NullifyDamageDebuff = false;
+
+        TotemCellAttackBonus     = 0f;
+        TotemCellSpeedBonus      = 0f;
+        TotemCellFoodSpeedBonus  = 0f;
+        TotemCellFoodAmountBonus = 0f;
+        TotemCellCritChanceBonus = 0f;
+        TotemCellCritDamageBonus = 0f;
+
         OnStateChanged?.Invoke();
     }
 
