@@ -296,7 +296,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: bc35f0151471b044eb49e43bfd377839, type: 2}
   gridSize: {x: 6, y: 4}
-  totemPosition: {x: 3, y: 1}
+  totemPosition: {x: 4, y: 2}
   cellPrefab: {fileID: 5598022100568901656, guid: f142233d68b64e54f91002d1da108f9f,
     type: 3}
   gridLayout: {fileID: 4605168618344427892}
