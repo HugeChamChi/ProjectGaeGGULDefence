@@ -20,7 +20,8 @@ public class DroneHoverAnimation : MonoBehaviour
     [SerializeField] private bool _randomPhase = true;
 
     private RectTransform _rt;
-    private Sequence      _seq;
+    private Tween         _hoverTween;
+    private Tween         _tiltTween;
 
     private void Awake()
     {
@@ -40,43 +41,39 @@ public class DroneHoverAnimation : MonoBehaviour
 
     private void OnDisable()
     {
-        _seq?.Kill();
+        _hoverTween?.Kill();
+        _tiltTween?.Kill();
     }
 
     private void PlayHover()
     {
         if (_rt == null) return;
 
-        _seq?.Kill();
-        _seq = DOTween.Sequence();
+        _hoverTween?.Kill();
+        _tiltTween?.Kill();
 
         float phaseDelay = _randomPhase ? Random.Range(0f, _hoverDuration) : 0f;
+        Vector2 basePos  = _rt.anchoredPosition;
 
-        // ── 상하 부유 ─────────────────────────────────────────
-        Vector2 basePos = _rt.anchoredPosition;
+        // DOTween Sequence 안에서는 SetLoops(-1) 금지 — 두 트윈을 독립 실행
+        _hoverTween = _rt.DOAnchorPosY(basePos.y + _hoverAmplitude, _hoverDuration)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetDelay(phaseDelay)
+            .SetLink(gameObject);
 
-        _seq.Insert(0f,
-            _rt.DOAnchorPosY(basePos.y + _hoverAmplitude, _hoverDuration)
-               .SetEase(Ease.InOutSine)
-               .SetLoops(-1, LoopType.Yoyo)
-               .SetDelay(phaseDelay)
-        );
-
-        // ── 미세 회전 ─────────────────────────────────────────
-        _seq.Insert(0f,
-            _rt.DOLocalRotate(new Vector3(0f, 0f, _tiltAngle), _tiltDuration)
-               .SetEase(Ease.InOutSine)
-               .SetLoops(-1, LoopType.Yoyo)
-               .From(new Vector3(0f, 0f, -_tiltAngle))
-               .SetDelay(phaseDelay * 0.5f)
-        );
-
-        _seq.SetLink(gameObject);
+        _tiltTween = _rt.DOLocalRotate(new Vector3(0f, 0f, _tiltAngle), _tiltDuration)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(-1, LoopType.Yoyo)
+            .From(new Vector3(0f, 0f, -_tiltAngle))
+            .SetDelay(phaseDelay * 0.5f)
+            .SetLink(gameObject);
     }
 
     private void OnDestroy()
     {
-        _seq?.Kill();
+        _hoverTween?.Kill();
+        _tiltTween?.Kill();
     }
 
 #if UNITY_EDITOR

@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.Pool;
+using VContainer;
+using VContainer.Unity;
 
 /// <summary>
 /// 드론 오브젝트 풀 — InGameSingleton.
@@ -8,6 +10,8 @@ using UnityEngine.Pool;
 /// </summary>
 public class DronePool : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+
     [Header("프리팹")]
     [SerializeField] private GameObject _dronePrefab;
     [SerializeField] private GameObject _selfDestructPrefab;
@@ -33,7 +37,7 @@ public class DronePool : MonoBehaviour
         var droneParent = _droneContainer != null ? _droneContainer : transform;
 
         _dronePool = new ObjectPool<DroneUnit>(
-            createFunc:      () => Instantiate(_dronePrefab, droneParent).GetComponent<DroneUnit>(),
+            createFunc:      () => _resolver.Instantiate(_dronePrefab, droneParent).GetComponent<DroneUnit>(),
             actionOnGet:     d => d.gameObject.SetActive(true),
             actionOnRelease: d => d.gameObject.SetActive(false),
             actionOnDestroy: d => Destroy(d.gameObject),
@@ -49,7 +53,7 @@ public class DronePool : MonoBehaviour
         }
 
         _selfDestructPool = new ObjectPool<SelfDestructDrone>(
-            createFunc:      () => Instantiate(_selfDestructPrefab, droneParent).GetComponent<SelfDestructDrone>(),
+            createFunc:      () => _resolver.Instantiate(_selfDestructPrefab, droneParent).GetComponent<SelfDestructDrone>(),
             actionOnGet:     b => b.gameObject.SetActive(true),
             actionOnRelease: b => b.gameObject.SetActive(false),
             actionOnDestroy: b => Destroy(b.gameObject),

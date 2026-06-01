@@ -39,6 +39,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<AudioManager>();
         builder.RegisterComponentInHierarchy<UpgradeManager>();
         builder.RegisterComponentInHierarchy<DronePool>();
+        builder.RegisterComponentInHierarchy<DroneManager>();
         builder.RegisterComponentInHierarchy<GameDataManager>();
         builder.RegisterEntryPoint<GameInitializer>();
 

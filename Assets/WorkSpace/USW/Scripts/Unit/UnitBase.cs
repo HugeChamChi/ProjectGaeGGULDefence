@@ -45,6 +45,9 @@ public abstract class UnitBase : MonoBehaviour
     protected BossBase        _boss;
     public GridCell currentCell { get; private set; }
 
+    // 배치 시점 스냅샷(_boss) 대신 항상 live 보스를 반환
+    private BossBase LiveBoss => _bossManager?.CurrentBoss ?? _boss;
+
     public UnitAnimator animator;
     protected UnitSoundController _sound;
     protected UnitVisualController _visual;
@@ -248,7 +251,7 @@ public abstract class UnitBase : MonoBehaviour
             float attackInterval = GetCurrentAttackInterval();
             float skillInterval = GetCurrentSkillInterval();
             
-            bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && _boss != null && !_boss.IsDead;
+            bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
             // 우선순위 결정: Skill > Attack > Idle
             if (_skillTimer >= skillInterval)
@@ -330,10 +333,11 @@ public abstract class UnitBase : MonoBehaviour
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
 
-        if (!attackDisabled && _boss != null && !_boss.IsDead)
+        var boss = LiveBoss;
+        if (!attackDisabled && boss != null && !boss.IsDead)
         {
             LaunchProjectile();
-            _boss.TakeDamage(GetAttackDamage());
+            boss.TakeDamage(GetAttackDamage());
             onAttack?.Invoke();
             _hitCount++;
             TriggerBonusAttacks(attackDisabled);
@@ -398,10 +402,11 @@ public abstract class UnitBase : MonoBehaviour
         bool attackDisabled = currentCell != null &&
             (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
 
-        if (!attackDisabled && _boss != null && !_boss.IsDead)
+        var boss = LiveBoss;
+        if (!attackDisabled && boss != null && !boss.IsDead)
         {
             LaunchProjectile();
-            _boss.TakeDamage(GetSkillDamage());
+            boss.TakeDamage(GetSkillDamage());
         }
 
         // ── 레벨업 스킬 특수 효과 ─────────────────────────────
@@ -411,10 +416,10 @@ public abstract class UnitBase : MonoBehaviour
         if (lu.HasBurstOnSkillFull)
             _burstEndTime = Time.time + lu.BurstDurationSeconds;
 
-        if (lu.HasExtraAttackOnSkillFull && !attackDisabled && _boss != null && !_boss.IsDead)
+        if (lu.HasExtraAttackOnSkillFull && !attackDisabled && boss != null && !boss.IsDead)
         {
             LaunchProjectile();
-            _boss.TakeDamage(GetAttackDamage());
+            boss.TakeDamage(GetAttackDamage());
         }
     }
 
@@ -484,7 +489,8 @@ public abstract class UnitBase : MonoBehaviour
 
     private void TriggerBonusAttacks(bool attackDisabled)
     {
-        if (attackDisabled || _boss == null || _boss.IsDead) return;
+        var boss = LiveBoss;
+        if (attackDisabled || boss == null || boss.IsDead) return;
 
         var lu = _levelUpManager;
         if (lu == null) return;
@@ -495,7 +501,7 @@ public abstract class UnitBase : MonoBehaviour
             if (n > 0 && _hitCount % n == 0)
             {
                 LaunchProjectile();
-                _boss.TakeDamage(GetAttackDamage());
+                boss.TakeDamage(GetAttackDamage());
             }
         }
 
@@ -503,21 +509,21 @@ public abstract class UnitBase : MonoBehaviour
         if (lu.RandomExtraAttackChance > 0f && UnityEngine.Random.value < lu.RandomExtraAttackChance)
         {
             LaunchProjectile();
-            _boss.TakeDamage(GetAttackDamage());
+            boss.TakeDamage(GetAttackDamage());
         }
 
         // 5% 확률 50% 데미지 (변칙 타격)
         if (lu.HasRandomProcAttack && UnityEngine.Random.value < lu.RandomProcChance)
         {
             LaunchProjectile();
-            _boss.TakeDamage(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
+            boss.TakeDamage(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
         }
 
         // 매 공격마다 추가 공격 (양손잡이)
         if (lu.HasExtraAttackEveryAttack)
         {
             LaunchProjectile();
-            _boss.TakeDamage(GetAttackDamage());
+            boss.TakeDamage(GetAttackDamage());
         }
     }
 
