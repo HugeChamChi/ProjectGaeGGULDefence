@@ -92,3 +92,4 @@ Assets/GEMINI.md.meta
 *.txt
 /Assets/WorkSpace/USW/Gemini
 /docs
+/.agent_orchestrator

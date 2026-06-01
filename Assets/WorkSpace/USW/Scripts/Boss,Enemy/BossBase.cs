@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using DG.Tweening;
 
 /// <summary>
 /// 모든 보스의 기반 추상 클래스
@@ -48,12 +49,21 @@ public abstract class BossBase : MonoBehaviour
     public int  CurrentHp => _currentHp;
     public bool IsDead    => _currentHp <= 0;
 
+    // ── 트윈 관련 ──────────────────────────────────────────────────
+    private Vector3 _originalScale;
+    private Tween _hitTween;
+
     // ── 초기화 ──────────────────────────────────────────────────────
     /// <summary>BossManager.SpawnBosses() 내부에서 WaveData의 hp 주입</summary>
     public void Init(int hp)
     {
         _maxHp     = hp;
         _currentHp = hp;
+
+        if (_originalScale == Vector3.zero)
+        {
+            _originalScale = transform.localScale;
+        }
     }
 
     // ── 데미지 처리 ─────────────────────────────────────────────────
@@ -66,6 +76,8 @@ public abstract class BossBase : MonoBehaviour
 
         _currentHp = Mathf.Max(0, _currentHp - actualAmount);
 
+        PlayHitAnimation();
+
         OnHpChanged?.Invoke(_currentHp, _maxHp);
         OnDamaged?.Invoke(actualAmount);
 
@@ -74,6 +86,13 @@ public abstract class BossBase : MonoBehaviour
             OnDeath?.Invoke();
             OnAnyBossDied?.Invoke();
         }
+    }
+
+    private void PlayHitAnimation()
+    {
+        _hitTween?.Kill();
+        transform.localScale = _originalScale;
+        _hitTween = transform.DOPunchScale(_originalScale * 0.2f, 0.15f, 0, 0f).SetLink(gameObject);
     }
 
     // ── 패턴 실행 (자식 구현) ───────────────────────────────────────
