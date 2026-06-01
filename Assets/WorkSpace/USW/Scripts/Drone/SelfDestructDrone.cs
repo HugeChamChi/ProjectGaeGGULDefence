@@ -1,4 +1,5 @@
 using System.Threading;
+using VContainer;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -8,6 +9,9 @@ using UnityEngine;
 /// </summary>
 public class SelfDestructDrone : MonoBehaviour
 {
+    [Inject] private BossManager _bossManager;
+    [Inject] private DronePool _dronePoolManager;
+
     [SerializeField] private float _flyDuration = 0.4f;
 
     private CancellationTokenSource _cts;
@@ -24,7 +28,7 @@ public class SelfDestructDrone : MonoBehaviour
 
     private async UniTaskVoid FlyAndExplodeAsync(float damage, CancellationToken token)
     {
-        var boss = Manager.Boss?.CurrentBoss;
+        var boss = _bossManager?.CurrentBoss;
         if (boss == null || boss.IsDead)
         {
             ReturnToPool();
@@ -50,14 +54,14 @@ public class SelfDestructDrone : MonoBehaviour
         }
 
         // 도착 — 폭발
-        boss = Manager.Boss?.CurrentBoss;
+        boss = _bossManager?.CurrentBoss;
         if (boss != null && !boss.IsDead)
             boss.TakeDamage(Mathf.RoundToInt(damage));
 
         ReturnToPool();
     }
 
-    private void ReturnToPool() => Manager.DronePool?.ReturnSelfDestruct(this);
+    private void ReturnToPool() => _dronePoolManager?.ReturnSelfDestruct(this);
 
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
 

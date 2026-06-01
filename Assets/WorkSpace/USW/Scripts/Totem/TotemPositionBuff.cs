@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemPositionBuff : TotemBase
 {
+
     [Tooltip("이 행(y) 미만을 '앞쪽'으로 판정. 기본 2 = y0,1이 앞줄")]
     [SerializeField] private int _frontRowThreshold = 2;
 
@@ -24,9 +26,9 @@ public class TotemPositionBuff : TotemBase
         _isFront = CurrentCell.GridPosition.y < _frontRowThreshold;
 
         if (_isFront)
-            Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
         else
-            Manager.Buff.AddSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
     }
 
     protected override void RemoveBuff()
@@ -34,9 +36,9 @@ public class TotemPositionBuff : TotemBase
         if (totemData == null) return;
 
         if (_isFront)
-            Manager.Buff.RemoveAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
         else
-            Manager.Buff.RemoveSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -47,7 +49,7 @@ public class TotemPositionBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -60,7 +62,7 @@ public class TotemPositionBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(

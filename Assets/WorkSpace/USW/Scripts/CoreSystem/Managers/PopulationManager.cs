@@ -6,8 +6,13 @@ using UnityEngine;
 /// 유닛: UnitBase.OnPlaced/OnRemoved 에서 자동 호출
 /// 토템: TotemBase.OnPlaced/OnRemoved 에서 동일하게 Add/Remove 호출하면 확장 가능
 /// </summary>
-public class PopulationManager : InGameSingleton<PopulationManager>
-{
+public class PopulationManager : MonoBehaviour
+{ 
+    public void Init()
+    {
+        
+    }
+
     [SerializeField] private GameConfig _config;
 
     public int Current    { get; private set; }

@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -20,6 +21,11 @@ using UnityEngine.UI;
 // ════════════════════════════════════════════════════════
 public class LevelUpUI : InGameSingleton<LevelUpUI>
 {
+    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private TimerController _timerManager;
+    [Inject] private GridManager _gridManager;
+    [Inject] private GameManager _gameManager;
+
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
@@ -36,7 +42,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     protected override void Awake()
     {
-        base.Awake();
+        // base.Awake(); // Removed to prevent double call
     }
 
     // ── 열기 ───────────────────────────────────────────────────
@@ -46,7 +52,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         ClearCards();
         _selectedCard = null;
 
-        var choices = Manager.LevelUp.GetRandomChoices(ChoiceCount);
+        var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);
@@ -57,9 +63,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         obj.SetActive(true);
         gameObject.SetActive(true);
         Time.timeScale = 0f;
-        Manager.Timer.StopTimer();
+        _timerManager.StopTimer();
 
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.PauseLoops();
 
         RunSelectionTimer().Forget();
@@ -73,7 +79,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
         var data = clicked.GetData();
         if (data != null)
-            Manager.LevelUp.ApplyEffect(data);
+            _levelUpManager.ApplyEffect(data);
 
         Hide();
     }
@@ -86,7 +92,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
         var data = _selectedCard.GetData();
         if (data != null)
-            Manager.LevelUp.ApplyEffect(data);
+            _levelUpManager.ApplyEffect(data);
 
         Hide();
     }
@@ -134,15 +140,15 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         obj.SetActive(false);
         gameObject.SetActive(false);
         Time.timeScale = 1f;
-        Manager.Timer.ResumeTimer();
+        _timerManager.ResumeTimer();
 
         // 연쇄 레벨업 여부를 먼저 확인 — FlushPendingLevelUp이 새 Show()를 열 수 있음
-        Manager.Game.OnLevelUpChoiceMade();
+        _gameManager.OnLevelUpChoiceMade();
 
         // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
-        if (Manager.Game.CurrentState != GameManager.GameState.LevelUp)
+        if (_gameManager.CurrentState != GameManager.GameState.LevelUp)
         {
-            foreach (var cell in Manager.Grid.GetOccupiedCells())
+            foreach (var cell in _gridManager.GetOccupiedCells())
                 cell.OccupyingUnit?.ResumeLoops();
         }
     }

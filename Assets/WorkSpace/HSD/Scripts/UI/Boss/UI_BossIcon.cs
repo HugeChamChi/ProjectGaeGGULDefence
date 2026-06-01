@@ -1,22 +1,26 @@
 using System.Collections;
+using VContainer;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UI_BossIcon : MonoBehaviour
 {
+    [Inject] private BossManager _bossManager;
+
     [SerializeField] private Image _imgBossIcon;
 
     private void Start()
     {
-        Manager.Boss.OnBossEntryed += ChangeIcon;
+        _bossManager.OnBossEntryed += ChangeIcon;
     }
 
     private void OnDestroy()
     {
-        if (BossManager.HasInstance)
+        if ((_bossManager != null))
         {
-            Manager.Boss.OnBossEntryed -= ChangeIcon;
+            _bossManager.OnBossEntryed -= ChangeIcon;
         }
     }
 

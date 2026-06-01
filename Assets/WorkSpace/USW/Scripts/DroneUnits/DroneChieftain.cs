@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using VContainer;
 using UnityEngine;
 
 /// <summary>
@@ -11,16 +12,18 @@ using UnityEngine;
 /// </summary>
 public class DroneChieftain : UnitBase
 {
+    [Inject] private DroneManager _droneManager;
+
     [SerializeField] private DroneChieftainData _data;
 
     protected override void OnSkillFull()
     {
         onSkillFull?.Invoke();
 
-        if (_data == null || Manager.Drone == null) return;
+        if (_data == null || _droneManager == null) return;
 
-        Manager.Drone
+        _droneManager
             .ExecuteRallyAsync(_data.damagePerDrone, this.GetCancellationTokenOnDestroy())
-            .Forget(Debug.LogException);
+            .Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 }

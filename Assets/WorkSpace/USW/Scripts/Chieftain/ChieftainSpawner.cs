@@ -8,8 +8,12 @@ using UnityEngine;
 ///
 /// Inspector: chieftainDataList — 등록된 모든 ChieftainData 할당
 /// </summary>
-public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
+public class ChieftainSpawner : MonoBehaviour
 {
+    [VContainer.Inject] private GridManager _gridManager;
+    [VContainer.Inject] private UnitFactory _unitFactory;
+    [VContainer.Inject] private UnitSpawner _unitSpawner;
+
     [SerializeField] private ChieftainData[] chieftainDataList;
 
     [Header("테스트 소환 (아웃게임 미구현 시)")]
@@ -83,33 +87,33 @@ public class ChieftainSpawner : InGameSingleton<ChieftainSpawner>
 
     private void SpawnChieftainByUnitData(UnitData unitData)
     {
-        var cell = Manager.Grid.GetCenterCell();
+        var cell = _gridManager.GetCenterCell();
         if (cell == null || !cell.IsAvailable)
         {
             Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
             return;
         }
 
-        var unit = Manager.UnitFactory.CreateUnitFromData(unitData);
+        var unit = _unitFactory.CreateUnitFromData(unitData);
         if (unit == null) return;
 
         ChieftainUnit = unit;
-        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
+        _unitSpawner.PlaceUnitWithEffect(unit, cell);
     }
 
     private void SpawnToCenter(int unitType)
     {
-        var cell = Manager.Grid.GetCenterCell();
+        var cell = _gridManager.GetCenterCell();
         if (cell == null || !cell.IsAvailable)
         {
             Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
             return;
         }
 
-        var unit = Manager.UnitFactory.CreateUnit(unitType);
+        var unit = _unitFactory.CreateUnit(unitType);
         if (unit == null) return;
 
         ChieftainUnit = unit;
-        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
+        _unitSpawner.PlaceUnitWithEffect(unit, cell);
     }
 }

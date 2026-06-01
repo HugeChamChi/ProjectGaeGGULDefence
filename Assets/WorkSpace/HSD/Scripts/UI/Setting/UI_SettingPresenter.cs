@@ -1,4 +1,5 @@
 using GaeGGUL.Extension;
+using VContainer;
 using UnityEngine;
 
 namespace HSD.UI.Setting
@@ -8,6 +9,8 @@ namespace HSD.UI.Setting
     /// </summary>
     public class UI_SettingPresenter
     {
+    [Inject] private AudioManager _audioManager;
+
         private readonly UI_SettingPanel_Base _view;
 
         public UI_SettingPresenter(UI_SettingPanel_Base view)
@@ -20,8 +23,8 @@ namespace HSD.UI.Setting
             // AudioManager에서 현재 값 가져오기
             foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
             {
-                int vol = AudioManager.Instance.GetVolume(group);
-                bool mute = AudioManager.Instance.IsMuted(group);
+                int vol = _audioManager.GetVolume(group);
+                bool mute = _audioManager.IsMuted(group);
                 _view.UpdateSoundSlot(group, vol, mute);
             }
             
@@ -30,12 +33,12 @@ namespace HSD.UI.Setting
 
         public void OnVolumeChanged(AudioGroup group, int value)
         {
-            AudioManager.Instance.SetVolume(group, value);
+            _audioManager.SetVolume(group, value);
         }
 
         public void OnMuteChanged(AudioGroup group, bool isMute)
         {
-            AudioManager.Instance.SetMute(group, isMute);
+            _audioManager.SetMute(group, isMute);
         }
 
         public void OnLanguageClicked()

@@ -1,4 +1,5 @@
 using System.Threading;
+using VContainer;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -9,6 +10,10 @@ using UnityEngine;
 /// </summary>
 public class DroneUnit : MonoBehaviour
 {
+    [Inject] private DroneManager _droneManager;
+    [Inject] private BossManager _bossManager;
+    [Inject] private ProjectilePool _projectileManager;
+
     public float   Atk            { get; private set; }
     public float   AttackInterval { get; private set; }
     public Vector3 HomePosition   => (_ownerTransform != null ? _ownerTransform.position : _homePositionFallback)
@@ -49,7 +54,7 @@ public class DroneUnit : MonoBehaviour
         StopAll();
         transform.position = HomePosition;
 
-        Manager.Drone?.RegisterDrone(this);
+        _droneManager?.RegisterDrone(this);
 
         _attackCts = new CancellationTokenSource();
         AttackLoopAsync(_attackCts.Token).Forget();
@@ -101,9 +106,9 @@ public class DroneUnit : MonoBehaviour
 
     public void FireRallyShot()
     {
-        var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || Manager.Projectile == null) return;
-        Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        if (bossArea == null || _projectileManager == null) return;
+        _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }
 
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
@@ -111,7 +116,7 @@ public class DroneUnit : MonoBehaviour
     private void OnDisable()
     {
         StopAll();
-        Manager.Drone?.UnregisterDrone(this);
+        _droneManager?.UnregisterDrone(this);
     }
 
     private void OnDestroy() => StopAll();
@@ -130,25 +135,25 @@ public class DroneUnit : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
-            float speedMult = Manager.Drone?.DroneSpeedMultiplier ?? 1f;
+            float speedMult = _droneManager?.DroneSpeedMultiplier ?? 1f;
             int   delayMs   = Mathf.RoundToInt(AttackInterval / speedMult * 1000f);
 
             if (await UniTask.Delay(delayMs, cancellationToken: token).SuppressCancellationThrow())
                 return;
 
-            var boss = Manager.Boss?.CurrentBoss;
+            var boss = _bossManager?.CurrentBoss;
             if (boss == null || boss.IsDead) continue;
 
             LaunchProjectile();
-            float dmg = Atk * (Manager.Drone?.DroneAtkMultiplier ?? 1f);
+            float dmg = Atk * (_droneManager?.DroneAtkMultiplier ?? 1f);
             boss.TakeDamage(Mathf.RoundToInt(dmg));
         }
     }
 
     private void LaunchProjectile()
     {
-        var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || Manager.Projectile == null) return;
-        Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        if (bossArea == null || _projectileManager == null) return;
+        _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }
 }

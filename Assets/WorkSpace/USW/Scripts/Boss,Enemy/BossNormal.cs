@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 1웨이브 보스 — 기본 패턴 보스
@@ -8,6 +9,8 @@ using UnityEngine;
 /// </summary>
 public class BossNormal : BossBase
 {
+    [Inject] private GridManager _gridManager;
+
     public override void ExecutePattern(BossPatternData patternData)
     {
         if (patternData == null) return;
@@ -108,7 +111,7 @@ public class BossNormal : BossBase
         var list = new System.Collections.Generic.List<GridCell>();
         foreach (var coord in coords)
         {
-            var cell = Manager.Grid.GetCell(coord.x, coord.y);
+            var cell = _gridManager.GetCell(coord.x, coord.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -116,7 +119,7 @@ public class BossNormal : BossBase
 
     private System.Collections.Generic.List<GridCell> GetRandomCells(int count)
     {
-        var all  = Manager.Grid.AllCells();
+        var all  = _gridManager.AllCells();
         var list = new System.Collections.Generic.List<GridCell>(all);
 
         // 피셔-예이츠 셔플로 count개 선택

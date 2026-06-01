@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using TMPro;
 using GaeGGUL.Animation;
 using Cysharp.Threading.Tasks;
@@ -8,6 +9,8 @@ using Cysharp.Threading.Tasks;
 /// </summary>
 public class UI_WaveText : MonoBehaviour
 {
+    [Inject] private WaveManager _waveManager;
+
     private TMP_Text _text;
     private Anim_InOutBase _anim;
 
@@ -31,8 +34,8 @@ public class UI_WaveText : MonoBehaviour
     {
         if (_text == null) return;
         
-        // 제공된 waveNum이 있으면 사용하고, 없으면 Manager.Wave에서 가져옴
-        int currentWave = waveNum ?? ((Manager.Wave != null) ? Manager.Wave.CurrentWave + 1 : 1);
+        // 제공된 waveNum이 있으면 사용하고, 없으면 _waveManager에서 가져옴
+        int currentWave = waveNum ?? ((_waveManager != null) ? _waveManager.CurrentWave + 1 : 1);
         _text.text = $"WAVE {currentWave}";
 
         if (_anim != null)

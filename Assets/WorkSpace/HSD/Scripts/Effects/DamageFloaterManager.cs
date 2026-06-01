@@ -5,8 +5,10 @@ using UnityEngine;
 /// ExpEffectController와 동일하게 BossManager의 이벤트를 스스로 구독하여
 /// 역방향 의존성을 방지하고 완전한 단일 책임을 가집니다.
 /// </summary>
-public class DamageFloaterManager : InGameSingleton<DamageFloaterManager>
+public class DamageFloaterManager : MonoBehaviour
 {
+    [VContainer.Inject] private BossManager _bossManager;
+
     [Header("프리팹 어드레서블 주소")]
     public string damageTextAddress = "DamageTextPrefab";
 
@@ -23,12 +25,12 @@ public class DamageFloaterManager : InGameSingleton<DamageFloaterManager>
     private void Start()
     {
         // 보스 소환 이벤트 구독
-        if (Manager.Boss != null)
+        if (_bossManager != null)
         {
-            Manager.Boss.OnBossEntryed += SubscribeBoss;
+            _bossManager.OnBossEntryed += SubscribeBoss;
             
             // 이미 소환된 보스가 있다면 바로 구독
-            if (Manager.Boss.CurrentBoss != null)
+            if (_bossManager.CurrentBoss != null)
             {
                 SubscribeBoss(null, null);
             }
@@ -37,9 +39,9 @@ public class DamageFloaterManager : InGameSingleton<DamageFloaterManager>
 
     private void OnDestroy()
     {
-        if (Manager.Boss != null)
+        if (_bossManager != null)
         {
-            Manager.Boss.OnBossEntryed -= SubscribeBoss;
+            _bossManager.OnBossEntryed -= SubscribeBoss;
         }
         UnsubscribeBoss();
     }
@@ -48,7 +50,7 @@ public class DamageFloaterManager : InGameSingleton<DamageFloaterManager>
     {
         UnsubscribeBoss();
 
-        _subscribedBoss = Manager.Boss.CurrentBoss;
+        _subscribedBoss = _bossManager.CurrentBoss;
         if (_subscribedBoss != null)
         {
             _subscribedBoss.OnDamaged += OnBossDamaged;

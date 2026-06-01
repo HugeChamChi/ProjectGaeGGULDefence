@@ -5,8 +5,19 @@ using AssetKits.ParticleImage;
 // ════════════════════════════════════════════════════════
 // UnitSpawner — InGameSingleton 교체 + Manager 접근 통일
 // ════════════════════════════════════════════════════════
-public class UnitSpawner : InGameSingleton<UnitSpawner>
+public class UnitSpawner : MonoBehaviour
 {
+    [VContainer.Inject] private UpgradeManager _upgradeManager;
+    [VContainer.Inject] private GameDataManager _gameDataManager;
+    [VContainer.Inject] private GameManager _gameManager;
+    [VContainer.Inject] private PopulationManager _populationManager;
+    [VContainer.Inject] private LevelUpManager _levelUpManager;
+    [VContainer.Inject] private CurrencyManager _currencyManager;
+    [VContainer.Inject] private GridManager _gridManager;
+    [VContainer.Inject] private UnitFactory _unitFactory;
+    [VContainer.Inject] private BossManager _bossManager;
+    [VContainer.Inject] private TotemBuffManager _totemBuffManager;
+
     [Header("Spawn Effects")]
     [SerializeField] private UISpawnLine spawnLinePrefab;
     [SerializeField] private ParticleImage spawnEffectPrefab;
@@ -21,70 +32,69 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
     /// <summary>유닛 판매(삭제) 시 전역 알림 — TotemSellStack에서 구독</summary>
     public static event System.Action OnAnyUnitSold;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
         // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
         CurrentCost = 20f;
-        if (Manager.GameData != null)
-            Manager.GameData.OnLoaded += SyncInitialCost;
+        if (_gameDataManager != null)
+            _gameDataManager.OnLoaded += SyncInitialCost;
     }
 
     private void SyncInitialCost()
     {
-        CurrentCost = Manager.GameData.SummonInitialCost;
+        CurrentCost = _gameDataManager.SummonInitialCost;
         OnCostChanged?.Invoke(CurrentCost);
     }
 
     public void OnSpawnButtonPressed()
     {
-        if (Manager.Game.CurrentState != GameManager.GameState.Playing)
+        if (_gameManager.CurrentState != GameManager.GameState.Playing)
         {
             Debug.Log("게임 시작 후 배치 가능합니다.");
             return;
         }
 
-        if (Manager.Population != null && !Manager.Population.CanAdd(1))
+        if (_populationManager != null && !_populationManager.CanAdd(1))
         {
             Debug.Log("인구수가 부족합니다.");
             return;
         }
 
         // 소환 할인 (할인 티켓 레벨업 효과)
-        float discountRate  = Manager.LevelUp?.SummonDiscountRate ?? 0f;
+        float discountRate  = _levelUpManager?.SummonDiscountRate ?? 0f;
         float effectiveCost = CurrentCost * Mathf.Max(0f, 1f - discountRate);
 
-        if (!Manager.Currency.Spend(effectiveCost))
+        if (!_currencyManager.Spend(effectiveCost))
         {
             Debug.Log("식량이 부족합니다.");
             return;
         }
 
-        var empty = Manager.Grid.GetEmptyCells();
+        var empty = _gridManager.GetEmptyCells();
         if (empty.Count == 0)
         {
             Debug.Log("빈 셀이 없습니다.");
-            Manager.Currency.AddCurrency(effectiveCost);
+            _currencyManager.AddCurrency(effectiveCost);
             return;
         }
 
         // 소환 확률 시트 기반 랜덤 — 미로드 시 Normal 랜덤 폴백
         UnitBase unit;
-        if (Manager.GameData != null && Manager.GameData.IsLoaded)
+        if (_gameDataManager != null && _gameDataManager.IsLoaded)
         {
-            int charId = Manager.GameData.GetRandomSpawnCharacterId();
+            int charId = _gameDataManager.GetRandomSpawnCharacterId();
             unit = charId >= 0
-                ? Manager.UnitFactory.CreateUnitByCharacterId(charId)
-                : Manager.UnitFactory.CreateRandomNormalUnit();
+                ? _unitFactory.CreateUnitByCharacterId(charId)
+                : _unitFactory.CreateRandomNormalUnit();
         }
         else
         {
-            unit = Manager.UnitFactory.CreateRandomNormalUnit();
+            unit = _unitFactory.CreateRandomNormalUnit();
         }
         if (unit == null)
         {
             Debug.LogError("UnitSpawner: 유닛 생성 실패");
-            Manager.Currency.AddCurrency(effectiveCost);
+            _currencyManager.AddCurrency(effectiveCost);
             return;
         }
 
@@ -94,8 +104,8 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         PlaceUnitWithEffect(unit, cell);
 
         // 소환 성공 시 비용 증가 (시트 값 우선, 폴백 20)
-        float increment = Manager.GameData != null && Manager.GameData.IsLoaded
-            ? Manager.GameData.SummonCostIncrease
+        float increment = _gameDataManager != null && _gameDataManager.IsLoaded
+            ? _gameDataManager.SummonCostIncrease
             : 20f;
         CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
@@ -111,7 +121,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         cell.TryPlaceUnit(unit);
         unit.transform.SetParent(cell.transform, false);
         
-        Manager.UnitFactory.InitUnitRectTransform(unit);
+        _unitFactory.InitUnitRectTransform(unit);
         
         var drag = unit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(cell);
@@ -171,7 +181,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         if (unit != null && unit.gameObject != null)
         {
             unit.gameObject.SetActive(true);
-            unit.OnPlaced(Manager.Currency, Manager.Boss?.CurrentBoss, cell);
+            unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
         }
     }
 
@@ -206,14 +216,14 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         // 강화 레벨 조회 (UpgradeManager 기준)
         int charId  = unit.unitData != null ? unit.unitData.characterId : -1;
         string jobType = unit.unitData != null
-            ? Manager.Upgrade?.GetJobType(charId) ?? string.Empty
+            ? _upgradeManager?.GetJobType(charId) ?? string.Empty
             : string.Empty;
-        int upgradeLevel = Manager.Upgrade != null && !string.IsNullOrEmpty(jobType)
-            ? Manager.Upgrade.GetJobLevel(jobType)
+        int upgradeLevel = _upgradeManager != null && !string.IsNullOrEmpty(jobType)
+            ? _upgradeManager.GetJobLevel(jobType)
             : 1;
 
-        float refund = Manager.GameData != null && Manager.GameData.IsLoaded && charId >= 0
-            ? Manager.GameData.GetSellPrice(charId, upgradeLevel)
+        float refund = _gameDataManager != null && _gameDataManager.IsLoaded && charId >= 0
+            ? _gameDataManager.GetSellPrice(charId, upgradeLevel)
             : 5f;
 
         cell.RemoveUnit();
@@ -221,29 +231,29 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
         Destroy(unit.gameObject);
 
         if (refund > 0f)
-            Manager.Currency.AddCurrency(refund);
+            _currencyManager.AddCurrency(refund);
 
         // 판매 보너스 식량 (서비스 레벨업 효과)
-        float bonusFood = Manager.LevelUp?.SellBonusFoodAmount ?? 0f;
+        float bonusFood = _levelUpManager?.SellBonusFoodAmount ?? 0f;
         if (bonusFood > 0f)
-            Manager.Currency.AddCurrency(bonusFood);
+            _currencyManager.AddCurrency(bonusFood);
 
         // 판매 시 보스 피해 (자폭병 레벨업 효과)
-        var lu = Manager.LevelUp;
+        var lu = _levelUpManager;
         if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
         {
             int dmg = Mathf.RoundToInt(unit.GetAttackDamage() * lu.SellDamagePct);
-            Manager.Boss?.CurrentBoss?.TakeDamage(dmg);
+            _bossManager?.CurrentBoss?.TakeDamage(dmg);
         }
 
         // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
         if (lu != null && lu.HasChieftainGainOnSell)
         {
-            Manager.Buff.AddLevelUpAttackBuff(lu.ChieftainSellAtkGain);
-            int   excessPop     = (Manager.Population?.Current ?? 0) - 2;
+            _totemBuffManager.AddLevelUpAttackBuff(lu.ChieftainSellAtkGain);
+            int   excessPop     = (_populationManager?.Current ?? 0) - 2;
             float popPenalty    = excessPop > 0 ? excessPop * lu.ChieftainSellPopPenalty : 0f;
             if (popPenalty > 0f)
-                Manager.Buff.AddLevelUpAttackBuff(-popPenalty);
+                _totemBuffManager.AddLevelUpAttackBuff(-popPenalty);
         }
 
         OnAnyUnitSold?.Invoke();
@@ -251,7 +261,7 @@ public class UnitSpawner : InGameSingleton<UnitSpawner>
 
     private GridCell FindCellByUnit(UnitBase unit)
     {
-        foreach (var cell in Manager.Grid.AllCells())
+        foreach (var cell in _gridManager.AllCells())
         {
             if (cell.OccupyingUnit == unit) return cell;
         }

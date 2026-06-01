@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 // ════════════════════════════════════════════════════════
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemAttackBuff : TotemBase
 {
+
     protected override void ApplyBuff()
     {
         if (totemData.attackBuffAmount <= 0f)
@@ -20,13 +22,13 @@ public class TotemAttackBuff : TotemBase
             Debug.LogWarning($"TotemAttackBuff({name}): attackBuffAmount = 0. TotemData를 확인하세요.");
             return;
         }
-        Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+        _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
     }
 
     protected override void RemoveBuff()
     {
         if (totemData.attackBuffAmount <= 0f) return;
-        Manager.Buff.RemoveAttackBuff(totemData.attackBuffAmount);
+        _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -35,8 +37,8 @@ public class TotemAttackBuff : TotemBase
         if (CurrentCell == null) return list;
 
         var pos = CurrentCell.GridPosition;
-        var left  = Manager.Grid.GetCell(pos.x - 1, pos.y);
-        var right = Manager.Grid.GetCell(pos.x + 1, pos.y);
+        var left  = _gridManager.GetCell(pos.x - 1, pos.y);
+        var right = _gridManager.GetCell(pos.x + 1, pos.y);
 
         if (left  != null) list.Add(left);
         if (right != null) list.Add(right);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 토템 소환 서비스. 배치 로직만 담당.
@@ -10,8 +11,23 @@ using UnityEngine;
 ///   Instantiate(genericPrefab) → SetTotemData(data) → OnPlaced(cell)
 ///   → UpdateSprite()가 rotationSprites[0] or icon 으로 스프라이트 설정
 /// </summary>
-public class TotemSpawner : InGameSingleton<TotemSpawner>
+public class TotemSpawner : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+        if (_populationManager == null) _populationManager = _resolver.Resolve<PopulationManager>();
+        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
+
+        
+    }
+
+    private GridManager _gridManager;
+    private PopulationManager _populationManager;
+    private CurrencyManager _currencyManager;
+
     [SerializeField] private GameObject genericPrefab;
 
     /// <summary>
@@ -36,9 +52,9 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
             return false;
         }
 
-        var empty = Manager.Grid.GetEmptyCells();
+        var empty = _gridManager.GetEmptyCells();
         if (empty.Count == 0) return false;
-        if (Manager.Population != null && !Manager.Population.CanAdd(1)) return false;
+        if (_populationManager != null && !_populationManager.CanAdd(1)) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
         var go    = Instantiate(prefab, cell.transform);
@@ -91,6 +107,6 @@ public class TotemSpawner : InGameSingleton<TotemSpawner>
         // 환급금: 추후 GameDataManager 또는 TotemData에 sellPrice 필드 추가 후 교체
         float refund = 0f;
         if (refund > 0f)
-            Manager.Currency.AddCurrency(refund);
+            _currencyManager.AddCurrency(refund);
     }
 }

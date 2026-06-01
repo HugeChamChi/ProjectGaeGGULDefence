@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,6 +9,9 @@ namespace HSD.UI.Upgrade
     [CreateAssetMenu(fileName = "UpgradeModel", menuName = "UI/UpgradeModel")]
     public class UpgradeModel : ScriptableObject
     {
+    [Inject] private CurrencyManager _currencyManager;
+    [Inject] private UpgradeManager _upgradeManager;
+
         [Serializable]
         public struct UpgradeDisplayConfig
         {
@@ -35,17 +39,17 @@ namespace HSD.UI.Upgrade
         // SO는 인스펙터에서 설정되므로 런타임에 초기화가 필요할 수 있음
         public void Initialize()
         {
-            if (Manager.Currency != null)
+            if (_currencyManager != null)
             {
-                Manager.Currency.OnCurrencyChanged += HandleCurrencyChanged;
+                _currencyManager.OnCurrencyChanged += HandleCurrencyChanged;
             }
         }
 
         public void Release()
         {
-            if (Manager.Currency != null)
+            if (_currencyManager != null)
             {
-                Manager.Currency.OnCurrencyChanged -= HandleCurrencyChanged;
+                _currencyManager.OnCurrencyChanged -= HandleCurrencyChanged;
             }
         }
 
@@ -60,8 +64,8 @@ namespace HSD.UI.Upgrade
             foreach (var config in displayConfigs)
             {
                 string target = config.targetKey;
-                int currentLevel = Manager.Upgrade.GetUpgradeLevel(target);
-                int cost = Manager.Upgrade.GetUpgradeCost(target);
+                int currentLevel = _upgradeManager.GetUpgradeLevel(target);
+                int cost = _upgradeManager.GetUpgradeCost(target);
 
                 items.Add(new UpgradeItemData
                 {
@@ -78,12 +82,12 @@ namespace HSD.UI.Upgrade
 
         public float GetCurrentCurrency()
         {
-            return Manager.Currency != null ? Manager.Currency.Currency : 0;
+            return _currencyManager != null ? _currencyManager.Currency : 0;
         }
 
         public bool TryUpgrade(string target)
         {
-            bool success = Manager.Upgrade.TryUpgrade(target);
+            bool success = _upgradeManager.TryUpgrade(target);
             if (success)
             {
                 OnDataChanged?.Invoke();

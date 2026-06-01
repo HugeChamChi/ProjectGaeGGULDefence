@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemSellStack : TotemBase
 {
+
     private int   _stackCount;
     private float _appliedAmount;
 
@@ -26,7 +28,7 @@ public class TotemSellStack : TotemBase
         UnitSpawner.OnAnyUnitSold -= OnUnitSold;
 
         if (_appliedAmount > 0f)
-            Manager.Buff.RemoveAttackBuff(_appliedAmount);
+            _totemBuffManager.RemoveAttackBuff(_appliedAmount);
 
         _stackCount    = 0;
         _appliedAmount = 0f;
@@ -39,7 +41,7 @@ public class TotemSellStack : TotemBase
         float increment = totemData.attackBuffAmount;
         _stackCount++;
         _appliedAmount += increment;
-        Manager.Buff.AddAttackBuff(increment);
+        _totemBuffManager.AddAttackBuff(increment);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemSellStack] 판매 누적 x{_stackCount} → 공격력 +{_appliedAmount * 100f:F2}%");
@@ -54,7 +56,7 @@ public class TotemSellStack : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -67,7 +69,7 @@ public class TotemSellStack : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);

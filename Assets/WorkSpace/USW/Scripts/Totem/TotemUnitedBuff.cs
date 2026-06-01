@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,12 +13,13 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemUnitedBuff : TotemBase
 {
+
     // TODO: "앞"의 기준 열(column) — 기획자 확인 후 수정
     // 현재: x >= gridColumns / 2 이면 "앞"으로 판단
     private bool IsInFrontPosition()
     {
         if (CurrentCell == null) return false;
-        return CurrentCell.GridPosition.x >= Manager.Grid.Columns / 2;
+        return CurrentCell.GridPosition.x >= _gridManager.Columns / 2;
     }
 
     // 버프 적용 여부를 기억 — 제거 시 동일 조건으로 해제하기 위함
@@ -33,12 +35,12 @@ public class TotemUnitedBuff : TotemBase
         }
 
         if (totemData.attackBuffAmount > 0f)
-            Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
         else
             Debug.LogWarning($"TotemUnitedBuff({name}): attackBuffAmount = 0.");
 
         if (totemData.speedBuffAmount > 0f)
-            Manager.Buff.AddSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
         else
             Debug.LogWarning($"TotemUnitedBuff({name}): speedBuffAmount = 0.");
 
@@ -51,9 +53,9 @@ public class TotemUnitedBuff : TotemBase
         _buffApplied = false;
 
         if (totemData.attackBuffAmount > 0f)
-            Manager.Buff.RemoveAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
         if (totemData.speedBuffAmount > 0f)
-            Manager.Buff.RemoveSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -63,8 +65,8 @@ public class TotemUnitedBuff : TotemBase
 
         var pos = CurrentCell.GridPosition;
         // 상(上) = y-1, 하(下) = y+1
-        var above = Manager.Grid.GetCell(pos.x, pos.y - 1);
-        var below = Manager.Grid.GetCell(pos.x, pos.y + 1);
+        var above = _gridManager.GetCell(pos.x, pos.y - 1);
+        var below = _gridManager.GetCell(pos.x, pos.y + 1);
 
         if (above != null) list.Add(above);
         if (below != null) list.Add(below);

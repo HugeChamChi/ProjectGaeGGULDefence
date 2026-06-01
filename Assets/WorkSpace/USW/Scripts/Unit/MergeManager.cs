@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,8 +13,27 @@ using UnityEngine;
 ///   OnUnitSelected(unit, canMerge) — 유닛 선택됨
 ///   OnSelectionCleared             — 선택 해제됨
 /// </summary>
-public class MergeManager : InGameSingleton<MergeManager>
+public class MergeManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_chieftainManager == null) _chieftainManager = _resolver.Resolve<ChieftainSpawner>();
+        if (_levelUpManager == null) _levelUpManager = _resolver.Resolve<LevelUpManager>();
+        if (_unitFactoryManager == null) _unitFactoryManager = _resolver.Resolve<UnitFactory>();
+        if (_spawnerManager == null) _spawnerManager = _resolver.Resolve<UnitSpawner>();
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+
+        
+    }
+
+    private ChieftainSpawner _chieftainManager;
+    private LevelUpManager _levelUpManager;
+    private UnitFactory _unitFactoryManager;
+    private UnitSpawner _spawnerManager;
+    private GridManager _gridManager;
+
     public event Action<UnitBase, bool> OnUnitSelected;
     public event Action                 OnSelectionCleared;
 
@@ -24,7 +44,7 @@ public class MergeManager : InGameSingleton<MergeManager>
     /// <summary>DragHandler.OnPointerClick에서 호출</summary>
     public void OnUnitClicked(UnitBase unit)
     {
-        if (unit == Manager.Chieftain?.ChieftainUnit) return;
+        if (unit == _chieftainManager?.ChieftainUnit) return;
 
         if (_selectedUnit == unit) { ClearSelection(); return; }
 
@@ -52,13 +72,13 @@ public class MergeManager : InGameSingleton<MergeManager>
             UnityEngine.Object.Destroy(unit.gameObject);
         }
 
-        var newUnit = Manager.LevelUp?.HasMergeKeepsTribe == true
-            ? Manager.UnitFactory.CreateRandomUnitByTribeAndTier(tribe, nextTier)
-            : Manager.UnitFactory.CreateRandomUnitOfTier(nextTier);
+        var newUnit = _levelUpManager?.HasMergeKeepsTribe == true
+            ? _unitFactoryManager.CreateRandomUnitByTribeAndTier(tribe, nextTier)
+            : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return;
 
         // Use PlaceUnitWithEffect with the spawnCell as origin (so the effect plays without a long line traversal)
-        Manager.Spawner.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
+        _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
     }
 
     /// <summary>선택 해제 및 OnSelectionCleared 이벤트 발행</summary>
@@ -84,7 +104,7 @@ public class MergeManager : InGameSingleton<MergeManager>
     private List<(UnitBase unit, GridCell cell)> GetMergeTargets(UnitBase unit)
     {
         var result = new List<(UnitBase, GridCell)>();
-        foreach (var cell in Manager.Grid.AllCells())
+        foreach (var cell in _gridManager.AllCells())
         {
             var u = cell.OccupyingUnit;
             if (u != null &&

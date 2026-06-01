@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemTotemCount : TotemBase
 {
+
     // 마지막으로 적용한 원본 수치 (efficiency 미포함 — Remove 시 동일 값 전달)
     private float _appliedCritChance;
     private float _appliedCritDamage;
@@ -27,8 +29,8 @@ public class TotemTotemCount : TotemBase
 
     protected override void RemoveBuff()
     {
-        if (_appliedCritChance > 0f) Manager.Buff.RemoveCritChanceBuff(_appliedCritChance);
-        if (_appliedCritDamage > 0f) Manager.Buff.RemoveCritDamageBuff(_appliedCritDamage);
+        if (_appliedCritChance > 0f) _totemBuffManager.RemoveCritChanceBuff(_appliedCritChance);
+        if (_appliedCritDamage > 0f) _totemBuffManager.RemoveCritDamageBuff(_appliedCritDamage);
         _appliedCritChance = 0f;
         _appliedCritDamage = 0f;
     }
@@ -41,7 +43,7 @@ public class TotemTotemCount : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -52,22 +54,22 @@ public class TotemTotemCount : TotemBase
         if (CurrentCell == null || totemData == null) return;
 
         // 이전 기여분 제거
-        if (_appliedCritChance > 0f) Manager.Buff.RemoveCritChanceBuff(_appliedCritChance);
-        if (_appliedCritDamage > 0f) Manager.Buff.RemoveCritDamageBuff(_appliedCritDamage);
+        if (_appliedCritChance > 0f) _totemBuffManager.RemoveCritChanceBuff(_appliedCritChance);
+        if (_appliedCritDamage > 0f) _totemBuffManager.RemoveCritDamageBuff(_appliedCritDamage);
 
         // 현재 토템 수 기준으로 재계산 (이 토템 포함)
-        int count = Manager.Buff.GetActiveTotemCount();
+        int count = _totemBuffManager.GetActiveTotemCount();
         _appliedCritChance = count * totemData.critChanceBuffAmount;
         _appliedCritDamage = count * totemData.critDamageBuffAmount;
 
-        if (_appliedCritChance > 0f) Manager.Buff.AddCritChanceBuff(_appliedCritChance);
-        if (_appliedCritDamage > 0f) Manager.Buff.AddCritDamageBuff(_appliedCritDamage);
+        if (_appliedCritChance > 0f) _totemBuffManager.AddCritChanceBuff(_appliedCritChance);
+        if (_appliedCritDamage > 0f) _totemBuffManager.AddCritDamageBuff(_appliedCritDamage);
 
         // 셀 시각화
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);

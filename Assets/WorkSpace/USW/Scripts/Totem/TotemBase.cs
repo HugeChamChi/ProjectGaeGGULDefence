@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
@@ -6,12 +7,16 @@ using UnityEngine.UI;
 /// 모든 토템의 기반 클래스
 /// 
 /// 변경 사항:
-///   - OnPlaced() → Manager.Buff.RegisterTotem(this) 추가
-///   - OnRemoved() → Manager.Buff.UnregisterTotem(this) 추가
+///   - OnPlaced() → _totemBuffManager.RegisterTotem(this) 추가
+///   - OnRemoved() → _totemBuffManager.UnregisterTotem(this) 추가
 ///   - Manager 통해 접근 통일
 /// </summary>
 public abstract class TotemBase : MonoBehaviour
 {
+    [Inject] protected TotemBuffManager _totemBuffManager;
+    [Inject] protected PopulationManager _populationManager;
+    [Inject] protected GridManager _gridManager;
+
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
     [SerializeField] private   Image          _image;
@@ -50,9 +55,9 @@ public abstract class TotemBase : MonoBehaviour
         ApplyBuff();
 
         // 토템 목록에 등록 (FindObjectsOfType 대체)
-        Manager.Buff.RegisterTotem(this);
-        Manager.Buff.RebuildCellBuffFlags();
-        Manager.Population?.Add(1);
+        _totemBuffManager.RegisterTotem(this);
+        _totemBuffManager.RebuildCellBuffFlags();
+        _populationManager?.Add(1);
 
         Debug.Log($"[토템] {totemData.totemName} 배치 @ {cell.GridPosition}");
     }
@@ -61,8 +66,8 @@ public abstract class TotemBase : MonoBehaviour
     {
         if (!IsActive) return;
 
-        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
-            Manager.Grid.ClearTotemRangePreview();
+        if (_gridManager != null && _gridManager.IsPreviewingTotem(this))
+            _gridManager.ClearTotemRangePreview();
 
         IsActive    = false;
         CurrentCell = null;
@@ -70,9 +75,9 @@ public abstract class TotemBase : MonoBehaviour
         RemoveBuff();
 
         // 토템 목록에서 해제
-        Manager.Buff.UnregisterTotem(this);
-        Manager.Buff.RebuildCellBuffFlags();
-        Manager.Population?.Remove(1);
+        _totemBuffManager.UnregisterTotem(this);
+        _totemBuffManager.RebuildCellBuffFlags();
+        _populationManager?.Remove(1);
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
     }
@@ -85,10 +90,10 @@ public abstract class TotemBase : MonoBehaviour
         if (!IsActive) return;
         RotationStep = (RotationStep + 1) % 4;
         UpdateSprite();
-        Manager.Buff.RebuildCellBuffFlags();
+        _totemBuffManager.RebuildCellBuffFlags();
 
-        if (Manager.Grid != null && Manager.Grid.IsPreviewingTotem(this))
-            Manager.Grid.ShowTotemRangePreview(this);
+        if (_gridManager != null && _gridManager.IsPreviewingTotem(this))
+            _gridManager.ShowTotemRangePreview(this);
     }
 
     private void UpdateSprite()

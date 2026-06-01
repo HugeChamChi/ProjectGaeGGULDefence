@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class RangedBuffTotemBase : TotemBase
 {
+
     /// <summary>effectRange 안 각 셀에 적용할 버프와 시각 플래그를 여기서 구현.</summary>
     protected abstract void PaintRangeBuffs(GridCell cell);
 
@@ -29,7 +31,7 @@ public abstract class RangedBuffTotemBase : TotemBase
         foreach (var offset in totemData.effectRange)
         {
             var rotated = RotateOffset(offset);
-            var cell    = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
+            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -45,7 +47,7 @@ public abstract class RangedBuffTotemBase : TotemBase
         foreach (var offset in totemData.effectRange)
         {
             var rotated = RotateOffset(offset);
-            var cell    = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
+            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell == null) continue;
             PaintRangeBuffs(cell);
         }
@@ -54,7 +56,7 @@ public abstract class RangedBuffTotemBase : TotemBase
         foreach (var offset in totemData.attackDisabledRange)
         {
             var rotated = RotateOffset(offset);
-            var cell    = Manager.Grid.GetCell(pos.x + rotated.x, pos.y + rotated.y);
+            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
             if (cell != null) cell.SetTotemAttackDisabled(true);
         }
     }

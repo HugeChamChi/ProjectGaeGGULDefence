@@ -1,4 +1,5 @@
 using System.Collections;
+using VContainer;
 using System.Collections.Generic;
 using AssetKits.ParticleImage;
 using Cysharp.Threading.Tasks;
@@ -9,6 +10,10 @@ using UnityEngine;
 /// </summary>
 public class ExpEffectController : MonoBehaviour
 {
+    [Inject] private BossManager _bossManager;
+
+    [Inject] private ExpManager _expManager;
+
     [SerializeField] private ParticleImage particleImage;
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform attractorTarget;
@@ -18,12 +23,12 @@ public class ExpEffectController : MonoBehaviour
     private void Start()
     {
         // 보스 소환 이벤트 구독
-        if (BossManager.Instance != null)
+        if (_bossManager != null)
         {
-            BossManager.Instance.OnBossEntryed += SubscribeBoss;
+            _bossManager.OnBossEntryed += SubscribeBoss;
             
             // 이미 소환된 보스가 있다면 바로 구독
-            if (BossManager.Instance.CurrentBoss != null)
+            if (_bossManager.CurrentBoss != null)
             {
                 SubscribeBoss(null, null); // entry는 사용하지 않으므로 null 전달
             }
@@ -32,9 +37,9 @@ public class ExpEffectController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (BossManager.Instance != null)
+        if (_bossManager != null)
         {
-            BossManager.Instance.OnBossEntryed -= SubscribeBoss;
+            _bossManager.OnBossEntryed -= SubscribeBoss;
         }
 
         UnsubscribeBoss();
@@ -44,7 +49,7 @@ public class ExpEffectController : MonoBehaviour
     {
         UnsubscribeBoss();
 
-        _subscribedBoss = BossManager.Instance.CurrentBoss;
+        _subscribedBoss = _bossManager.CurrentBoss;
         if (_subscribedBoss != null)
         {
             _subscribedBoss.OnDamaged += OnBossDamaged;
@@ -80,7 +85,7 @@ public class ExpEffectController : MonoBehaviour
     {
         if (particleImage == null) return;
 
-        float expAmount = Manager.Exp.CalculateExpFromDamage(damage);
+        float expAmount = _expManager.CalculateExpFromDamage(damage);
         if (expAmount <= 0) return;
 
         _accumulatedExp += expAmount;
@@ -91,7 +96,7 @@ public class ExpEffectController : MonoBehaviour
         // 타임스케일이 0이거나(토템 선택창 등), 파티클 오브젝트가 없으면 에러를 막기 위해 파티클 생성 생략
         if (Time.timeScale == 0f || particleImage == null)
         {
-            Manager.Exp.AddExp(expAmount);
+            _expManager.AddExp(expAmount);
             return;
         }
 
@@ -104,7 +109,7 @@ public class ExpEffectController : MonoBehaviour
         {
             if (isAdded) return;
             isAdded = true;
-            Manager.Exp.AddExp(expAmount);
+            _expManager.AddExp(expAmount);
         });
 
         particle.Play();

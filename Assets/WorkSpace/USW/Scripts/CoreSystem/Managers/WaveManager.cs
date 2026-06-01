@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,11 +12,32 @@ using System.Collections.Generic;
 ///             ├─ 다음 보스 있음 → 토템 보상 → SpawnNextBoss()
 ///             └─ 모두 처치    → OnAllBossesDefeated()
 /// </summary>
-public class WaveManager : InGameSingleton<WaveManager>
+public class WaveManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
+        if (_bossManager == null) _bossManager = _resolver.Resolve<BossManager>();
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
+        if (_gameManager == null) _gameManager = _resolver.Resolve<GameManager>();
+
+        
+    }
+
+    private GameDataManager _gameDataManager;
+    private BossManager _bossManager;
+    private GridManager _gridManager;
+    private CurrencyManager _currencyManager;
+    
+    private GameManager _gameManager;
+
     [SerializeField] private StageData stageData;
 
     public event System.Action<int> OnWaveChanged;
+    public event System.Action<System.Action> OnTotemSelectionRequested;
 
     public int CurrentWave { get; private set; } = 0;
     public int TotalWaves  => stageData != null ? stageData.waves.Length : 0;
@@ -52,7 +74,7 @@ public class WaveManager : InGameSingleton<WaveManager>
         }
 
         // GameDataManager에 현재 라운드 ID 전달 (Normal 기준: 100 + wave 인덱스)
-        Manager.GameData?.SetCurrentBossRound(100 + CurrentWave);
+        _gameDataManager?.SetCurrentBossRound(100 + CurrentWave);
 
         OnWaveChanged?.Invoke(CurrentWave + 1);
 
@@ -65,22 +87,22 @@ public class WaveManager : InGameSingleton<WaveManager>
     {
         var entry = _pendingBosses[_bossIndex];
 
-        Manager.Boss.SpawnSingleBoss(entry, OnSingleBossDefeated);
+        _bossManager.SpawnSingleBoss(entry, OnSingleBossDefeated);
 
         // 유닛 타겟 갱신 — 셀 참조 유지해야 행별 배율/디버프 정상 작동
-        var mainBoss = Manager.Boss.CurrentBoss;
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        var mainBoss = _bossManager.CurrentBoss;
+        foreach (var cell in _gridManager.GetOccupiedCells())
         {
             if (cell.OccupyingUnit == null) continue;
             cell.OccupyingUnit.OnRemoved();
-            cell.OccupyingUnit.OnPlaced(Manager.Currency, mainBoss, cell);
+            cell.OccupyingUnit.OnPlaced(_currencyManager, mainBoss, cell);
         }
     }
 
     /// <summary>보스 1마리 처치 시 호출 — 토템 선택 UI 표시 후 흐름 재개</summary>
     private void OnSingleBossDefeated()
     {
-        Manager.TotemSelect.Show(OnTotemSelectionDone);
+        OnTotemSelectionRequested?.Invoke(OnTotemSelectionDone);
     }
 
     private void OnTotemSelectionDone()
@@ -100,7 +122,7 @@ public class WaveManager : InGameSingleton<WaveManager>
 
         if (CurrentWave >= TotalWaves)
         {
-            Manager.Game.OnAllWavesCleared();
+            _gameManager.OnAllWavesCleared();
             return;
         }
 

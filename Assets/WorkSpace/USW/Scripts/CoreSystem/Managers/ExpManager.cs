@@ -1,8 +1,24 @@
 using UnityEngine;
+using VContainer;
 using System;
 
-public class ExpManager : InGameSingleton<ExpManager>
+public class ExpManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
+        if (_levelUpManager == null) _levelUpManager = _resolver.Resolve<LevelUpManager>();
+        if (_gameManager == null) _gameManager = _resolver.Resolve<GameManager>();
+
+        
+    }
+
+    private GameDataManager _gameDataManager;
+    private LevelUpManager _levelUpManager;
+    private GameManager _gameManager;
+
     public event Action<float> OnExpChanged;
     public event Action        OnLevelUp;
 
@@ -26,8 +42,8 @@ public class ExpManager : InGameSingleton<ExpManager>
     {
         get
         {
-            if (Manager.GameData != null && Manager.GameData.IsLoaded)
-                return Manager.GameData.GetExpRequired(CurrentLevel);
+            if (_gameDataManager != null && _gameDataManager.IsLoaded)
+                return _gameDataManager.GetExpRequired(CurrentLevel);
             return FallbackExpTable[Mathf.Min(CurrentLevel - 1, FallbackExpTable.Length - 1)];
         }
     }
@@ -37,10 +53,10 @@ public class ExpManager : InGameSingleton<ExpManager>
     /// <summary>보스 데미지로부터 획득할 EXP 양 계산.</summary>
     public float CalculateExpFromDamage(float damage)
     {
-        float multiplier    = Manager.GameData != null && Manager.GameData.IsLoaded
-            ? Manager.GameData.GetCurrentExpMultiplier()
+        float multiplier    = _gameDataManager != null && _gameDataManager.IsLoaded
+            ? _gameDataManager.GetCurrentExpMultiplier()
             : 0.01f;
-        float levelUpMult   = Manager.LevelUp?.ExpGainMultiplier ?? 1f;
+        float levelUpMult   = _levelUpManager?.ExpGainMultiplier ?? 1f;
         return damage * multiplier * levelUpMult;
     }
 
@@ -72,7 +88,7 @@ public class ExpManager : InGameSingleton<ExpManager>
 
     public void TryFireLevelUp()
     {
-        var state = Manager.Game.CurrentState;
+        var state = _gameManager.CurrentState;
 
         if (state == GameManager.GameState.Playing)
         {

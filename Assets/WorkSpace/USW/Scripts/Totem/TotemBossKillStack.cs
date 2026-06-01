@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemBossKillStack : TotemBase
 {
+
     private int   _killCount;
     private float _appliedAttack;
     private float _appliedSpeed;
@@ -30,8 +32,8 @@ public class TotemBossKillStack : TotemBase
     {
         BossBase.OnAnyBossDied -= OnBossKilled;
 
-        if (_appliedAttack > 0f) Manager.Buff.RemoveAttackBuff(_appliedAttack);
-        if (_appliedSpeed  > 0f) Manager.Buff.RemoveSpeedBuff(_appliedSpeed);
+        if (_appliedAttack > 0f) _totemBuffManager.RemoveAttackBuff(_appliedAttack);
+        if (_appliedSpeed  > 0f) _totemBuffManager.RemoveSpeedBuff(_appliedSpeed);
 
         _killCount     = 0;
         _appliedAttack = 0f;
@@ -46,12 +48,12 @@ public class TotemBossKillStack : TotemBase
 
         if (totemData.attackBuffAmount > 0f)
         {
-            Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
             _appliedAttack += totemData.attackBuffAmount;
         }
         if (totemData.speedBuffAmount > 0f)
         {
-            Manager.Buff.AddSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
             _appliedSpeed += totemData.speedBuffAmount;
         }
 
@@ -68,7 +70,7 @@ public class TotemBossKillStack : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -84,7 +86,7 @@ public class TotemBossKillStack : TotemBase
 
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(

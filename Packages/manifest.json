@@ -14,6 +14,7 @@
     "com.unity.visualscripting": "1.9.4",
     "com.unrealchan.foldercolorsettings": "https://github.com/bomul0327/UnityFolderColorSettings.git",
     "com.wooshii.hierarchydecorator": "https://github.com/WooshiiDev/HierarchyDecorator.git",
+    "jp.hadashikick.vcontainer": "https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",

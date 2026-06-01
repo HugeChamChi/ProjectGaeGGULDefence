@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
@@ -9,13 +10,18 @@ using System.Collections.Generic;
 /// - 이동 불가 시 원래 위치 복귀
 ///
 /// 변경 사항:
-///   - CurrencyManager.Instance / BossManager.Instance → Manager.Currency / Manager.Boss
+///   - _currencyManager / _bossManager → _currencyManager / _bossManager
 ///   - BossMonster → BossBase 타입 변경
 ///   - 봉인된 셀(IsSealed)에는 배치 불가 처리
 /// </summary>
 public class DragHandler : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
+    [Inject] private CurrencyManager _currencyManager;
+    [Inject] private BossManager _bossManager;
+    [Inject] private GridManager _gridManager;
+    [Inject] private MergeManager _mergeManager;
+
     private RectTransform _rect;
     private Canvas        _canvas;
 
@@ -58,8 +64,8 @@ public class DragHandler : MonoBehaviour,
 
         if (_unit != null)
         {
-            Manager.Grid?.ClearTotemRangePreview();
-            if (Manager.Merge != null) Manager.Merge.OnUnitClicked(_unit);
+            _gridManager?.ClearTotemRangePreview();
+            if (_mergeManager != null) _mergeManager.OnUnitClicked(_unit);
         }
         if (_totem != null) OnTotemClickedGlobal?.Invoke(_totem);
     }
@@ -68,8 +74,8 @@ public class DragHandler : MonoBehaviour,
     public void OnBeginDrag(PointerEventData eventData)
     {
         // 드래그 시작 시 합성 버튼 닫기
-        Manager.Merge?.HideButton();
-        Manager.Grid?.ClearTotemRangePreview();
+        _mergeManager?.HideButton();
+        _gridManager?.ClearTotemRangePreview();
 
         _isDragging = false;
         if (_originCell == null) return;
@@ -175,7 +181,7 @@ public class DragHandler : MonoBehaviour,
 
             _unit.OnRemoved();
             // Manager 접근 통일 + 셀 참조 전달
-            _unit.OnPlaced(Manager.Currency, Manager.Boss.CurrentBoss, cell);
+            _unit.OnPlaced(_currencyManager, _bossManager.CurrentBoss, cell);
         }
 
         if (_totem != null)

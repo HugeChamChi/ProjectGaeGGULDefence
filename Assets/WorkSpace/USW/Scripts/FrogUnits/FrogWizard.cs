@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 고블린 마법사
@@ -11,23 +12,24 @@ using UnityEngine;
 /// </summary>
 public class FrogWizard : UnitBase
 {
+
     [SerializeField, Range(0.01f, 0.9f)]
     [Tooltip("식량 생산량 감소율 (0.2 = 20% 감소)")]
     private float foodReduction = 0.2f;
 
     protected override void OnUnitPlaced()
     {
-        Manager.Buff.AddFoodAmountDebuff(foodReduction);
+        _totemBuffManager.AddFoodAmountDebuff(foodReduction);
     }
 
     protected override void OnUnitRemoved()
     {
-        Manager.Buff.RemoveFoodAmountDebuff(foodReduction);
+        _totemBuffManager.RemoveFoodAmountDebuff(foodReduction);
     }
 
     protected override void OnSkillFull()
     {
-        if (Manager.LevelUp?.HasWizardPhysicalMode == true) return;
+        if (_levelUpManager?.HasWizardPhysicalMode == true) return;
         base.OnSkillFull();
     }
 }

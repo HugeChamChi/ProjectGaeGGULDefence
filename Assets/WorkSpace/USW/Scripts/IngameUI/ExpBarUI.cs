@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using UnityEngine.UI;
 using DG.Tweening;
 using GaeGGUL.Animation;
@@ -8,6 +9,9 @@ using GaeGGUL.Animation;
 /// </summary>
 public class ExpBarUI : MonoBehaviour
 {
+    [Inject] private ExpManager _expManager;
+    [Inject] private AudioManager _audioManager;
+
     [SerializeField] private Slider expSlider;
     [SerializeField] private float  tweenDuration = 0.35f;
     [SerializeField] private float  animationSpeed = 1f;
@@ -23,18 +27,18 @@ public class ExpBarUI : MonoBehaviour
             expSlider.interactable = false;
         }
 
-        Manager.Exp.OnExpChanged += OnExpChanged;
-        Manager.Exp.OnLevelUp   += OnLevelUp;
+        _expManager.OnExpChanged += OnExpChanged;
+        _expManager.OnLevelUp   += OnLevelUp;
 
         Refresh();
     }
 
     private void OnDestroy()
     {
-        if (ExpManager.HasInstance)
+        if ((_expManager != null))
         {
-            Manager.Exp.OnExpChanged -= OnExpChanged;
-            Manager.Exp.OnLevelUp   -= OnLevelUp;
+            _expManager.OnExpChanged -= OnExpChanged;
+            _expManager.OnLevelUp   -= OnLevelUp;
         }
     }
 
@@ -44,7 +48,7 @@ public class ExpBarUI : MonoBehaviour
     {
         if (Time.unscaledTime - _lastSoundTime > 0.05f)
         {
-            Manager.Audio.PlaySFX("02.Expup");
+            _audioManager.PlaySFX("02.Expup");
             _lastSoundTime = Time.unscaledTime;
         }
 
@@ -54,7 +58,7 @@ public class ExpBarUI : MonoBehaviour
 
     private void OnLevelUp()
     {
-        Manager.Audio.PlaySFX("02.Levelup");
+        _audioManager.PlaySFX("02.Levelup");
         Refresh(levelUp: true);
     }
 
@@ -62,8 +66,8 @@ public class ExpBarUI : MonoBehaviour
     {
         if (expSlider == null) return;
 
-        float expToLevelUp = Manager.Exp.ExpToLevelUp;
-        float target       = expToLevelUp > 0f ? Manager.Exp.CurrentExp / expToLevelUp : 0f;
+        float expToLevelUp = _expManager.ExpToLevelUp;
+        float target       = expToLevelUp > 0f ? _expManager.CurrentExp / expToLevelUp : 0f;
 
         expSlider.DOKill();
 

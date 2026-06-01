@@ -4,8 +4,13 @@
 using UnityEngine;
 using System;
 
-public class CurrencyManager : InGameSingleton<CurrencyManager>
-{
+public class CurrencyManager : MonoBehaviour
+{ 
+    public void Init()
+    {
+        
+    }
+
     public event Action<float> OnCurrencyChanged;
     public float Currency { get; private set; }
 

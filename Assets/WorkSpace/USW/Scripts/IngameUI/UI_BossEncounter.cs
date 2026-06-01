@@ -36,7 +36,7 @@ public class UI_BossEncounter : UI_Base
 
     protected override void Awake()
     {
-        base.Awake();
+        // base.Awake(); // Removed to prevent double call
         Setting();
 
         gameObject.SetActive(false); // 초기 비활성화

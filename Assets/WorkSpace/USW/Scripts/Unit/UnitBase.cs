@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
@@ -20,6 +21,18 @@ using UnityEngine.UI;
 /// </summary>
 public abstract class UnitBase : MonoBehaviour
 {
+    [Inject] protected GameDataManager _gameDataManager;
+    [Inject] protected PopulationManager _populationManager;
+    [Inject] protected GridManager _gridManager;
+    [Inject] protected UpgradeManager _upgradeManager;
+    [Inject] protected LevelUpManager _levelUpManager;
+    [Inject] protected TotemBuffManager _totemBuffManager;
+    [Inject] protected CurrencyFloaterManager _currencyFloaterManager;
+    [Inject] protected ChieftainSpawner _chieftainManager;
+    [Inject] protected BossManager _bossManager;
+    [Inject] protected ProjectilePool _projectileManager;
+    [Inject] protected AudioManager _audioManager;
+
     public UnitData unitData;
 
     public UnityEvent onSkillFull; // 스킬 발동 시 VFX/애니메이션 훅
@@ -84,7 +97,7 @@ public abstract class UnitBase : MonoBehaviour
         }
 
         // ── 시트 데이터 적용 (강화 레벨 반영) ──────────────────
-        if (unitData != null && Manager.GameData != null && Manager.GameData.IsLoaded)
+        if (unitData != null && _gameDataManager != null && _gameDataManager.IsLoaded)
         {
             // ScriptableObject 에셋 직접 수정을 방지하기 위해 인스턴스 복제 (필요 시)
             // 여기서는 런타임에만 값을 유지하면 되므로, 데이터 동기화 수행
@@ -105,13 +118,13 @@ public abstract class UnitBase : MonoBehaviour
         StopLoops();
         _paused = false;
         _loopCts = new CancellationTokenSource();
-        UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+        UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
 
         OnUnitPlaced();
-        Manager.Population?.Add(unitData?.populationCost ?? 1);
+        _populationManager?.Add(unitData?.populationCost ?? 1);
         OnAnyUnitChanged?.Invoke();
 
-        _sound = new(this);
+        _sound = new(this, _audioManager);
     }
 
     /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
@@ -123,7 +136,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         OnUnitRemoved();
         StopLoops();
-        Manager.Population?.Remove(unitData?.populationCost ?? 1);
+        _populationManager?.Remove(unitData?.populationCost ?? 1);
         currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
@@ -133,9 +146,9 @@ public abstract class UnitBase : MonoBehaviour
 
     private void ApplyFacingByCell()
     {
-        if (_unitImage == null || currentCell == null || Manager.Grid == null) return;
+        if (_unitImage == null || currentCell == null || _gridManager == null) return;
 
-        int halfColumn = Manager.Grid.Columns / 2;
+        int halfColumn = _gridManager.Columns / 2;
         bool faceLeft = currentCell.GridPosition.x >= halfColumn;
 
         var imageTransform = _unitImage.rectTransform;
@@ -163,7 +176,7 @@ public abstract class UnitBase : MonoBehaviour
         if (_loopCts == null)
         {
             _loopCts = new CancellationTokenSource();
-            UnitControlLoopAsync(_loopCts.Token).Forget(Debug.LogException);
+            UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
         }
     }
 
@@ -177,16 +190,16 @@ public abstract class UnitBase : MonoBehaviour
     /// <summary>족장 전용 공격력 버프 (3008 위엄) 추가 처리 등</summary>
     protected virtual void SyncStatsWithSheet()
     {
-        if (unitData == null || Manager.GameData == null || !Manager.GameData.IsLoaded) return;
+        if (unitData == null || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
 
         // UpgradeManager에서 현재 직업의 강화 레벨 조회
-        string jobType = Manager.Upgrade?.GetJobType(unitData.characterId) ?? string.Empty;
-        int level = Manager.Upgrade != null && !string.IsNullOrEmpty(jobType)
-            ? Manager.Upgrade.GetJobLevel(jobType)
+        string jobType = _upgradeManager?.GetJobType(unitData.characterId) ?? string.Empty;
+        int level = _upgradeManager != null && !string.IsNullOrEmpty(jobType)
+            ? _upgradeManager.GetJobLevel(jobType)
             : 1;
 
         // 시트 데이터 가져오기
-        var sheetRow = Manager.GameData.GetCharacterRow(unitData.characterId, level);
+        var sheetRow = _gameDataManager.GetCharacterRow(unitData.characterId, level);
         if (sheetRow != null)
         {
             // UnitData 인스턴스에 시트 스탯 적용
@@ -284,14 +297,14 @@ public abstract class UnitBase : MonoBehaviour
     private float GetCurrentAttackInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult   = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
-        float tribeSpeedMult = Mathf.Max(1f + (Manager.LevelUp?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
+        float rowSpeedMult   = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float tribeSpeedMult = Mathf.Max(1f + (_levelUpManager?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
         
         // AttackSpeed는 초당 공격 횟수 (값이 클수록 공격 간격이 짧아져 더 빨라짐)
         float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
 
         float interval = baseInterval
-                       * Manager.Buff.SpeedMultiplier
+                       * _totemBuffManager.SpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        * (currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
@@ -302,9 +315,9 @@ public abstract class UnitBase : MonoBehaviour
     private float GetCurrentSkillInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult = Mathf.Max(Manager.LevelUp?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float rowSpeedMult = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float interval = unitData.skillCooldown
-                       * Manager.Buff.GaugeSpeedMultiplier
+                       * _totemBuffManager.GaugeSpeedMultiplier
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
         return Mathf.Max(interval, 0.05f);
@@ -341,7 +354,7 @@ public abstract class UnitBase : MonoBehaviour
         if (_currency == null || unitData == null || deltaTime <= 0f) return;
 
         // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
-        float speedMultiplier = Mathf.Max(Manager.Buff.FoodSpeedMultiplier, 0.01f);
+        float speedMultiplier = Mathf.Max(_totemBuffManager.FoodSpeedMultiplier, 0.01f);
         _foodTimer += deltaTime / speedMultiplier;
 
         // 표준 간격(1초)에 도달할 때까지 누적
@@ -359,7 +372,7 @@ public abstract class UnitBase : MonoBehaviour
         _foodTimer -= elapsedTicks;
 
         // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
-        float amountPerTick = baseAmount * Manager.Buff.FoodAmountMultiplier;
+        float amountPerTick = baseAmount * _totemBuffManager.FoodAmountMultiplier;
 
         if (amountPerTick > 0f)
         {
@@ -368,14 +381,14 @@ public abstract class UnitBase : MonoBehaviour
                 _currency.AddCurrency(amountPerTick);
                 
                 // 각 틱마다 플로터 생성 (1 미만의 소수점도 시각적 확인을 위해 표시 가능)
-                Manager.CurrencyFloater?.SpawnCurrencyText(transform.position + Vector3.up * 1.5f, amountPerTick);
+                _currencyFloaterManager?.SpawnCurrencyText(transform.position + Vector3.up * 1.5f, amountPerTick);
             }
         }
     }
 
     protected virtual float GetBaseFoodPerSecond()
     {
-        return unitData.foodPerTick;
+        return _gameDataManager.GetCurrencyPerSecond(unitData.characterId);
     }
 
     protected virtual void OnSkillFull()
@@ -392,7 +405,7 @@ public abstract class UnitBase : MonoBehaviour
         }
 
         // ── 레벨업 스킬 특수 효과 ─────────────────────────────
-        var lu = Manager.LevelUp;
+        var lu = _levelUpManager;
         if (lu == null) return;
 
         if (lu.HasBurstOnSkillFull)
@@ -408,12 +421,12 @@ public abstract class UnitBase : MonoBehaviour
     // ── 데미지 계산 ────────────────────────────────────────────
 
     // 강화 데이터 로드 전에는 SO 기본값으로 폴백
-    private float UpgradedAtk => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
-        ? Manager.Upgrade.GetCurrentAtk(unitData.characterId)
+    private float UpgradedAtk => _upgradeManager != null && _upgradeManager.IsLoaded
+        ? _upgradeManager.GetCurrentAtk(unitData.characterId)
         : unitData.atk;
 
-    private float UpgradedAttackInterval => Manager.Upgrade != null && Manager.Upgrade.IsLoaded
-        ? Manager.Upgrade.GetCurrentAttackSpeed(unitData.characterId)
+    private float UpgradedAttackInterval => _upgradeManager != null && _upgradeManager.IsLoaded
+        ? _upgradeManager.GetCurrentAttackSpeed(unitData.characterId)
         : 1.0f;
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
@@ -428,7 +441,7 @@ public abstract class UnitBase : MonoBehaviour
             : 1f;
         float totemModifier = currentCell?.Model.TotemAttackModifier ?? 1f;
         int   row           = currentCell?.GridPosition.y ?? 0;
-        var   lu            = Manager.LevelUp;
+        var   lu            = _levelUpManager;
         float rowModifier   = lu?.GetRowAttackMultiplier(row) ?? 1f;
 
         // 부족별 공격력 보너스
@@ -443,12 +456,12 @@ public abstract class UnitBase : MonoBehaviour
             : 1f;
 
         // 족장 전용 공격력 버프 (3008 위엄)
-        float chieftainAtk = (Manager.Chieftain?.ChieftainUnit == this)
+        float chieftainAtk = (_chieftainManager?.ChieftainUnit == this)
             ? 1f + (lu?.ChieftainAttackBonus ?? 0f)
             : 1f;
 
         float damage = (baseDamage + _unemployedAtkBonus)
-                     * Manager.Buff.AttackMultiplier
+                     * _totemBuffManager.AttackMultiplier
                      * cellModifier
                      * totemModifier
                      * rowModifier
@@ -457,10 +470,10 @@ public abstract class UnitBase : MonoBehaviour
                      * burstAtk
                      * chieftainAtk;
 
-        float critChance = (lu?.CritChance ?? 0f) + Manager.Buff.CritChanceBonus;
+        float critChance = (lu?.CritChance ?? 0f) + _totemBuffManager.CritChanceBonus;
         if (critChance > 0f && UnityEngine.Random.value < critChance)
         {
-            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + Manager.Buff.CritDamageBonus;
+            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + _totemBuffManager.CritDamageBonus;
             damage *= critMult;
         }
 
@@ -473,7 +486,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         if (attackDisabled || _boss == null || _boss.IsDead) return;
 
-        var lu = Manager.LevelUp;
+        var lu = _levelUpManager;
         if (lu == null) return;
 
         // N회마다 추가 공격 (연속 공격, 정밀 연타, 폭풍 연격)
@@ -512,11 +525,11 @@ public abstract class UnitBase : MonoBehaviour
 
     protected void LaunchProjectile()
     {
-        var bossArea = Manager.Boss?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
 
         if (gameObject == null) return;
 
-        if (bossArea != null && Manager.Projectile != null)
-            Manager.Projectile.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        if (bossArea != null && _projectileManager != null)
+            _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
     }
 }

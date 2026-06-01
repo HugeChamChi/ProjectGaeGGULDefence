@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemDisableBoost : TotemBase
 {
+
     protected override void ApplyBuff()  { /* 셀 단위 효과만 사용 */ }
     protected override void RemoveBuff() { /* RebuildCellBuffFlags()에서 자동 초기화 */ }
 
@@ -26,12 +28,12 @@ public class TotemDisableBoost : TotemBase
 
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         foreach (var offset in totemData.attackDisabledRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null && !list.Contains(cell)) list.Add(cell);
         }
         return list;
@@ -46,7 +48,7 @@ public class TotemDisableBoost : TotemBase
         // effectRange → 공격력 또는 공격속도 증폭 (셀 단위)
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             if (totemData.attackBuffAmount > 0f)
@@ -66,7 +68,7 @@ public class TotemDisableBoost : TotemBase
         // attackDisabledRange → 공격불가
         foreach (var offset in totemData.attackDisabledRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) cell.SetTotemAttackDisabled(true);
         }
     }

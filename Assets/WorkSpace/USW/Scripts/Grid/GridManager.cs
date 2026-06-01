@@ -5,7 +5,7 @@ using UnityEngine.UI;
 // ════════════════════════════════════════════════════════
 // GridManager — InGameSingleton 교체
 // ════════════════════════════════════════════════════════
-public class GridManager : InGameSingleton<GridManager>
+public class GridManager : MonoBehaviour
 {
     [SerializeField] private GameConfig       config;
     [SerializeField] private GameObject       cellPrefab;
@@ -17,10 +17,8 @@ public class GridManager : InGameSingleton<GridManager>
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
-
         if (config     == null) { Debug.LogError("GridManager: config 미연결");     return; }
         if (cellPrefab == null) { Debug.LogError("GridManager: cellPrefab 미연결"); return; }
         if (gridLayout == null) { Debug.LogError("GridManager: gridLayout 미연결"); return; }

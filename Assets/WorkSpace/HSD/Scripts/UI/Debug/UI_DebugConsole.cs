@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 // 디버그 콘솔은 다른 시스템에서 절대 참조하지 않아야 합니다. (완전한 독립성)
 public class UI_DebugConsole : UI_Base
 {
+    [Inject] private CurrencyManager _currencyManager;
+
     [Header("Debug Console specific")]
     [SerializeField] private Transform contentRoot;
     [SerializeField] private UI_DebugItem itemPrefab;
@@ -142,16 +145,16 @@ public class UI_DebugConsole : UI_Base
         }
 
         // 2. In-game Currency
-        if (CurrencyManager.Instance != null)
+        if (_currencyManager != null)
         {
-            string inGameName = $"InGame Currency [{CurrencyManager.Instance.Currency}]";
+            string inGameName = $"InGame Currency [{_currencyManager.Currency}]";
             string inGameAction = _currentMode == DebugMode.Possessed ? "-100" : "+100";
             CreateItem(inGameName, inGameAction, () =>
             {
                 if (_currentMode == DebugMode.Possessed)
-                    CurrencyManager.Instance.Spend(100);
+                    _currencyManager.Spend(100);
                 else
-                    CurrencyManager.Instance.AddCurrency(100);
+                    _currencyManager.AddCurrency(100);
                 
                 RefreshList();
             });

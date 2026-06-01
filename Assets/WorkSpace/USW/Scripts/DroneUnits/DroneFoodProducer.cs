@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 드론 식량 생산자 — 패시브 전용 유닛.
@@ -7,6 +8,8 @@ using UnityEngine;
 /// </summary>
 public class DroneFoodProducer : UnitBase
 {
+    [Inject] private DroneManager _droneManager;
+
     [SerializeField] private DroneFoodProducerData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
 
     private DroneFoodProducerData Data =>
@@ -16,12 +19,12 @@ public class DroneFoodProducer : UnitBase
     protected override void OnUnitPlaced()
     {
         if (Data != null)
-            Manager.Drone?.SetPerDroneFood(Data.foodPerDronePerSec);
+            _droneManager?.SetPerDroneFood(Data.foodPerDronePerSec);
     }
 
     protected override void OnUnitRemoved()
     {
-        Manager.Drone?.ResetPerDroneFood();
+        _droneManager?.ResetPerDroneFood();
     }
 
     protected override float GetBaseFoodPerSecond()

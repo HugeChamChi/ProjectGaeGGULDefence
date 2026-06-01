@@ -8,8 +8,14 @@ using UnityEngine.UI;
 // ════════════════════════════════════════════════════════
 // UIManager — InGameSingleton 교체 + Manager 접근 통일
 // ════════════════════════════════════════════════════════
-public class UIManager : InGameSingleton<UIManager>
+public class UIManager : MonoBehaviour
 {
+    [VContainer.Inject] private UnitSpawner _unitSpawner;
+    [VContainer.Inject] private GameManager _gameManager;
+    [VContainer.Inject] private TimerController _timerController;
+    [VContainer.Inject] private CurrencyManager _currencyManager;
+    [VContainer.Inject] private PopulationManager _populationManager;
+
     [Header("Buttons")]
     [SerializeField] private Button summonButton;
     [SerializeField] private Button startButton;
@@ -59,38 +65,37 @@ public class UIManager : InGameSingleton<UIManager>
     [SerializeField] private Button     retryButton;
     [SerializeField] private Button     homeButton;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
-    }
+        }
 
     private void Start()
     {
         Time.timeScale = 1f;
 
         if (summonButton != null)
-            summonButton.onClick.AddListener(Manager.Spawner.OnSpawnButtonPressed);
+            summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
 
         if (startButton != null)
-            startButton.onClick.AddListener(Manager.Game.OnStartButtonPressed);
+            startButton.onClick.AddListener(_gameManager.OnStartButtonPressed);
 
         if (timerText != null)
-            Manager.Timer.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
+            _timerController.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
         if (currencyText != null)
         {
             _currencyTextRect = currencyText.rectTransform;
             _currencyTextBaseScale = _currencyTextRect.localScale;
             _currencyTextBaseColor = currencyText.color;
-            _displayedCurrency = Mathf.FloorToInt(Manager.Currency.Currency);
+            _displayedCurrency = Mathf.FloorToInt(_currencyManager.Currency);
             currencyText.text = $"식량: {_displayedCurrency}";
-            Manager.Currency.OnCurrencyChanged += UpdateCurrencyDisplay;
+            _currencyManager.OnCurrencyChanged += UpdateCurrencyDisplay;
         }
 
         // 소환 비용 텍스트 초기값 + 변경 구독
         if (spawnCostText != null)
         {
-            spawnCostText.text = $"소환 {(int)Manager.Spawner.CurrentCost}";
-            Manager.Spawner.OnCostChanged += cost => spawnCostText.text = $"소환 {(int)cost}";
+            spawnCostText.text = $"소환 {(int)_unitSpawner.CurrentCost}";
+            _unitSpawner.OnCostChanged += cost => spawnCostText.text = $"소환 {(int)cost}";
         }
 
         if (currentLineSlider != null)
@@ -119,10 +124,10 @@ public class UIManager : InGameSingleton<UIManager>
         if (homeButton != null)
             homeButton.onClick.AddListener(OnHomeButtonPressed);
 
-        if (populationText != null && Manager.Population != null)
+        if (populationText != null && _populationManager != null)
         {
-            populationText.text = $"0 / {Manager.Population.Max}";
-            Manager.Population.OnPopulationChanged += (cur, max) =>
+            populationText.text = $"0 / {_populationManager.Max}";
+            _populationManager.OnPopulationChanged += (cur, max) =>
                 populationText.text = $"{cur} / {max}";
         }
 

@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using VContainer;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +7,14 @@ using UnityEngine;
 /// </summary>
 public class InGameInstaller : MonoBehaviour
 {
+    [Inject] private GameManager _gameManager;
+    [Inject] private WaveManager _waveManager;
+    [Inject] private BossManager _bossManager;
+    [Inject] private MergeManager _mergeManager;
+    [Inject] private UnitSpawner _spawnerManager;
+    [Inject] private GridManager _gridManager;
+    [Inject] private TotemSpawner _totemManager;
+
     [Header("Unit Action Popup")]
     [SerializeField] private UnitActionPopupUI _unitActionPopup;
     [SerializeField] private MergeButtonUI _mergeButton;
@@ -37,6 +46,30 @@ public class InGameInstaller : MonoBehaviour
         WireTotemActionPopup();
         WireBossEncounter();
         WireWaveUI();
+        WireLevelUpUI();
+        WireTotemSelectUI();
+    }
+
+    
+    // ── UI Decoupling ──────────────────────────────────────────
+
+    [Header("Level Up & Totem UI")]
+    [SerializeField] private LevelUpUI _levelUpUI;
+    [SerializeField] private TotemSelectUI _totemSelectUI;
+    [Inject] private LevelUpManager _levelUpManager;
+
+    private void WireLevelUpUI()
+    {
+        if (_levelUpUI == null) return;
+        if (_gameManager == null) return;
+        _gameManager.OnLevelUpStateEntered += _levelUpUI.Show;
+    }
+
+    private void WireTotemSelectUI()
+    {
+        if (_totemSelectUI == null) return;
+        if (_waveManager != null) _waveManager.OnTotemSelectionRequested += cb => _totemSelectUI.Show(cb);
+        if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested += cb => _totemSelectUI.Show(cb);
     }
 
     // ── Wave UI ────────────────────────────────────────────────
@@ -44,9 +77,9 @@ public class InGameInstaller : MonoBehaviour
     private void WireWaveUI()
     {
         if (_waveTextUI == null) return;
-        if (Manager.Wave == null) return;
+        if (_waveManager == null) return;
 
-        Manager.Wave.OnWaveChanged += OnWaveChanged;
+        _waveManager.OnWaveChanged += OnWaveChanged;
     }
 
     private void OnWaveChanged(int waveNum)
@@ -59,14 +92,14 @@ public class InGameInstaller : MonoBehaviour
     private void WireBossEncounter()
     {
         if (_bossEncounterUI == null) return;
-        if (Manager.Boss == null) return;
+        if (_bossManager == null) return;
 
-        Manager.Boss.OnBossEntryed += OnBossSpawned;
+        _bossManager.OnBossEntryed += OnBossSpawned;
     }
 
     private void OnBossSpawned(BossEntry prevEntry, BossEntry nextEntry)
     {
-        int waveNum = Manager.Wave != null ? Manager.Wave.CurrentWave + 1 : 1;
+        int waveNum = _waveManager != null ? _waveManager.CurrentWave + 1 : 1;
 
         _bossEncounterUI.PlayBossTransitionSequence(prevEntry?.bossIcon, nextEntry?.bossIcon, waveNum).Forget();
     }
@@ -79,17 +112,17 @@ public class InGameInstaller : MonoBehaviour
         if (_mergeButton == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
         if (_sellButton == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
         if (_unitInfoPanel == null) Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결");
-        if (Manager.Merge == null) { Debug.LogError("[InGameInstaller] Manager.Merge null — MergeManager 씬에 없음"); return; }
+        if (_mergeManager == null) { Debug.LogError("[InGameInstaller] _mergeManager null — MergeManager 씬에 없음"); return; }
 
-        Manager.Merge.OnUnitSelected += _unitActionPopup.Show;
-        Manager.Merge.OnUnitSelected += HandleUnitSelected;
-        Manager.Merge.OnSelectionCleared += _unitActionPopup.Hide;
-        Manager.Merge.OnSelectionCleared += _unitInfoPanel.Close;
-        Manager.Merge.OnSelectionCleared += _totemInfoPanel.Close;
+        _mergeManager.OnUnitSelected += _unitActionPopup.Show;
+        _mergeManager.OnUnitSelected += HandleUnitSelected;
+        _mergeManager.OnSelectionCleared += _unitActionPopup.Hide;
+        _mergeManager.OnSelectionCleared += _unitInfoPanel.Close;
+        _mergeManager.OnSelectionCleared += _totemInfoPanel.Close;
 
-        _mergeButton.OnMergeRequested += Manager.Merge.ExecuteMerge;
+        _mergeButton.OnMergeRequested += _mergeManager.ExecuteMerge;
         _sellButton.OnSellRequested += OnSellUnitRequested;
-        _unitActionPopup.OnDismissRequested += Manager.Merge.ClearSelection;
+        _unitActionPopup.OnDismissRequested += _mergeManager.ClearSelection;
     }
 
     private void HandleUnitSelected(UnitBase unit, bool canMerge)
@@ -99,8 +132,8 @@ public class InGameInstaller : MonoBehaviour
 
     private void OnSellUnitRequested(UnitBase unit)
     {
-        Manager.Spawner.SellUnit(unit);
-        Manager.Merge.ClearSelection();
+        _spawnerManager.SellUnit(unit);
+        _mergeManager.ClearSelection();
     }
 
     // ── Totem Action ───────────────────────────────────────────
@@ -127,35 +160,35 @@ public class InGameInstaller : MonoBehaviour
     {
         _totemActionPopup.Show(totem);
         _totemInfoPanel.SetData(totem.Data);
-        Manager.Grid?.ShowTotemRangePreview(totem);
+        _gridManager?.ShowTotemRangePreview(totem);
     }
 
     private void OnSellTotemRequested(TotemBase totem)
     {
-        Manager.Grid?.ClearTotemRangePreview();
-        Manager.Totem.SellTotem(totem);
+        _gridManager?.ClearTotemRangePreview();
+        _totemManager.SellTotem(totem);
     }
 
     private void ClearTotemRangePreview()
     {
-        Manager.Grid?.ClearTotemRangePreview();
+        _gridManager?.ClearTotemRangePreview();
     }
 
     // ── 정리 ───────────────────────────────────────────────────
 
     private void OnDestroy()
     {
-        if (Manager.Wave != null)
+        if (_waveManager != null)
         {
-            Manager.Wave.OnWaveChanged -= OnWaveChanged;
+            _waveManager.OnWaveChanged -= OnWaveChanged;
         }
 
-        if (Manager.Boss != null)
+        if (_bossManager != null)
         {
-            Manager.Boss.OnBossEntryed -= OnBossSpawned;
+            _bossManager.OnBossEntryed -= OnBossSpawned;
         }
 
-        var merge = Manager.Merge;
+        var merge = _mergeManager;
         if (merge != null)
         {
             merge.OnUnitSelected -= _unitActionPopup.Show;

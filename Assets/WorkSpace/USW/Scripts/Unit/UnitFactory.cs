@@ -1,17 +1,18 @@
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 // ════════════════════════════════════════════════════════
 // UnitFactory — InGameSingleton 교체
 // ════════════════════════════════════════════════════════
-public class UnitFactory : InGameSingleton<UnitFactory>
+public class UnitFactory : MonoBehaviour
 {
     [SerializeField] private UnitData[] unitDataList;
 
     public UnitData[] UnitDataList => unitDataList;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
         ValidateUnitDataList();
     }
 
@@ -108,6 +109,8 @@ public class UnitFactory : InGameSingleton<UnitFactory>
     public UnitBase CreateUnitFromData(UnitData data) => InstantiateFromData(data);
 
     // ── 공통 인스턴스화 ────────────────────────────────────────
+    [VContainer.Inject] private VContainer.IObjectResolver _resolver;
+
     private UnitBase InstantiateFromData(UnitData data)
     {
         if (data.prefab == null)
@@ -116,7 +119,7 @@ public class UnitFactory : InGameSingleton<UnitFactory>
             return null;
         }
 
-        var go   = Instantiate(data.prefab);
+        var go   = _resolver.Instantiate(data.prefab);
         var unit = go.GetComponent<UnitBase>();
 
         if (unit == null)

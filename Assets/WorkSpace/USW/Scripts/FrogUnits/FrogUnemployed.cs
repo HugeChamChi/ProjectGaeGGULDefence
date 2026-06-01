@@ -1,8 +1,10 @@
+using VContainer;
 public class FrogUnemployed : UnitBase
 {
+
     protected override void OnSkillFull()
     {
-        var lu = Manager.LevelUp;
+        var lu = _levelUpManager;
         if (lu?.HasUnemployedFoodNegate != true)
         {
             base.OnSkillFull();

@@ -1,5 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 public static class RM
 {
@@ -51,7 +53,11 @@ public static class RM
         if (isPool)
             return _poolManager.Get(instance, position, rotation, parent);
         else
-            return Object.Instantiate(instance, position, rotation, parent);
+        {
+            var obj = Object.Instantiate(instance, position, rotation, parent);
+            InGameLifetimeScope.GlobalResolver?.InjectGameObject(obj as GameObject ?? (obj as Component)?.gameObject);
+            return obj;
+        }
     }
 
     public static async UniTask<T> InstantiateAsync<T>(string address, Vector3 position, Quaternion rotation, bool isPool = false) where T : Object
@@ -78,7 +84,11 @@ public static class RM
         if (isPool)
             return _poolManager.Get(original, position, rotation, parent);
         else
-            return Object.Instantiate(original, position, rotation, parent);
+        {
+            var obj = Object.Instantiate(original, position, rotation, parent);
+            InGameLifetimeScope.GlobalResolver?.InjectGameObject(obj as GameObject ?? (obj as Component)?.gameObject);
+            return obj;
+        }
     }
 
     public static T Instantiate<T>(T original, Vector3 position, Quaternion rotation, bool isPool = false) where T : Object
@@ -109,7 +119,11 @@ public static class RM
         if (isPool)
             return _poolManager.Get(instance, position, rotation, parent);
         else
-            return Object.Instantiate(instance, position, rotation, parent);
+        {
+            var obj = Object.Instantiate(instance, position, rotation, parent);
+            InGameLifetimeScope.GlobalResolver?.InjectGameObject(obj as GameObject ?? (obj as Component)?.gameObject);
+            return obj;
+        }
     }
 
     public static T Instantiate<T>(string address, Vector3 position, Quaternion rotation, bool isPool = false) where T : Object

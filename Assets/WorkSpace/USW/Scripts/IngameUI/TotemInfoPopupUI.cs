@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using VContainer;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -37,6 +38,9 @@ using UnityEngine.UI;
 /// </summary>
 public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 {
+    [Inject] private GameDataManager _gameDataManager;
+    [Inject] private TotemSpawner _totemManager;
+
     // ─── Left Panel ───────────────────────────────────────────────────
     [Header("Left Panel — Icon & Info")]
     [SerializeField] private Image    totemIconImage;
@@ -93,7 +97,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     protected override void Awake()
     {
-        base.Awake();
+        // base.Awake(); // Removed to prevent double call
         _selfCanvas = GetComponent<Canvas>();
         rotateButton?.onClick.AddListener(OnRotateClicked);
         sellButton?.onClick.AddListener(OnSellClicked);
@@ -104,7 +108,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
     private void Start()
     {
-        _gameData = Manager.GameData;
+        _gameData = _gameDataManager;
         if (_gameData != null)
             _gameData.OnLoaded += OnSheetDataLoaded;
     }
@@ -293,7 +297,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var totem = _currentTotem;
         Hide();
-        Manager.Totem.SellTotem(totem);
+        _totemManager.SellTotem(totem);
     }
 
     // ─── Effect Text ──────────────────────────────────────────────────

@@ -1,12 +1,24 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
 /// 토템 버프 수치 보관 + 전체 셀 버프 플래그 재계산
 ///
 /// </summary>
-public class TotemBuffManager : InGameSingleton<TotemBuffManager>
+public class TotemBuffManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+
+        
+    }
+
+    private GridManager _gridManager;
+
     // 공격력 배율 = 1 + 토템 누산 + 레벨업 누산
     private float _totemAttackBonus   = 0f;
     private float _levelUpAttackBonus = 0f;
@@ -212,10 +224,10 @@ public class TotemBuffManager : InGameSingleton<TotemBuffManager>
     /// </summary>
     public void RebuildCellBuffFlags()
     {
-        if (Manager.Grid == null) return;
+        if (_gridManager == null) return;
 
         // 1) 모든 셀 토템 버프 플래그 초기화 (기본 + 토템 전용 효과)
-        foreach (var cell in Manager.Grid.AllCells())
+        foreach (var cell in _gridManager.AllCells())
         {
             cell.SetBuffFlags(false, false);
             cell.ClearTotemEffects();

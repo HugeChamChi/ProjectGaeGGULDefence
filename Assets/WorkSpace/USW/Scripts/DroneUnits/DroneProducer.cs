@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using VContainer;
 using UnityEngine;
 
 /// <summary>
@@ -8,6 +9,8 @@ using UnityEngine;
 /// </summary>
 public class DroneProducer : UnitBase
 {
+    [Inject] private DronePool _dronePoolManager;
+
     [SerializeField] private DroneProducerData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
 
     private DroneProducerData Data =>
@@ -41,19 +44,19 @@ public class DroneProducer : UnitBase
         onSkillFull?.Invoke();
         SpawnOneDrone();
 
-        if (Data == null || Manager.DronePool == null) return;
+        if (Data == null || _dronePoolManager == null) return;
         for (int i = 0; i < Data.selfDestructCount; i++)
-            Manager.DronePool.GetSelfDestruct(Data.selfDestructDamage, transform.position);
+            _dronePoolManager.GetSelfDestruct(Data.selfDestructDamage, transform.position);
     }
 
     private void SpawnOneDrone()
     {
-        if (Data == null || Manager.DronePool == null) return;
+        if (Data == null || _dronePoolManager == null) return;
         if (_ownedDrones.Count >= Data.maxDroneCount) return;
 
         var slots  = SlotOffsets;
         var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];
-        var drone  = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform, offset);
+        var drone  = _dronePoolManager.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform, offset);
         if (drone != null) _ownedDrones.Add(drone);
     }
 
@@ -62,7 +65,7 @@ public class DroneProducer : UnitBase
         foreach (var drone in _ownedDrones)
         {
             if (drone != null)
-                Manager.DronePool?.ReturnDrone(drone);
+                _dronePoolManager?.ReturnDrone(drone);
         }
         _ownedDrones.Clear();
     }

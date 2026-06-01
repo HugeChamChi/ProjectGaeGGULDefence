@@ -60,7 +60,7 @@ namespace HSD.InGameDebug
 
             if (_currentTab == DebugTabType.Totem)
             {
-                var pool = TotemSelectUI.Instance?.TotemPool;
+                var pool = UnityEngine.Object.FindObjectOfType<TotemSelectUI>(true)?.TotemPool;
                 if (pool != null)
                 {
                     foreach (var data in pool)
@@ -74,7 +74,7 @@ namespace HSD.InGameDebug
             }
             else if (_currentTab == DebugTabType.LevelUp)
             {
-                var pool = LevelUpManager.Instance?.LevelUpPool;
+                var pool = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.LevelUpPool;
                 if (pool != null)
                 {
                     foreach (var data in pool)
@@ -88,7 +88,7 @@ namespace HSD.InGameDebug
             }
             else if (_currentTab == DebugTabType.Unit)
             {
-                var pool = UnitFactory.Instance?.UnitDataList;
+                var pool = UnityEngine.Object.FindObjectOfType<UnitFactory>(true)?.UnitDataList;
                 if (pool != null)
                 {
                     foreach (var data in pool)
@@ -128,7 +128,7 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemBase totem)
             {
-                TotemSpawner.Instance.SellTotem(totem);
+                UnityEngine.Object.FindObjectOfType<TotemSpawner>(true).SellTotem(totem);
                 RefreshList();
             }
         }
@@ -137,7 +137,7 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemData data)
             {
-                TotemSpawner.Instance.SpawnTotemByData(data);
+                UnityEngine.Object.FindObjectOfType<TotemSpawner>(true).SpawnTotemByData(data);
                 _view.HideAddView();
                 RefreshList();
             }
@@ -146,10 +146,10 @@ namespace HSD.InGameDebug
         // --- LevelUp Logic ---
         private void RefreshLevelUpList()
         {
-            if (LevelUpManager.Instance == null) return;
+            if (UnityEngine.Object.FindObjectOfType<LevelUpManager>(true) == null) return;
 
-            var chosenIds = LevelUpManager.Instance.ChosenIds.ToList();
-            var pool = LevelUpManager.Instance.LevelUpPool;
+            var chosenIds = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).ChosenIds.ToList();
+            var pool = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).LevelUpPool;
 
             foreach (var id in chosenIds)
             {
@@ -165,7 +165,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                LevelUpManager.Instance.RemoveEffect(data);
+                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).RemoveEffect(data);
                 RefreshList();
             }
         }
@@ -174,7 +174,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                LevelUpManager.Instance.ApplyEffect(data);
+                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).ApplyEffect(data);
                 _view.HideAddView();
                 RefreshList();
             }
@@ -202,7 +202,7 @@ namespace HSD.InGameDebug
                 if (Player.Chief.SelectedChiefId == data.Id) return;
 
                 Player.Chief.SetSelectedChief(data.Id);
-                ChieftainSpawner.Instance?.ChangeChieftain(data.Id);
+                UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true)?.ChangeChieftain(data.Id);
                 RefreshList();
             }
         }
@@ -210,7 +210,7 @@ namespace HSD.InGameDebug
         // --- Unit Logic ---
         private void RefreshUnitList()
         {
-            var cells = Manager.Grid?.GetOccupiedCells();
+            var cells = UnityEngine.Object.FindObjectOfType<GridManager>(true)?.GetOccupiedCells();
             if (cells == null) return;
 
             foreach (var cell in cells)
@@ -219,7 +219,7 @@ namespace HSD.InGameDebug
                 if (unit == null || unit.unitData == null) continue;
 
                 // 족장은 제외 (족장 탭에서 관리)
-                if (ChieftainSpawner.Instance != null && ChieftainSpawner.Instance.ChieftainUnit == unit) continue;
+                if (UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true) != null && UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true).ChieftainUnit == unit) continue;
 
                 _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
             }
@@ -240,7 +240,7 @@ namespace HSD.InGameDebug
         {
             if (obj is UnitData data)
             {
-                var emptyCells = Manager.Grid?.GetEmptyCells();
+                var emptyCells = UnityEngine.Object.FindObjectOfType<GridManager>(true)?.GetEmptyCells();
                 if (emptyCells == null || emptyCells.Count == 0)
                 {
                     Debug.LogWarning("[Debug] 빈 셀 없음 — 유닛 생성 취소");
@@ -248,10 +248,10 @@ namespace HSD.InGameDebug
                 }
 
                 var cell = emptyCells[Random.Range(0, emptyCells.Count)];
-                var unit = UnitFactory.Instance.CreateUnit(data.unitType);
+                var unit = UnityEngine.Object.FindObjectOfType<UnitFactory>(true).CreateUnit(data.unitType);
                 if (unit != null)
                 {
-                    Manager.Spawner.PlaceUnitWithEffect(unit, cell);
+                    UnityEngine.Object.FindObjectOfType<UnitSpawner>(true).PlaceUnitWithEffect(unit, cell);
                 }
 
                 _view.HideAddView();

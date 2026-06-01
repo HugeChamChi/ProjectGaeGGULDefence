@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 // ════════════════════════════════════════════════════════
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemSpeedBuff : TotemBase
 {
+
     protected override void ApplyBuff()
     {
         if (totemData.speedBuffAmount <= 0f)
@@ -20,13 +22,13 @@ public class TotemSpeedBuff : TotemBase
             Debug.LogWarning($"TotemSpeedBuff({name}): speedBuffAmount = 0. TotemData를 확인하세요.");
             return;
         }
-        Manager.Buff.AddSpeedBuff(totemData.speedBuffAmount);
+        _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
     }
 
     protected override void RemoveBuff()
     {
         if (totemData.speedBuffAmount <= 0f) return;
-        Manager.Buff.RemoveSpeedBuff(totemData.speedBuffAmount);
+        _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -45,7 +47,7 @@ public class TotemSpeedBuff : TotemBase
 
         foreach (var offset in offsets)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
 

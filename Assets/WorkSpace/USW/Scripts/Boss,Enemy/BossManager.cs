@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System;
 using System.Collections.Generic;
 
@@ -8,8 +9,23 @@ using System.Collections.Generic;
 /// 순차 소환 흐름은 WaveManager가 담당.
 /// BossManager는 보스 1마리씩 소환/해제만 처리.
 /// </summary>
-public class BossManager : InGameSingleton<BossManager>
+public class BossManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
+        if (_waveManager == null) _waveManager = _resolver.Resolve<WaveManager>();
+        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
+
+        
+    }
+
+    private GameDataManager _gameDataManager;
+    private WaveManager _waveManager;
+    private UIManager _uiManager;
+
     [SerializeField] private RectTransform bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]
     [SerializeField] private Vector2 bossSize = new Vector2(300f, 300f);
@@ -53,14 +69,14 @@ public class BossManager : InGameSingleton<BossManager>
         SetupRectTransform(go);
 
         // 시트 HP 우선 — 미로드 시 WaveData SO의 hp 폴백
-        int hp = Manager.GameData != null && Manager.GameData.IsLoaded
-            ? Manager.GameData.GetBossMaxHp(100 + Manager.Wave.CurrentWave, entry.hp)
+        int hp = _gameDataManager != null && _gameDataManager.IsLoaded
+            ? _gameDataManager.GetBossMaxHp(100 + _waveManager.CurrentWave, entry.hp)
             : entry.hp;
         boss.Init(hp);
 
         _currentBosses.Add(boss);
 
-        boss.OnHpChanged += (cur, max) => Manager.UI.UpdateBossHp(cur, max);
+        boss.OnHpChanged += (cur, max) => _uiManager.UpdateBossHp(cur, max);
         boss.OnDeath     += () =>
         {
             BossPatternController.Instance.UnregisterBoss(boss);
@@ -72,7 +88,7 @@ public class BossManager : InGameSingleton<BossManager>
         boss.gameObject.AddComponent<BossAreaTarget>();
 
         BossPatternController.Instance.RegisterBoss(boss, boss.Patterns);
-        Manager.UI.UpdateBossHp(boss.CurrentHp, boss.MaxHp);
+        _uiManager.UpdateBossHp(boss.CurrentHp, boss.MaxHp);
 
         OnBossEntryed?.Invoke(_prevBossEntry, entry);
         _prevBossEntry = entry;

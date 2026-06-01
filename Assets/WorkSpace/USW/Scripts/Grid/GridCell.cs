@@ -111,7 +111,7 @@ public class GridCell : MonoBehaviour
     {
         if (duration <= 0f) return;
         DebuffTimerAsync(duration, onExpire, this.GetCancellationTokenOnDestroy())
-            .Forget(Debug.LogException);
+            .Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     private async UniTask DebuffTimerAsync(

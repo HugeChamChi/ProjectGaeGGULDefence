@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemOverWelmBuff : TotemBase
 {
+
     // 영향받는 셀 오프셋 목록
     private static readonly Vector2Int[] Offsets =
     {
@@ -28,7 +30,7 @@ public class TotemOverWelmBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in Offsets)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -41,7 +43,7 @@ public class TotemOverWelmBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in Offsets)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null)
                 cell.SetTotemAttackDisabled(true);
         }

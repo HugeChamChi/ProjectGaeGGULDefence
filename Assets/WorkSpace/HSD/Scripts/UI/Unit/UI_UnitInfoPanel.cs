@@ -31,6 +31,7 @@ namespace GaeGGUL.UI.Unit
         [Header("Stats")]
         [SerializeField] private UI_StatSlot[] statSlots; 
 
+        [VContainer.Inject] public GameDataManager _gameDataManager;
         private UI_UnitInfoPresenter _presenter;
 
         protected override void Awake()
@@ -58,7 +59,7 @@ namespace GaeGGUL.UI.Unit
         {
             if (_presenter == null)
             {
-                _presenter = new UI_UnitInfoPresenter(this);
+                _presenter = new UI_UnitInfoPresenter(this, _gameDataManager);
             }
         }
 

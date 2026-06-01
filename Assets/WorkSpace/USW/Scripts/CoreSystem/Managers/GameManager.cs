@@ -1,11 +1,36 @@
 using UnityEngine;
+using VContainer;
 using System;
 
 // ════════════════════════════════════════════════════════
 // GameManager — InGameSingleton 교체
 // ════════════════════════════════════════════════════════
-public class GameManager : InGameSingleton<GameManager>
+public class GameManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
+        if (_waveManager == null) _waveManager = _resolver.Resolve<WaveManager>();
+        if (_timerManager == null) _timerManager = _resolver.Resolve<TimerController>();
+        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
+        if (_expManager == null) _expManager = _resolver.Resolve<ExpManager>();
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+
+        
+    }
+
+    private UIManager _uiManager;
+    private WaveManager _waveManager;
+    private TimerController _timerManager;
+    private CurrencyManager _currencyManager;
+    private ExpManager _expManager;
+    
+    private GridManager _gridManager;
+
+    public event Action OnLevelUpStateEntered;
+
     public enum GameState { Idle, Playing, LevelUp, Win, Lose }
     public GameState CurrentState { get; private set; } = GameState.Idle;
 
@@ -18,28 +43,28 @@ public class GameManager : InGameSingleton<GameManager>
 
         CurrentState = GameState.Playing;
 
-        Manager.UI.HideStartButton();
-        Manager.Wave.StartWave();
+        _uiManager.HideStartButton();
+        _waveManager.StartWave();
 
-        Manager.Timer.OnTimeUp += HandleTimeUp;
-        Manager.Timer.StartTimer(config.countdownSeconds);
+        _timerManager.OnTimeUp += HandleTimeUp;
+        _timerManager.StartTimer(config.countdownSeconds);
         BossBase.OnAnyBossDied += HandleBossKilled;
 
-        Manager.Currency.AddCurrency(config.startingFood);
-        Manager.Exp.OnLevelUp += HandleLevelUp;
+        _currencyManager.AddCurrency(config.startingFood);
+        _expManager.OnLevelUp += HandleLevelUp;
     }
 
     private void HandleLevelUp()
     {
         if (CurrentState != GameState.Playing) return;
         CurrentState = GameState.LevelUp;
-        Manager.LevelUpUI.Show();
+        OnLevelUpStateEntered?.Invoke();
     }
 
     public void OnLevelUpChoiceMade()
     {
         CurrentState = GameState.Playing;
-        Manager.Exp.FlushPendingLevelUp();
+        _expManager.FlushPendingLevelUp();
     }
 
     public void OnAllWavesCleared()
@@ -49,7 +74,7 @@ public class GameManager : InGameSingleton<GameManager>
         EndGame(true);
     }
 
-    private void HandleBossKilled() => Manager.Timer.StartTimer(config.countdownSeconds);
+    private void HandleBossKilled() => _timerManager.StartTimer(config.countdownSeconds);
 
     private void HandleTimeUp()
     {
@@ -61,14 +86,14 @@ public class GameManager : InGameSingleton<GameManager>
     private void EndGame(bool isWin)
     {
         BossBase.OnAnyBossDied -= HandleBossKilled;
-        Manager.Timer.StopTimer();
+        _timerManager.StopTimer();
         StopAllUnits();
-        Manager.UI.ShowResult(isWin);
+        _uiManager.ShowResult(isWin);
     }
 
     private void StopAllUnits()
     {
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.OnRemoved();
     }
 }

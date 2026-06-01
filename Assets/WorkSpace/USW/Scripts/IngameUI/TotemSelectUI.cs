@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -21,13 +22,19 @@ using UnityEngine.UI;
 ///
 /// ─ 흐름 ─────────────────────────────────────────────────
 ///   WaveManager.OnSingleBossDefeated()
-///     → Manager.TotemSelect.Show(onChoiceMade)
+///     → _totemSelectManager.Show(onChoiceMade)
 ///     → 카드 3장 표시 + 30초 타이머
 ///     → 선택(또는 타임아웃) → TotemSpawner.SpawnTotemByData()
 ///     → onChoiceMade 콜백 → 다음 보스/웨이브 진행
 /// </summary>
 public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 {
+
+    [Inject] private TimerController _timerManager;
+    [Inject] private GridManager _gridManager;
+    [Inject] private TotemSpawner _totemManager;
+    [Inject] private CurrencyManager _currencyManager;
+
     [SerializeField] private Transform         cardContainer;
     [SerializeField] private TotemSelectCardUI cardPrefab;
     [SerializeField] private Button            confirmButton;
@@ -53,7 +60,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     protected override void Awake()
     {
-        base.Awake();
+        // base.Awake(); // Removed to prevent double call
         confirmButton?.onClick.AddListener(OnConfirmClicked);
         SetConfirmInteractable(false);
     }
@@ -83,9 +90,9 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
         gameObject.SetActive(true);
         Time.timeScale = 0f;
-        Manager.Timer.StopTimer();
+        _timerManager.StopTimer();
 
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.PauseLoops();
 
         RunSelectionTimer().Forget();
@@ -111,11 +118,11 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         var data = _selectedCard.GetData();
         if (data != null)
         {
-            bool placed = Manager.Totem.SpawnTotemByData(data);
+            bool placed = _totemManager.SpawnTotemByData(data);
             if (!placed)
             {
                 Debug.Log($"[TotemSelectUI] 빈 셀 없음 — 식량 {fallbackFood} 지급");
-                Manager.Currency.AddCurrency(fallbackFood);
+                _currencyManager.AddCurrency(fallbackFood);
             }
         }
 
@@ -174,9 +181,9 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         ClearCards();
         gameObject.SetActive(false);
         Time.timeScale = 1f;
-        Manager.Timer.ResumeTimer();
+        _timerManager.ResumeTimer();
 
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.ResumeLoops();
 
         var cb = _onChoiceMade;

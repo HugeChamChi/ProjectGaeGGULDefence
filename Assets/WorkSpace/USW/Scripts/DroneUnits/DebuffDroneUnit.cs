@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 디버프 드론 소환 유닛.
@@ -7,6 +8,9 @@ using UnityEngine;
 /// </summary>
 public class DebuffDroneUnit : UnitBase
 {
+    [Inject] private DronePool _dronePoolManager;
+    [Inject] private DroneManager _droneManager;
+
     [SerializeField] private DebuffDroneData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
 
     private DebuffDroneData Data =>
@@ -17,14 +21,14 @@ public class DebuffDroneUnit : UnitBase
 
     protected override void OnUnitPlaced()
     {
-        if (Data == null || Manager.DronePool == null) return;
-        _ownedDrone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
+        if (Data == null || _dronePoolManager == null) return;
+        _ownedDrone = _dronePoolManager.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
     }
 
     protected override void OnUnitRemoved()
     {
         if (_ownedDrone == null) return;
-        Manager.DronePool?.ReturnDrone(_ownedDrone);
+        _dronePoolManager?.ReturnDrone(_ownedDrone);
         _ownedDrone = null;
     }
 
@@ -33,6 +37,6 @@ public class DebuffDroneUnit : UnitBase
         onSkillFull?.Invoke();
 
         if (Data == null) return;
-        Manager.Drone?.ApplyBossDebuff(Data.damageAmplificationMultiplier, Data.debuffDuration);
+        _droneManager?.ApplyBossDebuff(Data.damageAmplificationMultiplier, Data.debuffDuration);
     }
 }

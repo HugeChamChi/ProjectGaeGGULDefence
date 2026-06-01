@@ -44,9 +44,8 @@ public class AudioManager : Singleton<AudioManager>
 
     #endregion
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
         InitializeEngine();
     }
 

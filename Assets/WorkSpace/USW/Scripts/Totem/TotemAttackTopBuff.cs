@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemAttackTopBuff : TotemBase
 {
+
     protected override void ApplyBuff()
     {
         if (totemData.attackBuffAmount <= 0f)
@@ -19,13 +21,13 @@ public class TotemAttackTopBuff : TotemBase
             Debug.LogWarning($"TotemAttackTopBuff({name}): attackBuffAmount = 0. TotemData를 확인하세요.");
             return;
         }
-        Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+        _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
     }
 
     protected override void RemoveBuff()
     {
         if (totemData.attackBuffAmount <= 0f) return;
-        Manager.Buff.RemoveAttackBuff(totemData.attackBuffAmount);
+        _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -35,11 +37,11 @@ public class TotemAttackTopBuff : TotemBase
 
         // 최상단 = y=0 (GridLayoutGroup 위→아래 기준)
         const int topRow = 0;
-        int cols = Manager.Grid.Columns;
+        int cols = _gridManager.Columns;
 
         for (int x = 0; x < cols; x++)
         {
-            var cell = Manager.Grid.GetCell(x, topRow);
+            var cell = _gridManager.GetCell(x, topRow);
             if (cell != null) list.Add(cell);
         }
 

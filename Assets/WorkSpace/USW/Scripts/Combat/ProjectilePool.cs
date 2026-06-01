@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// 씬에 오브젝트로 배치하면 Screen Space Overlay Canvas를 자동 생성한다.
 /// 투사체 시각은 Unity 내장 Knob 스프라이트(원형)를 Image로 사용.
 /// </summary>
-public class ProjectilePool : InGameSingleton<ProjectilePool>
+public class ProjectilePool : MonoBehaviour
 {
     [Header("투사체 설정")]
     [Tooltip("null이면 원형 Image를 코드로 자동 생성")]
@@ -20,9 +20,8 @@ public class ProjectilePool : InGameSingleton<ProjectilePool>
     private ObjectPool<Projectile> _pool;
     private Transform              _container;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
         CreateOverlayCanvas();
 
         _pool = new ObjectPool<Projectile>(

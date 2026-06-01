@@ -4,8 +4,13 @@ using UnityEngine;
 /// 재화 생산 시 플로터 소환을 전담하는 매니저.
 /// DamageFloaterManager의 로직을 참고하여 독립적으로 구현되었습니다.
 /// </summary>
-public class CurrencyFloaterManager : InGameSingleton<CurrencyFloaterManager>
-{
+public class CurrencyFloaterManager : MonoBehaviour
+{ 
+    public void Init()
+    {
+        
+    }
+
     [Header("프리팹 어드레서블 주소")]
     public string currencyTextAddress = "DamageTextPrefab"; // 기본 데미지 프리팹으로 우선 복구
 

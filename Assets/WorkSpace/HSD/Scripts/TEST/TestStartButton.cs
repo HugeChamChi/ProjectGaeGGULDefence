@@ -1,16 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class TestStartButton : MonoBehaviour
 {
     private Button button;
+    [Inject] private GameDataManager gameDataManager;
 
     private void Awake()
     {
         button = GetComponent<Button>();
         button.interactable = false;
-        GameDataManager.Instance.OnLoaded += () => button.interactable = true;
+        gameDataManager.OnLoaded += () => button.interactable = true;
     }
 }

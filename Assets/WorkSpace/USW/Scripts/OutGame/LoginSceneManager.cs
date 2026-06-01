@@ -88,7 +88,7 @@ public class LoginSceneManager : MonoBehaviour
         _loadingBarCts = CancellationTokenSource.CreateLinkedTokenSource(
             this.GetCancellationTokenOnDestroy());
 
-        LoadingBarAsync(_loadingBarCts.Token).Forget(Debug.LogException);
+        LoadingBarAsync(_loadingBarCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
 
 #if UNITY_EDITOR
         EditorLogin();

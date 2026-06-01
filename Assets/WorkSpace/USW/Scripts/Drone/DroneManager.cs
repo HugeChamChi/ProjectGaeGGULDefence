@@ -8,8 +8,12 @@ using UnityEngine;
 /// 드론 등록/해제, 초당 식량 틱, 드론 버프/보스 디버프 상태,
 /// 족장 집결 폭발(ExecuteRallyAsync)을 담당한다.
 /// </summary>
-public class DroneManager : InGameSingleton<DroneManager>
+public class DroneManager : MonoBehaviour
 {
+    [VContainer.Inject] private BossManager _bossManager;
+    [VContainer.Inject] private CurrencyManager _currencyManager;
+    [VContainer.Inject] private TotemBuffManager _totemBuffManager;
+
     private readonly List<DroneUnit> _drones = new();
 
     // ── 식량 ────────────────────────────────────────────────────────
@@ -90,7 +94,7 @@ public class DroneManager : InGameSingleton<DroneManager>
             var snapshot = _drones.ToArray();
 
             // 집결 위치 계산 — 보스 아래 가로 일렬
-            var boss = Manager.Boss?.CurrentBoss;
+            var boss = _bossManager?.CurrentBoss;
             Vector3 rallyCenter = boss != null
                 ? boss.transform.position + new Vector3(0f, -_rallyBossOffset, 0f)
                 : new Vector3(Screen.width * 0.5f, Screen.height * 0.65f, 0f);
@@ -112,7 +116,7 @@ public class DroneManager : InGameSingleton<DroneManager>
                 return;
 
             // ③ 일제 사격 + 피해
-            boss = Manager.Boss?.CurrentBoss;
+            boss = _bossManager?.CurrentBoss;
             if (boss != null && !boss.IsDead)
             {
                 foreach (var d in snapshot)
@@ -147,14 +151,13 @@ public class DroneManager : InGameSingleton<DroneManager>
             Debug.LogWarning("DroneManager: 플레이 모드에서만 테스트 가능합니다.");
             return;
         }
-        ExecuteRallyAsync(_testRallyDamage, this.GetCancellationTokenOnDestroy()).Forget(Debug.LogException);
+        ExecuteRallyAsync(_testRallyDamage, this.GetCancellationTokenOnDestroy()).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     // ── 초기화 ──────────────────────────────────────────────────────
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
         FoodTickAsync(this.GetCancellationTokenOnDestroy()).Forget();
     }
 
@@ -167,10 +170,10 @@ public class DroneManager : InGameSingleton<DroneManager>
             await UniTask.Delay(1000, cancellationToken: token);
 
             int count = _drones.Count;
-            if (count > 0 && Manager.Currency != null)
+            if (count > 0 && _currencyManager != null)
             {
-                float food = count * _baseFoodPerDrone * (Manager.Buff?.FoodAmountMultiplier ?? 1f);
-                Manager.Currency.AddCurrency(food);
+                float food = count * _baseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
+                _currencyManager.AddCurrency(food);
             }
         }
     }

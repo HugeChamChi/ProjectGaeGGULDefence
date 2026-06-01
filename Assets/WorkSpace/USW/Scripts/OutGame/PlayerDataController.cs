@@ -88,7 +88,7 @@ public class PlayerDataController : IDisposable
         // OnDisable에서 수동 취소 가능하고,
         // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
         _staminaLoopCts = new CancellationTokenSource();
-        StaminaTimerAsync(_staminaLoopCts.Token).Forget(Debug.LogException);
+        StaminaTimerAsync(_staminaLoopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     private void StopStaminaTimer()

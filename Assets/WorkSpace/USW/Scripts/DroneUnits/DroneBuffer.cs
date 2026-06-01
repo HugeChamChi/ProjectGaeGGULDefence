@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// 드론 버퍼 — 배치 시 드론 1마리 생성, 스킬 발동 시 모든 드론에 버프 적용.
@@ -6,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class DroneBuffer : UnitBase
 {
+    [Inject] private DronePool _dronePoolManager;
+    [Inject] private DroneManager _droneManager;
+
     [SerializeField] private DroneBufferData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
 
     private DroneBufferData Data =>
@@ -16,14 +20,14 @@ public class DroneBuffer : UnitBase
 
     protected override void OnUnitPlaced()
     {
-        if (Data == null || Manager.DronePool == null) return;
-        _ownedDrone = Manager.DronePool.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
+        if (Data == null || _dronePoolManager == null) return;
+        _ownedDrone = _dronePoolManager.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform);
     }
 
     protected override void OnUnitRemoved()
     {
         if (_ownedDrone == null) return;
-        Manager.DronePool?.ReturnDrone(_ownedDrone);
+        _dronePoolManager?.ReturnDrone(_ownedDrone);
         _ownedDrone = null;
     }
 
@@ -32,6 +36,6 @@ public class DroneBuffer : UnitBase
         onSkillFull?.Invoke();
 
         if (Data == null) return;
-        Manager.Drone?.ApplyDroneBuff(Data.atkBuffMultiplier, Data.speedBuffMultiplier, Data.buffDuration);
+        _droneManager?.ApplyDroneBuff(Data.atkBuffMultiplier, Data.speedBuffMultiplier, Data.buffDuration);
     }
 }

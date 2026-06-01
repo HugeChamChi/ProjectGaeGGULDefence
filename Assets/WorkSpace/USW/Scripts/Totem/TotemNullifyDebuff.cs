@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemNullifyDebuff : TotemBase
 {
+
     protected override void ApplyBuff()  { /* 셀 단위 효과 — PaintAffectedCells에서 처리 */ }
     protected override void RemoveBuff() { /* RebuildCellBuffFlags()에서 ClearTotemEffects로 자동 초기화 */ }
 
@@ -22,7 +24,7 @@ public class TotemNullifyDebuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -35,7 +37,7 @@ public class TotemNullifyDebuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetNullifyDamageDebuff(true);

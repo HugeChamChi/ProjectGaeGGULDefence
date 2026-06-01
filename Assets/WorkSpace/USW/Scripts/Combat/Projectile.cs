@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
@@ -9,6 +10,8 @@ using System.Threading;
 /// </summary>
 public class Projectile : MonoBehaviour
 {
+    [Inject] private TotemBuffManager _totemBuffManager;
+
     private Action<Projectile>      _onComplete;
     private CancellationTokenSource _moveCts;
 
@@ -17,7 +20,7 @@ public class Projectile : MonoBehaviour
         StopMove();
 
         transform.position = from;
-        transform.localScale = Vector3.one * (Manager.Buff?.ProjectileSizeMultiplier ?? 1f);
+        transform.localScale = Vector3.one * (_totemBuffManager?.ProjectileSizeMultiplier ?? 1f);
         _onComplete        = onComplete;
 
         // OnDisable에서 수동 취소 가능하고,
@@ -25,7 +28,7 @@ public class Projectile : MonoBehaviour
         _moveCts = CancellationTokenSource.CreateLinkedTokenSource(
             this.GetCancellationTokenOnDestroy());
 
-        MoveAsync(to, _moveCts.Token).Forget(Debug.LogException);
+        MoveAsync(to, _moveCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     private void StopMove()

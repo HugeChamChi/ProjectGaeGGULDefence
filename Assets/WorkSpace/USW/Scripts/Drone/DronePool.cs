@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 /// 일반 드론(50)과 자폭 드론(20) 두 풀을 관리한다.
 /// DroneProducer는 Instantiate 대신 이 클래스를 통해 드론을 가져온다.
 /// </summary>
-public class DronePool : InGameSingleton<DronePool>
+public class DronePool : MonoBehaviour
 {
     [Header("프리팹")]
     [SerializeField] private GameObject _dronePrefab;
@@ -22,10 +22,8 @@ public class DronePool : InGameSingleton<DronePool>
     private ObjectPool<DroneUnit>         _dronePool;
     private ObjectPool<SelfDestructDrone> _selfDestructPool;
 
-    protected override void Awake()
+    protected void Awake()
     {
-        base.Awake();
-
         if (_dronePrefab == null || _dronePrefab.GetComponent<DroneUnit>() == null)
         {
             Debug.LogError("DronePool: _dronePrefab 미연결 또는 DroneUnit 컴포넌트 없음 — Inspector에서 DronePrefab.prefab을 연결하세요.");

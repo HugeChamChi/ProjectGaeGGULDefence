@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ using AssetKits.ParticleImage;
 /// </summary>
 public class UIFeedbackController : MonoBehaviour
 {
+    [Inject] private AudioManager _audioManager;
+
     [Header("Sound Settings")]
     [SerializeField] private string buttonSFX = "01.Button_Touch(max vol)";
     [SerializeField] private string touchSFX  = "01.Screen_touch(max vol)";
@@ -51,7 +54,7 @@ public class UIFeedbackController : MonoBehaviour
         }
 
         // 2. 사운드 재생
-        Manager.Audio.PlaySFX(isButton ? buttonSFX : touchSFX);
+        _audioManager.PlaySFX(isButton ? buttonSFX : touchSFX);
 
         // 3. ParticleImage 이펙트 재생
         PlayClickEffect(mousePos);

@@ -4,8 +4,13 @@
 using UnityEngine;
 using System;
 
-public class TimerController : InGameSingleton<TimerController>
-{
+public class TimerController : MonoBehaviour
+{ 
+    public void Init()
+    {
+        
+    }
+
     public event Action        OnTimeUp;
     public event Action<float> OnTimerTick;
 

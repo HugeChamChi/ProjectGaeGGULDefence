@@ -1,10 +1,13 @@
 using UnityEngine;
+using VContainer;
 
 /// <summary>
 /// CurrencyFloaterManager 기능을 검증하기 위한 테스트 스크립트
 /// </summary>
 public class Test_CurrencyFloater : MonoBehaviour
 {
+    [Inject] private CurrencyFloaterManager _currencyFloaterManager;
+
     [Header("테스트 설정")]
     public float testAmount = 100f;
     public Vector3 testPosition = Vector3.zero;
@@ -13,9 +16,9 @@ public class Test_CurrencyFloater : MonoBehaviour
     [Button]
     public void TestSpawnAtOrigin()
     {
-        if (Manager.CurrencyFloater != null)
+        if (_currencyFloaterManager != null)
         {
-            Manager.CurrencyFloater.SpawnCurrencyText(Vector3.zero, testAmount);
+            _currencyFloaterManager.SpawnCurrencyText(Vector3.zero, testAmount);
             Debug.Log("[Test_CurrencyFloater] Spawned floater at (0, 0, 0)");
         }
         else
@@ -28,10 +31,10 @@ public class Test_CurrencyFloater : MonoBehaviour
     [Button]
     public void TestSpawnRandom()
     {
-        if (Manager.CurrencyFloater != null)
+        if (_currencyFloaterManager != null)
         {
             Vector3 randomPos = new Vector3(Random.Range(-5f, 5f), Random.Range(-5f, 5f), 0);
-            Manager.CurrencyFloater.SpawnCurrencyText(randomPos, testAmount);
+            _currencyFloaterManager.SpawnCurrencyText(randomPos, testAmount);
             Debug.Log($"[Test_CurrencyFloater] Spawned floater at {randomPos}");
         }
     }

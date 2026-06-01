@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,15 +12,16 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemBerserkBuff : TotemBase
 {
+
     protected override void ApplyBuff()
     {
         if (totemData.attackBuffAmount > 0f)
-            Manager.Buff.AddAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
         else
             Debug.LogWarning($"TotemBerserkBuff({name}): attackBuffAmount = 0.");
 
         if (totemData.speedBuffAmount > 0f)
-            Manager.Buff.AddSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
         else
             Debug.LogWarning($"TotemBerserkBuff({name}): speedBuffAmount = 0.");
     }
@@ -27,9 +29,9 @@ public class TotemBerserkBuff : TotemBase
     protected override void RemoveBuff()
     {
         if (totemData.attackBuffAmount > 0f)
-            Manager.Buff.RemoveAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
         if (totemData.speedBuffAmount > 0f)
-            Manager.Buff.RemoveSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -39,7 +41,7 @@ public class TotemBerserkBuff : TotemBase
 
         var pos = CurrentCell.GridPosition;
         // 상(上) = y-1 (GridLayoutGroup 위→아래 기준, y=0이 최상단)
-        var above = Manager.Grid.GetCell(pos.x, pos.y - 1);
+        var above = _gridManager.GetCell(pos.x, pos.y - 1);
         if (above != null) list.Add(above);
 
         return list;

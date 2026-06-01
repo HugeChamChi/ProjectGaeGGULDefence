@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
@@ -22,10 +23,33 @@ using Cysharp.Threading.Tasks;
 ///   MergeManager: HasMergeKeepsTribe
 ///   TotemSpawner: HasAllowTotemOverlap
 /// </summary>
-public class LevelUpManager : InGameSingleton<LevelUpManager>
+public class LevelUpManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+        if (_totemBuffManager == null) _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
+        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
+        if (_populationManager == null) _populationManager = _resolver.Resolve<PopulationManager>();
+        if (_unitFactoryManager == null) _unitFactoryManager = _resolver.Resolve<UnitFactory>();
+        if (_spawnerManager == null) _spawnerManager = _resolver.Resolve<UnitSpawner>();
+
+        
+    }
+
+    private GridManager _gridManager;
+    private TotemBuffManager _totemBuffManager;
+    private CurrencyManager _currencyManager;
+    private PopulationManager _populationManager;
+    
+    private UnitFactory _unitFactoryManager;
+    private UnitSpawner _spawnerManager;
+
     [SerializeField] private LevelUpData[] levelUpPool;
 
+    public event System.Action<System.Action> OnTotemSelectionRequested;
     public IEnumerable<int> ChosenIds => _chosenIds;
     public LevelUpData[] LevelUpPool => levelUpPool;
 
@@ -169,8 +193,8 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
     private HashSet<UnitTribe> GetPresentTribes()
     {
         var tribes = new HashSet<UnitTribe>();
-        if (Manager.Grid == null) return tribes;
-        foreach (var cell in Manager.Grid.GetOccupiedCells())
+        if (_gridManager == null) return tribes;
+        foreach (var cell in _gridManager.GetOccupiedCells())
         {
             if (cell.OccupyingUnit?.unitData != null)
                 tribes.Add(cell.OccupyingUnit.unitData.unitTribe);
@@ -215,20 +239,20 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         if (effectType == LevelUpEffectType.None || value == 0f) return;
 
         float v = value / 100f;
-        int rows = Manager.Grid != null ? Manager.Grid.Rows : 4;
+        int rows = _gridManager != null ? _gridManager.Rows : 4;
 
         switch (effectType)
         {
             case LevelUpEffectType.AttackPercent:
                 // LevelUpAttackBuff adds to a sum. Remove requires subtracting. 
                 // TotemBuffManager needs RemoveLevelUpAttackBuff, but we can do a negative add for now.
-                Manager.Buff.AddLevelUpAttackBuff(-v);
+                _totemBuffManager.AddLevelUpAttackBuff(-v);
                 break;
             case LevelUpEffectType.AttackSpeedPercent:
-                Manager.Buff.AddLevelUpSpeedBuff(-v);
+                _totemBuffManager.AddLevelUpSpeedBuff(-v);
                 break;
             case LevelUpEffectType.TotemEfficiencyPercent:
-                Manager.Buff.AddTotemEfficiency(-v);
+                _totemBuffManager.AddTotemEfficiency(-v);
                 break;
             case LevelUpEffectType.CritChancePercent:
                 CritChance = Mathf.Clamp01(CritChance - v);
@@ -237,13 +261,13 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
                 CritDamageMultiplier -= v;
                 break;
             case LevelUpEffectType.FoodProductionPercent:
-                Manager.Buff.AddFoodSpeedBuff(-v);
+                _totemBuffManager.AddFoodSpeedBuff(-v);
                 break;
             case LevelUpEffectType.ProjectileSizePercent:
-                Manager.Buff.AddProjectileSizeBuff(-v);
+                _totemBuffManager.AddProjectileSizeBuff(-v);
                 break;
             case LevelUpEffectType.GaugeSpeedPercent:
-                Manager.Buff.AddGaugeSpeedBuff(-v);
+                _totemBuffManager.AddGaugeSpeedBuff(-v);
                 break;
             case LevelUpEffectType.ExpGainPercent:
                 ExpGainMultiplier /= (1f + v);
@@ -356,21 +380,21 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         if (effectType == LevelUpEffectType.None || value == 0f) return;
 
         float v    = value / 100f;
-        int   rows = Manager.Grid != null ? Manager.Grid.Rows : 4;
+        int   rows = _gridManager != null ? _gridManager.Rows : 4;
 
         switch (effectType)
         {
             case LevelUpEffectType.AttackPercent:
-                Manager.Buff.AddLevelUpAttackBuff(v);
+                _totemBuffManager.AddLevelUpAttackBuff(v);
                 break;
 
             case LevelUpEffectType.AttackSpeedPercent:
                 // AddLevelUpSpeedBuff(양수) → SpeedMultiplier 감소 → interval 감소 → 더 빠름
-                Manager.Buff.AddLevelUpSpeedBuff(v);
+                _totemBuffManager.AddLevelUpSpeedBuff(v);
                 break;
 
             case LevelUpEffectType.TotemEfficiencyPercent:
-                Manager.Buff.AddTotemEfficiency(v);
+                _totemBuffManager.AddTotemEfficiency(v);
                 break;
 
             case LevelUpEffectType.CritChancePercent:
@@ -382,15 +406,15 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
                 break;
 
             case LevelUpEffectType.FoodProductionPercent:
-                Manager.Buff.AddFoodSpeedBuff(v);
+                _totemBuffManager.AddFoodSpeedBuff(v);
                 break;
 
             case LevelUpEffectType.ProjectileSizePercent:
-                Manager.Buff.AddProjectileSizeBuff(v);
+                _totemBuffManager.AddProjectileSizeBuff(v);
                 break;
 
             case LevelUpEffectType.GaugeSpeedPercent:
-                Manager.Buff.AddGaugeSpeedBuff(v);
+                _totemBuffManager.AddGaugeSpeedBuff(v);
                 break;
 
             case LevelUpEffectType.ExpGainPercent:
@@ -431,15 +455,15 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
 
             // ── 즉시 효과 ──────────────────────────────────────
             case LevelUpSpecialEffect.GiveFoodAmount:
-                Manager.Currency.AddCurrency(data.specialValue);
+                _currencyManager.AddCurrency(data.specialValue);
                 break;
 
             case LevelUpSpecialEffect.PopulationIncrease:
-                Manager.Population?.AddMaxBonus((int)data.specialValue);
+                _populationManager?.AddMaxBonus((int)data.specialValue);
                 break;
 
             case LevelUpSpecialEffect.TriggerTotemSelection:
-                Manager.TotemSelect?.Show(null);
+                OnTotemSelectionRequested?.Invoke(null);
                 break;
 
             case LevelUpSpecialEffect.GainRandomUnit:
@@ -564,7 +588,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
     {
         await UniTask.Yield(this.GetCancellationTokenOnDestroy());
 
-        var emptyCells = Manager.Grid?.GetEmptyCells();
+        var emptyCells = _gridManager?.GetEmptyCells();
         if (emptyCells == null || emptyCells.Count == 0)
         {
             Debug.LogWarning("[LevelUp] 빈 셀 없음 — 기물 획득 취소");
@@ -575,12 +599,12 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
         Tier tier = (Tier)Random.Range((int)minTier, (int)maxTier + 1);
 
         UnitBase unit = tribe.HasValue
-            ? Manager.UnitFactory.CreateRandomUnitByTribeAndTier(tribe.Value, tier)
-            : Manager.UnitFactory.CreateRandomUnitOfTier(tier);
+            ? _unitFactoryManager.CreateRandomUnitByTribeAndTier(tribe.Value, tier)
+            : _unitFactoryManager.CreateRandomUnitOfTier(tier);
 
         if (unit == null) return;
 
-        Manager.Spawner.PlaceUnitWithEffect(unit, cell);
+        _spawnerManager.PlaceUnitWithEffect(unit, cell);
     }
 
     // ── 투사체 크기 → 공격력 스케일 계산 ─────────────────────
@@ -589,7 +613,7 @@ public class LevelUpManager : InGameSingleton<LevelUpManager>
     public float GetProjectileSizeAtkBonus()
     {
         if (!HasProjectileSizeScalesAtk) return 0f;
-        float sizeBonus = Manager.Buff.ProjectileSizeMultiplier - 1f; // 0 이상
+        float sizeBonus = _totemBuffManager.ProjectileSizeMultiplier - 1f; // 0 이상
         return Mathf.Max(0f, sizeBonus / 0.1f * ProjectileSizeAtkPerUnit);
     }
 }

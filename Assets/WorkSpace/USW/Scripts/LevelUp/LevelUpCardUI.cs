@@ -131,7 +131,7 @@ public class LevelUpCardUI : MonoBehaviour
         StopAnim();
         _animCts = CancellationTokenSource.CreateLinkedTokenSource(
             this.GetCancellationTokenOnDestroy());
-        PlayAnimationAsync(_animCts.Token).Forget(Debug.LogException);
+        PlayAnimationAsync(_animCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     private void StopAnim()

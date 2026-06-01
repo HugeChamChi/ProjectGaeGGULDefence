@@ -1,10 +1,13 @@
 using System;
+using VContainer;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
 public abstract class UI_Base : MonoBehaviour
 {
+    [Inject] private AudioManager _audioManager;
+
     public Action OnClosed;
     public Action OnOpened;
 
@@ -36,7 +39,7 @@ public abstract class UI_Base : MonoBehaviour
     [Button]
     public virtual void Open()
     {
-        Manager.Audio.PlaySFX(openSoundName);
+        _audioManager.PlaySFX(openSoundName);
         OpenAsync().Forget();
     }
 

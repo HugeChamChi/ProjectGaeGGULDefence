@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -9,7 +10,7 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// 구글 시트 7개를 병렬 fetch하여 인게임 핵심 수치를 런타임에 제공합니다.
-/// Manager.GameData 로 접근합니다.
+/// _gameDataManager 로 접근합니다.
 ///
 /// 담당 시트:
 ///   - 소환 비용        (gid=1607115777)
@@ -38,8 +39,19 @@ using UnityEngine.Networking;
 ///     cooldown_decrease_rate, projectile_size_rate,
 ///     food_production_rate, food_amount, exp_gain_rate
 /// </summary>
-public class GameDataManager : InGameSingleton<GameDataManager>
+public class GameDataManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
+
+        
+    }
+
+    private GameDataManager _gameDataManager;
+
     private const string BaseUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=";
 
     private const string GidSummonCost = "1607115777";

@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -16,6 +17,8 @@ using System.Threading;
 /// </summary>
 public class BossPatternController : InGameSingleton<BossPatternController>
 {
+    [Inject] private GridManager _gridManager;
+
     private class BossPatternEntry
     {
         public BossPatternData[]        patterns;
@@ -56,7 +59,7 @@ public class BossPatternController : InGameSingleton<BossPatternController>
                 pattern.triggerType == PatternTriggerType.Both)
             {
                 TimerPatternAsync(boss, pattern, entry.timerCts.Token)
-                    .Forget(Debug.LogException);
+                    .Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
             }
         }
 
@@ -95,7 +98,7 @@ public class BossPatternController : InGameSingleton<BossPatternController>
 
         _entries.Clear();
 
-        foreach (var cell in Manager.Grid.AllCells())
+        foreach (var cell in _gridManager.AllCells())
             cell.Model.ClearBossDebuffs();
     }
 

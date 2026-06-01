@@ -13,7 +13,7 @@ public class CurrencyFloater : FloaterBase
 
     protected override void Awake()
     {
-        base.Awake();
+        // base.Awake(); // Removed to prevent double call
         if (_icon == null) _icon = GetComponentInChildren<Image>();
         
         // 재화 플로터는 처음부터 투명도가 줄어들도록 설정

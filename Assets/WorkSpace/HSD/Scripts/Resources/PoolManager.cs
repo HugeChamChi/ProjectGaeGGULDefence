@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -124,6 +126,7 @@ public class PoolManager : IDisposable
             createFunc: () =>
             {
                 GameObject obj = Object.Instantiate(prefab);
+                InGameLifetimeScope.GlobalResolver?.InjectGameObject(obj);
                 obj.SetActive(false);
                 obj.name = name;
                 if (root != null)

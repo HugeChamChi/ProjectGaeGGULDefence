@@ -1,9 +1,10 @@
 using UnityEngine;
+using VContainer;
 
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
 public class UnitData : ScriptableObject
 {
-    [Header("Info")]
+[Header("Info")]
     public int characterId;
     public int unitType;
     public string unitName;
@@ -24,13 +25,7 @@ public class UnitData : ScriptableObject
 
     [Header("Skill")]
     public string skillName;    // 스킬 이름
-    public float foodPerTick
-    {
-        get
-        {
-            return Manager.GameData.GetCurrencyPerSecond(characterId);
-        }
-    }
+
 
     [Header("Population")]
     public int populationCost = 1;

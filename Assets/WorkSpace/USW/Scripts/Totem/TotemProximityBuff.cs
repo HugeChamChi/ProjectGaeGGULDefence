@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System.Collections.Generic;
 
 /// <summary>
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 /// </summary>
 public class TotemProximityBuff : TotemBase
 {
+
     private float _appliedAmount;
 
     protected override void ApplyBuff()
@@ -25,7 +27,7 @@ public class TotemProximityBuff : TotemBase
         UnitBase.OnAnyUnitChanged -= Recalculate;
 
         if (_appliedAmount > 0f)
-            Manager.Buff.RemoveAttackBuff(_appliedAmount);
+            _totemBuffManager.RemoveAttackBuff(_appliedAmount);
 
         _appliedAmount = 0f;
     }
@@ -42,9 +44,9 @@ public class TotemProximityBuff : TotemBase
         if (Mathf.Approximately(delta, 0f)) return;
 
         if (delta > 0f)
-            Manager.Buff.AddAttackBuff(delta);
+            _totemBuffManager.AddAttackBuff(delta);
         else
-            Manager.Buff.RemoveAttackBuff(-delta);
+            _totemBuffManager.RemoveAttackBuff(-delta);
 
         _appliedAmount = newAmount;
     }
@@ -56,7 +58,7 @@ public class TotemProximityBuff : TotemBase
 
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null && cell.OccupyingUnit != null)
                 count++;
         }
@@ -71,7 +73,7 @@ public class TotemProximityBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell != null) list.Add(cell);
         }
         return list;
@@ -84,7 +86,7 @@ public class TotemProximityBuff : TotemBase
         var pos = CurrentCell.GridPosition;
         foreach (var offset in totemData.effectRange)
         {
-            var cell = Manager.Grid.GetCell(pos.x + offset.x, pos.y + offset.y);
+            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
             if (cell == null) continue;
 
             cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);

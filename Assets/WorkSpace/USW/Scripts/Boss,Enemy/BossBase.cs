@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using System;
 using DG.Tweening;
 
@@ -21,6 +22,8 @@ using DG.Tweening;
 /// </summary>
 public abstract class BossBase : MonoBehaviour
 {
+    [Inject] protected DroneManager _droneManager;
+
     // ── 패턴 데이터 (프리팹 Inspector에서 설정) ────────────────────
     [Header("보스 패턴")]
     [Tooltip("이 보스가 사용할 패턴 SO 목록 — 프리팹에 직접 설정")]
@@ -71,7 +74,7 @@ public abstract class BossBase : MonoBehaviour
     {
         if (IsDead) return;
 
-        float amplification = Manager.Drone?.BossDebuffMultiplier ?? 1f;
+        float amplification = _droneManager?.BossDebuffMultiplier ?? 1f;
         int actualAmount = Mathf.RoundToInt(amount * amplification);
 
         _currentHp = Mathf.Max(0, _currentHp - actualAmount);

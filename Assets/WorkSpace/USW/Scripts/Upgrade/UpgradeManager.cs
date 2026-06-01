@@ -1,4 +1,5 @@
 using System;
+using VContainer;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -8,10 +9,23 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// 구글 시트에서 강화 데이터를 로드하고, 강화 상태·비용·스탯 조회를 제공합니다.
-/// Manager.Upgrade 로 접근합니다.
+/// _upgradeManager 로 접근합니다.
 /// </summary>
-public class UpgradeManager : InGameSingleton<UpgradeManager>
+public class UpgradeManager : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
+ 
+    public void Init()
+    {
+        if (_upgradeManager == null) _upgradeManager = _resolver.Resolve<UpgradeManager>();
+        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
+
+        
+    }
+
+    private UpgradeManager _upgradeManager;
+    private CurrencyManager _currencyManager;
+
     private const string CostSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=297223937";
     private const string StatSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=1454519483";
 
@@ -192,7 +206,7 @@ public class UpgradeManager : InGameSingleton<UpgradeManager>
     {
         int cost = GetUpgradeCost(upgradeTarget);
         if (cost < 0) return false;
-        if (!Manager.Currency.Spend(cost)) return false;
+        if (!_currencyManager.Spend(cost)) return false;
 
         if (upgradeTarget == "Frog_Chief")
             _currencyLevel = Mathf.Min(_currencyLevel + 1, MaxUpgradeLevel);

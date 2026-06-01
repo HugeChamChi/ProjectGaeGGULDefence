@@ -14,53 +14,26 @@ using UnityEngine;
 public static class Manager
 {
     // ── 게임 흐름 ──────────────────────────────────────────────
-    public static GameManager      Game       => GameManager.Instance;
-    public static WaveManager      Wave       => WaveManager.Instance;
-    public static TimerController  Timer      => TimerController.Instance;
 
     // ── 경제 / 경험치 ──────────────────────────────────────────
-    public static CurrencyManager  Currency   => CurrencyManager.Instance;
-    public static ExpManager       Exp        => ExpManager.Instance;
 
     // ── 그리드 / 유닛 ──────────────────────────────────────────
-    public static GridManager      Grid       => GridManager.Instance;
-    public static UnitFactory      UnitFactory => UnitFactory.Instance;
-    public static UnitSpawner      Spawner    => UnitSpawner.Instance;
-    public static PopulationManager Population => PopulationManager.Instance;
 
     // ── 보스 / 토템 ────────────────────────────────────────────
-    public static BossManager      Boss       => BossManager.Instance;
-    public static TotemSpawner     Totem      => TotemSpawner.Instance;
-    public static TotemBuffManager Buff       => TotemBuffManager.Instance;
 
     // ── 족장 ───────────────────────────────────────────────────
-    public static ChieftainSpawner Chieftain  => ChieftainSpawner.Instance;
 
     // ── 합성 / 레벨업 ──────────────────────────────────────────
-    public static MergeManager     Merge      => MergeManager.Instance;
-    public static LevelUpManager   LevelUp    => LevelUpManager.Instance;
 
     // ── UI ─────────────────────────────────────────────────────
-    public static UIManager        UI         => UIManager.Instance;
-    public static LevelUpUI        LevelUpUI    => LevelUpUI.Instance;
-    public static TotemInfoPopupUI TotemInfo    => TotemInfoPopupUI.Instance;
-    public static TotemSelectUI    TotemSelect  => TotemSelectUI.Instance;
-    public static DamageFloaterManager DamageFloater => DamageFloaterManager.Instance;
-    public static CurrencyFloaterManager CurrencyFloater => CurrencyFloaterManager.Instance;
 
     // ── 투사체 ─────────────────────────────────────────────────
-    public static ProjectilePool   Projectile => ProjectilePool.Instance;
 
     // ── 사운드 ─────────────────────────────────────────────────
-    public static AudioManager     Audio      => AudioManager.Instance;
 
     // ── 강화 ───────────────────────────────────────────────────
-    public static UpgradeManager   Upgrade    => UpgradeManager.Instance;
 
     // ── 드론 ───────────────────────────────────────────────────
-    public static DroneManager     Drone      => DroneManager.Instance;
-    public static DronePool        DronePool  => DronePool.Instance;
 
     // ── 게임 데이터 (시트 연동) ────────────────────────────────
-    public static GameDataManager  GameData   => GameDataManager.Instance;
 }

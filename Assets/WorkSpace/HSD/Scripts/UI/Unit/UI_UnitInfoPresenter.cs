@@ -8,9 +8,12 @@ namespace GaeGGUL.UI.Unit
         private readonly UI_UnitInfoPanel _view;
         private readonly System.Collections.Generic.List<UnitStatUIData> _statBuffer = new System.Collections.Generic.List<UnitStatUIData>(4);
 
-        public UI_UnitInfoPresenter(UI_UnitInfoPanel view)
+        private readonly GameDataManager _gdm;
+
+        public UI_UnitInfoPresenter(UI_UnitInfoPanel view, GameDataManager gdm)
         {
             _view = view;
+            _gdm = gdm;
         }
 
         public void SetUnitData(UnitBase unit)
@@ -40,7 +43,7 @@ namespace GaeGGUL.UI.Unit
 
             // FoodPerTick: 현재는 기본값 표시, 보너스 텍스트 (Buff)
             _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   
-                $"+{data.foodPerTick:F0}",      
+                $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}",      
                 cell.GetFoodBonusText()));
 
             UpdateView(data, _statBuffer);
@@ -54,7 +57,7 @@ namespace GaeGGUL.UI.Unit
             _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           data.atk.ToString(),            ""));
             _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      data.skillAtk.ToString(),       ""));
             _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s",    ""));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{data.foodPerTick:F0}",      ""));
+            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}",      ""));
 
             UpdateView(data, _statBuffer);
         }

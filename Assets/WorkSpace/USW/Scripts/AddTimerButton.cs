@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using UnityEngine.UI;
 
 /// <summary>
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class DebugTimerButton : MonoBehaviour
 {
+    [Inject] private TimerController _timerManager;
+
     [Header("디버그 전용 ⚠️")]
     [SerializeField] private Button btnAddTime;
     [SerializeField] private float  addSeconds = 30f;
@@ -20,6 +23,6 @@ public class DebugTimerButton : MonoBehaviour
 
     private void OnAddTimePressed()
     {
-        Manager.Timer.AddTime(addSeconds);
+        _timerManager.AddTime(addSeconds);
     }
 }
