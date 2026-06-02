@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace WorkSpace.HSD.Test
 {
@@ -48,7 +49,7 @@ namespace WorkSpace.HSD.Test
 
             _profileManager.Data.CurrentIconId = 0;
 
-            _profileManager.Save();
+            _profileManager.SaveAsync().Forget();
         }
 
         [ContextMenu("Test Load")]

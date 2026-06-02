@@ -7,7 +7,6 @@ public class GameInitializer : IInitializable
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
     [Inject] private ProjectilePool _projectilePool;
-    [Inject] private DronePool _dronePool;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private ExpManager _expManager;
     [Inject] private GridManager _gridManager;

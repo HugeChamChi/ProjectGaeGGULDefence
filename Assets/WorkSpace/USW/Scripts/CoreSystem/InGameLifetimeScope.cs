@@ -6,6 +6,7 @@ using VContainer.Unity;
 public class InGameLifetimeScope : LifetimeScope
 {
     public static IObjectResolver GlobalResolver { get; private set; }
+    [SerializeField] private bool isDron;
 
     protected override void Configure(IContainerBuilder builder)
     {
@@ -38,8 +39,13 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<ProjectilePool>();
         builder.RegisterComponentInHierarchy<AudioManager>();
         builder.RegisterComponentInHierarchy<UpgradeManager>();
-        builder.RegisterComponentInHierarchy<DronePool>();
-        builder.RegisterComponentInHierarchy<DroneManager>();
+
+        if(isDron)
+        {
+            builder.RegisterComponentInHierarchy<DronePool>();
+            builder.RegisterComponentInHierarchy<DroneManager>();
+        }
+
         builder.RegisterComponentInHierarchy<GameDataManager>();
         builder.RegisterEntryPoint<GameInitializer>();
 

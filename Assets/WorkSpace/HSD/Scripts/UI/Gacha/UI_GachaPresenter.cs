@@ -37,7 +37,7 @@ public class UI_GachaPresenter
 
         // 획득 처리 (Model Update)
         Player.Character.AddCharacters(results);
-        Player.Character.Save();
+        Player.Character.SaveAsync().Forget();
 
         // 연출 및 결과 표시 (View Update)
         await _view.PlayProductionAsync(results);

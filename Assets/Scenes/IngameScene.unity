@@ -3477,6 +3477,18 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 294475894}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &355851961 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7560753904125046622, guid: 4fdf2c209d0e77b4795d1da3c4b3856a,
+    type: 3}
+  m_PrefabInstance: {fileID: 294475894}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355851960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b6e4f9796267b6468d77d1e04bd3dd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &376974124
 GameObject:
   m_ObjectHideFlags: 0
@@ -6757,6 +6769,7 @@ GameObject:
   - component: {fileID: 911643019}
   - component: {fileID: 911643018}
   - component: {fileID: 911643017}
+  - component: {fileID: 911643020}
   m_Layer: 0
   m_Name: DamageCanvas
   m_TagString: Untagged
@@ -6817,7 +6830,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -6846,6 +6859,18 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 3
   m_TargetDisplay: 0
+--- !u!114 &911643020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911643015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &927449222
 GameObject:
   m_ObjectHideFlags: 0
@@ -7114,6 +7139,7 @@ GameObject:
   - component: {fileID: 941494816}
   - component: {fileID: 941494815}
   - component: {fileID: 941494814}
+  - component: {fileID: 941494818}
   m_Layer: 5
   m_Name: '# Effects'
   m_TagString: Untagged
@@ -7155,7 +7181,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -7204,6 +7230,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &941494818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941494813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &965448863
 GameObject:
   m_ObjectHideFlags: 0
@@ -9458,6 +9496,7 @@ GameObject:
   - component: {fileID: 1142124694}
   - component: {fileID: 1142124693}
   - component: {fileID: 1142124692}
+  - component: {fileID: 1142124695}
   m_Layer: 0
   m_Name: CurrencyCanvas
   m_TagString: Untagged
@@ -9518,7 +9557,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -9547,6 +9586,18 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 3
   m_TargetDisplay: 0
+--- !u!114 &1142124695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1142124690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1150189967
 GameObject:
   m_ObjectHideFlags: 0
@@ -10457,6 +10508,7 @@ GameObject:
   - component: {fileID: 1196889860}
   - component: {fileID: 1196889859}
   - component: {fileID: 1196889858}
+  - component: {fileID: 1196889862}
   m_Layer: 5
   m_Name: MainUI
   m_TagString: Untagged
@@ -10498,7 +10550,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -10552,6 +10604,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1196889862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196889857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1210486226
 GameObject:
   m_ObjectHideFlags: 0
@@ -13358,6 +13422,7 @@ GameObject:
   - component: {fileID: 1706926338}
   - component: {fileID: 1706926337}
   - component: {fileID: 1706926336}
+  - component: {fileID: 1706926340}
   m_Layer: 5
   m_Name: SubUI
   m_TagString: Untagged
@@ -13399,7 +13464,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -13456,6 +13521,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1706926340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706926335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1714553162
 GameObject:
   m_ObjectHideFlags: 0
@@ -14370,6 +14447,7 @@ MonoBehaviour:
   - {fileID: 2014823003}
   - {fileID: 2068514271}
   - {fileID: 2125251324}
+  isDron: 0
 --- !u!4 &1803322509
 Transform:
   m_ObjectHideFlags: 0
@@ -14442,6 +14520,7 @@ GameObject:
   - component: {fileID: 1879076174}
   - component: {fileID: 1879076176}
   - component: {fileID: 1879076177}
+  - component: {fileID: 1879076178}
   m_Layer: 0
   m_Name: Debug Debug
   m_TagString: Untagged
@@ -14489,7 +14568,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -14551,6 +14630,18 @@ MonoBehaviour:
   autoPlayOnStart: 1
   playIntervalSeconds: 4
   testChiefSprite: {fileID: -817236093, guid: 7a9c1e07b1460c947a5265127776bc8f, type: 3}
+--- !u!114 &1879076178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1879076171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e980e15a87e69408b7155fe93c8ddf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1887718405
 GameObject:
   m_ObjectHideFlags: 0
@@ -16291,8 +16382,8 @@ MonoBehaviour:
   _totemInfoPanel: {fileID: 1743982087}
   _bossEncounterUI: {fileID: 1382569198}
   _waveTextUI: {fileID: 1511414540}
-  _levelUpUI: {fileID: 0}
-  _totemSelectUI: {fileID: 0}
+  _levelUpUI: {fileID: 886132646}
+  _totemSelectUI: {fileID: 355851961}
 --- !u!4 &2125251326
 Transform:
   m_ObjectHideFlags: 0
