@@ -14336,12 +14336,13 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects:
+  - {fileID: 355851960}
+  - {fileID: 1672366259}
   - {fileID: 1628378496}
   - {fileID: 248640384}
   - {fileID: 250575998}
   - {fileID: 266289827}
   - {fileID: 338745195}
-  - {fileID: 355851960}
   - {fileID: 376974124}
   - {fileID: 397711248}
   - {fileID: 433424273}
@@ -14354,6 +14355,7 @@ MonoBehaviour:
   - {fileID: 1138111723}
   - {fileID: 1481249893}
   - {fileID: 1161898285}
+  - {fileID: 1162155004}
   - {fileID: 1275057161}
   - {fileID: 1278502783}
   - {fileID: 1279346473}
@@ -14361,7 +14363,6 @@ MonoBehaviour:
   - {fileID: 1046232971}
   - {fileID: 1511414536}
   - {fileID: 1594926368}
-  - {fileID: 1672366259}
   - {fileID: 1703457863}
   - {fileID: 1714553162}
   - {fileID: 1035860068}

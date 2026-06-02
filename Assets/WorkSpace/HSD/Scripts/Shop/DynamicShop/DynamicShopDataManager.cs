@@ -21,6 +21,13 @@ public class DynamicShopDataManager
     public bool IsActive(string shopID) => _activeShops.ContainsKey(shopID);
     public DateTime GetStartTime(string shopID) => _activeShops.TryGetValue(shopID, out long time) ? new DateTime(time) : DateTime.MinValue;
 
+    public void Clear()
+    {
+        _activeShops.Clear();
+        _completedShops.Clear();
+        _inDate = string.Empty;
+    }
+
     public async UniTask InitializeAsync()
     {
         var bro = Backend.GameData.GetMyData(PLAYER_DYNAMIC_SHOP_TABLE, new Where());

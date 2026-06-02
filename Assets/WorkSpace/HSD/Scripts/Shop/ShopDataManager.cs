@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using GaeGGUL.Shop;
 
-public class ShopDataManager
+public class ShopDataManager : Global.IClearable
 {
     // 기존 Daily Shop 로직
     public DailyShopManager Daily { get; private set; } = new DailyShopManager();
@@ -13,5 +13,11 @@ public class ShopDataManager
             Daily.InitializeAsync(),
             Dynamic.InitializeAsync()
         );
+    }
+
+    public void Clear()
+    {
+        Daily.Clear();
+        Dynamic.Clear();
     }
 }

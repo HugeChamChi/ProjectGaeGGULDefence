@@ -36,4 +36,17 @@ public static class Player
             BackendGameData.Instance.GameDataUpdate(PlayerData.Data);
         }
     }
+
+    // 모든 하위 매니저들의 데이터를 초기화합니다. (로그아웃, 계정 변경 시 호출)
+    public static void ClearAll()
+    {
+        PlayerData.Clear();
+        Profile.Clear();
+        Mail.Clear();
+        Character.Clear();
+        Chief.Clear();
+        Shop.Clear();
+        Daily.Clear();
+        Tutorial.Clear();
+    }
 }

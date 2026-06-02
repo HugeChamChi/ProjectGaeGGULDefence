@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-public class PlayerChiefManager
+public class PlayerChiefManager : Global.IClearable
 {
     private const string TABLE_NAME = "PlayerChiefData";
     private const string DATA_KEY = "SelectedChiefId";
@@ -31,6 +31,12 @@ public class PlayerChiefManager
         bool isInit = false;
         Load(() => isInit = true);
         await UniTask.WaitUntil(() => isInit);
+    }
+
+    public void Clear()
+    {
+        selectedChiefId = 0;
+        _rowInDate = string.Empty;
     }
 
     public void SetSelectedChief(int id)

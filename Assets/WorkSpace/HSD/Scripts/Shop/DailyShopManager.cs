@@ -19,6 +19,12 @@ namespace GaeGGUL.Shop
         public List<ShopItemData> DailyItems => _dailyItems;
         public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
 
+        public void Clear()
+        {
+            _dailyItems.Clear();
+            _purchasedItemIDs.Clear();
+        }
+
         public async UniTask InitializeAsync()
         {
             var bro = Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where());

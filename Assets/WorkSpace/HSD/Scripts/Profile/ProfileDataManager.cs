@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-public class ProfileDataManager
+public class ProfileDataManager : Global.IClearable
 {
     private const string TABLE_NAME = "PlayerProfile";
 
@@ -49,6 +49,12 @@ public class ProfileDataManager
         Load(() => isInit = true);
 
         await UniTask.WaitUntil(() => isInit);
+    }
+
+    public void Clear()
+    {
+        Data = new();
+        rowInDate = string.Empty;
     }
 
     public void Save()

@@ -3,7 +3,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
-public class PlayerDataController : IDisposable
+public class PlayerDataController : IDisposable, Global.IClearable
 {
     private PlayerData _data;
     public PlayerData Data => _data;
@@ -34,6 +34,12 @@ public class PlayerDataController : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        StopStaminaTimer();
+    }
+
+    public void Clear()
+    {
+        _data = null;
         StopStaminaTimer();
     }
 

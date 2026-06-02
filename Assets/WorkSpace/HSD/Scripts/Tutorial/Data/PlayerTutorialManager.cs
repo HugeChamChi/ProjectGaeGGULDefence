@@ -6,7 +6,7 @@ namespace GaeGGUL.Tutorial
     /// <summary>
     /// 플레이어의 튜토리얼 진행 상태를 관리하고 뒤끝 서버와 동기화합니다.
     /// </summary>
-    public class PlayerTutorialManager
+    public class PlayerTutorialManager : Global.IClearable
     {
         public TutorialData Data { get; private set; } = new();
 
@@ -36,6 +36,11 @@ namespace GaeGGUL.Tutorial
             // TODO: 뒤끝 서버에 데이터 업데이트
             // BackendGameData.Instance.GameDataUpdate(Data);
             Debug.Log($"[PlayerTutorialManager] Saved Tutorial Completion: {Data.completedTutorials.Count} total.");
+        }
+
+        public void Clear()
+        {
+            Data = new TutorialData();
         }
     }
 }

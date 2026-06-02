@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-public class PlayerCharacterManager
+public class PlayerCharacterManager : Global.IClearable
 {
     private const string TABLE_NAME = "PlayerOwnedCharacterData";
     private const string DATA_KEY = "OwnedCharacterCounts";
@@ -20,6 +20,12 @@ public class PlayerCharacterManager
         Load(() => isInit = true);
 
         await UniTask.WaitUntil(() => isInit);
+    }
+
+    public void Clear()
+    {
+        _ownedCharacterCounts.Clear();
+        rowInDate = string.Empty;
     }
 
     public int GetCount(int characterId)

@@ -4,13 +4,18 @@ using LitJson;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
-public class MailManager
+public class MailManager : Global.IClearable
 {
     private List<Post> _postList = new List<Post>();
 
     public async UniTask InitalizeAsync()
     {
         await UniTask.WaitForSeconds(0.5f);
+    }
+
+    public void Clear()
+    {
+        _postList.Clear();
     }
 
     /// <summary>

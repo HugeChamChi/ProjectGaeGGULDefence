@@ -6,7 +6,7 @@ using GaeGGUL.Core;
 /// <summary>
 /// 뒤끝 서버 시간을 기준으로 매일 초기화 로직을 담당하는 클래스
 /// </summary>
-public class DailyManager
+public class DailyManager : Global.IClearable
 {
     public event Action OnDailyReset;
     public bool IsNewDay { get; private set; }
@@ -39,5 +39,11 @@ public class DailyManager
     private void ResetDailyData()
     {
         OnDailyReset?.Invoke();
+    }
+
+    public void Clear()
+    {
+        OnDailyReset = null;
+        IsNewDay = false;
     }
 }
