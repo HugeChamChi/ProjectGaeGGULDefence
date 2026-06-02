@@ -8,6 +8,7 @@ public class PlayerChiefManager : Global.IClearable
 {
     private const string TABLE_NAME = "PlayerChiefData";
     private const string DATA_KEY = "SelectedChiefId";
+    public bool IsDirty { get; set; }
 
     public int SelectedChiefId
     {
@@ -42,13 +43,16 @@ public class PlayerChiefManager : Global.IClearable
     public void SetSelectedChief(int id)
     {
         SelectedChiefId = id;
-        Save();
+        IsDirty = true;
     }
 
-    public void Save()
+    public async UniTask SaveAsync()
     {
+        if (!IsDirty) return;
+
         Param param = new Param();
         param.Add(DATA_KEY, SelectedChiefId);
+        var tcs = new UniTaskCompletionSource();
 
         if (string.IsNullOrEmpty(_rowInDate))
         {
@@ -59,11 +63,13 @@ public class PlayerChiefManager : Global.IClearable
                 {
                     _rowInDate = callback.GetInDate();
                     Debug.Log("족장 데이터 최초 저장 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"족장 데이터 최초 저장 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
         else
@@ -74,13 +80,16 @@ public class PlayerChiefManager : Global.IClearable
                 if (callback.IsSuccess())
                 {
                     Debug.Log("족장 데이터 업데이트 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"족장 데이터 업데이트 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
+        await tcs.Task;
     }
 
     public void Load(Action onCompleted = null)

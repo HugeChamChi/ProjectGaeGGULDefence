@@ -10,6 +10,7 @@ public class PlayerCharacterManager : Global.IClearable
     private const string TABLE_NAME = "PlayerOwnedCharacterData";
     private const string DATA_KEY = "OwnedCharacterCounts";
     private Dictionary<int, int> _ownedCharacterCounts = new Dictionary<int, int>();
+    public bool IsDirty { get; set; }
 
     private string rowInDate = string.Empty;
 
@@ -42,6 +43,7 @@ public class PlayerCharacterManager : Global.IClearable
         {
             _ownedCharacterCounts[characterId] = count;
         }
+        IsDirty = true;
     }
     public void AddCharacters(int[] ids)
     {
@@ -62,8 +64,10 @@ public class PlayerCharacterManager : Global.IClearable
         }
     }
 
-    public void Save()
+    public async UniTask SaveAsync()
     {
+        if (!IsDirty) return;
+
         Param param = new Param();
 
         // Dictionary<int, int>를 Backend에 저장하기 위해 Dictionary<string, int>로 변환
@@ -74,6 +78,7 @@ public class PlayerCharacterManager : Global.IClearable
         }
 
         param.Add(DATA_KEY, saveMap);
+        var tcs = new UniTaskCompletionSource();
 
         if (string.IsNullOrEmpty(rowInDate))
         {
@@ -84,11 +89,13 @@ public class PlayerCharacterManager : Global.IClearable
                 {
                     rowInDate = callback.GetInDate();
                     Debug.Log("캐릭터 보유 데이터 최초 저장 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"캐릭터 보유 데이터 최초 저장 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
         else
@@ -99,13 +106,16 @@ public class PlayerCharacterManager : Global.IClearable
                 if (callback.IsSuccess())
                 {
                     Debug.Log("캐릭터 보유 데이터 업데이트 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"캐릭터 보유 데이터 업데이트 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
+        await tcs.Task;
     }
 
     public void Load(Action onCompleted = null)

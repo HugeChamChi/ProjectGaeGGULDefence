@@ -9,6 +9,7 @@ public class ProfileDataManager : Global.IClearable
     private const string TABLE_NAME = "PlayerProfile";
 
     public PlayerProfileData Data { get; private set; } = new();
+    public bool IsDirty { get; set; }
 
     public Sprite CurrentIconSprite
     {
@@ -57,9 +58,12 @@ public class ProfileDataManager : Global.IClearable
         rowInDate = string.Empty;
     }
 
-    public void Save()
+    public async UniTask SaveAsync()
     {
+        if (!IsDirty) return;
+
         Param param = Data.ToParam();
+        var tcs = new UniTaskCompletionSource();
 
         if (string.IsNullOrEmpty(rowInDate))
         {
@@ -70,11 +74,13 @@ public class ProfileDataManager : Global.IClearable
                 {
                     rowInDate = callback.GetInDate();
                     Debug.Log("프로필 데이터 최초 저장 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"프로필 데이터 최초 저장 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
         else
@@ -85,13 +91,17 @@ public class ProfileDataManager : Global.IClearable
                 if (callback.IsSuccess())
                 {
                     Debug.Log("프로필 데이터 업데이트 성공");
+                    IsDirty = false;
                 }
                 else
                 {
                     Debug.LogError($"프로필 데이터 업데이트 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
+                tcs.TrySetResult();
             });
         }
+        
+        await tcs.Task;
     }
 
     public void Load(Action onCompleted = null)

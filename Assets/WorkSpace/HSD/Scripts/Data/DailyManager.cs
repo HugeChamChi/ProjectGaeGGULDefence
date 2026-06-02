@@ -10,6 +10,13 @@ public class DailyManager : Global.IClearable
 {
     public event Action OnDailyReset;
     public bool IsNewDay { get; private set; }
+    public bool IsDirty { get; set; }
+
+    public async UniTask SaveAsync()
+    {
+        if (IsDirty) IsDirty = false;
+        await UniTask.CompletedTask;
+    }
     const int RESET_HOUR = 5;
 
     public async UniTask InitializeAsync()

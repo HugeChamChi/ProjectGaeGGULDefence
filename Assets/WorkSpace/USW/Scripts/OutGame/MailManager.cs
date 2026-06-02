@@ -7,6 +7,14 @@ using Cysharp.Threading.Tasks;
 public class MailManager : Global.IClearable
 {
     private List<Post> _postList = new List<Post>();
+    public bool IsDirty { get; set; }
+
+    public async UniTask SaveAsync()
+    {
+        // 우편 시스템은 별도의 UpdateV2를 통해 데이터를 동기화하지 않고 ReceivePost 시점에 즉시 처리됩니다.
+        if (IsDirty) IsDirty = false;
+        await UniTask.CompletedTask;
+    }
 
     public async UniTask InitalizeAsync()
     {

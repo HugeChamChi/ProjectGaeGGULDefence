@@ -7,6 +7,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
 {
     private PlayerData _data;
     public PlayerData Data => _data;
+    public bool IsDirty { get; set; }
 
     public Action<PlayerData> OnPlayerProfilePopupUpdated;
     public Action<PlayerData> OnUpdateUI;
@@ -218,7 +219,18 @@ public class PlayerDataController : IDisposable, Global.IClearable
     // -------------------------
     private void SaveAndRefresh()
     {
-        BackendGameData.Instance.GameDataUpdate(_data);
+        IsDirty = true;
         RefreshUI(_data);
+    }
+
+    public async UniTask SaveAsync()
+    {
+        if (!IsDirty || _data == null) return;
+        
+        var tcs = new UniTaskCompletionSource();
+        BackendGameData.Instance.GameDataUpdate(_data, () => tcs.TrySetResult());
+        await tcs.Task;
+        
+        IsDirty = false;
     }
 }

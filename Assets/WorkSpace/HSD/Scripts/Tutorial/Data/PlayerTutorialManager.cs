@@ -9,6 +9,7 @@ namespace GaeGGUL.Tutorial
     public class PlayerTutorialManager : Global.IClearable
     {
         public TutorialData Data { get; private set; } = new();
+        public bool IsDirty { get; set; }
 
         public async UniTask InitializeAsync()
         {
@@ -28,14 +29,18 @@ namespace GaeGGUL.Tutorial
             if (Data.IsCompleted(tutorialID)) return;
 
             Data.Complete(tutorialID);
-            SaveToServer();
+            IsDirty = true;
         }
 
-        private void SaveToServer()
+        public async UniTask SaveAsync()
         {
+            if (!IsDirty) return;
+            
             // TODO: 뒤끝 서버에 데이터 업데이트
             // BackendGameData.Instance.GameDataUpdate(Data);
             Debug.Log($"[PlayerTutorialManager] Saved Tutorial Completion: {Data.completedTutorials.Count} total.");
+            IsDirty = false;
+            await UniTask.CompletedTask;
         }
 
         public void Clear()
