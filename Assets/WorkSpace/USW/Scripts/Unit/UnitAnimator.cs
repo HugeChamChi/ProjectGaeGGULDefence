@@ -63,7 +63,12 @@ public class UnitAnimator : MonoBehaviour
     /// </summary>
     public void PlayIdle()
     {
-        _animator.SetInteger(AnimStateHash, (int)VisualState.Idle);
+        if (_animator != null)
+        {
+            _animator.SetInteger(AnimStateHash, (int)VisualState.Idle);
+            _animator.Play("Idle", 0, 0f);
+            _animator.speed = 1.0f;
+        }
     }
 
     /// <summary>

@@ -51,17 +51,25 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     [Header("빈 셀 없을 때 대체 식량")]
     [SerializeField] private float fallbackFood = 500f;
 
+    [Header("Reroll")]
+    [SerializeField] private Button rerollButton;
+    [SerializeField] private float rerollCost = 10f;
+    [SerializeField] private TMP_Text rerollCostText;
+
     private const int ChoiceCount = 3;
 
     private readonly List<TotemSelectCardUI> _spawnedCards = new();
     private          TotemSelectCardUI       _selectedCard;
     private          CancellationTokenSource _selectionCts;
     private          Action                  _onChoiceMade;
+    
+    private readonly HashSet<int> _chosenTotems = new HashSet<int>();
 
     protected override void Awake()
     {
-        // base.Awake(); // Removed to prevent double call
+        // base.Awake();
         confirmButton?.onClick.AddListener(OnConfirmClicked);
+        rerollButton?.onClick.AddListener(OnRerollClicked);
         SetConfirmInteractable(false);
     }
 
@@ -70,6 +78,10 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     public void Show(Action onChoiceMade)
     {
         _onChoiceMade = onChoiceMade;
+        
+        if (rerollCostText != null)
+            rerollCostText.text = rerollCost.ToString();
+
         ClearCards();
         _selectedCard = null;
         SetConfirmInteractable(false);
@@ -118,6 +130,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         var data = _selectedCard.GetData();
         if (data != null)
         {
+            _chosenTotems.Add(data.totemId); // 중복 방지 캐싱
+            
             bool placed = _totemManager.SpawnTotemByData(data);
             if (!placed)
             {
@@ -127,6 +141,36 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         }
 
         Hide();
+    }
+
+    // ── 리롤 버튼 ──────────────────────────────────────────────
+    public void OnRerollClicked()
+    {
+        if (!_currencyManager.Spend(rerollCost))
+        {
+            Debug.Log("[TotemSelectUI] 식량이 부족하여 리롤할 수 없습니다.");
+            return;
+        }
+
+        ClearCards();
+        _selectedCard = null;
+        SetConfirmInteractable(false);
+
+        var choices = GetRandomChoices(ChoiceCount);
+        if (choices.Count == 0)
+        {
+            Hide();
+            return;
+        }
+
+        foreach (var data in choices)
+        {
+            var card = Instantiate(cardPrefab, cardContainer);
+            card.Setup(data, OnCardClicked);
+            _spawnedCards.Add(card);
+        }
+
+        RunSelectionTimer().Forget();
     }
 
     // ── 선택 타이머 ────────────────────────────────────────────
@@ -197,19 +241,57 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     {
         if (totemPool == null || totemPool.Length == 0)
         {
-            Debug.LogWarning("[TotemSelectUI] totemPool 비어있음 — Inspector에서 TotemData 배열 등록 필요");
+            Debug.LogWarning("[TotemSelectUI] totemPool 비어있음");
             return new List<TotemData>();
         }
 
-        var pool   = new List<TotemData>(totemPool);
-        var result = new List<TotemData>();
-        count = Mathf.Min(count, pool.Count);
-
-        for (int i = 0; i < count; i++)
+        var filtered = new List<TotemData>();
+        foreach (var data in totemPool)
         {
-            int idx = UnityEngine.Random.Range(0, pool.Count);
-            result.Add(pool[idx]);
-            pool.RemoveAt(idx);
+            if (data != null && !_chosenTotems.Contains(data.totemId))
+                filtered.Add(data);
+        }
+
+        var tierGroups = new Dictionary<Tier, List<TotemData>>();
+        foreach (var d in filtered)
+        {
+            if (!tierGroups.ContainsKey(d.tier)) tierGroups[d.tier] = new List<TotemData>();
+            tierGroups[d.tier].Add(d);
+        }
+
+        if (tierGroups.Count == 0) return new List<TotemData>();
+
+        float roll = UnityEngine.Random.Range(0f, filtered.Count);
+        float cumul = 0f;
+        Tier selectedTier = Tier.Normal;
+
+        foreach (var kvp in tierGroups)
+        {
+            cumul += kvp.Value.Count;
+            if (roll <= cumul)
+            {
+                selectedTier = kvp.Key;
+                break;
+            }
+        }
+
+        var group = tierGroups[selectedTier];
+        var result = new List<TotemData>();
+        int pickCount = Mathf.Min(count, group.Count);
+
+        for (int i = 0; i < pickCount; i++)
+        {
+            int idx = UnityEngine.Random.Range(0, group.Count);
+            result.Add(group[idx]);
+            group.RemoveAt(idx);
+        }
+
+        filtered.RemoveAll(x => result.Contains(x));
+        while (result.Count < count && filtered.Count > 0)
+        {
+            int idx = UnityEngine.Random.Range(0, filtered.Count);
+            result.Add(filtered[idx]);
+            filtered.RemoveAt(idx);
         }
 
         return result;

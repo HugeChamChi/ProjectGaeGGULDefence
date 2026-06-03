@@ -148,7 +148,7 @@ public class LevelUpManager : MonoBehaviour
         }
 
         var presentTribes = GetPresentTribes();
-        var filtered = new List<LevelUpData>(levelUpPool.Length);
+        var filtered = new List<LevelUpData>();
 
         foreach (var data in levelUpPool)
         {
@@ -156,35 +156,59 @@ public class LevelUpManager : MonoBehaviour
                 filtered.Add(data);
         }
 
-        var result = new List<LevelUpData>(count);
-        count = Mathf.Min(count, filtered.Count);
+        var tierGroups = new Dictionary<Tier, List<LevelUpData>>();
+        var tierWeights = new Dictionary<Tier, float>();
 
-        for (int i = 0; i < count; i++)
+        foreach (var d in filtered)
         {
-            float total = 0f;
-            foreach (var d in filtered) total += d.spawnRate;
-
-            float roll   = Random.Range(0f, total);
-            float cumul  = 0f;
-            bool  picked = false;
-
-            for (int j = 0; j < filtered.Count; j++)
+            if (!tierGroups.ContainsKey(d.tier)) 
             {
-                cumul += filtered[j].spawnRate;
-                if (roll <= cumul)
-                {
-                    result.Add(filtered[j]);
-                    filtered.RemoveAt(j);
-                    picked = true;
-                    break;
-                }
+                tierGroups[d.tier] = new List<LevelUpData>();
+                tierWeights[d.tier] = 0f;
             }
+            tierGroups[d.tier].Add(d);
+            tierWeights[d.tier] += d.spawnRate;
+        }
 
-            if (!picked && filtered.Count > 0)
+        if (tierGroups.Count == 0) return new List<LevelUpData>();
+
+        // 1. 등급(Tier) 추첨
+        float totalWeight = 0f;
+        foreach (var w in tierWeights.Values) totalWeight += w;
+
+        float roll = Random.Range(0f, totalWeight);
+        float cumul = 0f;
+        Tier selectedTier = Tier.Normal;
+
+        foreach (var kvp in tierWeights)
+        {
+            cumul += kvp.Value;
+            if (roll <= cumul)
             {
-                result.Add(filtered[filtered.Count - 1]);
-                filtered.RemoveAt(filtered.Count - 1);
+                selectedTier = kvp.Key;
+                break;
             }
+        }
+
+        // 2. 선택된 등급 내에서 슬롯 뽑기
+        var group = tierGroups[selectedTier];
+        var result = new List<LevelUpData>();
+        int pickCount = Mathf.Min(count, group.Count);
+
+        for (int i = 0; i < pickCount; i++)
+        {
+            int idx = Random.Range(0, group.Count);
+            result.Add(group[idx]);
+            group.RemoveAt(idx);
+        }
+
+        // 등급 내 갯수가 모자라면 다른 등급에서라도 채움
+        filtered.RemoveAll(x => result.Contains(x));
+        while (result.Count < count && filtered.Count > 0)
+        {
+            int idx = Random.Range(0, filtered.Count);
+            result.Add(filtered[idx]);
+            filtered.RemoveAt(idx);
         }
 
         return result;

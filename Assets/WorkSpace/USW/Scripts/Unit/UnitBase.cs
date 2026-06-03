@@ -254,7 +254,7 @@ public abstract class UnitBase : MonoBehaviour
             bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
             // 우선순위 결정: Skill > Attack > Idle
-            if (_skillTimer >= skillInterval)
+            if (_skillTimer >= skillInterval && canAttack)
             {
                 CurrentState = UnitState.Skilling;
                 _skillTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 발동 방지)
@@ -285,7 +285,7 @@ public abstract class UnitBase : MonoBehaviour
             }
             else
             {
-                if (CurrentState != UnitState.Idle && _attackTimer < attackInterval)
+                if (CurrentState != UnitState.Idle)
                 {
                     CurrentState = UnitState.Idle;
                     if (animator != null) animator.PlayIdle();
