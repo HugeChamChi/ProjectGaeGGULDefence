@@ -25,6 +25,7 @@ public class WaveManager : MonoBehaviour
         if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
         if (_gameManager == null) _gameManager = _resolver.Resolve<GameManager>();
         if (_timerManager == null) _timerManager = _resolver.Resolve<TimerController>();
+        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
     }
 
     private GameDataManager _gameDataManager;
@@ -33,6 +34,7 @@ public class WaveManager : MonoBehaviour
     private CurrencyManager _currencyManager;
     private GameManager _gameManager;
     private TimerController _timerManager;
+    private UIManager _uiManager;
 
     [SerializeField] private StageData stageData;
     [SerializeField] private GameConfig config;
@@ -101,7 +103,14 @@ public class WaveManager : MonoBehaviour
             _timerManager?.StopTimer();
         }
 
-        await UniTask.Delay(System.TimeSpan.FromSeconds(delay), cancellationToken: this.GetCancellationTokenOnDestroy());
+        // 보스 스폰 대기 시간 동안 UI 텍스트로 카운트다운 표시 (둥둥 애니메이션 포함)
+        float remainingDelay = delay;
+        while (remainingDelay > 0)
+        {
+            _uiManager?.UpdateTimerUI(remainingDelay, true);
+            await UniTask.Yield(PlayerLoopTiming.Update, this.GetCancellationTokenOnDestroy());
+            remainingDelay -= Time.deltaTime;
+        }
 
         var entry = _pendingBosses[_bossIndex];
 

@@ -57,6 +57,12 @@ public class UIManager : MonoBehaviour
     private Image _currentLineImage;
     private Image _nextLineImage;
 
+    private Vector3 _timerTextBaseScale = Vector3.one;
+    private float _timerTextBaseFontSize;
+    private FontStyles _timerTextBaseFontStyle;
+    private bool _timerTextBaseAutoSize;
+    private int _lastTimerSec = -1;
+
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
 
@@ -80,7 +86,13 @@ public class UIManager : MonoBehaviour
             startButton.onClick.AddListener(_gameManager.OnStartButtonPressed);
 
         if (timerText != null)
-            _timerController.OnTimerTick += t => timerText.text = $"{Mathf.CeilToInt(t)}";
+        {
+            _timerTextBaseScale = timerText.rectTransform.localScale;
+            _timerTextBaseFontSize = timerText.fontSize;
+            _timerTextBaseFontStyle = timerText.fontStyle;
+            _timerTextBaseAutoSize = timerText.enableAutoSizing;
+            _timerController.OnTimerTick += t => UpdateTimerUI(t, false);
+        }
         if (currencyText != null)
         {
             _currencyTextRect = currencyText.rectTransform;
@@ -257,6 +269,54 @@ public class UIManager : MonoBehaviour
             .DOColor(currencyFlashColor, currencyTweenDuration * 0.45f)
             .SetLoops(2, LoopType.Yoyo)
             .OnComplete(() => currencyText.color = _currencyTextBaseColor);
+    }
+
+    private bool _wasWaitTime = false;
+
+    public void UpdateTimerUI(float remaining, bool isWaitTime = false)
+    {
+        if (timerText == null) return;
+        
+        if (isWaitTime)
+        {
+            // 대기 시간: 크게, 볼드체, 소수점 없음, 둥둥 애니메이션
+            if (!_wasWaitTime)
+            {
+                timerText.enableAutoSizing = false;
+                timerText.fontSize = 80f;
+                timerText.fontStyle = FontStyles.Bold;
+                _wasWaitTime = true;
+            }
+
+            int sec = Mathf.CeilToInt(remaining);
+            if (sec != _lastTimerSec)
+            {
+                _lastTimerSec = sec;
+                timerText.text = sec.ToString();
+                
+                timerText.rectTransform.DOKill(true);
+                timerText.rectTransform.localScale = _timerTextBaseScale;
+                timerText.rectTransform.DOPunchScale(Vector3.one * 0.3f, 0.2f, 2, 0.5f).SetEase(Ease.OutCubic);
+            }
+        }
+        else
+        {
+            // 웨이브(보스) 시간: 원래 크기, 원래 스타일, 소수점 2자리, 애니메이션 없음
+            if (_wasWaitTime)
+            {
+                timerText.enableAutoSizing = _timerTextBaseAutoSize;
+                if (!_timerTextBaseAutoSize)
+                    timerText.fontSize = _timerTextBaseFontSize;
+                timerText.fontStyle = _timerTextBaseFontStyle;
+                
+                timerText.rectTransform.DOKill(true);
+                timerText.rectTransform.localScale = _timerTextBaseScale;
+                _wasWaitTime = false;
+            }
+            
+            // 매 프레임 업데이트되므로 부드럽게 소수점 표시
+            timerText.text = remaining.ToString("F2");
+        }
     }
 
     private void BossHpShakeAnimation()
