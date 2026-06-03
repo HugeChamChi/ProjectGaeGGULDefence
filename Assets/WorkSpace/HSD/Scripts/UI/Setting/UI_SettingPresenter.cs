@@ -9,13 +9,14 @@ namespace HSD.UI.Setting
     /// </summary>
     public class UI_SettingPresenter
     {
-    [Inject] private AudioManager _audioManager;
+        private AudioManager _audioManager;
 
         private readonly UI_SettingPanel_Base _view;
 
-        public UI_SettingPresenter(UI_SettingPanel_Base view)
+        public UI_SettingPresenter(UI_SettingPanel_Base view, AudioManager audioManager)
         {
             _view = view;
+            _audioManager = audioManager;
         }
 
         public void RefreshUI()

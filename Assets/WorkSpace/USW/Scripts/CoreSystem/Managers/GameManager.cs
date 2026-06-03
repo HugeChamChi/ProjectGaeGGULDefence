@@ -104,7 +104,7 @@ public class GameManager : MonoBehaviour
         {
             // 앱이 백그라운드로 전환될 때 디바운싱 타이머를 무시하고 무조건 즉시 저장 시도
             UnityEngine.Debug.Log("[GameManager] 앱 백그라운드 전환 감지. 데이터 강제 업데이트 진행...");
-            Player.UpdateDirtyDataAsync().Forget();
+            //Player.UpdateDirtyDataAsync().Forget();
         }
     }
 
@@ -112,6 +112,6 @@ public class GameManager : MonoBehaviour
     {
         // 앱이 강제로 종료될 때 최후의 저장 시도
         UnityEngine.Debug.Log("[GameManager] 앱 강제 종료 감지. 데이터 강제 업데이트 진행...");
-        Player.UpdateDirtyDataAsync().Forget();
+        //Player.UpdateDirtyDataAsync().Forget();
     }
 }

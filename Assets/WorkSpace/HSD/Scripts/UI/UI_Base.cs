@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public abstract class UI_Base : MonoBehaviour
 {
-    [Inject] private AudioManager _audioManager;
+    [Inject] protected AudioManager _audioManager;
 
     public Action OnClosed;
     public Action OnOpened;

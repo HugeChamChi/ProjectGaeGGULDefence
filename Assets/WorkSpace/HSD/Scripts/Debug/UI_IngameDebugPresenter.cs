@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace HSD.InGameDebug
 {
@@ -8,12 +10,21 @@ namespace HSD.InGameDebug
     {
         private UI_IngameDebugPanel _view;
         private DebugTabType _currentTab;
+        private CancellationTokenSource _addViewCts;
 
         private TotemData[] _allTotemData;
 
         public UI_IngameDebugPresenter(UI_IngameDebugPanel view)
         {
             _view = view;
+        }
+
+        public void Dispose()
+        {
+            _addViewCts?.Cancel();
+            _addViewCts?.Dispose();
+            _addViewCts = null;
+            _view = null;
         }
 
         public void Init()
@@ -25,7 +36,15 @@ namespace HSD.InGameDebug
         {
             _currentTab = tab;
             _view.HideAddView();
+            
+            _view.UpdateInfoButtonVisibility(tab);
+            
             RefreshList();
+        }
+
+        public void OpenInfoView()
+        {
+            _view.ShowInfoPopup(_currentTab);
         }
 
         private void RefreshList()
@@ -55,6 +74,13 @@ namespace HSD.InGameDebug
 
         public async void OpenAddView()
         {
+            _addViewCts?.Cancel();
+            _addViewCts?.Dispose();
+            _addViewCts = new CancellationTokenSource();
+            var token = _addViewCts.Token;
+
+            if (_view == null) return;
+
             _view.ClearAddList();
             _view.ShowAddView();
 
@@ -66,23 +92,34 @@ namespace HSD.InGameDebug
                     foreach (var data in pool)
                     {
                         if (data == null) continue;
+                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
                         _view.AddAddItem(data, data.totemName, data.description, data.icon, "+", OnAddTotem);
                         // 최적화: 매 프레임마다 일정 개수만 생성하여 렉 방지
-                        await Cysharp.Threading.Tasks.UniTask.Yield();
+                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+                        if (canceled) break;
                     }
                 }
             }
             else if (_currentTab == DebugTabType.LevelUp)
             {
-                var pool = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.LevelUpPool;
+                var levelUpManager = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true);
+                var pool = levelUpManager?.LevelUpPool;
                 if (pool != null)
                 {
                     foreach (var data in pool)
                     {
                         if (data == null) continue;
-                        _view.AddAddItem(data, data.chooseName, data.description, data.icon, "+", OnAddLevelUp);
+                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
+                        
+                        string statDesc = $"{data.description}\n";
+                        if (data.primaryValue != 0) statDesc += $"[{data.primaryEffect}] {data.primaryValue:+#;-#;0} ";
+                        if (data.secondaryValue != 0) statDesc += $"[{data.secondaryEffect}] {data.secondaryValue:+#;-#;0} ";
+                        if (data.specialValue != 0) statDesc += $"[{data.specialEffect}] {data.specialValue:+#;-#;0}";
+
+                        _view.AddAddItem(data, data.chooseName, statDesc.Trim(), data.icon, "+", OnAddLevelUp);
                         // 최적화: 매 프레임마다 일정 개수만 생성하여 렉 방지
-                        await Cysharp.Threading.Tasks.UniTask.Yield();
+                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+                        if (canceled) break;
                     }
                 }
             }
@@ -94,8 +131,10 @@ namespace HSD.InGameDebug
                     foreach (var data in pool)
                     {
                         if (data == null) continue;
+                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
                         _view.AddAddItem(data, data.unitName, data.description, data.icon, "+", OnAddUnit);
-                        await Cysharp.Threading.Tasks.UniTask.Yield();
+                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
+                        if (canceled) break;
                     }
                 }
             }
@@ -128,7 +167,8 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemBase totem)
             {
-                UnityEngine.Object.FindObjectOfType<TotemSpawner>(true).SellTotem(totem);
+                var spawner = UnityEngine.Object.FindObjectOfType<TotemSpawner>(true);
+                spawner?.SellTotem(totem);
                 RefreshList();
             }
         }
@@ -137,7 +177,8 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemData data)
             {
-                UnityEngine.Object.FindObjectOfType<TotemSpawner>(true).SpawnTotemByData(data);
+                var spawner = UnityEngine.Object.FindObjectOfType<TotemSpawner>(true);
+                spawner?.SpawnTotemByData(data);
                 _view.HideAddView();
                 RefreshList();
             }
@@ -146,17 +187,23 @@ namespace HSD.InGameDebug
         // --- LevelUp Logic ---
         private void RefreshLevelUpList()
         {
-            if (UnityEngine.Object.FindObjectOfType<LevelUpManager>(true) == null) return;
+            var levelUpManager = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true);
+            if (levelUpManager == null) return;
 
-            var chosenIds = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).ChosenIds.ToList();
-            var pool = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).LevelUpPool;
+            var chosenIds = levelUpManager.ChosenIds.ToList();
+            var pool = levelUpManager.LevelUpPool;
 
             foreach (var id in chosenIds)
             {
                 var data = pool?.FirstOrDefault(d => d != null && d.chooseId == id);
                 if (data != null)
                 {
-                    _view.AddListItem(data, data.chooseName, data.description, data.icon, "X", OnRemoveLevelUp);
+                    string statDesc = $"{data.description}\n";
+                    if (data.primaryValue != 0) statDesc += $"[{data.primaryEffect}] {data.primaryValue:+#;-#;0} ";
+                    if (data.secondaryValue != 0) statDesc += $"[{data.secondaryEffect}] {data.secondaryValue:+#;-#;0} ";
+                    if (data.specialValue != 0) statDesc += $"[{data.specialEffect}] {data.specialValue:+#;-#;0}";
+
+                    _view.AddListItem(data, data.chooseName, statDesc.Trim(), data.icon, "X", OnRemoveLevelUp);
                 }
             }
         }
@@ -165,7 +212,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).RemoveEffect(data);
+                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.RemoveEffect(data);
                 RefreshList();
             }
         }
@@ -174,7 +221,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true).ApplyEffect(data);
+                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.ApplyEffect(data);
                 _view.HideAddView();
                 RefreshList();
             }
@@ -183,6 +230,8 @@ namespace HSD.InGameDebug
         // --- Chief Logic ---
         private void RefreshChiefList()
         {
+            if (Player.Chief == null) return;
+            
             int currentChiefId = Player.Chief.SelectedChiefId;
             var chiefs = Table.Character.Chief.Chiefs;
 
@@ -199,9 +248,9 @@ namespace HSD.InGameDebug
         {
             if (obj is ChiefData data)
             {
-                if (Player.Chief.SelectedChiefId == data.Id) return;
+                if (Player.Chief != null && Player.Chief.SelectedChiefId == data.Id) return;
 
-                Player.Chief.SetSelectedChief(data.Id);
+                Player.Chief?.SetSelectedChief(data.Id);
                 UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true)?.ChangeChieftain(data.Id);
                 RefreshList();
             }
@@ -219,7 +268,8 @@ namespace HSD.InGameDebug
                 if (unit == null || unit.unitData == null) continue;
 
                 // 족장은 제외 (족장 탭에서 관리)
-                if (UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true) != null && UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true).ChieftainUnit == unit) continue;
+                var chieftainSpawner = UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true);
+                if (chieftainSpawner != null && chieftainSpawner.ChieftainUnit == unit) continue;
 
                 _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
             }
@@ -248,10 +298,16 @@ namespace HSD.InGameDebug
                 }
 
                 var cell = emptyCells[Random.Range(0, emptyCells.Count)];
-                var unit = UnityEngine.Object.FindObjectOfType<UnitFactory>(true).CreateUnit(data.unitType);
-                if (unit != null)
+                var factory = UnityEngine.Object.FindObjectOfType<UnitFactory>(true);
+                var spawner = UnityEngine.Object.FindObjectOfType<UnitSpawner>(true);
+                
+                if (factory != null && spawner != null)
                 {
-                    UnityEngine.Object.FindObjectOfType<UnitSpawner>(true).PlaceUnitWithEffect(unit, cell);
+                    var unit = factory.CreateUnit(data.unitType);
+                    if (unit != null)
+                    {
+                        spawner.PlaceUnitWithEffect(unit, cell);
+                    }
                 }
 
                 _view.HideAddView();

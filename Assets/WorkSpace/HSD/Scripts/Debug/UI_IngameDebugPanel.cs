@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 
 namespace HSD.InGameDebug
@@ -31,9 +32,14 @@ namespace HSD.InGameDebug
         [SerializeField] private Button btn_ShowAddView;
         [SerializeField] private Button btn_CloseAddView;
 
+        [Header("Info View")]
+        [SerializeField] private Button btn_ShowInfoView;
+
         private UI_IngameDebugPresenter _presenter;
         private List<UI_DebugItemSlot> _activeSlots = new List<UI_DebugItemSlot>();
         private List<UI_DebugItemSlot> _activeAddSlots = new List<UI_DebugItemSlot>();
+
+        private IDebugInfoPopup[] _infoPopups;
 
         public static UI_IngameDebugPanel Instance { get; private set; }
 
@@ -48,6 +54,7 @@ namespace HSD.InGameDebug
 
             base.Awake();
             _presenter = new UI_IngameDebugPresenter(this);
+            _infoPopups = GetComponentsInChildren<IDebugInfoPopup>(true);
 
             btn_TabTotem?.onClick.AddListener(() => _presenter.ChangeTab(DebugTabType.Totem));
             btn_TabLevelUp?.onClick.AddListener(() => _presenter.ChangeTab(DebugTabType.LevelUp));
@@ -56,8 +63,7 @@ namespace HSD.InGameDebug
 
             btn_ShowAddView?.onClick.AddListener(() => _presenter.OpenAddView());
             btn_CloseAddView?.onClick.AddListener(() => HideAddView());
-
-            
+            btn_ShowInfoView?.onClick.AddListener(() => _presenter.OpenInfoView());
         }
 
         public override void Open()
@@ -65,6 +71,8 @@ namespace HSD.InGameDebug
             base.Open();
             _presenter.Init();
         }
+
+        public Transform GetListContentParent() => listContentParent;
 
         public void ClearList()
         {
@@ -113,6 +121,39 @@ namespace HSD.InGameDebug
         public void ShowAddButton(bool show)
         {
             if (btn_ShowAddView != null) btn_ShowAddView.gameObject.SetActive(show);
+        }
+
+        public void ShowInfoPopup(DebugTabType tabType)
+        {
+            foreach (var popup in _infoPopups)
+            {
+                if (popup.TabType == tabType)
+                    popup.OpenPopup();
+                else
+                    popup.ClosePopup();
+            }
+        }
+
+        public void UpdateInfoButtonVisibility(DebugTabType tabType)
+        {
+            if (btn_ShowInfoView != null)
+            {
+                bool hasPopup = _infoPopups.Any(p => p.TabType == tabType);
+                btn_ShowInfoView.gameObject.SetActive(hasPopup);
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            btn_TabTotem?.onClick.RemoveAllListeners();
+            btn_TabLevelUp?.onClick.RemoveAllListeners();
+            btn_TabChief?.onClick.RemoveAllListeners();
+            btn_TabUnit?.onClick.RemoveAllListeners();
+            btn_ShowAddView?.onClick.RemoveAllListeners();
+            btn_CloseAddView?.onClick.RemoveAllListeners();
+            btn_ShowInfoView?.onClick.RemoveAllListeners();
+
+            _presenter?.Dispose();
         }
     }
 }

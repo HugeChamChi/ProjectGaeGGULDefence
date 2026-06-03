@@ -26,7 +26,7 @@ namespace HSD.UI.Setting
             get
             {
                 if (_presenterValue == null)
-                    _presenterValue = new UI_SettingPresenter(this);
+                    _presenterValue = new UI_SettingPresenter(this, AudioManager.Instance);
 
                 return _presenterValue;
             }

@@ -25,6 +25,7 @@ namespace HSD.UI.Upgrade
             
             if (upgradeModel != null)
             {
+                InGameLifetimeScope.GlobalResolver?.Inject(upgradeModel);
                 upgradeModel.Initialize();
                 _presenter = new UpgradePresenter(upgradeModel, this);
             }

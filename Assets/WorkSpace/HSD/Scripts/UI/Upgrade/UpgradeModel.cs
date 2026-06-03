@@ -1,16 +1,15 @@
 using System;
-using VContainer;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using VContainer;
 
 namespace HSD.UI.Upgrade
 {
     [CreateAssetMenu(fileName = "UpgradeModel", menuName = "UI/UpgradeModel")]
     public class UpgradeModel : ScriptableObject
     {
-    [Inject] private CurrencyManager _currencyManager;
-    [Inject] private UpgradeManager _upgradeManager;
+        [Inject] private CurrencyManager _currencyManager;
+        [Inject] private UpgradeManager _upgradeManager;
 
         [Serializable]
         public struct UpgradeDisplayConfig

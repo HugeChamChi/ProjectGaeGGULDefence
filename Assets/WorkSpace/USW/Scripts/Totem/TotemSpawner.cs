@@ -1,5 +1,6 @@
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 /// <summary>
 /// 토템 소환 서비스. 배치 로직만 담당.
@@ -57,7 +58,7 @@ public class TotemSpawner : MonoBehaviour
         if (_populationManager != null && !_populationManager.CanAdd(1)) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
-        var go    = Instantiate(prefab, cell.transform);
+        var go    = _resolver.Instantiate(prefab, cell.transform);
         var totem = go.GetComponent<TotemBase>();
 
         if (totem == null)
@@ -67,7 +68,7 @@ public class TotemSpawner : MonoBehaviour
             return false;
         }
 
-        if (useGeneric) totem.SetTotemData(data);
+        totem.SetTotemData(data);
         if (!cell.TryPlaceTotem(totem))
         {
             Destroy(go);

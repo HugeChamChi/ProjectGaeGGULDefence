@@ -75,6 +75,19 @@ public class GridManager : MonoBehaviour
     /// <summary>그리드 중앙 셀 반환 — 족장 자동 배치용</summary>
     public GridCell GetCenterCell() => GetCell(Columns / 2, Rows / 2);
 
+    /// <summary>그리드 영역의 기하학적 정중앙 월드 좌표 반환</summary>
+    public Vector3 GetAbsoluteCenterPosition()
+    {
+        if (_grid == null || Columns == 0 || Rows == 0) return transform.position;
+        var minCell = GetCell(0, 0);
+        var maxCell = GetCell(Columns - 1, Rows - 1);
+        if (minCell != null && maxCell != null)
+        {
+            return (minCell.transform.position + maxCell.transform.position) * 0.5f;
+        }
+        return gridLayout != null ? gridLayout.transform.position : transform.position;
+    }
+
     public IEnumerable<GridCell> AllCells()
     {
         foreach (var cell in _grid)
