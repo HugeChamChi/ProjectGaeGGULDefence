@@ -36,6 +36,7 @@ public class GameManager : MonoBehaviour
     public GameState CurrentState { get; private set; } = GameState.Idle;
 
     [SerializeField] private GameConfig config;
+    public GameConfig Config => config;
 
     public void OnStartButtonPressed()
     {
@@ -48,7 +49,6 @@ public class GameManager : MonoBehaviour
         _waveManager.StartWave();
 
         _timerManager.OnTimeUp += HandleTimeUp;
-        _timerManager.StartTimer(config.countdownSeconds);
         BossBase.OnAnyBossDied += HandleBossKilled;
 
         _currencyManager.AddCurrency(config.startingFood);
@@ -75,8 +75,10 @@ public class GameManager : MonoBehaviour
         EndGame(true);
     }
 
-    private void HandleBossKilled() => _timerManager.StartTimer(config.countdownSeconds);
-
+    private void HandleBossKilled()
+    {
+        // 타이머 시작/리셋은 WaveManager가 SpawnNextBossAsync에서 수행합니다.
+    }
     private void HandleTimeUp()
     {
         if (CurrentState != GameState.Playing) return;

@@ -188,7 +188,7 @@ public class DroneManager : MonoBehaviour
                     
                     // 중앙 빔 연출 (전기 선 부모 활용)
                     Transform beamParent = snapshot[0] != null ? snapshot[0].transform.parent : transform;
-                    SpawnLaserBeamAsync(snapshot[centerIndex].transform.position, boss.transform.position, beamParent).Forget();
+                    SpawnLaserBeamAsync(rallyCenter, boss.transform.position, beamParent).Forget();
                 }
 
                 boss.TakeDamage(Mathf.RoundToInt(snapshot.Length * damagePerDrone));

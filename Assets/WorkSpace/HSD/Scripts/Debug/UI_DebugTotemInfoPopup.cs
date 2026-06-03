@@ -38,11 +38,16 @@ namespace HSD.InGameDebug
 
             _totemGridView.gameObject.SetActive(true);
             _totemGridView.InitOrRefresh(detailPopup);
+
+            if (detailPopup != null)
+                detailPopup.Hide();
         }
 
         public void ClosePopup()
         {
             gameObject.SetActive(false);
+            if (detailPopup != null)
+                detailPopup.Hide();
         }
 
         private void OnDestroy()

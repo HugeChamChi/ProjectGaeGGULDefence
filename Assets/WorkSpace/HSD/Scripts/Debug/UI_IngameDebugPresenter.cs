@@ -36,6 +36,7 @@ namespace HSD.InGameDebug
         {
             _currentTab = tab;
             _view.HideAddView();
+            _view.CloseAllInfoPopups();
             
             _view.UpdateInfoButtonVisibility(tab);
             

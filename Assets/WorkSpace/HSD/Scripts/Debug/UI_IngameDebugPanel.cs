@@ -69,7 +69,23 @@ namespace HSD.InGameDebug
         public override void Open()
         {
             base.Open();
+            CloseAllInfoPopups();
             _presenter.Init();
+        }
+
+        public override void Close()
+        {
+            base.Close();
+            CloseAllInfoPopups();
+        }
+
+        public void CloseAllInfoPopups()
+        {
+            if (_infoPopups == null) return;
+            foreach (var popup in _infoPopups)
+            {
+                popup.ClosePopup();
+            }
         }
 
         public Transform GetListContentParent() => listContentParent;

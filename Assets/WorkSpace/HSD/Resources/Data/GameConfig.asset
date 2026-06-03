@@ -15,6 +15,7 @@ MonoBehaviour:
   gridColumns: 6
   gridRows: 4
   countdownSeconds: 90
+  bossSpawnDelaySeconds: 3
   cellSize: 1.5
   startingFood: 10000
   placeCost: 10

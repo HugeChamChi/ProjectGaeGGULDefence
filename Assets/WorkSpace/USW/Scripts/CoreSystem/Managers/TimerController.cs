@@ -35,10 +35,14 @@ public class TimerController : MonoBehaviour
     {
         RemainingTime = seconds;
         _isRunning    = true;
+        OnTimerTick?.Invoke(RemainingTime);
     }
 
     public void StopTimer()   => _isRunning = false;
-    public void ResumeTimer() => _isRunning = true;
+    public void ResumeTimer() 
+    {
+        if (RemainingTime > 0f) _isRunning = true;
+    }
 
     public void AddTime(float seconds)
     {
