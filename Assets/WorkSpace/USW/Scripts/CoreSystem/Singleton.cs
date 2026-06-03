@@ -9,7 +9,21 @@ public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 {
     private static T _instance;
 
-    public static T Instance => _instance;
+    public static T Instance 
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<T>();
+                if (_instance == null)
+                {
+                    CreateInstance();
+                }
+            }
+            return _instance;
+        }
+    }
 
     /// <summary>
     /// 런타임에 싱글톤 인스턴스를 생성하고 DontDestroyOnLoad 등록
