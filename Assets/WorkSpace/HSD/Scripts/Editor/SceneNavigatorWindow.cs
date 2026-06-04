@@ -12,6 +12,9 @@ public class SceneNavigatorWindow : EditorWindow
     private List<SceneInfo> allScenes = new List<SceneInfo>();
     private List<SceneInfo> favoriteScenes = new List<SceneInfo>();
 
+    private float favoritesHeight = 200f;
+    private bool isResizing = false;
+
     private class SceneInfo
     {
         public string Name;
@@ -44,6 +47,9 @@ public class SceneNavigatorWindow : EditorWindow
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (string.IsNullOrEmpty(path)) continue;
+            
+            // Imports 폴더 내 씬 제외
+            if (path.StartsWith("Assets/Imports")) continue;
 
             bool isFav = favSet.Contains(path);
             var info = new SceneInfo { Name = System.IO.Path.GetFileNameWithoutExtension(path), Path = path, IsFavorite = isFav };
@@ -98,7 +104,35 @@ public class SceneNavigatorWindow : EditorWindow
         GUILayout.Space(10);
 
         DrawFavorites();
-        GUILayout.Space(10);
+        
+        // 크기 조절용 스플리터 (Splitter)
+        if (favoriteScenes.Count > 0)
+        {
+            GUILayout.Box("", GUILayout.Height(4), GUILayout.ExpandWidth(true));
+            Rect splitterRect = GUILayoutUtility.GetLastRect();
+            EditorGUIUtility.AddCursorRect(splitterRect, MouseCursor.ResizeVertical);
+            
+            if (Event.current.type == EventType.MouseDown && splitterRect.Contains(Event.current.mousePosition))
+            {
+                isResizing = true;
+                Event.current.Use();
+            }
+            if (isResizing && Event.current.type == EventType.MouseDrag)
+            {
+                favoritesHeight += Event.current.delta.y;
+                favoritesHeight = Mathf.Clamp(favoritesHeight, 50f, position.height - 150f);
+                Repaint();
+            }
+            if (Event.current.type == EventType.MouseUp)
+            {
+                isResizing = false;
+            }
+        }
+        else
+        {
+            GUILayout.Space(10);
+        }
+
         DrawAllScenes();
     }
 
@@ -111,7 +145,7 @@ public class SceneNavigatorWindow : EditorWindow
             return;
         }
 
-        scrollPosFavorites = GUILayout.BeginScrollView(scrollPosFavorites, GUILayout.MaxHeight(200));
+        scrollPosFavorites = GUILayout.BeginScrollView(scrollPosFavorites, GUILayout.Height(favoritesHeight));
         foreach (var scene in favoriteScenes)
         {
             if (!string.IsNullOrEmpty(searchQuery) && !scene.Name.ToLower().Contains(searchQuery.ToLower()))
