@@ -1,9 +1,6 @@
-using System.Collections;
-using VContainer;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class UI_BossIcon : MonoBehaviour
 {

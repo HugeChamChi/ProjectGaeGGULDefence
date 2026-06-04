@@ -15,6 +15,12 @@ public class PlayerDataController : IDisposable, Global.IClearable
 
     private CancellationTokenSource _staminaLoopCts;
     private bool _disposed = false;
+    private BackendGameData _backendData;
+
+    public void Inject(BackendGameData backendData)
+    {
+        _backendData = backendData;
+    }
 
     public async UniTask InitalizeAsync()
     {
@@ -44,32 +50,18 @@ public class PlayerDataController : IDisposable, Global.IClearable
         StopStaminaTimer();
     }
 
-    private void Start()
-    {
-        InitData();
-    }
-
-    private void OnEnable()
-    {
-        StartStaminaTimer();
-    }
-
-    private void OnDisable()
-    {
-        StopStaminaTimer();
-    }
-
-    private void OnDestroy()
-    {
-        StopStaminaTimer();
-    }
-
     // -------------------------
     // 데이터 초기화
     // -------------------------
     public void InitData(Action onCompleted = null)
     {
-        BackendGameData.Instance.GameDataGet((data) =>
+        if (_backendData == null)
+        {
+            Debug.LogError("PlayerDataController: BackendGameData is not injected!");
+            return;
+        }
+
+        _backendData.GameDataGet((data) =>
         {
             _data = data;
             RefreshUI(_data);
@@ -92,8 +84,6 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private void StartStaminaTimer()
     {
         StopStaminaTimer();
-        // OnDisable에서 수동 취소 가능하고,
-        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
         _staminaLoopCts = new CancellationTokenSource();
         StaminaTimerAsync(_staminaLoopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
@@ -121,10 +111,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
             {
                 token.ThrowIfCancellationRequested();
 
-                if (_data != null && _data.Stamina < _data.MaxStamina)
+                if (_data != null && _data.Stamina < _data.MaxStamina && _backendData != null)
                 {
-                    int timeUntilNext = BackendGameData.Instance
-                        .GetTimeUntilNextStaminaRecovery(_data.LastStaminaRecoveryTime);
+                    int timeUntilNext = _backendData.GetTimeUntilNextStaminaRecovery(_data.LastStaminaRecoveryTime);
                     OnStaminaRecoveryTimer?.Invoke(timeUntilNext);
 
                     if (timeUntilNext <= 1)
@@ -143,7 +132,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
 
     private void RecoverStamina()
     {
-        var (newStamina, newRecoveryTime) = BackendGameData.Instance.CalculateStaminaRecovery(
+        if (_backendData == null) return;
+
+        var (newStamina, newRecoveryTime) = _backendData.CalculateStaminaRecovery(
             _data.Stamina, _data.LastStaminaRecoveryTime, _data.MaxStamina);
 
         if (newStamina != _data.Stamina)
@@ -225,10 +216,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
 
     public async UniTask SaveAsync()
     {
-        if (!IsDirty || _data == null) return;
+        if (!IsDirty || _data == null || _backendData == null) return;
         
         var tcs = new UniTaskCompletionSource();
-        BackendGameData.Instance.GameDataUpdate(_data, () => tcs.TrySetResult());
+        _backendData.GameDataUpdate(_data, () => tcs.TrySetResult());
         await tcs.Task;
         
         IsDirty = false;

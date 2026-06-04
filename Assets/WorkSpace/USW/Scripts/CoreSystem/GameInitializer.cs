@@ -2,8 +2,9 @@ using VContainer;
 using VContainer.Unity;
 using UnityEngine;
 
-public class GameInitializer : IInitializable
+public class GameInitializer : IInitializable, IAsyncStartable
 {
+    [Inject] private GlobalUIManager _globalUIManager;
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
     [Inject] private ProjectilePool _projectilePool;
@@ -45,5 +46,13 @@ public class GameInitializer : IInitializable
         if (_bossManager != null) _bossManager.Init();
         if (_currencyFloaterManager != null) _currencyFloaterManager.Init();
         Debug.Log("=========================================\n[GameInitializer] 모든 VContainer 매니저(Init) 초기화 완벽 성공! 🎉\n=========================================");
+    }
+
+    public async System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellation)
+    {
+        if (_globalUIManager != null)
+        {
+            await _globalUIManager.FadeOutAsync();
+        }
     }
 }

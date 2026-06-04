@@ -13,6 +13,10 @@ public class UnitFactory : MonoBehaviour
 
     protected void Awake()
     {
+        if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
+        {
+            unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
+        }
         ValidateUnitDataList();
     }
 

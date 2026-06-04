@@ -13,7 +13,7 @@ public enum AudioGroup
 /// 오디오 엔진(Unity/Native 등)에 상관없이 게임 비즈니스 로직을 처리하는 매니저
 /// 10년차 시니어 팁: 리소스 로드 자동화 및 Strategy 패턴을 통한 유연한 확장성 확보
 /// </summary>
-public class AudioManager : Singleton<AudioManager>
+public class AudioManager : MonoBehaviour
 {
     private const string BGM_PATH_ROOT = "Sound/BGM/";
     private const string SFX_PATH_ROOT = "Sound/SFX/";
@@ -46,6 +46,7 @@ public class AudioManager : Singleton<AudioManager>
 
     protected void Awake()
     {
+        DontDestroyOnLoad(gameObject);
         InitializeEngine();
     }
 

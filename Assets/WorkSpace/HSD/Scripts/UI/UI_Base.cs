@@ -3,10 +3,18 @@ using VContainer;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 public abstract class UI_Base : MonoBehaviour
 {
-    [Inject] protected AudioManager _audioManager;
+    protected static AudioManager _audioManager;
+
+    public static void Inject(AudioManager audioManager)
+    {
+        _audioManager = audioManager;
+    }
 
     public Action OnClosed;
     public Action OnOpened;
@@ -36,14 +44,25 @@ public abstract class UI_Base : MonoBehaviour
         }
     }
 
+#if ODIN_INSPECTOR
     [Button]
+#else
+    [ContextMenu("Open")]
+#endif
     public virtual void Open()
     {
-        _audioManager.PlaySFX(openSoundName);
+        if (_audioManager != null)
+        {
+            _audioManager.PlaySFX(openSoundName);
+        }
         OpenAsync().Forget();
     }
 
+#if ODIN_INSPECTOR
     [Button]
+#else
+    [ContextMenu("Close")]
+#endif
     public virtual void Close()
     {
         CloseAsync().Forget();
@@ -90,7 +109,7 @@ public abstract class UI_Base : MonoBehaviour
 
     protected virtual async UniTask OpenAnimationAsync()
     {
-        btn_BackgroundClose?.gameObject.SetActive(true);
+        if (btn_BackgroundClose != null) btn_BackgroundClose.gameObject.SetActive(true);
 
         if (targetAnim != null)
         {
@@ -113,6 +132,6 @@ public abstract class UI_Base : MonoBehaviour
             await UniTask.CompletedTask;
         }
 
-        btn_BackgroundClose?.gameObject.SetActive(false);
+        if (btn_BackgroundClose != null) btn_BackgroundClose.gameObject.SetActive(false);
     }
 }

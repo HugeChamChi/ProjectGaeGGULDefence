@@ -4,7 +4,7 @@ using BackEnd;
 using LitJson;
 using Cysharp.Threading.Tasks;
 
-public class BackendGameData : MonoBehaviour
+public class BackendGameData
 {
     private const string TABLE_NAME = "PlayerData";
     private const string COLUMN_PLAYER_NAME = "PlayerName";
@@ -17,21 +17,10 @@ public class BackendGameData : MonoBehaviour
     private const string COLUMN_PLAYER_EXP = "PlayerExp";
     private const string COLUMN_MAX_EXP = "MaxExp";
     private const string COLUMN_LAST_RESET_DATE = "LastResetDate";
-
-    public static BackendGameData Instance { get; private set; }
-
     private string _inDate;
 
-    private void Awake()
+    public BackendGameData()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-
 #if UNITY_EDITOR
         EditorInitBackend();
 #endif

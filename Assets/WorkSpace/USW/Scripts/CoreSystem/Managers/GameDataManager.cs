@@ -39,18 +39,13 @@ using UnityEngine.Networking;
 ///     cooldown_decrease_rate, projectile_size_rate,
 ///     food_production_rate, food_amount, exp_gain_rate
 /// </summary>
-public class GameDataManager : MonoBehaviour
+public class GameDataManager
 {
     [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
-
-        
     }
-
-    private GameDataManager _gameDataManager;
 
     private const string BaseUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=";
 
@@ -94,15 +89,7 @@ public class GameDataManager : MonoBehaviour
     // ── 캐릭터 데이터 (성장) ───────────────────────────────
     private readonly Dictionary<(int, int), CharacterSheetRow> _characterData = new();
 
-    // ── 초기화 ────────────────────────────────────────────
-
-    private async UniTaskVoid Start()
-    {
-        var token = this.GetCancellationTokenOnDestroy();
-        await LoadAllAsync(token);
-    }
-
-    private async UniTask LoadAllAsync(CancellationToken token)
+    public async UniTask LoadAllAsync(CancellationToken token = default)
     {
         var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8) = await UniTask.WhenAll(
             FetchCsvAsync(GidSummonCost, token),

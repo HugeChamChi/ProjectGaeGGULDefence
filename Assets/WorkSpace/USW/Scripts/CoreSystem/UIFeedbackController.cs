@@ -20,6 +20,12 @@ public class UIFeedbackController : MonoBehaviour
     [SerializeField] private ParticleImage clickEffectPrefab; // 클릭 시 생성될 ParticleImage 프리팹
     [SerializeField] private RectTransform effectParent;      // 이펙트가 생성될 UI 부모 (최상위 Canvas 권장)
 
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(effectParent.gameObject);
+    }
+
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
@@ -54,7 +60,7 @@ public class UIFeedbackController : MonoBehaviour
         }
 
         // 2. 사운드 재생
-        _audioManager.PlaySFX(isButton ? buttonSFX : touchSFX);
+        _audioManager?.PlaySFX(isButton ? buttonSFX : touchSFX);
 
         // 3. ParticleImage 이펙트 재생
         PlayClickEffect(mousePos);

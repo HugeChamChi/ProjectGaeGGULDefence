@@ -12,6 +12,14 @@ public static class Player
     public static DailyManager Daily                { get; private set; } = new();
     public static GaeGGUL.Tutorial.PlayerTutorialManager Tutorial { get; private set; } = new();
 
+    private static BackendGameData _backendData;
+
+    public static void Inject(BackendGameData backendData)
+    {
+        _backendData = backendData;
+        PlayerData.Inject(backendData);
+    }
+
     public async static UniTask InitializeAsync()
     {
         // 1. 핵심 데이터(플레이어 정보) 먼저 초기화
@@ -31,9 +39,9 @@ public static class Player
         );
 
         // 4. 새로운 날이었다면 갱신된 LastResetDate를 포함해 서버에 저장
-        if (Daily.IsNewDay)
+        if (Daily.IsNewDay && _backendData != null)
         {
-            BackendGameData.Instance.GameDataUpdate(PlayerData.Data);
+            _backendData.GameDataUpdate(PlayerData.Data);
         }
     }
 

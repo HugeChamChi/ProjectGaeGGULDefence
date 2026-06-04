@@ -45,7 +45,9 @@ public class Test_DailyReset : MonoBehaviour
         Player.PlayerData.Data.LastResetDate = "2000-01-01";
         
         // 2. 서버에 저장 (리셋 전 상태 시뮬레이션)
-        BackendGameData.Instance.GameDataUpdate(Player.PlayerData.Data);
+        Player.PlayerData.IsDirty = true;
+        await Player.PlayerData.SaveAsync();
+        
         Debug.Log("날짜 조작 완료 및 서버 저장 성공. 1초 후 다시 초기화를 시도합니다...");
         
         await UniTask.Delay(1000);
