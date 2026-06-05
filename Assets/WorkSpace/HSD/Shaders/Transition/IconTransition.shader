@@ -57,6 +57,18 @@ Shader "Custom/IconTransition"
                 float2 gridUV = i.uv * _GridSize.xy;
                 float2 localUV = frac(gridUV);
                 
+                // --- 해상도 비율 뭉개짐(Distortion) 보정 ---
+                // _ScreenParams: 유니티 내장 변수 (x=width, y=height)
+                float screenAspect = _ScreenParams.x / _ScreenParams.y;
+                float gridAspect = _GridSize.x / _GridSize.y;
+                float cellAspect = screenAspect / gridAspect;
+                
+                // localUV의 중심을 (0.5, 0.5)로 맞추고 X축 스케일 보정
+                localUV -= 0.5;
+                localUV.x *= cellAspect;
+                localUV += 0.5;
+                // -------------------------------------------
+                
                 float mask = 0;
                 float threshold = 0;
 
