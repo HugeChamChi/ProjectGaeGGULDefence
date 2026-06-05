@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 using Cysharp.Threading.Tasks;
 using AssetKits.ParticleImage;
 
@@ -7,16 +8,18 @@ using AssetKits.ParticleImage;
 // ════════════════════════════════════════════════════════
 public class UnitSpawner : MonoBehaviour
 {
-    [VContainer.Inject] private UpgradeManager _upgradeManager;
-    [VContainer.Inject] private GameDataManager _gameDataManager;
-    [VContainer.Inject] private GameManager _gameManager;
-    [VContainer.Inject] private PopulationManager _populationManager;
-    [VContainer.Inject] private LevelUpManager _levelUpManager;
-    [VContainer.Inject] private CurrencyManager _currencyManager;
-    [VContainer.Inject] private GridManager _gridManager;
-    [VContainer.Inject] private UnitFactory _unitFactory;
-    [VContainer.Inject] private BossManager _bossManager;
-    [VContainer.Inject] private TotemBuffManager _totemBuffManager;
+    [Inject] private IObjectResolver _resolver;
+
+    private UpgradeManager _upgradeManager;
+    private GameDataManager _gameDataManager;
+    private GameManager _gameManager;
+    private PopulationManager _populationManager;
+    private LevelUpManager _levelUpManager;
+    private CurrencyManager _currencyManager;
+    private GridManager _gridManager;
+    private UnitFactory _unitFactory;
+    private BossManager _bossManager;
+    private TotemBuffManager _totemBuffManager;
 
     [Header("Spawn Effects")]
     [SerializeField] private UISpawnLine spawnLinePrefab;
@@ -32,8 +35,19 @@ public class UnitSpawner : MonoBehaviour
     /// <summary>유닛 판매(삭제) 시 전역 알림 — TotemSellStack에서 구독</summary>
     public static event System.Action OnAnyUnitSold;
 
-    protected void Awake()
+    private void Start()
     {
+        _upgradeManager = _resolver.Resolve<UpgradeManager>();
+        _gameDataManager = _resolver.Resolve<GameDataManager>();
+        _gameManager = _resolver.Resolve<GameManager>();
+        _populationManager = _resolver.Resolve<PopulationManager>();
+        _levelUpManager = _resolver.Resolve<LevelUpManager>();
+        _currencyManager = _resolver.Resolve<CurrencyManager>();
+        _gridManager = _resolver.Resolve<GridManager>();
+        _unitFactory = _resolver.Resolve<UnitFactory>();
+        _bossManager = _resolver.Resolve<BossManager>();
+        _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
+
         // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
         CurrentCost = 20f;
         if (_gameDataManager != null)

@@ -42,6 +42,7 @@ public class TotemBuffManager : MonoBehaviour
     public float ProjectileSizeMultiplier { get; private set; } = 1f;
     // 토템 효율 보너스 (기본 0 — 레벨업으로 증가, 토템 버프 적용 시 곱해짐)
     private float _totemEfficiencyBonus = 0f;
+    public float TotemEfficiencyBonus => _totemEfficiencyBonus;
 
     // 활성 토템 목록 직접 관리 (FindObjectsOfType 대체)
     private readonly List<TotemBase> _activeTotem = new();

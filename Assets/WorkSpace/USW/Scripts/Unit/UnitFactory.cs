@@ -7,6 +7,7 @@ using VContainer.Unity;
 // ════════════════════════════════════════════════════════
 public class UnitFactory : MonoBehaviour
 {
+    [Inject] private IObjectResolver _resolver;
     [SerializeField] private UnitData[] unitDataList;
 
     public UnitData[] UnitDataList => unitDataList;
@@ -113,7 +114,6 @@ public class UnitFactory : MonoBehaviour
     public UnitBase CreateUnitFromData(UnitData data) => InstantiateFromData(data);
 
     // ── 공통 인스턴스화 ────────────────────────────────────────
-    [VContainer.Inject] private VContainer.IObjectResolver _resolver;
 
     private UnitBase InstantiateFromData(UnitData data)
     {

@@ -11,20 +11,16 @@ using System.Collections.Generic;
 /// </summary>
 public class BossManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
-        if (_waveManager == null) _waveManager = _resolver.Resolve<WaveManager>();
-        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
 
         
     }
 
-    private GameDataManager _gameDataManager;
-    private WaveManager _waveManager;
-    private UIManager _uiManager;
+    [Inject] private GameDataManager _gameDataManager;
+    [Inject] private WaveManager _waveManager;
+    [Inject] private UIManager _uiManager;
 
     [SerializeField] private RectTransform bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]

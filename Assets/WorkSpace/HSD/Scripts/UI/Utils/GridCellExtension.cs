@@ -4,19 +4,33 @@ namespace GaeGGUL.Extension
 {
     public static class GridCellExtension
     {
-        // ── 핵심 계산 로직 (내부 재사용) ──────────────────────────
+        private static TotemBuffManager _totemBuffManager;
+        private static TotemBuffManager TotemManager
+        {
+            get
+            {
+                if (_totemBuffManager == null)
+                    _totemBuffManager = UnityEngine.Object.FindFirstObjectByType<TotemBuffManager>();
+                return _totemBuffManager;
+            }
+        }
 
         private static float GetAttackMultiplier(this GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
             var model = cell.Model;
-            return (model.NullifyDamageDebuff ? 1f : model.DamageModifier) * model.TotemAttackModifier;
+            float globalMult = TotemManager != null ? TotemManager.AttackMultiplier : 1f;
+            float cellBonus = model.TotemCellAttackBonus;
+            return (model.NullifyDamageDebuff ? 1f : model.DamageModifier) * model.TotemAttackModifier * (globalMult + cellBonus);
         }
 
         private static float GetSpeedMultiplier(this GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
-            return cell.Model.SpeedModifier;
+            var model = cell.Model;
+            float globalMult = TotemManager != null ? TotemManager.SpeedMultiplier : 1f;
+            float cellBonusMult = Mathf.Max(0.1f, 1f - model.TotemCellSpeedBonus);
+            return model.SpeedModifier * model.TotemSpeedModifier * globalMult * cellBonusMult;
         }
 
         // ── 최종 수치 계산 (Presenter에서 사용) ──────────────────

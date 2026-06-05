@@ -15,26 +15,32 @@ using Cysharp.Threading.Tasks;
 /// </summary>
 public class WaveManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
-        if (_bossManager == null) _bossManager = _resolver.Resolve<BossManager>();
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
-        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
-        if (_gameManager == null) _gameManager = _resolver.Resolve<GameManager>();
-        if (_timerManager == null) _timerManager = _resolver.Resolve<TimerController>();
-        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
     }
+
+    [Inject] private IObjectResolver _resolver;
 
     private GameDataManager _gameDataManager;
     private BossManager _bossManager;
     private GridManager _gridManager;
+
     private CurrencyManager _currencyManager;
     private GameManager _gameManager;
     private TimerController _timerManager;
     private UIManager _uiManager;
+
+    private void Start()
+    {
+        _gameDataManager = _resolver.Resolve<GameDataManager>();
+        _bossManager = _resolver.Resolve<BossManager>();
+        _gridManager = _resolver.Resolve<GridManager>();
+        _currencyManager = _resolver.Resolve<CurrencyManager>();
+        _gameManager = _resolver.Resolve<GameManager>();
+        _timerManager = _resolver.Resolve<TimerController>();
+        _uiManager = _resolver.Resolve<UIManager>();
+    }
 
     [SerializeField] private StageData stageData;
     [SerializeField] private GameConfig config;

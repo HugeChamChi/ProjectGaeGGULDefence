@@ -41,7 +41,6 @@ using UnityEngine.Networking;
 /// </summary>
 public class GameDataManager
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {

@@ -24,12 +24,14 @@ public class GenericBuffTotem : RangedBuffTotemBase
 
         if (hasFod) cell.SetFoodBuff(true);
 
+        float efficiency = 1f + (_totemBuffManager != null ? _totemBuffManager.TotemEfficiencyBonus : 0f);
+
         // 셀별 버프 보너스 누산 (RebuildCellBuffFlags 사이클마다 초기화 후 재계산)
-        if (totemData.attackBuffAmount     > 0f) cell.AddTotemCellAttackBonus(totemData.attackBuffAmount);
-        if (totemData.speedBuffAmount      > 0f) cell.AddTotemCellSpeedBonus(totemData.speedBuffAmount);
+        if (totemData.attackBuffAmount     > 0f) cell.AddTotemCellAttackBonus(totemData.attackBuffAmount * efficiency);
+        if (totemData.speedBuffAmount      > 0f) cell.AddTotemCellSpeedBonus(totemData.speedBuffAmount * efficiency);
         if (totemData.foodSpeedBuffAmount  > 0f) cell.AddTotemCellFoodSpeedBonus(totemData.foodSpeedBuffAmount);
-        if (totemData.foodAmountBuffAmount > 0f) cell.AddTotemCellFoodAmountBonus(totemData.foodAmountBuffAmount);
-        if (totemData.critChanceBuffAmount > 0f) cell.AddTotemCellCritChanceBonus(totemData.critChanceBuffAmount);
-        if (totemData.critDamageBuffAmount > 0f) cell.AddTotemCellCritDamageBonus(totemData.critDamageBuffAmount);
+        if (totemData.foodAmountBuffAmount > 0f) cell.AddTotemCellFoodAmountBonus(totemData.foodAmountBuffAmount * efficiency);
+        if (totemData.critChanceBuffAmount > 0f) cell.AddTotemCellCritChanceBonus(totemData.critChanceBuffAmount * efficiency);
+        if (totemData.critDamageBuffAmount > 0f) cell.AddTotemCellCritDamageBonus(totemData.critDamageBuffAmount * efficiency);
     }
 }

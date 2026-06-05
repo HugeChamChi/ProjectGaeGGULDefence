@@ -306,8 +306,11 @@ public abstract class UnitBase : MonoBehaviour
         // AttackSpeed는 초당 공격 횟수 (값이 클수록 공격 간격이 짧아져 더 빨라짐)
         float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
 
+        float cellSpeedBonusMult = Mathf.Max(0.1f, 1f - (currentCell?.Model.TotemCellSpeedBonus ?? 0f));
+
         float interval = baseInterval
                        * _totemBuffManager.SpeedMultiplier
+                       * cellSpeedBonusMult
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        * (currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
@@ -358,7 +361,8 @@ public abstract class UnitBase : MonoBehaviour
         if (_currency == null || unitData == null || deltaTime <= 0f) return;
 
         // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
-        float speedMultiplier = Mathf.Max(_totemBuffManager.FoodSpeedMultiplier, 0.01f);
+        float cellFoodSpeedBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
+        float speedMultiplier = Mathf.Max(_totemBuffManager.FoodSpeedMultiplier - cellFoodSpeedBonus, 0.01f);
         _foodTimer += deltaTime / speedMultiplier;
 
         // 표준 간격(1초)에 도달할 때까지 누적
@@ -376,7 +380,8 @@ public abstract class UnitBase : MonoBehaviour
         _foodTimer -= elapsedTicks;
 
         // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
-        float amountPerTick = baseAmount * _totemBuffManager.FoodAmountMultiplier;
+        float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
+        float amountPerTick = baseAmount * (_totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus);
 
         if (amountPerTick > 0f)
         {
@@ -465,8 +470,10 @@ public abstract class UnitBase : MonoBehaviour
             ? 1f + (lu?.ChieftainAttackBonus ?? 0f)
             : 1f;
 
+        float cellAttackBonus = currentCell?.Model.TotemCellAttackBonus ?? 0f;
+
         float damage = (baseDamage + _unemployedAtkBonus)
-                     * _totemBuffManager.AttackMultiplier
+                     * (_totemBuffManager.AttackMultiplier + cellAttackBonus)
                      * cellModifier
                      * totemModifier
                      * rowModifier
@@ -475,10 +482,12 @@ public abstract class UnitBase : MonoBehaviour
                      * burstAtk
                      * chieftainAtk;
 
-        float critChance = (lu?.CritChance ?? 0f) + _totemBuffManager.CritChanceBonus;
+        float cellCritChance = currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
+        float critChance = (lu?.CritChance ?? 0f) + _totemBuffManager.CritChanceBonus + cellCritChance;
         if (critChance > 0f && UnityEngine.Random.value < critChance)
         {
-            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + _totemBuffManager.CritDamageBonus;
+            float cellCritDamage = currentCell?.Model.TotemCellCritDamageBonus ?? 0f;
+            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + _totemBuffManager.CritDamageBonus + cellCritDamage;
             damage *= critMult;
         }
 

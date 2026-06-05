@@ -8,18 +8,23 @@ using VContainer;
 /// </summary>
 public class PopulationManager : MonoBehaviour
 {
-    [VContainer.Inject] private IObjectResolver _resolver;
+    [Inject] private IObjectResolver _resolver;
+
     private GridManager _gridManager;
     private TotemSpawner _totemSpawner;
     private UnitSpawner _unitSpawner;
     private UnitFactory _unitFactory;
     
+    private void Start()
+    {
+        _gridManager = _resolver.Resolve<GridManager>();
+        _totemSpawner = _resolver.Resolve<TotemSpawner>();
+        _unitSpawner = _resolver.Resolve<UnitSpawner>();
+        _unitFactory = _resolver.Resolve<UnitFactory>();
+    }
+    
     public void Init()
     {
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
-        if (_totemSpawner == null) _totemSpawner = _resolver.Resolve<TotemSpawner>();
-        if (_unitSpawner == null) _unitSpawner = _resolver.Resolve<UnitSpawner>();
-        if (_unitFactory == null) _unitFactory = _resolver.Resolve<UnitFactory>();
     }
 
     public struct SpawnQueueItem {

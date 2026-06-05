@@ -13,18 +13,14 @@ using UnityEngine.Networking;
 /// </summary>
 public class UpgradeManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_upgradeManager == null) _upgradeManager = _resolver.Resolve<UpgradeManager>();
-        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
 
         
     }
 
-    private UpgradeManager _upgradeManager;
-    private CurrencyManager _currencyManager;
+    [Inject] private CurrencyManager _currencyManager;
 
     private const string CostSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=297223937";
     private const string StatSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=1454519483";

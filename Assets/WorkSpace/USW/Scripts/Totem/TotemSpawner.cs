@@ -14,20 +14,17 @@ using VContainer.Unity;
 /// </summary>
 public class TotemSpawner : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
-        if (_populationManager == null) _populationManager = _resolver.Resolve<PopulationManager>();
-        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
 
         
     }
 
-    private GridManager _gridManager;
-    private PopulationManager _populationManager;
-    private CurrencyManager _currencyManager;
+    [Inject] private IObjectResolver _resolver;
+    [Inject] private GridManager _gridManager;
+    [Inject] private PopulationManager _populationManager;
+    [Inject] private CurrencyManager _currencyManager;
 
     [SerializeField] private GameObject genericPrefab;
 

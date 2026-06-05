@@ -4,20 +4,16 @@ using System;
 
 public class ExpManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gameDataManager == null) _gameDataManager = _resolver.Resolve<GameDataManager>();
-        if (_levelUpManager == null) _levelUpManager = _resolver.Resolve<LevelUpManager>();
-        if (_gameManager == null) _gameManager = _resolver.Resolve<GameManager>();
 
         
     }
 
-    private GameDataManager _gameDataManager;
-    private LevelUpManager _levelUpManager;
-    private GameManager _gameManager;
+    [Inject] private GameDataManager _gameDataManager;
+    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private GameManager _gameManager;
 
     public event Action<float> OnExpChanged;
     public event Action        OnLevelUp;

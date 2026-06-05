@@ -8,27 +8,31 @@ using Cysharp.Threading.Tasks;
 // ════════════════════════════════════════════════════════
 public class GameManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_uiManager == null) _uiManager = _resolver.Resolve<UIManager>();
-        if (_waveManager == null) _waveManager = _resolver.Resolve<WaveManager>();
-        if (_timerManager == null) _timerManager = _resolver.Resolve<TimerController>();
-        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
-        if (_expManager == null) _expManager = _resolver.Resolve<ExpManager>();
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
 
         
     }
+
+    [Inject] private IObjectResolver _resolver;
 
     private UIManager _uiManager;
     private WaveManager _waveManager;
     private TimerController _timerManager;
     private CurrencyManager _currencyManager;
     private ExpManager _expManager;
-    
     private GridManager _gridManager;
+
+    private void Start()
+    {
+        _uiManager = _resolver.Resolve<UIManager>();
+        _waveManager = _resolver.Resolve<WaveManager>();
+        _timerManager = _resolver.Resolve<TimerController>();
+        _currencyManager = _resolver.Resolve<CurrencyManager>();
+        _expManager = _resolver.Resolve<ExpManager>();
+        _gridManager = _resolver.Resolve<GridManager>();
+    }
 
     public event Action OnLevelUpStateEntered;
 

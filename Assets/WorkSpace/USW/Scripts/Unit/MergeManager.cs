@@ -15,24 +15,18 @@ using UnityEngine;
 /// </summary>
 public class MergeManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_chieftainManager == null) _chieftainManager = _resolver.Resolve<ChieftainSpawner>();
-        if (_levelUpManager == null) _levelUpManager = _resolver.Resolve<LevelUpManager>();
-        if (_unitFactoryManager == null) _unitFactoryManager = _resolver.Resolve<UnitFactory>();
-        if (_spawnerManager == null) _spawnerManager = _resolver.Resolve<UnitSpawner>();
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
 
         
     }
 
-    private ChieftainSpawner _chieftainManager;
-    private LevelUpManager _levelUpManager;
-    private UnitFactory _unitFactoryManager;
-    private UnitSpawner _spawnerManager;
-    private GridManager _gridManager;
+    [Inject] private ChieftainSpawner _chieftainManager;
+    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private UnitFactory _unitFactoryManager;
+    [Inject] private UnitSpawner _spawnerManager;
+    [Inject] private GridManager _gridManager;
 
     public event Action<UnitBase, bool> OnUnitSelected;
     public event Action                 OnSelectionCleared;

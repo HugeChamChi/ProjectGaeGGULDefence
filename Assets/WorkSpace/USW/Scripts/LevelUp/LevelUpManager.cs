@@ -25,27 +25,20 @@ using Cysharp.Threading.Tasks;
 /// </summary>
 public class LevelUpManager : MonoBehaviour
 {
-    [Inject] private IObjectResolver _resolver;
  
     public void Init()
     {
-        if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
-        if (_totemBuffManager == null) _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
-        if (_currencyManager == null) _currencyManager = _resolver.Resolve<CurrencyManager>();
-        if (_populationManager == null) _populationManager = _resolver.Resolve<PopulationManager>();
-        if (_unitFactoryManager == null) _unitFactoryManager = _resolver.Resolve<UnitFactory>();
-        if (_spawnerManager == null) _spawnerManager = _resolver.Resolve<UnitSpawner>();
 
         
     }
 
-    private GridManager _gridManager;
-    private TotemBuffManager _totemBuffManager;
-    private CurrencyManager _currencyManager;
-    private PopulationManager _populationManager;
+    [Inject] private GridManager _gridManager;
+    [Inject] private TotemBuffManager _totemBuffManager;
+    [Inject] private CurrencyManager _currencyManager;
+    [Inject] private PopulationManager _populationManager;
     
-    private UnitFactory _unitFactoryManager;
-    private UnitSpawner _spawnerManager;
+    [Inject] private UnitFactory _unitFactoryManager;
+    [Inject] private UnitSpawner _spawnerManager;
 
     [SerializeField] private LevelUpData[] levelUpPool;
 

@@ -10,6 +10,7 @@ using VContainer.Unity;
 /// </summary>
 public class DronePool : MonoBehaviour
 {
+
     [Inject] private IObjectResolver _resolver;
 
     [Header("프리팹")]

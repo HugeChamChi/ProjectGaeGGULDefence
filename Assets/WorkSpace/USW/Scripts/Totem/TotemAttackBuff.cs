@@ -17,18 +17,12 @@ public class TotemAttackBuff : TotemBase
 
     protected override void ApplyBuff()
     {
-        if (totemData.attackBuffAmount <= 0f)
-        {
-            Debug.LogWarning($"TotemAttackBuff({name}): attackBuffAmount = 0. TotemData를 확인하세요.");
-            return;
-        }
-        _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
+        // 글로벌 버프 적용 제거 (PaintAffectedCells에서 지역 버프로 적용)
     }
 
     protected override void RemoveBuff()
     {
-        if (totemData.attackBuffAmount <= 0f) return;
-        _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
+        // 글로벌 버프 해제 제거
     }
 
     public override List<GridCell> GetAffectedCells()
@@ -48,7 +42,14 @@ public class TotemAttackBuff : TotemBase
 
     public override void PaintAffectedCells()
     {
+        float efficiency = 1f + (_totemBuffManager != null ? _totemBuffManager.TotemEfficiencyBonus : 0f);
         foreach (var cell in GetAffectedCells())
+        {
             cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
+            if (totemData.attackBuffAmount > 0f)
+            {
+                cell.AddTotemCellAttackBonus(totemData.attackBuffAmount * efficiency);
+            }
+        }
     }
 }
