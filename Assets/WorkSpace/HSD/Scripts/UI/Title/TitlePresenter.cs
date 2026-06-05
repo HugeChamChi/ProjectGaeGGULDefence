@@ -69,7 +69,7 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
         if (_sceneChangeManager != null)
         {
             // SceneChangeManager의 완벽한 흐름(FadeIn -> beforeLoad -> Load -> afterLoad -> FadeOut)에 올라탑니다.
-            await _sceneChangeManager.TransitionToSceneAsync("WorkSpace/HSD/Scenes/LobbyScene", 
+            await _sceneChangeManager.TransitionToSceneAsync("LobbyScene", 
                 beforeLoad: async () =>
                 {
                     // 1. 씬이 넘어가기 전 (FadeIn으로 화면이 가려진 상태)에서 백엔드 및 각종 데이터 초기화
@@ -77,6 +77,11 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
                     if (initBro.IsSuccess())
                     {
                         Debug.Log("Backend Init Success");
+                        
+                        // 구글 해시 키 출력 (로그캣 확인용)
+                        string googleHash = Backend.Utils.GetGoogleHash();
+                        Debug.Log($"[Backend] 현재 빌드의 구글 해시 키(Google Hash): {googleHash}");
+
                         var loginBro = Backend.BMember.CustomLogin("test", "test");
                         if (!loginBro.IsSuccess())
                         {

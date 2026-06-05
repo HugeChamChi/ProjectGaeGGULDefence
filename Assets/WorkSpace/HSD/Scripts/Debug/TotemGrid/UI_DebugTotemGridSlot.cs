@@ -42,6 +42,9 @@ namespace HSD.InGameDebug
                 var txtRt = txtGo.AddComponent<RectTransform>();
                 txtRt.anchorMin = Vector2.zero;
                 txtRt.anchorMax = Vector2.one;
+                txtRt.offsetMin = Vector2.zero;
+                txtRt.offsetMax = Vector2.zero;
+                txtRt.sizeDelta = Vector2.zero;
                 _txtDesc = txtGo.AddComponent<TextMeshProUGUI>();
                 _txtDesc.fontSize = 14;
                 _txtDesc.color = Color.white;

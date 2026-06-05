@@ -20,6 +20,8 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
 
     private void Awake()
     {
+        DontDestroyOnLoad(gameObject);
+
         if (fadeImage != null && useMaterialTransition && fadeImage.material != null)
         {
             // 원본 머티리얼 에셋이 변조되지 않도록 인스턴스로 복제

@@ -46,6 +46,9 @@ namespace HSD.InGameDebug
             {
                 slot.Refresh();
             }
+
+            // UI 레이아웃 즉시 강제 갱신 (크기 삐져나옴 방지)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(GetComponent<RectTransform>());
         }
     }
 }

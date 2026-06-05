@@ -90,31 +90,51 @@ public class GameDataManager
 
     public async UniTask LoadAllAsync(CancellationToken token = default)
     {
-        var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8) = await UniTask.WhenAll(
-            FetchCsvAsync(GidSummonCost, token),
-            FetchCsvAsync(GidSpawnRate, token),
-            FetchCsvAsync(GidSellPrice, token),
-            FetchCsvAsync(GidCurrency, token),
-            FetchCsvAsync(GidBoss, token),
-            FetchCsvAsync(GidExpTable, token),
-            FetchCsvAsync(GidTotem, token),
-            FetchCsvAsync(GidCharacter, token),
-            FetchCsvAsync(GidConfig, token)
-        );
+        while (!token.IsCancellationRequested)
+        {
+            try
+            {
+                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8) = await UniTask.WhenAll(
+                    FetchCsvAsync(GidSummonCost, token),
+                    FetchCsvAsync(GidSpawnRate, token),
+                    FetchCsvAsync(GidSellPrice, token),
+                    FetchCsvAsync(GidCurrency, token),
+                    FetchCsvAsync(GidBoss, token),
+                    FetchCsvAsync(GidExpTable, token),
+                    FetchCsvAsync(GidTotem, token),
+                    FetchCsvAsync(GidCharacter, token),
+                    FetchCsvAsync(GidConfig, token)
+                );
 
-        if (csv0 != null) ParseSummonCost(csv0);
-        if (csv1 != null) ParseSpawnRates(csv1);
-        if (csv2 != null) ParseSellPrices(csv2);
-        if (csv3 != null) ParseCurrencyPerSecond(csv3);
-        if (csv4 != null) ParseBossData(csv4);
-        if (csv5 != null) ParseExpTable(csv5);
-        if (csv6 != null) ParseTotemData(csv6);
-        if (csv7 != null) ParseCharacterData(csv7);
-        if (csv8 != null) ParseWaveTime(csv8);
+                if (csv0 == null || csv1 == null || csv2 == null || csv3 == null || 
+                    csv4 == null || csv5 == null || csv6 == null || csv7 == null || csv8 == null)
+                {
+                    Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
+                    await UniTask.Delay(3000, cancellationToken: token);
+                    continue;
+                }
 
-        IsLoaded = true;
-        OnLoaded?.Invoke();
-        Debug.Log("[GameDataManager] 모든 시트 로드 완료");
+                ParseSummonCost(csv0);
+                ParseSpawnRates(csv1);
+                ParseSellPrices(csv2);
+                ParseCurrencyPerSecond(csv3);
+                ParseBossData(csv4);
+                ParseExpTable(csv5);
+                ParseTotemData(csv6);
+                ParseCharacterData(csv7);
+                ParseWaveTime(csv8);
+
+                IsLoaded = true;
+                OnLoaded?.Invoke();
+                Debug.Log("[GameDataManager] 모든 시트 로드 및 파싱 완료");
+                break; // 성공 시 무한루프 탈출
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GameDataManager] 파싱 중 에러 발생: {ex.Message}\n3초 후 전체 재시도합니다...");
+                await UniTask.Delay(3000, cancellationToken: token);
+            }
+        }
     }
 
     private async UniTask<string> FetchCsvAsync(string gid, CancellationToken token)
