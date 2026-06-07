@@ -46,6 +46,8 @@ public class AudioManager : MonoBehaviour
 
     protected void Awake()
     {
+        // 최상위 루트 오브젝트가 아니면 DontDestroyOnLoad가 무시되므로 강제로 부모를 해제합니다.
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
         InitializeEngine();
     }

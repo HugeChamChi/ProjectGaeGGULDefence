@@ -149,14 +149,11 @@ public class WaveManager : MonoBehaviour
 
     private void OnTotemSelectionDone()
     {
-        ProceedAfterTotemSelectionAsync().Forget();
+        ProceedAfterTotemSelection();
     }
 
-    private async Cysharp.Threading.Tasks.UniTaskVoid ProceedAfterTotemSelectionAsync()
+    private void ProceedAfterTotemSelection()
     {
-        // 토템 배치 및 적용 효과 확인하는 유예 시간 5초 지급
-        await Cysharp.Threading.Tasks.UniTask.Delay(5000, cancellationToken: this.GetCancellationTokenOnDestroy());
-
         _bossIndex++;
 
         if (_bossIndex < _pendingBosses.Count)

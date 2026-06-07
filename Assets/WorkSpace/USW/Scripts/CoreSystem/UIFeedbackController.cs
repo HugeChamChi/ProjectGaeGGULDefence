@@ -59,8 +59,11 @@ public class UIFeedbackController : MonoBehaviour
             }
         }
 
-        // 2. 사운드 재생
-        _audioManager?.PlaySFX(isButton ? buttonSFX : touchSFX);
+        // C#의 ?. 연산자는 유니티에서 파괴된(Destroyed) 오브젝트를 걸러내지 못하므로 명시적 null 체크 필수
+        if (_audioManager != null)
+        {
+            _audioManager.PlaySFX(isButton ? buttonSFX : touchSFX);
+        }
 
         // 3. ParticleImage 이펙트 재생
         PlayClickEffect(mousePos);
