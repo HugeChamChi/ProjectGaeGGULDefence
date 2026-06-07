@@ -11,20 +11,32 @@ using UnityEngine.UI;
 ///   - OnRemoved() → _totemBuffManager.UnregisterTotem(this) 추가
 ///   - Manager 통해 접근 통일
 /// </summary>
+
 public abstract class TotemBase : MonoBehaviour
 {
     [Inject] protected TotemBuffManager _totemBuffManager;
     [Inject] protected PopulationManager _populationManager;
     [Inject] protected GridManager _gridManager;
+    [Inject] protected GameDataManager _gameDataManager;
 
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
     [SerializeField] private   Image          _image;
 
+    private bool _isDataCloned = false;
+
     public TotemData Data        => totemData;
 
     /// <summary>소환 직후 SO 데이터를 주입한다. TotemSpawner에서 호출.</summary>
-    public void SetTotemData(TotemData data) => totemData = data;
+    public void SetTotemData(TotemData data) 
+    {
+        if (data != null)
+        {
+            totemData = Instantiate(data);
+            totemData.name = data.name + "_Runtime";
+            _isDataCloned = true;
+        }
+    }
     public bool      IsActive    { get; private set; } = false;
     public int       RotationStep { get; private set; } = 0;
 
@@ -48,6 +60,8 @@ public abstract class TotemBase : MonoBehaviour
             return;
         }
 
+        SyncStatsWithSheet();
+
         CurrentCell = cell;
         IsActive    = true;
 
@@ -55,8 +69,15 @@ public abstract class TotemBase : MonoBehaviour
         ApplyBuff();
 
         // 토템 목록에 등록 (FindObjectsOfType 대체)
-        _totemBuffManager.RegisterTotem(this);
-        _totemBuffManager.RebuildCellBuffFlags();
+        if (_totemBuffManager != null)
+        {
+            _totemBuffManager.RegisterTotem(this);
+            _totemBuffManager.RebuildCellBuffFlags();
+        }
+        else
+        {
+            Debug.LogWarning($"TotemBase({name}): _totemBuffManager is null!");
+        }
         _populationManager?.Add(1);
 
         Debug.Log($"[토템] {totemData.totemName} 배치 @ {cell.GridPosition}");
@@ -75,8 +96,11 @@ public abstract class TotemBase : MonoBehaviour
         RemoveBuff();
 
         // 토템 목록에서 해제
-        _totemBuffManager.UnregisterTotem(this);
-        _totemBuffManager.RebuildCellBuffFlags();
+        if (_totemBuffManager != null)
+        {
+            _totemBuffManager.UnregisterTotem(this);
+            _totemBuffManager.RebuildCellBuffFlags();
+        }
         _populationManager?.Remove(1);
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
@@ -90,7 +114,9 @@ public abstract class TotemBase : MonoBehaviour
         if (!IsActive) return;
         RotationStep = (RotationStep + 1) % 4;
         UpdateSprite();
-        _totemBuffManager.RebuildCellBuffFlags();
+        
+        if (_totemBuffManager != null)
+            _totemBuffManager.RebuildCellBuffFlags();
 
         if (_gridManager != null && _gridManager.IsPreviewingTotem(this))
             _gridManager.ShowTotemRangePreview(this);
@@ -129,8 +155,33 @@ public abstract class TotemBase : MonoBehaviour
     public abstract void PaintAffectedCells();
     public abstract List<GridCell> GetAffectedCells();
 
+    protected virtual void SyncStatsWithSheet()
+    {
+        if (totemData == null || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
+
+        // 원본 ScriptableObject가 오염되는 것을 방지하기 위해 런타임 인스턴스로 복제
+        if (!_isDataCloned)
+        {
+            totemData = Instantiate(totemData);
+            totemData.name = totemData.name + "_Runtime";
+            _isDataCloned = true;
+        }
+
+        var sheetRow = _gameDataManager.GetTotemRow(totemData.totemId);
+        if (sheetRow != null)
+        {
+            totemData.ApplySheetData(sheetRow);
+        }
+    }
+
     private void OnDestroy()
     {
         if (IsActive) OnRemoved();
+
+        // 런타임에 복제된 ScriptableObject 메모리 해제
+        if (_isDataCloned && totemData != null)
+        {
+            Destroy(totemData);
+        }
     }
 }

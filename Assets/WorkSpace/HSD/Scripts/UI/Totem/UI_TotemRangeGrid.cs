@@ -58,6 +58,18 @@ namespace GaeGGUL.UI.Totem
 
         public void Initialize()
         {
+            if (settings == null)
+            {
+                Debug.LogError("[TotemUI] TotemDisplaySettings is missing.");
+                return;
+            }
+
+            if (gridSize.x <= 0 || gridSize.y <= 0)
+            {
+                Debug.LogError("[TotemUI] Invalid gridSize.");
+                return;
+            }
+
             // 에디터 모드 대응: _cells가 날아갔을 경우 자식들을 확인하여 복구 시도
             if (_cells == null || _cells.Length == 0)
             {
@@ -95,17 +107,18 @@ namespace GaeGGUL.UI.Totem
                         _cells[x, y] = existingCells[index++];
                     }
                 }
-                _center = totemPosition - new Vector2Int(1, 1);
+                _center = new Vector2Int(totemPosition.x - 1, gridSize.y - totemPosition.y);
                 _isInitialized = true;
             }
         }
 
         public void RefreshLayoutPositions()
         {
-            if (gridLayout == null || _cells == null) 
+            if (gridLayout == null || _cells == null || _cells.GetLength(0) != gridSize.x || _cells.GetLength(1) != gridSize.y) 
             {
+                _isInitialized = false;
                 Initialize();
-                if (_cells == null) return;
+                if (_cells == null || _cells.GetLength(0) != gridSize.x || _cells.GetLength(1) != gridSize.y) return;
             }
 
             for (int y = 0; y < gridSize.y; y++)
@@ -161,7 +174,7 @@ namespace GaeGGUL.UI.Totem
             }
 
             _cells = new UI_TotemRangeCell[gridSize.x, gridSize.y];
-            _center = totemPosition - new Vector2Int(1, 1);
+            _center = new Vector2Int(totemPosition.x - 1, gridSize.y - totemPosition.y);
 
             for (int y = 0; y < gridSize.y; y++)
             {
@@ -183,33 +196,51 @@ namespace GaeGGUL.UI.Totem
         {
             Initialize();
 
+            if (_cells == null) return;
+
             // 1. 전체 초기화 (필드 색상)
-            foreach (var cell in _cells) cell.SetColor(settings.fieldColor);
+            foreach (var cell in _cells)
+            {
+                if (cell != null) cell.SetColor(settings.fieldColor);
+            }
 
             // 2. 효과 범위 표시
-            foreach (var offset in effectRange)
+            if (effectRange != null)
             {
-                Vector2Int pos = _center + offset;
-                if (IsValidPos(pos))
+                foreach (var offset in effectRange)
                 {
-                    _cells[pos.x, pos.y].SetColor(settings.effectColor);
-                    Debug.Log($"[TotemUI] Effect Range at {pos} (offset: {offset})");
+                    Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
+                    if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
+                    {
+                        _cells[pos.x, pos.y].SetColor(settings.effectColor);
+                        Debug.Log($"[TotemUI] Effect Range at {pos} (offset: {offset})");
+                    }
                 }
             }
 
             // 3. 디버프 범위 표시
-            foreach (var offset in debuffRange)
+            if (debuffRange != null)
             {
-                Vector2Int pos = _center + offset;
-                if (IsValidPos(pos))
+                foreach (var offset in debuffRange)
                 {
-                    _cells[pos.x, pos.y].SetColor(settings.debuffColor);
-                    Debug.Log($"[TotemUI] Debuff Range at {pos} (offset: {offset})");
+                    Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
+                    if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
+                    {
+                        _cells[pos.x, pos.y].SetColor(settings.debuffColor);
+                        Debug.Log($"[TotemUI] Debuff Range at {pos} (offset: {offset})");
+                    }
                 }
             }
 
             // 4. 토템 위치 표시 (중앙)
-            _cells[_center.x, _center.y].SetColor(settings.totemColor);
+            if (IsValidPos(_center) && _cells[_center.x, _center.y] != null)
+            {
+                _cells[_center.x, _center.y].SetColor(settings.totemColor);
+            }
+            else
+            {
+                Debug.LogWarning($"[TotemUI] Totem position out of bounds: {_center}");
+            }
         }
 
         private bool IsValidPos(Vector2Int pos)

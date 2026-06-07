@@ -60,4 +60,36 @@ public class TotemData : ScriptableObject
     public int  totemId     = 0;
     [Tooltip("회전 가능 여부. 시트 is_rotatable 컬럼이 있으면 런타임에 덮어쓰기됨.")]
     public bool isRotatable = true;
+
+    /// <summary>
+    /// 구글 시트에서 가져온 토템 데이터를 SO 인스턴스에 적용합니다.
+    /// </summary>
+    public void ApplySheetData(GameDataManager.TotemSheetRow row)
+    {
+        if (row == null) return;
+
+        // 1. 기본 정보 덮어쓰기
+        if (!string.IsNullOrEmpty(row.TotemName)) totemName = row.TotemName;
+        tier = row.Grade;
+        isRotatable = row.IsRotatable;
+
+        // 2. 버프 수치 덮어쓰기
+        attackBuffAmount = row.AtkIncreaseRate;
+        speedBuffAmount = row.AttackSpeedIncreaseRate;
+        foodSpeedBuffAmount = row.FoodProductionRate;
+        foodAmountBuffAmount = row.FoodAmount;
+        critChanceBuffAmount = row.CriticalChanceRate;
+        critDamageBuffAmount = row.CriticalDamageRate;
+
+        // 3. 범위 데이터 덮어쓰기 (시트에 데이터가 존재할 경우에만)
+        if (row.EffectRange != null && row.EffectRange.Count > 0)
+        {
+            effectRange = new List<Vector2Int>(row.EffectRange);
+        }
+        
+        if (row.AttackDisabledRange != null && row.AttackDisabledRange.Count > 0)
+        {
+            attackDisabledRange = new List<Vector2Int>(row.AttackDisabledRange);
+        }
+    }
 }

@@ -312,18 +312,18 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var sb = new StringBuilder();
 
-        float atk      = sheet != null ? sheet.AttackBuff         : data.attackBuffAmount;
-        float spd      = sheet != null ? sheet.SpeedBuff          : data.speedBuffAmount;
-        float fProd    = sheet != null ? sheet.FoodProductionBuff : data.foodSpeedBuffAmount;
-        float fAmt     = sheet != null ? sheet.FoodAmountBuff     : data.foodAmountBuffAmount;
-        float cCh      = sheet != null ? sheet.CritChanceBuff     : data.critChanceBuffAmount;
-        float cDmg     = sheet != null ? sheet.CritDamageBuff     : data.critDamageBuffAmount;
+        float atk      = sheet != null ? sheet.AtkIncreaseRate         : data.attackBuffAmount;
+        float spd      = sheet != null ? sheet.AttackSpeedIncreaseRate : data.speedBuffAmount;
+        float fProd    = sheet != null ? sheet.FoodProductionRate      : data.foodSpeedBuffAmount;
+        float fAmt     = sheet != null ? sheet.FoodAmount              : data.foodAmountBuffAmount;
+        float cCh      = sheet != null ? sheet.CriticalChanceRate      : data.critChanceBuffAmount;
+        float cDmg     = sheet != null ? sheet.CriticalDamageRate      : data.critDamageBuffAmount;
 
-        float atkDeb   = sheet?.AttackDebuff      ?? 0f;
-        float spdDeb   = sheet?.SpeedDebuff       ?? 0f;
-        float cooldown = sheet?.CooldownDecrease  ?? 0f;
-        float projSize = sheet?.ProjectileSizeRate ?? 0f;
-        float expGain  = sheet?.ExpGainRate       ?? 0f;
+        float atkDeb   = sheet?.AtkDecreaseRate         ?? 0f;
+        float spdDeb   = sheet?.AttackSpeedDecreaseRate ?? 0f;
+        float cooldown = sheet?.CooldownDecreaseRate    ?? 0f;
+        float projSize = sheet?.ProjectileSizeRate      ?? 0f;
+        float expGain  = sheet?.ExpGainRate             ?? 0f;
 
         if (atk    > 0f) sb.AppendLine($"공격력 +{atk    * 100f:F0}%");
         if (atkDeb > 0f) sb.AppendLine($"공격력 -{atkDeb * 100f:F0}%");

@@ -54,6 +54,10 @@ Shader "Custom/IconTransition"
 
             fixed4 frag (v2f i) : SV_Target
             {
+                // 트랜지션이 완전히 끝났거나 시작 전일 때는 아예 투명 처리 (Scene 뷰 잔상 방지)
+                if (_Progress <= 0.0 || _Progress >= 1.0) 
+                    return fixed4(0, 0, 0, 0);
+
                 float2 gridUV = i.uv * _GridSize.xy;
                 float2 localUV = frac(gridUV);
                 
@@ -67,6 +71,10 @@ Shader "Custom/IconTransition"
                 localUV -= 0.5;
                 localUV.x *= cellAspect;
                 localUV += 0.5;
+                
+                // Scene 뷰 등 극단적인 비율에서 최대 스케일이 모자라 검은 테두리가 남는 현상 보정
+                float aspectScale = max(1.0, max(cellAspect, 1.0 / cellAspect));
+                float finalMaxScale = _IconMaxScale * aspectScale;
                 // -------------------------------------------
                 
                 float mask = 0;
@@ -79,7 +87,7 @@ Shader "Custom/IconTransition"
                     threshold = saturate(p * 1.8 - i.uv.x * 0.8);
                     
                     // 아이콘 스케일 계산 (Max Scale까지 확장)
-                    float currentScale = threshold * _IconMaxScale;
+                    float currentScale = threshold * finalMaxScale;
                     
                     // 중앙 기준 UV 스케일링 (값이 커질수록 이미지가 커짐 = 샘플링 범위는 좁아짐)
                     float2 scaledUV = (localUV - 0.5) / max(currentScale, 0.0001) + 0.5;
@@ -96,7 +104,7 @@ Shader "Custom/IconTransition"
                     float p = (_Progress - 0.5) * 2.0;
                     threshold = saturate(p * 1.8 - i.uv.x * 0.8);
                     
-                    float currentScale = threshold * _IconMaxScale;
+                    float currentScale = threshold * finalMaxScale;
                     float2 scaledUV = (localUV - 0.5) / max(currentScale, 0.0001) + 0.5;
                     
                     if (all(scaledUV >= 0 && scaledUV <= 1))

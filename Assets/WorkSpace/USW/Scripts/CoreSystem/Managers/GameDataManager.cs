@@ -287,10 +287,10 @@ public class GameDataManager
 
     private void ParseTotemData(string csv)
     {
-        var lines = csv.Split('\n');
-        if (lines.Length < 2) return;
+        var rows = SplitCsvRows(csv);
+        if (rows.Count < 2) return;
 
-        var headers = ParseCsvRow(lines[0]);
+        var headers = rows[0];
 
         // ── 컬럼 인덱스 감지 ──
         int iId = FindCol(headers, "totem_id");
@@ -323,9 +323,9 @@ public class GameDataManager
         if (usePositionalRotatable)
             Debug.LogWarning("[GameDataManager] 토템 시트: is_rotatable 헤더 없음. 컬럼 6번 위치로 fallback.");
 
-        for (int i = 1; i < lines.Length; i++)
+        for (int i = 1; i < rows.Count; i++)
         {
-            var cols = ParseCsvRow(lines[i]);
+            var cols = rows[i];
             if (cols.Length == 0 || iId >= cols.Length) continue;
             if (!int.TryParse(cols[iId], out int id)) continue;
 
@@ -346,16 +346,16 @@ public class GameDataManager
             }
 
             // 수치 컬럼: 정수 퍼센트(10 = 10%) → ÷100 → 소수 비율(0.1)
-            TrySetPct(cols, iAtkUp, ref row.AttackBuff);
-            TrySetPct(cols, iAtkDown, ref row.AttackDebuff);
-            TrySetPct(cols, iSpdUp, ref row.SpeedBuff);
-            TrySetPct(cols, iSpdDown, ref row.SpeedDebuff);
-            TrySetPct(cols, iCritCh, ref row.CritChanceBuff);
-            TrySetPct(cols, iCritDmg, ref row.CritDamageBuff);
-            TrySetPct(cols, iCooldown, ref row.CooldownDecrease);
+            TrySetPct(cols, iAtkUp, ref row.AtkIncreaseRate);
+            TrySetPct(cols, iAtkDown, ref row.AtkDecreaseRate);
+            TrySetPct(cols, iSpdUp, ref row.AttackSpeedIncreaseRate);
+            TrySetPct(cols, iSpdDown, ref row.AttackSpeedDecreaseRate);
+            TrySetPct(cols, iCritCh, ref row.CriticalChanceRate);
+            TrySetPct(cols, iCritDmg, ref row.CriticalDamageRate);
+            TrySetPct(cols, iCooldown, ref row.CooldownDecreaseRate);
             TrySetPct(cols, iProj, ref row.ProjectileSizeRate);
-            TrySetPct(cols, iFoodProd, ref row.FoodProductionBuff);
-            TrySetFloat(cols, iFoodAmt, ref row.FoodAmountBuff);
+            TrySetPct(cols, iFoodProd, ref row.FoodProductionRate);
+            TrySetFloat(cols, iFoodAmt, ref row.FoodAmount);
             TrySetPct(cols, iExpGain, ref row.ExpGainRate);
 
             _totemRows[id] = row;
@@ -403,6 +403,60 @@ public class GameDataManager
                 result.Add(new Vector2Int(x, y));
         }
         return result;
+    }
+
+    /// <summary>
+    /// 쌍따옴표 내의 줄바꿈을 지원하는 전체 CSV 파서.
+    /// </summary>
+    public static List<string[]> SplitCsvRows(string csv)
+    {
+        var rows = new List<string[]>();
+        var fields = new List<string>();
+        var current = new StringBuilder();
+        bool inQuotes = false;
+
+        for (int i = 0; i < csv.Length; i++)
+        {
+            char c = csv[i];
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < csv.Length && csv[i + 1] == '"')
+                {
+                    current.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+            }
+            else if (c == ',' && !inQuotes)
+            {
+                fields.Add(current.ToString().Trim());
+                current.Clear();
+            }
+            else if ((c == '\n' || c == '\r') && !inQuotes)
+            {
+                if (c == '\r' && i + 1 < csv.Length && csv[i + 1] == '\n') i++;
+                
+                fields.Add(current.ToString().Trim());
+                rows.Add(fields.ToArray());
+                fields.Clear();
+                current.Clear();
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+        
+        if (fields.Count > 0 || current.Length > 0)
+        {
+            fields.Add(current.ToString().Trim());
+            rows.Add(fields.ToArray());
+        }
+
+        return rows;
     }
 
     /// <summary>
@@ -525,11 +579,11 @@ public class GameDataManager
 
     private void ParseCharacterData(string csv)
     {
-        var lines = csv.Split('\n');
+        var rows = SplitCsvRows(csv);
 
-        for (int i = 5; i < lines.Length; i++)
+        for (int i = 5; i < rows.Count; i++)
         {
-            var cols = ParseCsvRow(lines[i]);
+            var cols = rows[i];
             if (cols.Length < 12 || string.IsNullOrWhiteSpace(cols[0])) continue;
 
             if (!int.TryParse(cols[0], out int id)) continue;
@@ -600,16 +654,16 @@ public class GameDataManager
         public List<Vector2Int> AttackDisabledRange = new();
 
         // 버프/디버프 수치 (0.1 = 10%)
-        public float AttackBuff;
-        public float AttackDebuff;
-        public float SpeedBuff;
-        public float SpeedDebuff;
-        public float CritChanceBuff;
-        public float CritDamageBuff;
-        public float CooldownDecrease;
+        public float AtkIncreaseRate;
+        public float AtkDecreaseRate;
+        public float AttackSpeedIncreaseRate;
+        public float AttackSpeedDecreaseRate;
+        public float CriticalChanceRate;
+        public float CriticalDamageRate;
+        public float CooldownDecreaseRate;
         public float ProjectileSizeRate;
-        public float FoodProductionBuff;
-        public float FoodAmountBuff;
+        public float FoodProductionRate;
+        public float FoodAmount;
         public float ExpGainRate;
     }
 }
