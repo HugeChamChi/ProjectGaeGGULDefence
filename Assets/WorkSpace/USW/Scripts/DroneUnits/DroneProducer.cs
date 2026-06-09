@@ -44,9 +44,19 @@ public class DroneProducer : UnitBase
         onSkillFull?.Invoke();
         SpawnOneDrone();
 
-        if (Data == null || _dronePoolManager == null) return;
+        if (Data == null || _dronePoolManager == null) 
+        {
+            Debug.Log($"[DroneProducer] OnSkillFull: Data={Data != null}, Pool={_dronePoolManager != null}");
+            return;
+        }
+
+        Debug.Log($"[DroneProducer] 스킬 발동! (Tier: {unitData?.unitTier}) | 자폭 드론 소환 개수: {Data.selfDestructCount}");
+
         for (int i = 0; i < Data.selfDestructCount; i++)
-            _dronePoolManager.GetSelfDestruct(Data.selfDestructDamage, transform.position);
+        {
+            var bomb = _dronePoolManager.GetSelfDestruct(Data.selfDestructDamage, transform.position);
+            if (bomb == null) Debug.LogError("[DroneProducer] 자폭 드론을 풀에서 가져오지 못했습니다! 풀 설정을 확인하세요.");
+        }
     }
 
     private void SpawnOneDrone()
