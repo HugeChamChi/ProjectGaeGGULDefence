@@ -25,8 +25,11 @@ public enum LevelUpSpecialEffect
 
     // ── 영구 패시브 (UnitSpawner가 참조) ────────────────────
     SummonDiscount,             // 3019: 소환 비용 specialValue% 할인
+    SummonFixedDiscount,        // 소환 비용 specialValue만큼 고정 수치 할인
     SellBonusFood,              // 3024: 판매 시 식량 specialValue개 추가
+    SummonDealsDamage,          // 소환 시 소환된 유닛 공격력의 specialValue% 피해
     SellDealsDamage,            // 3044: 판매 시 기물 공격력 specialValue% 피해
+    SellGivesRandomUnit,        // 판매 시 specialValue% 확률로 노말 무작위 유닛 획득
     ChieftainGainOnSell,        // 3058: 판매 시 족장 공격력+primaryValue%, 인구>2당 -secondaryValue%
 
     // ── 영구 패시브 (TotemSpawner가 참조) ───────────────────

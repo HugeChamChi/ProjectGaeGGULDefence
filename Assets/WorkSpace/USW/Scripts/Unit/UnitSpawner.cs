@@ -74,9 +74,11 @@ public class UnitSpawner : MonoBehaviour
             return;
         }
 
-        // 소환 할인 (할인 티켓 레벨업 효과)
+        // 소환 할인 (할인 티켓 레벨업 효과 등)
         float discountRate  = _levelUpManager?.SummonDiscountRate ?? 0f;
-        float effectiveCost = CurrentCost * Mathf.Max(0f, 1f - discountRate);
+        float fixedDiscount = _levelUpManager?.SummonFixedDiscountAmount ?? 0f;
+        float effectiveCost = (CurrentCost - fixedDiscount) * Mathf.Max(0f, 1f - discountRate);
+        effectiveCost = Mathf.Max(0f, effectiveCost);
 
         if (!_currencyManager.Spend(effectiveCost))
         {
@@ -196,6 +198,13 @@ public class UnitSpawner : MonoBehaviour
         {
             unit.gameObject.SetActive(true);
             unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
+
+            var lu = _levelUpManager;
+            if (lu != null && lu.HasSummonDealsDamage && unit.unitData != null)
+            {
+                int dmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SummonDamagePct);
+                _bossManager?.CurrentBoss?.TakeDamage(dmg);
+            }
         }
     }
 
@@ -256,8 +265,18 @@ public class UnitSpawner : MonoBehaviour
         var lu = _levelUpManager;
         if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
         {
-            int dmg = Mathf.RoundToInt(unit.GetAttackDamage() * lu.SellDamagePct);
+            int dmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SellDamagePct);
             _bossManager?.CurrentBoss?.TakeDamage(dmg);
+        }
+
+        // 판매 시 확률로 노말 기물 획득 (비상 탈출 레벨업 효과)
+        if (lu != null && lu.HasSellGivesRandomUnit)
+        {
+            if (Random.value < lu.SellGivesUnitChance)
+            {
+                // 다음 프레임이나 약간 지연 후 스폰하여 그리드 충돌 회피
+                SpawnNormalUnitAfterSellAsync().Forget();
+            }
         }
 
         // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
@@ -280,5 +299,19 @@ public class UnitSpawner : MonoBehaviour
             if (cell.OccupyingUnit == unit) return cell;
         }
         return null;
+    }
+
+    private async Cysharp.Threading.Tasks.UniTaskVoid SpawnNormalUnitAfterSellAsync()
+    {
+        await Cysharp.Threading.Tasks.UniTask.Yield();
+        var empty = _gridManager.GetEmptyCells();
+        if (empty.Count == 0) return;
+
+        var cell = empty[Random.Range(0, empty.Count)];
+        UnitBase newUnit = _unitFactory.CreateRandomNormalUnit();
+        if (newUnit != null)
+        {
+            PlaceUnitWithEffect(newUnit, cell);
+        }
     }
 }

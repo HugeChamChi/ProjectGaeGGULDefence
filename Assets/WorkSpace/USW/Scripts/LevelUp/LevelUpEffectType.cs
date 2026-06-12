@@ -15,4 +15,5 @@ public enum LevelUpEffectType
     FrontRowSpeedPercent,   // 전방 2줄 공격속도 N%
     BackRowSpeedPercent,    // 후방 2줄 공격속도 N%
     ChieftainAttackPercent, // 족장 공격력 N%
+    ChieftainFoodProductionPercent, // 족장 식량 생산량 N% 증가
 }

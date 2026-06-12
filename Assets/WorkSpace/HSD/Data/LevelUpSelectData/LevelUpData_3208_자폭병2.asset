@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: "LevelUpData_3208_\uC790\uD3ED\uBCD12"
+  m_EditorClassIdentifier: 
+  chooseId: 3208
+  chooseName: "\uC790\uD3ED\uBCD12"
+  tier: 2
+  spawnRate: 0.15
+  description: "\uC720\uB2DB \uD310\uB9E4 \uC2DC \uD310\uB9E4 \uB41C \uC720\uB2DB
+    \uACF5\uACA9\uB825\uC758 1500%\uC758 \uD53C\uD574\uB97C \uC90C"
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 22
+  specialValue: 1500
+  icon: {fileID: 0}
+  animationFrames: []
+  frameRate: 12

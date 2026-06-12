@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chooseId: 3035
   chooseName: "\uD1B5\uCC30\uB825"
-  grade: 1
+  tier: 1
   spawnRate: 0.015
   description: "\uCE58\uBA85\uD0C0 \uD655\uB960 20% \uC99D\uAC00"
   applicableTribes: 
@@ -24,6 +24,6 @@ MonoBehaviour:
   secondaryValue: 0
   specialEffect: 0
   specialValue: 0
-  icon: {fileID: 21300000, guid: 8373bdb9b9dc39d4d98700f27a05c575, type: 3}
+  icon: {fileID: 0}
   animationFrames: []
   frameRate: 12

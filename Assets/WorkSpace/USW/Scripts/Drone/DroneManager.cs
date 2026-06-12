@@ -346,7 +346,11 @@ public class DroneManager : MonoBehaviour
             int count = _drones.Count;
             if (count > 0 && _currencyManager != null)
             {
-                float food = count * _baseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
+                float chieftainFood = 0f;
+                var lu = Object.FindObjectOfType<LevelUpManager>();
+                if (lu != null) chieftainFood = lu.ChieftainFoodProductionBonus;
+
+                float food = count * _baseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f) + chieftainFood);
                 _currencyManager.AddCurrency(food);
             }
         }

@@ -381,7 +381,8 @@ public abstract class UnitBase : MonoBehaviour
 
         // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
         float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
-        float amountPerTick = baseAmount * (_totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus);
+        float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
+        float amountPerTick = baseAmount * (_totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus + chieftainFoodBonus);
 
         if (amountPerTick > 0f)
         {
@@ -484,14 +485,15 @@ public abstract class UnitBase : MonoBehaviour
 
         float cellCritChance = currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
         float critChance = (lu?.CritChance ?? 0f) + _totemBuffManager.CritChanceBonus + cellCritChance;
-        if (critChance > 0f && UnityEngine.Random.value < critChance)
+        if (UnityEngine.Random.value < critChance)
         {
+            float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = currentCell?.Model.TotemCellCritDamageBonus ?? 0f;
-            float critMult = (lu?.CritDamageMultiplier ?? 1.5f) + _totemBuffManager.CritDamageBonus + cellCritDamage;
-            damage *= critMult;
+            float totemCritDamage = _totemBuffManager?.CritDamageBonus ?? 0f;
+            damage *= (critMultiplier + totemCritDamage + cellCritDamage);
         }
 
-        return Mathf.RoundToInt(damage);
+        return Mathf.Max(1, DamageCalculator.ApplyRounding(damage));
     }
 
     // ── 보너스 공격 (레벨업 특수 효과) ───────────────────────

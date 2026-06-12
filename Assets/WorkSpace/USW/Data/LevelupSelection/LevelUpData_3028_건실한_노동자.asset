@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chooseId: 3028
   chooseName: "\uAC74\uC2E4\uD55C \uB178\uB3D9\uC790"
-  grade: 1
+  tier: 1
   spawnRate: 0.015
   description: "[Rare~Epic] \uBB34\uC9C1 \uAE30\uBB3C \uD68D\uB4DD"
   applicableTribes: 
@@ -24,6 +24,6 @@ MonoBehaviour:
   secondaryValue: 0
   specialEffect: 8
   specialValue: 0
-  icon: {fileID: 21300000, guid: 2ec69a3cfba60fa4db9043b4aedf5f7d, type: 3}
+  icon: {fileID: 0}
   animationFrames: []
   frameRate: 12

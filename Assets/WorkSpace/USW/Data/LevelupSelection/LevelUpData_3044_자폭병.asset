@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chooseId: 3044
   chooseName: "\uC790\uD3ED\uBCD1"
-  grade: 1
+  tier: 1
   spawnRate: 0.015
   description: "\uAE30\uBB3C \uD310\uB9E4 \uC2DC \uAE30\uBB3C \uACF5\uACA9\uB825
     100%\uC758 \uD53C\uD574"
@@ -23,8 +23,8 @@ MonoBehaviour:
   primaryValue: 0
   secondaryEffect: 0
   secondaryValue: 0
-  specialEffect: 20
+  specialEffect: 22
   specialValue: 100
-  icon: {fileID: 21300000, guid: 549f9beb5b7c6a44aabc54d15f3756c6, type: 3}
+  icon: {fileID: 0}
   animationFrames: []
   frameRate: 12

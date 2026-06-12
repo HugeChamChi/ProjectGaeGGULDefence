@@ -28,8 +28,13 @@ public class LevelUpManager : MonoBehaviour
  
     public void Init()
     {
-
-        
+        if (_gameDataManager != null)
+        {
+            if (_gameDataManager.IsLoaded)
+                SyncStatsWithSheet();
+            else
+                _gameDataManager.OnLoaded += SyncStatsWithSheet;
+        }
     }
 
     [Inject] private GridManager _gridManager;
@@ -39,6 +44,7 @@ public class LevelUpManager : MonoBehaviour
     
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
+    [Inject] private GameDataManager _gameDataManager;
 
     [SerializeField] private LevelUpData[] levelUpPool;
 
@@ -47,6 +53,29 @@ public class LevelUpManager : MonoBehaviour
     public LevelUpData[] LevelUpPool => levelUpPool;
 
     private readonly HashSet<int> _chosenIds = new();
+
+    private void SyncStatsWithSheet()
+    {
+        if (_gameDataManager == null || !_gameDataManager.IsLoaded) return;
+
+        for (int i = 0; i < levelUpPool.Length; i++)
+        {
+            var data = levelUpPool[i];
+            if (data == null) continue;
+
+            // SO 데이터 훼손 방지를 위한 런타임 클론
+            var clone = Instantiate(data);
+            clone.name = data.name + "_Runtime";
+            
+            var row = _gameDataManager.GetLevelUpRow(clone.chooseId);
+            if (row != null)
+            {
+                clone.ApplySheetData(row);
+            }
+            
+            levelUpPool[i] = clone;
+        }
+    }
 
     // ── 기본 스탯 ──────────────────────────────────────────────
     public float CritChance           { get; private set; } = 0f;
@@ -65,6 +94,7 @@ public class LevelUpManager : MonoBehaviour
 
     // ── 족장 공격 보너스 ───────────────────────────────────────
     public float ChieftainAttackBonus { get; private set; } = 0f;
+    public float ChieftainFoodProductionBonus { get; private set; } = 0f;
 
     // ── 부족별 특수 버프 ───────────────────────────────────────
     public float NinjaAtkBonus       { get; private set; } = 0f;
@@ -117,9 +147,14 @@ public class LevelUpManager : MonoBehaviour
 
     // ── 소환 / 판매 플래그 (UnitSpawner 참조) ─────────────────
     public float SummonDiscountRate      { get; private set; } = 0f;
+    public float SummonFixedDiscountAmount { get; private set; } = 0f;
     public float SellBonusFoodAmount     { get; private set; } = 0f;
+    public bool  HasSummonDealsDamage    { get; private set; }
+    public float SummonDamagePct         { get; private set; } = 0f;
     public bool  HasSellDealsDamage      { get; private set; }
     public float SellDamagePct           { get; private set; } = 0f;
+    public bool  HasSellGivesRandomUnit  { get; private set; }
+    public float SellGivesUnitChance     { get; private set; } = 0f;
     public bool  HasChieftainGainOnSell  { get; private set; }
     public float ChieftainSellAtkGain    { get; private set; } = 0f;
     public float ChieftainSellPopPenalty { get; private set; } = 0f;
@@ -308,6 +343,9 @@ public class LevelUpManager : MonoBehaviour
             case LevelUpEffectType.ChieftainAttackPercent:
                 ChieftainAttackBonus -= v;
                 break;
+            case LevelUpEffectType.ChieftainFoodProductionPercent:
+                ChieftainFoodProductionBonus -= v;
+                break;
         }
     }
 
@@ -355,12 +393,23 @@ public class LevelUpManager : MonoBehaviour
             case LevelUpSpecialEffect.SummonDiscount:
                 SummonDiscountRate -= data.specialValue / 100f;
                 break;
+            case LevelUpSpecialEffect.SummonFixedDiscount:
+                SummonFixedDiscountAmount -= data.specialValue;
+                break;
             case LevelUpSpecialEffect.SellBonusFood:
                 SellBonusFoodAmount -= data.specialValue;
+                break;
+            case LevelUpSpecialEffect.SummonDealsDamage:
+                HasSummonDealsDamage = false;
+                SummonDamagePct = 0f;
                 break;
             case LevelUpSpecialEffect.SellDealsDamage:
                 HasSellDealsDamage = false;
                 SellDamagePct = 0f;
+                break;
+            case LevelUpSpecialEffect.SellGivesRandomUnit:
+                HasSellGivesRandomUnit = false;
+                SellGivesUnitChance = 0f;
                 break;
             case LevelUpSpecialEffect.ChieftainGainOnSell:
                 HasChieftainGainOnSell = false;
@@ -461,6 +510,10 @@ public class LevelUpManager : MonoBehaviour
             case LevelUpEffectType.ChieftainAttackPercent:
                 ChieftainAttackBonus += v;
                 break;
+
+            case LevelUpEffectType.ChieftainFoodProductionPercent:
+                ChieftainFoodProductionBonus += v;
+                break;
         }
     }
 
@@ -552,13 +605,27 @@ public class LevelUpManager : MonoBehaviour
                 SummonDiscountRate += data.specialValue / 100f;
                 break;
 
+            case LevelUpSpecialEffect.SummonFixedDiscount:
+                SummonFixedDiscountAmount += data.specialValue;
+                break;
+
             case LevelUpSpecialEffect.SellBonusFood:
                 SellBonusFoodAmount += data.specialValue;
+                break;
+
+            case LevelUpSpecialEffect.SummonDealsDamage:
+                HasSummonDealsDamage = true;
+                SummonDamagePct      = Mathf.Max(SummonDamagePct, data.specialValue / 100f);
                 break;
 
             case LevelUpSpecialEffect.SellDealsDamage:
                 HasSellDealsDamage = true;
                 SellDamagePct      = Mathf.Max(SellDamagePct, data.specialValue / 100f);
+                break;
+
+            case LevelUpSpecialEffect.SellGivesRandomUnit:
+                HasSellGivesRandomUnit = true;
+                SellGivesUnitChance    += data.specialValue / 100f;
                 break;
 
             case LevelUpSpecialEffect.ChieftainGainOnSell:
