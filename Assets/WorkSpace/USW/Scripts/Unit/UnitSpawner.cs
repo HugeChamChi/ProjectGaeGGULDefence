@@ -35,7 +35,7 @@ public class UnitSpawner : MonoBehaviour
     /// <summary>유닛 판매(삭제) 시 전역 알림 — TotemSellStack에서 구독</summary>
     public static event System.Action OnAnyUnitSold;
 
-    private void Start()
+    public void Init()
     {
         _upgradeManager = _resolver.Resolve<UpgradeManager>();
         _gameDataManager = _resolver.Resolve<GameDataManager>();

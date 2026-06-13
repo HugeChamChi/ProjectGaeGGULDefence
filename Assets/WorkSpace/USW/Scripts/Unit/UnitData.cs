@@ -4,7 +4,7 @@ using VContainer;
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
 public class UnitData : ScriptableObject
 {
-[Header("Info")]
+    [Header("Info")]
     public int characterId;
     public int unitType;
     public string unitName;
@@ -30,6 +30,9 @@ public class UnitData : ScriptableObject
     [Header("Population")]
     public int populationCost = 1;
 
+    [Header("Drone")]
+    public int maxDroneCount;
+
     /// <summary>
     /// 구글 시트에서 가져온 캐릭터 성장 데이터를 SO 인스턴스에 적용합니다.
     /// (주의: 런타임에 에셋 자체를 수정하지 않도록 인스턴스화된 객체에 사용하는 것이 좋습니다)
@@ -40,10 +43,8 @@ public class UnitData : ScriptableObject
 
         unitName = row.Name;
         atk = row.Atk;
-        attackSpeed = row.AttackSpeed;
-        skillAtk = row.SkillAtk;
-        skillCooldown = row.SkillCooldown;
-        skillName = row.SkillName;
-        description = row.SkillDescription;
+        maxDroneCount = row.DroneCount;
+        if (maxDroneCount > 0)
+            Debug.Log($"[UnitData] ApplySheetData ({unitName}): maxDroneCount가 {maxDroneCount}로 적용되었습니다.");
     }
 }

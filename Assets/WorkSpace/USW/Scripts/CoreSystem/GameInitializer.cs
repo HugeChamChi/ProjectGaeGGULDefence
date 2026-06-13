@@ -46,6 +46,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
         if (_totemSpawner != null) _totemSpawner.Init();
         if (_bossManager != null) _bossManager.Init();
         if (_currencyFloaterManager != null) _currencyFloaterManager.Init();
+        if (_unitSpawner != null) _unitSpawner.Init();
         if (_chieftainSpawner != null) _chieftainSpawner.Init();
         Debug.Log("=========================================\n[GameInitializer] 모든 VContainer 매니저(Init) 초기화 완벽 성공! 🎉\n=========================================");
     }

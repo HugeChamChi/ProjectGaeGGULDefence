@@ -48,17 +48,13 @@ public class GameDataManager
 
     private const string BaseUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=";
 
-    private const string GidSummonCost = "1607115777";
     private const string GidSpawnRate = "1984586417";
-    private const string GidSellPrice = "284585537";
-    private const string GidCurrency = "1326045266";
     private const string GidBoss = "1622284954";
     private const string GidExpTable = "499762901";
     private const string GidTotem = "660087267";
     private const string GidCharacter = "1454519483";
     private const string GidConfig = "2094930366";
     private const string GidLevelUp = "2005855251";
-    private const string GidDroneUnit = "0"; // TODO: 드론 유닛 GID 입력
 
     public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -71,12 +67,6 @@ public class GameDataManager
     private readonly Dictionary<int, float> _spawnRates = new();
     private float _totalSpawnWeight;
 
-    // ── 판매 가격 ─────────────────────────────────────────
-    private readonly Dictionary<(int, int), int> _sellPrices = new();
-
-    // ── 재화 생산량 ───────────────────────────────────────
-    private readonly Dictionary<int, float> _currencyPerSecond = new();
-
     // ── 보스 데이터 ───────────────────────────────────────
     private readonly Dictionary<int, BossSheetRow> _bossByRoundId = new();
     private int _currentBossRoundId = -1;
@@ -88,14 +78,10 @@ public class GameDataManager
     private readonly Dictionary<int, TotemSheetRow> _totemRows = new();
 
     // ── 캐릭터 데이터 (성장) ───────────────────────────────
-    private readonly Dictionary<(int, int), CharacterSheetRow> _characterData = new();
+    private readonly Dictionary<int, CharacterSheetRow> _characterData = new();
 
     // ── 레벨업 선택지 데이터 ───────────────────────────────
     private readonly Dictionary<int, LevelUpSheetRow> _levelUpRows = new();
-
-    // ── 드론 유닛 데이터 ───────────────────────────────────
-    private readonly Dictionary<int, DroneSheetRow> _droneData = new();
-    
     public class LevelUpSheetRow
     {
         public int ChooseId;
@@ -121,39 +107,31 @@ public class GameDataManager
         {
             try
             {
-                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8, csv9, csv10) = await UniTask.WhenAll(
-                    FetchCsvAsync(GidSummonCost, token),
+                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6) = await UniTask.WhenAll(
                     FetchCsvAsync(GidSpawnRate, token),
-                    FetchCsvAsync(GidSellPrice, token),
-                    FetchCsvAsync(GidCurrency, token),
                     FetchCsvAsync(GidBoss, token),
                     FetchCsvAsync(GidExpTable, token),
                     FetchCsvAsync(GidTotem, token),
                     FetchCsvAsync(GidCharacter, token),
                     FetchCsvAsync(GidConfig, token),
-                    FetchCsvAsync(GidLevelUp, token),
-                    FetchCsvAsync(GidDroneUnit, token)
+                    FetchCsvAsync(GidLevelUp, token)
                 );
 
                 if (csv0 == null || csv1 == null || csv2 == null || csv3 == null || 
-                    csv4 == null || csv5 == null || csv6 == null || csv7 == null || csv8 == null || csv9 == null || csv10 == null)
+                    csv4 == null || csv5 == null || csv6 == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
                     await UniTask.Delay(3000, cancellationToken: token);
                     continue;
                 }
 
-                ParseSummonCost(csv0);
-                ParseSpawnRates(csv1);
-                ParseSellPrices(csv2);
-                ParseCurrencyPerSecond(csv3);
-                ParseBossData(csv4);
-                ParseExpTable(csv5);
-                ParseTotemData(csv6);
-                ParseCharacterData(csv7);
-                ParseWaveTime(csv8);
-                ParseLevelUpData(csv9);
-                ParseDroneData(csv10);
+                ParseSpawnRates(csv0);
+                ParseBossData(csv1);
+                ParseExpTable(csv2);
+                ParseTotemData(csv3);
+                ParseCharacterData(csv4);
+                ParseWaveTime(csv5);
+                ParseLevelUpData(csv6);
 
                 IsLoaded = true;
                 OnLoaded?.Invoke();
@@ -190,25 +168,6 @@ public class GameDataManager
 
     // ── 기존 파싱 ─────────────────────────────────────────
 
-    private void ParseSummonCost(string csv)
-    {
-        var lines = csv.Split('\n');
-
-        for (int i = 5; i < lines.Length; i++)
-        {
-            var cols = lines[i].Trim().Split(',');
-
-            if (cols.Length < 2 || string.IsNullOrWhiteSpace(cols[0])) continue;
-
-            if (int.TryParse(cols[0].Trim(), out var ic) && int.TryParse(cols[1].Trim(), out var ci))
-            {
-                SummonInitialCost = ic;
-                SummonCostIncrease = ci;
-                break;
-            }
-        }
-    }
-
     private void ParseSpawnRates(string csv)
     {
         var lines = csv.Split('\n');
@@ -224,33 +183,7 @@ public class GameDataManager
         }
     }
 
-    private void ParseSellPrices(string csv)
-    {
-        var lines = csv.Split('\n');
-        for (int i = 1; i < lines.Length; i++)
-        {
-            var cols = lines[i].Trim().Split(',');
-            if (cols.Length < 5) continue;
-            if (!int.TryParse(cols[0].Trim(), out var charId)) continue;
-            if (!int.TryParse(cols[3].Trim(), out var level)) continue;
-            if (!int.TryParse(cols[4].Trim(), out var price)) continue;
 
-            _sellPrices[(charId, level)] = price;
-        }
-    }
-
-    private void ParseCurrencyPerSecond(string csv)
-    {
-        var lines = csv.Split('\n');
-        for (int i = 1; i < lines.Length; i++)
-        {
-            var cols = lines[i].Trim().Split(',');
-            if (cols.Length < 4 || !int.TryParse(cols[0].Trim(), out var id)) continue;
-            if (!float.TryParse(cols[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var cps)) continue;
-
-            _currencyPerSecond[id] = cps;
-        }
-    }
     private void ParseWaveTime(string csv)
     {
         var lines = csv.Split('\n');
@@ -566,14 +499,16 @@ public class GameDataManager
         return -1;
     }
 
-    public int GetSellPrice(int characterId, int upgradeLevel)
+    public int GetSellPrice(int characterId, int level)
     {
-        int clampedLevel = Mathf.Clamp(upgradeLevel, 1, 10);
-        return _sellPrices.TryGetValue((characterId, clampedLevel), out var price) ? price : 0;
+        return 0; // 시트 삭제됨
     }
 
     public float GetCurrencyPerSecond(int characterId)
-        => _currencyPerSecond.TryGetValue(characterId, out var cps) ? cps : 0f;
+    {
+        var row = GetCharacterRow(characterId);
+        return row != null ? row.FoodProduction : 0f;
+    }
 
     public int GetBossMaxHp(int roundId, int fallback = 1000)
         => _bossByRoundId.TryGetValue(roundId, out var row) ? row.MaxHealth : fallback;
@@ -604,54 +539,18 @@ public class GameDataManager
     public TotemSheetRow GetTotemRow(int totemId)
         => _totemRows.TryGetValue(totemId, out var row) ? row : null;
 
-    /// <summary>캐릭터ID와 레벨 기준 시트 데이터 반환</summary>
-    public CharacterSheetRow GetCharacterRow(int charId, int level)
-        => _characterData.TryGetValue((charId, level), out var row) ? row : null;
+    /// <summary>캐릭터ID 기준 시트 데이터 반환</summary>
+    public CharacterSheetRow GetCharacterRow(int charId)
+        => _characterData.TryGetValue(charId, out var row) ? row : null;
 
     // ── 캐릭터 데이터 파싱 ──────────────────────────────────
 
     private void ParseCharacterData(string csv)
     {
-        var rows = SplitCsvRows(csv);
-
-        for (int i = 5; i < rows.Count; i++)
-        {
-            var cols = rows[i];
-            if (cols.Length < 12 || string.IsNullOrWhiteSpace(cols[0])) continue;
-
-            if (!int.TryParse(cols[0], out int id)) continue;
-            if (!int.TryParse(cols[5], out int level)) continue;
-
-            var row = new CharacterSheetRow
-            {
-                CharacterId = id,
-                Name = cols[1],
-                Grade = cols[4],
-                Level = level,
-                Atk = ParseFloat(cols[6]),
-                AttackSpeed = ParseFloat(cols[7]),
-                SkillAtk = ParseFloat(cols[8]),
-                SkillCooldown = ParseFloat(cols[9]),
-                SkillName = cols[10],
-                SkillDescription = cols[11],
-            };
-
-            _characterData[(id, level)] = row;
-        }
-        Debug.Log($"[GameDataManager] 캐릭터 데이터 {_characterData.Count}행 로드 완료");
-    }
-
-    private static float ParseFloat(string v)
-        => float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f) ? f : 0f;
-
-    // ── 드론 데이터 파싱 ──────────────────────────────────
-    private void ParseDroneData(string csv)
-    {
         if (string.IsNullOrWhiteSpace(csv)) return;
 
         var rows = SplitCsvRows(csv);
         
-        // 데이터는 헤더 다음인 2번째 행부터라고 가정 (필요 시 수정)
         for (int i = 2; i < rows.Count; i++)
         {
             var cols = rows[i];
@@ -659,41 +558,49 @@ public class GameDataManager
 
             if (!int.TryParse(cols[0], out int id)) continue;
 
-            var row = new DroneSheetRow
+            var row = new CharacterSheetRow
             {
                 CharacterId = id,
                 Name = cols[1],
                 LocalKey = cols[2],
                 CharacterType = cols[3],
                 Grade = cols[4],
+                Level = GradeToLevel(cols[4]),
                 Atk = ParseFloat(cols[5]),
                 AttackSpeed = ParseFloat(cols[6]),
                 CriticalDamage = ParseFloat(cols[7]),
                 CriticalChance = ParseFloat(cols[8]),
                 FoodProduction = ParseFloat(cols[10]),
-                DroneOnly = int.TryParse(cols[11], out int droneOnly) ? droneOnly : 0
+                DroneCount = int.TryParse(cols[11], out int dc) ? dc : 0
             };
 
             if (float.TryParse(cols[9], NumberStyles.Float, CultureInfo.InvariantCulture, out float skillIdFloat))
             {
-                int skillId = Mathf.RoundToInt(skillIdFloat);
-                if (skillId > 0)
-                {
-                    row.Skill = RM.Load<SkillData>($"Data/Skill/SkillData_{skillId}");
-                    if (row.Skill == null)
-                    {
-                        Debug.LogWarning($"[GameDataManager] 드론 데이터 파싱: Skill_id {skillId}에 해당하는 SkillData를 로드할 수 없습니다. (CharacterId: {id})");
-                    }
-                }
+                row.SkillId = Mathf.RoundToInt(skillIdFloat);
             }
 
-            _droneData[id] = row;
+            if (row.DroneCount > 0)
+                Debug.Log($"[GameDataManager] 캐릭터 파싱: ID={id}, Name={cols[1]}, DroneCount={row.DroneCount}");
+
+            _characterData[id] = row;
         }
-        Debug.Log($"[GameDataManager] 드론 데이터 {_droneData.Count}행 로드 완료");
+        Debug.Log($"[GameDataManager] 캐릭터 데이터 {_characterData.Count}행 로드 완료");
     }
 
-    public DroneSheetRow GetDroneRow(int charId)
-        => _droneData.TryGetValue(charId, out var row) ? row : null;
+    private static int GradeToLevel(string grade)
+    {
+        return grade.Trim().ToLowerInvariant() switch
+        {
+            "normal" or "노말" or "0" or "common" => 1,
+            "rare" or "레어" or "1" => 2,
+            "epic" or "에픽" or "2" => 3,
+            "legend" or "전설" or "3" or "special" => 4,
+            _ => 1
+        };
+    }
+
+    private static float ParseFloat(string v)
+        => float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f) ? f : 0f;
 
     // ── 내부 데이터 클래스 ────────────────────────────────
 
@@ -710,30 +617,17 @@ public class GameDataManager
     {
         public int CharacterId;
         public string Name;
+        public string LocalKey;
+        public string CharacterType;
         public string Grade;
         public int Level;
         public float Atk;
         public float AttackSpeed;
-        public float SkillAtk;
-        public float SkillCooldown;
-        public string SkillName;
-        public string SkillDescription;
-    }
-
-    public class DroneSheetRow
-    {
-        public int CharacterId;
-        public string Name;
-        public string LocalKey;
-        public string CharacterType;
-        public string Grade;
-        public float Atk;
-        public float AttackSpeed;
         public float CriticalDamage;
         public float CriticalChance;
-        public SkillData Skill;
+        public int SkillId;
         public float FoodProduction;
-        public int DroneOnly;
+        public int DroneCount;
     }
 
     /// <summary>

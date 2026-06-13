@@ -202,7 +202,7 @@ public abstract class UnitBase : MonoBehaviour
             : 1;
 
         // 시트 데이터 가져오기
-        var sheetRow = _gameDataManager.GetCharacterRow(unitData.characterId, level);
+        var sheetRow = _gameDataManager.GetCharacterRow(unitData.characterId);
         if (sheetRow != null)
         {
             // UnitData 인스턴스에 시트 스탯 적용
@@ -436,9 +436,7 @@ public abstract class UnitBase : MonoBehaviour
         ? _upgradeManager.GetCurrentAtk(unitData.characterId)
         : unitData.atk;
 
-    private float UpgradedAttackInterval => _upgradeManager != null && _upgradeManager.IsLoaded
-        ? _upgradeManager.GetCurrentAttackSpeed(unitData.characterId)
-        : 1.0f;
+    private float UpgradedAttackInterval => unitData != null ? unitData.attackSpeed : 1.0f;
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
     public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);

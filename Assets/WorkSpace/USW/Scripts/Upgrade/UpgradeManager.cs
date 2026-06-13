@@ -22,15 +22,12 @@ public class UpgradeManager : MonoBehaviour
 
     [Inject] private CurrencyManager _currencyManager;
 
-    private const string CostSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=297223937";
     private const string StatSheetUrl = "https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/export?format=csv&gid=1454519483";
 
     private const int MaxUpgradeLevel = 10;
 
     public bool   IsLoaded { get; private set; }
     public event Action OnLoaded;
-
-    private readonly List<JobUpgradeCostRow>          _costRows        = new();
     private readonly Dictionary<int, CharacterStatRow[]> _statCache    = new();  // characterId → rows[level-1]
     private readonly Dictionary<int, string>          _charIdToJobType = new();
 
@@ -48,12 +45,8 @@ public class UpgradeManager : MonoBehaviour
 
     private async UniTask LoadAllAsync(CancellationToken token)
     {
-        var (costCsv, statCsv) = await UniTask.WhenAll(
-            FetchCsvAsync(CostSheetUrl, token),
-            FetchCsvAsync(StatSheetUrl, token)
-        );
+        var statCsv = await FetchCsvAsync(StatSheetUrl, token);
 
-        if (costCsv != null) ParseCostSheet(costCsv);
         if (statCsv  != null) ParseStatSheet(statCsv);
 
         IsLoaded = true;
@@ -75,30 +68,6 @@ public class UpgradeManager : MonoBehaviour
         finally
         {
             req.Dispose();
-        }
-    }
-
-    // 헤더 2줄(컬럼명 + 타입) 스킵
-    private void ParseCostSheet(string csv)
-    {
-        var lines = csv.Split('\n');
-        for (int i = 2; i < lines.Length; i++)
-        {
-            var cols = lines[i].Trim().Split(',');
-            if (cols.Length < 5 || string.IsNullOrWhiteSpace(cols[0])) continue;
-
-            string target = cols[1].Trim();
-            if (target == "Frog_Magician") target = "Frog_Wizard";
-            else if (target == "All") target = "Frog_Chief";
-
-            _costRows.Add(new JobUpgradeCostRow
-            {
-                UpgradeType   = cols[0].Trim(),
-                UpgradeTarget = target,
-                InitialCost   = int.TryParse(cols[2].Trim(), out var ic) ? ic : 0,
-                CostRate      = float.TryParse(cols[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var cr) ? cr : 1f,
-                CostIncrease  = int.TryParse(cols[4].Trim(), out var ci) ? ci : 0,
-            });
         }
     }
 
@@ -178,23 +147,13 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>다음 강화 비용을 반환합니다. 최대 레벨이거나 데이터 없으면 -1.</summary>
     public int GetUpgradeCost(string upgradeTarget)
     {
-        var costRow = _costRows.Find(r => r.UpgradeTarget == upgradeTarget);
-        if (costRow == null) return -1;
-
         int currentLevel = upgradeTarget == "Frog_Chief"
             ? _currencyLevel
             : (_jobLevel.TryGetValue(upgradeTarget, out var lv) ? lv : 1);
 
         if (currentLevel >= MaxUpgradeLevel) return -1;
 
-        return CalculateCost(costRow, currentLevel);
-    }
-
-    private static int CalculateCost(JobUpgradeCostRow row, int currentLevel)
-    {
-        return row.UpgradeType == "Currency"
-            ? row.InitialCost + row.CostIncrease * (currentLevel - 1)
-            : Mathf.RoundToInt(row.InitialCost * Mathf.Pow(row.CostRate, currentLevel - 1));
+        return 10; // 임시 고정 비용
     }
 
     /// <summary>강화를 시도합니다. 재화 부족 또는 최대 레벨이면 false.</summary>
