@@ -3,11 +3,13 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace HSD.UI.Effect
 {
     public class UI_ChiefSkillEffect : UI_Base
     {
+
         [Header("UI References - Elements")]
         [SerializeField] private Image img_ChiefIcon;
         [SerializeField] private RectTransform rect_Line;
@@ -29,7 +31,7 @@ namespace HSD.UI.Effect
         [Header("Chief Icon Settings")]
         [SerializeField] private float moveDuration = 0.4f;
         [SerializeField] private Ease moveEase = Ease.OutBack;
-        [SerializeField] private float spawnOffsetX = 1500f; // 목표 위치 기준 오른쪽에서 시작할 오프셋 거리
+        [SerializeField] private RectTransform spawnPoint;
 
         [Header("Background Settings")]
         [SerializeField] private float bgDarkAlpha = 0.6f;
@@ -95,11 +97,11 @@ namespace HSD.UI.Effect
 
             // 3. 정확해진 목표 위치 획득 및 초기 위치 설정
             Vector3 finalTargetPos = rect_Target.position;
-            Vector3 startPos = finalTargetPos + new Vector3(spawnOffsetX, 0, 0);
+            
 
             // 데이터 적용 및 초기 위치 강제 이동
             img_ChiefIcon.sprite = chiefSprite;
-            img_ChiefIcon.transform.position = startPos;
+            img_ChiefIcon.transform.position = spawnPoint.position;
             rect_Line.sizeDelta = new Vector2(rect_Line.sizeDelta.x, 0);
             
             rect_Paching.localRotation = Quaternion.identity;

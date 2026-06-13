@@ -58,6 +58,7 @@ public class GameDataManager
     private const string GidCharacter = "1454519483";
     private const string GidConfig = "2094930366";
     private const string GidLevelUp = "2005855251";
+    private const string GidDroneUnit = "0"; // TODO: 드론 유닛 GID 입력
 
     public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -91,6 +92,9 @@ public class GameDataManager
 
     // ── 레벨업 선택지 데이터 ───────────────────────────────
     private readonly Dictionary<int, LevelUpSheetRow> _levelUpRows = new();
+
+    // ── 드론 유닛 데이터 ───────────────────────────────────
+    private readonly Dictionary<int, DroneSheetRow> _droneData = new();
     
     public class LevelUpSheetRow
     {
@@ -117,7 +121,7 @@ public class GameDataManager
         {
             try
             {
-                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8, csv9) = await UniTask.WhenAll(
+                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7, csv8, csv9, csv10) = await UniTask.WhenAll(
                     FetchCsvAsync(GidSummonCost, token),
                     FetchCsvAsync(GidSpawnRate, token),
                     FetchCsvAsync(GidSellPrice, token),
@@ -127,11 +131,12 @@ public class GameDataManager
                     FetchCsvAsync(GidTotem, token),
                     FetchCsvAsync(GidCharacter, token),
                     FetchCsvAsync(GidConfig, token),
-                    FetchCsvAsync(GidLevelUp, token)
+                    FetchCsvAsync(GidLevelUp, token),
+                    FetchCsvAsync(GidDroneUnit, token)
                 );
 
                 if (csv0 == null || csv1 == null || csv2 == null || csv3 == null || 
-                    csv4 == null || csv5 == null || csv6 == null || csv7 == null || csv8 == null || csv9 == null)
+                    csv4 == null || csv5 == null || csv6 == null || csv7 == null || csv8 == null || csv9 == null || csv10 == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
                     await UniTask.Delay(3000, cancellationToken: token);
@@ -148,6 +153,7 @@ public class GameDataManager
                 ParseCharacterData(csv7);
                 ParseWaveTime(csv8);
                 ParseLevelUpData(csv9);
+                ParseDroneData(csv10);
 
                 IsLoaded = true;
                 OnLoaded?.Invoke();
@@ -164,6 +170,8 @@ public class GameDataManager
 
     private async UniTask<string> FetchCsvAsync(string gid, CancellationToken token)
     {
+        if (string.IsNullOrEmpty(gid) || gid == "0") return ""; // GID가 미설정된 경우 무시
+
         var req = UnityWebRequest.Get(BaseUrl + gid);
         try
         {
@@ -636,6 +644,57 @@ public class GameDataManager
     private static float ParseFloat(string v)
         => float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f) ? f : 0f;
 
+    // ── 드론 데이터 파싱 ──────────────────────────────────
+    private void ParseDroneData(string csv)
+    {
+        if (string.IsNullOrWhiteSpace(csv)) return;
+
+        var rows = SplitCsvRows(csv);
+        
+        // 데이터는 헤더 다음인 2번째 행부터라고 가정 (필요 시 수정)
+        for (int i = 2; i < rows.Count; i++)
+        {
+            var cols = rows[i];
+            if (cols.Length < 12 || string.IsNullOrWhiteSpace(cols[0])) continue;
+
+            if (!int.TryParse(cols[0], out int id)) continue;
+
+            var row = new DroneSheetRow
+            {
+                CharacterId = id,
+                Name = cols[1],
+                LocalKey = cols[2],
+                CharacterType = cols[3],
+                Grade = cols[4],
+                Atk = ParseFloat(cols[5]),
+                AttackSpeed = ParseFloat(cols[6]),
+                CriticalDamage = ParseFloat(cols[7]),
+                CriticalChance = ParseFloat(cols[8]),
+                FoodProduction = ParseFloat(cols[10]),
+                DroneOnly = int.TryParse(cols[11], out int droneOnly) ? droneOnly : 0
+            };
+
+            if (float.TryParse(cols[9], NumberStyles.Float, CultureInfo.InvariantCulture, out float skillIdFloat))
+            {
+                int skillId = Mathf.RoundToInt(skillIdFloat);
+                if (skillId > 0)
+                {
+                    row.Skill = RM.Load<SkillData>($"Data/Skill/SkillData_{skillId}");
+                    if (row.Skill == null)
+                    {
+                        Debug.LogWarning($"[GameDataManager] 드론 데이터 파싱: Skill_id {skillId}에 해당하는 SkillData를 로드할 수 없습니다. (CharacterId: {id})");
+                    }
+                }
+            }
+
+            _droneData[id] = row;
+        }
+        Debug.Log($"[GameDataManager] 드론 데이터 {_droneData.Count}행 로드 완료");
+    }
+
+    public DroneSheetRow GetDroneRow(int charId)
+        => _droneData.TryGetValue(charId, out var row) ? row : null;
+
     // ── 내부 데이터 클래스 ────────────────────────────────
 
     private class BossSheetRow
@@ -659,6 +718,22 @@ public class GameDataManager
         public float SkillCooldown;
         public string SkillName;
         public string SkillDescription;
+    }
+
+    public class DroneSheetRow
+    {
+        public int CharacterId;
+        public string Name;
+        public string LocalKey;
+        public string CharacterType;
+        public string Grade;
+        public float Atk;
+        public float AttackSpeed;
+        public float CriticalDamage;
+        public float CriticalChance;
+        public SkillData Skill;
+        public float FoodProduction;
+        public int DroneOnly;
     }
 
     /// <summary>

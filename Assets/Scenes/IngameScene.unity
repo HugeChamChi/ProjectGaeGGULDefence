@@ -12718,6 +12718,41 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1293262640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1293262641}
+  m_Layer: 5
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1293262641
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293262640}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1703457864}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 771, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1298592601
 GameObject:
   m_ObjectHideFlags: 0
@@ -15690,6 +15725,7 @@ RectTransform:
   m_Children:
   - {fileID: 1032987549}
   - {fileID: 1154161700}
+  - {fileID: 1293262641}
   m_Father: {fileID: 1026647503}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -15737,7 +15773,7 @@ MonoBehaviour:
   lineCloseEase: 8
   moveDuration: 0.4
   moveEase: 27
-  spawnOffsetX: 1500
+  spawnPoint: {fileID: 1293262641}
   bgDarkAlpha: 0.6
   pachingStartRatio: 0.3
   pachingRotateAngle: {x: 0, y: 0, z: -180}
@@ -16797,7 +16833,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1879076171}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 88b30021a8eda144abe67cf40341cafb, type: 3}
   m_Name: 
@@ -18997,7 +19033,7 @@ PrefabInstance:
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.size
-      value: 25
+      value: 28
       objectReference: {fileID: 0}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
@@ -19028,117 +19064,117 @@ PrefabInstance:
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[5]
       value: 
-      objectReference: {fileID: 433424273}
+      objectReference: {fileID: 397711248}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[6]
       value: 
-      objectReference: {fileID: 507422207}
+      objectReference: {fileID: 433424273}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[7]
       value: 
-      objectReference: {fileID: 776270060}
+      objectReference: {fileID: 507422207}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[8]
       value: 
-      objectReference: {fileID: 810861385}
+      objectReference: {fileID: 776270060}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[9]
       value: 
-      objectReference: {fileID: 886132644}
+      objectReference: {fileID: 810861385}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[10]
       value: 
-      objectReference: {fileID: 993732466}
+      objectReference: {fileID: 830595519}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[11]
       value: 
-      objectReference: {fileID: 65934414}
+      objectReference: {fileID: 886132644}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[12]
       value: 
-      objectReference: {fileID: 1138111723}
+      objectReference: {fileID: 993732466}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[13]
       value: 
-      objectReference: {fileID: 1481249893}
+      objectReference: {fileID: 65934414}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[14]
       value: 
-      objectReference: {fileID: 1161898285}
+      objectReference: {fileID: 1138111723}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[15]
       value: 
-      objectReference: {fileID: 1162155004}
+      objectReference: {fileID: 1481249893}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[16]
       value: 
-      objectReference: {fileID: 1194915203}
+      objectReference: {fileID: 1161898285}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[17]
       value: 
-      objectReference: {fileID: 1275057161}
+      objectReference: {fileID: 1162155004}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[18]
       value: 
-      objectReference: {fileID: 1279346473}
+      objectReference: {fileID: 1194915203}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[19]
       value: 
-      objectReference: {fileID: 1422612461}
+      objectReference: {fileID: 1275057161}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[20]
       value: 
-      objectReference: {fileID: 1511414536}
+      objectReference: {fileID: 1279346473}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[21]
       value: 
-      objectReference: {fileID: 1594926368}
+      objectReference: {fileID: 1422612461}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[22]
       value: 
-      objectReference: {fileID: 1714553162}
+      objectReference: {fileID: 1511414536}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[23]
       value: 
-      objectReference: {fileID: 2068514271}
+      objectReference: {fileID: 1594926368}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[24]
       value: 
-      objectReference: {fileID: 2125251324}
+      objectReference: {fileID: 1714553162}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[25]
       value: 
-      objectReference: {fileID: 1422612461}
+      objectReference: {fileID: 2014823003}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[26]
       value: 
-      objectReference: {fileID: 1511414536}
+      objectReference: {fileID: 2068514271}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[27]
       value: 
-      objectReference: {fileID: 1594926368}
+      objectReference: {fileID: 2125251324}
     - target: {fileID: 4595646819258112829, guid: fdcca2c6043bd4047b794831df8c279c,
         type: 3}
       propertyPath: autoInjectGameObjects.Array.data[28]

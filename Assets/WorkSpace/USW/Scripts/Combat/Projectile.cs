@@ -5,17 +5,22 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 
 /// <summary>
-/// 단일 투사체 — 시작 위치에서 목표 위치로 이동 후 풀로 반환.
-/// ProjectilePool이 생성/관리하며 직접 Instantiate 하지 않는다.
+/// 기본 투사체 (직선 이동) 및 상속을 위한 베이스 클래스.
+/// ProjectilePool 또는 RM.Instantiate 등을 통해 소환됩니다.
 /// </summary>
 public class Projectile : MonoBehaviour
 {
-    [Inject] private TotemBuffManager _totemBuffManager;
+    [Inject] protected TotemBuffManager _totemBuffManager;
+    [Inject] protected AudioManager _audioManager;
 
-    private Action<Projectile>      _onComplete;
-    private CancellationTokenSource _moveCts;
+    [Header("폭발 이펙트 (비워두면 사용 안 함)")]
+    [SerializeField] protected GameObject _hitEffectPrefab;
+    [SerializeField] protected float _hitEffectDuration = 1.0f;
 
-    public void Launch(Vector3 from, Vector3 to, Action<Projectile> onComplete)
+    protected Action<Projectile>      _onComplete;
+    protected CancellationTokenSource _moveCts;
+
+    public virtual void Launch(Vector3 from, Vector3 to, Action<Projectile> onComplete)
     {
         StopMove();
 
@@ -23,15 +28,13 @@ public class Projectile : MonoBehaviour
         transform.localScale = Vector3.one * (_totemBuffManager?.ProjectileSizeMultiplier ?? 1f);
         _onComplete        = onComplete;
 
-        // OnDisable에서 수동 취소 가능하고,
-        // 오브젝트 Destroy 시에도 자동 취소되도록 DestroyToken과 연결
         _moveCts = CancellationTokenSource.CreateLinkedTokenSource(
             this.GetCancellationTokenOnDestroy());
 
         MoveAsync(to, _moveCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
-    private void StopMove()
+    protected void StopMove()
     {
         if (_moveCts == null) return;
         _moveCts.Cancel();
@@ -39,7 +42,7 @@ public class Projectile : MonoBehaviour
         _moveCts = null;
     }
 
-    private async UniTask MoveAsync(Vector3 target, CancellationToken token)
+    protected virtual async UniTask MoveAsync(Vector3 target, CancellationToken token)
     {
         try
         {
@@ -51,22 +54,49 @@ public class Projectile : MonoBehaviour
             {
                 token.ThrowIfCancellationRequested();
                 elapsed            += Time.deltaTime;
-                transform.position  = Vector3.Lerp(start, target, elapsed / Duration);
+                float t = elapsed / Duration;
+                
+                transform.position = Vector3.Lerp(start, target, t);
+
+                // 기본적으로 목표점을 향해 회전
+                Vector3 dir = target - transform.position;
+                if (dir.sqrMagnitude > 0.001f)
+                {
+                    transform.up = dir.normalized;
+                }
+
                 await UniTask.Yield(token);
             }
 
             transform.position = target;
+            
+            OnHit(target);
+
             _onComplete?.Invoke(this);
         }
         catch (OperationCanceledException) { }
     }
 
-    private void OnDisable()
+    protected virtual void OnHit(Vector3 pos)
+    {
+        _audioManager?.PlaySFX("05.Drone_Attack_Hit");
+
+        if (_hitEffectPrefab != null)
+        {
+            var effect = RM.Instantiate(_hitEffectPrefab, pos, Quaternion.identity, transform.parent, true);
+            if (effect != null)
+            {
+                RM.Destroy(effect, _hitEffectDuration);
+            }
+        }
+    }
+
+    protected virtual void OnDisable()
     {
         StopMove();
     }
 
-    private void OnDestroy()
+    protected virtual void OnDestroy()
     {
         StopMove();
     }

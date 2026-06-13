@@ -2,6 +2,7 @@ using UnityEngine;
 using VContainer;
 using System;
 using DG.Tweening;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 모든 보스의 기반 추상 클래스
@@ -28,6 +29,9 @@ public abstract class BossBase : MonoBehaviour
     [Header("보스 패턴")]
     [Tooltip("이 보스가 사용할 패턴 SO 목록 — 프리팹에 직접 설정")]
     [SerializeField] private BossPatternData[] _patterns;
+
+    [Header("애니메이션")]
+    [SerializeField] protected Animator _animator;
 
     public BossPatternData[] Patterns => _patterns;
 
@@ -67,6 +71,11 @@ public abstract class BossBase : MonoBehaviour
         {
             _originalScale = transform.localScale;
         }
+
+        if (_animator != null)
+        {
+            _animator.Play("Idle");
+        }
     }
 
     // ── 데미지 처리 ─────────────────────────────────────────────────
@@ -86,16 +95,36 @@ public abstract class BossBase : MonoBehaviour
 
         if (IsDead)
         {
-            OnDeath?.Invoke();
-            OnAnyBossDied?.Invoke();
+            HandleDeathAsync().Forget();
         }
+    }
+
+    private async UniTaskVoid HandleDeathAsync()
+    {
+        if (_animator != null)
+        {
+            _animator.SetTrigger("Death");
+            // 애니메이션 재생을 위해 1초 대기 후 파괴 이벤트 호출
+            await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: this.GetCancellationTokenOnDestroy())
+                         .SuppressCancellationThrow();
+        }
+
+        OnDeath?.Invoke();
+        OnAnyBossDied?.Invoke();
     }
 
     private void PlayHitAnimation()
     {
-        _hitTween?.Kill();
-        transform.localScale = _originalScale;
-        _hitTween = transform.DOPunchScale(_originalScale * 0.2f, 0.15f, 0, 0f).SetLink(gameObject);
+        if (_animator != null)
+        {
+            _animator.SetTrigger("Hit");
+        }
+        else
+        {
+            _hitTween?.Kill();
+            transform.localScale = _originalScale;
+            _hitTween = transform.DOPunchScale(_originalScale * 0.2f, 0.15f, 0, 0f).SetLink(gameObject);
+        }
     }
 
     // ── 패턴 실행 (자식 구현) ───────────────────────────────────────

@@ -13,6 +13,5 @@ MonoBehaviour:
   m_Name: PartyLobbyData
   m_EditorClassIdentifier: 
   partyList:
-  - {fileID: 11400000, guid: b786c1ffcd532e04fb06cbefc2a3b909, type: 2}
   - {fileID: 11400000, guid: 9e427abc3d2e3f24da695a858cb6c99a, type: 2}
   - {fileID: 11400000, guid: 72cb65ca5d4d1904a9fcd2323cc0ee1f, type: 2}

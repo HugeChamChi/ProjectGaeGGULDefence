@@ -13,6 +13,7 @@ public class DroneUnit : MonoBehaviour
     [Inject] private DroneManager _droneManager;
     [Inject] private BossManager _bossManager;
     [Inject] private ProjectilePool _projectileManager;
+    [Inject] private AudioManager _audioManager;
 
     public float   Atk            { get; private set; }
     public float   AttackInterval { get; private set; }
@@ -21,11 +22,15 @@ public class DroneUnit : MonoBehaviour
 
     private Transform _ownerTransform;
     private Vector3   _homePositionFallback;
+
     private Vector2   _spawnOffset;
 
     [Header("유닛 근처 오프셋 범위 (px)")]
     [SerializeField] private float _offsetRangeX =  12f;
     [SerializeField] private float _offsetRangeY =  10f;
+
+    [Header("투사체 프리팹 (지정 시 RM 풀링 사용, 비우면 기본 Pool 사용)")]
+    [SerializeField] private Projectile _projectilePrefab;
 
     private DroneHoverAnimation      _hoverAnim;
     private CancellationTokenSource  _attackCts;
@@ -107,8 +112,8 @@ public class DroneUnit : MonoBehaviour
     public void FireRallyShot()
     {
         var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || _projectileManager == null) return;
-        _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        if (bossArea == null) return;
+        ShootProjectile(bossArea.GetRandomWorldPosition());
     }
 
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
@@ -153,7 +158,26 @@ public class DroneUnit : MonoBehaviour
     private void LaunchProjectile()
     {
         var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || _projectileManager == null) return;
-        _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        if (bossArea == null) return;
+        ShootProjectile(bossArea.GetRandomWorldPosition());
+    }
+
+    private void ShootProjectile(Vector3 targetPos)
+    {
+        _audioManager?.PlaySFX("05.Drone_Attack");
+
+        if (_projectilePrefab != null)
+        {
+            var p = RM.Instantiate(_projectilePrefab, transform.position, Quaternion.identity, true);
+            if (p != null)
+            {
+                p.transform.SetParent(transform.parent, worldPositionStays: true);
+                p.Launch(transform.position, targetPos, proj => RM.Destroy(proj.gameObject));
+            }
+        }
+        else if (_projectileManager != null)
+        {
+            _projectileManager.Launch(transform.position, targetPos);
+        }
     }
 }

@@ -108,3 +108,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _offsetRangeX: 12
   _offsetRangeY: 10
+  _projectilePrefab: {fileID: 3319223371518631887, guid: 755faa335b50ff8488c4196447cbff09,
+    type: 3}

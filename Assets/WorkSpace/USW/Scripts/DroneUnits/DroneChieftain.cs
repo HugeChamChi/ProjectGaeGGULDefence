@@ -22,8 +22,20 @@ public class DroneChieftain : UnitBase
 
         if (_data == null || _droneManager == null) return;
 
+        // 1. 효과음 재생
+        _audioManager?.PlaySFX("05.Leader_Skill_Effect");
+
+        // 2. UI 컷신 연출 발동 (비활성화 상태인 컷신 UI를 찾아 실행)
+        var skillEffectUI = FindObjectOfType<HSD.UI.Effect.UI_ChiefSkillEffect>(true);
+        if (skillEffectUI != null)
+        {
+            Sprite chieftainSprite = unitData != null ? unitData.icon : null;
+            skillEffectUI.PlayEffectAsync(chieftainSprite, this.GetCancellationTokenOnDestroy()).Forget();
+        }
+
+        // 3. 드론 집결 및 일제 사격 로직 실행
         _droneManager
             .ExecuteRallyAsync(_data.damagePerDrone, this.GetCancellationTokenOnDestroy())
-            .Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+            .Forget(e => { if (e is not System.OperationCanceledException) Debug.LogException(e); });
     }
 }

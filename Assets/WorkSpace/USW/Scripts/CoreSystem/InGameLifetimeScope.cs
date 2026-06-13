@@ -40,7 +40,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<AudioManager>();
         builder.RegisterComponentInHierarchy<UpgradeManager>();
 
-        if(isDron)
+        if (isDron)
         {
             builder.RegisterComponentInHierarchy<DronePool>();
             builder.RegisterComponentInHierarchy<DroneManager>();

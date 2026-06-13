@@ -17,13 +17,20 @@ public class GridManager : MonoBehaviour
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
 
-    protected void Awake()
+    public void Init()
     {
+        if (_grid != null) return; // Already initialized
+
         if (config     == null) { Debug.LogError("GridManager: config 미연결");     return; }
         if (cellPrefab == null) { Debug.LogError("GridManager: cellPrefab 미연결"); return; }
         if (gridLayout == null) { Debug.LogError("GridManager: gridLayout 미연결"); return; }
 
         BuildGrid();
+    }
+
+    protected void Awake()
+    {
+        Init();
     }
 
     private void BuildGrid()

@@ -37,6 +37,7 @@ public class DebuffDroneUnit : UnitBase
         onSkillFull?.Invoke();
 
         if (Data == null) return;
+        _audioManager?.PlaySFX("05.Drone_Debuff");
         _droneManager?.ApplyBossDebuff(Data.damageAmplificationMultiplier, Data.debuffDuration);
     }
 }

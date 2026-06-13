@@ -36,6 +36,7 @@ public class DroneBuffer : UnitBase
         onSkillFull?.Invoke();
 
         if (Data == null) return;
+        _audioManager?.PlaySFX("05.Drone_Buff");
         _droneManager?.ApplyDroneBuff(Data.atkBuffMultiplier, Data.speedBuffMultiplier, Data.buffDuration);
     }
 }

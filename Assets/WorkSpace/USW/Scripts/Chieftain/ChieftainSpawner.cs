@@ -4,15 +4,21 @@ using UnityEngine;
 /// 인게임 진입 시 선택된 족장을 그리드 중앙에 자동 배치
 ///
 /// 데이터 흐름:
-///   Player.Chief.SelectedChiefId (HSD) → chieftainDataList 룩업 → UnitFactory 생성 → 중앙 셀 배치
-///
-/// Inspector: chieftainDataList — 등록된 모든 ChieftainData 할당
+///   GlobalData.SelectedParty.chieftainData (1순위) → 테스트 유닛(2순위) → 기존 레거시 ID(3순위)
 /// </summary>
 public class ChieftainSpawner : MonoBehaviour
 {
-    [VContainer.Inject] private GridManager _gridManager;
-    [VContainer.Inject] private UnitFactory _unitFactory;
-    [VContainer.Inject] private UnitSpawner _unitSpawner;
+    private GridManager _gridManager;
+    private UnitFactory _unitFactory;
+    private UnitSpawner _unitSpawner;
+
+    [VContainer.Inject]
+    public void Construct(GridManager gridManager, UnitFactory unitFactory, UnitSpawner unitSpawner)
+    {
+        _gridManager = gridManager;
+        _unitFactory = unitFactory;
+        _unitSpawner = unitSpawner;
+    }
 
     [SerializeField] private ChieftainData[] chieftainDataList;
 
@@ -24,14 +30,23 @@ public class ChieftainSpawner : MonoBehaviour
     /// <summary>현재 배치된 족장 유닛 — 족장 전용 버프 적용에 사용</summary>
     public UnitBase ChieftainUnit { get; private set; }
 
-    private void Start()
+    public void Init()
     {
+        // 1순위: 로비에서 선택한 파티 데이터에 족장 데이터가 있으면 스폰
+        if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.chieftainData != null)
+        {
+            SpawnChieftainByUnitData(GlobalData.SelectedParty.chieftainData);
+            return;
+        }
+
+        // 2순위: 에디터 테스트용 할당 스폰
         if (_useTestSpawn && _testUnitData != null)
         {
             SpawnChieftainByUnitData(_testUnitData);
             return;
         }
 
+        // 3순위: (레거시) Player.Chief.SelectedChiefId 기반 소환
         int selectedId = Player.Chief.SelectedChiefId;
 
         if (selectedId == 0 && _useTestSpawn)

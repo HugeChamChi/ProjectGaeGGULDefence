@@ -67,7 +67,11 @@ public class DroneProducer : UnitBase
         var slots  = SlotOffsets;
         var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];
         var drone  = _dronePoolManager.GetDrone(Data.droneAtk, Data.droneAttackInterval, transform.position, transform, offset);
-        if (drone != null) _ownedDrones.Add(drone);
+        if (drone != null)
+        {
+            _audioManager?.PlaySFX("05.Drone_Summon");
+            _ownedDrones.Add(drone);
+        }
     }
 
     protected override void OnUnitRemoved()
