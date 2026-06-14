@@ -42,7 +42,6 @@ public class InGameLifetimeScope : LifetimeScope
 
         if (isDron)
         {
-            builder.RegisterComponentInHierarchy<DronePool>();
             builder.RegisterComponentInHierarchy<DroneManager>();
         }
 

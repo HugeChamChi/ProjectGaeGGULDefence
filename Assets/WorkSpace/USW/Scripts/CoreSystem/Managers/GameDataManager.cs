@@ -55,6 +55,7 @@ public class GameDataManager
     private const string GidCharacter = "1454519483";
     private const string GidConfig = "2094930366";
     private const string GidLevelUp = "2005855251";
+    private const string GidUpgrade = "842065624";
 
     public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -79,6 +80,22 @@ public class GameDataManager
 
     // ── 캐릭터 데이터 (성장) ───────────────────────────────
     private readonly Dictionary<int, CharacterSheetRow> _characterData = new();
+
+    // ── 업그레이드 데이터 ──────────────────────────────────
+    private readonly Dictionary<int, UpgradeSheetRow> _upgradeRows = new();
+    public class UpgradeSheetRow
+    {
+        public int Level;
+        public float AtkIncreaseRate;
+        public float AtkSpeedIncreaseRate;
+        public int UpgradeCost;
+    }
+
+    public UpgradeSheetRow GetUpgradeRow(int level)
+    {
+        if (_upgradeRows.TryGetValue(level, out var row)) return row;
+        return null;
+    }
 
     // ── 레벨업 선택지 데이터 ───────────────────────────────
     private readonly Dictionary<int, LevelUpSheetRow> _levelUpRows = new();
@@ -107,18 +124,19 @@ public class GameDataManager
         {
             try
             {
-                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6) = await UniTask.WhenAll(
+                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7) = await UniTask.WhenAll(
                     FetchCsvAsync(GidSpawnRate, token),
                     FetchCsvAsync(GidBoss, token),
                     FetchCsvAsync(GidExpTable, token),
                     FetchCsvAsync(GidTotem, token),
                     FetchCsvAsync(GidCharacter, token),
                     FetchCsvAsync(GidConfig, token),
-                    FetchCsvAsync(GidLevelUp, token)
+                    FetchCsvAsync(GidLevelUp, token),
+                    FetchCsvAsync(GidUpgrade, token)
                 );
 
                 if (csv0 == null || csv1 == null || csv2 == null || csv3 == null || 
-                    csv4 == null || csv5 == null || csv6 == null)
+                    csv4 == null || csv5 == null || csv6 == null || csv7 == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
                     await UniTask.Delay(3000, cancellationToken: token);
@@ -132,6 +150,7 @@ public class GameDataManager
                 ParseCharacterData(csv4);
                 ParseWaveTime(csv5);
                 ParseLevelUpData(csv6);
+                ParseUpgradeData(csv7);
 
                 IsLoaded = true;
                 OnLoaded?.Invoke();
@@ -330,12 +349,12 @@ public class GameDataManager
         Debug.Log($"[GameDataManager] 토템 시트 {_totemRows.Count}행 로드 완료");
     }
 
-    // 정수 퍼센트 → ÷100 소수 비율
+    // 정수 퍼센트
     private static void TrySetPct(string[] cols, int idx, ref float field)
     {
         if (idx < 0 || idx >= cols.Length) return;
         if (float.TryParse(cols[idx], NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
-            field = v / 100f;
+            field = v;
     }
 
     // 소수 그대로 저장 (food_amount는 절댓값이므로 ÷100 불필요)
@@ -554,7 +573,7 @@ public class GameDataManager
         for (int i = 2; i < rows.Count; i++)
         {
             var cols = rows[i];
-            if (cols.Length < 12 || string.IsNullOrWhiteSpace(cols[0])) continue;
+            if (cols.Length < 10 || string.IsNullOrWhiteSpace(cols[0])) continue;
 
             if (!int.TryParse(cols[0], out int id)) continue;
 
@@ -570,17 +589,10 @@ public class GameDataManager
                 AttackSpeed = ParseFloat(cols[6]),
                 CriticalDamage = ParseFloat(cols[7]),
                 CriticalChance = ParseFloat(cols[8]),
-                FoodProduction = ParseFloat(cols[10]),
-                DroneCount = int.TryParse(cols[11], out int dc) ? dc : 0
+                FoodProduction = ParseFloat(cols[9])
             };
 
-            if (float.TryParse(cols[9], NumberStyles.Float, CultureInfo.InvariantCulture, out float skillIdFloat))
-            {
-                row.SkillId = Mathf.RoundToInt(skillIdFloat);
-            }
-
-            if (row.DroneCount > 0)
-                Debug.Log($"[GameDataManager] 캐릭터 파싱: ID={id}, Name={cols[1]}, DroneCount={row.DroneCount}");
+            Debug.Log($"[GameDataManager] Parsed Character {id} - Name: {row.Name}, FoodProduction: {row.FoodProduction}");
 
             _characterData[id] = row;
         }
@@ -627,7 +639,6 @@ public class GameDataManager
         public float CriticalChance;
         public int SkillId;
         public float FoodProduction;
-        public int DroneCount;
     }
 
     /// <summary>
@@ -735,13 +746,13 @@ public class GameDataManager
                 else if (se == LevelUpEffectType.None) { se = type; sv = val; }
             };
 
-            if (finalAtk != 0) AddEffect(LevelUpEffectType.AttackPercent, finalAtk * 100f);
-            if (finalAtkSpd != 0) AddEffect(LevelUpEffectType.AttackSpeedPercent, finalAtkSpd * 100f);
-            if (critDmgInc != 0) AddEffect(LevelUpEffectType.CritDamagePercent, critDmgInc * 100f);
-            if (critChcInc != 0) AddEffect(LevelUpEffectType.CritChancePercent, critChcInc * 100f);
-            if (coolInc != 0) AddEffect(LevelUpEffectType.GaugeSpeedPercent, coolInc * 100f);
-            if (foodInc != 0) AddEffect(LevelUpEffectType.FoodProductionPercent, foodInc * 100f);
-            if (expInc != 0) AddEffect(LevelUpEffectType.ExpGainPercent, expInc * 100f);
+            if (finalAtk != 0) AddEffect(LevelUpEffectType.AttackPercent, finalAtk);
+            if (finalAtkSpd != 0) AddEffect(LevelUpEffectType.AttackSpeedPercent, finalAtkSpd);
+            if (critDmgInc != 0) AddEffect(LevelUpEffectType.CritDamagePercent, critDmgInc);
+            if (critChcInc != 0) AddEffect(LevelUpEffectType.CritChancePercent, critChcInc);
+            if (coolInc != 0) AddEffect(LevelUpEffectType.GaugeSpeedPercent, coolInc);
+            if (foodInc != 0) AddEffect(LevelUpEffectType.FoodProductionPercent, foodInc);
+            if (expInc != 0) AddEffect(LevelUpEffectType.ExpGainPercent, expInc);
 
             // Hardcoded special values
             switch(id)
@@ -785,5 +796,58 @@ public class GameDataManager
         }
         
         Debug.Log($"[GameDataManager] 레벨업 시트 {_levelUpRows.Count}행 로드 완료");
+    }
+
+    // ── 업그레이드 시트 파싱 ─────────────────────────────────
+    private void ParseUpgradeData(string csv)
+    {
+        var rows = SplitCsvRows(csv);
+        if (rows.Count < 2) return;
+
+        string[] headers = null;
+        int headerIndex = -1;
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (rows[i].Length > 0 && rows[i][0].Trim() == "level")
+            {
+                headers = rows[i];
+                headerIndex = i;
+                break;
+            }
+        }
+
+        if (headers == null)
+        {
+            Debug.LogWarning("[GameDataManager] 업그레이드 시트: level 헤더 행을 찾을 수 없습니다.");
+            return;
+        }
+
+        int iLevel = FindCol(headers, "level");
+        int iAtk = FindCol(headers, "atk");
+        int iAtkSpd = FindCol(headers, "atk_speed");
+        int iCost = FindCol(headers, "UpgradeCost");
+
+        for (int i = headerIndex + 2; i < rows.Count; i++) // Skip type row
+        {
+            var cols = rows[i];
+            if (cols.Length <= iLevel || !int.TryParse(cols[iLevel], out int level)) continue;
+
+            string atkStr = iAtk >= 0 && cols.Length > iAtk ? cols[iAtk].Replace("%", "").Trim() : "0";
+            string spdStr = iAtkSpd >= 0 && cols.Length > iAtkSpd ? cols[iAtkSpd].Replace("%", "").Trim() : "0";
+            
+            float atkInc = float.TryParse(atkStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float a) ? a : 0f;
+            float spdInc = float.TryParse(spdStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float s) ? s : 0f;
+            int cost = iCost >= 0 && cols.Length > iCost && int.TryParse(cols[iCost].Trim(), out int c) ? c : 0;
+
+            _upgradeRows[level] = new UpgradeSheetRow
+            {
+                Level = level,
+                AtkIncreaseRate = atkInc,
+                AtkSpeedIncreaseRate = spdInc,
+                UpgradeCost = cost
+            };
+        }
+        Debug.Log($"[GameDataManager] 업그레이드 데이터 {_upgradeRows.Count}행 로드 완료");
     }
 }

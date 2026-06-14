@@ -8,9 +8,8 @@ using VContainer;
 /// </summary>
 public abstract class DroneSpawnerBase : UnitBase
 {
-    [Inject] protected DronePool _dronePoolManager;
-
     [Header("드론 배치 설정")]
+    [SerializeField] protected DroneUnit dronePrefab;
     [SerializeField] protected float _spreadX      = 35f;
     [SerializeField] protected float _spreadXUpper = 50f;
     [SerializeField] protected float _spreadY      = 20f;
@@ -25,14 +24,14 @@ public abstract class DroneSpawnerBase : UnitBase
 
     protected readonly List<DroneUnit> _ownedDrones = new();
 
-    // 하위 클래스에서 제공해야 하는 데이터
-    protected abstract bool HasValidData();
-    protected abstract float GetDroneAtk();
-    protected abstract float GetDroneAttackInterval();
+    // 하위 클래스에서 추가 검증이 필요하면 재정의
+    protected virtual bool HasValidData() => unitData != null && dronePrefab != null;
+
+    protected override bool CanBasicAttack => false;
 
     protected override void OnUnitPlaced()
     {
-        if (unitData == null || _dronePoolManager == null || !HasValidData()) return;
+        if (!HasValidData()) return;
         
         for (int i = 0; i < unitData.maxDroneCount; i++)
         {
@@ -42,20 +41,26 @@ public abstract class DroneSpawnerBase : UnitBase
 
     protected void SpawnOneDrone()
     {
-        if (unitData == null || _dronePoolManager == null || !HasValidData()) return;
+        if (!HasValidData()) return;
         if (_ownedDrones.Count >= unitData.maxDroneCount) return;
 
         var slots  = SlotOffsets;
         var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];
-        var drone  = _dronePoolManager.GetDrone(GetDroneAtk(), GetDroneAttackInterval(), transform.position, transform, offset);
         
-        if (drone != null)
+        var droneObj = RM.Instantiate(dronePrefab.gameObject, transform.position, Quaternion.identity, transform, true);
+        if (droneObj != null)
         {
-            if (IsFirstPlacement)
+            var drone = droneObj.GetComponent<DroneUnit>();
+            if (drone != null)
             {
-                _audioManager?.PlaySFX("05.Drone_Summon");
+                drone.Initialize(this, offset);
+                
+                if (IsFirstPlacement)
+                {
+                    _audioManager?.PlaySFX("05.Drone_Summon");
+                }
+                _ownedDrones.Add(drone);
             }
-            _ownedDrones.Add(drone);
         }
     }
 
@@ -64,7 +69,7 @@ public abstract class DroneSpawnerBase : UnitBase
         foreach (var drone in _ownedDrones)
         {
             if (drone != null)
-                _dronePoolManager?.ReturnDrone(drone);
+                RM.Destroy(drone.gameObject);
         }
         _ownedDrones.Clear();
     }

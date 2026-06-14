@@ -19,8 +19,7 @@ public class FrogUnemployed : UnitBase
 
         if (!attackDisabled && _boss != null && !_boss.IsDead)
         {
-            LaunchProjectile();
-            _boss.TakeDamage(GetSkillDamage());
+            LaunchProjectile(GetSkillDamage());
         }
 
         onSkillFull?.Invoke();

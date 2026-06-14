@@ -10,7 +10,6 @@ using UnityEngine;
 public class SelfDestructDrone : MonoBehaviour
 {
     [Inject] private BossManager _bossManager;
-    [Inject] private DronePool _dronePoolManager;
 
     [SerializeField] private float _flyDuration = 0.4f;
 
@@ -61,7 +60,7 @@ public class SelfDestructDrone : MonoBehaviour
         ReturnToPool();
     }
 
-    private void ReturnToPool() => _dronePoolManager?.ReturnSelfDestruct(this);
+    private void ReturnToPool() => RM.Destroy(this.gameObject);
 
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
 

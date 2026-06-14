@@ -15,12 +15,12 @@ public class DroneUnit : MonoBehaviour
     [Inject] private ProjectilePool _projectileManager;
     [Inject] private AudioManager _audioManager;
 
-    public float   Atk            { get; private set; }
-    public float   AttackInterval { get; private set; }
-    public Vector3 HomePosition   => (_ownerTransform != null ? _ownerTransform.position : _homePositionFallback)
+    public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
+    public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval() : 1f;
+    public Vector3 HomePosition   => (_owner != null ? _owner.transform.position : _homePositionFallback)
                                      + (Vector3)_spawnOffset;
 
-    private Transform _ownerTransform;
+    private UnitBase _owner;
     private Vector3   _homePositionFallback;
 
     private Vector2   _spawnOffset;
@@ -34,21 +34,28 @@ public class DroneUnit : MonoBehaviour
 
     private DroneHoverAnimation      _hoverAnim;
     private CancellationTokenSource  _attackCts;
+    private Animator                 _animator;
 
     // ── 초기화 ──────────────────────────────────────────────────────
 
     private void Awake()
     {
         _hoverAnim = GetComponent<DroneHoverAnimation>();
+        _animator = GetComponent<Animator>();
+        if (_animator == null) _animator = GetComponentInChildren<Animator>();
     }
 
     /// <summary>DronePool.GetDrone() 에서 호출 — 스탯 주입 후 공격 루프 시작</summary>
     /// <param name="fixedOffset">null 이면 랜덤 오프셋, 값 지정 시 해당 위치에 고정 (드론 간 겹침 방지용)</param>
-    public void Initialize(float atk, float attackInterval, Transform ownerTransform = null, Vector2? fixedOffset = null)
+    public void Initialize(UnitBase owner, Vector2? fixedOffset = null)
     {
-        Atk                   = atk;
-        AttackInterval        = attackInterval;
-        _ownerTransform       = ownerTransform;
+        if (_animator == null)
+        {
+            _animator = GetComponent<Animator>();
+            if (_animator == null) _animator = GetComponentInChildren<Animator>();
+        }
+
+        _owner                = owner;
         _homePositionFallback = transform.position;
 
         _spawnOffset = fixedOffset ?? new Vector2(
@@ -148,21 +155,27 @@ public class DroneUnit : MonoBehaviour
 
             var boss = _bossManager?.CurrentBoss;
             if (boss == null || boss.IsDead) continue;
-
-            LaunchProjectile();
             float dmg = Atk * (_droneManager?.DroneAtkMultiplier ?? 1f);
-            boss.TakeDamage(Mathf.RoundToInt(dmg));
+            LaunchProjectile(Mathf.RoundToInt(dmg));
         }
     }
 
-    private void LaunchProjectile()
+    private void LaunchProjectile(int damage)
     {
-        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        var boss = _bossManager?.CurrentBoss;
+        var bossArea = boss?.GetComponent<BossAreaTarget>();
         if (bossArea == null) return;
-        ShootProjectile(bossArea.GetRandomWorldPosition());
+        
+        ShootProjectile(bossArea.GetRandomWorldPosition(), () => 
+        {
+            if (boss != null && !boss.IsDead)
+            {
+                boss.TakeDamage(damage);
+            }
+        });
     }
 
-    private void ShootProjectile(Vector3 targetPos)
+    private void ShootProjectile(Vector3 targetPos, System.Action onHitCallback = null)
     {
         _audioManager?.PlaySFX("05.Drone_Attack");
 
@@ -172,12 +185,16 @@ public class DroneUnit : MonoBehaviour
             if (p != null)
             {
                 p.transform.SetParent(transform.parent, worldPositionStays: true);
-                p.Launch(transform.position, targetPos, proj => RM.Destroy(proj.gameObject));
+                p.Launch(transform.position, targetPos, proj => 
+                {
+                    onHitCallback?.Invoke();
+                    RM.Destroy(proj.gameObject);
+                });
             }
         }
         else if (_projectileManager != null)
         {
-            _projectileManager.Launch(transform.position, targetPos);
+            _projectileManager.Launch(transform.position, targetPos, onHitCallback);
         }
     }
 }

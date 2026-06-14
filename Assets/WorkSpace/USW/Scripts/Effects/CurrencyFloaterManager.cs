@@ -25,10 +25,10 @@ public class CurrencyFloaterManager : MonoBehaviour
     /// 월드 좌표를 입력받아 현재 컨테이너(Canvas) 설정에 맞춰 재화 플로터를 배치합니다.
     /// </summary>
     /// <param name="worldPosition">생성할 월드 좌표</param>
-    /// <param name="amount">표시할 재화 양</param>
-    public void SpawnCurrencyText(Vector3 worldPosition, float amount)
+    /// <param name="floatAmount">표시할 재화 양</param>
+    public void SpawnCurrencyText(Vector3 worldPosition, float floatAmount)
     {
-        if (amount <= 0) return;
+        if (floatAmount <= 0) return;
         if (currencyTextContainer == null)
         {
             Debug.LogWarning("[CurrencyFloaterManager] currencyTextContainer가 할당되지 않았습니다.");
@@ -58,8 +58,8 @@ public class CurrencyFloaterManager : MonoBehaviour
             }
 
             // 3. 스타일 적용 및 재생
-            // 재화 양이 작을 경우(1 미만) 소수점 첫째 자리까지 표시, 그 외에는 정수로 표시
-            string text = amount < 1f ? $"+{amount:F1}" : $"+{Mathf.FloorToInt(amount)}";
+            // 소수점 아래 값이 있으면 1자리까지 표시, 딱 떨어지는 정수면 정수로 표시
+            string text = (floatAmount % 1 == 0) ? $"+{Mathf.FloorToInt(floatAmount)}" : $"+{floatAmount:F1}";
             floater.SetupAndPlay(text, currencyStyle, false);
         }
     }

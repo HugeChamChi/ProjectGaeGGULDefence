@@ -9,22 +9,17 @@ public class DroneBuffer : DroneSpawnerBase
 {
     [Inject] private DroneManager _droneManager;
 
-    [SerializeField] private DroneBufferData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
-
-    private DroneBufferData Data =>
-        unitData != null && _dataByTier != null && (int)unitData.unitTier < _dataByTier.Length
-            ? _dataByTier[(int)unitData.unitTier] : null;
-
-    protected override bool HasValidData() => Data != null;
-    protected override float GetDroneAtk() => Data.droneAtk;
-    protected override float GetDroneAttackInterval() => Data.droneAttackInterval;
+    [Header("Buffer Settings")]
+    [SerializeField] private float atkBuffMultiplier = 1f;
+    [SerializeField] private float speedBuffMultiplier = 1f;
+    [SerializeField] private float buffDuration = 5f;
 
     protected override void OnSkillFull()
     {
         onSkillFull?.Invoke();
 
-        if (Data == null) return;
+        if (unitData == null) return;
         _audioManager?.PlaySFX("05.Drone_Buff");
-        _droneManager?.ApplyDroneBuff(Data.atkBuffMultiplier, Data.speedBuffMultiplier, Data.buffDuration);
+        _droneManager?.ApplyDroneBuff(atkBuffMultiplier, speedBuffMultiplier, buffDuration);
     }
 }

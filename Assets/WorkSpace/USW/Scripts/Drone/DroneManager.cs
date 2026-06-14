@@ -23,7 +23,11 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private float _defaultFoodPerDrone = 0.15f;
     private float _baseFoodPerDrone;
 
+    public event System.Action OnDroneCountChanged;
+
     public int DroneCount => _drones.Count;
+    public IReadOnlyList<DroneUnit> Drones => _drones;
+    public float BaseFoodPerDrone => _baseFoodPerDrone;
 
     // ── 드론 버프 ───────────────────────────────────────────────────
     private float _droneAtkMult   = 1f;
@@ -76,10 +80,19 @@ public class DroneManager : MonoBehaviour
     public void RegisterDrone(DroneUnit drone)
     {
         if (!_drones.Contains(drone))
+        {
             _drones.Add(drone);
+            OnDroneCountChanged?.Invoke();
+        }
     }
 
-    public void UnregisterDrone(DroneUnit drone) => _drones.Remove(drone);
+    public void UnregisterDrone(DroneUnit drone)
+    {
+        if (_drones.Remove(drone))
+        {
+            OnDroneCountChanged?.Invoke();
+        }
+    }
 
     // ── 식량 설정 ───────────────────────────────────────────────────
 

@@ -60,6 +60,9 @@ public abstract class UnitBase : MonoBehaviour
     public enum UnitState { Idle, Attacking, Skilling, Sealed }
     public UnitState CurrentState { get; private set; } = UnitState.Idle;
 
+    protected virtual bool IsFoodProductionBuffable => true;
+    protected virtual bool CanBasicAttack => true;
+
     private float _attackTimer;
     private float _skillTimer;
     private float _foodTimer;
@@ -82,7 +85,8 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        animator = GetComponentInChildren<UnitAnimator>();
+        if (animator == null) animator = GetComponentInChildren<UnitAnimator>();
+        if (animator == null) animator = GetComponent<UnitAnimator>();
         
         _unitImage = GetComponent<Image>();
         if (_unitImage == null) _unitImage = GetComponentInChildren<Image>();
@@ -94,6 +98,12 @@ public abstract class UnitBase : MonoBehaviour
     /// <summary>UnitSpawner 또는 DragHandler.PlaceSelfAt() 이 셀에 배치한 뒤 호출</summary>
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
     {
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<UnitAnimator>();
+            if (animator == null) animator = GetComponent<UnitAnimator>();
+        }
+
         if (currency == null)
         {
             Debug.LogError($"UnitBase({name}): CurrencyManager가 null입니다.");
@@ -203,21 +213,8 @@ public abstract class UnitBase : MonoBehaviour
     /// <summary>족장 전용 공격력 버프 (3008 위엄) 추가 처리 등</summary>
     protected virtual void SyncStatsWithSheet()
     {
-        if (unitData == null || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
-
-        // UpgradeManager에서 현재 직업의 강화 레벨 조회
-        string jobType = _upgradeManager?.GetJobType(unitData.characterId) ?? string.Empty;
-        int level = _upgradeManager != null && !string.IsNullOrEmpty(jobType)
-            ? _upgradeManager.GetJobLevel(jobType)
-            : 1;
-
-        // 시트 데이터 가져오기
-        var sheetRow = _gameDataManager.GetCharacterRow(unitData.characterId);
-        if (sheetRow != null)
-        {
-            // UnitData 인스턴스에 시트 스탯 적용
-            unitData.ApplySheetData(sheetRow);
-        }
+        // UnitSpawner.Init()에서 전역적으로 모든 UnitData SO를 업데이트하도록 변경되었으므로,
+        // 개별 유닛 단위의 시트 덮어쓰기는 생략합니다.
     }
 
     // ── 통합 제어 루프 ──────────────────────────────────────────
@@ -273,7 +270,7 @@ public abstract class UnitBase : MonoBehaviour
                     await animator.PlaySkillAsync(token);
                 }
             }
-            else if (_attackTimer >= attackInterval && canAttack)
+            else if (CanBasicAttack && _attackTimer >= attackInterval && canAttack)
             {
                 CurrentState = UnitState.Attacking;
                 _attackTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 공격 방지)
@@ -303,7 +300,7 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    private float GetCurrentAttackInterval()
+    public float GetCurrentAttackInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult   = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
@@ -345,8 +342,7 @@ public abstract class UnitBase : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile();
-            boss.TakeDamage(GetAttackDamage());
+            LaunchProjectile(GetAttackDamage());
             onAttack?.Invoke();
             _hitCount++;
             TriggerBonusAttacks(attackDisabled);
@@ -369,6 +365,8 @@ public abstract class UnitBase : MonoBehaviour
         // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
         float cellFoodSpeedBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
         float speedMultiplier = Mathf.Max(_totemBuffManager.FoodSpeedMultiplier - cellFoodSpeedBonus, 0.01f);
+        if (!IsFoodProductionBuffable) speedMultiplier = 1f;
+
         _foodTimer += deltaTime / speedMultiplier;
 
         // 표준 간격(1초)에 도달할 때까지 누적
@@ -388,7 +386,10 @@ public abstract class UnitBase : MonoBehaviour
         // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
         float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
         float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-        float amountPerTick = baseAmount * (_totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus + chieftainFoodBonus);
+        float amountMultiplier = _totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus + chieftainFoodBonus;
+        if (!IsFoodProductionBuffable) amountMultiplier = 1f;
+
+        float amountPerTick = baseAmount * amountMultiplier;
 
         if (amountPerTick > 0f)
         {
@@ -402,9 +403,32 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
+    public virtual float CurrentFoodProductionPerSecond
+    {
+        get
+        {
+            if (unitData == null) return 0f;
+            float baseAmount = GetBaseFoodPerSecond();
+            if (baseAmount <= 0f) return 0f;
+
+            float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
+            float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
+            float amountMultiplier = (_totemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
+            if (!IsFoodProductionBuffable) amountMultiplier = 1f;
+
+            float amountPerTick = baseAmount * amountMultiplier;
+
+            float cellIntervalBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
+            float intervalMultiplier = Mathf.Max(0.1f, (_totemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellIntervalBonus);
+            if (!IsFoodProductionBuffable) intervalMultiplier = 1f;
+
+            return amountPerTick / intervalMultiplier;
+        }
+    }
+
     protected virtual float GetBaseFoodPerSecond()
     {
-        return _gameDataManager.GetCurrencyPerSecond(unitData.characterId);
+        return unitData != null ? unitData.foodProduction : 0f;
     }
 
     protected virtual void OnSkillFull()
@@ -417,8 +441,7 @@ public abstract class UnitBase : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile();
-            boss.TakeDamage(GetSkillDamage());
+            LaunchProjectile(GetSkillDamage());
         }
 
         // ── 레벨업 스킬 특수 효과 ─────────────────────────────
@@ -430,8 +453,7 @@ public abstract class UnitBase : MonoBehaviour
 
         if (lu.HasExtraAttackOnSkillFull && !attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile();
-            boss.TakeDamage(GetAttackDamage());
+            LaunchProjectile(GetAttackDamage());
         }
     }
 
@@ -442,7 +464,9 @@ public abstract class UnitBase : MonoBehaviour
         ? _upgradeManager.GetCurrentAtk(unitData.characterId)
         : unitData.atk;
 
-    private float UpgradedAttackInterval => unitData != null ? unitData.attackSpeed : 1.0f;
+    private float UpgradedAttackInterval => _upgradeManager != null && _upgradeManager.IsLoaded
+        ? _upgradeManager.GetCurrentAttackSpeed(unitData.characterId)
+        : (unitData != null ? unitData.attackSpeed : 1.0f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
     public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);
@@ -515,42 +539,47 @@ public abstract class UnitBase : MonoBehaviour
         {
             if (n > 0 && _hitCount % n == 0)
             {
-                LaunchProjectile();
-                boss.TakeDamage(GetAttackDamage());
+                LaunchProjectile(GetAttackDamage());
             }
         }
 
         // 30% 확률 추가 공격 (연쇄 타격)
         if (lu.RandomExtraAttackChance > 0f && UnityEngine.Random.value < lu.RandomExtraAttackChance)
         {
-            LaunchProjectile();
-            boss.TakeDamage(GetAttackDamage());
+            LaunchProjectile(GetAttackDamage());
         }
 
         // 5% 확률 50% 데미지 (변칙 타격)
         if (lu.HasRandomProcAttack && UnityEngine.Random.value < lu.RandomProcChance)
         {
-            LaunchProjectile();
-            boss.TakeDamage(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
+            LaunchProjectile(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
         }
 
         // 매 공격마다 추가 공격 (양손잡이)
         if (lu.HasExtraAttackEveryAttack)
         {
-            LaunchProjectile();
-            boss.TakeDamage(GetAttackDamage());
+            LaunchProjectile(GetAttackDamage());
         }
     }
 
     // ── 투사체 ─────────────────────────────────────────────────
 
-    protected void LaunchProjectile()
+    protected void LaunchProjectile(int damage)
     {
-        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        var boss = LiveBoss;
+        var bossArea = boss?.GetComponent<BossAreaTarget>();
 
         if (gameObject == null) return;
 
         if (bossArea != null && _projectileManager != null)
-            _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition());
+        {
+            _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition(), () => 
+            {
+                if (boss != null && !boss.IsDead)
+                {
+                    boss.TakeDamage(damage);
+                }
+            });
+        }
     }
 }

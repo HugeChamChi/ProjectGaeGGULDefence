@@ -26,12 +26,17 @@ public class UnitData : ScriptableObject
     [Header("Skill")]
     public string skillName;    // 스킬 이름
 
+    [Header("Economy")]
+    public float foodProduction; // 초당 식량 생산량
+
 
     [Header("Population")]
     public int populationCost = 1;
 
     [Header("Drone")]
     public int maxDroneCount;
+
+
 
     /// <summary>
     /// 구글 시트에서 가져온 캐릭터 성장 데이터를 SO 인스턴스에 적용합니다.
@@ -43,8 +48,7 @@ public class UnitData : ScriptableObject
 
         unitName = row.Name;
         atk = row.Atk;
-        maxDroneCount = row.DroneCount;
-        if (maxDroneCount > 0)
-            Debug.Log($"[UnitData] ApplySheetData ({unitName}): maxDroneCount가 {maxDroneCount}로 적용되었습니다.");
+        attackSpeed = row.AttackSpeed;
+        foodProduction = row.FoodProduction;
     }
 }

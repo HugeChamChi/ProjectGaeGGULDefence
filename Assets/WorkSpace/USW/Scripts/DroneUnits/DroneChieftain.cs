@@ -14,16 +14,20 @@ public class DroneChieftain : UnitBase
 {
     [Inject] private DroneManager _droneManager;
 
-    [SerializeField] private DroneChieftainData _data;
+    [Header("Chieftain Settings")]
+    [SerializeField] private float damagePerDrone = 50f;
+
+    protected override bool CanBasicAttack => false;
 
     protected override void OnSkillFull()
     {
         onSkillFull?.Invoke();
+        if (unitData == null) return;
 
-        if (_data == null || _droneManager == null) return;
+        // 드론이 하나도 없으면 스킬 불발 (사운드도 재생 안 함)
+        if (_droneManager == null || _droneManager.DroneCount <= 0) return;
 
-        // 1. 효과음 재생
-        _audioManager?.PlaySFX("05.Leader_Skill_Effect");
+        _audioManager?.PlaySFX("05.Drone_Chieftain_Skill");
 
         // 2. UI 컷신 연출 발동 (비활성화 상태인 컷신 UI를 찾아 실행)
         var skillEffectUI = FindObjectOfType<HSD.UI.Effect.UI_ChiefSkillEffect>(true);
@@ -35,7 +39,7 @@ public class DroneChieftain : UnitBase
 
         // 3. 드론 집결 및 일제 사격 로직 실행
         _droneManager
-            .ExecuteRallyAsync(_data.damagePerDrone, this.GetCancellationTokenOnDestroy())
+            .ExecuteRallyAsync(damagePerDrone, this.GetCancellationTokenOnDestroy())
             .Forget(e => { if (e is not System.OperationCanceledException) Debug.LogException(e); });
     }
 }

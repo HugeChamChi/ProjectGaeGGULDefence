@@ -49,35 +49,43 @@ public class TotemBuffManager : MonoBehaviour
 
     // ── 토템 등록/해제 ─────────────────────────────────────────
 
+    public event System.Action OnTotemBuffChanged;
+
     public int GetActiveTotemCount() => _activeTotem.Count;
 
     /// <summary>TotemBase.OnPlaced()에서 호출</summary>
     public void RegisterTotem(TotemBase totem)
     {
         if (!_activeTotem.Contains(totem))
+        {
             _activeTotem.Add(totem);
+            OnTotemBuffChanged?.Invoke();
+        }
     }
 
     /// <summary>TotemBase.OnRemoved()에서 호출</summary>
     public void UnregisterTotem(TotemBase totem)
     {
-        _activeTotem.Remove(totem);
+        if (_activeTotem.Remove(totem))
+        {
+            OnTotemBuffChanged?.Invoke();
+        }
     }
 
     // ── 공격력 버프 (토템 전용 — 토템효율 적용) ───────────────
     public void AddAttackBuff(float percent)
     {
-        _totemAttackBonus += percent * (1f + _totemEfficiencyBonus);
+        _totemAttackBonus += (percent / 100f) * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 공격력 +{percent * 100f:F0}% → 배율: {AttackMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 공격력 +{percent:F0}% → 배율: {AttackMultiplier:F2}x");
 #endif
     }
 
     public void RemoveAttackBuff(float percent)
     {
-        _totemAttackBonus = Mathf.Max(0f, _totemAttackBonus - percent * (1f + _totemEfficiencyBonus));
+        _totemAttackBonus = Mathf.Max(0f, _totemAttackBonus - (percent / 100f) * (1f + _totemEfficiencyBonus));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 공격력 -{percent * 100f:F0}% 해제 → 배율: {AttackMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 공격력 -{percent:F0}% 해제 → 배율: {AttackMultiplier:F2}x");
 #endif
     }
 
@@ -93,17 +101,17 @@ public class TotemBuffManager : MonoBehaviour
     // ── 속도 버프 (토템 전용 — 토템효율 적용) ─────────────────
     public void AddSpeedBuff(float percent)
     {
-        _totemSpeedBonus += percent * (1f + _totemEfficiencyBonus);
+        _totemSpeedBonus += (percent / 100f) * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 속도 +{percent * 100f:F0}% → 배율: {SpeedMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 속도 +{percent:F0}% → 배율: {SpeedMultiplier:F2}x");
 #endif
     }
 
     public void RemoveSpeedBuff(float percent)
     {
-        _totemSpeedBonus = Mathf.Max(0f, _totemSpeedBonus - percent * (1f + _totemEfficiencyBonus));
+        _totemSpeedBonus = Mathf.Max(0f, _totemSpeedBonus - (percent / 100f) * (1f + _totemEfficiencyBonus));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 속도 -{percent * 100f:F0}% 해제 → 배율: {SpeedMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 속도 -{percent:F0}% 해제 → 배율: {SpeedMultiplier:F2}x");
 #endif
     }
 
@@ -128,93 +136,93 @@ public class TotemBuffManager : MonoBehaviour
     // ── 식량 속도 버프 ─────────────────────────────────────────
     public void AddFoodSpeedBuff(float percent)
     {
-        FoodSpeedMultiplier = Mathf.Max(0.1f, FoodSpeedMultiplier - percent);
+        FoodSpeedMultiplier = Mathf.Max(0.1f, FoodSpeedMultiplier - (percent / 100f));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 식량속도 +{percent * 100f:F0}% → 배율: {FoodSpeedMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 식량속도 +{percent:F0}% → 배율: {FoodSpeedMultiplier:F2}x");
 #endif
     }
 
     public void RemoveFoodSpeedBuff(float percent)
     {
-        FoodSpeedMultiplier = Mathf.Min(1f, FoodSpeedMultiplier + percent);
+        FoodSpeedMultiplier = Mathf.Min(1f, FoodSpeedMultiplier + (percent / 100f));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 식량속도 -{percent * 100f:F0}% 해제 → 배율: {FoodSpeedMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 식량속도 -{percent:F0}% 해제 → 배율: {FoodSpeedMultiplier:F2}x");
 #endif
     }
 
     // ── 치명타 버프 (토템) ─────────────────────────────────────
     public void AddCritChanceBuff(float percent)
     {
-        CritChanceBonus += percent * (1f + _totemEfficiencyBonus);
+        CritChanceBonus += (percent / 100f) * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 치명타 확률 +{percent * 100f:F0}% → 보너스: {CritChanceBonus:F2}");
+        Debug.Log($"[TotemBuff] 치명타 확률 +{percent:F0}% → 보너스: {CritChanceBonus:F2}");
 #endif
     }
 
     public void RemoveCritChanceBuff(float percent)
     {
-        CritChanceBonus = Mathf.Max(0f, CritChanceBonus - percent * (1f + _totemEfficiencyBonus));
+        CritChanceBonus = Mathf.Max(0f, CritChanceBonus - (percent / 100f) * (1f + _totemEfficiencyBonus));
     }
 
     public void AddCritDamageBuff(float percent)
     {
-        CritDamageBonus += percent * (1f + _totemEfficiencyBonus);
+        CritDamageBonus += (percent / 100f) * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 치명타 데미지 +{percent * 100f:F0}% → 보너스: {CritDamageBonus:F2}");
+        Debug.Log($"[TotemBuff] 치명타 데미지 +{percent:F0}% → 보너스: {CritDamageBonus:F2}");
 #endif
     }
 
     public void RemoveCritDamageBuff(float percent)
     {
-        CritDamageBonus = Mathf.Max(0f, CritDamageBonus - percent * (1f + _totemEfficiencyBonus));
+        CritDamageBonus = Mathf.Max(0f, CritDamageBonus - (percent / 100f) * (1f + _totemEfficiencyBonus));
     }
 
     // ── 게이지 회복 속도 버프 ──────────────────────────────────
     public void AddGaugeSpeedBuff(float percent)
     {
-        GaugeSpeedMultiplier = Mathf.Max(0.1f, GaugeSpeedMultiplier - percent);
+        GaugeSpeedMultiplier = Mathf.Max(0.1f, GaugeSpeedMultiplier - (percent / 100f));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 게이지속도 +{percent * 100f:F0}% → 배율: {GaugeSpeedMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 게이지속도 +{percent:F0}% → 배율: {GaugeSpeedMultiplier:F2}x");
 #endif
     }
 
     // ── 투사체 크기 버프 ───────────────────────────────────────
     public void AddProjectileSizeBuff(float percent)
     {
-        ProjectileSizeMultiplier += percent;
+        ProjectileSizeMultiplier += (percent / 100f);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 투사체크기 +{percent * 100f:F0}% → 배율: {ProjectileSizeMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 투사체크기 +{percent:F0}% → 배율: {ProjectileSizeMultiplier:F2}x");
 #endif
     }
 
     // ── 식량 생산량 버프 (토템) ────────────────────────────────
     public void AddFoodAmountBuff(float percent)
     {
-        FoodAmountMultiplier += percent * (1f + _totemEfficiencyBonus);
+        FoodAmountMultiplier += (percent / 100f) * (1f + _totemEfficiencyBonus);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 식량생산량 +{percent * 100f:F0}% → 배율: {FoodAmountMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 식량생산량 +{percent:F0}% → 배율: {FoodAmountMultiplier:F2}x");
 #endif
     }
 
     public void RemoveFoodAmountBuff(float percent)
     {
-        FoodAmountMultiplier = Mathf.Max(0.1f, FoodAmountMultiplier - percent * (1f + _totemEfficiencyBonus));
+        FoodAmountMultiplier = Mathf.Max(0.1f, FoodAmountMultiplier - (percent / 100f) * (1f + _totemEfficiencyBonus));
     }
 
     // ── 식량 생산량 디버프 (마법사) ────────────────────────────
     public void AddFoodAmountDebuff(float reduction)
     {
-        FoodAmountMultiplier = Mathf.Max(0.1f, FoodAmountMultiplier - reduction);
+        FoodAmountMultiplier = Mathf.Max(0.1f, FoodAmountMultiplier - (reduction / 100f));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 식량생산량 -{reduction * 100f:F0}% → 배율: {FoodAmountMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 식량생산량 -{reduction:F0}% → 배율: {FoodAmountMultiplier:F2}x");
 #endif
     }
 
     public void RemoveFoodAmountDebuff(float reduction)
     {
-        FoodAmountMultiplier = Mathf.Min(1f, FoodAmountMultiplier + reduction);
+        FoodAmountMultiplier = Mathf.Min(1f, FoodAmountMultiplier + (reduction / 100f));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBuff] 식량생산량 -{reduction * 100f:F0}% 해제 → 배율: {FoodAmountMultiplier:F2}x");
+        Debug.Log($"[TotemBuff] 식량생산량 -{reduction:F0}% 해제 → 배율: {FoodAmountMultiplier:F2}x");
 #endif
     }
 

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Dron_FoodProducer_Anim
+  m_Controller: {fileID: 9100000, guid: 49d1c7156595322438f5e8ec7b363902, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 520aa08d8356a5048a761c980fb83ec9, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: e897c53d40f2ddd4b9094d99ecc9f98c, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: d69ea4ab26ef1a145a14343c04a46d01, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: bc45d4d7672afa049a0b180cc6e889c8, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 4622c9a3902e15a4ba80ddf87de928a4, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: bc45d4d7672afa049a0b180cc6e889c8, type: 2}

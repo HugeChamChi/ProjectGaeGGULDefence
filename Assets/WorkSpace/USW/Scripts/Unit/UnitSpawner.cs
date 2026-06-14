@@ -51,13 +51,40 @@ public class UnitSpawner : MonoBehaviour
         // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
         CurrentCost = 20f;
         if (_gameDataManager != null)
-            _gameDataManager.OnLoaded += SyncInitialCost;
+        {
+            if (_gameDataManager.IsLoaded)
+            {
+                SyncInitialCost();
+                SyncAllUnitData();
+            }
+            else
+            {
+                _gameDataManager.OnLoaded += SyncInitialCost;
+                _gameDataManager.OnLoaded += SyncAllUnitData;
+            }
+        }
     }
 
     private void SyncInitialCost()
     {
         CurrentCost = _gameDataManager.SummonInitialCost;
         OnCostChanged?.Invoke(CurrentCost);
+    }
+
+    private void SyncAllUnitData()
+    {
+        if (_unitFactory == null || _unitFactory.UnitDataList == null || _gameDataManager == null) return;
+
+        foreach (var data in _unitFactory.UnitDataList)
+        {
+            if (data == null) continue;
+            var row = _gameDataManager.GetCharacterRow(data.characterId);
+            if (row != null)
+            {
+                data.ApplySheetData(row);
+            }
+        }
+        Debug.Log($"[UnitSpawner] 모든 UnitData SO에 시트 스탯 동기화 완료 ({_unitFactory.UnitDataList.Length}종)");
     }
 
     public void OnSpawnButtonPressed()

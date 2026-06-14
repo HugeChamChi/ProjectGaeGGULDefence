@@ -12,19 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_DroneBuffer_Normal
   m_EditorClassIdentifier: 
-  characterId: 1010
+  characterId: 1008
   unitType: 6
   unitName: "\uAC10\uB9DD"
   unitTier: 0
   unitTribe: 0
-  icon: {fileID: 21300000, guid: 2e3d19f734c6f8a4e9cf982ebb806997, type: 3}
+  icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
   prefab: {fileID: 1563179443448772243, guid: 07828d40f9c1cfe4e90b04ff49ee5b07, type: 3}
   description: 
   attackSoundAddress: 
-  atk: 320
-  attackSpeed: 0
+  atk: 80
+  attackSpeed: 1.5
   skillAtk: 0
   skillCooldown: 20
   skillName: 
+  foodProduction: 1
   populationCost: 1
-  maxDroneCount: 4
+  maxDroneCount: 1

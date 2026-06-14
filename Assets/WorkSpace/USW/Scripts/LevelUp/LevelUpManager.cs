@@ -49,6 +49,8 @@ public class LevelUpManager : MonoBehaviour
     [SerializeField] private LevelUpData[] levelUpPool;
 
     public event System.Action<System.Action> OnTotemSelectionRequested;
+    public event System.Action OnChieftainBuffChanged;
+
     public IEnumerable<int> ChosenIds => _chosenIds;
     public LevelUpData[] LevelUpPool => levelUpPool;
 
@@ -345,6 +347,7 @@ public class LevelUpManager : MonoBehaviour
                 break;
             case LevelUpEffectType.ChieftainFoodProductionPercent:
                 ChieftainFoodProductionBonus -= v;
+                OnChieftainBuffChanged?.Invoke();
                 break;
         }
     }
@@ -513,6 +516,7 @@ public class LevelUpManager : MonoBehaviour
 
             case LevelUpEffectType.ChieftainFoodProductionPercent:
                 ChieftainFoodProductionBonus += v;
+                OnChieftainBuffChanged?.Invoke();
                 break;
         }
     }

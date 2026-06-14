@@ -10,22 +10,16 @@ public class DebuffDroneUnit : DroneSpawnerBase
 {
     [Inject] private DroneManager _droneManager;
 
-    [SerializeField] private DebuffDroneData[] _dataByTier; // 0=Normal 1=Rare 2=Epic 3=Legend
-
-    private DebuffDroneData Data =>
-        unitData != null && _dataByTier != null && (int)unitData.unitTier < _dataByTier.Length
-            ? _dataByTier[(int)unitData.unitTier] : null;
-
-    protected override bool HasValidData() => Data != null;
-    protected override float GetDroneAtk() => Data.droneAtk;
-    protected override float GetDroneAttackInterval() => Data.droneAttackInterval;
+    [Header("Debuff Settings")]
+    [SerializeField] private float damageAmplificationMultiplier = 1.2f;
+    [SerializeField] private float debuffDuration = 5f;
 
     protected override void OnSkillFull()
     {
         onSkillFull?.Invoke();
 
-        if (Data == null) return;
+        if (unitData == null) return;
         _audioManager?.PlaySFX("05.Drone_Debuff");
-        _droneManager?.ApplyBossDebuff(Data.damageAmplificationMultiplier, Data.debuffDuration);
+        _droneManager?.ApplyBossDebuff(damageAmplificationMultiplier, debuffDuration);
     }
 }

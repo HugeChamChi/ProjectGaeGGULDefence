@@ -36,15 +36,16 @@ namespace HSD.UI.Upgrade
         public void UpdateUI(UpgradeModel.UpgradeItemData data)
         {
             if (txt_Name != null) txt_Name.text = data.DisplayName;
-            if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
             
             if (data.IsMaxLevel)
             {
+                if (txt_Level != null) txt_Level.text = "MaxLV";
                 if (txt_Cost != null) txt_Cost.text = "MAX";
                 if (btn_Upgrade != null) btn_Upgrade.interactable = false;
             }
             else
             {
+                if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
                 if (txt_Cost != null) txt_Cost.text = data.UpgradeCost.ToString("N0");
                 if (btn_Upgrade != null) btn_Upgrade.interactable = true;
             }

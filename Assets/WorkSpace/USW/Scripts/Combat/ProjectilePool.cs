@@ -36,11 +36,15 @@ public class ProjectilePool : MonoBehaviour
 
     // ── 외부 API ──────────────────────────────────────────────────
 
-    /// <summary>from → to 로 투사체 발사. 도착 후 자동 풀 반환.</summary>
-    public void Launch(Vector3 from, Vector3 to)
+    /// <summary>from → to 로 투사체 발사. 도착 후 onHitCallback 호출 및 자동 풀 반환.</summary>
+    public void Launch(Vector3 from, Vector3 to, System.Action onHitCallback = null)
     {
         var p = _pool.Get();
-        p.Launch(from, to, ReturnToPool);
+        p.Launch(from, to, proj => 
+        {
+            onHitCallback?.Invoke();
+            ReturnToPool(proj);
+        });
     }
 
     // ── 내부 ──────────────────────────────────────────────────────

@@ -58,7 +58,7 @@ public class TotemBossKillStack : TotemBase
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[TotemBossKillStack] 보스 처치 x{_killCount} → 공격 {_appliedAttack*100f:F0}% / 속도 {_appliedSpeed*100f:F0}%");
+        Debug.Log($"[TotemBossKillStack] 보스 처치 x{_killCount} → 공격 {_appliedAttack:F0}% / 속도 {_appliedSpeed:F0}%");
 #endif
     }
 

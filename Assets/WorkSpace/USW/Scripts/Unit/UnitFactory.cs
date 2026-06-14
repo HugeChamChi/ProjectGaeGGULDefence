@@ -12,7 +12,7 @@ public class UnitFactory : MonoBehaviour
 
     public UnitData[] UnitDataList => unitDataList;
 
-    protected void Awake()
+    public void Init()
     {
         if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
         {

@@ -15,6 +15,11 @@ public class UIManager : MonoBehaviour
     [VContainer.Inject] private TimerController _timerController;
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private PopulationManager _populationManager;
+    [VContainer.Inject] private GridManager _gridManager;
+    [VContainer.Inject] private ChieftainSpawner _chieftainSpawner;
+    [VContainer.Inject] private LevelUpManager _levelUpManager;
+    [VContainer.Inject] private TotemBuffManager _totemBuffManager;
+    [VContainer.Inject] private DroneManager _droneManager;
 
     [Header("Buttons")]
     [SerializeField] private Button summonButton;
@@ -29,6 +34,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI bossHpLineText;
     [SerializeField] private Slider   currentLineSlider;
     [SerializeField] private Slider   nextLineSlider;
+    [SerializeField] private TMP_Text totalFoodProductionText;
 
     [Header("Population")]
     [SerializeField] private TMP_Text populationText;
@@ -106,8 +112,8 @@ public class UIManager : MonoBehaviour
         // 소환 비용 텍스트 초기값 + 변경 구독
         if (spawnCostText != null)
         {
-            spawnCostText.text = $"소환 {(int)_unitSpawner.CurrentCost}";
-            _unitSpawner.OnCostChanged += cost => spawnCostText.text = $"소환 {(int)cost}";
+            spawnCostText.text = $"{(int)_unitSpawner.CurrentCost}";
+            _unitSpawner.OnCostChanged += cost => spawnCostText.text = $"{(int)cost}";
         }
 
         if (currentLineSlider != null)
@@ -145,6 +151,44 @@ public class UIManager : MonoBehaviour
 
         if (resultPanel != null)
             resultPanel.SetActive(false);
+
+        if (totalFoodProductionText != null)
+        {
+            UnitBase.OnAnyUnitChanged += RefreshTotalFoodProduction;
+            if (_totemBuffManager != null) _totemBuffManager.OnTotemBuffChanged += RefreshTotalFoodProduction;
+            if (_levelUpManager != null) _levelUpManager.OnChieftainBuffChanged += RefreshTotalFoodProduction;
+            
+            RefreshTotalFoodProduction();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        UnitBase.OnAnyUnitChanged -= RefreshTotalFoodProduction;
+        if (_totemBuffManager != null) _totemBuffManager.OnTotemBuffChanged -= RefreshTotalFoodProduction;
+        if (_levelUpManager != null) _levelUpManager.OnChieftainBuffChanged -= RefreshTotalFoodProduction;
+    }
+
+    private void RefreshTotalFoodProduction()
+    {
+        if (totalFoodProductionText == null) return;
+
+        float total = 0f;
+        if (_gridManager != null)
+        {
+            foreach (var cell in _gridManager.AllCells())
+            {
+                if (cell.OccupyingUnit != null)
+                    total += cell.OccupyingUnit.CurrentFoodProductionPerSecond;
+            }
+        }
+
+        if (_chieftainSpawner != null && _chieftainSpawner.ChieftainUnit != null)
+        {
+            total += _chieftainSpawner.ChieftainUnit.CurrentFoodProductionPerSecond;
+        }
+
+        totalFoodProductionText.text = $"{total:F1}";
     }
 
     public void UpdateBossHp(int current, int max)

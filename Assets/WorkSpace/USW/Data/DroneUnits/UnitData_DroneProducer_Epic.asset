@@ -12,19 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_DroneProducer_Epic
   m_EditorClassIdentifier: 
-  characterId: 1012
+  characterId: 1014
   unitType: 5
-  unitName: "\uB4DC\uB860 \uC0DD\uC0B0\uC790 (\uC5D0\uD53D)"
+  unitName: "\uBCA0\uD0D5"
   unitTier: 2
   unitTribe: 0
-  icon: {fileID: 21300000, guid: 2e3d19f734c6f8a4e9cf982ebb806997, type: 3}
+  icon: {fileID: -1807137302, guid: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7, type: 3}
   prefab: {fileID: 8805120042669687640, guid: 74e086c8dfb5ef8429d72ea79bd836fa, type: 3}
   description: 
   attackSoundAddress: 
-  atk: 0
-  attackSpeed: 0
+  atk: 170
+  attackSpeed: 1.4
   skillAtk: 0
   skillCooldown: 12
   skillName: 
+  foodProduction: 3
   populationCost: 1
-  maxDroneCount: 0
+  maxDroneCount: 3

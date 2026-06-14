@@ -132,6 +132,11 @@ public class AnimatorControllerGenerator : EditorWindow
             return;
         }
 
+        if (AssetDatabase.LoadAssetAtPath<Object>(targetPath) != null)
+        {
+            AssetDatabase.DeleteAsset(targetPath);
+        }
+
         if (AssetDatabase.CopyAsset(basePath, targetPath))
         {
             AnimatorController newController = AssetDatabase.LoadAssetAtPath<AnimatorController>(targetPath);

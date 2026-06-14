@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Dron_Chief_Anim
+  m_Controller: {fileID: 9100000, guid: 49d1c7156595322438f5e8ec7b363902, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 4622c9a3902e15a4ba80ddf87de928a4, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3e8871a774f51f049971b82f545765dc, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: d69ea4ab26ef1a145a14343c04a46d01, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3e8871a774f51f049971b82f545765dc, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 520aa08d8356a5048a761c980fb83ec9, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: eab9c2bc133398f4ba0612a135adc700, type: 2}
