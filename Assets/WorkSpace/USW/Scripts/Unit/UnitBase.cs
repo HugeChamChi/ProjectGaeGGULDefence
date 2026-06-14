@@ -63,6 +63,7 @@ public abstract class UnitBase : MonoBehaviour
     private float _attackTimer;
     private float _skillTimer;
     private float _foodTimer;
+    public bool IsFirstPlacement { get; private set; } = true;
 
     public float SkillGaugeProgress 
     {
@@ -118,6 +119,13 @@ public abstract class UnitBase : MonoBehaviour
         currentCell = cell;
         ApplyFacingByCell();
 
+        if (IsFirstPlacement)
+        {
+            _attackTimer = GetCurrentAttackInterval();
+            _skillTimer = 0f;
+            _foodTimer = 0f;
+        }
+
         StopLoops();
         _paused = false;
         _loopCts = new CancellationTokenSource();
@@ -128,6 +136,8 @@ public abstract class UnitBase : MonoBehaviour
         OnAnyUnitChanged?.Invoke();
 
         _sound = new(this, _audioManager);
+
+        IsFirstPlacement = false;
     }
 
     /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
@@ -219,10 +229,6 @@ public abstract class UnitBase : MonoBehaviour
     private async UniTask UnitControlLoopAsync(CancellationToken token)
     {
         if (unitData == null) return;
-
-        _attackTimer = GetCurrentAttackInterval(); 
-        _skillTimer = 0f;
-        _foodTimer = 0f;
 
         float lastUpdateTime = Time.time;
 

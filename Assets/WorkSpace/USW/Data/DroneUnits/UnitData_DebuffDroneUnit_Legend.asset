@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_DebuffDroneUnit_Legend
   m_EditorClassIdentifier: 
-  characterId: 5012
+  characterId: 1001
   unitType: 7
   unitName: "\uB514\uBC84\uD504 \uB4DC\uB860 (\uC804\uC124)"
   unitTier: 3
@@ -22,9 +22,9 @@ MonoBehaviour:
   description: 
   attackSoundAddress: 
   atk: 0
-  attackSpeed: 9999
+  attackSpeed: 0
   skillAtk: 0
   skillCooldown: 16
   skillName: 
-  foodPerTick: 10
   populationCost: 1
+  maxDroneCount: 0
