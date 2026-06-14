@@ -51,7 +51,10 @@ public abstract class DroneSpawnerBase : UnitBase
         
         if (drone != null)
         {
-            _audioManager?.PlaySFX("05.Drone_Summon");
+            if (IsFirstPlacement)
+            {
+                _audioManager?.PlaySFX("05.Drone_Summon");
+            }
             _ownedDrones.Add(drone);
         }
     }
