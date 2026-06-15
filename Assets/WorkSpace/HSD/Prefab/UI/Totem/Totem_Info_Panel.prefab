@@ -236,8 +236,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uACF5\uACA9\uB825 20% \uC99D\uAC00\n\uACF5\uACA9 \uC18D\uB3C4 20% \uC99D\uAC00"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ebb7147477ed82c4c8023a49ae3b8a34, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -371,8 +371,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD1A0\uD15C \uBC94\uC704"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ebb7147477ed82c4c8023a49ae3b8a34, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -506,8 +506,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uACE0\uBAA9 \uADF8\uB8E8\uD130\uAE30"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ebb7147477ed82c4c8023a49ae3b8a34, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -641,8 +641,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "[\uB808\uC5B4]"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ebb7147477ed82c4c8023a49ae3b8a34, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1047,6 +1047,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f1e408223aea6248b257adb687f7c1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  openSoundName: 01.Popup
+  btn_Close: {fileID: 0}
+  btn_BackgroundClose: {fileID: 0}
+  targetAnim: {fileID: 0}
   iconSlot: {fileID: 7713152641649688066}
   txt_Name: {fileID: 7725360253335676659}
   txt_Stats: {fileID: 6422736368223713451}
@@ -1065,6 +1069,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationTarget: {fileID: 0}
   triggerType: 1
+  ignoreTimeScale: 0
   isLoop: 0
   ease: 6
   duration: 0.4

@@ -57,7 +57,7 @@ namespace GaeGGUL.UI.Unit
 
         public void UpdateBasicInfo(string unitName, Sprite icon, Tier tier)
         {
-            if (txt_UnitTier != null) txt_UnitTier.text = $"[{tier.ToString()}]".ToColor(tier.GetTextColor());
+            if (txt_UnitTier != null) txt_UnitTier.text = $"[{tier.GetName()}]".ToColor(tier.GetTextColor());
             if (txt_UnitName != null) txt_UnitName.text = unitName;
             if (iconSlot != null)     iconSlot.SetData(icon, tier);
         }

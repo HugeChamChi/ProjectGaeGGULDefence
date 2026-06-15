@@ -150,10 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c5230cc83129f9469ece87a1110719c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shrinkScale: 0.9
-  duration: 0.1
-  pressEase: 6
-  releaseEase: 27
+  data: {fileID: 0}
 --- !u!1 &5281144116311987211
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,8 +293,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: DayText
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ebb7147477ed82c4c8023a49ae3b8a34, type: 2}
-  m_sharedMaterial: {fileID: 2135569537731035230, guid: ebb7147477ed82c4c8023a49ae3b8a34,
+  m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

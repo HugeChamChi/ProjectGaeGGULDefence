@@ -30,23 +30,18 @@ public class TotemSelectCardUI : MonoBehaviour
 
     [Header("Range Grid")]
     [SerializeField] private Transform rangeGridContainer;
-    [SerializeField] private Sprite    rangeCellSprite;
 
-    [Header("Range Grid Colors")]
-    [SerializeField] private Color colorDefault  = new Color(0.85f, 0.85f, 0.85f, 1f);
-    [SerializeField] private Color colorCenter   = new Color(0.57f, 0.82f, 0.31f, 1f);
-    [SerializeField] private Color colorBuff     = new Color(0.64f, 0.00f, 0.00f, 1f);
-    [SerializeField] private Color colorDisabled = new Color(0.10f, 0.10f, 0.10f, 1f);
+    [Header("Range Grid Sprites")]
+    [SerializeField] private Sprite spriteDefault;
+    [SerializeField] private Sprite spriteCenter;
+    [SerializeField] private Sprite spriteBuff;
+    [SerializeField] private Sprite spriteDisabled;
 
     [Header("Scale Animation")]
     [SerializeField] private float selectedScale = 1.2f;
     [SerializeField] private float scaleDuration = 0.2f;
 
-    [Header("Tier Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
-    [SerializeField] private Sprite[] tierBorderSprites;
 
-    [Header("Icon Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
-    [SerializeField] private Sprite[] iconBorderSprites;
 
     [Header("Editor Test")]
     [SerializeField] private TotemData testData;
@@ -85,7 +80,6 @@ public class TotemSelectCardUI : MonoBehaviour
         if (descriptionText != null) descriptionText.text = data?.description ?? string.Empty;
         if (tierText        != null) tierText.text        = TierToLabel(data?.tier ?? Tier.Normal);
 
-        ApplyTierSprites(data?.tier ?? Tier.Normal);
         RefreshGrid(data);
     }
 
@@ -105,18 +99,6 @@ public class TotemSelectCardUI : MonoBehaviour
         transform.DOScale(1f, scaleDuration).SetEase(Ease.InOutQuad).SetUpdate(true);
     }
 
-    // ── 등급 스프라이트 ────────────────────────────────────────
-
-    private void ApplyTierSprites(Tier tier)
-    {
-        int idx = (int)tier;
-
-        if (tierBorderImage != null && tierBorderSprites != null && idx < tierBorderSprites.Length)
-            tierBorderImage.sprite = tierBorderSprites[idx];
-
-        if (iconBorderImage != null && iconBorderSprites != null && idx < iconBorderSprites.Length)
-            iconBorderImage.sprite = iconBorderSprites[idx];
-    }
 
     // ── 범위 그리드 ────────────────────────────────────────────
 
@@ -152,8 +134,8 @@ public class TotemSelectCardUI : MonoBehaviour
             var go  = new GameObject($"Cell_{i}", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(rangeGridContainer, false);
             var img = go.GetComponent<Image>();
-            img.sprite = rangeCellSprite;
-            img.color  = colorDefault;
+            img.sprite = spriteDefault;
+            img.color  = Color.white;
             _cells.Add(img);
         }
     }
@@ -186,23 +168,32 @@ public class TotemSelectCardUI : MonoBehaviour
         if (_cells.Count == 0) return;
 
         foreach (var cell in _cells)
-            cell.color = colorDefault;
+        {
+            cell.sprite = spriteDefault;
+            cell.color  = Color.white;
+        }
 
         // 토템 위치 D3
-        _cells[TotemRow * GridCols + TotemCol].color = colorCenter;
+        _cells[TotemRow * GridCols + TotemCol].sprite = spriteCenter;
 
         if (data == null) return;
 
         foreach (var offset in data.effectRange)
         {
             if (TryGetIndex(offset, out int idx))
-                _cells[idx].color = colorBuff;
+            {
+                _cells[idx].sprite = spriteBuff;
+                _cells[idx].color  = Color.white;
+            }
         }
 
         foreach (var offset in data.attackDisabledRange)
         {
             if (TryGetIndex(offset, out int idx))
-                _cells[idx].color = colorDisabled;
+            {
+                _cells[idx].sprite = spriteDisabled;
+                _cells[idx].color  = Color.white;
+            }
         }
     }
 

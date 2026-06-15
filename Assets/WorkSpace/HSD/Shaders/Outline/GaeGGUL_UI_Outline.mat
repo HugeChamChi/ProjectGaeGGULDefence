@@ -32,8 +32,8 @@ Material:
     - _AnimIntensity: 0.5
     - _AnimSpeed: 0
     - _ColorMask: 15
-    - _InnerWidth: 7
-    - _OuterWidth: 5
+    - _InnerWidth: 0
+    - _OuterWidth: 4
     - _OutlineWidth: 3
     - _Stencil: 0
     - _StencilComp: 8

@@ -36,7 +36,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     [Inject] private CurrencyManager _currencyManager;
 
     [SerializeField] private Transform         cardContainer;
-    [SerializeField] private TotemSelectCardUI cardPrefab;
+    [SerializeField] private TotemSelectCardUI[] cardPrefabs;
     [SerializeField] private Button            confirmButton;
 
     [Header("Selection Timer")]
@@ -95,7 +95,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
         foreach (var data in choices)
         {
-            var card = Instantiate(cardPrefab, cardContainer);
+            var prefab = cardPrefabs[(int)data.tier];
+            var card = Instantiate(prefab, cardContainer);
             card.Setup(data, OnCardClicked);
             _spawnedCards.Add(card);
         }
@@ -165,7 +166,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
         foreach (var data in choices)
         {
-            var card = Instantiate(cardPrefab, cardContainer);
+            var prefab = cardPrefabs[(int)data.tier];
+            var card = Instantiate(prefab, cardContainer);
             card.Setup(data, OnCardClicked);
             _spawnedCards.Add(card);
         }
