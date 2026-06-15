@@ -12375,7 +12375,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1264989399
 RectTransform:
   m_ObjectHideFlags: 0
@@ -20833,7 +20833,7 @@ PrefabInstance:
     - target: {fileID: 2408876844603203321, guid: dbf9f61150539d24c8da43489b15933f,
         type: 3}
       propertyPath: m_Name
-      value: InGame_Setting_Panel
+      value: Setting_Panel
       objectReference: {fileID: 0}
     - target: {fileID: 2408876844603203321, guid: dbf9f61150539d24c8da43489b15933f,
         type: 3}
@@ -21646,7 +21646,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &5361045829266045638
 GameObject:
   m_ObjectHideFlags: 0
@@ -22200,7 +22200,7 @@ MonoBehaviour:
   targetAnim: {fileID: 0}
   iconSlot: {fileID: 3709525342578333578}
   txt_UnitTier: {fileID: 9074754231419192903}
-  txt_UnitName: {fileID: 9074754231419192903}
+  txt_UnitName: {fileID: 32407315}
   txt_SkillNameText: {fileID: 8047944441483992334}
   txt_SkillDescription: {fileID: 7959020013248212100}
   txt_SkillCooldown: {fileID: 101654065}
