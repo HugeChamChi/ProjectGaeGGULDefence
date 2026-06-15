@@ -88,7 +88,10 @@ public abstract class BossBase : MonoBehaviour
 
         _currentHp = Mathf.Max(0, _currentHp - actualAmount);
 
-        PlayHitAnimation();
+        if (!IsDead)
+        {
+            PlayHitAnimation();
+        }
 
         OnHpChanged?.Invoke(_currentHp, _maxHp);
         OnDamaged?.Invoke(actualAmount);
@@ -101,14 +104,24 @@ public abstract class BossBase : MonoBehaviour
 
     private async UniTaskVoid HandleDeathAsync()
     {
+        Debug.Log($"[BossBase] HandleDeathAsync called for {gameObject.name}");
         if (_animator != null)
         {
+            Debug.Log($"[BossBase] Triggering 'Death' animation on {_animator.name}");
+            _animator.ResetTrigger("Hit"); // 찌꺼기 트리거 초기화
             _animator.SetTrigger("Death");
+            
             // 애니메이션 재생을 위해 1초 대기 후 파괴 이벤트 호출
             await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: this.GetCancellationTokenOnDestroy())
                          .SuppressCancellationThrow();
+            Debug.Log($"[BossBase] Finished 1-second death wait for {gameObject.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"[BossBase] _animator is null on {gameObject.name}!");
         }
 
+        Debug.Log($"[BossBase] Invoking OnDeath and OnAnyBossDied for {gameObject.name}");
         OnDeath?.Invoke();
         OnAnyBossDied?.Invoke();
     }

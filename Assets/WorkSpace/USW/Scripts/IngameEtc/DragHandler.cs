@@ -176,7 +176,9 @@ public class DragHandler : MonoBehaviour,
         {
             cell.TryPlaceUnit(_unit);
             _rect.SetParent(cell.transform, false);
-            _rect.anchoredPosition = Vector2.zero;
+            var factory = UnityEngine.Object.FindObjectOfType<UnitFactory>(true);
+            if (factory != null) factory.InitUnitRectTransform(_unit);
+            else _rect.anchoredPosition = Vector2.zero;
             _originCell = cell;
 
             _unit.OnRemoved();

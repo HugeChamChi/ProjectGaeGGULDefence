@@ -136,6 +136,8 @@ public class UnitFactory : MonoBehaviour
         unit.unitData = data;
         unit.animator?.Initialize(unit);
 
+        InitUnitRectTransform(unit);
+
         return unit;
     }
 
