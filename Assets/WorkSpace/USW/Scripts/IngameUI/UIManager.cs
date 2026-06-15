@@ -15,11 +15,11 @@ public class UIManager : MonoBehaviour
     [VContainer.Inject] private TimerController _timerController;
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private PopulationManager _populationManager;
-    [VContainer.Inject] private GridManager _gridManager;
-    [VContainer.Inject] private ChieftainSpawner _chieftainSpawner;
-    [VContainer.Inject] private LevelUpManager _levelUpManager;
-    [VContainer.Inject] private TotemBuffManager _totemBuffManager;
-    [VContainer.Inject] private DroneManager _droneManager;
+    private GridManager _gridManager;
+    private ChieftainSpawner _chieftainSpawner;
+    private LevelUpManager _levelUpManager;
+    private TotemBuffManager _totemBuffManager;
+    private DroneManager _droneManager;
 
     [Header("Buttons")]
     [SerializeField] private Button summonButton;
@@ -84,6 +84,12 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         Time.timeScale = 1f;
+
+        _gridManager = Object.FindObjectOfType<GridManager>();
+        _chieftainSpawner = Object.FindObjectOfType<ChieftainSpawner>();
+        _levelUpManager = Object.FindObjectOfType<LevelUpManager>();
+        _totemBuffManager = Object.FindObjectOfType<TotemBuffManager>();
+        _droneManager = Object.FindObjectOfType<DroneManager>();
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);

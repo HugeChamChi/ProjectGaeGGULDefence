@@ -18,6 +18,11 @@ public class SellTotemButtonUI : MonoBehaviour
     public void SetTotem(TotemBase totem)          => _targetTotem = totem;
     public void SetPopup(TotemActionPopupUI popup)  => _popup       = popup;
 
+    public void SetState(bool canSell)
+    {
+        GetComponent<Button>().interactable = canSell;
+    }
+
     private void OnSellButtonClicked()
     {
         if (_targetTotem == null || _popup == null) return;

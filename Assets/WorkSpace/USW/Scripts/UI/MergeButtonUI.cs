@@ -20,9 +20,9 @@ public class MergeButtonUI : MonoBehaviour
         GetComponent<Button>().onClick.AddListener(() => OnMergeRequested?.Invoke());
     }
 
-    /// <summary>UnitActionPopupUI.Show()에서 호출 — 합성 가능 여부에 따라 색상 변경</summary>
+    /// <summary>UnitActionPopupUI.Show()에서 호출 — 합성 가능 여부에 따라 버튼 비활성화</summary>
     public void SetState(bool canMerge)
     {
-        buttonImage.color = canMerge ? colorActive : colorInactive;
+        GetComponent<Button>().interactable = canMerge;
     }
 }

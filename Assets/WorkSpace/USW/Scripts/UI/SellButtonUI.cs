@@ -21,6 +21,11 @@ public class SellButtonUI : MonoBehaviour
     /// <summary>UnitActionPopupUI.Show()에서 호출 — 판매 대상 유닛 설정</summary>
     public void SetUnit(UnitBase unit) => _targetUnit = unit;
 
+    public void SetState(bool canSell)
+    {
+        GetComponent<Button>().interactable = canSell;
+    }
+
     private void OnSellButtonClicked()
     {
         if (_targetUnit == null) return;

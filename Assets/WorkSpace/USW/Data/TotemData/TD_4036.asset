@@ -15,13 +15,13 @@ MonoBehaviour:
   totemType: 0
   tier: 3
   totemName: "\uC815\uC810\uC758 \uAD8C\uB2A5"
-  icon: {fileID: 21300000, guid: a82e083bb3584c945bee3b9795699686, type: 3}
+  icon: {fileID: 21300000, guid: 4a787a4ff96ae914da3eb2df993d136e, type: 3}
   prefab: {fileID: 0}
   rotationSprites:
-  - {fileID: 21300000, guid: a82e083bb3584c945bee3b9795699686, type: 3}
-  - {fileID: 21300000, guid: 0a3fc07adfc7572499f036aa6dfa75bb, type: 3}
-  - {fileID: 21300000, guid: fbd8bf8e0efea0146aeb29fcf364be93, type: 3}
-  - {fileID: 21300000, guid: 8f11ee224e88a054a82ff3021b491334, type: 3}
+  - {fileID: 21300000, guid: 4a787a4ff96ae914da3eb2df993d136e, type: 3}
+  - {fileID: 21300000, guid: 2cd08013d52bebc4fb1549456db7a6fb, type: 3}
+  - {fileID: 21300000, guid: d1c2ae26db1929f4ca7ac4e4e904fcb0, type: 3}
+  - {fileID: 21300000, guid: 485108ffd047c124fa08760e7e8461c8, type: 3}
   description: "\uD45C\uAE30 \uC601\uC5ED \uACF5\uACA9 \uBD88\uAC00, \uCD5C\uC0C1\uB2E8
     1\uCE78\uC758 \uAE30\uBB3C \uACF5\uACA9\uB825 100% \uC0C1\uC2B9"
   attackBuffAmount: 1

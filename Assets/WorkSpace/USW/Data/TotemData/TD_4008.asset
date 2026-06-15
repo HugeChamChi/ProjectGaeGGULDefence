@@ -15,13 +15,13 @@ MonoBehaviour:
   totemType: 2
   tier: 0
   totemName: "\uB05D\uC5C6\uB294 \uC218\uD655"
-  icon: {fileID: 21300000, guid: 78af46d61a4e4d8499b5edf302f7371f, type: 3}
+  icon: {fileID: 21300000, guid: 7606e922e230a2240a1c8491dff4ea55, type: 3}
   prefab: {fileID: 0}
   rotationSprites:
-  - {fileID: 21300000, guid: 78af46d61a4e4d8499b5edf302f7371f, type: 3}
-  - {fileID: 21300000, guid: 4a4629e6f85d65040ac6fee311b03277, type: 3}
-  - {fileID: 21300000, guid: a8b273590015f38439c02016ba01e2e4, type: 3}
-  - {fileID: 21300000, guid: 37f1de2792069864a824f01ac2be7f73, type: 3}
+  - {fileID: 21300000, guid: 7606e922e230a2240a1c8491dff4ea55, type: 3}
+  - {fileID: 21300000, guid: ff411f22cd6a34b479b378f7e44b4e7d, type: 3}
+  - {fileID: 21300000, guid: e035e38263399114eaebc2526f5502f1, type: 3}
+  - {fileID: 21300000, guid: 6517d4cb68796cf4e8eb1413806fab18, type: 3}
   description: "10\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 30 \uC0DD\uC131"
   attackBuffAmount: 0
   speedBuffAmount: 0

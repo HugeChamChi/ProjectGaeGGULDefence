@@ -75,6 +75,22 @@ namespace GaeGGUL.Extension
             return bonusVal > 0 ? $"+{bonusVal:F1}s" : $"{bonusVal:F1}s";
         }
 
+        public static float GetFinalAttackSpeed(this GridCell cell, float baseSpeed)
+        {
+            return baseSpeed * cell.GetSpeedMultiplier();
+        }
+
+        public static string GetAttackSpeedBonusText(this GridCell cell, float baseSpeed)
+        {
+            float mult = cell.GetSpeedMultiplier();
+            if (Mathf.Approximately(mult, 1f)) return "";
+
+            float bonusVal = baseSpeed * (mult - 1f);
+            if (Mathf.Approximately(bonusVal, 0f)) return "";
+
+            return bonusVal > 0 ? $"+{bonusVal:F2}s" : $"{bonusVal:F2}s";
+        }
+
         /// <summary>
         /// 식량 생산량 관련 보너스 정보 반환
         /// </summary>

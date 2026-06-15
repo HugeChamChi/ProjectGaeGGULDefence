@@ -139,6 +139,10 @@ public class UnitFactory : MonoBehaviour
         return unit;
     }
 
+    [Header("Spawn Settings")]
+    [SerializeField] private float defaultSpawnPivotY = 0.5f;
+    [SerializeField] private float defaultSpawnOffsetY = 0f;
+
     /// <summary>유닛의 RectTransform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
     public void InitUnitRectTransform(UnitBase unit)
     {
@@ -147,8 +151,8 @@ public class UnitFactory : MonoBehaviour
 
         rt.anchorMin        = new Vector2(0.5f, 0.5f);
         rt.anchorMax        = new Vector2(0.5f, 0.5f);
-        rt.pivot            = new Vector2(0.5f, 0f); // 하단 중앙 피벗 (셀 위에 서 있는 형태)
-        rt.anchoredPosition = Vector2.zero;
+        rt.pivot            = new Vector2(0.5f, defaultSpawnPivotY); // 기본값 0.5 (인스펙터에서 수정 가능)
+        rt.anchoredPosition = new Vector2(0f, defaultSpawnOffsetY); // y에 offset 더함
         rt.localScale       = Vector3.one;
     }
 

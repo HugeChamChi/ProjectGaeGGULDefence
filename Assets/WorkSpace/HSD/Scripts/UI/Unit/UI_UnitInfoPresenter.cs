@@ -6,8 +6,6 @@ namespace GaeGGUL.UI.Unit
     public class UI_UnitInfoPresenter
     {
         private readonly UI_UnitInfoPanel _view;
-        private readonly System.Collections.Generic.List<UnitStatUIData> _statBuffer = new System.Collections.Generic.List<UnitStatUIData>(4);
-
         private readonly GameDataManager _gdm;
 
         public UI_UnitInfoPresenter(UI_UnitInfoPanel view, GameDataManager gdm)
@@ -23,56 +21,42 @@ namespace GaeGGUL.UI.Unit
             var data = unit.unitData;
             var cell = unit.currentCell;
 
-            _statBuffer.Clear();
+            string atkValue = cell.GetFinalAttack(data.atk).ToString();
+            string atkBonus = cell.GetAttackBonusText(data.atk);
 
-            // Atk: 최종값 (기본+보너스), 보너스 텍스트 (+N)
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           
-                cell.GetFinalAttack(data.atk).ToString(),            
-                cell.GetAttackBonusText(data.atk)));
+            float finalAtkSpeed = cell.GetFinalAttackSpeed(data.attackSpeed);
+            string atkSpeedValue = $"{finalAtkSpeed:F2}s";
+            string atkSpeedBonus = cell.GetAttackSpeedBonusText(data.attackSpeed);
 
-            // SkillAtk: 최종값 (기본+보너스), 보너스 텍스트 (+N)
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      
-                cell.GetFinalAttack(data.skillAtk).ToString(),       
-                cell.GetAttackBonusText(data.skillAtk)));
-
-            // SkillCooldown: 최종값 (기본+보너스), 보너스 텍스트 (+0.5s)
             float finalCooldown = cell.GetFinalCooldown(data.skillCooldown);
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, 
-                $"{finalCooldown:F1}s",    
-                cell.GetCooldownBonusText(data.skillCooldown)));
+            string cooldownValue = $"{finalCooldown:F1}s";
+            string cooldownBonus = cell.GetCooldownBonusText(data.skillCooldown);
+            string cooldownText = string.IsNullOrEmpty(cooldownBonus) ? cooldownValue : $"{cooldownValue} ({cooldownBonus})";
 
-            // FoodPerTick: 현재는 기본값 표시, 보너스 텍스트 (Buff)
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   
-                $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}",      
-                cell.GetFoodBonusText()));
+            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}";
+            string foodBonus = cell.GetFoodBonusText();
 
-            UpdateView(data, _statBuffer);
+            UpdateView(data, atkValue, atkBonus, atkSpeedValue, atkSpeedBonus, foodValue, foodBonus, cooldownText);
         }
 
         public void SetUnitData(UnitData data)
         {
             if (data == null) return;
 
-            _statBuffer.Clear();
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.Atk,           data.atk.ToString(),            ""));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillAtk,      data.skillAtk.ToString(),       ""));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.SkillCooldown, $"{data.skillCooldown:F1}s",    ""));
-            _statBuffer.Add(new UnitStatUIData(UnitStatType.FoodPerTick,   $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}",      ""));
+            string atkValue = data.atk.ToString();
+            string atkSpeedValue = $"{data.attackSpeed:F2}s";
+            string cooldownValue = $"{data.skillCooldown:F1}s";
+            string cooldownText = cooldownValue;
+            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}";
 
-            UpdateView(data, _statBuffer);
+            UpdateView(data, atkValue, "", atkSpeedValue, "", foodValue, "", cooldownText);
         }
 
-        private void UpdateView(UnitData data, System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
+        private void UpdateView(UnitData data, string atk, string atkBonus, string atkSpeed, string atkSpeedBonus, string food, string foodBonus, string cooldownText)
         {
-            _view.UpdateBasicInfo(
-                data.unitName, 
-                data.skillName,
-                data.description,
-                data.icon,
-                data.unitTier
-            );
-
-            _view.UpdateStats(stats);
+            _view.UpdateBasicInfo(data.unitName, data.icon, data.unitTier);
+            _view.UpdateSkillInfo(data.skillName, data.description, cooldownText);
+            _view.UpdateStats(atk, atkBonus, atkSpeed, atkSpeedBonus, food, foodBonus);
         }
     }
 }

@@ -563,11 +563,13 @@ public class GameDataManager
         => _characterData.TryGetValue(charId, out var row) ? row : null;
 
     // ── 캐릭터 데이터 파싱 ──────────────────────────────────
+    public List<string> UpgradeTypes { get; private set; } = new();
 
     private void ParseCharacterData(string csv)
     {
         if (string.IsNullOrWhiteSpace(csv)) return;
 
+        UpgradeTypes.Clear();
         var rows = SplitCsvRows(csv);
         
         for (int i = 2; i < rows.Count; i++)
@@ -591,10 +593,16 @@ public class GameDataManager
                 CriticalChance = ParseFloat(cols[8]),
                 FoodProduction = ParseFloat(cols[9])
             };
+            row.Level = GradeToLevel(row.Grade);
 
             Debug.Log($"[GameDataManager] Parsed Character {id} - Name: {row.Name}, FoodProduction: {row.FoodProduction}");
 
-            _characterData[id] = row;
+            if (!string.IsNullOrEmpty(row.CharacterType) && !UpgradeTypes.Contains(row.CharacterType))
+            {
+                UpgradeTypes.Add(row.CharacterType);
+            }
+
+            _characterData[row.CharacterId] = row;
         }
         Debug.Log($"[GameDataManager] 캐릭터 데이터 {_characterData.Count}행 로드 완료");
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using DG.Tweening;
+using Cysharp.Threading.Tasks;
+using GaeGGUL.Animation;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -18,26 +19,20 @@ public class UnitActionPopupUI : MonoBehaviour
 {
     [SerializeField] private MergeButtonUI mergeButton;
     [SerializeField] private SellButtonUI  sellButton;
-    [SerializeField] private Canvas        rootCanvas;
 
     public event Action OnDismissRequested;
 
-    private RectTransform _rect;
-    private Tweener       _tween;
     private bool          _isShowing;
     private bool          _justShown;
 
     private void Awake()
     {
-        _rect            = GetComponent<RectTransform>();
-        _rect.localScale = Vector3.zero;
+        if (mergeButton != null) mergeButton.OnMergeRequested += Hide;
+        if (sellButton != null) sellButton.OnSellRequested += (_) => Hide();
     }
 
     public void Show(UnitBase unit, bool canMerge)
     {
-        // 오브젝트가 비활성 상태로 시작했을 때 Awake가 안 돌아 _rect가 null일 수 있음
-        if (_rect == null) _rect = GetComponent<RectTransform>();
-        if (_rect == null) { Debug.LogError("[UnitActionPopupUI] RectTransform 없음"); return; }
         if (mergeButton == null) { Debug.LogError("[UnitActionPopupUI] mergeButton 미연결 (Inspector 확인)"); return; }
         if (sellButton  == null) { Debug.LogError("[UnitActionPopupUI] sellButton 미연결 (Inspector 확인)"); return; }
 
@@ -47,16 +42,6 @@ public class UnitActionPopupUI : MonoBehaviour
         mergeButton.SetState(canMerge);
         sellButton.SetUnit(unit);
 
-        RectTransform targetRect = unit.transform as RectTransform;
-
-        PositionAtCenter(targetRect);
-
-        _tween?.Kill();
-        _rect.localScale = Vector3.zero;
-        _tween = _rect.DOScale(Vector3.one, 0.25f)
-                      .SetEase(Ease.OutBack)
-                      .SetUpdate(true);
-
         _isShowing = true;
     }
 
@@ -64,12 +49,7 @@ public class UnitActionPopupUI : MonoBehaviour
     {
         if (!_isShowing) return;
         _isShowing = false;
-
-        _tween?.Kill();
-        _tween = _rect.DOScale(Vector3.zero, 0.18f)
-                      .SetEase(Ease.InBack)
-                      .SetUpdate(true)
-                      .OnComplete(() => gameObject.SetActive(false));
+        gameObject.SetActive(false);
     }
 
     private void LateUpdate()
@@ -86,24 +66,9 @@ public class UnitActionPopupUI : MonoBehaviour
             if (r.gameObject.transform.IsChildOf(transform)) return;
         }
 
+        Hide();
         OnDismissRequested?.Invoke();
     }
 
-    private void PositionAtCenter(RectTransform targetRect)
-    {
-        if (targetRect == null || rootCanvas == null) return;
 
-        Vector3[] corners = new Vector3[4];
-        targetRect.GetWorldCorners(corners);
-        Vector3 center = (corners[0] + corners[2]) / 2f;
-
-        Camera cam = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-            ? null : rootCanvas.worldCamera;
-        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, center);
-
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rootCanvas.GetComponent<RectTransform>(), screenPoint, cam, out Vector2 localPoint);
-
-        _rect.anchoredPosition = localPoint;
-    }
 }

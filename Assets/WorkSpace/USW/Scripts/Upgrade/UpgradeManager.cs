@@ -28,10 +28,7 @@ public class UpgradeManager : MonoBehaviour
     public bool   IsLoaded { get; private set; }
     public event Action OnLoaded;
 
-    private readonly Dictionary<string, int> _jobLevel = new()
-    {
-        { "돌격", 1 }, { "사격", 1 }, { "지원", 1 }, { "마법", 1 }
-    };
+    private readonly Dictionary<string, int> _jobLevel = new();
 
     private async UniTaskVoid Start()
     {
@@ -41,6 +38,12 @@ public class UpgradeManager : MonoBehaviour
         if (_gameDataManager != null)
         {
             await UniTask.WaitUntil(() => _gameDataManager.IsLoaded, cancellationToken: token);
+
+            _jobLevel.Clear();
+            foreach (var jobType in _gameDataManager.UpgradeTypes)
+            {
+                _jobLevel[jobType] = 1; // 기본 1레벨
+            }
         }
 
         IsLoaded = true;

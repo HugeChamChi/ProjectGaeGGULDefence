@@ -12,10 +12,14 @@ namespace GaeGGUL.UI.Totem
         [SerializeField] private Image img_Color;
         [SerializeField] private TextMeshProUGUI txt_Label;
 
-        public void SetData(string label, Color color)
+        public void SetData(string label, Sprite sprite)
         {
             if (txt_Label != null) txt_Label.text = label;
-            if (img_Color != null) img_Color.color = color;
+            if (img_Color != null)
+            {
+                img_Color.sprite = sprite;
+                img_Color.color = Color.white; // Ensure tint doesn't hide sprite
+            }
         }
     }
 }

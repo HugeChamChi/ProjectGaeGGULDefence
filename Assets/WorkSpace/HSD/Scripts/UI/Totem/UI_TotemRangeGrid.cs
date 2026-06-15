@@ -147,18 +147,18 @@ namespace GaeGGUL.UI.Totem
                 else DestroyImmediate(tr_LegendParent.GetChild(i).gameObject);
             }
 
-            var legendData = new (string label, Color color)[]
+            var legendData = new (string label, Sprite sprite)[]
             {
-                (settings.fieldLabel, settings.fieldColor),
-                (settings.totemLabel, settings.totemColor),
-                (settings.effectLabel, settings.effectColor),
-                (settings.debuffLabel, settings.debuffColor)
+                (settings.fieldLabel, settings.fieldSprite),
+                (settings.totemLabel, settings.totemSprite),
+                (settings.effectLabel, settings.effectSprite),
+                (settings.debuffLabel, settings.debuffSprite)
             };
 
             foreach (var data in legendData)
             {
                 var slot = Instantiate(legendSlotPrefab, tr_LegendParent);
-                slot.SetData(data.label, data.color);
+                slot.SetData(data.label, data.sprite);
             }
         }
 
@@ -187,7 +187,7 @@ namespace GaeGGUL.UI.Totem
                     gridLayout.ApplyLayoutToChild(cellRect, pos, size);
 
                     _cells[x, y] = cell;
-                    _cells[x, y].SetColor(settings.fieldColor); // 초기화 시 필드색
+                    _cells[x, y].SetSprite(settings.fieldSprite); // 초기화 시 필드 스프라이트
                 }
             }
         }
@@ -198,10 +198,10 @@ namespace GaeGGUL.UI.Totem
 
             if (_cells == null) return;
 
-            // 1. 전체 초기화 (필드 색상)
+            // 1. 전체 초기화 (필드 스프라이트)
             foreach (var cell in _cells)
             {
-                if (cell != null) cell.SetColor(settings.fieldColor);
+                if (cell != null) cell.SetSprite(settings.fieldSprite);
             }
 
             // 2. 효과 범위 표시
@@ -212,7 +212,7 @@ namespace GaeGGUL.UI.Totem
                     Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
                     if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
                     {
-                        _cells[pos.x, pos.y].SetColor(settings.effectColor);
+                        _cells[pos.x, pos.y].SetSprite(settings.effectSprite);
                         Debug.Log($"[TotemUI] Effect Range at {pos} (offset: {offset})");
                     }
                 }
@@ -226,7 +226,7 @@ namespace GaeGGUL.UI.Totem
                     Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
                     if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
                     {
-                        _cells[pos.x, pos.y].SetColor(settings.debuffColor);
+                        _cells[pos.x, pos.y].SetSprite(settings.debuffSprite);
                         Debug.Log($"[TotemUI] Debuff Range at {pos} (offset: {offset})");
                     }
                 }
@@ -235,7 +235,7 @@ namespace GaeGGUL.UI.Totem
             // 4. 토템 위치 표시 (중앙)
             if (IsValidPos(_center) && _cells[_center.x, _center.y] != null)
             {
-                _cells[_center.x, _center.y].SetColor(settings.totemColor);
+                _cells[_center.x, _center.y].SetSprite(settings.totemSprite);
             }
             else
             {

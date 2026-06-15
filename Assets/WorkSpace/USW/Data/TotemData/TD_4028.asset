@@ -15,13 +15,13 @@ MonoBehaviour:
   totemType: 4
   tier: 2
   totemName: "\uADE0\uD615\uC758 \uC218\uD638"
-  icon: {fileID: 21300000, guid: 1a5a33d93c3496f4c945f4ea586c3252, type: 3}
+  icon: {fileID: 21300000, guid: d35e25cf34d859745b346bedd8e1ba9b, type: 3}
   prefab: {fileID: 0}
   rotationSprites:
-  - {fileID: 21300000, guid: 1a5a33d93c3496f4c945f4ea586c3252, type: 3}
-  - {fileID: 21300000, guid: 6ab2d19c0b0e109418ebb4ded9e1383a, type: 3}
-  - {fileID: 21300000, guid: 1ffd1baa919d4ce4e935407761fdd692, type: 3}
-  - {fileID: 21300000, guid: ea86d071b92e3a841b378b5ed82a0b11, type: 3}
+  - {fileID: 21300000, guid: d35e25cf34d859745b346bedd8e1ba9b, type: 3}
+  - {fileID: 21300000, guid: 8435a99cd3fb1eb439337bba41eaee05, type: 3}
+  - {fileID: 21300000, guid: 5f8adab1a550ccd4a8cced6e0f5cc480, type: 3}
+  - {fileID: 21300000, guid: 34a624ab9fd1d7f4a99649ccc12bb9f2, type: 3}
   description: "\uACF5\uACA9\uB825 20% \uC99D\uAC00, \uACF5\uACA9 \uC18D\uB3C4 20%
     \uC99D\uAC00"
   attackBuffAmount: 0.2

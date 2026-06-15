@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using DG.Tweening;
+using Cysharp.Threading.Tasks;
+using GaeGGUL.Animation;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -22,41 +23,26 @@ public class TotemActionPopupUI : MonoBehaviour
 {
     [SerializeField] private RotateButtonUI rotateButton;
     [SerializeField] private SellTotemButtonUI sellButton;
-    [SerializeField] private Canvas rootCanvas;
 
     public event Action              OnDismissRequested;
     public event Action<TotemBase>   OnSellTotemRequested;
 
-    private RectTransform _rect;
-    private Tweener       _tween;
     private bool          _isShowing;
     private bool          _justShown;
     private TotemBase     _currentTotem;
 
-    private void Awake()
-    {
-        _rect            = GetComponent<RectTransform>();
-        _rect.localScale = Vector3.zero;
-    }
+
 
     public void Show(TotemBase totem)
     {
-        if (_rect == null) _rect = GetComponent<RectTransform>();
-        if (_rect == null) return;
         _justShown    = true;
         _currentTotem = totem;
 
         rotateButton.SetTotem(totem);
         sellButton.SetTotem(totem);
+        sellButton.SetPopup(this);
 
         gameObject.SetActive(true);
-        PositionAtCenter(totem.GetComponent<RectTransform>());
-
-        _tween?.Kill();
-        _rect.localScale = Vector3.zero;
-        _tween = _rect.DOScale(Vector3.one, 0.25f)
-                      .SetEase(Ease.OutBack)
-                      .SetUpdate(true);
 
         _isShowing = true;
     }
@@ -67,11 +53,7 @@ public class TotemActionPopupUI : MonoBehaviour
         _isShowing    = false;
         _currentTotem = null;
 
-        _tween?.Kill();
-        _tween = _rect.DOScale(Vector3.zero, 0.18f)
-                      .SetEase(Ease.InBack)
-                      .SetUpdate(true)
-                      .OnComplete(() => gameObject.SetActive(false));
+        gameObject.SetActive(false);
     }
 
     internal void RaiseSellRequested(TotemBase totem)
@@ -93,24 +75,8 @@ public class TotemActionPopupUI : MonoBehaviour
             if (r.gameObject.transform.IsChildOf(transform)) return;
         }
 
+        Hide();
         OnDismissRequested?.Invoke();
     }
 
-    private void PositionAtCenter(RectTransform targetRect)
-    {
-        if (targetRect == null || rootCanvas == null || _rect == null) return;
-
-        Vector3[] corners = new Vector3[4];
-        targetRect.GetWorldCorners(corners);
-        Vector3 center = (corners[0] + corners[2]) / 2f;
-
-        Camera cam = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-            ? null : rootCanvas.worldCamera;
-        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, center);
-
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rootCanvas.GetComponent<RectTransform>(), screenPoint, cam, out Vector2 localPoint);
-
-        _rect.anchoredPosition = localPoint;
-    }
 }

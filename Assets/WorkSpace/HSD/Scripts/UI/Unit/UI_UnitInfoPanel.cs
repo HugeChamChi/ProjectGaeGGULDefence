@@ -6,30 +6,22 @@ using GaeGGUL.UI.Common;
 
 namespace GaeGGUL.UI.Unit
 {
-    public struct UnitStatUIData
-    {
-        public UnitStatType Type;
-        public string Value;
-        public string Bonus;
-
-        public UnitStatUIData(UnitStatType type, string value, string bonus)
-        {
-            Type = type;
-            Value = value;
-            Bonus = bonus;
-        }
-    }
-
     public class UI_UnitInfoPanel : UI_Base
     {
         [Header("Basic Info")]
         [SerializeField] private UI_IconTierSlot iconSlot;
+        [SerializeField] private TextMeshProUGUI txt_UnitTier;
         [SerializeField] private TextMeshProUGUI txt_UnitName;
+
+        [Header("Skill")]
         [SerializeField] private TextMeshProUGUI txt_SkillNameText;
         [SerializeField] private TextMeshProUGUI txt_SkillDescription;
+        [SerializeField] private TextMeshProUGUI txt_SkillCooldown;
 
         [Header("Stats")]
-        [SerializeField] private UI_StatSlot[] statSlots; 
+        [SerializeField] private UI_StatSlot statSlot_Atk;
+        [SerializeField] private UI_StatSlot statSlot_AtkSpeed;
+        [SerializeField] private UI_StatSlot statSlot_Food;
 
         [VContainer.Inject] public GameDataManager _gameDataManager;
         private UI_UnitInfoPresenter _presenter;
@@ -63,27 +55,25 @@ namespace GaeGGUL.UI.Unit
             }
         }
 
-        public void UpdateBasicInfo(string unitName, string skillName, string skillDescription, Sprite icon, Tier tier)
+        public void UpdateBasicInfo(string unitName, Sprite icon, Tier tier)
         {
-            if (txt_UnitName != null) txt_UnitName.text = $"[{tier.ToString().ToColor(tier.GetTextColor())}] {unitName}";
-            if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
-            if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
-            
-            if (iconSlot != null)             iconSlot.SetData(icon, tier);
+            if (txt_UnitTier != null) txt_UnitTier.text = $"[{tier.ToString()}]".ToColor(tier.GetTextColor());
+            if (txt_UnitName != null) txt_UnitName.text = unitName;
+            if (iconSlot != null)     iconSlot.SetData(icon, tier);
         }
 
-        public void UpdateStats(System.Collections.Generic.IReadOnlyList<UnitStatUIData> stats)
+        public void UpdateSkillInfo(string skillName, string skillDescription, string cooldownText)
         {
-            if (statSlots == null) return;
+            if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
+            if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
+            if (txt_SkillCooldown != null) txt_SkillCooldown.text = cooldownText;
+        }
 
-            for (int i = 0; i < statSlots.Length && i < stats.Count; i++)
-            {
-                if (statSlots[i] == null) continue;
-                
-                var statData = stats[i];
-                var visual = statData.Type.GetVisual();
-                statSlots[i].Setup(visual.icon, visual.bgColor, statData.Value, statData.Bonus);
-            }
+        public void UpdateStats(string atkValue, string atkBonus, string atkSpeedValue, string atkSpeedBonus, string foodValue, string foodBonus)
+        {
+            if (statSlot_Atk != null)      statSlot_Atk.Setup(atkValue, atkBonus);
+            if (statSlot_AtkSpeed != null) statSlot_AtkSpeed.Setup(atkSpeedValue, atkSpeedBonus);
+            if (statSlot_Food != null)     statSlot_Food.Setup(foodValue, foodBonus);
         }
     }
 }

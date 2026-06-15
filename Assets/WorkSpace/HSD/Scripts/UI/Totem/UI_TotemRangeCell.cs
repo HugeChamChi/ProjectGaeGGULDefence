@@ -10,11 +10,14 @@ namespace GaeGGUL.UI.Totem
     {
         [SerializeField] private Image img_Background;
 
-        public void SetColor(Color color)
+        public void SetSprite(Sprite sprite)
         {
             if (img_Background == null) img_Background = GetComponent<Image>();
             if (img_Background != null)
-                img_Background.color = color;
+            {
+                img_Background.sprite = sprite;
+                img_Background.color = Color.white; // Ensure tint doesn't hide sprite
+            }
         }
     }
 }

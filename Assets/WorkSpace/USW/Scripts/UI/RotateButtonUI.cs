@@ -14,4 +14,9 @@ public class RotateButtonUI : MonoBehaviour
     }
 
     public void SetTotem(TotemBase totem) => _targetTotem = totem;
+
+    public void SetState(bool canRotate)
+    {
+        GetComponent<Button>().interactable = canRotate;
+    }
 }
