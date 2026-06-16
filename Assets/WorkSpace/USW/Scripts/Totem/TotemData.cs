@@ -49,6 +49,10 @@ public class TotemData : ScriptableObject
     // 치명타 확률 증가 (0.1 = 10%)
     public float critChanceBuffAmount = 0f;
 
+    [Header("식량 생성 (끝없는 수확 전용)")]
+    [Tooltip("토템이 스스로 식량을 생성하는 주기(초). 생성량은 foodAmountBuffAmount 사용. 0 이하면 미사용.")]
+    public float foodGenInterval = 10f;
+
     [Header("범위 데이터 (TotemEditor로 설정)")]
     [Tooltip("토템 위치 기준 상대 오프셋 — TotemEditorWindow에서 편집")]
     public List<Vector2Int> effectRange         = new List<Vector2Int>();
