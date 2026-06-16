@@ -321,11 +321,7 @@ public class UnitSpawner : MonoBehaviour
         // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
         if (lu != null && lu.HasChieftainGainOnSell)
         {
-            _totemBuffManager.AddLevelUpAttackBuff(lu.ChieftainSellAtkGain);
-            int   excessPop     = (_populationManager?.Current ?? 0) - 2;
-            float popPenalty    = excessPop > 0 ? excessPop * lu.ChieftainSellPopPenalty : 0f;
-            if (popPenalty > 0f)
-                _totemBuffManager.AddLevelUpAttackBuff(-popPenalty);
+            lu.AddChieftainAttackBonus(lu.ChieftainSellAtkGain);
         }
 
         OnAnyUnitSold?.Invoke();

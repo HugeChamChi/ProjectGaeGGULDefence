@@ -509,10 +509,21 @@ public abstract class UnitBase : MonoBehaviour
             ? (1f + lu.BurstAttackBonus)
             : 1f;
 
-        // 족장 전용 공격력 버프 (3008 위엄)
-        float chieftainAtk = (_chieftainManager?.ChieftainUnit == this)
-            ? 1f + (lu?.ChieftainAttackBonus ?? 0f)
-            : 1f;
+        // 족장 전용 공격력 버프 (3008 위엄 및 원맨쇼)
+        float chieftainAtk = 1f;
+        if (_chieftainManager?.ChieftainUnit == this && lu != null)
+        {
+            float bonus = lu.ChieftainAttackBonus;
+            if (lu.HasChieftainGainOnSell)
+            {
+                int excessPop = (_populationManager?.Current ?? 0) - 2;
+                if (excessPop > 0)
+                {
+                    bonus -= excessPop * lu.ChieftainSellPopPenalty;
+                }
+            }
+            chieftainAtk += bonus;
+        }
 
         float cellAttackBonus = currentCell?.Model.TotemCellAttackBonus ?? 0f;
 

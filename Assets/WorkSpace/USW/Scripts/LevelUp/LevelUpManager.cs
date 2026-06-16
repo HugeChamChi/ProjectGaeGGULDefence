@@ -161,6 +161,12 @@ public class LevelUpManager : MonoBehaviour
     public float ChieftainSellAtkGain    { get; private set; } = 0f;
     public float ChieftainSellPopPenalty { get; private set; } = 0f;
 
+    public void AddChieftainAttackBonus(float v)
+    {
+        ChieftainAttackBonus += v;
+        OnChieftainBuffChanged?.Invoke();
+    }
+
     // ── 합성 / 토템 플래그 ─────────────────────────────────────
     public bool HasMergeKeepsTribe  { get; private set; }
     public bool HasAllowTotemOverlap { get; private set; }
