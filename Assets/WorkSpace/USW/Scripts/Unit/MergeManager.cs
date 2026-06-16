@@ -66,13 +66,30 @@ public class MergeManager : MonoBehaviour
             UnityEngine.Object.Destroy(unit.gameObject);
         }
 
-        var newUnit = _levelUpManager?.HasMergeKeepsTribe == true
-            ? _unitFactoryManager.CreateRandomUnitByTribeAndTier(tribe, nextTier)
-            : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
+        var newUnit = _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return;
 
         // Use PlaceUnitWithEffect with the spawnCell as origin (so the effect plays without a long line traversal)
         _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
+
+        // [진로 계승] 진로 계승 보유 시 무작위 노멀 유닛 1기 추가 지급
+        if (_levelUpManager?.HasMergeKeepsTribe == true)
+        {
+            var bonusUnit = _unitFactoryManager.CreateRandomNormalUnit();
+            if (bonusUnit != null)
+            {
+                var emptyCells = _gridManager.GetEmptyCells();
+                if (emptyCells.Count > 0)
+                {
+                    var randomCell = emptyCells[UnityEngine.Random.Range(0, emptyCells.Count)];
+                    _spawnerManager.PlaceUnitWithEffect(bonusUnit, randomCell);
+                }
+                else
+                {
+                    UnityEngine.Object.Destroy(bonusUnit.gameObject);
+                }
+            }
+        }
     }
 
     /// <summary>선택 해제 및 OnSelectionCleared 이벤트 발행</summary>
