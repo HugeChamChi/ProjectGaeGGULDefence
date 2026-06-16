@@ -75,9 +75,9 @@ public class TotemSpawner : MonoBehaviour
         var rt = go.GetComponent<RectTransform>();
         if (rt != null)
         {
-            rt.anchorMin        = new Vector2(0.5f, 0.5f);
-            rt.anchorMax        = new Vector2(0.5f, 0.5f);
-            rt.pivot            = new Vector2(0.5f, 0.5f);
+            rt.anchorMin        = new Vector2(0.5f, 0f);
+            rt.anchorMax        = new Vector2(0.5f, 0f);
+            rt.pivot            = new Vector2(0.5f, 0f);
             rt.anchoredPosition = Vector2.zero;
         }
 
