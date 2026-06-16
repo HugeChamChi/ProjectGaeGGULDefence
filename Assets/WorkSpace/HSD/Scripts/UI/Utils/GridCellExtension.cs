@@ -61,11 +61,13 @@ namespace GaeGGUL.Extension
 
         public static int GetFinalAttack(this GridCell cell, float baseAtk)
         {
+            if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetAttackDamage();
             return Mathf.RoundToInt(baseAtk * cell.GetAttackMultiplier());
         }
 
         public static float GetFinalCooldown(this GridCell cell, float baseCooldown)
         {
+            if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetCurrentSkillInterval();
             return baseCooldown * cell.GetSkillCooldownMultiplier();
         }
 
@@ -76,13 +78,21 @@ namespace GaeGGUL.Extension
         /// </summary>
         public static string GetAttackBonusText(this GridCell cell, float baseValue)
         {
-            float mult = cell.GetAttackMultiplier();
-            if (Mathf.Approximately(mult, 1f)) return "";
+            int diff;
+            if (cell != null && cell.OccupyingUnit != null)
+            {
+                diff = cell.OccupyingUnit.GetAttackDamage() - Mathf.RoundToInt(baseValue);
+            }
+            else
+            {
+                float mult = cell.GetAttackMultiplier();
+                if (Mathf.Approximately(mult, 1f)) return "";
+                diff = Mathf.RoundToInt(baseValue * (mult - 1f));
+            }
 
-            int bonusValue = Mathf.RoundToInt(baseValue * (mult - 1f));
-            if (bonusValue == 0) return "";
-
-            return bonusValue > 0 ? $"+{bonusValue}" : bonusValue.ToString();
+            if (diff == 0) return "";
+            string color = diff > 0 ? "green" : "red";
+            return $"<color={color}>{(diff > 0 ? $"+{diff}" : diff.ToString())}</color>";
         }
 
         /// <summary>
@@ -90,29 +100,46 @@ namespace GaeGGUL.Extension
         /// </summary>
         public static string GetCooldownBonusText(this GridCell cell, float baseCooldown)
         {
-            float mult = cell.GetSkillCooldownMultiplier();
-            if (Mathf.Approximately(mult, 1f)) return "";
+            float diff;
+            if (cell != null && cell.OccupyingUnit != null)
+            {
+                diff = cell.OccupyingUnit.GetCurrentSkillInterval() - baseCooldown;
+            }
+            else
+            {
+                float mult = cell.GetSkillCooldownMultiplier();
+                if (Mathf.Approximately(mult, 1f)) return "";
+                diff = baseCooldown * (mult - 1f);
+            }
 
-            float bonusVal = baseCooldown * (mult - 1f);
-            if (Mathf.Approximately(bonusVal, 0f)) return "";
-
-            return bonusVal > 0 ? $"+{bonusVal:F1}s" : $"{bonusVal:F1}s";
+            if (Mathf.Approximately(diff, 0f)) return "";
+            string color = diff < 0 ? "green" : "red";
+            return $"<color={color}>{(diff > 0 ? $"+{diff:F1}s" : $"{diff:F1}s")}</color>";
         }
 
         public static float GetFinalAttackSpeed(this GridCell cell, float baseSpeed)
         {
+            if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetCurrentAttackInterval();
             return baseSpeed * cell.GetSpeedMultiplier();
         }
 
         public static string GetAttackSpeedBonusText(this GridCell cell, float baseSpeed)
         {
-            float mult = cell.GetSpeedMultiplier();
-            if (Mathf.Approximately(mult, 1f)) return "";
+            float diff;
+            if (cell != null && cell.OccupyingUnit != null)
+            {
+                diff = cell.OccupyingUnit.GetCurrentAttackInterval() - baseSpeed;
+            }
+            else
+            {
+                float mult = cell.GetSpeedMultiplier();
+                if (Mathf.Approximately(mult, 1f)) return "";
+                diff = baseSpeed * (mult - 1f);
+            }
 
-            float bonusVal = baseSpeed * (mult - 1f);
-            if (Mathf.Approximately(bonusVal, 0f)) return "";
-
-            return bonusVal > 0 ? $"+{bonusVal:F2}s" : $"{bonusVal:F2}s";
+            if (Mathf.Approximately(diff, 0f)) return "";
+            string color = diff < 0 ? "green" : "red";
+            return $"<color={color}>{(diff > 0 ? $"+{diff:F2}s" : $"{diff:F2}s")}</color>";
         }
 
         /// <summary>

@@ -509,21 +509,22 @@ public abstract class UnitBase : MonoBehaviour
             ? (1f + lu.BurstAttackBonus)
             : 1f;
 
-        // 족장 전용 공격력 버프 (3008 위엄 및 원맨쇼)
-        float chieftainAtk = 1f;
-        if (_chieftainManager?.ChieftainUnit == this && lu != null)
+        // 족장 전용 공격력 버프 (3008 위엄 및 원맨쇼 판매스택)
+        float chieftainAtk = (_chieftainManager?.ChieftainUnit == this && lu != null)
+            ? 1f + lu.ChieftainAttackBonus
+            : 1f;
+
+        // 원맨쇼 인구수 페널티 (전체 유닛 적용)
+        float globalPopPenalty = 1f;
+        if (lu != null && lu.HasChieftainGainOnSell)
         {
-            float bonus = lu.ChieftainAttackBonus;
-            if (lu.HasChieftainGainOnSell)
+            int excessPop = (_populationManager?.Current ?? 0) - 2;
+            if (excessPop > 0)
             {
-                int excessPop = (_populationManager?.Current ?? 0) - 2;
-                if (excessPop > 0)
-                {
-                    bonus -= excessPop * lu.ChieftainSellPopPenalty;
-                }
+                globalPopPenalty -= excessPop * lu.ChieftainSellPopPenalty;
             }
-            chieftainAtk += bonus;
         }
+        globalPopPenalty = Mathf.Max(0.01f, globalPopPenalty);
 
         float cellAttackBonus = currentCell?.Model.TotemCellAttackBonus ?? 0f;
 
@@ -535,7 +536,8 @@ public abstract class UnitBase : MonoBehaviour
                      * tribeAtk
                      * projAtk
                      * burstAtk
-                     * chieftainAtk;
+                     * chieftainAtk
+                     * globalPopPenalty;
 
         float cellCritChance = currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
         float critChance = (lu?.CritChance ?? 0f) + (_totemBuffManager?.CritChanceBonus ?? 0f) + cellCritChance;
