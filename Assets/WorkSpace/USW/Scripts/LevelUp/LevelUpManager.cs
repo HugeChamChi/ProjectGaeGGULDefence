@@ -619,12 +619,12 @@ public class LevelUpManager : MonoBehaviour
 
             case LevelUpSpecialEffect.SummonDealsDamage:
                 HasSummonDealsDamage = true;
-                SummonDamagePct      = Mathf.Max(SummonDamagePct, data.specialValue / 100f);
+                SummonDamagePct      += data.specialValue / 100f;
                 break;
 
             case LevelUpSpecialEffect.SellDealsDamage:
                 HasSellDealsDamage = true;
-                SellDamagePct      = Mathf.Max(SellDamagePct, data.specialValue / 100f);
+                SellDamagePct      += data.specialValue / 100f;
                 break;
 
             case LevelUpSpecialEffect.SellGivesRandomUnit:

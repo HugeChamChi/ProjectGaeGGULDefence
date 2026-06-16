@@ -79,6 +79,9 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     {
         _onChoiceMade = onChoiceMade;
         
+        var layout = cardContainer.GetComponent<LayoutGroup>();
+        if (layout != null) layout.enabled = true;
+        
         if (rerollCostText != null)
             rerollCostText.text = rerollCost.ToString();
 
@@ -102,6 +105,9 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         }
 
         gameObject.SetActive(true);
+        
+        FreezeLayoutAsync(layout).Forget();
+
         Time.timeScale = 0f;
         _timerManager.StopTimer();
 
@@ -109,6 +115,13 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             cell.OccupyingUnit?.PauseLoops();
 
         RunSelectionTimer().Forget();
+    }
+
+    private async UniTaskVoid FreezeLayoutAsync(LayoutGroup layout)
+    {
+        if (layout == null) return;
+        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+        if (layout != null) layout.enabled = false;
     }
 
     // ── 카드 클릭 ──────────────────────────────────────────────
@@ -152,6 +165,9 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             Debug.Log("[TotemSelectUI] 식량이 부족하여 리롤할 수 없습니다.");
             return;
         }
+        
+        var layout = cardContainer.GetComponent<LayoutGroup>();
+        if (layout != null) layout.enabled = true;
 
         ClearCards();
         _selectedCard = null;
@@ -171,6 +187,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             card.Setup(data, OnCardClicked);
             _spawnedCards.Add(card);
         }
+
+        FreezeLayoutAsync(layout).Forget();
 
         RunSelectionTimer().Forget();
     }

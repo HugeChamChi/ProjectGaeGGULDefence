@@ -85,6 +85,8 @@ public class LevelUpCardUI : MonoBehaviour
         if (hasAnim)
             StartAnim();
 
+        transform.SetAsLastSibling();
+
         transform.DOKill();
         transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic).SetUpdate(true);
     }

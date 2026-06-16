@@ -89,6 +89,7 @@ public class TotemSelectCardUI : MonoBehaviour
 
     public void Select()
     {
+        transform.SetAsLastSibling();
         transform.DOKill();
         transform.DOScale(selectedScale, scaleDuration).SetEase(Ease.InOutElastic).SetUpdate(true);
     }

@@ -141,6 +141,13 @@ public class UnitSpawner : MonoBehaviour
             return;
         }
 
+        // 비동기 스폰 지연 전에 인구수 즉시 선점 (광클 초과 방지)
+        if (_populationManager != null)
+        {
+            _populationManager.Add(unit.unitData?.populationCost ?? 1);
+            unit.IsPopulationReserved = true;
+        }
+
         // 환급 처리(소환 실패 시)는 effectiveCost 기준
         var cell = empty[Random.Range(0, empty.Count)];
         
@@ -276,6 +283,14 @@ public class UnitSpawner : MonoBehaviour
             ? _gameDataManager.GetSellPrice(charId, upgradeLevel)
             : 5f;
 
+        // 판매 시 보스 피해 (자폭병 레벨업 효과) - 유닛 제거 전에 데미지를 미리 계산해야 토템/위치 효과가 적용됨
+        var lu = _levelUpManager;
+        int sellDmg = 0;
+        if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
+        {
+            sellDmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SellDamagePct);
+        }
+
         cell.RemoveUnit();
         unit.OnRemoved();
         Destroy(unit.gameObject);
@@ -288,12 +303,9 @@ public class UnitSpawner : MonoBehaviour
         if (bonusFood > 0f)
             _currencyManager.AddCurrency(bonusFood);
 
-        // 판매 시 보스 피해 (자폭병 레벨업 효과)
-        var lu = _levelUpManager;
-        if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
+        if (sellDmg > 0)
         {
-            int dmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SellDamagePct);
-            _bossManager?.CurrentBoss?.TakeDamage(dmg);
+            _bossManager?.CurrentBoss?.TakeDamage(sellDmg);
         }
 
         // 판매 시 확률로 노말 기물 획득 (비상 탈출 레벨업 효과)

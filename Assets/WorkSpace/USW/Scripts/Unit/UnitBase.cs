@@ -97,6 +97,8 @@ public abstract class UnitBase : MonoBehaviour
     // ── 배치/제거 ──────────────────────────────────────────────
 
     /// <summary>UnitSpawner 또는 DragHandler.PlaceSelfAt() 이 셀에 배치한 뒤 호출</summary>
+    public bool IsPopulationReserved = false;
+
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
     {
         if (animator == null)
@@ -143,7 +145,13 @@ public abstract class UnitBase : MonoBehaviour
         UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
 
         OnUnitPlaced();
-        _populationManager?.Add(unitData?.populationCost ?? 1);
+        
+        if (!IsPopulationReserved)
+        {
+            _populationManager?.Add(unitData?.populationCost ?? 1);
+            IsPopulationReserved = true;
+        }
+        
         OnAnyUnitChanged?.Invoke();
 
         _sound = new(this, _audioManager);
@@ -160,7 +168,11 @@ public abstract class UnitBase : MonoBehaviour
     {
         OnUnitRemoved();
         StopLoops();
-        _populationManager?.Remove(unitData?.populationCost ?? 1);
+        if (IsPopulationReserved)
+        {
+            _populationManager?.Remove(unitData?.populationCost ?? 1);
+            IsPopulationReserved = false;
+        }
         currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
