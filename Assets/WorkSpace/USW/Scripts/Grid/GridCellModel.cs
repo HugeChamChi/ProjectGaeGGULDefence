@@ -83,12 +83,12 @@ public class GridCellModel
         OnStateChanged?.Invoke();
     }
 
-    public void AddTotemCellAttackBonus(float v)     => TotemCellAttackBonus    += (v / 100f);
-    public void AddTotemCellSpeedBonus(float v)      => TotemCellSpeedBonus     += (v / 100f);
-    public void AddTotemCellFoodSpeedBonus(float v)  => TotemCellFoodSpeedBonus += (v / 100f);
-    public void AddTotemCellFoodAmountBonus(float v) => TotemCellFoodAmountBonus += (v / 100f);
-    public void AddTotemCellCritChanceBonus(float v) => TotemCellCritChanceBonus += (v / 100f);
-    public void AddTotemCellCritDamageBonus(float v) => TotemCellCritDamageBonus += (v / 100f);
+    public void AddTotemCellAttackBonus(float v)     => TotemCellAttackBonus    += v;
+    public void AddTotemCellSpeedBonus(float v)      => TotemCellSpeedBonus     += v;
+    public void AddTotemCellFoodSpeedBonus(float v)  => TotemCellFoodSpeedBonus += v;
+    public void AddTotemCellFoodAmountBonus(float v) => TotemCellFoodAmountBonus += v;
+    public void AddTotemCellCritChanceBonus(float v) => TotemCellCritChanceBonus += v;
+    public void AddTotemCellCritDamageBonus(float v) => TotemCellCritDamageBonus += v;
 
     /// <summary>토템 제거 시 RebuildCellBuffFlags()에서 호출 — 토템 전용 효과 초기화</summary>
     public void ClearTotemEffects()

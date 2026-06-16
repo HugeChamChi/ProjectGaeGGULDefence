@@ -46,11 +46,21 @@ public class DroneManager : MonoBehaviour
     // ── 집결 상태 ───────────────────────────────────────────────────
     private bool _isRallying;
 
+    [Header("드론 스폰 배치 간격 (늘어진 V자)")]
+    public float droneSpreadXLower = 25f; // 하단 드론의 X 간격 (좁게)
+    public float droneSpreadYLower = -45f;// 하단 드론의 Y 위치 (아래로 깊게)
+    public float droneSpreadXUpper = 80f; // 상단 드론의 X 간격 (넓게)
+    public float droneSpreadYUpper = 25f; // 상단 드론의 Y 위치 (위로)
+
     [Header("집결 대형")]
     [Tooltip("드론 간 수평 간격 (px)")]
     [SerializeField] private float _rallySpacing    = 100f;
     [Tooltip("V자 대형 수직 간격 (px)")]
     [SerializeField] private float _rallyVSpacing   = 100f;
+    [Tooltip("집결 대형의 최대 가로 폭 (넘으면 간격 자동 축소)")]
+    [SerializeField] private float _rallyMaxWidth   = 800f;
+    [Tooltip("집결 대형의 최대 세로 폭 (넘으면 간격 자동 축소)")]
+    [SerializeField] private float _rallyMaxHeight  = 400f;
     [Tooltip("보스 중심 기준 아래 방향 오프셋 (px)")]
     [SerializeField] private float _rallyBossOffset = 200f;
 
@@ -170,16 +180,31 @@ public class DroneManager : MonoBehaviour
 
             // ① 집결 이동 (전체 병렬) - V자 배치
             var moveTasks = new List<UniTask>();
+            
+            float actualSpacing = _rallySpacing;
+            float actualVSpacing = _rallyVSpacing;
+            int count = snapshot.Length;
+
+            if (count > 1)
+            {
+                // 최대 폭 제한에 따른 간격 압축
+                float totalW = (count - 1) * _rallySpacing;
+                if (totalW > _rallyMaxWidth) actualSpacing = _rallyMaxWidth / (count - 1);
+                
+                float totalH = ((count - 1) / 2f) * _rallyVSpacing;
+                if (totalH > _rallyMaxHeight) actualVSpacing = _rallyMaxHeight / ((count - 1) / 2f);
+            }
+
             // V자 대형 전체를 수직으로 '정중앙'에 맞추기 위해, 대형 전체 높이의 절반만큼 아래로 오프셋
-            float vHeight = ((snapshot.Length - 1) / 2f) * _rallyVSpacing;
+            float vHeight = ((count - 1) / 2f) * actualVSpacing;
             float verticalOffset = -vHeight * 0.5f;
 
-            for (int i = 0; i < snapshot.Length; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (snapshot[i] == null) continue;
-                float distFromCenter = Mathf.Abs(i - (snapshot.Length - 1) / 2f);
-                float x = rallyCenter.x + (i - (snapshot.Length - 1) / 2f) * _rallySpacing;
-                float y = rallyCenter.y + verticalOffset + distFromCenter * _rallyVSpacing;
+                float distFromCenter = Mathf.Abs(i - (count - 1) / 2f);
+                float x = rallyCenter.x + (i - (count - 1) / 2f) * actualSpacing;
+                float y = rallyCenter.y + verticalOffset + distFromCenter * actualVSpacing;
                 var pos = new Vector3(x, y, 0f);
                 moveTasks.Add(snapshot[i].MoveToAsync(pos, _rallyMoveDuration, token));
             }

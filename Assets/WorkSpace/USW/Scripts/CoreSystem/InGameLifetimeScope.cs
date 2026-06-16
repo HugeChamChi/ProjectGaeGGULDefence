@@ -45,7 +45,6 @@ public class InGameLifetimeScope : LifetimeScope
             builder.RegisterComponentInHierarchy<DroneManager>();
         }
 
-        // builder.RegisterComponentInHierarchy<GameDataManager>();
         builder.RegisterEntryPoint<GameInitializer>();
 
         builder.RegisterBuildCallback(resolver =>

@@ -8,7 +8,7 @@ using VContainer;
 /// </summary>
 public class DebuffDroneUnit : DroneSpawnerBase
 {
-    [Inject] private DroneManager _droneManager;
+
 
     [Header("Debuff Settings")]
     [SerializeField] private float damageAmplificationMultiplier = 1.2f;

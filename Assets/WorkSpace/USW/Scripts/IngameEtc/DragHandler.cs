@@ -21,6 +21,7 @@ public class DragHandler : MonoBehaviour,
     [Inject] private BossManager _bossManager;
     [Inject] private GridManager _gridManager;
     [Inject] private MergeManager _mergeManager;
+    [Inject] private UnitFactory _unitFactory;
 
     private RectTransform _rect;
     private Canvas        _canvas;
@@ -31,6 +32,10 @@ public class DragHandler : MonoBehaviour,
 
     private UnitBase  _unit;
     private TotemBase _totem;
+
+    private Vector2   _originSizeDelta;
+    private Vector3   _originLocalScale;
+    private Quaternion _originLocalRot;
 
     private bool _isDragging = false;
 
@@ -89,6 +94,9 @@ public class DragHandler : MonoBehaviour,
 
         _originParent      = _rect.parent;
         _originAnchoredPos = _rect.anchoredPosition;
+        _originSizeDelta   = _rect.sizeDelta;
+        _originLocalScale  = _rect.localScale;
+        _originLocalRot    = _rect.localRotation;
 
         _rect.SetParent(canvas.transform, true);
         _rect.SetAsLastSibling();
@@ -113,6 +121,7 @@ public class DragHandler : MonoBehaviour,
         if (!_isDragging) { ReturnToOrigin(); return; }
         _isDragging = false;
 
+        if (EventSystem.current == null) { ReturnToOrigin(); return; }
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
 
@@ -130,7 +139,7 @@ public class DragHandler : MonoBehaviour,
         if (targetCell == null)            { ReturnToOrigin(); return; }
 
         // 봉인된 셀에는 배치 불가
-        if (!targetCell.Model.IsAvailable) { ReturnToOrigin(); return; }
+        if (targetCell.Model == null || !targetCell.Model.IsAvailable) { ReturnToOrigin(); return; }
 
         if (targetCell.IsOccupied) TrySwap(targetCell);
         else                       MoveToEmpty(targetCell);
@@ -176,14 +185,18 @@ public class DragHandler : MonoBehaviour,
         {
             cell.TryPlaceUnit(_unit);
             _rect.SetParent(cell.transform, false);
-            var factory = UnityEngine.Object.FindObjectOfType<UnitFactory>(true);
-            if (factory != null) factory.InitUnitRectTransform(_unit);
-            else _rect.anchoredPosition = Vector2.zero;
+            if (_unitFactory != null) _unitFactory.InitUnitRectTransform(_unit);
+            else 
+            {
+                _rect.anchoredPosition = Vector2.zero;
+                _rect.localScale = Vector3.one;
+                _rect.localRotation = Quaternion.identity;
+            }
             _originCell = cell;
 
             _unit.OnRemoved();
             // Manager 접근 통일 + 셀 참조 전달
-            _unit.OnPlaced(_currencyManager, _bossManager.CurrentBoss, cell);
+            _unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
         }
 
         if (_totem != null)
@@ -191,6 +204,8 @@ public class DragHandler : MonoBehaviour,
             cell.TryPlaceTotem(_totem);
             _rect.SetParent(cell.transform, false);
             _rect.anchoredPosition = Vector2.zero;
+            _rect.localScale = Vector3.one;
+            _rect.localRotation = Quaternion.identity;
             _originCell = cell;
 
             _totem.OnPlaced(cell);
@@ -203,5 +218,8 @@ public class DragHandler : MonoBehaviour,
         if (_originParent == null) return;
         _rect.SetParent(_originParent, false);
         _rect.anchoredPosition = _originAnchoredPos;
+        _rect.sizeDelta        = _originSizeDelta;
+        _rect.localScale       = _originLocalScale;
+        _rect.localRotation    = _originLocalRot;
     }
 }

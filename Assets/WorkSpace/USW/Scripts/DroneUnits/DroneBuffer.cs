@@ -7,7 +7,7 @@ using VContainer;
 /// </summary>
 public class DroneBuffer : DroneSpawnerBase
 {
-    [Inject] private DroneManager _droneManager;
+
 
     [Header("Buffer Settings")]
     [SerializeField] private float atkBuffMultiplier = 1f;

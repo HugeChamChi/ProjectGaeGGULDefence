@@ -11,13 +11,15 @@ public class ChieftainSpawner : MonoBehaviour
     private GridManager _gridManager;
     private UnitFactory _unitFactory;
     private UnitSpawner _unitSpawner;
+    private GameManager _gameManager;
 
     [VContainer.Inject]
-    public void Construct(GridManager gridManager, UnitFactory unitFactory, UnitSpawner unitSpawner)
+    public void Construct(GridManager gridManager, UnitFactory unitFactory, UnitSpawner unitSpawner, GameManager gameManager)
     {
         _gridManager = gridManager;
         _unitFactory = unitFactory;
         _unitSpawner = unitSpawner;
+        _gameManager = gameManager;
     }
 
     [SerializeField] private ChieftainData[] chieftainDataList;
@@ -30,7 +32,21 @@ public class ChieftainSpawner : MonoBehaviour
     /// <summary>현재 배치된 족장 유닛 — 족장 전용 버프 적용에 사용</summary>
     public UnitBase ChieftainUnit { get; private set; }
 
+    public event System.Action<ChiefUnit> OnChieftainSpawned;
+
     public void Init()
+    {
+        if (_gameManager != null)
+        {
+            _gameManager.OnGameStart += HandleGameStart;
+        }
+        else
+        {
+            HandleGameStart();
+        }
+    }
+
+    private void HandleGameStart()
     {
         // 1순위: 로비에서 선택한 파티 데이터에 족장 데이터가 있으면 스폰
         if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.chieftainData != null)
@@ -61,6 +77,14 @@ public class ChieftainSpawner : MonoBehaviour
         SpawnChieftainById(selectedId);
     }
 
+    private void OnDestroy()
+    {
+        if (_gameManager != null)
+        {
+            _gameManager.OnGameStart -= HandleGameStart;
+        }
+    }
+
     private int GetTestChieftainId()
     {
         if (chieftainDataList != null && chieftainDataList.Length > 0 && chieftainDataList[0] != null)
@@ -76,6 +100,7 @@ public class ChieftainSpawner : MonoBehaviour
             if (cell != null) cell.RemoveUnit();
             Destroy(ChieftainUnit.gameObject);
             ChieftainUnit = null;
+            OnChieftainSpawned?.Invoke(null);
         }
         SpawnChieftainById(selectedId);
     }
@@ -114,6 +139,7 @@ public class ChieftainSpawner : MonoBehaviour
 
         ChieftainUnit = unit;
         _unitSpawner.PlaceUnitWithEffect(unit, cell);
+        OnChieftainSpawned?.Invoke(unit as ChiefUnit);
     }
 
     private void SpawnToCenter(int unitType)
@@ -130,5 +156,6 @@ public class ChieftainSpawner : MonoBehaviour
 
         ChieftainUnit = unit;
         _unitSpawner.PlaceUnitWithEffect(unit, cell);
+        OnChieftainSpawned?.Invoke(unit as ChiefUnit);
     }
 }

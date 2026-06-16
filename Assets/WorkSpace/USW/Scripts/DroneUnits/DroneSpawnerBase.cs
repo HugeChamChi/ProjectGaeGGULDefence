@@ -10,17 +10,27 @@ public abstract class DroneSpawnerBase : UnitBase
 {
     [Header("드론 배치 설정")]
     [SerializeField] protected DroneUnit dronePrefab;
-    [SerializeField] protected float _spreadX      = 35f;
-    [SerializeField] protected float _spreadXUpper = 50f;
-    [SerializeField] protected float _spreadY      = 20f;
 
-    protected Vector2[] SlotOffsets => new[]
+    [Inject] protected DroneManager _droneManager;
+
+    protected Vector2[] SlotOffsets
     {
-        new Vector2(-_spreadX,      -_spreadY), // 0: 좌하단
-        new Vector2( _spreadX,      -_spreadY), // 1: 우하단
-        new Vector2(-_spreadXUpper,  _spreadY), // 2: 좌중단
-        new Vector2( _spreadXUpper,  _spreadY), // 3: 우중단
-    };
+        get
+        {
+            float sxL = _droneManager?.droneSpreadXLower ?? 25f;
+            float syL = _droneManager?.droneSpreadYLower ?? -45f;
+            float sxU = _droneManager?.droneSpreadXUpper ?? 80f;
+            float syU = _droneManager?.droneSpreadYUpper ?? 25f;
+
+            return new[]
+            {
+                new Vector2(-sxL,  syL), // 0: 좌하단 (안쪽 아래)
+                new Vector2( sxL,  syL), // 1: 우하단 (안쪽 아래)
+                new Vector2(-sxU,  syU), // 2: 좌상단 (바깥쪽 위)
+                new Vector2( sxU,  syU), // 3: 우상단 (바깥쪽 위)
+            };
+        }
+    }
 
     protected readonly List<DroneUnit> _ownedDrones = new();
 

@@ -10,7 +10,7 @@ using UnityEngine;
 /// 족장 등급 규칙: 합성/판매/등급 변경 불가 (MergeManager, UnitSpawner에서 차단).
 /// 드론이 없으면 발동해도 아무 일 없음.
 /// </summary>
-public class DroneChieftain : UnitBase
+public class DroneChieftain : ChiefUnit
 {
     [Inject] private DroneManager _droneManager;
 

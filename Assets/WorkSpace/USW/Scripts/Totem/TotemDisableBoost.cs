@@ -39,6 +39,8 @@ public class TotemDisableBoost : TotemBase
         return list;
     }
 
+
+
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
@@ -59,8 +61,8 @@ public class TotemDisableBoost : TotemBase
 
             if (totemData.speedBuffAmount > 0f)
             {
-                // 전역 SpeedMultiplier와 동일한 공식: 1 - percent → 낮을수록 빠름
-                cell.SetTotemSpeedModifier(Mathf.Max(0.1f, 1f - totemData.speedBuffAmount));
+                // 전역 SpeedMultiplier와 동일한 공식: 1 / (1 + percent)
+                cell.SetTotemSpeedModifier(1f / Mathf.Max(0.1f, 1f + totemData.speedBuffAmount));
                 cell.SetBuffFlags(atk: cell.HasAttackBuff, spd: true);
             }
         }

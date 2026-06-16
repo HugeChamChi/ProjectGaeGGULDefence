@@ -112,10 +112,12 @@ public class BossManager : MonoBehaviour
         var rt = go.GetComponent<RectTransform>();
         if (rt == null) return;
 
-        rt.anchorMin        = new Vector2(0.5f, 0.5f);
-        rt.anchorMax        = new Vector2(0.5f, 0.5f);
-        rt.pivot            = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = Vector2.zero;
+        rt.anchorMin        = new Vector2(0.5f, 0f); // Bottom 앵커
+        rt.anchorMax        = new Vector2(0.5f, 0f); // Bottom 앵커
+        rt.pivot            = new Vector2(0.5f, 0.5f); // 피벗은 정중앙(Center) 유지
+        
+        // 피벗이 중앙(0.5)이므로, 하단 앵커(0)에 시각적으로 딱 붙이려면 Y를 크기의 절반만큼 올려주어야 합니다.
+        rt.anchoredPosition = new Vector2(0f, bossSize.y / 2f);
         rt.sizeDelta        = bossSize;
     }
 }

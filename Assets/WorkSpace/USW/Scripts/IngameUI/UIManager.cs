@@ -79,7 +79,7 @@ public class UIManager : MonoBehaviour
 
     protected void Awake()
     {
-        }
+    }
 
     private void Start()
     {

@@ -29,8 +29,6 @@ public class DroneProducer : DroneSpawnerBase
             return;
         }
 
-        Debug.Log($"[DroneProducer] 스킬 발동! (Tier: {unitData?.unitTier}) | 자폭 드론 소환 개수: {selfDestructCount}");
-
         for (int i = 0; i < selfDestructCount; i++)
         {
             var bombObj = RM.Instantiate(selfDestructPrefab.gameObject, transform.position, Quaternion.identity, transform, true);

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f1d439734be03849b398c4b21065503, type: 3}
   m_Name: HealthBarSettings
   m_EditorClassIdentifier: 
-  healthPerLine: 100
+  healthPerLine: 500
   lineColors:
   - {r: 1, g: 0.23137255, b: 0.23137255, a: 1}
   - {r: 0.31764707, g: 1, b: 1, a: 1}

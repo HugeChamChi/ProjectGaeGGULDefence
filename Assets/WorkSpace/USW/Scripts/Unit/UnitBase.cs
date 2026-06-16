@@ -58,14 +58,15 @@ public abstract class UnitBase : MonoBehaviour
 
     // ── 상태 및 타이머 (관찰 가능) ──────────────────────────────
     public enum UnitState { Idle, Attacking, Skilling, Sealed }
-    public UnitState CurrentState { get; private set; } = UnitState.Idle;
+    public UnitState CurrentState { get; protected set; } = UnitState.Idle;
 
     protected virtual bool IsFoodProductionBuffable => true;
     protected virtual bool CanBasicAttack => true;
+    protected virtual bool CanAutoSkill => true;
 
-    private float _attackTimer;
-    private float _skillTimer;
-    private float _foodTimer;
+    protected float _attackTimer;
+    protected float _skillTimer;
+    protected float _foodTimer;
     public bool IsFirstPlacement { get; private set; } = true;
 
     public float SkillGaugeProgress 
@@ -257,7 +258,7 @@ public abstract class UnitBase : MonoBehaviour
             bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
             // 우선순위 결정: Skill > Attack > Idle
-            if (_skillTimer >= skillInterval && canAttack)
+            if (CanAutoSkill && _skillTimer >= skillInterval && canAttack)
             {
                 CurrentState = UnitState.Skilling;
                 _skillTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 발동 방지)
@@ -309,10 +310,10 @@ public abstract class UnitBase : MonoBehaviour
         // AttackSpeed는 초당 공격 횟수 (값이 클수록 공격 간격이 짧아져 더 빨라짐)
         float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
 
-        float cellSpeedBonusMult = Mathf.Max(0.1f, 1f - (currentCell?.Model.TotemCellSpeedBonus ?? 0f));
+        float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + (currentCell?.Model.TotemCellSpeedBonus ?? 0f));
 
         float interval = baseInterval
-                       * _totemBuffManager.SpeedMultiplier
+                       * (_totemBuffManager?.SpeedMultiplier ?? 1f)
                        * cellSpeedBonusMult
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        * (currentCell?.Model.TotemSpeedModifier ?? 1f)
@@ -321,12 +322,14 @@ public abstract class UnitBase : MonoBehaviour
         return Mathf.Max(interval, 0.05f);
     }
 
-    private float GetCurrentSkillInterval()
+    public float CurrentSkillTimer => _skillTimer;
+
+    public float GetCurrentSkillInterval()
     {
         int row = currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float interval = unitData.skillCooldown
-                       * _totemBuffManager.GaugeSpeedMultiplier
+                       * (_totemBuffManager?.GaugeSpeedMultiplier ?? 1f)
                        * (currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
         return Mathf.Max(interval, 0.05f);
@@ -364,7 +367,7 @@ public abstract class UnitBase : MonoBehaviour
 
         // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
         float cellFoodSpeedBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
-        float speedMultiplier = Mathf.Max(_totemBuffManager.FoodSpeedMultiplier - cellFoodSpeedBonus, 0.01f);
+        float speedMultiplier = Mathf.Max((_totemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellFoodSpeedBonus, 0.01f);
         if (!IsFoodProductionBuffable) speedMultiplier = 1f;
 
         _foodTimer += deltaTime / speedMultiplier;
@@ -386,7 +389,7 @@ public abstract class UnitBase : MonoBehaviour
         // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
         float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
         float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-        float amountMultiplier = _totemBuffManager.FoodAmountMultiplier + cellFoodAmountBonus + chieftainFoodBonus;
+        float amountMultiplier = (_totemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
         if (!IsFoodProductionBuffable) amountMultiplier = 1f;
 
         float amountPerTick = baseAmount * amountMultiplier;
@@ -502,7 +505,7 @@ public abstract class UnitBase : MonoBehaviour
         float cellAttackBonus = currentCell?.Model.TotemCellAttackBonus ?? 0f;
 
         float damage = (baseDamage + _unemployedAtkBonus)
-                     * (_totemBuffManager.AttackMultiplier + cellAttackBonus)
+                     * ((_totemBuffManager?.AttackMultiplier ?? 1f) + cellAttackBonus)
                      * cellModifier
                      * totemModifier
                      * rowModifier
@@ -512,7 +515,7 @@ public abstract class UnitBase : MonoBehaviour
                      * chieftainAtk;
 
         float cellCritChance = currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
-        float critChance = (lu?.CritChance ?? 0f) + _totemBuffManager.CritChanceBonus + cellCritChance;
+        float critChance = (lu?.CritChance ?? 0f) + (_totemBuffManager?.CritChanceBonus ?? 0f) + cellCritChance;
         if (UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;

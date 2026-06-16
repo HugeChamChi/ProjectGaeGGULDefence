@@ -15,6 +15,17 @@ namespace GaeGGUL.Extension
             }
         }
 
+        private static LevelUpManager _levelUpManager;
+        private static LevelUpManager LevelUpManager
+        {
+            get
+            {
+                if (_levelUpManager == null)
+                    _levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>();
+                return _levelUpManager;
+            }
+        }
+
         private static float GetAttackMultiplier(this GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
@@ -33,6 +44,19 @@ namespace GaeGGUL.Extension
             return model.SpeedModifier * model.TotemSpeedModifier * globalMult * cellBonusMult;
         }
 
+        private static float GetSkillCooldownMultiplier(this GridCell cell)
+        {
+            if (cell == null || cell.Model == null) return 1f;
+            
+            int row = cell.GridPosition.y;
+            float rowSpeedMult = Mathf.Max(LevelUpManager != null ? LevelUpManager.GetRowSpeedMultiplier(row) : 1f, 0.01f);
+            
+            float gaugeSpeedMult = TotemManager != null ? TotemManager.GaugeSpeedMultiplier : 1f;
+            float cellSpeedModifier = cell.Model.SpeedModifier;
+            
+            return (gaugeSpeedMult * cellSpeedModifier) / rowSpeedMult;
+        }
+
         // ── 최종 수치 계산 (Presenter에서 사용) ──────────────────
 
         public static int GetFinalAttack(this GridCell cell, float baseAtk)
@@ -42,7 +66,7 @@ namespace GaeGGUL.Extension
 
         public static float GetFinalCooldown(this GridCell cell, float baseCooldown)
         {
-            return baseCooldown * cell.GetSpeedMultiplier();
+            return baseCooldown * cell.GetSkillCooldownMultiplier();
         }
 
         // ── 보너스 텍스트 생성 (Presenter에서 사용) ────────────────
@@ -66,7 +90,7 @@ namespace GaeGGUL.Extension
         /// </summary>
         public static string GetCooldownBonusText(this GridCell cell, float baseCooldown)
         {
-            float mult = cell.GetSpeedMultiplier();
+            float mult = cell.GetSkillCooldownMultiplier();
             if (Mathf.Approximately(mult, 1f)) return "";
 
             float bonusVal = baseCooldown * (mult - 1f);

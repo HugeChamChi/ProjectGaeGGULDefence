@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     }
 
     public event Action OnLevelUpStateEntered;
+    public event Action OnGameStart;
 
     public enum GameState { Idle, Playing, LevelUp, Win, Lose }
     public GameState CurrentState { get; private set; } = GameState.Idle;
@@ -57,6 +58,8 @@ public class GameManager : MonoBehaviour
 
         _currencyManager.AddCurrency(config.startingFood);
         _expManager.OnLevelUp += HandleLevelUp;
+
+        OnGameStart?.Invoke();
     }
 
     private void HandleLevelUp()

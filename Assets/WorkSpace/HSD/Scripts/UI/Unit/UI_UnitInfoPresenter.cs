@@ -29,9 +29,7 @@ namespace GaeGGUL.UI.Unit
             string atkSpeedBonus = cell.GetAttackSpeedBonusText(data.attackSpeed);
 
             float finalCooldown = cell.GetFinalCooldown(data.skillCooldown);
-            string cooldownValue = $"{finalCooldown:F1}s";
-            string cooldownBonus = cell.GetCooldownBonusText(data.skillCooldown);
-            string cooldownText = string.IsNullOrEmpty(cooldownBonus) ? cooldownValue : $"{cooldownValue} ({cooldownBonus})";
+            string cooldownText = $"{finalCooldown:F1}s";
 
             string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}";
             string foodBonus = cell.GetFoodBonusText();
