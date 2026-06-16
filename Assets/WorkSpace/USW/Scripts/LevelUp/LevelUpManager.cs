@@ -683,6 +683,13 @@ public class LevelUpManager : MonoBehaviour
             return;
         }
 
+        // 인구수 상한 검사 — 가득 차면 보상 유닛도 배치하지 않는다 (수동 소환과 동일 규칙)
+        if (_populationManager != null && !_populationManager.CanAdd(1))
+        {
+            Debug.Log("[LevelUp] 인구수 상한 도달 — 기물 획득 취소");
+            return;
+        }
+
         var  cell = emptyCells[Random.Range(0, emptyCells.Count)];
         Tier tier = (Tier)Random.Range((int)minTier, (int)maxTier + 1);
 

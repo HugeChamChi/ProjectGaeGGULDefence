@@ -57,6 +57,7 @@ public class PopulationManager : MonoBehaviour
             var item = _spawnQueue.Dequeue();
             _totemSpawner.SpawnTotemByData(item.totemData);
         } else {
+            if (!CanAdd(1)) return;
             var item = _spawnQueue.Dequeue();
             var cell = emptyCells[Random.Range(0, emptyCells.Count)];
             Tier tier = (Tier)Random.Range((int)item.minTier, (int)item.maxTier + 1);
