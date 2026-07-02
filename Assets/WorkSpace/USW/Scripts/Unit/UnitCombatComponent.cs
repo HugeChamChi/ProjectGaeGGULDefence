@@ -224,12 +224,13 @@ public class UnitCombatComponent : MonoBehaviour
 
         if (gameObject == null) return;
 
-        if (bossArea != null && _deps?.ProjectileManager != null)
+        if (boss != null && !boss.IsDead && _deps?.ProjectileManager != null)
         {
             // 발사 시작 위치를 유닛의 중심(발밑 + 0.5f)으로 조정
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
+            Vector3 targetPos = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
             
-            _deps.ProjectileManager.Launch(spawnPos, bossArea.GetRandomWorldPosition(), () => 
+            _deps.ProjectileManager.Launch(spawnPos, targetPos, () => 
             {
                 if (boss != null && !boss.IsDead)
                 {

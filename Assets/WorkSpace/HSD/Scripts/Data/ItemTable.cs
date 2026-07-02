@@ -8,11 +8,11 @@ public class ItemTable
     public IEnumerable<IItemData> Items => _itemDict.Values;
     public int Count => _itemDict.Count;
 
-    const string PATH = "Data/ItemData";
+    const string LABEL = "ItemData";
 
     public async UniTask InitializeAsync()
     {
-        var itemDataList = await RM.LoadAllAsync<ItemData>(PATH);
+        var itemDataList = await RM.LoadAllAsync<ItemData>(LABEL);
 
         foreach (var itemData in itemDataList)
         {

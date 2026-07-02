@@ -41,7 +41,9 @@ public static class Player
         // 4. 새로운 날이었다면 갱신된 LastResetDate를 포함해 서버에 저장
         if (Daily.IsNewDay && _backendData != null)
         {
-            _backendData.GameDataUpdate(PlayerData.Data);
+            var tcs = new UniTaskCompletionSource();
+            _backendData.GameDataUpdate(PlayerData.Data, () => tcs.TrySetResult());
+            await tcs.Task;
         }
     }
 

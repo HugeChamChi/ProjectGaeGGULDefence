@@ -148,7 +148,7 @@ public class GameDataManager
                 ParseExpTable(csv2);
                 ParseTotemData(csv3);
                 ParseCharacterData(csv4);
-                ParseWaveTime(csv5);
+                await ParseWaveTimeAsync(csv5);
                 ParseLevelUpData(csv6);
                 ParseUpgradeData(csv7);
 
@@ -203,7 +203,7 @@ public class GameDataManager
     }
 
 
-    private void ParseWaveTime(string csv)
+    private async UniTask ParseWaveTimeAsync(string csv)
     {
         var lines = csv.Split('\n');
 
@@ -213,7 +213,7 @@ public class GameDataManager
 
             if (cols.Length >= 2)
             {
-                var data = RM.Load<GameConfig>("Data/GameConfig");
+                var data = await RM.LoadAsync<GameConfig>("Data/GameConfig");
 
                 if (float.TryParse(cols[0].Trim(), out var waveTime))
                 {

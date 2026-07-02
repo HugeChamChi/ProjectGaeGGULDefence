@@ -24,10 +24,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
 
     public async UniTask InitalizeAsync()
     {
-        bool isInit = false;
-        InitData(() => isInit = true);
+        var tcs = new UniTaskCompletionSource();
+        InitData(() => tcs.TrySetResult());
 
-        await UniTask.WaitUntil(() => isInit);
+        await tcs.Task;
 
         StartStaminaTimer();
     }

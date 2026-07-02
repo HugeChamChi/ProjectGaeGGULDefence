@@ -29,9 +29,9 @@ public class PlayerChiefManager : Global.IClearable
 
     public async UniTask InitializeAsync()
     {
-        bool isInit = false;
-        Load(() => isInit = true);
-        await UniTask.WaitUntil(() => isInit);
+        var tcs = new UniTaskCompletionSource();
+        Load(() => tcs.TrySetResult());
+        await tcs.Task;
     }
 
     public void Clear()

@@ -5,15 +5,15 @@ public class DynamicShopTable
 {
     private Dictionary<string, DynamicShopData> _shopDict = new Dictionary<string, DynamicShopData>();
 
-    public void Initialize()
+    public async Cysharp.Threading.Tasks.UniTask InitializeAsync()
     {
         _shopDict.Clear();
-        // RM.LoadAll을 사용하여 Resources/Data/DynamicShopData 폴더 내의 모든 SO를 로드합니다.
-        var shopDatas = RM.LoadAll<DynamicShopData>("Data/DynamicShopData");
+        // Addressables 레이블 "DynamicShopData" 기반으로 에셋들을 비동기 로드합니다.
+        var shopDatas = await RM.LoadAllAsync<DynamicShopData>("DynamicShopData");
         
         if (shopDatas == null || shopDatas.Length == 0)
         {
-            Debug.LogWarning("[DynamicShopTable] No DynamicShopData found in Resources/Data/DynamicShopData");
+            Debug.LogWarning("[DynamicShopTable] No DynamicShopData found with Label 'DynamicShopData'");
             return;
         }
 

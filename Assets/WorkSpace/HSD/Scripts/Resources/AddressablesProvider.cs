@@ -154,6 +154,8 @@ public class AddressablesProvider : IResourceProvider
         var handle = Addressables.LoadAssetsAsync<T>(path, null);
         IList<T> resultList = handle.WaitForCompletion();
         
+        if (resultList == null) return new T[0];
+
         List<T> list = new List<T>(resultList);
         return list.ToArray();
     }

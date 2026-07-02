@@ -10,11 +10,11 @@ public class CharacterTable
 
     public ChiefTable Chief { get; private set; } = new();
 
-    const string PATH = "Data/CharacterData";
+    const string LABEL = "CharacterData";
 
     public async UniTask InitializeAsync()
     {
-        var charDataList = await RM.LoadAllAsync<Test_CharacterData>(PATH);
+        var charDataList = await RM.LoadAllAsync<Test_CharacterData>(LABEL);
 
         foreach (var charData in charDataList)
         {

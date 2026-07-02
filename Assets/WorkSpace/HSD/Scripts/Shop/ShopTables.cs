@@ -8,7 +8,7 @@ public class ShopTables
 
     public async UniTask InitializeAsync()
     {
-        Dynamic.Initialize();
+        await Dynamic.InitializeAsync();
         await Daily.InitializeAsync();
     }
 }

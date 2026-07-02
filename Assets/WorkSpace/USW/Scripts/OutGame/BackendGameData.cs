@@ -56,29 +56,31 @@ public class BackendGameData
     // -------------------------
     public void GameDataGet(Action<PlayerData> onComplete = null)
     {
-        var bro = Backend.GameData.GetMyData(TABLE_NAME, new Where());
-
-        if (bro.IsSuccess())
+        Backend.GameData.GetMyData(TABLE_NAME, new Where(), bro =>
         {
-            JsonData rows = bro.FlattenRows();
-
-            if (rows.Count <= 0)
+            if (bro.IsSuccess())
             {
-                Debug.Log("PlayerData 없음 → 신규 생성");
-                GameDataInsert(onComplete);
-                return;
+                JsonData rows = bro.FlattenRows();
+
+                if (rows.Count <= 0)
+                {
+                    Debug.Log("PlayerData 없음 → 신규 생성");
+                    GameDataInsert(onComplete);
+                    return;
+                }
+
+                _inDate = rows[0]["inDate"].ToString();
+                var data = ParsePlayerData(rows[0]);
+
+                Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
+                onComplete?.Invoke(data);
             }
-
-            _inDate = rows[0]["inDate"].ToString();
-            var data = ParsePlayerData(rows[0]);
-
-            Debug.Log($"PlayerData 불러오기 성공 : {data.PlayerName}");
-            onComplete?.Invoke(data);
-        }
-        else
-        {
-            Debug.LogError("PlayerData 불러오기 실패 : " + bro);
-        }
+            else
+            {
+                Debug.LogError("PlayerData 불러오기 실패 : " + bro);
+                onComplete?.Invoke(null);
+            }
+        });
     }
 
     // -------------------------
@@ -100,18 +102,20 @@ public class BackendGameData
         };
 
         Param param = PlayerDataToParam(newData);
-        var bro = Backend.GameData.Insert(TABLE_NAME, param);
-
-        if (bro.IsSuccess())
+        Backend.GameData.Insert(TABLE_NAME, param, bro =>
         {
-            _inDate = bro.GetInDate();
-            Debug.Log("PlayerData 생성 성공");
-            onComplete?.Invoke(newData);
-        }
-        else
-        {
-            Debug.LogError("PlayerData 생성 실패 : " + bro);
-        }
+            if (bro.IsSuccess())
+            {
+                _inDate = bro.GetInDate();
+                Debug.Log("PlayerData 생성 성공");
+                onComplete?.Invoke(newData);
+            }
+            else
+            {
+                Debug.LogError("PlayerData 생성 실패 : " + bro);
+                onComplete?.Invoke(null);
+            }
+        });
     }
 
     // -------------------------
@@ -122,21 +126,23 @@ public class BackendGameData
         if (data == null || string.IsNullOrEmpty(_inDate))
         {
             Debug.LogError("저장할 데이터가 없습니다");
+            onComplete?.Invoke();
             return;
         }
 
         Param param = PlayerDataToParam(data);
-        var bro = Backend.GameData.UpdateV2(TABLE_NAME, _inDate, Backend.UserInDate, param);
-
-        if (bro.IsSuccess())
+        Backend.GameData.UpdateV2(TABLE_NAME, _inDate, Backend.UserInDate, param, bro =>
         {
-            Debug.Log("PlayerData 저장 성공");
+            if (bro.IsSuccess())
+            {
+                Debug.Log("PlayerData 저장 성공");
+            }
+            else
+            {
+                Debug.LogError("PlayerData 저장 실패 : " + bro);
+            }
             onComplete?.Invoke();
-        }
-        else
-        {
-            Debug.LogError("PlayerData 저장 실패 : " + bro);
-        }
+        });
     }
 
     // -------------------------

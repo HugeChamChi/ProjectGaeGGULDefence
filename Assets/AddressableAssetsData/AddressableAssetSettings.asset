@@ -46,6 +46,7 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 5bd164ef20e1ffe4f83166e533e6629b, type: 2}
   - {fileID: 11400000, guid: 475a78801d88f4c42a53b4b4639cc03c, type: 2}
+  - {fileID: 11400000, guid: 1367053889ec37d42b999aae926a66ba, type: 2}
   - {fileID: 11400000, guid: 5379b3df8c58c1f44806b8bbee84fa04, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
@@ -89,6 +90,13 @@ MonoBehaviour:
     m_LabelNames:
     - default
     - Data
+    - Scenes
+    - CharacterData
+    - ChiefData
+    - DynamicShopData
+    - ItemData
+    - PlayerFrame
+    - PlayerIcon
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 3e69f746f7d542a48976b79de975305a, type: 2}

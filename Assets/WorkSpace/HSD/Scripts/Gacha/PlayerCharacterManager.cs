@@ -16,11 +16,9 @@ public class PlayerCharacterManager : Global.IClearable
 
     public async UniTask InitalizeAsync()
     {
-        bool isInit = false;
-
-        Load(() => isInit = true);
-
-        await UniTask.WaitUntil(() => isInit);
+        var tcs = new UniTaskCompletionSource();
+        Load(() => tcs.TrySetResult());
+        await tcs.Task;
     }
 
     public void Clear()

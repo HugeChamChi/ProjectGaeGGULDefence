@@ -20,8 +20,8 @@ public class ProfileItemTable
             _ => Enumerable.Empty<IProfileItem>()
         };
 
-    const string iconKey   = "Data/PlayerIcon";
-    const string frameKey  = "Data/PlayerFrame";
+    const string iconLabel  = "PlayerIcon";
+    const string frameLabel = "PlayerFrame";
 
     public async UniTask InitializeAsync()
     {
@@ -31,8 +31,8 @@ public class ProfileItemTable
     private async UniTask LoadAsync()
     {
         var (icons, frames) = await UniTask.WhenAll(
-            RM.LoadAllAsync<IconItemDataSO>(iconKey),
-            RM.LoadAllAsync<FrameItemDataSO>(frameKey)
+            RM.LoadAllAsync<IconItemDataSO>(iconLabel),
+            RM.LoadAllAsync<FrameItemDataSO>(frameLabel)
         );
 
         iconItems = icons.ToDictionary(x => x.Id);

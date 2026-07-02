@@ -70,6 +70,10 @@ public class ProjectilePool : MonoBehaviour
         if (_prefab != null)
         {
             var inst = Instantiate(_prefab, _container);
+            if (inst.TryGetComponent<SpriteRenderer>(out var srInst))
+            {
+                srInst.sortingOrder = 100;
+            }
             return inst;
         }
 
@@ -80,7 +84,7 @@ public class ProjectilePool : MonoBehaviour
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = CreateCircleSprite(64);
         sr.color  = _projectileColor;
-        sr.sortingOrder = 30; // 그리드나 유닛보다 위에 노출
+        sr.sortingOrder = 100; // 그리드나 유닛, 배경보다 상위에 확실히 노출
 
         go.transform.localScale = new Vector3(_projectileSize / 100f, _projectileSize / 100f, 1f);
 

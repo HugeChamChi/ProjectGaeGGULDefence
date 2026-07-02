@@ -6,21 +6,17 @@ using UnityEngine;
 /// </summary>
 public class BossAreaTarget : MonoBehaviour
 {
-    [SerializeField] private float _width  = 100f;
-    [SerializeField] private float _height = 100f;
+    [SerializeField] private float _width  = 1f;
+    [SerializeField] private float _height = 1f;
 
-    /// <summary>보스 중심 기준 100x100 영역 내 랜덤 월드 좌표 반환</summary>
+    /// <summary>보스 중심 기준 위쪽(+Y) 피격 위치 반환</summary>
     public Vector3 GetRandomWorldPosition()
     {
-        Canvas canvas = GetComponentInParent<Canvas>();
-        float scale   = canvas != null ? canvas.scaleFactor : 1f;
-
-        float hw = _width  * scale * 0.5f;
-        float hh = _height * scale * 0.5f;
+        float hw = _width * 0.5f;
 
         return transform.position + new Vector3(
             Random.Range(-hw, hw),
-            Random.Range(-hh, hh),
+            Random.Range(0f, _height),
             0f
         );
     }

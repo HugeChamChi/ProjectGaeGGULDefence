@@ -102,6 +102,8 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
                     }
 
                     // 2. Table Initialize, Data Parsing
+                    await Table.InitializeAsync();
+
                     if (_gameDataManager != null)
                     {
                         await _gameDataManager.LoadAllAsync();

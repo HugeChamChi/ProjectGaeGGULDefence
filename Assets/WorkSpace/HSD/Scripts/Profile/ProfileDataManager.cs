@@ -45,11 +45,9 @@ public class ProfileDataManager : Global.IClearable
 
     public async UniTask InitalizeAsync()
     {
-        bool isInit = false;
-
-        Load(() => isInit = true);
-
-        await UniTask.WaitUntil(() => isInit);
+        var tcs = new UniTaskCompletionSource();
+        Load(() => tcs.TrySetResult());
+        await tcs.Task;
     }
 
     public void Clear()
@@ -108,29 +106,38 @@ public class ProfileDataManager : Global.IClearable
     {
         Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback =>
         {
-            if (callback.IsSuccess())
+            try
             {
-                JsonData rows = callback.FlattenRows();
-
-                if (rows.Count > 0)
+                if (callback.IsSuccess())
                 {
-                    // 데이터가 존재하는 경우 복구
-                    rowInDate = rows[0]["inDate"].ToString();
-                    Data.FromData(rows[0]);
-                    Debug.Log($"프로필 데이터 로드 성공: IconId={Data.CurrentIconId}, FrameId={Data.CurrentFrameId}");
+                    JsonData rows = callback.FlattenRows();
+
+                    if (rows.Count > 0)
+                    {
+                        // 데이터가 존재하는 경우 복구
+                        rowInDate = rows[0]["inDate"].ToString();
+                        Data.FromData(rows[0]);
+                        Debug.Log($"프로필 데이터 로드 성공: IconId={Data.CurrentIconId}, FrameId={Data.CurrentFrameId}");
+                    }
+                    else
+                    {
+                        // 데이터가 없는 경우 (신규 유저)
+                        Debug.Log("저장된 프로필 데이터가 없습니다. 신규 유저로 처리합니다.");
+                    }
                 }
                 else
                 {
-                    // 데이터가 없는 경우 (신규 유저)
-                    Debug.Log("저장된 프로필 데이터가 없습니다. 신규 유저로 처리합니다.");
+                    // 네트워크 오류, 서버 점검 등 실패 처리
+                    Debug.LogError($"프로필 데이터 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
                 }
-
-                onCompleted?.Invoke();
             }
-            else
+            catch (Exception e)
             {
-                // 네트워크 오류, 서버 점검 등 실패 처리
-                Debug.LogError($"프로필 데이터 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
+                Debug.LogError($"프로필 데이터 파싱 중 예외 발생: {e.Message}");
+            }
+            finally
+            {
+                onCompleted?.Invoke();
             }
         });
     }

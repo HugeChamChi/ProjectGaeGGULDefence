@@ -9,18 +9,18 @@ public class ChiefTable
     private Dictionary<int, ChiefData> _chiefDict = new Dictionary<int, ChiefData>();
     public IEnumerable<ChiefData> Chiefs => _chiefDict.Values;
 
-    const string PATH = "Data/ChiefData";
+    const string LABEL = "ChiefData";
 
     public async UniTask InitializeAsync()
     {
-        // RM.LoadAllAsync를 사용하여 Resources/Data/ChiefData 폴더의 모든 ChiefData 로드
-        var dataList = await RM.LoadAllAsync<ChiefData>(PATH);
+        // RM.LoadAllAsync를 사용하여 Addressables Label 'ChiefData'의 모든 ChiefData 로드
+        var dataList = await RM.LoadAllAsync<ChiefData>(LABEL);
 
         foreach (var data in dataList)
         {
             if (!_chiefDict.TryAdd(data.Id, data))
             {
-                Debug.LogWarning($"Duplicate Chief ID: {data.Id} in {PATH}");
+                Debug.LogWarning($"Duplicate Chief ID: {data.Id} in {LABEL}");
             }
         }
         

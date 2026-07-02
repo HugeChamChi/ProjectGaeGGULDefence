@@ -24,8 +24,11 @@ public class Projectile : MonoBehaviour
     {
         StopMove();
 
+        from.z = 0f;
+        to.z = 0f;
         transform.position = from;
-        transform.localScale = Vector3.one * (_totemBuffManager?.ProjectileSizeMultiplier ?? 1f);
+        float mult = _totemBuffManager?.ProjectileSizeMultiplier ?? 1f;
+        transform.localScale = transform.localScale * mult;
         _onComplete        = onComplete;
 
         _moveCts = CancellationTokenSource.CreateLinkedTokenSource(

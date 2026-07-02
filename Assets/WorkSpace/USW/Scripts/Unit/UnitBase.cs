@@ -122,7 +122,8 @@ public abstract class UnitBase : MonoBehaviour
         var scale = t.localScale;
         float x = Mathf.Abs(scale.x);
         if (x <= 0f) x = 1f;
-        t.localScale = new Vector3(faceLeft ? -x : x, scale.y, scale.z);
+        // 기존 반대이던 방향을 반전 (오른쪽/왼쪽 반대 정렬)
+        t.localScale = new Vector3(faceLeft ? x : -x, scale.y, scale.z);
     }
 
     private void OnDestroy() 

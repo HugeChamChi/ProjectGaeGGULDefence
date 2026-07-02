@@ -41,6 +41,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 045efcd887d483c4182ee5932546b48a
+    m_Address: DynamicShopData/B
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DynamicShopData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 049618c361321b976583387d90bdec91
     m_Address: Data/TD_4002
     m_ReadOnly: 0
@@ -70,6 +76,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0aed710a2d45cfe42a6c4b7e57020392
+    m_Address: DynamicShopData/C
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DynamicShopData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0cb180fbf27073c46ab206b481d6e019
     m_Address: "Data/LevelUpData_3043_\uD3ED\uD48D_\uC5F0\uACA9"
@@ -335,6 +347,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 49a131f9f78014048a9d8a896fa20859
+    m_Address: PlayerFrame/FrameItemDataSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerFrame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4abdf1cc439f0c5458b4790cfcb00eca
+    m_Address: CharacterData/Test_CharacterData 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b5201e27a932ced0f24401f728e11b4
     m_Address: Data/TD_4029
     m_ReadOnly: 0
@@ -437,6 +461,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 605ffde24b0f78b4dbe2f0c69eeb8404
+    m_Address: PlayerFrame/FrameItemDataSO 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerFrame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 607cd98b468b5794dbbd980b0bf78829
     m_Address: "Data/LevelUpData_3007_\uD65C\uB825_\uCDA9\uC804"
     m_ReadOnly: 0
@@ -448,6 +478,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 646bbf4f4772ea04996d40622370162c
+    m_Address: ItemData/Diamond
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 647d6db08c8dbaa4e8af4002e437c1df
     m_Address: "Data/LevelUpData_3039_\uC9C8\uB7C9\uD0C4"
@@ -491,6 +527,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b3bbca49dd36b4428d8b2de40ed40ff
+    m_Address: DynamicShopData/A
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DynamicShopData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b51185fea8562b4fb4aa718da8af8cc
     m_Address: "Data/LevelUpData_3002_\uACF5\uBA85\uD558\uB294_\uD1A0\uD15C"
     m_ReadOnly: 0
@@ -502,6 +544,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d98dfa54e2b0644aa74310fa1adebd6
+    m_Address: CharacterData/Test_CharacterData 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f807a4bc6a1c254994534c487c5d59a
     m_Address: "Data/LevelUpData_3016_\uC5F0\uC18D_\uACF5\uACA9"
@@ -647,6 +695,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 860ba96886d43fc4ab9f50baf2e811e6
+    m_Address: ChiefData/ChiefData 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChiefData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86a2dd265fa3b61aaa96889c11e03f61
     m_Address: Data/TD_4013
     m_ReadOnly: 0
@@ -707,11 +761,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 943d306428c2cb2418bc13b6e60b6658
+    m_Address: PlayerIcon/IconItemDataSO
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerIcon
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 94b017702f310024bf61dba11c4d7e51
     m_Address: Data/TD_4038
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 959adde9d519974449dd2ee86e99e156
+    m_Address: ChiefData/ChiefData 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChiefData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 970aec264e3d5274da93a0b6baaf7570
     m_Address: "Data/LevelUpData_3052_\uACE0\uC18D_\uAC00\uB3D9"
@@ -809,11 +875,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a30365611a6e6f349936b28c4dc451f7
+    m_Address: CharacterData/Test_CharacterData 4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a3171cc8ad3d7124d8803d4720d5efaa
     m_Address: Data/Frog_Legend
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a36327a61f0647a41ac8edf878ffb5c0
+    m_Address: PlayerIcon/IconItemDataSO 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerIcon
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a3e8744c6a9fad3a6464bb75449d347e
     m_Address: Data/TD_4017
@@ -875,6 +953,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b24d580afcfc9da489b23bc4661a320f
+    m_Address: PlayerIcon/IconItemDataSO 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerIcon
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b2fd08aa496e4654e9ff9d80c5ce8a2c
+    m_Address: PlayerFrame/FrameItemDataSO 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerFrame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b4fc8df56dda68943b6a7afeda937351
     m_Address: "Data/LevelUpData_3014_\uBB35\uC9C1\uD55C_\uD55C_\uBC29"
     m_ReadOnly: 0
@@ -886,6 +976,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba6e8ec0c9dafa642b97a80492270904
+    m_Address: ChiefData/ChiefData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChiefData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: babfe800652f099439a1248a4abcda91
+    m_Address: PlayerIcon/IconItemDataSO 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerIcon
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc35f0151471b044eb49e43bfd377839
     m_Address: Data/TotemDisplaySettings
@@ -971,6 +1073,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c61d083e2286ff4449218d1b51007de9
+    m_Address: CharacterData/Test_CharacterData 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: caa594112fdc0bb47aaf4372c53b9c3c
     m_Address: "Data/LevelUpData_3011_\uC9C4\uB85C_\uACC4\uC2B9"
     m_ReadOnly: 0
@@ -982,6 +1090,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: caf325d3765e23349ad20c40e9489592
+    m_Address: ItemData/Gold
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cd2cb2d838984b64d93f863e2caa8d9a
     m_Address: "Data/LevelUpData_3007_\uB2E4\uC911\uAC15\uD654"
@@ -1097,6 +1211,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4e72daf79bc7364c94696265732b43c
+    m_Address: PlayerFrame/FrameItemDataSO 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - PlayerFrame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e705ccbd40fef034e864e203309caa63
+    m_Address: ChiefData/ChiefData 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ChiefData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e935247a462ed501f4dbca297c5e8fa3
     m_Address: Data/TD_4021
     m_ReadOnly: 0
@@ -1174,6 +1300,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f964571f74e260540963a0c2fe03699a
+    m_Address: CharacterData/Test_CharacterData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f9c5a8b28895a8f47aabc2aa2a5bab5f
     m_Address: Data/UnitData_DroneBuffer_Normal
