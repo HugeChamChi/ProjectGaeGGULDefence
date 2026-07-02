@@ -1,0 +1,605 @@
+﻿%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 2a1e57ad30f1cd8459f99453f766853b
+  m_SerializeEntries:
+  - m_GUID: 027d603aca78cbf48a8d47fa97ed3a90
+    m_Address: Totem_009_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07828d40f9c1cfe4e90b04ff49ee5b07
+    m_Address: DroneUnit_Buffer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0edcbb6fc9983b345bb01c6a332dfd62
+    m_Address: Totem_011_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f37ac66cf30f634f813e323a2b0c9dc
+    m_Address: Totem_018_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ff038500be4d1644be6144f098c2b03
+    m_Address: Totem_017_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1236c5ebc6105c14aa58318d2a8a122a
+    m_Address: Totem_002_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14b18c01ede94854d80abbe83f408456
+    m_Address: DroneUnit_FoodProducer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 188aa502517044c4d91d9ae5e000aa16
+    m_Address: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d08017bdbc4a5644a15fbb9450297f6
+    m_Address: Totem_005_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e4743ba941a490f99eeb277a582243d
+    m_Address: Totem_AttackTop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20b92eca8581e6243ac196452a1333c1
+    m_Address: Totem_014_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 221c3b8f1af730c4a8ec8e290382013b
+    m_Address: Totem_020_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2cd08013d52bebc4fb1549456db7a6fb
+    m_Address: Totem_012_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ce472c54699a6f4d8e7aa1265866881
+    m_Address: Totem_018
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30265a7e8f81e7f46b30dd9bf6f6a756
+    m_Address: Totem_019_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30471f22a681ec34e8cb50025700f512
+    m_Address: Totem_017_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3410f0a92e1713c4c9031b088e7d6623
+    m_Address: Totem_013_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34a624ab9fd1d7f4a99649ccc12bb9f2
+    m_Address: Totem_008_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 381616421df2d0a46a93cc5c32d64900
+    m_Address: Totem_024_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ffca19cdbb44484c9bf98203aa2c4ad
+    m_Address: Totem_024
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 40e9faac4daeea8418fd93e7e7c3828f
+    m_Address: Totem_014_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 452249a5ff89d9142bb950d34534319c
+    m_Address: Totem_023_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45db96131f27c3b4c9c4d250519e6c7a
+    m_Address: Totem_022_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46abf9aae2aa85444806cce443f473da
+    m_Address: Totem_009_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 485108ffd047c124fa08760e7e8461c8
+    m_Address: Totem_012_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a787a4ff96ae914da3eb2df993d136e
+    m_Address: Totem_012
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4d47426fde51c9949bb029b7d15e5273
+    m_Address: Totem_020_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4eb30f5fcc20a4e48886569411e10feb
+    m_Address: Totem_020
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ba91dfaf38d4444da5dd60e60812e95
+    m_Address: ANIM_DroneFrogSupporter_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5da19beae9d4109489ee877eaa727a0f
+    m_Address: Totem_022_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f8adab1a550ccd4a8cced6e0f5cc480
+    m_Address: Totem_008_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 637d12dc2aa7a3b4cbd80b8267a93f68
+    m_Address: Totem_018_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6517d4cb68796cf4e8eb1413806fab18
+    m_Address: Totem_007_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 66cd5a7684d6ccc4c823e81c8e09f3f5
+    m_Address: Totem_019_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6edf09827ca92a24c91bfe267bc84e7e
+    m_Address: Totem_006_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f634dae582e7fd4ba9d4f441aa6898e
+    m_Address: Totem_004_90__R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 722a262ca8d31444d921557077e69dd5
+    m_Address: Totem_001
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7344bd6f5dba97544820cd25422170f9
+    m_Address: Totem_005_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 735843e8527841c4194e349016b11a3e
+    m_Address: Totem_005
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74744c6c7f762f545ae9eeb77288cc06
+    m_Address: Totem_001_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74e086c8dfb5ef8429d72ea79bd836fa
+    m_Address: DroneUnit_Producer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7606e922e230a2240a1c8491dff4ea55
+    m_Address: Totem_007
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7eb67cb3ebd6eee47a8f983d548b8408
+    m_Address: Totem_019
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f30a80b1850c59468ab3d23463b250c
+    m_Address: Totem_018_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ff86724a0e577940b062f1a90efc093
+    m_Address: Totem_020_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80d6449d59f68424a9eb3d17b2d99f22
+    m_Address: Totem_022
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 836b7c61b3b4c094cba854505e85a8dc
+    m_Address: Totem_002_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8435a99cd3fb1eb439337bba41eaee05
+    m_Address: Totem_008_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 853a9802cad5a4e40a53b488607707e2
+    m_Address: Totem_022_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 875376496d093484f8a5fd2aca2c2789
+    m_Address: DroneUnit_Debuff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 909f9ed62e76a8c4fb58ef4bf5342078
+    m_Address: Totem_024_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9224e766bbc240444857f8028641787f
+    m_Address: Totem_009
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9607b3078d6f09b4385b9a0bf5690844
+    m_Address: Totem_004_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96442455cdf129d4bb0e0571cfd9dc1a
+    m_Address: Totem_011
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98daf7eca6d93e44b848567383738848
+    m_Address: Totem_021_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a2629c3e477a99478af9be35681d975
+    m_Address: ANIM_DroneFrogLeader_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f2608d3fafd9cc4fbe5a52d75064b4a
+    m_Address: Totem_021_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f2cb0bddfe50734fbafec1151b4dd10
+    m_Address: Totem_001_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f3127bccc214bf40b80c234c648dd55
+    m_Address: Totem_023_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3287a04582cd0f40b99daa3694fa23a
+    m_Address: Totem_004
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa936141a05fbee42b4c9d327a11d288
+    m_Address: Totem_017
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abd59a4d5756343499040500501c3546
+    m_Address: Totem_009_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad2feb4189b4f2b48ba77e4070db5394
+    m_Address: Totem_006_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b76b7c25143f1ab4d9fd4a047b9323b2
+    m_Address: Totem_024_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb4e42a25dd3ace4b9cebd839db43c65
+    m_Address: Totem_017_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bef6eb329b7cb334aad109fb087b0903
+    m_Address: Totem_006
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1f74ce48cff85942bd5649087d2a521
+    m_Address: Totem_006_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c40fbdad76fbff3439e698b846c9c534
+    m_Address: Totem_001_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4deb9a02ea44663b6f3ee4d2452722b
+    m_Address: Totem_FoodGenerator
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c539adeb8c5bf7b408296beb77a05d74
+    m_Address: Totem_011_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c92f572622bf6364680f486d8a1b0f6c
+    m_Address: Totem_014_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c94c16f52747b8d4cb7265b21772b9d3
+    m_Address: Totem_023
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d11531403826f2745b246aa506f5485a
+    m_Address: Totem_013_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1c2ae26db1929f4ca7ac4e4e904fcb0
+    m_Address: Totem_012_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d35e25cf34d859745b346bedd8e1ba9b
+    m_Address: Totem_008
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5e4788261782cf40a438d43a80b5c94
+    m_Address: Totem_013
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7113f2e884f1a745b0fde642d211a4f
+    m_Address: TotemDisableBoost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9844ca51382e004994ae4c957905cfd
+    m_Address: Totem_019_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc07e7fd43b13954e9796c7484ea6ab3
+    m_Address: DroneUnit_Cheiftain
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e035e38263399114eaebc2526f5502f1
+    m_Address: Totem_007_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3822f1ab8168074f882869602887a30
+    m_Address: Totem_002_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e704064b4149c29479a7d6c8f63a6ca1
+    m_Address: Totem_013_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e87ecf070a148b24dbf8c0f1b5a39581
+    m_Address: Totem_014
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8e95a9554c205045b0ac51e3d8fcd97
+    m_Address: Totem_004_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee640aaf5d051f542a35bcedf0994d2c
+    m_Address: Totem_011_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef1e1ae1f60812b4ca09029cbb5e1552
+    m_Address: Totem_021_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f261046b3dd94ae4684e904a2fc3ef9f
+    m_Address: ANIM_DroneFrogDebuffer_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4bb7c2ba000ba440881a2c08b0dc945
+    m_Address: Totem_021
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faf0681d198c0254aa4d342a55757993
+    m_Address: Totem_002
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fcc618621bebf33439718325a4bd7589
+    m_Address: Totem_023_180
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7
+    m_Address: ANIM_DroneFrogMaker_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe55e4742a5104542a72aeb24a4b23e3
+    m_Address: Totem_005_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff411f22cd6a34b479b378f7e44b4e7d
+    m_Address: Totem_007_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6577599dbf469645b8ae34e27156203
+    m_Address: 01.Button_Touch(max vol)
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0293ed68660dbae41b373eccc4a7a6ee
+    m_Address: 01.Popup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ca50cc660167d945a82416836e6d0d9
+    m_Address: 01.Screen_touch(max vol)
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53fd4841626423245a69a4731f2147f0
+    m_Address: 01.Sell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e1e7edaa182b5045ad2d21bf41f5079
+    m_Address: 01.Touch_block
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10c408d1e623b2547b337139b1aa027d
+    m_Address: 02.Choose_done
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 589e6dc6be530fd40988547439d31c61
+    m_Address: 02.Expup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e57e9a5ec9155a45aa06300afe6ca0b
+    m_Address: 02.Levelup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2140818c5333f3478c7094f8e5d42f3
+    m_Address: 02.Summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44f99b37e3a78de46be904450bbcccdc
+    m_Address: 03.Frog_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ba537965e46d5442a2bcf0426e384fd
+    m_Address: 03.Gunner_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 72d2958068776c34e850ecd91827673b
+    m_Address: 03.Magician_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a7627eaf6f68e6439b5af3e9eccb5a5
+    m_Address: 03.Ninja_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 92a4a884b57ff2543bccceb3698e1499
+    m_Address: 03.OX_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4af1444cb4cb1454d9fa888c491ffae3
+    m_Address: 03.Samurai_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5740275b41b468c4fa309cf3eb5819e3
+    m_Address: 03.Sniper_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01cadda2b2564544f9cd8465153b574f
+    m_Address: 03.Wizard_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
+    m_Address: 05.Drone_Attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56e5ccf72bb5b5b4ab7443bd0926a52b
+    m_Address: 05.Drone_Attack_Hit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0de5b5aab7e48cd40bf2588e7cd83aee
+    m_Address: 05.Drone_Buff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
+    m_Address: 05.Drone_Debuff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 536415d54e63732488f7348ec40061eb
+    m_Address: 05.Drone_Summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9012786876aba8f4dbcf878780429bc2
+    m_Address: 05.Leader_Skill_Effect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 62ecb7143346cd947a725445b3886c08, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c17e015815097f643a2e97abe4b6ba3e, type: 2}
+    - {fileID: 11400000, guid: b6118c448652cc0499aea8383d28cf72, type: 2}

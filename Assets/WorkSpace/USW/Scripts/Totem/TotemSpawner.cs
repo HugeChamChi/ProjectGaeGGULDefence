@@ -33,7 +33,7 @@ public class TotemSpawner : MonoBehaviour
     /// data.prefab이 있으면 그 프리팹을 사용 (특수 동작 토템).
     /// 없으면 genericPrefab을 사용하고 SO 데이터를 주입 (일반 수치 토템).
     /// </summary>
-    public bool SpawnTotemByData(TotemData data)
+    public async Cysharp.Threading.Tasks.UniTask<bool> SpawnTotemByData(TotemData data)
     {
         if (data == null)
         {
@@ -41,6 +41,7 @@ public class TotemSpawner : MonoBehaviour
             return false;
         }
 
+        await data.LoadAssetsAsync();
         bool useGeneric = data.prefab == null;
         var  prefab     = useGeneric ? genericPrefab : data.prefab;
 
@@ -55,7 +56,7 @@ public class TotemSpawner : MonoBehaviour
         if (_populationManager != null && !_populationManager.CanAdd(1)) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
-        var go    = _resolver.Instantiate(prefab, cell.transform);
+        var go    = RM.Instantiate(prefab, cell.transform);
         var totem = go.GetComponent<TotemBase>();
 
         if (totem == null)
@@ -72,14 +73,10 @@ public class TotemSpawner : MonoBehaviour
             return false;
         }
 
-        var rt = go.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            rt.anchorMin        = new Vector2(0.5f, 0f);
-            rt.anchorMax        = new Vector2(0.5f, 0f);
-            rt.pivot            = new Vector2(0.5f, 0f);
-            rt.anchoredPosition = Vector2.zero;
-        }
+        var t = go.transform;
+        t.localPosition = Vector3.zero;
+        t.localRotation = Quaternion.identity;
+        t.localScale = Vector3.one;
 
         var drag = go.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(cell);

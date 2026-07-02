@@ -1,7 +1,6 @@
 using UnityEngine;
 using VContainer;
 using Cysharp.Threading.Tasks;
-using AssetKits.ParticleImage;
 
 // ════════════════════════════════════════════════════════
 // UnitSpawner — InGameSingleton 교체 + Manager 접근 통일
@@ -22,9 +21,9 @@ public class UnitSpawner : MonoBehaviour
     private TotemBuffManager _totemBuffManager;
 
     [Header("Spawn Effects")]
-    [SerializeField] private UISpawnLine spawnLinePrefab;
-    [SerializeField] private ParticleImage spawnEffectPrefab;
-    [SerializeField] private RectTransform defaultSpawnOrigin;
+    [SerializeField] private SpawnLine spawnLinePrefab;
+    [SerializeField] private GameObject spawnEffectPrefab;
+    [SerializeField] private Transform defaultSpawnOrigin;
     [SerializeField] private Transform effectParent;
 
     public float CurrentCost { get; private set; }
@@ -171,7 +170,7 @@ public class UnitSpawner : MonoBehaviour
         cell.TryPlaceUnit(unit);
         unit.transform.SetParent(cell.transform, false);
         
-        _unitFactory.InitUnitRectTransform(unit);
+        _unitFactory.InitUnitTransform(unit);
         
         var drag = unit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(cell);
@@ -189,41 +188,58 @@ public class UnitSpawner : MonoBehaviour
         
         Transform lineParent = effectParent != null ? effectParent : transform;
 
-        // 1. Line Effect (UI Space)
+        // 1. Line Effect (World Space)
         if (spawnLinePrefab != null)
         {
             var lineObj = RM.Instantiate(spawnLinePrefab.gameObject, lineParent, true);
-            var line = lineObj.GetComponent<UISpawnLine>();
+            var line = lineObj.GetComponent<SpawnLine>();
             if (line != null)
             {
-                // UI는 생성 직후 Scale과 Position을 초기화해주어야 좌표계가 틀어지지 않습니다.
-                var rt = line.GetComponent<RectTransform>();
-                if (rt != null)
+                var tr = line.transform;
+                tr.position = Vector3.zero;
+                tr.localScale = Vector3.one;
+                tr.localRotation = Quaternion.identity;
+
+                Vector3 startPos;
+                if (originWorldPos.HasValue)
                 {
-                    rt.anchoredPosition3D = Vector3.zero;
-                    rt.localScale = Vector3.one;
-                    rt.localRotation = Quaternion.identity;
+                    startPos = originWorldPos.Value;
+                }
+                else if (defaultSpawnOrigin != null)
+                {
+                    // 만약 할당된 위치가 UI(RectTransform)라면 화면 좌표를 2D 월드 좌표로 변환합니다.
+                    var rect = defaultSpawnOrigin.GetComponent<RectTransform>();
+                    if (rect != null && Camera.main != null)
+                    {
+                        Vector3 screenPos = rect.position;
+                        // 2D 카메라와의 거리(z)를 맞춰주어 정확한 월드 좌표를 얻습니다.
+                        screenPos.z = Mathf.Abs(Camera.main.transform.position.z);
+                        startPos = Camera.main.ScreenToWorldPoint(screenPos);
+                        startPos.z = 0f; // 2D 평면에 맞게 Z축 보정
+                    }
+                    else
+                    {
+                        startPos = defaultSpawnOrigin.position;
+                    }
+                }
+                else
+                {
+                    startPos = lineParent.position;
                 }
 
-                // UI Coordinate (Local Space relative to effectParent)
-                Vector2 startLocal = originWorldPos.HasValue 
-                    ? (Vector2)lineParent.InverseTransformPoint(originWorldPos.Value)
-                    : (defaultSpawnOrigin != null ? (Vector2)lineParent.InverseTransformPoint(defaultSpawnOrigin.position) : Vector2.zero);
-                
-                Vector2 endLocal = (Vector2)lineParent.InverseTransformPoint(cell.transform.position);
+                Vector3 endPos = cell.transform.position;
 
-                line.Fire(startLocal, endLocal);
+                line.Fire(startPos, endPos);
                 await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: false);
             }
         }
 
-        // 2. Particle Effect (UI Space - ParticleImage)
+        // 2. Particle Effect (World Space)
         if (spawnEffectPrefab != null)
         {
-            // If effectParent is specified, we use it to avoid being clipped by Grid/Cell
             Transform pParent = effectParent != null ? effectParent : cell.transform;
-            var particleObj = RM.Instantiate(spawnEffectPrefab.gameObject, cell.transform.position, spawnEffectPrefab.transform.rotation, pParent, true);
-            var particle = particleObj.GetComponent<ParticleImage>();
+            var particleObj = RM.Instantiate(spawnEffectPrefab, cell.transform.position, spawnEffectPrefab.transform.rotation, pParent, true);
+            var particle = particleObj.GetComponent<ParticleSystem>();
             if (particle != null) particle.Play();
             RM.Destroy(particleObj, 2f);
         }
@@ -242,24 +258,6 @@ public class UnitSpawner : MonoBehaviour
         }
     }
 
-    private Vector3 GetWorldPosition(RectTransform rectTransform)
-    {
-        if (rectTransform == null) return Vector3.zero;
-
-        Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
-        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-        {
-            Vector3 screenPos = rectTransform.position;
-            if (Camera.main != null)
-            {
-                screenPos.z = Mathf.Abs(Camera.main.transform.position.z);
-                if (screenPos.z == 0) screenPos.z = 10f;
-                return Camera.main.ScreenToWorldPoint(screenPos);
-            }
-        }
-        
-        return rectTransform.position;
-    }
 
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>
     public void SellUnit(UnitBase unit)

@@ -14,20 +14,24 @@ public enum TotemType
 }
 
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
-public class TotemData : ScriptableObject
+public class TotemData : ScriptableObject, ILoadableAsset
 {
     [Header("기본 정보")]
     public TotemType   totemType;
     public Tier        tier;
     public string      totemName;
-    public Sprite      icon;
-    [Tooltip("특수 동작 스크립트가 필요한 토템만 연결. 비워두면 TotemSpawner의 genericPrefab 사용.")]
-    public GameObject  prefab;
 
-    [Header("회전 스프라이트 (0°/90°/180°/270°)")]
-    [Tooltip("각 90° 회전 상태별 스프라이트. null이면 icon 사용.")]
-    public Sprite[] rotationSprites = new Sprite[4];
+    [Header("Addressables")]
+    public string      iconAddress;
+    public string      prefabAddress;
+    public string[]    rotationSpriteAddresses = new string[4];
+
+    [HideInInspector] public Sprite      icon;
+    [HideInInspector] public GameObject  prefab;
+    [HideInInspector] public Sprite[]    rotationSprites = new Sprite[4];
     [TextArea] public string description;
+
+    public bool IsLoaded => icon != null || prefab != null;
 
     public Sprite DisplaySprite
         => rotationSprites != null && rotationSprites.Length > 0 && rotationSprites[0] != null
@@ -94,6 +98,52 @@ public class TotemData : ScriptableObject
         if (row.AttackDisabledRange != null && row.AttackDisabledRange.Count > 0)
         {
             attackDisabledRange = new List<Vector2Int>(row.AttackDisabledRange);
+        }
+    }
+
+    public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()
+    {
+        if (!string.IsNullOrEmpty(iconAddress) && icon == null)
+            icon = await RM.LoadAsync<Sprite>(iconAddress);
+            
+        if (!string.IsNullOrEmpty(prefabAddress) && prefab == null)
+            prefab = await RM.LoadAsync<GameObject>(prefabAddress);
+
+        if (rotationSprites == null || rotationSprites.Length != 4)
+            rotationSprites = new Sprite[4];
+
+        if (rotationSpriteAddresses != null)
+        {
+            for (int i = 0; i < rotationSpriteAddresses.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(rotationSpriteAddresses[i]) && i < rotationSprites.Length && rotationSprites[i] == null)
+                    rotationSprites[i] = await RM.LoadAsync<Sprite>(rotationSpriteAddresses[i]);
+            }
+        }
+    }
+
+    public void UnloadAssets()
+    {
+        if (icon != null)
+        {
+            RM.Unload(icon);
+            icon = null;
+        }
+        if (prefab != null)
+        {
+            RM.Unload(prefab);
+            prefab = null;
+        }
+        if (rotationSprites != null)
+        {
+            for (int i = 0; i < rotationSprites.Length; i++)
+            {
+                if (rotationSprites[i] != null)
+                {
+                    RM.Unload(rotationSprites[i]);
+                    rotationSprites[i] = null;
+                }
+            }
         }
     }
 }

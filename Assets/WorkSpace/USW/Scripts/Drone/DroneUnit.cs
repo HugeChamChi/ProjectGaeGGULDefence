@@ -25,9 +25,9 @@ public class DroneUnit : MonoBehaviour
 
     private Vector2   _spawnOffset;
 
-    [Header("유닛 근처 오프셋 범위 (px)")]
-    [SerializeField] private float _offsetRangeX =  12f;
-    [SerializeField] private float _offsetRangeY =  10f;
+    [Header("Drone Offset")]
+    [SerializeField] private float _offsetRangeX =  0.12f;
+    [SerializeField] private float _offsetRangeY =  0.10f;
 
     [Header("투사체 프리팹 (지정 시 RM 풀링 사용, 비우면 기본 Pool 사용)")]
     [SerializeField] private Projectile _projectilePrefab;
@@ -184,7 +184,10 @@ public class DroneUnit : MonoBehaviour
             var p = RM.Instantiate(_projectilePrefab, transform.position, Quaternion.identity, true);
             if (p != null)
             {
-                p.transform.SetParent(transform.parent, worldPositionStays: true);
+                // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
+                p.transform.SetParent(null);
+                p.transform.localScale = Vector3.one;
+
                 p.Launch(transform.position, targetPos, proj => 
                 {
                     onHitCallback?.Invoke();

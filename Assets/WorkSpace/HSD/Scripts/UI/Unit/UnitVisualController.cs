@@ -1,22 +1,21 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
-/// 유닛의 등급(Tier)에 맞춰 UI 외곽선(Outline)을 제어하는 로직 클래스입니다.
+/// 유닛의 등급(Tier)에 맞춰 SpriteRenderer 외곽선(Outline)을 제어하는 로직 클래스입니다.
 /// 등급별 머티리얼 캐싱을 통해 드로우 콜과 메모리를 최적화합니다.
 /// </summary>
 public class UnitVisualController
 {
-    private readonly Image _targetImage;
+    private readonly SpriteRenderer _targetRenderer;
     private static UIOutlineSettings _settings;
     
     // 등급별 머티리얼 캐시 (최적화 핵심)
     private static readonly Dictionary<Tier, Material> _materialCache = new Dictionary<Tier, Material>();
 
-    public UnitVisualController(Image targetImage)
+    public UnitVisualController(SpriteRenderer targetRenderer)
     {
-        _targetImage = targetImage;
+        _targetRenderer = targetRenderer;
         LoadSettings();
     }
 
@@ -33,7 +32,7 @@ public class UnitVisualController
     /// </summary>
     public void UpdateVisual(Tier tier)
     {
-        if (_targetImage == null) return;
+        if (_targetRenderer == null) return;
         if (_settings == null) LoadSettings();
         if (_settings == null) return;
 
@@ -48,13 +47,13 @@ public class UnitVisualController
         // 2. 공유 머티리얼 적용
         if (sharedMat != null)
         {
-            _targetImage.material = sharedMat;
+            _targetRenderer.material = sharedMat;
         }
     }
 
     private Material CreateTierMaterial(Tier tier)
     {
-        Material baseMat = _targetImage.material;
+        Material baseMat = _targetRenderer.material;
         
         if (baseMat == null)
         {

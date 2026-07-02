@@ -138,6 +138,7 @@ namespace HSD.UI.Effect
             
             masterSeq.Insert(closeStartTime, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, 0), lineCloseDuration).SetEase(lineCloseEase));
             masterSeq.Insert(closeStartTime, img_Background.DOFade(0f, lineCloseDuration));
+            masterSeq.Insert(closeStartTime, img_ChiefIcon.DOFade(0f, lineCloseDuration));
             
             foreach (var pachingImg in img_Pachings)
             {
@@ -153,6 +154,7 @@ namespace HSD.UI.Effect
             img_Background.gameObject.SetActive(false);
             rect_Paching.gameObject.SetActive(false);
             rect_Line.gameObject.SetActive(false);
+            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -160,7 +162,13 @@ namespace HSD.UI.Effect
         /// </summary>
         private void PrepareInitialVisibility()
         {
-            if (img_ChiefIcon != null) img_ChiefIcon.gameObject.SetActive(true);
+            if (img_ChiefIcon != null)
+            {
+                img_ChiefIcon.gameObject.SetActive(true);
+                Color c = img_ChiefIcon.color;
+                c.a = 1f;
+                img_ChiefIcon.color = c;
+            }
             if (rect_Paching != null) rect_Paching.gameObject.SetActive(true);
             if (rect_Line != null) rect_Line.gameObject.SetActive(true);
             

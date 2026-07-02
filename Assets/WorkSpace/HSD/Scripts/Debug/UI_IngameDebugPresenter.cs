@@ -179,7 +179,7 @@ namespace HSD.InGameDebug
             if (obj is TotemData data)
             {
                 var spawner = UnityEngine.Object.FindObjectOfType<TotemSpawner>(true);
-                spawner?.SpawnTotemByData(data);
+                spawner?.SpawnTotemByData(data).Forget();
                 _view.HideAddView();
                 RefreshList();
             }

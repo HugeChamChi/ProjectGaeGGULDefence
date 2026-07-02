@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// 그리드 셀의 시각적 표현 담당 (View)
@@ -13,7 +12,7 @@ using UnityEngine.UI;
 /// </summary>
 public class GridCellView : MonoBehaviour
 {
-    [SerializeField] private Image cellImage;
+    [SerializeField] private SpriteRenderer cellRenderer;
 
     // ── 색상 정의 ──────────────────────────────────────────────
     // 토템 범위 프리뷰
@@ -31,12 +30,12 @@ public class GridCellView : MonoBehaviour
 
     private void Awake()
     {
-        if (cellImage == null)
-            cellImage = GetComponent<Image>();
+        if (cellRenderer == null)
+            cellRenderer = GetComponent<SpriteRenderer>();
 
-        if (cellImage == null)
+        if (cellRenderer == null)
         {
-            Debug.LogWarning($"GridCellView({name}): Image 컴포넌트 없음");
+            Debug.LogWarning($"GridCellView({name}): SpriteRenderer 컴포넌트 없음");
             return;
         }
 
@@ -45,8 +44,8 @@ public class GridCellView : MonoBehaviour
 
     private void CaptureOriginalColor()
     {
-        if (_originalColorCaptured || cellImage == null) return;
-        _originalColor         = cellImage.color;
+        if (_originalColorCaptured || cellRenderer == null) return;
+        _originalColor         = cellRenderer.color;
         _originalColorCaptured = true;
     }
 
@@ -54,8 +53,8 @@ public class GridCellView : MonoBehaviour
     public void SetModel(GridCellModel model)
     {
         // GridCell.Awake()가 먼저 실행될 경우를 대비해 여기서도 초기화
-        if (cellImage == null)
-            cellImage = GetComponent<Image>();
+        if (cellRenderer == null)
+            cellRenderer = GetComponent<SpriteRenderer>();
         CaptureOriginalColor();
 
         // 기존 구독 해제 후 재등록
@@ -77,39 +76,39 @@ public class GridCellView : MonoBehaviour
     // ── 색상 갱신 ──────────────────────────────────────────────
     private void RefreshColor()
     {
-        if (cellImage == null || _model == null) return;
+        if (cellRenderer == null || _model == null) return;
 
         if (_model.IsTotemDisabledRangePreviewed)
         {
-            cellImage.color = ColorTotemPreviewDisabled;
+            cellRenderer.color = ColorTotemPreviewDisabled;
             return;
         }
 
         if (_model.IsTotemRangePreviewed)
         {
-            cellImage.color = ColorTotemPreviewEffect;
+            cellRenderer.color = ColorTotemPreviewEffect;
             return;
         }
 
         // 보스 패턴 디버프 우선순위 높음
         if (_model.IsSealed)
         {
-            cellImage.color = ColorSealed;
+            cellRenderer.color = ColorSealed;
             return;
         }
 
         if (_model.IsAttackDisabled)
         {
-            cellImage.color = ColorDisable;
+            cellRenderer.color = ColorDisable;
             return;
         }
 
         if (_model.DamageModifier < 1f || _model.SpeedModifier > 1f)
         {
-            cellImage.color = ColorDebuff;
+            cellRenderer.color = ColorDebuff;
             return;
         }
 
-        cellImage.color = _originalColor;
+        cellRenderer.color = _originalColor;
     }
 }

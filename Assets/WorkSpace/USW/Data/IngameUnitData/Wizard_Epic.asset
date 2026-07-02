@@ -17,6 +17,8 @@ MonoBehaviour:
   unitName: Frog_Wizard
   unitTier: 2
   unitTribe: 3
+  iconAddress: FrogMagicianIcon_Epic
+  prefabAddress: Frog_Magician
   icon: {fileID: 21300000, guid: 9a9e635adee04504a863d905b091a8e7, type: 3}
   prefab: {fileID: 6420751813791673423, guid: 0963f26c8c90c8b46897cbfeda3529a2, type: 3}
   description: 
@@ -26,5 +28,6 @@ MonoBehaviour:
   skillAtk: 1100
   skillCooldown: 12.6
   skillName: 
-  foodPerTick: 10
+  foodProduction: 0
   populationCost: 1
+  maxDroneCount: 0

@@ -9,7 +9,7 @@ using System.Threading;
 /// </summary>
 public abstract class ChiefUnit : UnitBase
 {
-    protected override bool CanAutoSkill => false;
+    public override bool CanAutoSkill => false;
 
     /// <summary>
     /// 족장 스킬 쿨타임(게이지)이 100% 찼는지 여부

@@ -5,7 +5,7 @@ using VContainer.Unity;
 
 public static class RM
 {
-    static IResourceProvider _provider = new ResourcesProvider();
+    static IResourceProvider _provider = new AddressablesProvider();
     static PoolManager _poolManager = new PoolManager();
 
     public static T Load<T>(string path) where T : Object
@@ -37,6 +37,12 @@ public static class RM
     {
         return await _provider.LoadAllAsync<T>(path);
     }
+
+    public static void ReleaseAllHandles()
+    {
+        _provider.ReleaseAll();
+    }
+
 
     #region Async Instantiate
     public static async UniTask<T> InstantiateAsync<T>(string address, Vector3 position, Quaternion rotation, Transform parent, bool isPool = false) where T : Object

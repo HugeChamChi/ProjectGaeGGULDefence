@@ -15,6 +15,13 @@ MonoBehaviour:
   totemType: 2
   tier: 0
   totemName: "\uB05D\uC5C6\uB294 \uC218\uD655"
+  iconAddress: Totem_007
+  prefabAddress: Totem_FoodGenerator
+  rotationSpriteAddresses:
+  - Totem_007
+  - Totem_007_90_R
+  - Totem_007_180
+  - Totem_007_90_L
   icon: {fileID: 21300000, guid: 7606e922e230a2240a1c8491dff4ea55, type: 3}
   prefab: {fileID: 2617104415731177961, guid: c4deb9a02ea44663b6f3ee4d2452722b, type: 3}
   rotationSprites:

@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -8,17 +9,43 @@ using VContainer.Unity;
 public class UnitFactory : MonoBehaviour
 {
     [Inject] private IObjectResolver _resolver;
+    [Inject] private AssetLifecycleManager _assetLifecycle;
     [SerializeField] private UnitData[] unitDataList;
 
     public UnitData[] UnitDataList => unitDataList;
+    private UnitDependencies _deps;
 
     public void Init()
     {
+        _deps = new UnitDependencies
+        {
+            GameDataManager = _resolver.Resolve<GameDataManager>(),
+            PopulationManager = _resolver.Resolve<PopulationManager>(),
+            GridManager = _resolver.Resolve<GridManager>(),
+            UpgradeManager = _resolver.Resolve<UpgradeManager>(),
+            LevelUpManager = _resolver.Resolve<LevelUpManager>(),
+            TotemBuffManager = _resolver.Resolve<TotemBuffManager>(),
+            CurrencyFloaterManager = _resolver.Resolve<CurrencyFloaterManager>(),
+            ChieftainManager = _resolver.Resolve<ChieftainSpawner>(),
+            BossManager = _resolver.Resolve<BossManager>(),
+            ProjectileManager = _resolver.Resolve<ProjectilePool>(),
+            AudioManager = _resolver.Resolve<AudioManager>(),
+            CurrencyManager = _resolver.Resolve<CurrencyManager>()
+        };
         if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
         {
             unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
         }
         ValidateUnitDataList();
+
+        LoadAllUnitAssetsAsync().Forget();
+    }
+
+    private async Cysharp.Threading.Tasks.UniTaskVoid LoadAllUnitAssetsAsync()
+    {
+        if (unitDataList == null) return;
+        await _assetLifecycle.LoadAsync(unitDataList.OfType<ILoadableAsset>());
+        Debug.Log("UnitFactory: 모든 유닛 에셋 로드 완료");
     }
 
     public UnitBase CreateUnit(int type)
@@ -123,7 +150,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var go   = _resolver.Instantiate(data.prefab);
+        var go   = RM.Instantiate(data.prefab);
         var unit = go.GetComponent<UnitBase>();
 
         if (unit == null)
@@ -136,26 +163,24 @@ public class UnitFactory : MonoBehaviour
         unit.unitData = data;
         unit.animator?.Initialize(unit);
 
-        InitUnitRectTransform(unit);
+        unit.Init(_deps);
+
+        InitUnitTransform(unit);
 
         return unit;
     }
 
     [Header("Spawn Settings")]
-    [SerializeField] private float defaultSpawnPivotY = 0.5f;
     [SerializeField] private float defaultSpawnOffsetY = 0f;
+    [SerializeField] private Vector3 defaultSpawnScale = Vector3.one;
 
-    /// <summary>유닛의 RectTransform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
-    public void InitUnitRectTransform(UnitBase unit)
+    /// <summary>유닛의 Transform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
+    public void InitUnitTransform(UnitBase unit)
     {
-        var rt = unit.GetComponent<RectTransform>();
-        if (rt == null) return;
-
-        rt.anchorMin        = new Vector2(0.5f, 0.5f);
-        rt.anchorMax        = new Vector2(0.5f, 0.5f);
-        rt.pivot            = new Vector2(0.5f, defaultSpawnPivotY); // 기본값 0.5 (인스펙터에서 수정 가능)
-        rt.anchoredPosition = new Vector2(0f, defaultSpawnOffsetY); // y에 offset 더함
-        rt.localScale       = Vector3.one;
+        var t = unit.transform;
+        t.localPosition = new Vector3(0f, defaultSpawnOffsetY, 0f);
+        t.localRotation = Quaternion.identity;
+        t.localScale = defaultSpawnScale;
     }
 
     private void ValidateUnitDataList()

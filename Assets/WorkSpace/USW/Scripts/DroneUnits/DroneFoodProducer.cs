@@ -13,8 +13,8 @@ public class DroneFoodProducer : UnitBase
     [Header("Food Production Settings")]
     [SerializeField] private float foodPerDronePerSec = 1f;
 
-    protected override bool IsFoodProductionBuffable => false;
-    protected override bool CanBasicAttack => false;
+    public override bool IsFoodProductionBuffable => false;
+    public override bool CanBasicAttack => false;
 
     protected override void OnUnitPlaced()
     {
@@ -27,7 +27,7 @@ public class DroneFoodProducer : UnitBase
         _droneManager?.ResetPerDroneFood();
     }
 
-    protected override float GetBaseFoodPerSecond()
+    public override float GetBaseFoodPerSecond()
     {
         return unitData != null ? unitData.foodProduction : 0f;
     }

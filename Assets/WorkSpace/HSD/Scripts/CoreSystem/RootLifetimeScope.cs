@@ -30,6 +30,7 @@ public class RootLifetimeScope : LifetimeScope
         builder.Register<BackendGameData>(Lifetime.Singleton).AsSelf();
         builder.Register<GlobalUIManager>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
         
+        builder.Register<AssetLifecycleManager>(Lifetime.Singleton);
         builder.Register<SceneChangeManager>(Lifetime.Singleton);
         builder.Register<GameDataManager>(Lifetime.Singleton);
 

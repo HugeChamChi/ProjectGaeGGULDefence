@@ -17,10 +17,10 @@ public abstract class DroneSpawnerBase : UnitBase
     {
         get
         {
-            float sxL = _droneManager?.droneSpreadXLower ?? 25f;
-            float syL = _droneManager?.droneSpreadYLower ?? -45f;
-            float sxU = _droneManager?.droneSpreadXUpper ?? 80f;
-            float syU = _droneManager?.droneSpreadYUpper ?? 25f;
+            float sxL = _droneManager?.droneSpreadXLower ?? 0.25f;
+            float syL = _droneManager?.droneSpreadYLower ?? 0.2f;
+            float sxU = _droneManager?.droneSpreadXUpper ?? 0.8f;
+            float syU = _droneManager?.droneSpreadYUpper ?? 0.7f;
 
             return new[]
             {
@@ -37,7 +37,7 @@ public abstract class DroneSpawnerBase : UnitBase
     // 하위 클래스에서 추가 검증이 필요하면 재정의
     protected virtual bool HasValidData() => unitData != null && dronePrefab != null;
 
-    protected override bool CanBasicAttack => false;
+    public override bool CanBasicAttack => false;
 
     protected override void OnUnitPlaced()
     {

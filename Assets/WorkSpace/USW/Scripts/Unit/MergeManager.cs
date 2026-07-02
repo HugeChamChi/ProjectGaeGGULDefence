@@ -18,8 +18,18 @@ public class MergeManager : MonoBehaviour
  
     public void Init()
     {
+    }
 
-        
+    private void OnEnable()
+    {
+        DragHandler.OnUnitClickedEvent += OnUnitClicked;
+        DragHandler.OnDragStartedEvent += HideButton;
+    }
+
+    private void OnDisable()
+    {
+        DragHandler.OnUnitClickedEvent -= OnUnitClicked;
+        DragHandler.OnDragStartedEvent -= HideButton;
     }
 
     [Inject] private ChieftainSpawner _chieftainManager;

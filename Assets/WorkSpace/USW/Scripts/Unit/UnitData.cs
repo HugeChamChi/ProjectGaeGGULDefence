@@ -2,7 +2,7 @@ using UnityEngine;
 using VContainer;
 
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
-public class UnitData : ScriptableObject
+public class UnitData : ScriptableObject, ILoadableAsset
 {
     [Header("Info")]
     public int characterId;
@@ -10,9 +10,16 @@ public class UnitData : ScriptableObject
     public string unitName;
     public Tier unitTier;
     public UnitTribe unitTribe;
-    public Sprite icon;
-    public GameObject prefab;
+    
+    [Header("Addressables")]
+    public string iconAddress;
+    public string prefabAddress;
+
+    [HideInInspector] public Sprite icon;
+    [HideInInspector] public GameObject prefab;
     [TextArea] public string description;
+
+    public bool IsLoaded => icon != null || prefab != null;
 
     [Header("Sound")]
     public string attackSoundAddress;
@@ -50,5 +57,28 @@ public class UnitData : ScriptableObject
         atk = row.Atk;
         attackSpeed = row.AttackSpeed;
         foodProduction = row.FoodProduction;
+    }
+
+    public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()
+    {
+        if (!string.IsNullOrEmpty(iconAddress) && icon == null)
+            icon = await RM.LoadAsync<Sprite>(iconAddress);
+            
+        if (!string.IsNullOrEmpty(prefabAddress) && prefab == null)
+            prefab = await RM.LoadAsync<GameObject>(prefabAddress);
+    }
+
+    public void UnloadAssets()
+    {
+        if (icon != null)
+        {
+            RM.Unload(icon);
+            icon = null;
+        }
+        if (prefab != null)
+        {
+            RM.Unload(prefab);
+            prefab = null;
+        }
     }
 }

@@ -41,3 +41,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Unit
+    uniqueID: 1815747135
+    locked: 0
+  - name: FX
+    uniqueID: 1997927139
+    locked: 0

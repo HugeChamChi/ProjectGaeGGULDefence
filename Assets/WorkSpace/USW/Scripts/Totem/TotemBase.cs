@@ -1,7 +1,6 @@
 using UnityEngine;
 using VContainer;
 using System.Collections.Generic;
-using UnityEngine.UI;
 
 /// <summary>
 /// 모든 토템의 기반 클래스
@@ -21,7 +20,6 @@ public abstract class TotemBase : MonoBehaviour
 
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
-    [SerializeField] private   Image          _image;
 
     private bool _isDataCloned = false;
 
@@ -46,8 +44,6 @@ public abstract class TotemBase : MonoBehaviour
     {
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        if (_image == null)
-            _image = GetComponentInChildren<Image>();
     }
 
     // ── 배치/제거 ──────────────────────────────────────────────
@@ -132,12 +128,6 @@ public abstract class TotemBase : MonoBehaviour
 
         if (_spriteRenderer != null)
             _spriteRenderer.sprite = s;
-
-        if (_image != null)
-        {
-            _image.sprite = s;
-            _image.preserveAspect = true;
-        }
     }
 
     /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>

@@ -6,11 +6,13 @@ using System;
 public class SceneChangeManager
 {
     private readonly GlobalUIManager _globalUIManager;
+    private readonly AssetLifecycleManager _assetLifecycle;
 
     [Inject]
-    public SceneChangeManager(GlobalUIManager globalUIManager)
+    public SceneChangeManager(GlobalUIManager globalUIManager, AssetLifecycleManager assetLifecycle)
     {
         _globalUIManager = globalUIManager;
+        _assetLifecycle = assetLifecycle;
     }
 
     /// <summary>
@@ -27,16 +29,20 @@ public class SceneChangeManager
             await beforeLoad();
         }
 
-        // 3. 씬 로드
+        // 3. 에셋 라이프사이클 정리 (씬 전환 전 로드된 에셋 언로드)
+        _assetLifecycle.UnloadAll();
+        RM.ReleaseAllHandles();
+
+        // 4. 씬 로드
         await LoadSceneInternalAsync(sceneName);
 
-        // 4. 씬 로드 후 추가 작업 (데이터 바인딩, 초기화 등)
+        // 5. 씬 로드 후 추가 작업 (데이터 바인딩, 초기화 등)
         if (afterLoad != null)
         {
             await afterLoad();
         }
 
-        // 5. 화면 밝히기 (Fade Out)
+        // 6. 화면 밝히기 (Fade Out)
         await _globalUIManager.FadeOutAsync();
     }
 

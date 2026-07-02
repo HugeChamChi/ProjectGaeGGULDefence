@@ -54,6 +54,36 @@ public class GameInitializer : IInitializable, IAsyncStartable
 
     public async System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellation)
     {
+        // 1. 필요한 사운드 식별 및 프리로드
+        var sfxToLoad = new System.Collections.Generic.HashSet<string>();
+        
+        // 1-1. 인게임 공통 사운드 세팅 (실제 파일 이름 기준)
+        sfxToLoad.Add("01.Button_Touch(max vol)");
+        sfxToLoad.Add("01.Screen_touch(max vol)");
+        sfxToLoad.Add("02.Summon");
+        sfxToLoad.Add("01.Touch_block");
+        sfxToLoad.Add("02.Levelup");
+        // 필요 시 더 추가하세요.
+
+        // 1-2. 현재 선택된 덱(파티)의 유닛별 사운드 수집
+        if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
+        {
+            foreach (var unit in GlobalData.SelectedParty.unitDataList)
+            {
+                if (unit != null && !string.IsNullOrEmpty(unit.attackSoundAddress))
+                {
+                    sfxToLoad.Add(unit.attackSoundAddress);
+                }
+            }
+        }
+
+        // 2. 오디오 매니저를 통해 한 번에 비동기 로드
+        if (_audioManager != null)
+        {
+            await _audioManager.PreloadSFXAsync(sfxToLoad);
+        }
+
+        // 3. 로딩이 모두 끝나면 페이드아웃 후 게임 진입
         if (_globalUIManager != null)
         {
             await _globalUIManager.FadeOutAsync();

@@ -1,103 +1,59 @@
 using System;
-using VContainer;
-using System.Threading;
-using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
 
-/// <summary>
-/// 모든 유닛의 기반 클래스
-///
-/// 루프 구조:
-///   AttackLoopAsync — 1초마다 일반 공격 (atk), 공속 버프 적용
-///   SkillLoopAsync  — skillCooldown마다 스킬 공격 (skillAtk) + 식량 생산, 게이지속도 버프 적용
-///
-/// 서브클래스 훅:
-///   OnUnitPlaced()  — 배치 시 추가 처리
-///   OnUnitRemoved() — 제거 시 추가 처리
-///   OnSkillFull()   — 스킬 발동 시 추가 처리 (식량 생산 로직 오버라이드 가능)
-/// </summary>
 public abstract class UnitBase : MonoBehaviour
 {
-    [Inject] protected GameDataManager _gameDataManager;
-    [Inject] protected PopulationManager _populationManager;
-    [Inject] protected GridManager _gridManager;
-    [Inject] protected UpgradeManager _upgradeManager;
-    [Inject] protected LevelUpManager _levelUpManager;
-    [Inject] protected TotemBuffManager _totemBuffManager;
-    [Inject] protected CurrencyFloaterManager _currencyFloaterManager;
-    [Inject] protected ChieftainSpawner _chieftainManager;
-    [Inject] protected BossManager _bossManager;
-    [Inject] protected ProjectilePool _projectileManager;
-    [Inject] protected AudioManager _audioManager;
-
     public UnitData unitData;
-
-    public UnityEvent onSkillFull; // 스킬 발동 시 VFX/애니메이션 훅
-    public UnityEvent onAttack;    // 일반 공격 시 VFX 훅
-
-    /// <summary>배치/제거 시 전역 알림 — TotemProximityBuff 등에서 구독</summary>
+    public UnityEvent onSkillFull;
+    public UnityEvent onAttack;
     public static event Action OnAnyUnitChanged;
 
-    protected CurrencyManager _currency;
-    protected BossBase        _boss;
     public GridCell currentCell { get; private set; }
-
-    // 배치 시점 스냅샷(_boss) 대신 항상 live 보스를 반환
-    private BossBase LiveBoss => _bossManager?.CurrentBoss ?? _boss;
-
+    public BossBase Boss { get; private set; }
+    
     public UnitAnimator animator;
     protected UnitSoundController _sound;
     protected UnitVisualController _visual;
+    private SpriteRenderer _spriteRenderer;
 
-    private Image _unitImage;
-    private CancellationTokenSource _loopCts;
-    private bool _paused = false;
-
-    // ── 상태 및 타이머 (관찰 가능) ──────────────────────────────
     public enum UnitState { Idle, Attacking, Skilling, Sealed }
     public UnitState CurrentState { get; protected set; } = UnitState.Idle;
 
-    protected virtual bool IsFoodProductionBuffable => true;
-    protected virtual bool CanBasicAttack => true;
-    protected virtual bool CanAutoSkill => true;
+    public virtual bool IsFoodProductionBuffable => true;
+    public virtual bool CanBasicAttack => true;
+    public virtual bool CanAutoSkill => true;
 
-    protected float _attackTimer;
-    protected float _skillTimer;
-    protected float _foodTimer;
     public bool IsFirstPlacement { get; private set; } = true;
+    public bool IsPopulationReserved = false;
 
-    public float SkillGaugeProgress 
-    {
-        get 
-        {
-            if (unitData == null) return 0f;
-            float interval = GetCurrentSkillInterval();
-            return Mathf.Clamp01(_skillTimer / interval);
-        }
-    }
-
-    // ── 레벨업 특수 효과용 ─────────────────────────────────────
-    private int   _hitCount;                      // 공격 횟수 (AttackEveryNHits용)
-    private float _burstEndTime;                  // 버스트 버프 종료 시각 (Time.time 기준)
-    protected float _unemployedAtkBonus = 0f;     // 3056 식충이 — 스킬마다 누적 공격력
+    private UnitStatsModifier _stats;
+    private UnitCombatComponent _combat;
+    private UnitResourceComponent _resource;
+    private UnitDependencies _deps;
 
     protected virtual void Awake()
     {
         if (animator == null) animator = GetComponentInChildren<UnitAnimator>();
         if (animator == null) animator = GetComponent<UnitAnimator>();
         
-        _unitImage = GetComponent<Image>();
-        if (_unitImage == null) _unitImage = GetComponentInChildren<Image>();
-        if (_unitImage != null) _visual = new UnitVisualController(_unitImage);
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (_spriteRenderer == null) _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (_spriteRenderer != null) _visual = new UnitVisualController(_spriteRenderer);
     }
 
-    // ── 배치/제거 ──────────────────────────────────────────────
-
-    /// <summary>UnitSpawner 또는 DragHandler.PlaceSelfAt() 이 셀에 배치한 뒤 호출</summary>
-    public bool IsPopulationReserved = false;
+    public void Init(UnitDependencies deps)
+    {
+        _deps = deps;
+        
+        _stats = gameObject.AddComponent<UnitStatsModifier>();
+        _resource = gameObject.AddComponent<UnitResourceComponent>();
+        _combat = gameObject.AddComponent<UnitCombatComponent>();
+        
+        _stats.Init(this, deps);
+        _resource.Init(this, deps);
+        _combat.Init(this, deps, _stats, _resource);
+    }
 
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
     {
@@ -107,70 +63,47 @@ public abstract class UnitBase : MonoBehaviour
             if (animator == null) animator = GetComponent<UnitAnimator>();
         }
 
-        if (currency == null)
+        if (unitData != null && _deps?.GameDataManager != null && _deps.GameDataManager.IsLoaded)
         {
-            Debug.LogError($"UnitBase({name}): CurrencyManager가 null입니다.");
-            return;
-        }
-
-        // ── 시트 데이터 적용 (강화 레벨 반영) ──────────────────
-        if (unitData != null && _gameDataManager != null && _gameDataManager.IsLoaded)
-        {
-            // ScriptableObject 에셋 직접 수정을 방지하기 위해 인스턴스 복제 (필요 시)
-            // 여기서는 런타임에만 값을 유지하면 되므로, 데이터 동기화 수행
             SyncStatsWithSheet();
         }
 
-        // ── 비주얼 업데이트 (등급별 외곽선) ──────────────────
         if (_visual != null && unitData != null)
         {
             _visual.UpdateVisual(unitData.unitTier);
         }
 
-        _currency    = currency;
-        _boss        = boss;
+        Boss = boss;
         currentCell = cell;
         ApplyFacingByCell();
 
-        if (IsFirstPlacement)
-        {
-            _attackTimer = GetCurrentAttackInterval();
-            _skillTimer = 0f;
-            _foodTimer = 0f;
-        }
-
-        StopLoops();
-        _paused = false;
-        _loopCts = new CancellationTokenSource();
-        UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+        _combat.StartLoops();
 
         OnUnitPlaced();
         
         if (!IsPopulationReserved)
         {
-            _populationManager?.Add(unitData?.populationCost ?? 1);
+            _deps?.PopulationManager?.Add(unitData?.populationCost ?? 1);
             IsPopulationReserved = true;
         }
         
         OnAnyUnitChanged?.Invoke();
 
-        _sound = new(this, _audioManager);
+        if (_deps?.AudioManager != null)
+            _sound = new(this, _deps.AudioManager);
 
         IsFirstPlacement = false;
     }
 
-    /// <summary>하위 호환 오버로드 — 셀 참조 없이 호출하는 기존 코드 지원</summary>
-    public void OnPlaced(CurrencyManager currency, BossBase boss)
-        => OnPlaced(currency, boss, null);
+    public void OnPlaced(CurrencyManager currency, BossBase boss) => OnPlaced(currency, boss, null);
 
-    /// <summary>셀 제거 또는 게임 종료 시 호출</summary>
     public void OnRemoved()
     {
         OnUnitRemoved();
-        StopLoops();
+        _combat.StopLoops();
         if (IsPopulationReserved)
         {
-            _populationManager?.Remove(unitData?.populationCost ?? 1);
+            _deps?.PopulationManager?.Remove(unitData?.populationCost ?? 1);
             IsPopulationReserved = false;
         }
         currentCell = null;
@@ -182,432 +115,72 @@ public abstract class UnitBase : MonoBehaviour
 
     private void ApplyFacingByCell()
     {
-        if (_unitImage == null || currentCell == null || _gridManager == null) return;
-
-        int halfColumn = _gridManager.Columns / 2;
+        if (_spriteRenderer == null || currentCell == null || _deps?.GridManager == null) return;
+        int halfColumn = _deps.GridManager.Columns / 2;
         bool faceLeft = currentCell.GridPosition.x >= halfColumn;
-
-        var imageTransform = _unitImage.rectTransform;
-        var scale = imageTransform.localScale;
+        var t = _spriteRenderer.transform;
+        var scale = t.localScale;
         float x = Mathf.Abs(scale.x);
         if (x <= 0f) x = 1f;
-
-        imageTransform.localScale = new Vector3(faceLeft ? -x : x, scale.y, scale.z);
+        t.localScale = new Vector3(faceLeft ? -x : x, scale.y, scale.z);
     }
 
     private void OnDestroy() 
     {
         _visual?.Cleanup();
-        StopLoops();
     }
 
-    /// <summary>인구수·셀 상태 변경 없이 공격/스킬을 일시 중단. LevelUpUI 등 전용.</summary>
-    public void PauseLoops() => _paused = true;
+    public void PauseLoops() => _combat.PauseLoops();
+    public void ResumeLoops() => _combat.ResumeLoops();
+    protected virtual void SyncStatsWithSheet() { }
 
-    /// <summary>PauseLoops 이후 루프 재개. 셀·재화·보스 참조는 기존 값 유지.</summary>
-    public void ResumeLoops()
-    {
-        if (_currency == null) return;
-        _paused = false;
-        if (_loopCts == null)
-        {
-            _loopCts = new CancellationTokenSource();
-            UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
-        }
-    }
-
-    private void StopLoops()
-    {
-        _loopCts?.Cancel();
-        _loopCts?.Dispose();
-        _loopCts = null;
-    }
-
-    /// <summary>족장 전용 공격력 버프 (3008 위엄) 추가 처리 등</summary>
-    protected virtual void SyncStatsWithSheet()
-    {
-        // UnitSpawner.Init()에서 전역적으로 모든 UnitData SO를 업데이트하도록 변경되었으므로,
-        // 개별 유닛 단위의 시트 덮어쓰기는 생략합니다.
-    }
-
-    // ── 통합 제어 루프 ──────────────────────────────────────────
-
-    /// <summary>
-    /// 유닛의 행동을 제어하는 메인 루프.
-    /// Idle 상태에서 스킬 게이지(쿨다운)와 공격 쿨다운을 확인하여 우선순위에 따라 행동을 결정합니다.
-    /// </summary>
-    private async UniTask UnitControlLoopAsync(CancellationToken token)
-    {
-        if (unitData == null) return;
-
-        float lastUpdateTime = Time.time;
-
-        while (!token.IsCancellationRequested)
-        {
-            float currentTime = Time.time;
-            float dt = currentTime - lastUpdateTime;
-            lastUpdateTime = currentTime;
-
-            if (_paused || (currentCell != null && currentCell.Model.IsSealed))
-            {
-                if (CurrentState != UnitState.Idle && CurrentState != UnitState.Sealed)
-                {
-                    CurrentState = _paused ? UnitState.Idle : UnitState.Sealed;
-                    animator?.PlayIdle();
-                }
-                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
-                    return;
-                continue;
-            }
-
-            _attackTimer += dt;
-            _skillTimer += dt;
-            TickFoodProduction(dt);
-
-            float attackInterval = GetCurrentAttackInterval();
-            float skillInterval = GetCurrentSkillInterval();
-            
-            bool canAttack = currentCell != null && !currentCell.Model.IsAttackDisabled && !currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
-
-            // 우선순위 결정: Skill > Attack > Idle
-            if (CanAutoSkill && _skillTimer >= skillInterval && canAttack)
-            {
-                CurrentState = UnitState.Skilling;
-                _skillTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 발동 방지)
-                
-                ExecuteSkill();
-                
-                if (animator != null) 
-                {
-                    animator.SetSpeed(1f);
-                    await animator.PlaySkillAsync(token);
-                }
-            }
-            else if (CanBasicAttack && _attackTimer >= attackInterval && canAttack)
-            {
-                CurrentState = UnitState.Attacking;
-                _attackTimer = 0f; // 누적된 잉여 시간 버림 (순간 다중 공격 방지)
-                
-                ExecuteAttack(); // 애니메이션 시작과 동시에 즉각적인 공격 판정
-                
-                if (animator != null) 
-                {
-                    await animator.PlayAttackAsync(token, attackInterval);
-                }
-                else
-                {
-                    await UniTask.Delay(TimeSpan.FromSeconds(attackInterval), cancellationToken: token);
-                }
-            }
-            else
-            {
-                if (CurrentState != UnitState.Idle)
-                {
-                    CurrentState = UnitState.Idle;
-                    if (animator != null) animator.PlayIdle();
-                }
-                
-                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
-                    return;
-            }
-        }
-    }
-
-    public float GetCurrentAttackInterval()
-    {
-        int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult   = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
-        float tribeSpeedMult = Mathf.Max(1f + (_levelUpManager?.GetTribeSpeedBonus(unitData.unitTribe) ?? 0f), 0.01f);
-        
-        // AttackSpeed는 초당 공격 횟수 (값이 클수록 공격 간격이 짧아져 더 빨라짐)
-        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
-
-        float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + (currentCell?.Model.TotemCellSpeedBonus ?? 0f));
-
-        float interval = baseInterval
-                       * (_totemBuffManager?.SpeedMultiplier ?? 1f)
-                       * cellSpeedBonusMult
-                       * (currentCell?.Model.SpeedModifier ?? 1f)
-                       * (currentCell?.Model.TotemSpeedModifier ?? 1f)
-                       / rowSpeedMult
-                       / tribeSpeedMult;
-        return Mathf.Max(interval, 0.05f);
-    }
-
-    public float CurrentSkillTimer => _skillTimer;
-
-    public float GetCurrentSkillInterval()
-    {
-        int row = currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult = Mathf.Max(_levelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
-        float interval = unitData.skillCooldown
-                       * (_totemBuffManager?.GaugeSpeedMultiplier ?? 1f)
-                       * (currentCell?.Model.SpeedModifier ?? 1f)
-                       / rowSpeedMult;
-        return Mathf.Max(interval, 0.05f);
-    }
-
-    private void ExecuteAttack()
-    {
-        if (unitData == null || unitData.atk <= 0) return;
-
-        bool attackDisabled = currentCell != null &&
-            (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
-
-        var boss = LiveBoss;
-        if (!attackDisabled && boss != null && !boss.IsDead)
-        {
-            LaunchProjectile(GetAttackDamage());
-            onAttack?.Invoke();
-            _hitCount++;
-            TriggerBonusAttacks(attackDisabled);
-        }
-    }
-
-    private void ExecuteSkill()
-    {
-        OnSkillFull();
-    }
-
-    // 기존 AttackLoopAsync와 SkillLoopAsync는 제거됨
-
-
-    /// <summary>Adds food based on CPS, speed multiplier (frequency), and amount multiplier.</summary>
-    private void TickFoodProduction(float deltaTime)
-    {
-        if (_currency == null || unitData == null || deltaTime <= 0f) return;
-
-        // 1. 속도 배율을 타이머 증가량에 반영 (값이 낮을수록 타이머가 빨리 참 -> 빈도 증가)
-        float cellFoodSpeedBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
-        float speedMultiplier = Mathf.Max((_totemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellFoodSpeedBonus, 0.01f);
-        if (!IsFoodProductionBuffable) speedMultiplier = 1f;
-
-        _foodTimer += deltaTime / speedMultiplier;
-
-        // 표준 간격(1초)에 도달할 때까지 누적
-        if (_foodTimer < 1f) return;
-
-        float baseAmount = GetBaseFoodPerSecond();
-        if (baseAmount <= 0f)
-        {
-            _foodTimer = 0f;
-            return;
-        }
-
-        // 2. 누적된 시간 동안 발생한 틱 횟수 계산
-        int elapsedTicks = Mathf.FloorToInt(_foodTimer);
-        _foodTimer -= elapsedTicks;
-
-        // 3. 틱당 생산량 계산 (순수 생산량 버프 적용)
-        float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
-        float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-        float amountMultiplier = (_totemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
-        if (!IsFoodProductionBuffable) amountMultiplier = 1f;
-
-        float amountPerTick = baseAmount * amountMultiplier;
-
-        if (amountPerTick > 0f)
-        {
-            for (int i = 0; i < elapsedTicks; i++)
-            {
-                _currency.AddCurrency(amountPerTick);
-                
-                // 각 틱마다 플로터 생성 (1 미만의 소수점도 시각적 확인을 위해 표시 가능)
-                _currencyFloaterManager?.SpawnCurrencyText(transform.position + Vector3.up * 1.5f, amountPerTick);
-            }
-        }
-    }
-
-    public virtual float CurrentFoodProductionPerSecond
-    {
-        get
-        {
-            if (unitData == null) return 0f;
-            float baseAmount = GetBaseFoodPerSecond();
-            if (baseAmount <= 0f) return 0f;
-
-            float cellFoodAmountBonus = currentCell?.Model.TotemCellFoodAmountBonus ?? 0f;
-            float chieftainFoodBonus = (_chieftainManager != null && _chieftainManager.ChieftainUnit == this) ? (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-            float amountMultiplier = (_totemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
-            if (!IsFoodProductionBuffable) amountMultiplier = 1f;
-
-            float amountPerTick = baseAmount * amountMultiplier;
-
-            float cellIntervalBonus = currentCell?.Model.TotemCellFoodSpeedBonus ?? 0f;
-            float intervalMultiplier = Mathf.Max(0.1f, (_totemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellIntervalBonus);
-            if (!IsFoodProductionBuffable) intervalMultiplier = 1f;
-
-            return amountPerTick / intervalMultiplier;
-        }
-    }
-
-    protected virtual float GetBaseFoodPerSecond()
-    {
-        return unitData != null ? unitData.foodProduction : 0f;
-    }
-
-    protected virtual void OnSkillFull()
+    public void SetState(UnitState state) => CurrentState = state;
+    public void InvokeOnAttack() => onAttack?.Invoke();
+    public void InvokeOnSkillFull() 
     {
         onSkillFull?.Invoke();
-
-        bool attackDisabled = currentCell != null &&
-            (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
-
-        var boss = LiveBoss;
-        if (!attackDisabled && boss != null && !boss.IsDead)
-        {
-            LaunchProjectile(GetSkillDamage());
-        }
-
-        // ── 레벨업 스킬 특수 효과 ─────────────────────────────
-        var lu = _levelUpManager;
-        if (lu == null) return;
-
-        if (lu.HasBurstOnSkillFull)
-            _burstEndTime = Time.time + lu.BurstDurationSeconds;
-
-        if (lu.HasExtraAttackOnSkillFull && !attackDisabled && boss != null && !boss.IsDead)
-        {
-            LaunchProjectile(GetAttackDamage());
-        }
+        OnSkillFull();
     }
+    
+    protected virtual void OnSkillFull() { }
 
-    // ── 데미지 계산 ────────────────────────────────────────────
-
-    // 강화 데이터 로드 전에는 SO 기본값으로 폴백
-    private float UpgradedAtk => _upgradeManager != null && _upgradeManager.IsLoaded
-        ? _upgradeManager.GetCurrentAtk(unitData.characterId)
-        : unitData.atk;
-
-    private float UpgradedAttackInterval => _upgradeManager != null && _upgradeManager.IsLoaded
-        ? _upgradeManager.GetCurrentAttackSpeed(unitData.characterId)
-        : (unitData != null ? unitData.attackSpeed : 1.0f);
-
-    public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
-    public int GetSkillDamage()  => ComputeDamage(unitData.skillAtk);
-
-    private int ComputeDamage(float baseDamage)
+    public float SkillGaugeProgress 
     {
-        if (unitData == null) return 0;
-
-        float cellModifier  = currentCell != null
-            ? (currentCell.Model.NullifyDamageDebuff ? 1f : currentCell.Model.DamageModifier)
-            : 1f;
-        float totemModifier = currentCell?.Model.TotemAttackModifier ?? 1f;
-        int   row           = currentCell?.GridPosition.y ?? 0;
-        var   lu            = _levelUpManager;
-        float rowModifier   = lu?.GetRowAttackMultiplier(row) ?? 1f;
-
-        // 부족별 공격력 보너스
-        float tribeAtk     = 1f + (lu?.GetTribeAtkBonus(unitData.unitTribe) ?? 0f);
-
-        // 투사체 크기 → 공격력 보너스
-        float projAtk      = 1f + (lu?.GetProjectileSizeAtkBonus() ?? 0f);
-
-        // 버스트 버프 (스킬 풀 시 일시적)
-        float burstAtk     = (Time.time < _burstEndTime && lu != null)
-            ? (1f + lu.BurstAttackBonus)
-            : 1f;
-
-        // 족장 전용 공격력 버프 (3008 위엄 및 원맨쇼 판매스택)
-        float chieftainAtk = (_chieftainManager?.ChieftainUnit == this && lu != null)
-            ? 1f + lu.ChieftainAttackBonus
-            : 1f;
-
-        // 원맨쇼 인구수 페널티 (전체 유닛 적용)
-        float globalPopPenalty = 1f;
-        if (lu != null && lu.HasChieftainGainOnSell)
+        get 
         {
-            int excessPop = (_populationManager?.Current ?? 0) - 2;
-            if (excessPop > 0)
-            {
-                globalPopPenalty -= excessPop * lu.ChieftainSellPopPenalty;
-            }
-        }
-        globalPopPenalty = Mathf.Max(0.01f, globalPopPenalty);
-
-        float cellAttackBonus = currentCell?.Model.TotemCellAttackBonus ?? 0f;
-
-        float damage = (baseDamage + _unemployedAtkBonus)
-                     * ((_totemBuffManager?.AttackMultiplier ?? 1f) + cellAttackBonus)
-                     * cellModifier
-                     * totemModifier
-                     * rowModifier
-                     * tribeAtk
-                     * projAtk
-                     * burstAtk
-                     * chieftainAtk
-                     * globalPopPenalty;
-
-        float cellCritChance = currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
-        float critChance = (lu?.CritChance ?? 0f) + (_totemBuffManager?.CritChanceBonus ?? 0f) + cellCritChance;
-        if (UnityEngine.Random.value < critChance)
-        {
-            float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
-            float cellCritDamage = currentCell?.Model.TotemCellCritDamageBonus ?? 0f;
-            float totemCritDamage = _totemBuffManager?.CritDamageBonus ?? 0f;
-            damage *= (critMultiplier + totemCritDamage + cellCritDamage);
-        }
-
-        return Mathf.Max(1, DamageCalculator.ApplyRounding(damage));
-    }
-
-    // ── 보너스 공격 (레벨업 특수 효과) ───────────────────────
-
-    private void TriggerBonusAttacks(bool attackDisabled)
-    {
-        var boss = LiveBoss;
-        if (attackDisabled || boss == null || boss.IsDead) return;
-
-        var lu = _levelUpManager;
-        if (lu == null) return;
-
-        // N회마다 추가 공격 (연속 공격, 정밀 연타, 폭풍 연격)
-        foreach (int n in lu.BonusAttackEveryNHits)
-        {
-            if (n > 0 && _hitCount % n == 0)
-            {
-                LaunchProjectile(GetAttackDamage());
-            }
-        }
-
-        // 30% 확률 추가 공격 (연쇄 타격)
-        if (lu.RandomExtraAttackChance > 0f && UnityEngine.Random.value < lu.RandomExtraAttackChance)
-        {
-            LaunchProjectile(GetAttackDamage());
-        }
-
-        // 5% 확률 50% 데미지 (변칙 타격)
-        if (lu.HasRandomProcAttack && UnityEngine.Random.value < lu.RandomProcChance)
-        {
-            LaunchProjectile(Mathf.RoundToInt(GetAttackDamage() * lu.RandomProcDamagePct));
-        }
-
-        // 매 공격마다 추가 공격 (양손잡이)
-        if (lu.HasExtraAttackEveryAttack)
-        {
-            LaunchProjectile(GetAttackDamage());
+            if (unitData == null || _stats == null || _combat == null) return 0f;
+            float interval = _stats.GetCurrentSkillInterval();
+            return Mathf.Clamp01(_combat.SkillTimer / interval);
         }
     }
 
-    // ── 투사체 ─────────────────────────────────────────────────
+    public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction : 0f;
+    
+    public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
 
-    protected void LaunchProjectile(int damage)
-    {
-        var boss = LiveBoss;
-        var bossArea = boss?.GetComponent<BossAreaTarget>();
-
-        if (gameObject == null) return;
-
-        if (bossArea != null && _projectileManager != null)
-        {
-            _projectileManager.Launch(transform.position, bossArea.GetRandomWorldPosition(), () => 
-            {
-                if (boss != null && !boss.IsDead)
-                {
-                    boss.TakeDamage(damage);
-                }
-            });
-        }
+    // ── Backward Compatibility Wrappers for Subclasses & UI ──
+    public TotemBuffManager _totemBuffManager => _deps?.TotemBuffManager;
+    public LevelUpManager _levelUpManager => _deps?.LevelUpManager;
+    public AudioManager _audioManager => _deps?.AudioManager;
+    public BossBase _boss => Boss;
+    
+    public float _unemployedAtkBonus 
+    { 
+        get => _stats?.UnemployedAtkBonus ?? 0f; 
+        set { if (_stats != null) _stats.UnemployedAtkBonus = value; } 
     }
+
+    public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
+    public int GetSkillDamage() => _stats?.GetSkillDamage() ?? 0;
+
+    public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;
+    public float GetCurrentSkillInterval() => _stats?.GetCurrentSkillInterval() ?? 1f;
+    
+    public float _skillTimer 
+    { 
+        get => _combat?.SkillTimer ?? 0f; 
+        set { if (_combat != null) _combat.SkillTimer = value; } 
+    }
+    public float CurrentSkillTimer => _combat?.SkillTimer ?? 0f;
 }

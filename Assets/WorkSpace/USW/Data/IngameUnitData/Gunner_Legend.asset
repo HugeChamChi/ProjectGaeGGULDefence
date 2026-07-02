@@ -17,6 +17,8 @@ MonoBehaviour:
   unitName: Frog_Gunner
   unitTier: 3
   unitTribe: 1
+  iconAddress: FrogGunnerIcon_Legendary
+  prefabAddress: Frog_Gunner
   icon: {fileID: 21300000, guid: 9d09cbadb705dbc4ab1de11aeec74d0f, type: 3}
   prefab: {fileID: 319455943723871855, guid: 3f25299148718034c8eab73a61d7aa4f, type: 3}
   description: 
@@ -26,5 +28,6 @@ MonoBehaviour:
   skillAtk: 1200
   skillCooldown: 8
   skillName: 
-  foodPerTick: 10
+  foodProduction: 0
   populationCost: 1
+  maxDroneCount: 0

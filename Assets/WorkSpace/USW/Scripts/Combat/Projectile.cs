@@ -49,6 +49,7 @@ public class Projectile : MonoBehaviour
             const float Duration = 0.35f;
             float   elapsed = 0f;
             Vector3 start   = transform.position;
+            target.z = start.z;
 
             while (elapsed < Duration)
             {

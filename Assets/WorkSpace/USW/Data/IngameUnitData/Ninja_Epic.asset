@@ -17,6 +17,8 @@ MonoBehaviour:
   unitName: Frog_Ninja
   unitTier: 2
   unitTribe: 2
+  iconAddress: FrogNinjaIcon_Epic
+  prefabAddress: Frog_Ninja
   icon: {fileID: 21300000, guid: fdd4d47a337037640ba169771c5cc8bb, type: 3}
   prefab: {fileID: 4914462842172424252, guid: d7709e26f5c9f8c4cb2f1c51561bfae4, type: 3}
   description: 
@@ -26,5 +28,6 @@ MonoBehaviour:
   skillAtk: 840
   skillCooldown: 8.1
   skillName: 
-  foodPerTick: 10
+  foodProduction: 0
   populationCost: 1
+  maxDroneCount: 0

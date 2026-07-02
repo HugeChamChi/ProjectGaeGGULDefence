@@ -42,9 +42,8 @@ public class ResourcesProvider : IResourceProvider
     }
     public UniTask UnloadAsync(Object obj)
     {
-        if (obj == null) return
+        if (obj == null) return UniTask.CompletedTask;
 
-        UniTask.CompletedTask;
         Resources.UnloadAsset(obj);
         return UniTask.CompletedTask;
     }
@@ -58,5 +57,11 @@ public class ResourcesProvider : IResourceProvider
         var request = Resources.LoadAll<T>(path);
         await UniTask.DelayFrame(1);
         return request;
+    }
+
+    public void ReleaseAll()
+    {
+        _cache.Clear();
+        Resources.UnloadUnusedAssets();
     }
 }

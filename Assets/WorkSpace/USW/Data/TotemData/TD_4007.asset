@@ -15,6 +15,13 @@ MonoBehaviour:
   totemType: 0
   tier: 0
   totemName: "\uBC31\uBC1C\uBC31\uC911"
+  iconAddress: Totem_019
+  prefabAddress: 
+  rotationSpriteAddresses:
+  - Totem_019
+  - Totem_019_90_R
+  - Totem_019_180
+  - Totem_019_90_L
   icon: {fileID: 21300000, guid: 7eb67cb3ebd6eee47a8f983d548b8408, type: 3}
   prefab: {fileID: 0}
   rotationSprites:
@@ -30,6 +37,7 @@ MonoBehaviour:
   foodAmountBuffAmount: 0
   critDamageBuffAmount: 0
   critChanceBuffAmount: 1
+  foodGenInterval: 10
   effectRange:
   - {x: 0, y: -1}
   attackDisabledRange: []

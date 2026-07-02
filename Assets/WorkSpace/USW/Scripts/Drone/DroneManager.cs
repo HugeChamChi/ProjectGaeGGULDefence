@@ -47,22 +47,26 @@ public class DroneManager : MonoBehaviour
     private bool _isRallying;
 
     [Header("드론 스폰 배치 간격 (늘어진 V자)")]
-    public float droneSpreadXLower = 25f; // 하단 드론의 X 간격 (좁게)
-    public float droneSpreadYLower = -45f;// 하단 드론의 Y 위치 (아래로 깊게)
-    public float droneSpreadXUpper = 80f; // 상단 드론의 X 간격 (넓게)
-    public float droneSpreadYUpper = 25f; // 상단 드론의 Y 위치 (위로)
+    [Tooltip("하단 드론의 X 간격 (좁게)")]
+    public float droneSpreadXLower = 0.25f; 
+    [Tooltip("하단 드론의 Y 위치 (아래로 깊게)")]
+    public float droneSpreadYLower = 0.2f;   // (수정) 발밑으로 꺼지지 않게 살짝 위로 올림
+    [Tooltip("상단 드론의 X 간격 (넓게)")]
+    public float droneSpreadXUpper = 0.8f; 
+    [Tooltip("상단 드론의 Y 위치 (위로)")]
+    public float droneSpreadYUpper = 0.7f;   // (수정) 본체 머리 부근에 위치하도록 올림
 
-    [Header("집결 대형")]
-    [Tooltip("드론 간 수평 간격 (px)")]
-    [SerializeField] private float _rallySpacing    = 100f;
-    [Tooltip("V자 대형 수직 간격 (px)")]
-    [SerializeField] private float _rallyVSpacing   = 100f;
-    [Tooltip("집결 대형의 최대 가로 폭 (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxWidth   = 800f;
-    [Tooltip("집결 대형의 최대 세로 폭 (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxHeight  = 400f;
-    [Tooltip("보스 중심 기준 아래 방향 오프셋 (px)")]
-    [SerializeField] private float _rallyBossOffset = 200f;
+    [Header("집결 대형 설정")]
+    [Tooltip("드론 간 기본 가로 간격 (Unit)")]
+    [SerializeField] private float _rallySpacing   = 0.6f;
+    [Tooltip("드론 간 기본 세로 간격 (Unit)")]
+    [SerializeField] private float _rallyVSpacing   = 0.6f;
+    [Tooltip("집결 대형의 최대 가로 폭 (Unit) (넘으면 간격 자동 축소)")]
+    [SerializeField] private float _rallyMaxWidth   = 8.0f;
+    [Tooltip("집결 대형의 최대 세로 폭 (Unit) (넘으면 간격 자동 축소)")]
+    [SerializeField] private float _rallyMaxHeight  = 4.0f;
+    [Tooltip("보스 중심 기준 아래 방향 오프셋 (Unit)")]
+    [SerializeField] private float _rallyBossOffset = 2.0f;
 
     [Header("집결 연출")]
     [Tooltip("집결 이동 시간 (초)")]
@@ -75,10 +79,10 @@ public class DroneManager : MonoBehaviour
     [Header("전기 이펙트")]
     [Tooltip("전기 선 렌더러 머티리얼")]
     [SerializeField] private Material _electricLineMaterial;
-    [Tooltip("전기 선 굵기")]
-    [SerializeField] private float _electricLineWidth = 5f;
-    [Tooltip("지터링 세기 (픽셀)")]
-    [SerializeField] private float _electricJitterAmount = 2f;
+    [Tooltip("전기 선 굵기 (Unit)")]
+    [SerializeField] private float _electricLineWidth = 0.05f;
+    [Tooltip("지터링 세기 (Unit)")]
+    [SerializeField] private float _electricJitterAmount = 0.1f;
     [SerializeField] private Color _electricColorA = Color.cyan;
     [SerializeField] private Color _electricColorB = Color.white;
 
@@ -150,33 +154,29 @@ public class DroneManager : MonoBehaviour
             {
                 rallyCenter = _gridManager.GetAbsoluteCenterPosition();
             }
-            else
-            {
-                rallyCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-            }
 
-            // 전기 효과(UI Image) 생성
+            // 전기 효과(LineRenderer) 생성
             lrObj = new GameObject("DroneElectricLines");
-            Transform parentTransform = snapshot[0] != null ? snapshot[0].transform.parent : transform;
-            lrObj.transform.SetParent(parentTransform, false);
-            lrObj.transform.SetAsLastSibling();
+            lrObj.transform.position = Vector3.zero;
             
             int lineCount = Mathf.Max(0, snapshot.Length - 1);
-            var lineImages = new UnityEngine.UI.Image[lineCount];
+            var lineRenderers = new LineRenderer[lineCount];
             for (int i = 0; i < lineCount; i++)
             {
                 var lineGo = new GameObject($"Line_{i}");
                 lineGo.transform.SetParent(lrObj.transform, false);
-                var img = lineGo.AddComponent<UnityEngine.UI.Image>();
-                img.material = _electricLineMaterial;
-                img.raycastTarget = false;
-                var rt = img.rectTransform;
-                rt.pivot = new Vector2(0f, 0.5f);
-                lineImages[i] = img;
+                var lr = lineGo.AddComponent<LineRenderer>();
+                lr.material = _electricLineMaterial;
+                lr.useWorldSpace = true;
+                lr.positionCount = 2;
+                lr.startWidth = _electricLineWidth;
+                lr.endWidth = _electricLineWidth;
+                lr.sortingOrder = 50; // Grid나 유닛보다 위에 노출
+                lineRenderers[i] = lr;
             }
 
             lrCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            UpdateLineRendererAsync(lrObj, lineImages, snapshot, lrCts.Token).Forget();
+            UpdateLineRendererAsync(lrObj, lineRenderers, snapshot, lrCts.Token).Forget();
 
             // ① 집결 이동 (전체 병렬) - V자 배치
             var moveTasks = new List<UniTask>();
@@ -268,17 +268,17 @@ public class DroneManager : MonoBehaviour
         }
     }
 
-    private async UniTaskVoid UpdateLineRendererAsync(GameObject container, UnityEngine.UI.Image[] lineImages, DroneUnit[] drones, CancellationToken token)
+    private async UniTaskVoid UpdateLineRendererAsync(GameObject container, LineRenderer[] lineRenderers, DroneUnit[] drones, CancellationToken token)
     {
         try
         {
             while (!token.IsCancellationRequested && container != null)
             {
-                for (int i = 0; i < lineImages.Length; i++)
+                for (int i = 0; i < lineRenderers.Length; i++)
                 {
                     if (drones[i] != null && drones[i+1] != null)
                     {
-                        if (!lineImages[i].enabled) lineImages[i].enabled = true;
+                        if (!lineRenderers[i].enabled) lineRenderers[i].enabled = true;
                         
                         Vector3 posA = drones[i].transform.position;
                         Vector3 posB = drones[i+1].transform.position;
@@ -291,21 +291,16 @@ public class DroneManager : MonoBehaviour
                                                UnityEngine.Random.Range(-_electricJitterAmount, _electricJitterAmount), 0f);
                         }
                         
-                        var rt = lineImages[i].rectTransform;
-                        Vector3 localA = rt.parent.InverseTransformPoint(posA);
-                        Vector3 localB = rt.parent.InverseTransformPoint(posB);
-                        
-                        rt.localPosition = localA;
-                        Vector3 localDir = localB - localA;
-                        rt.sizeDelta = new Vector2(localDir.magnitude, _electricLineWidth);
-                        float angle = Mathf.Atan2(localDir.y, localDir.x) * Mathf.Rad2Deg;
-                        rt.localRotation = Quaternion.Euler(0, 0, angle);
+                        lineRenderers[i].SetPosition(0, posA);
+                        lineRenderers[i].SetPosition(1, posB);
 
-                        lineImages[i].color = UnityEngine.Random.value > 0.5f ? _electricColorA : _electricColorB;
+                        Color c = UnityEngine.Random.value > 0.5f ? _electricColorA : _electricColorB;
+                        lineRenderers[i].startColor = c;
+                        lineRenderers[i].endColor = c;
                     }
                     else
                     {
-                        lineImages[i].enabled = false;
+                        lineRenderers[i].enabled = false;
                     }
                 }
                 
@@ -319,32 +314,31 @@ public class DroneManager : MonoBehaviour
     {
         var go = new GameObject("RallyLaserBeam");
         go.transform.SetParent(parent, false);
-        var img = go.AddComponent<UnityEngine.UI.Image>();
-        img.material = _electricLineMaterial; 
-        img.color = Color.yellow; // 강렬한 빔 색상
-        img.raycastTarget = false;
+        var lr = go.AddComponent<LineRenderer>();
+        lr.material = _electricLineMaterial; 
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.startWidth = _electricLineWidth * 4f;
+        lr.endWidth = _electricLineWidth * 4f;
+        lr.sortingOrder = 55;
         
-        var rt = img.rectTransform;
-        rt.pivot = new Vector2(0f, 0.5f);
+        lr.SetPosition(0, startPos);
+        lr.SetPosition(1, endPos);
         
-        Vector3 localA = rt.parent.InverseTransformPoint(startPos);
-        Vector3 localB = rt.parent.InverseTransformPoint(endPos);
-        rt.localPosition = localA;
-        Vector3 localDir = localB - localA;
-        
-        // 빔은 전기 이펙트보다 두껍게 연출
-        rt.sizeDelta = new Vector2(localDir.magnitude, _electricLineWidth * 4f); 
-        float angle = Mathf.Atan2(localDir.y, localDir.x) * Mathf.Rad2Deg;
-        rt.localRotation = Quaternion.Euler(0, 0, angle);
+        Color baseColor = Color.yellow;
+        lr.startColor = baseColor;
+        lr.endColor = baseColor;
 
         // 0.25초 동안 서서히 페이드아웃
         float duration = 0.25f;
         float elapsed = 0f;
-        while (elapsed < duration && img != null)
+        while (elapsed < duration && lr != null)
         {
             elapsed += Time.deltaTime;
             float alpha = 1f - (elapsed / duration);
-            img.color = new Color(Color.yellow.r, Color.yellow.g, Color.yellow.b, alpha);
+            Color fadeColor = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+            lr.startColor = fadeColor;
+            lr.endColor = fadeColor;
             await UniTask.Yield(PlayerLoopTiming.Update);
         }
         

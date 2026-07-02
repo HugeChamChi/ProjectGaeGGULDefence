@@ -1,57 +1,70 @@
 using UnityEngine;
 using VContainer;
-using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using System;
 
 /// <summary>
-/// 유닛/토템 공용 드래그 핸들러
-/// - 빈 셀로 드롭 → 이동
-/// - 점유 셀로 드롭 → 위치 스왑 (유닛↔유닛 / 유닛↔토템 / 토템↔토템)
-/// - 이동 불가 시 원래 위치 복귀
-///
-/// 변경 사항:
-///   - _currencyManager / _bossManager → _currencyManager / _bossManager
-///   - BossMonster → BossBase 타입 변경
-///   - 봉인된 셀(IsSealed)에는 배치 불가 처리
+/// 유닛/토템 공용 드래그 핸들러 (World Space / Physics Raycast 기반)
+/// - InputManager가 IDraggable 인터페이스를 통해 호출
+/// - 의존성을 낮추기 위해 주요 액션 시 event를 발행합니다.
 /// </summary>
-public class DragHandler : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+[RequireComponent(typeof(BoxCollider2D))]
+public class DragHandler : MonoBehaviour, IDraggable
 {
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private BossManager _bossManager;
-    [Inject] private GridManager _gridManager;
-    [Inject] private MergeManager _mergeManager;
     [Inject] private UnitFactory _unitFactory;
 
-    private RectTransform _rect;
-    private Canvas        _canvas;
+    public static event Action<UnitBase> OnUnitClickedEvent;
+    public static event Action<TotemBase> OnTotemClickedGlobal;
+    public static event Action OnDragStartedEvent;
 
     private GridCell  _originCell;
-    private Vector2   _originAnchoredPos;
-    private Transform _originParent;
+    private Vector3   _originPos;
+    private int       _originSortingOrder;
+    private string    _originSortingLayer;
 
     private UnitBase  _unit;
     private TotemBase _totem;
-
-    private Vector2   _originSizeDelta;
-    private Vector3   _originLocalScale;
-    private Quaternion _originLocalRot;
-
-    private bool _isDragging = false;
+    private SpriteRenderer _spriteRenderer;
 
     private void Awake()
     {
-        _rect  = GetComponent<RectTransform>();
         _unit  = GetComponent<UnitBase>();
         _totem = GetComponent<TotemBase>();
+        _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (_spriteRenderer == null) _spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    private Canvas GetCanvas()
+    private void Start()
     {
-        if (_canvas != null) return _canvas;
-        var c = GetComponentInParent<Canvas>();
-        if (c != null) _canvas = c.rootCanvas;
-        return _canvas;
+        AdjustCollider();
+    }
+
+    public void AdjustCollider()
+    {
+        var col = GetComponent<BoxCollider2D>();
+        if (col != null && _spriteRenderer != null && _spriteRenderer.sprite != null)
+        {
+            Bounds spriteBounds = _spriteRenderer.sprite.bounds;
+            Vector2 size = spriteBounds.size;
+            Vector2 center = spriteBounds.center;
+
+            if (_spriteRenderer.gameObject != gameObject)
+            {
+                Vector3 childScale = _spriteRenderer.transform.localScale;
+                Vector3 childPos = _spriteRenderer.transform.localPosition;
+                
+                size.x *= Mathf.Abs(childScale.x);
+                size.y *= Mathf.Abs(childScale.y);
+                
+                center.x = (center.x * childScale.x) + childPos.x;
+                center.y = (center.y * childScale.y) + childPos.y;
+            }
+
+            col.size = size;
+            col.offset = center;
+        }
     }
 
     public void SetOriginCell(GridCell cell)
@@ -59,93 +72,80 @@ public class DragHandler : MonoBehaviour,
         _originCell = cell;
     }
 
-    /// <summary>토템 클릭 시 발행 — InGameInstaller가 TotemActionPopupUI.Toggle에 연결</summary>
-    public static event System.Action<TotemBase> OnTotemClickedGlobal;
-
-    // ── 클릭 (드래그 없을 때만 발생) ──────────────────────────
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerClick()
     {
-        if (eventData.dragging) return;
-
         if (_unit != null)
         {
-            _gridManager?.ClearTotemRangePreview();
-            if (_mergeManager != null) _mergeManager.OnUnitClicked(_unit);
+            OnUnitClickedEvent?.Invoke(_unit);
         }
-        if (_totem != null) OnTotemClickedGlobal?.Invoke(_totem);
+        if (_totem != null)
+        {
+            OnTotemClickedGlobal?.Invoke(_totem);
+        }
     }
 
-    // ── 드래그 시작 ────────────────────────────────────────────
-    public void OnBeginDrag(PointerEventData eventData)
+    public void OnBeginDrag()
     {
-        // 드래그 시작 시 합성 버튼 닫기
-        _mergeManager?.HideButton();
-        _gridManager?.ClearTotemRangePreview();
+        OnDragStartedEvent?.Invoke();
 
-        _isDragging = false;
         if (_originCell == null) return;
 
-        var canvas = GetCanvas();
-        if (canvas == null)
+        _originPos = transform.position;
+        
+        if (_spriteRenderer != null)
         {
-            Debug.LogWarning($"DragHandler({name}): Canvas를 찾지 못했습니다.");
+            _originSortingLayer = _spriteRenderer.sortingLayerName;
+            _originSortingOrder = _spriteRenderer.sortingOrder;
+            _spriteRenderer.sortingLayerName = "UI"; // 드래그 시 맨 앞에 보이게 임의로 UI 레이어 사용 (프로젝트 설정에 따라 변경 가능)
+            _spriteRenderer.sortingOrder = 999;
+        }
+    }
+
+    public void OnDrag(Vector2 worldPosition)
+    {
+        transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+    }
+
+    public void OnEndDrag(Vector2 worldPosition)
+    {
+        if (_spriteRenderer != null)
+        {
+            _spriteRenderer.sortingLayerName = _originSortingLayer;
+            _spriteRenderer.sortingOrder = _originSortingOrder;
+        }
+
+        // Raycast를 쏴서 아래에 GridCell이 있는지 확인
+        // 자기 자신의 Collider를 꺼서 셀을 맞출 수 있게 함
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        RaycastHit2D hit = Physics2D.Raycast(worldPosition, Vector2.zero);
+        
+        if (col != null) col.enabled = true;
+
+        GridCell targetCell = null;
+        if (hit.collider != null)
+        {
+            targetCell = hit.collider.GetComponent<GridCell>();
+        }
+
+        if (targetCell == null || targetCell == _originCell)
+        {
+            ReturnToOrigin();
             return;
         }
 
-        _originParent      = _rect.parent;
-        _originAnchoredPos = _rect.anchoredPosition;
-        _originSizeDelta   = _rect.sizeDelta;
-        _originLocalScale  = _rect.localScale;
-        _originLocalRot    = _rect.localRotation;
-
-        _rect.SetParent(canvas.transform, true);
-        _rect.SetAsLastSibling();
-
-        _isDragging = true;
-    }
-
-    // ── 드래그 중 ──────────────────────────────────────────────
-    public void OnDrag(PointerEventData eventData)
-    {
-        if (!_isDragging) return;
-
-        var canvas = GetCanvas();
-        if (canvas == null) return;
-
-        _rect.anchoredPosition += eventData.delta / canvas.scaleFactor;
-    }
-
-    // ── 드래그 종료 ────────────────────────────────────────────
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        if (!_isDragging) { ReturnToOrigin(); return; }
-        _isDragging = false;
-
-        if (EventSystem.current == null) { ReturnToOrigin(); return; }
-        var results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
-
-        GridCell targetCell = null;
-        foreach (var r in results)
-        {
-            var cell = r.gameObject.GetComponent<GridCell>();
-            if (cell != null && cell != _originCell)
-            {
-                targetCell = cell;
-                break;
-            }
-        }
-
-        if (targetCell == null)            { ReturnToOrigin(); return; }
-
         // 봉인된 셀에는 배치 불가
-        if (targetCell.Model == null || !targetCell.Model.IsAvailable) { ReturnToOrigin(); return; }
+        if (targetCell.Model == null || !targetCell.Model.IsAvailable) 
+        { 
+            ReturnToOrigin(); 
+            return; 
+        }
 
         if (targetCell.IsOccupied) TrySwap(targetCell);
         else                       MoveToEmpty(targetCell);
     }
 
-    // ── 빈 셀 이동 ─────────────────────────────────────────────
     private void MoveToEmpty(GridCell targetCell)
     {
         if (_unit  != null) _originCell.RemoveUnit();
@@ -154,14 +154,13 @@ public class DragHandler : MonoBehaviour,
         PlaceSelfAt(targetCell);
     }
 
-    // ── 스왑 처리 ──────────────────────────────────────────────
     private void TrySwap(GridCell targetCell)
     {
         UnitBase  targetUnit  = targetCell.OccupyingUnit;
         TotemBase targetTotem = targetCell.OccupyingTotem;
 
         DragHandler targetDrag = null;
-        if (targetUnit  != null) targetDrag = targetUnit .GetComponent<DragHandler>();
+        if (targetUnit  != null) targetDrag = targetUnit.GetComponent<DragHandler>();
         if (targetTotem != null) targetDrag = targetTotem.GetComponent<DragHandler>();
 
         if (targetDrag == null) { ReturnToOrigin(); return; }
@@ -178,48 +177,34 @@ public class DragHandler : MonoBehaviour,
         targetDrag.PlaceSelfAt(myOriginalCell);
     }
 
-    // ── 지정 셀에 자신을 배치 ──────────────────────────────────
     public void PlaceSelfAt(GridCell cell)
     {
         if (_unit != null)
         {
             cell.TryPlaceUnit(_unit);
-            _rect.SetParent(cell.transform, false);
-            if (_unitFactory != null) _unitFactory.InitUnitRectTransform(_unit);
-            else 
-            {
-                _rect.anchoredPosition = Vector2.zero;
-                _rect.localScale = Vector3.one;
-                _rect.localRotation = Quaternion.identity;
-            }
+            transform.SetParent(cell.transform, false);
+            transform.localPosition = Vector3.zero;
+            
             _originCell = cell;
 
             _unit.OnRemoved();
-            // Manager 접근 통일 + 셀 참조 전달
             _unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
         }
 
         if (_totem != null)
         {
             cell.TryPlaceTotem(_totem);
-            _rect.SetParent(cell.transform, false);
-            _rect.anchoredPosition = Vector2.zero;
-            _rect.localScale = Vector3.one;
-            _rect.localRotation = Quaternion.identity;
+            transform.SetParent(cell.transform, false);
+            transform.localPosition = Vector3.zero;
+            
             _originCell = cell;
 
             _totem.OnPlaced(cell);
         }
     }
 
-    // ── 원래 위치로 복귀 ───────────────────────────────────────
     private void ReturnToOrigin()
     {
-        if (_originParent == null) return;
-        _rect.SetParent(_originParent, false);
-        _rect.anchoredPosition = _originAnchoredPos;
-        _rect.sizeDelta        = _originSizeDelta;
-        _rect.localScale       = _originLocalScale;
-        _rect.localRotation    = _originLocalRot;
+        transform.position = _originPos;
     }
 }

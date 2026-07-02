@@ -17,7 +17,7 @@ public class DroneChieftain : ChiefUnit
     [Header("Chieftain Settings")]
     [SerializeField] private float damagePerDrone = 50f;
 
-    protected override bool CanBasicAttack => false;
+    public override bool CanBasicAttack => false;
 
     protected override void OnSkillFull()
     {
@@ -27,7 +27,7 @@ public class DroneChieftain : ChiefUnit
         // 드론이 하나도 없으면 스킬 불발 (사운드도 재생 안 함)
         if (_droneManager == null || _droneManager.DroneCount <= 0) return;
 
-        _audioManager?.PlaySFX("05.Drone_Chieftain_Skill");
+        _audioManager?.PlaySFX("05.Leader_Skill_Effect");
 
         // 2. UI 컷신 연출 발동 (비활성화 상태인 컷신 UI를 찾아 실행)
         var skillEffectUI = FindObjectOfType<HSD.UI.Effect.UI_ChiefSkillEffect>(true);

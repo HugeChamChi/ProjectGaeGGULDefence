@@ -15,8 +15,8 @@ public enum AudioGroup
 /// </summary>
 public class AudioManager : MonoBehaviour
 {
-    private const string BGM_PATH_ROOT = "Sound/BGM/";
-    private const string SFX_PATH_ROOT = "Sound/SFX/";
+    private const string BGM_PATH_ROOT = "";
+    private const string SFX_PATH_ROOT = "";
     private const string MIXER_RESOURCE_PATH = "Master"; // Resources 내 AudioMixer 경로
 
     // 실제 기능을 수행하는 구현체 (Interface)
@@ -150,6 +150,50 @@ public class AudioManager : MonoBehaviour
     #endregion
 
     #region SFX Methods
+
+    private readonly HashSet<string> _preloadedSFX = new HashSet<string>();
+
+    /// <summary>
+    /// 필요한 사운드를 미리 비동기 로드해 메모리에 올립니다.
+    /// 이후 PlaySFX 호출 시 RM.Load가 불려도 즉시(동기) 로드되어 렉이 발생하지 않습니다.
+    /// </summary>
+    public async Cysharp.Threading.Tasks.UniTask PreloadSFXAsync(IEnumerable<string> addresses)
+    {
+        var tasks = new List<Cysharp.Threading.Tasks.UniTask>();
+        foreach (var addr in addresses)
+        {
+            if (string.IsNullOrEmpty(addr)) continue;
+            string fullPath = $"{SFX_PATH_ROOT}{addr}";
+            
+            if (!_preloadedSFX.Contains(fullPath))
+            {
+                tasks.Add(PreloadSingleAsync(fullPath));
+            }
+        }
+        await Cysharp.Threading.Tasks.UniTask.WhenAll(tasks);
+    }
+
+    private async Cysharp.Threading.Tasks.UniTask PreloadSingleAsync(string fullPath)
+    {
+        var clip = await RM.LoadAsync<AudioClip>(fullPath);
+        if (clip != null)
+        {
+            _preloadedSFX.Add(fullPath);
+        }
+    }
+
+    /// <summary>
+    /// 메모리에 올려둔 사운드 에셋들을 해제합니다.
+    /// </summary>
+    public void ReleasePreloadedSFX()
+    {
+        foreach (var path in _preloadedSFX)
+        {
+            var clip = RM.Load<AudioClip>(path);
+            if (clip != null) RM.Unload(clip);
+        }
+        _preloadedSFX.Clear();
+    }
 
     public void PlaySFX(string address, float pitchRandomness = 0.1f)
     {

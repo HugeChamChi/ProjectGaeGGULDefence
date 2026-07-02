@@ -55,7 +55,7 @@ public class PopulationManager : MonoBehaviour
         if (peek.isTotem) {
             if (!CanAdd(1)) return;
             var item = _spawnQueue.Dequeue();
-            _totemSpawner.SpawnTotemByData(item.totemData);
+            SpawnTotemAsync(item.totemData).Forget();
         } else {
             if (!CanAdd(1)) return;
             var item = _spawnQueue.Dequeue();
@@ -69,6 +69,11 @@ public class PopulationManager : MonoBehaviour
                 _unitSpawner.PlaceUnitWithEffect(unit, cell);
             }
         }
+    }
+
+    private async Cysharp.Threading.Tasks.UniTaskVoid SpawnTotemAsync(TotemData data)
+    {
+        await _totemSpawner.SpawnTotemByData(data);
     }
 
     [SerializeField] private GameConfig _config;

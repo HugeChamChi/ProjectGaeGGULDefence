@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -17,10 +17,12 @@ MonoBehaviour:
   unitName: "\uB4DC\uB860 \uC871\uC7A5 (\uC804\uC124)"
   unitTier: 4
   unitTribe: 0
+  iconAddress: ANIM_DroneFrogLeader_Idle_sprite sheet_0
+  prefabAddress: DroneUnit_Cheiftain
   icon: {fileID: 1471017148, guid: 9a2629c3e477a99478af9be35681d975, type: 3}
   prefab: {fileID: 3717258970254922025, guid: dc07e7fd43b13954e9796c7484ea6ab3, type: 3}
   description: 
-  attackSoundAddress: 
+  attackSoundAddress: 05.Leader_Skill_Effect
   atk: 0
   attackSpeed: 0
   skillAtk: 0
@@ -29,3 +31,4 @@ MonoBehaviour:
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 4
+

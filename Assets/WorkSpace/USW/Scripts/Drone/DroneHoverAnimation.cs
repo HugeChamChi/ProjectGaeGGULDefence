@@ -8,7 +8,8 @@ using UnityEngine;
 public class DroneHoverAnimation : MonoBehaviour
 {
     [Header("부유 (상하)")]
-    [SerializeField] private float _hoverAmplitude = 3f;   // px 단위 이동 폭
+    [Tooltip("월드 단위(Unit) 이동 폭")]
+    [SerializeField] private float _hoverAmplitude = 0.08f;
     [SerializeField] private float _hoverDuration  = 1.8f; // 위→아래 한 번 시간(초)
 
     [Header("회전 흔들림")]
@@ -19,13 +20,13 @@ public class DroneHoverAnimation : MonoBehaviour
     [Tooltip("드론마다 타이밍을 다르게 해 동기화 어색함 방지")]
     [SerializeField] private bool _randomPhase = true;
 
-    private RectTransform _rt;
+    private Transform _tr;
     private Tween         _hoverTween;
     private Tween         _tiltTween;
 
     private void Awake()
     {
-        _rt = GetComponent<RectTransform>();
+        _tr = transform;
     }
 
     private void OnEnable()
@@ -47,22 +48,22 @@ public class DroneHoverAnimation : MonoBehaviour
 
     private void PlayHover()
     {
-        if (_rt == null) return;
+        if (_tr == null) return;
 
         _hoverTween?.Kill();
         _tiltTween?.Kill();
 
         float phaseDelay = _randomPhase ? Random.Range(0f, _hoverDuration) : 0f;
-        Vector2 basePos  = _rt.anchoredPosition;
+        Vector3 basePos  = _tr.localPosition;
 
         // DOTween Sequence 안에서는 SetLoops(-1) 금지 — 두 트윈을 독립 실행
-        _hoverTween = _rt.DOAnchorPosY(basePos.y + _hoverAmplitude, _hoverDuration)
+        _hoverTween = _tr.DOLocalMoveY(basePos.y + _hoverAmplitude, _hoverDuration)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo)
             .SetDelay(phaseDelay)
             .SetLink(gameObject);
 
-        _tiltTween = _rt.DOLocalRotate(new Vector3(0f, 0f, _tiltAngle), _tiltDuration)
+        _tiltTween = _tr.DOLocalRotate(new Vector3(0f, 0f, _tiltAngle), _tiltDuration)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo)
             .From(new Vector3(0f, 0f, -_tiltAngle))
@@ -79,7 +80,7 @@ public class DroneHoverAnimation : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (Application.isPlaying && _rt != null)
+        if (Application.isPlaying && _tr != null)
             PlayHover();
     }
 #endif

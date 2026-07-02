@@ -10,12 +10,12 @@ using System;
 public class MissileProjectile : Projectile
 {
     [Header("미사일 유도 설정")]
-    [Tooltip("초기 발사 속도")]
-    [SerializeField] private float _startSpeed = 800f;
-    [Tooltip("최대 비행 속도")]
-    [SerializeField] private float _maxSpeed = 2500f;
-    [Tooltip("가속도")]
-    [SerializeField] private float _acceleration = 2000f;
+    [Tooltip("초기 발사 속도 (Unit/s)")]
+    [SerializeField] private float _startSpeed = 8.0f;
+    [Tooltip("최대 비행 속도 (Unit/s)")]
+    [SerializeField] private float _maxSpeed = 25.0f;
+    [Tooltip("가속도 (Unit/s^2)")]
+    [SerializeField] private float _acceleration = 20.0f;
     [Tooltip("타겟을 향해 방향을 꺾는 유도 성능(회전 속도)")]
     [SerializeField] private float _turnSpeed = 4f;
     [Tooltip("발사 시 퍼지는 최대 무작위 각도 (0이면 무조건 타겟 방향 직선)")]
@@ -26,6 +26,7 @@ public class MissileProjectile : Projectile
         try
         {
             Vector3 currentPos = transform.position;
+            target.z = currentPos.z;
             
             // 처음에는 목표물 방향을 기준으로 무작위 각도(±_randomAngleMax)로 발사
             Vector3 toTarget = (target - currentPos).normalized;

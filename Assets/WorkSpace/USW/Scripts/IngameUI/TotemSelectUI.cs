@@ -75,7 +75,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     // ── 열기 ───────────────────────────────────────────────────
 
-    public void Show(Action onChoiceMade)
+    public async void Show(Action onChoiceMade)
     {
         _onChoiceMade = onChoiceMade;
         
@@ -85,8 +85,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         if (rerollCostText != null)
             rerollCostText.text = rerollCost.ToString();
 
-        ClearCards();
         _selectedCard = null;
+        ClearCards();
         SetConfirmInteractable(false);
 
         var choices = GetRandomChoices(ChoiceCount);
@@ -95,6 +95,13 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             onChoiceMade?.Invoke();
             return;
         }
+
+        var loadTasks = new List<UniTask>();
+        foreach (var data in choices)
+        {
+            if (data != null) loadTasks.Add(data.LoadAssetsAsync());
+        }
+        await UniTask.WhenAll(loadTasks);
 
         foreach (var data in choices)
         {
@@ -137,7 +144,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     // ── 확인 버튼 ──────────────────────────────────────────────
 
-    public void OnConfirmClicked()
+    public async void OnConfirmClicked()
     {
         if (_selectedCard == null) return;
 
@@ -146,7 +153,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         {
             _chosenTotems.Add(data.totemId); // 중복 방지 캐싱
             
-            bool placed = _totemManager.SpawnTotemByData(data);
+            bool placed = await _totemManager.SpawnTotemByData(data);
             if (!placed)
             {
                 Debug.Log($"[TotemSelectUI] 빈 셀 없음 — 식량 {fallbackFood} 지급");
@@ -158,7 +165,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     }
 
     // ── 리롤 버튼 ──────────────────────────────────────────────
-    public void OnRerollClicked()
+    public async void OnRerollClicked()
     {
         if (!_currencyManager.Spend(rerollCost))
         {
@@ -169,8 +176,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         var layout = cardContainer.GetComponent<LayoutGroup>();
         if (layout != null) layout.enabled = true;
 
-        ClearCards();
         _selectedCard = null;
+        ClearCards();
         SetConfirmInteractable(false);
 
         var choices = GetRandomChoices(ChoiceCount);
@@ -179,6 +186,13 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             Hide();
             return;
         }
+
+        var loadTasks = new List<UniTask>();
+        foreach (var data in choices)
+        {
+            if (data != null) loadTasks.Add(data.LoadAssetsAsync());
+        }
+        await UniTask.WhenAll(loadTasks);
 
         foreach (var data in choices)
         {
@@ -320,7 +334,17 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     private void ClearCards()
     {
         foreach (var card in _spawnedCards)
-            if (card != null) Destroy(card.gameObject);
+        {
+            if (card != null)
+            {
+                var data = card.GetData();
+                if (data != null && (_selectedCard == null || data != _selectedCard.GetData()))
+                {
+                    data.UnloadAssets();
+                }
+                Destroy(card.gameObject);
+            }
+        }
         _spawnedCards.Clear();
         _selectedCard = null;
     }

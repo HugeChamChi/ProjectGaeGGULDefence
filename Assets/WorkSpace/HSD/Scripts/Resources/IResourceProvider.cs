@@ -11,4 +11,6 @@ public interface IResourceProvider
 
     T[] LoadAll<T>(string path) where T : Object;
     UniTask<T[]> LoadAllAsync<T>(string path) where T : Object;
+
+    void ReleaseAll();
 }

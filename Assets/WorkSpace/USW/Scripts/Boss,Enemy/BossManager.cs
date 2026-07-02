@@ -22,7 +22,7 @@ public class BossManager : MonoBehaviour
     [Inject] private WaveManager _waveManager;
     [Inject] private UIManager _uiManager;
 
-    [SerializeField] private RectTransform bossSpawnPoint;
+    [SerializeField] private GameObject bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]
     [SerializeField] private Vector2 bossSize = new Vector2(300f, 300f);
 
@@ -51,7 +51,7 @@ public class BossManager : MonoBehaviour
             return;
         }
 
-        var go   = Instantiate(entry.prefab, bossSpawnPoint);
+        var go   = Instantiate(entry.prefab, bossSpawnPoint != null ? bossSpawnPoint.transform : transform);
         var boss = go.GetComponent<BossBase>();
 
         if (boss == null)
@@ -61,8 +61,6 @@ public class BossManager : MonoBehaviour
             onDefeated?.Invoke();
             return;
         }
-
-        SetupRectTransform(go);
 
         // 시트 HP 우선 — 미로드 시 WaveData SO의 hp 폴백
         int hp = _gameDataManager != null && _gameDataManager.IsLoaded
@@ -105,19 +103,5 @@ public class BossManager : MonoBehaviour
         }
 
         _currentBosses.Clear();
-    }
-
-    private void SetupRectTransform(GameObject go)
-    {
-        var rt = go.GetComponent<RectTransform>();
-        if (rt == null) return;
-
-        rt.anchorMin        = new Vector2(0.5f, 0f); // Bottom 앵커
-        rt.anchorMax        = new Vector2(0.5f, 0f); // Bottom 앵커
-        rt.pivot            = new Vector2(0.5f, 0.5f); // 피벗은 정중앙(Center) 유지
-        
-        // 피벗이 중앙(0.5)이므로, 하단 앵커(0)에 시각적으로 딱 붙이려면 Y를 크기의 절반만큼 올려주어야 합니다.
-        rt.anchoredPosition = new Vector2(0f, bossSize.y / 2f);
-        rt.sizeDelta        = bossSize;
     }
 }

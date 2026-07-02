@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 투사체 오브젝트 풀 — InGameSingleton.
-/// 씬에 오브젝트로 배치하면 Screen Space Overlay Canvas를 자동 생성한다.
-/// 투사체 시각은 Unity 내장 Knob 스프라이트(원형)를 Image로 사용.
+/// 투사체 시각은 Unity 내장 Knob 스프라이트(원형)를 SpriteRenderer로 사용.
+/// 2D 월드 공간에서 동작합니다.
 /// </summary>
 public class ProjectilePool : MonoBehaviour
 {
@@ -22,7 +22,7 @@ public class ProjectilePool : MonoBehaviour
 
     protected void Awake()
     {
-        CreateOverlayCanvas();
+        CreateWorldContainer();
 
         _pool = new ObjectPool<Projectile>(
             createFunc:      CreateProjectile,
@@ -54,18 +54,15 @@ public class ProjectilePool : MonoBehaviour
         _pool.Release(p);
     }
 
-    private void CreateOverlayCanvas()
+    private void CreateWorldContainer()
     {
-        var canvasGO = new GameObject("ProjectileCanvas");
-        canvasGO.transform.SetParent(transform);
-
-        var canvas           = canvasGO.AddComponent<Canvas>();
-        canvas.renderMode    = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder  = 2;
-
-        canvasGO.AddComponent<CanvasScaler>();
-
-        _container = canvasGO.transform;
+        var containerGO = new GameObject("ProjectileContainer");
+        // 부모를 Canvas 등이 아닌 씬의 최상단(null)으로 설정하여 WorldSpace 좌표계를 온전히 사용하도록 합니다.
+        containerGO.transform.SetParent(null);
+        containerGO.transform.position = Vector3.zero;
+        containerGO.transform.localScale = Vector3.one;
+        
+        _container = containerGO.transform;
     }
 
     private Projectile CreateProjectile()
@@ -80,13 +77,12 @@ public class ProjectilePool : MonoBehaviour
         var go  = new GameObject("Projectile");
         go.transform.SetParent(_container, false);
 
-        var img    = go.AddComponent<Image>();
-        img.sprite = CreateCircleSprite(64);
-        img.color  = _projectileColor;
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateCircleSprite(64);
+        sr.color  = _projectileColor;
+        sr.sortingOrder = 30; // 그리드나 유닛보다 위에 노출
 
-        var rt          = go.GetComponent<RectTransform>();
-        rt.sizeDelta    = new Vector2(_projectileSize, _projectileSize);
-        rt.localScale   = Vector3.one;
+        go.transform.localScale = new Vector3(_projectileSize / 100f, _projectileSize / 100f, 1f);
 
         return go.AddComponent<Projectile>();
     }
