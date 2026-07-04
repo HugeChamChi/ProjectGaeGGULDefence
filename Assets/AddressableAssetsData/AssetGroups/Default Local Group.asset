@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -17,13 +17,28 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 2a1e57ad30f1cd8459f99453f766853b
   m_SerializeEntries:
+  - m_GUID: 01cadda2b2564544f9cd8465153b574f
+    m_Address: 03.Wizard_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 027d603aca78cbf48a8d47fa97ed3a90
     m_Address: Totem_009_90_L
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0293ed68660dbae41b373eccc4a7a6ee
+    m_Address: 01.Popup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07828d40f9c1cfe4e90b04ff49ee5b07
     m_Address: DroneUnit_Buffer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0de5b5aab7e48cd40bf2588e7cd83aee
+    m_Address: 05.Drone_Buff
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -39,6 +54,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0ff038500be4d1644be6144f098c2b03
     m_Address: Totem_017_90_R
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10c408d1e623b2547b337139b1aa027d
+    m_Address: 02.Choose_done
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -77,6 +97,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a7627eaf6f68e6439b5af3e9eccb5a5
+    m_Address: 03.Ninja_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ba537965e46d5442a2bcf0426e384fd
+    m_Address: 03.Gunner_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2cd08013d52bebc4fb1549456db7a6fb
     m_Address: Totem_012_90_R
     m_ReadOnly: 0
@@ -84,6 +114,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ce472c54699a6f4d8e7aa1265866881
     m_Address: Totem_018
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e57e9a5ec9155a45aa06300afe6ca0b
+    m_Address: 02.Levelup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -122,6 +157,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
+    m_Address: 05.Drone_Attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44f99b37e3a78de46be904450bbcccdc
+    m_Address: 03.Frog_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 452249a5ff89d9142bb950d34534319c
     m_Address: Totem_023_90_R
     m_ReadOnly: 0
@@ -147,6 +192,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4af1444cb4cb1454d9fa888c491ffae3
+    m_Address: 03.Samurai_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d47426fde51c9949bb029b7d15e5273
     m_Address: Totem_020_90_L
     m_ReadOnly: 0
@@ -154,6 +204,31 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4eb30f5fcc20a4e48886569411e10feb
     m_Address: Totem_020
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 536415d54e63732488f7348ec40061eb
+    m_Address: 05.Drone_Summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53fd4841626423245a69a4731f2147f0
+    m_Address: 01.Sell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56e5ccf72bb5b5b4ab7443bd0926a52b
+    m_Address: 05.Drone_Attack_Hit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5740275b41b468c4fa309cf3eb5819e3
+    m_Address: 03.Sniper_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 589e6dc6be530fd40988547439d31c61
+    m_Address: 02.Expup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -202,6 +277,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 72d2958068776c34e850ecd91827673b
+    m_Address: 03.Magician_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7344bd6f5dba97544820cd25422170f9
     m_Address: Totem_005_90_L
     m_ReadOnly: 0
@@ -224,6 +304,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7606e922e230a2240a1c8491dff4ea55
     m_Address: Totem_007
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e1e7edaa182b5045ad2d21bf41f5079
+    m_Address: 01.Touch_block
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -267,6 +352,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 887159d1bdebcf74b8e7aacc124a4b95
+    m_Address: DamageTextPrefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ca50cc660167d945a82416836e6d0d9
+    m_Address: 01.Screen_touch(max vol)
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9012786876aba8f4dbcf878780429bc2
+    m_Address: 05.Leader_Skill_Effect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 909f9ed62e76a8c4fb58ef4bf5342078
     m_Address: Totem_024_180
     m_ReadOnly: 0
@@ -274,6 +374,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9224e766bbc240444857f8028641787f
     m_Address: Totem_009
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 92a4a884b57ff2543bccceb3698e1499
+    m_Address: 03.OX_attack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -294,6 +399,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9a2629c3e477a99478af9be35681d975
     m_Address: ANIM_DroneFrogLeader_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c7dbd7ab89421345b9394959235e27b
+    m_Address: CurrencyTextPrefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -329,6 +439,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ad2feb4189b4f2b48ba77e4070db5394
     m_Address: Totem_006_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6577599dbf469645b8ae34e27156203
+    m_Address: 01.Button_Touch(max vol)
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -417,6 +532,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2140818c5333f3478c7094f8e5d42f3
+    m_Address: 02.Summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e3822f1ab8168074f882869602887a30
     m_Address: Totem_002_180
     m_ReadOnly: 0
@@ -444,6 +564,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef1e1ae1f60812b4ca09029cbb5e1552
     m_Address: Totem_021_90_L
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
+    m_Address: 05.Drone_Debuff
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -479,121 +604,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff411f22cd6a34b479b378f7e44b4e7d
     m_Address: Totem_007_90_R
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b6577599dbf469645b8ae34e27156203
-    m_Address: 01.Button_Touch(max vol)
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0293ed68660dbae41b373eccc4a7a6ee
-    m_Address: 01.Popup
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8ca50cc660167d945a82416836e6d0d9
-    m_Address: 01.Screen_touch(max vol)
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 53fd4841626423245a69a4731f2147f0
-    m_Address: 01.Sell
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7e1e7edaa182b5045ad2d21bf41f5079
-    m_Address: 01.Touch_block
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 10c408d1e623b2547b337139b1aa027d
-    m_Address: 02.Choose_done
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 589e6dc6be530fd40988547439d31c61
-    m_Address: 02.Expup
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2e57e9a5ec9155a45aa06300afe6ca0b
-    m_Address: 02.Levelup
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e2140818c5333f3478c7094f8e5d42f3
-    m_Address: 02.Summon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 44f99b37e3a78de46be904450bbcccdc
-    m_Address: 03.Frog_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2ba537965e46d5442a2bcf0426e384fd
-    m_Address: 03.Gunner_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 72d2958068776c34e850ecd91827673b
-    m_Address: 03.Magician_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2a7627eaf6f68e6439b5af3e9eccb5a5
-    m_Address: 03.Ninja_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 92a4a884b57ff2543bccceb3698e1499
-    m_Address: 03.OX_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4af1444cb4cb1454d9fa888c491ffae3
-    m_Address: 03.Samurai_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5740275b41b468c4fa309cf3eb5819e3
-    m_Address: 03.Sniper_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 01cadda2b2564544f9cd8465153b574f
-    m_Address: 03.Wizard_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
-    m_Address: 05.Drone_Attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 56e5ccf72bb5b5b4ab7443bd0926a52b
-    m_Address: 05.Drone_Attack_Hit
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0de5b5aab7e48cd40bf2588e7cd83aee
-    m_Address: 05.Drone_Buff
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
-    m_Address: 05.Drone_Debuff
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 536415d54e63732488f7348ec40061eb
-    m_Address: 05.Drone_Summon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9012786876aba8f4dbcf878780429bc2
-    m_Address: 05.Leader_Skill_Effect
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

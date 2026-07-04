@@ -1,11 +1,14 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
 /// 재화 생산 시 플로터 소환을 전담하는 매니저.
 /// DamageFloaterManager의 로직을 참고하여 독립적으로 구현되었습니다.
 /// </summary>
-public class CurrencyFloaterManager : MonoBehaviour
+public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
 { 
+    [VContainer.Inject] private AssetLifecycleManager _assetLifecycle;
+
     public void Init()
     {
         
@@ -21,6 +24,37 @@ public class CurrencyFloaterManager : MonoBehaviour
     [Header("재화 스타일")]
     public DamageFloaterStyle currencyStyle;
 
+    private GameObject _loadedPrefab;
+
+    public bool IsLoaded => _loadedPrefab != null;
+
+    public async UniTask LoadAssetsAsync()
+    {
+        if (_loadedPrefab == null && !string.IsNullOrEmpty(currencyTextAddress))
+        {
+            _loadedPrefab = await RM.LoadAsync<GameObject>(currencyTextAddress);
+        }
+    }
+
+    public void UnloadAssets()
+    {
+        if (_loadedPrefab != null)
+        {
+            RM.Unload(_loadedPrefab);
+            _loadedPrefab = null;
+        }
+    }
+
+    private void Start()
+    {
+        _assetLifecycle?.LoadAsync(this).Forget();
+    }
+
+    private void OnDestroy()
+    {
+        _assetLifecycle?.Unload(this);
+    }
+
     /// <summary>
     /// 월드 좌표를 입력받아 현재 컨테이너(Canvas) 설정에 맞춰 재화 플로터를 배치합니다.
     /// </summary>
@@ -35,23 +69,39 @@ public class CurrencyFloaterManager : MonoBehaviour
             return;
         }
 
-        // 1. 프리팹 생성 (임시 위치)
-        var floater = RM.Instantiate<CurrencyFloater>(currencyTextAddress, Vector3.zero, currencyTextContainer, true);
-
-        if (floater != null)
+        if (_loadedPrefab == null)
         {
-            // 2. 범용 좌표 설정 (DamageFloaterManager와 동일한 로직)
+            if (!string.IsNullOrEmpty(currencyTextAddress))
+            {
+                _loadedPrefab = RM.Load<GameObject>(currencyTextAddress);
+            }
+        }
+        if (_loadedPrefab == null) return;
+
+        // 1. 프리팹 생성 (임시 위치)
+        var floaterObj = RM.Instantiate(_loadedPrefab, Vector3.zero, Quaternion.identity, currencyTextContainer, true);
+        if (floaterObj != null)
+        {
+            var floater = floaterObj.GetComponent<CurrencyFloater>();
+            if (floater != null)
+            {
+                // 2. 범용 좌표 설정 (DamageFloaterManager와 동일한 로직)
             RectTransform rect = floater.transform as RectTransform;
             Canvas canvas = currencyTextContainer.GetComponentInParent<Canvas>();
 
-            if (rect != null && canvas != null && canvas.renderMode != RenderMode.WorldSpace)
-            {
-                // Screen Space (Overlay / Camera) 모드
-                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, worldPosition);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(currencyTextContainer as RectTransform, screenPoint, canvas.worldCamera, out Vector2 localPoint);
-                rect.anchoredPosition = localPoint;
-            }
-            else
+                if (rect != null && canvas != null && canvas.renderMode != RenderMode.WorldSpace)
+                {
+                    // Screen Space (Overlay / Camera) 모드
+                    Camera cam = Camera.main;
+                    Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, worldPosition);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(currencyTextContainer as RectTransform, screenPoint, canvas.worldCamera, out Vector2 localPoint);
+                    rect.anchoredPosition = localPoint;
+                    
+                    Vector3 localPos = rect.localPosition;
+                    localPos.z = 0f;
+                    rect.localPosition = localPos;
+                }
+                else
             {
                 // World Space 또는 일반 Transform
                 floater.transform.position = worldPosition;
@@ -61,6 +111,7 @@ public class CurrencyFloaterManager : MonoBehaviour
             // 소수점 아래 값이 있으면 1자리까지 표시, 딱 떨어지는 정수면 정수로 표시
             string text = (floatAmount % 1 == 0) ? $"+{Mathf.FloorToInt(floatAmount)}" : $"+{floatAmount:F1}";
             floater.SetupAndPlay(text, currencyStyle, false);
+            }
         }
     }
 }

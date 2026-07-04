@@ -43,6 +43,22 @@ public class GridCell : MonoBehaviour
             view.SetModel(Model);
         else
             Debug.LogWarning($"GridCell({name}): GridCellView 컴포넌트 없음 — Inspector에서 추가 필요");
+
+        // 드래그 앤 드롭 감지를 위해 Collider 추가
+        var col = GetComponent<BoxCollider2D>();
+        if (col == null)
+        {
+            col = gameObject.AddComponent<BoxCollider2D>();
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                col.size = sr.sprite.bounds.size;
+            }
+            else
+            {
+                col.size = new Vector2(1.5f, 1.5f);
+            }
+        }
     }
 
     public void Init(Vector2Int pos)

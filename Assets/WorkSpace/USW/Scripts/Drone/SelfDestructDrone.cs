@@ -55,7 +55,7 @@ public class SelfDestructDrone : MonoBehaviour
         // 도착 — 폭발
         boss = _bossManager?.CurrentBoss;
         if (boss != null && !boss.IsDead)
-            boss.TakeDamage(Mathf.RoundToInt(damage));
+            boss.TakeDamage(Mathf.RoundToInt(damage), target);
 
         ReturnToPool();
     }

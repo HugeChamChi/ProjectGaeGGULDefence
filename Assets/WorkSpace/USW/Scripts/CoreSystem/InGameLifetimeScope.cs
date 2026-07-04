@@ -39,6 +39,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<ProjectilePool>();
         builder.RegisterComponentInHierarchy<AudioManager>();
         builder.RegisterComponentInHierarchy<UpgradeManager>();
+        builder.RegisterComponentInHierarchy<InputManager>();
 
         if (isDron)
         {

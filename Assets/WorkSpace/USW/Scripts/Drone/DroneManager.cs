@@ -58,15 +58,15 @@ public class DroneManager : MonoBehaviour
 
     [Header("집결 대형 설정")]
     [Tooltip("드론 간 기본 가로 간격 (Unit)")]
-    [SerializeField] private float _rallySpacing   = 0.6f;
+    [SerializeField] private float _rallySpacing   = 0.2f;
     [Tooltip("드론 간 기본 세로 간격 (Unit)")]
-    [SerializeField] private float _rallyVSpacing   = 0.6f;
+    [SerializeField] private float _rallyVSpacing   = 0.2f;
     [Tooltip("집결 대형의 최대 가로 폭 (Unit) (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxWidth   = 8.0f;
+    [SerializeField] private float _rallyMaxWidth   = 2.0f;
     [Tooltip("집결 대형의 최대 세로 폭 (Unit) (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxHeight  = 4.0f;
+    [SerializeField] private float _rallyMaxHeight  = 1.5f;
     [Tooltip("보스 중심 기준 아래 방향 오프셋 (Unit)")]
-    [SerializeField] private float _rallyBossOffset = 2.0f;
+    [SerializeField] private float _rallyBossOffset = 0.5f;
 
     [Header("집결 연출")]
     [Tooltip("집결 이동 시간 (초)")]
@@ -77,12 +77,17 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private float _rallyReturnDuration = 0.4f;
 
     [Header("전기 이펙트")]
-    [Tooltip("전기 선 렌더러 머티리얼")]
+    [Tooltip("전기 선 프리팹 (옵션, LineRenderer 포함된 GameObject)")]
+    [SerializeField] private LineRenderer _electricLinePrefab;
+    [Tooltip("레이저 빔 프리팹 (옵션, LineRenderer 포함된 GameObject)")]
+    [SerializeField] private LineRenderer _laserBeamPrefab;
+
+    [Tooltip("전기 선 렌더러 머티리얼 (프리팹 미사용 시)")]
     [SerializeField] private Material _electricLineMaterial;
     [Tooltip("전기 선 굵기 (Unit)")]
-    [SerializeField] private float _electricLineWidth = 0.05f;
+    [SerializeField] private float _electricLineWidth = 0.02f;
     [Tooltip("지터링 세기 (Unit)")]
-    [SerializeField] private float _electricJitterAmount = 0.1f;
+    [SerializeField] private float _electricJitterAmount = 0.02f;
     [SerializeField] private Color _electricColorA = Color.cyan;
     [SerializeField] private Color _electricColorB = Color.white;
 
@@ -163,15 +168,25 @@ public class DroneManager : MonoBehaviour
             var lineRenderers = new LineRenderer[lineCount];
             for (int i = 0; i < lineCount; i++)
             {
-                var lineGo = new GameObject($"Line_{i}");
-                lineGo.transform.SetParent(lrObj.transform, false);
-                var lr = lineGo.AddComponent<LineRenderer>();
-                lr.material = _electricLineMaterial;
-                lr.useWorldSpace = true;
-                lr.positionCount = 2;
-                lr.startWidth = _electricLineWidth;
-                lr.endWidth = _electricLineWidth;
-                lr.sortingOrder = 50; // Grid나 유닛보다 위에 노출
+                LineRenderer lr;
+                if (_electricLinePrefab != null)
+                {
+                    lr = Instantiate(_electricLinePrefab, lrObj.transform);
+                    lr.useWorldSpace = true;
+                    lr.positionCount = 2;
+                }
+                else
+                {
+                    var lineGo = new GameObject($"Line_{i}");
+                    lineGo.transform.SetParent(lrObj.transform, false);
+                    lr = lineGo.AddComponent<LineRenderer>();
+                    lr.material = _electricLineMaterial;
+                    lr.useWorldSpace = true;
+                    lr.positionCount = 2;
+                    lr.startWidth = _electricLineWidth;
+                    lr.endWidth = _electricLineWidth;
+                    lr.sortingOrder = 50; // Grid나 유닛보다 위에 노출
+                }
                 lineRenderers[i] = lr;
             }
 
@@ -283,14 +298,6 @@ public class DroneManager : MonoBehaviour
                         Vector3 posA = drones[i].transform.position;
                         Vector3 posB = drones[i+1].transform.position;
                         
-                        if (UnityEngine.Random.value > 0.3f)
-                        {
-                            posA += new Vector3(UnityEngine.Random.Range(-_electricJitterAmount, _electricJitterAmount), 
-                                               UnityEngine.Random.Range(-_electricJitterAmount, _electricJitterAmount), 0f);
-                            posB += new Vector3(UnityEngine.Random.Range(-_electricJitterAmount, _electricJitterAmount), 
-                                               UnityEngine.Random.Range(-_electricJitterAmount, _electricJitterAmount), 0f);
-                        }
-                        
                         lineRenderers[i].SetPosition(0, posA);
                         lineRenderers[i].SetPosition(1, posB);
 
@@ -312,22 +319,36 @@ public class DroneManager : MonoBehaviour
 
     private async UniTaskVoid SpawnLaserBeamAsync(Vector3 startPos, Vector3 endPos, Transform parent)
     {
-        var go = new GameObject("RallyLaserBeam");
-        go.transform.SetParent(parent, false);
-        var lr = go.AddComponent<LineRenderer>();
-        lr.material = _electricLineMaterial; 
-        lr.useWorldSpace = true;
-        lr.positionCount = 2;
-        lr.startWidth = _electricLineWidth * 4f;
-        lr.endWidth = _electricLineWidth * 4f;
-        lr.sortingOrder = 55;
+        LineRenderer lr;
+        GameObject go;
+        Color baseColor = Color.yellow;
+        
+        if (_laserBeamPrefab != null)
+        {
+            lr = Instantiate(_laserBeamPrefab, parent);
+            go = lr.gameObject;
+            baseColor = lr.startColor;
+            lr.useWorldSpace = true;
+            lr.positionCount = 2;
+        }
+        else
+        {
+            go = new GameObject("RallyLaserBeam");
+            go.transform.SetParent(parent, false);
+            lr = go.AddComponent<LineRenderer>();
+            lr.material = _electricLineMaterial; 
+            lr.useWorldSpace = true;
+            lr.positionCount = 2;
+            lr.startWidth = _electricLineWidth * 2f;
+            lr.endWidth = _electricLineWidth * 2f;
+            lr.sortingOrder = 55;
+            
+            lr.startColor = baseColor;
+            lr.endColor = baseColor;
+        }
         
         lr.SetPosition(0, startPos);
         lr.SetPosition(1, endPos);
-        
-        Color baseColor = Color.yellow;
-        lr.startColor = baseColor;
-        lr.endColor = baseColor;
 
         // 0.25초 동안 서서히 페이드아웃
         float duration = 0.25f;

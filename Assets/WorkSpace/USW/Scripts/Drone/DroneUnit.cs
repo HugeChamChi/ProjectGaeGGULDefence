@@ -166,11 +166,12 @@ public class DroneUnit : MonoBehaviour
         var bossArea = boss?.GetComponent<BossAreaTarget>();
         if (bossArea == null) return;
         
-        ShootProjectile(bossArea.GetRandomWorldPosition(), () => 
+        Vector3 targetPos = bossArea.GetRandomWorldPosition();
+        ShootProjectile(targetPos, () => 
         {
             if (boss != null && !boss.IsDead)
             {
-                boss.TakeDamage(damage);
+                boss.TakeDamage(damage, targetPos);
             }
         });
     }
@@ -186,7 +187,6 @@ public class DroneUnit : MonoBehaviour
             {
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
-                p.transform.localScale = Vector3.one;
 
                 p.Launch(transform.position, targetPos, proj => 
                 {

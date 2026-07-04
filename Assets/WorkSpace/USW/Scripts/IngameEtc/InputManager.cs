@@ -20,6 +20,13 @@ public class InputManager : MonoBehaviour
     private Vector2 _pointerDownScreenPos;
     private bool _pointerDown = false;
 
+    private Vector2 GetWorldPos(Vector2 screenPos)
+    {
+        if (_mainCamera == null) return Vector2.zero;
+        Vector3 posWithZ = new Vector3(screenPos.x, screenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
+        return _mainCamera.ScreenToWorldPoint(posWithZ);
+    }
+
     private void Awake()
     {
         _mainCamera = Camera.main;
@@ -27,6 +34,45 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
+        if (_mainCamera == null)
+        {
+            _mainCamera = Camera.main;
+            if (_mainCamera == null) return;
+        }
+
+        // 1. 모바일 터치 입력 처리
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                if (UnityEngine.EventSystems.EventSystem.current != null &&
+                    UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    return;
+                }
+
+                ProcessPointerDown(touch.position);
+            }
+            else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
+            {
+                if (_pointerDown)
+                {
+                    ProcessPointerMove(touch.position);
+                }
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                if (_pointerDown)
+                {
+                    ProcessPointerUp(touch.position);
+                }
+            }
+            return;
+        }
+
+        // 2. 에디터 / PC 마우스 입력 처리 (폴백)
         if (Input.GetMouseButtonDown(0))
         {
             if (UnityEngine.EventSystems.EventSystem.current != null && 
@@ -35,57 +81,82 @@ public class InputManager : MonoBehaviour
                 return;
             }
 
-            _pointerDownScreenPos = Input.mousePosition;
-            _pointerDownPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            _pointerDown = true;
-            _isDragging = false;
-            
-            RaycastHit2D hit = Physics2D.Raycast(_pointerDownPos, Vector2.zero);
-            if (hit.collider != null)
-            {
-                _currentDraggable = hit.collider.GetComponent<IDraggable>();
-            }
+            ProcessPointerDown(Input.mousePosition);
         }
         else if (Input.GetMouseButton(0) && _pointerDown)
         {
-            Vector2 currentPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            
-            if (!_isDragging && Vector2.Distance(_pointerDownScreenPos, (Vector2)Input.mousePosition) > _dragThreshold)
-            {
-                _isDragging = true;
-                if (_currentDraggable != null)
-                {
-                    _currentDraggable.OnBeginDrag();
-                }
-            }
-            
-            if (_isDragging && _currentDraggable != null)
-            {
-                _currentDraggable.OnDrag(currentPos);
-            }
+            ProcessPointerMove(Input.mousePosition);
         }
         else if (Input.GetMouseButtonUp(0) && _pointerDown)
         {
-            Vector2 currentPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            
-            if (_isDragging)
-            {
-                if (_currentDraggable != null)
-                {
-                    _currentDraggable.OnEndDrag(currentPos);
-                }
-            }
-            else
-            {
-                if (_currentDraggable != null)
-                {
-                    _currentDraggable.OnPointerClick();
-                }
-            }
-            
-            _pointerDown = false;
-            _isDragging = false;
-            _currentDraggable = null;
+            ProcessPointerUp(Input.mousePosition);
         }
+    }
+
+    private void ProcessPointerDown(Vector2 screenPos)
+    {
+        _pointerDownScreenPos = screenPos;
+        _pointerDownPos = GetWorldPos(screenPos);
+        _pointerDown = true;
+        _isDragging = false;
+        _currentDraggable = null;
+
+        RaycastHit2D[] hits = Physics2D.RaycastAll(_pointerDownPos, Vector2.zero);
+        foreach (var h in hits)
+        {
+            if (h.collider != null)
+            {
+                var draggable = h.collider.GetComponent<IDraggable>();
+                if (draggable != null)
+                {
+                    _currentDraggable = draggable;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void ProcessPointerMove(Vector2 screenPos)
+    {
+        Vector2 currentPos = GetWorldPos(screenPos);
+
+        if (!_isDragging && Vector2.Distance(_pointerDownScreenPos, screenPos) > _dragThreshold)
+        {
+            _isDragging = true;
+            if (_currentDraggable != null)
+            {
+                _currentDraggable.OnBeginDrag();
+            }
+        }
+
+        if (_isDragging && _currentDraggable != null)
+        {
+            _currentDraggable.OnDrag(currentPos);
+        }
+    }
+
+    private void ProcessPointerUp(Vector2 screenPos)
+    {
+
+        Vector2 currentPos = GetWorldPos(screenPos);
+
+        if (_isDragging)
+        {
+            if (_currentDraggable != null)
+            {
+                _currentDraggable.OnEndDrag(currentPos);
+            }
+        }
+        else
+        {
+            if (_currentDraggable != null)
+            {
+                _currentDraggable.OnPointerClick();
+            }
+        }
+
+        _pointerDown = false;
+        _isDragging = false;
+        _currentDraggable = null;
     }
 }

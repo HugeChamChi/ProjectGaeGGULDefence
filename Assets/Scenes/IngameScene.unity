@@ -10668,6 +10668,7 @@ MonoBehaviour:
   spawnEffectPrefab: {fileID: 0}
   defaultSpawnOrigin: {fileID: 1636846596}
   effectParent: {fileID: 1196889861}
+  spawnScale: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!4 &993732468
 Transform:
   m_ObjectHideFlags: 0
@@ -10832,7 +10833,7 @@ RectTransform:
   m_Father: {fileID: 1196889861}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.9653875}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -12976,17 +12977,19 @@ MonoBehaviour:
   droneSpreadYLower: -0.1
   droneSpreadXUpper: 0.4
   droneSpreadYUpper: 0.15
-  _rallySpacing: 150
-  _rallyVSpacing: 150
-  _rallyMaxWidth: 800
-  _rallyMaxHeight: 400
+  _rallySpacing: 1.5
+  _rallyVSpacing: 1.5
+  _rallyMaxWidth: 8
+  _rallyMaxHeight: 4
   _rallyBossOffset: 0
   _rallyMoveDuration: 0.3
   _rallyWindupMs: 200
   _rallyReturnDuration: 0.2
+  _electricLinePrefab: {fileID: 0}
+  _laserBeamPrefab: {fileID: 0}
   _electricLineMaterial: {fileID: 2100000, guid: 8a80b25e622f6c84aac445df7e206085,
     type: 2}
-  _electricLineWidth: 10
+  _electricLineWidth: 0.1
   _electricJitterAmount: 2
   _electricColorA: {r: 0, g: 1, b: 1, a: 1}
   _electricColorB: {r: 1, g: 1, b: 1, a: 1}
@@ -14549,6 +14552,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98b230ca1d76504419ee0b7c9ecd4b4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1362631091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1362631093}
+  - component: {fileID: 1362631092}
+  m_Layer: 0
+  m_Name: InputManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1362631092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362631091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48cd206e5df890b47903715d5d5bd762, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1362631093
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362631091}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.0718784, y: 0.8739555, z: -0.00030922864}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1363963067
 GameObject:
   m_ObjectHideFlags: 0
@@ -15608,7 +15655,7 @@ RectTransform:
   m_Father: {fileID: 1879076173}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.9653875}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -17938,6 +17985,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   genericPrefab: {fileID: 2617104415731177961, guid: 446217f04c6e8924d9ee8662a72c368d,
     type: 3}
+  spawnScale: {x: 0.6, y: 0.6, z: 0.6}
 --- !u!4 &1594926370
 Transform:
   m_ObjectHideFlags: 0
@@ -26205,3 +26253,4 @@ SceneRoots:
   - {fileID: 1566950131}
   - {fileID: 1879076173}
   - {fileID: 457777337}
+  - {fileID: 1362631093}

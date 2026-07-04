@@ -132,13 +132,20 @@ public class AddressablesProvider : IResourceProvider
         else
         {
             // 인스턴스화된 GameObject의 경우 바로 ReleaseInstance 처리
-            if (obj is GameObject go)
+            try
             {
-                Addressables.ReleaseInstance(go);
+                if (obj is GameObject go)
+                {
+                    Addressables.ReleaseInstance(go);
+                }
+                else
+                {
+                    Addressables.Release(obj);
+                }
             }
-            else
+            catch (System.Exception)
             {
-                Addressables.Release(obj);
+                // 인스펙터 직렬화 에셋이거나 어드레서블 핸들이 미등록된 경우 무시
             }
         }
     }

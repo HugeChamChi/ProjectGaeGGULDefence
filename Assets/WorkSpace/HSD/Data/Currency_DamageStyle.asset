@@ -15,7 +15,7 @@ MonoBehaviour:
   fontAsset: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
   fontMaterial: {fileID: 0}
   textColor: {r: 1, g: 1, b: 0.9490196, a: 1}
-  fontSize: 0.3
+  fontSize: 0.35
   isBold: 0
   duration: 0.4
   moveDistance: 0.3

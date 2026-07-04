@@ -174,13 +174,16 @@ public class UnitFactory : MonoBehaviour
     [SerializeField] private float defaultSpawnOffsetY = 0f;
     [SerializeField] private Vector3 defaultSpawnScale = Vector3.one;
 
-    /// <summary>유닛의 Transform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
-    public void InitUnitTransform(UnitBase unit)
+    /// <summary>유닛/토템의 Transform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
+    public void InitUnitTransform(Transform t)
     {
-        var t = unit.transform;
         t.localPosition = new Vector3(0f, defaultSpawnOffsetY, 0f);
         t.localRotation = Quaternion.identity;
-        t.localScale = defaultSpawnScale;
+    }
+
+    public void InitUnitTransform(UnitBase unit)
+    {
+        InitUnitTransform(unit.transform);
     }
 
     private void ValidateUnitDataList()

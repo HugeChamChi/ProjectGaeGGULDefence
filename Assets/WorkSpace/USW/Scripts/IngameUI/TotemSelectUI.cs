@@ -337,11 +337,6 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         {
             if (card != null)
             {
-                var data = card.GetData();
-                if (data != null && (_selectedCard == null || data != _selectedCard.GetData()))
-                {
-                    data.UnloadAssets();
-                }
                 Destroy(card.gameObject);
             }
         }

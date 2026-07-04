@@ -44,27 +44,14 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void AdjustCollider()
     {
         var col = GetComponent<BoxCollider2D>();
-        if (col != null && _spriteRenderer != null && _spriteRenderer.sprite != null)
+        if (col == null) 
         {
-            Bounds spriteBounds = _spriteRenderer.sprite.bounds;
-            Vector2 size = spriteBounds.size;
-            Vector2 center = spriteBounds.center;
-
-            if (_spriteRenderer.gameObject != gameObject)
-            {
-                Vector3 childScale = _spriteRenderer.transform.localScale;
-                Vector3 childPos = _spriteRenderer.transform.localPosition;
-                
-                size.x *= Mathf.Abs(childScale.x);
-                size.y *= Mathf.Abs(childScale.y);
-                
-                center.x = (center.x * childScale.x) + childPos.x;
-                center.y = (center.y * childScale.y) + childPos.y;
-            }
-
-            col.size = size;
-            col.offset = center;
+            col = gameObject.AddComponent<BoxCollider2D>();
+            // 컴포넌트가 없어서 새로 추가될 때만 기본값 세팅
+            col.size = new Vector2(1.2f, 1.2f);
+            col.offset = new Vector2(0f, 0.6f);
         }
+        // 프리팹에 이미 BoxCollider2D가 있다면 사용자가 설정한 크기/오프셋을 그대로 유지합니다.
     }
 
     public void SetOriginCell(GridCell cell)
@@ -88,6 +75,11 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         OnDragStartedEvent?.Invoke();
 
+        if (_originCell == null)
+        {
+            _originCell = GetComponentInParent<GridCell>();
+        }
+
         if (_originCell == null) return;
 
         _originPos = transform.position;
@@ -96,8 +88,7 @@ public class DragHandler : MonoBehaviour, IDraggable
         {
             _originSortingLayer = _spriteRenderer.sortingLayerName;
             _originSortingOrder = _spriteRenderer.sortingOrder;
-            _spriteRenderer.sortingLayerName = "UI"; // 드래그 시 맨 앞에 보이게 임의로 UI 레이어 사용 (프로젝트 설정에 따라 변경 가능)
-            _spriteRenderer.sortingOrder = 999;
+            _spriteRenderer.sortingOrder = 30000;
         }
     }
 
@@ -119,14 +110,22 @@ public class DragHandler : MonoBehaviour, IDraggable
         var col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
-        RaycastHit2D hit = Physics2D.Raycast(worldPosition, Vector2.zero);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(worldPosition, Vector2.zero);
         
         if (col != null) col.enabled = true;
 
         GridCell targetCell = null;
-        if (hit.collider != null)
+        foreach (var h in hits)
         {
-            targetCell = hit.collider.GetComponent<GridCell>();
+            if (h.collider != null)
+            {
+                var cell = h.collider.GetComponentInParent<GridCell>();
+                if (cell != null)
+                {
+                    targetCell = cell;
+                    break;
+                }
+            }
         }
 
         if (targetCell == null || targetCell == _originCell)
@@ -183,7 +182,8 @@ public class DragHandler : MonoBehaviour, IDraggable
         {
             cell.TryPlaceUnit(_unit);
             transform.SetParent(cell.transform, false);
-            transform.localPosition = Vector3.zero;
+            if (_unitFactory != null) _unitFactory.InitUnitTransform(transform);
+            else transform.localPosition = Vector3.zero;
             
             _originCell = cell;
 
@@ -195,11 +195,24 @@ public class DragHandler : MonoBehaviour, IDraggable
         {
             cell.TryPlaceTotem(_totem);
             transform.SetParent(cell.transform, false);
-            transform.localPosition = Vector3.zero;
+            if (_unitFactory != null) _unitFactory.InitUnitTransform(transform);
+            else transform.localPosition = Vector3.zero;
             
             _originCell = cell;
 
             _totem.OnPlaced(cell);
+        }
+
+        UpdateDepthSorting();
+    }
+
+    public void UpdateDepthSorting()
+    {
+        if (_spriteRenderer != null)
+        {
+            // Y좌표가 낮을수록(화면 아래일수록) 앞에 그려지도록 정렬
+            _originSortingOrder = Mathf.RoundToInt(-transform.position.y * 100f);
+            _spriteRenderer.sortingOrder = _originSortingOrder;
         }
     }
 

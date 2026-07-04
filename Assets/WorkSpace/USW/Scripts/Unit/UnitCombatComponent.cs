@@ -234,7 +234,7 @@ public class UnitCombatComponent : MonoBehaviour
             {
                 if (boss != null && !boss.IsDead)
                 {
-                    boss.TakeDamage(damage);
+                    boss.TakeDamage(damage, targetPos);
                 }
             });
         }

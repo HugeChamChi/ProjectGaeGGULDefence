@@ -81,7 +81,7 @@ public class ExpEffectController : MonoBehaviour
         }
     }
 
-    private void OnBossDamaged(int damage)
+    private void OnBossDamaged(int damage, Vector3? hitPos)
     {
         if (particleImage == null) return;
 

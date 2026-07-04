@@ -26,6 +26,9 @@ public class UnitSpawner : MonoBehaviour
     [SerializeField] private Transform defaultSpawnOrigin;
     [SerializeField] private Transform effectParent;
 
+    [Header("Unit Settings")]
+    [SerializeField] private Vector3 spawnScale = new Vector3(0.5f, 0.5f, 0.5f);
+
     public float CurrentCost { get; private set; }
 
     // UIManager가 구독해서 비용 텍스트 갱신
@@ -171,6 +174,7 @@ public class UnitSpawner : MonoBehaviour
         unit.transform.SetParent(cell.transform, false);
         
         _unitFactory.InitUnitTransform(unit);
+        unit.transform.localScale = spawnScale;
         
         var drag = unit.GetComponent<DragHandler>();
         if (drag != null) drag.SetOriginCell(cell);
@@ -247,6 +251,9 @@ public class UnitSpawner : MonoBehaviour
         if (unit != null && unit.gameObject != null)
         {
             unit.gameObject.SetActive(true);
+            var dragHandler = unit.GetComponent<DragHandler>();
+            if (dragHandler != null) dragHandler.UpdateDepthSorting();
+            
             unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
 
             var lu = _levelUpManager;

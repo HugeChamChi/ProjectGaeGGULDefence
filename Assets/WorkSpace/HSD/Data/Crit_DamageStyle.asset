@@ -15,10 +15,10 @@ MonoBehaviour:
   fontAsset: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
   fontMaterial: {fileID: 0}
   textColor: {r: 1, g: 0.5254902, b: 0.15686275, a: 1}
-  fontSize: 0.3
+  fontSize: 0.5
   isBold: 1
-  duration: 0.8
-  moveDistance: 150
+  duration: 0.4
+  moveDistance: 0.3
   scaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -85,5 +85,5 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  randomizeOffsetX: 100
-  randomizeOffsetY: 100
+  randomizeOffsetX: 0
+  randomizeOffsetY: 0

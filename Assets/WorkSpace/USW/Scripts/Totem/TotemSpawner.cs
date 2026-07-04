@@ -25,8 +25,12 @@ public class TotemSpawner : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private PopulationManager _populationManager;
     [Inject] private CurrencyManager _currencyManager;
+    [Inject] private UnitFactory _unitFactory;
 
     [SerializeField] private GameObject genericPrefab;
+
+    [Header("Totem Settings")]
+    [SerializeField] private Vector3 spawnScale = new Vector3(0.6f, 0.6f, 0.6f);
 
     /// <summary>
     /// TotemData SO를 기반으로 토템을 소환하고 빈 셀에 배치한다.
@@ -74,12 +78,20 @@ public class TotemSpawner : MonoBehaviour
         }
 
         var t = go.transform;
-        t.localPosition = Vector3.zero;
-        t.localRotation = Quaternion.identity;
-        t.localScale = Vector3.one;
+        if (_unitFactory != null) _unitFactory.InitUnitTransform(t);
+        else 
+        {
+            t.localPosition = Vector3.zero;
+            t.localRotation = Quaternion.identity;
+        }
+        t.localScale = spawnScale;
 
         var drag = go.GetComponent<DragHandler>();
-        if (drag != null) drag.SetOriginCell(cell);
+        if (drag != null) 
+        {
+            drag.SetOriginCell(cell);
+            drag.UpdateDepthSorting();
+        }
 
         totem.OnPlaced(cell);
         return true;

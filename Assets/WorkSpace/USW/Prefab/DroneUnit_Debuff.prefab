@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7462295945276876132}
   - component: {fileID: -6478686102761626982}
   - component: {fileID: 6256195657664122124}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: DroneUnit_Debuff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -191,16 +191,16 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.4}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
-    oldSize: {x: 5.12, y: 5.12}
+    oldSize: {x: 1, y: 1}
     newSize: {x: 5.12, y: 5.12}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.8}
   m_EdgeRadius: 0

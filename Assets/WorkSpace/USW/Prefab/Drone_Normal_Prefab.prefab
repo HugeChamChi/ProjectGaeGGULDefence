@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -5867111096088273222}
   - component: {fileID: -1013402522113950437}
   - component: {fileID: 3657059266075076704}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Drone_Normal_Prefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}

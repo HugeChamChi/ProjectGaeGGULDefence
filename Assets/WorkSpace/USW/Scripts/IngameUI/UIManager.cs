@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.AddressableAssets;
 
 // ════════════════════════════════════════════════════════
 // UIManager — InGameSingleton 교체 + Manager 접근 통일
@@ -399,12 +400,12 @@ public class UIManager : MonoBehaviour
     private void OnRetryButtonPressed()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Addressables.LoadSceneAsync(SceneManager.GetActiveScene().name);
     }
 
     private void OnHomeButtonPressed()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("LobbyScene");
+        Addressables.LoadSceneAsync("LobbyScene");
     }
 }

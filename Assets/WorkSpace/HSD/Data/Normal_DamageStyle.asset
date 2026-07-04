@@ -15,10 +15,10 @@ MonoBehaviour:
   fontAsset: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
   fontMaterial: {fileID: 0}
   textColor: {r: 1, g: 1, b: 1, a: 1}
-  fontSize: 0.3
+  fontSize: 0.5
   isBold: 0
-  duration: 0.8
-  moveDistance: 150
+  duration: 0.4
+  moveDistance: 0.5
   scaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -32,8 +32,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.2
-      value: 1.2
+      time: 0.31250304
+      value: 1.0047181
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.4
+      time: 0.7500061
       value: 1
       inSlope: 0
       outSlope: 0
@@ -50,8 +50,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1
-      value: 0.8
+      time: 1.0041809
+      value: 1.000943
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -85,5 +85,5 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  randomizeOffsetX: 100
-  randomizeOffsetY: 100
+  randomizeOffsetX: 0
+  randomizeOffsetY: 0

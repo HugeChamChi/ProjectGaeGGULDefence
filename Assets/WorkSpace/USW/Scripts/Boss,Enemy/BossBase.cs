@@ -39,8 +39,8 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>(현재HP, 최대HP) — UIManager가 구독하여 HP바 갱신</summary>
     public event Action<int, int> OnHpChanged;
 
-    /// <summary>데미지량 — ExpManager가 구독하여 경험치 추가</summary>
-    public event Action<int>      OnDamaged;
+    /// <summary>데미지량, 타격위치 — ExpManager가 구독하여 경험치 추가 및 데미지 플로터 띄움</summary>
+    public event Action<int, Vector3?> OnDamaged;
 
     /// <summary>사망 — WaveManager가 구독하여 다음 웨이브 처리</summary>
     public event Action           OnDeath;
@@ -79,7 +79,7 @@ public abstract class BossBase : MonoBehaviour
     }
 
     // ── 데미지 처리 ─────────────────────────────────────────────────
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount, Vector3? hitPos = null)
     {
         if (IsDead) return;
 
@@ -94,7 +94,7 @@ public abstract class BossBase : MonoBehaviour
         }
 
         OnHpChanged?.Invoke(_currentHp, _maxHp);
-        OnDamaged?.Invoke(actualAmount);
+        OnDamaged?.Invoke(actualAmount, hitPos);
 
         if (IsDead)
         {

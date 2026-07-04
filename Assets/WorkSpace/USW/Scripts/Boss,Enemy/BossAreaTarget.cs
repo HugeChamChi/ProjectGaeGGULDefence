@@ -7,7 +7,7 @@ using UnityEngine;
 public class BossAreaTarget : MonoBehaviour
 {
     [SerializeField] private float _width  = 1f;
-    [SerializeField] private float _height = 1f;
+    [SerializeField] private float _height = 3f;
 
     /// <summary>보스 중심 기준 위쪽(+Y) 피격 위치 반환</summary>
     public Vector3 GetRandomWorldPosition()
