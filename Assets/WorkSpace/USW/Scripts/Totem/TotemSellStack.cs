@@ -38,7 +38,7 @@ public class TotemSellStack : TotemBase
     {
         if (totemData == null) return;
 
-        float increment = totemData.attackBuffAmount;
+        float increment = totemData.GetSimpleAmount(TotemBuffKind.Attack);
         _stackCount++;
         _appliedAmount += increment;
         _totemBuffManager.AddAttackBuff(increment);
@@ -50,29 +50,15 @@ public class TotemSellStack : TotemBase
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
-            cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);
-        }
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
+            cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
     }
 }

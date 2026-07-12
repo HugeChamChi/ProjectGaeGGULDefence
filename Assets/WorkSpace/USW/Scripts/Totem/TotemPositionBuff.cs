@@ -26,9 +26,9 @@ public class TotemPositionBuff : TotemBase
         _isFront = CurrentCell.GridPosition.y < _frontRowThreshold;
 
         if (_isFront)
-            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.AddAttackBuff(totemData.GetSimpleAmount(TotemBuffKind.Attack));
         else
-            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.AddSpeedBuff(totemData.GetSimpleAmount(TotemBuffKind.Speed));
     }
 
     protected override void RemoveBuff()
@@ -36,35 +36,23 @@ public class TotemPositionBuff : TotemBase
         if (totemData == null) return;
 
         if (_isFront)
-            _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
+            _totemBuffManager.RemoveAttackBuff(totemData.GetSimpleAmount(TotemBuffKind.Attack));
         else
-            _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
+            _totemBuffManager.RemoveSpeedBuff(totemData.GetSimpleAmount(TotemBuffKind.Speed));
     }
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
         {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
             cell.SetBuffFlags(
                 atk: _isFront || cell.HasAttackBuff,
                 spd: !_isFront || cell.HasSpeedBuff);

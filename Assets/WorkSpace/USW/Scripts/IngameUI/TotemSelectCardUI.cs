@@ -179,7 +179,7 @@ public class TotemSelectCardUI : MonoBehaviour
 
         if (data == null) return;
 
-        foreach (var offset in data.effectRange)
+        foreach (var offset in data.GetEffectPreviewOffsets())
         {
             if (TryGetIndex(offset, out int idx))
             {
@@ -188,7 +188,7 @@ public class TotemSelectCardUI : MonoBehaviour
             }
         }
 
-        foreach (var offset in data.attackDisabledRange)
+        foreach (var offset in data.GetAttackDisabledPreviewOffsets())
         {
             if (TryGetIndex(offset, out int idx))
             {

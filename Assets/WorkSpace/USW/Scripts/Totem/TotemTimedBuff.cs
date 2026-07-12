@@ -66,45 +66,37 @@ public class TotemTimedBuff : TotemBase
     {
         if (totemData == null || _burstActive) return;
         _burstActive = true;
-        if (totemData.attackBuffAmount > 0f) _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
-        if (totemData.speedBuffAmount  > 0f) _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
+        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        if (attackAmount > 0f) _totemBuffManager.AddAttackBuff(attackAmount);
+        if (speedAmount  > 0f) _totemBuffManager.AddSpeedBuff(speedAmount);
     }
 
     private void EndBurst()
     {
         if (totemData == null || !_burstActive) return;
         _burstActive = false;
-        if (totemData.attackBuffAmount > 0f) _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
-        if (totemData.speedBuffAmount  > 0f) _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
+        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        if (attackAmount > 0f) _totemBuffManager.RemoveAttackBuff(attackAmount);
+        if (speedAmount  > 0f) _totemBuffManager.RemoveSpeedBuff(speedAmount);
     }
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        bool hasAtk = totemData.attackBuffAmount > 0f;
-        bool hasSpd = totemData.speedBuffAmount  > 0f;
-        var  pos    = CurrentCell.GridPosition;
+        bool hasAtk = totemData.GetSimpleAmount(TotemBuffKind.Attack) > 0f;
+        bool hasSpd = totemData.GetSimpleAmount(TotemBuffKind.Speed)  > 0f;
 
-        foreach (var offset in totemData.effectRange)
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
         {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
             cell.SetBuffFlags(
                 atk: hasAtk || cell.HasAttackBuff,
                 spd: hasSpd || cell.HasSpeedBuff);

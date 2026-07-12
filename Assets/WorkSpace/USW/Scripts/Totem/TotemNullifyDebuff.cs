@@ -18,31 +18,19 @@ public class TotemNullifyDebuff : TotemBase
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
         {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
             cell.SetNullifyDamageDebuff(true);
             // 공격력 무효 = 공격 버프 계열로 시각화
-            cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);
+            cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
         }
     }
 }

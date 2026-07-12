@@ -39,5 +39,17 @@ MonoBehaviour:
   foodGenInterval: 10
   effectRange: []
   attackDisabledRange: []
+  functions:
+  - rid: 7076784764168962059
+  effectRanges: []
+  attackDisabledRanges: []
   totemId: 4024
   isRotatable: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784764168962059
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 0
+        amount: 0.1

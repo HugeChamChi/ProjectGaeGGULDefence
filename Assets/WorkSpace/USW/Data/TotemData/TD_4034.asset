@@ -31,18 +31,31 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 45db96131f27c3b4c9c4d250519e6c7a, type: 3}
   description: "\uC0C1 3\uCE78 \uACF5\uACA9 \uBD88\uAC00, \uD558 1\uCE78\uC758 \uAE30\uBB3C
     \uACF5\uACA9 \uC18D\uB3C4 100% \uC0C1\uC2B9"
-  attackBuffAmount: 0
-  speedBuffAmount: 1
-  foodSpeedBuffAmount: 0
-  foodAmountBuffAmount: 0
-  critDamageBuffAmount: 0
-  critChanceBuffAmount: 0
-  foodGenInterval: 10
-  effectRange:
-  - {x: 0, y: 1}
-  attackDisabledRange:
-  - {x: -1, y: -1}
-  - {x: 0, y: -1}
-  - {x: 1, y: -1}
+  functions:
+  - rid: 7076784764168962109
+  effectRanges:
+  - rid: 7076784764168962110
+  attackDisabledRanges:
+  - rid: 7076784764168962111
   totemId: 4034
   isRotatable: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784764168962109
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 1
+        amount: 1
+    - rid: 7076784764168962110
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: 0, y: 1}
+    - rid: 7076784764168962111
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: -1, y: -1}
+        - {x: 0, y: -1}
+        - {x: 1, y: -1}

@@ -38,30 +38,60 @@ public class TotemData : ScriptableObject, ILoadableAsset
             ? rotationSprites[0]
             : icon;
 
-    [Header("버프 수치")]
-    // AttackBuff/AttackTop/Berserk/United: 공격력 버프 비율 (0.1 = 10%)
-    // OverWelm: 하1칸 공격력 증폭 비율 (0.7 = +70% → modifier 1.7)
-    public float attackBuffAmount    = 0f;
-    // SpeedBuff/Berserk/United: 공격속도 버프 비율 (0.3 = 30%)
-    public float speedBuffAmount     = 0f;
-    // FoodBuff: 식량 생산 간격 감소 비율 (0.2 = 20%)
-    public float foodSpeedBuffAmount  = 0f;
-    // 식량 생산량 증가 비율 (0.3 = 30%)
-    public float foodAmountBuffAmount = 0f;
-    // 치명타 데미지 증가 비율 (0.1 = 10%)
-    public float critDamageBuffAmount = 0f;
-    // 치명타 확률 증가 (0.1 = 10%)
-    public float critChanceBuffAmount = 0f;
+    [Header("기능 / 범위 (SelectableReference)")]
+    [SerializeReference, SelectableReference]
+    public List<ITotemFunction> functions = new List<ITotemFunction>();
+    [SerializeReference, SelectableReference]
+    public List<ITotemRange> effectRanges = new List<ITotemRange>();
+    [SerializeReference, SelectableReference]
+    public List<ITotemRange> attackDisabledRanges = new List<ITotemRange>();
 
-    [Header("식량 생성 (끝없는 수확 전용)")]
-    [Tooltip("토템이 스스로 식량을 생성하는 주기(초). 생성량은 foodAmountBuffAmount 사용. 0 이하면 미사용.")]
-    public float foodGenInterval = 10f;
+    /// <summary>functions 중 kind가 일치하는 첫 SimpleBuffFunction의 amount. 없으면 0.</summary>
+    public float GetSimpleAmount(TotemBuffKind kind)
+    {
+        foreach (var fn in functions)
+            if (fn is SimpleBuffFunction simple && simple.kind == kind) return simple.amount;
+        return 0f;
+    }
 
-    [Header("범위 데이터 (TotemEditor로 설정)")]
-    [Tooltip("토템 위치 기준 상대 오프셋 — TotemEditorWindow에서 편집")]
-    public List<Vector2Int> effectRange         = new List<Vector2Int>();
-    [Tooltip("공격 불가 범위 — 토템 위치 기준 상대 오프셋")]
-    public List<Vector2Int> attackDisabledRange = new List<Vector2Int>();
+    /// <summary>functions 중 첫 FoodGeneratorFunction. 없으면 null (끝없는 수확류가 아닌 토템).</summary>
+    public FoodGeneratorFunction GetFoodGenerator()
+    {
+        foreach (var fn in functions)
+            if (fn is FoodGeneratorFunction gen) return gen;
+        return null;
+    }
+
+    public List<GridCell> GetEffectCells(TotemBase totem, GridManager gridManager)
+        => CollectCells(effectRanges, totem, gridManager);
+
+    public List<GridCell> GetAttackDisabledCells(TotemBase totem, GridManager gridManager)
+        => CollectCells(attackDisabledRanges, totem, gridManager);
+
+    private static List<GridCell> CollectCells(List<ITotemRange> ranges, TotemBase totem, GridManager gridManager)
+    {
+        var result = new List<GridCell>();
+        foreach (var range in ranges)
+        {
+            if (range == null) continue;
+            foreach (var cell in range.GetCells(totem, gridManager))
+                if (!result.Contains(cell)) result.Add(cell);
+        }
+        return result;
+    }
+
+    /// <summary>배치 전 UI 미리보기용 오프셋 (GridManager 불필요).</summary>
+    public List<Vector2Int> GetEffectPreviewOffsets() => CollectPreviewOffsets(effectRanges);
+
+    public List<Vector2Int> GetAttackDisabledPreviewOffsets() => CollectPreviewOffsets(attackDisabledRanges);
+
+    private static List<Vector2Int> CollectPreviewOffsets(List<ITotemRange> ranges)
+    {
+        var result = new List<Vector2Int>();
+        foreach (var range in ranges)
+            if (range != null) result.AddRange(range.GetPreviewOffsets());
+        return result;
+    }
 
     [Header("시트 연동")]
     [Tooltip("구글 시트 totem_id 컬럼 값. 런타임 시트 데이터 매핑 키.")]
@@ -81,24 +111,31 @@ public class TotemData : ScriptableObject, ILoadableAsset
         tier = row.Grade;
         isRotatable = row.IsRotatable;
 
-        // 2. 버프 수치 덮어쓰기
-        attackBuffAmount = row.AtkIncreaseRate;
-        speedBuffAmount = row.AttackSpeedIncreaseRate;
-        foodSpeedBuffAmount = row.FoodProductionRate;
-        foodAmountBuffAmount = row.FoodAmount;
-        critChanceBuffAmount = row.CriticalChanceRate;
-        critDamageBuffAmount = row.CriticalDamageRate;
+        // 2. functions 재구성 (시트의 flat 수치 기준 — 조건부 버프 등 SO 전용 구성은 시트에 없으므로
+        //    여기서는 항상 단순 버프로만 재구성한다)
+        functions = new List<ITotemFunction>();
+        AddSimpleFunctionIfPositive(TotemBuffKind.Attack,     row.AtkIncreaseRate);
+        AddSimpleFunctionIfPositive(TotemBuffKind.Speed,      row.AttackSpeedIncreaseRate);
+        AddSimpleFunctionIfPositive(TotemBuffKind.FoodSpeed,  row.FoodProductionRate);
+        AddSimpleFunctionIfPositive(TotemBuffKind.FoodAmount, row.FoodAmount);
+        AddSimpleFunctionIfPositive(TotemBuffKind.CritChance, row.CriticalChanceRate);
+        AddSimpleFunctionIfPositive(TotemBuffKind.CritDamage, row.CriticalDamageRate);
 
-        // 3. 범위 데이터 덮어쓰기 (시트에 데이터가 존재할 경우에만)
+        // 3. 범위 데이터 덮어쓰기 (시트에 데이터가 존재할 경우에만 — 없으면 SO에 설정된 범위 유지)
         if (row.EffectRange != null && row.EffectRange.Count > 0)
         {
-            effectRange = new List<Vector2Int>(row.EffectRange);
+            effectRanges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int>(row.EffectRange) } };
         }
-        
+
         if (row.AttackDisabledRange != null && row.AttackDisabledRange.Count > 0)
         {
-            attackDisabledRange = new List<Vector2Int>(row.AttackDisabledRange);
+            attackDisabledRanges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int>(row.AttackDisabledRange) } };
         }
+    }
+
+    private void AddSimpleFunctionIfPositive(TotemBuffKind kind, float amount)
+    {
+        if (amount > 0f) functions.Add(new SimpleBuffFunction { kind = kind, amount = amount });
     }
 
     public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()

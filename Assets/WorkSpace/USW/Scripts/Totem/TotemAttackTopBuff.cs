@@ -40,7 +40,7 @@ public class TotemAttackTopBuff : TotemBase
     {
         if (totemData == null) return;
 
-        float amount = totemData.attackBuffAmount;
+        float amount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
         if (amount <= 0f) return;
 
         float efficiency = 1f + (_totemBuffManager != null ? _totemBuffManager.TotemEfficiencyBonus : 0f);

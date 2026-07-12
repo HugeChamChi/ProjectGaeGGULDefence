@@ -48,5 +48,36 @@ MonoBehaviour:
   - {x: 2, y: 0}
   - {x: 2, y: 1}
   attackDisabledRange: []
+  functions:
+  - rid: 7076784764168962116
+  - rid: 7076784764168962117
+  effectRanges:
+  - rid: 7076784764168962118
+  attackDisabledRanges: []
   totemId: 4039
   isRotatable: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784764168962116
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 4
+        amount: 0.02
+    - rid: 7076784764168962117
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 5
+        amount: 0.03
+    - rid: 7076784764168962118
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: -3, y: -2}
+        - {x: -3, y: -1}
+        - {x: -3, y: 0}
+        - {x: -3, y: 1}
+        - {x: 2, y: -2}
+        - {x: 2, y: -1}
+        - {x: 2, y: 0}
+        - {x: 2, y: 1}

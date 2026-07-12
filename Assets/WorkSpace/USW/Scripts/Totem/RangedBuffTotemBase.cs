@@ -24,40 +24,20 @@ public abstract class RangedBuffTotemBase : TotemBase
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var rotated = RotateOffset(offset);
-            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
-
         // effectRange 셀 — 서브클래스 버프/시각화
-        foreach (var offset in totemData.effectRange)
-        {
-            var rotated = RotateOffset(offset);
-            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
-            if (cell == null) continue;
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
             PaintRangeBuffs(cell);
-        }
 
         // attackDisabledRange 셀 — 공격불가 (모든 범위 토템 공통)
-        foreach (var offset in totemData.attackDisabledRange)
-        {
-            var rotated = RotateOffset(offset);
-            var cell    = _gridManager.GetCell(pos.x + rotated.x, pos.y + rotated.y);
-            if (cell != null) cell.SetTotemAttackDisabled(true);
-        }
+        foreach (var cell in totemData.GetAttackDisabledCells(this, _gridManager))
+            cell.SetTotemAttackDisabled(true);
     }
 }

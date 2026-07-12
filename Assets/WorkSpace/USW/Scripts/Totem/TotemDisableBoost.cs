@@ -24,54 +24,38 @@ public class TotemDisableBoost : TotemBase
         var list = new List<GridCell>();
         if (CurrentCell == null || totemData == null) return list;
 
-        var pos = CurrentCell.GridPosition;
-
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        foreach (var offset in totemData.attackDisabledRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null && !list.Contains(cell)) list.Add(cell);
-        }
+        list.AddRange(totemData.GetEffectCells(this, _gridManager));
+        foreach (var cell in totemData.GetAttackDisabledCells(this, _gridManager))
+            if (!list.Contains(cell)) list.Add(cell);
         return list;
     }
-
-
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
+        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
 
         // effectRange → 공격력 또는 공격속도 증폭 (셀 단위)
-        foreach (var offset in totemData.effectRange)
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
         {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
-            if (totemData.attackBuffAmount > 0f)
+            if (attackAmount > 0f)
             {
-                cell.SetTotemAttackModifier(1f + totemData.attackBuffAmount);
+                cell.SetTotemAttackModifier(1f + attackAmount);
                 cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
             }
 
-            if (totemData.speedBuffAmount > 0f)
+            if (speedAmount > 0f)
             {
                 // 전역 SpeedMultiplier와 동일한 공식: 1 / (1 + percent)
-                cell.SetTotemSpeedModifier(1f / Mathf.Max(0.1f, 1f + totemData.speedBuffAmount));
+                cell.SetTotemSpeedModifier(1f / Mathf.Max(0.1f, 1f + speedAmount));
                 cell.SetBuffFlags(atk: cell.HasAttackBuff, spd: true);
             }
         }
 
         // attackDisabledRange → 공격불가
-        foreach (var offset in totemData.attackDisabledRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) cell.SetTotemAttackDisabled(true);
-        }
+        foreach (var cell in totemData.GetAttackDisabledCells(this, _gridManager))
+            cell.SetTotemAttackDisabled(true);
     }
 }

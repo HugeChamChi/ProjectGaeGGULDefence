@@ -13,10 +13,22 @@ MonoBehaviour:
   m_Name: Totem_OldTreeStub
   m_EditorClassIdentifier: 
   totemType: 0
-  rarity: 2
+  tier: 0
   totemName: "\uACE0\uBAA9 \uADF8\uB8E8\uD130\uAE30"
+  iconAddress: 
+  prefabAddress: 
+  rotationSpriteAddresses:
+  - 
+  - 
+  - 
+  - 
   icon: {fileID: 0}
   prefab: {fileID: 0}
+  rotationSprites:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   description: 
   attackBuffAmount: 20
   speedBuffAmount: 20
@@ -24,6 +36,7 @@ MonoBehaviour:
   foodAmountBuffAmount: 0
   critDamageBuffAmount: 0
   critChanceBuffAmount: 0
+  foodGenInterval: 10
   effectRange:
   - {x: -1, y: 1}
   - {x: 1, y: 1}
@@ -33,3 +46,40 @@ MonoBehaviour:
   - {x: 2, y: 2}
   attackDisabledRange:
   - {x: 0, y: 2}
+  functions:
+  - rid: 7076784764168962096
+  - rid: 7076784764168962097
+  effectRanges:
+  - rid: 7076784764168962098
+  attackDisabledRanges:
+  - rid: 7076784764168962099
+  totemId: 0
+  isRotatable: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784764168962096
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 0
+        amount: 20
+    - rid: 7076784764168962097
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 1
+        amount: 20
+    - rid: 7076784764168962098
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: -1, y: 1}
+        - {x: 1, y: 1}
+        - {x: -1, y: -1}
+        - {x: 1, y: -1}
+        - {x: -2, y: 2}
+        - {x: 2, y: 2}
+    - rid: 7076784764168962099
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: 0, y: 2}

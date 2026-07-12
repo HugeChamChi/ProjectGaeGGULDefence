@@ -34,13 +34,16 @@ public class TotemUnitedBuff : TotemBase
             return;
         }
 
-        if (totemData.attackBuffAmount > 0f)
-            _totemBuffManager.AddAttackBuff(totemData.attackBuffAmount);
+        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+
+        if (attackAmount > 0f)
+            _totemBuffManager.AddAttackBuff(attackAmount);
         else
             Debug.LogWarning($"TotemUnitedBuff({name}): attackBuffAmount = 0.");
 
-        if (totemData.speedBuffAmount > 0f)
-            _totemBuffManager.AddSpeedBuff(totemData.speedBuffAmount);
+        if (speedAmount > 0f)
+            _totemBuffManager.AddSpeedBuff(speedAmount);
         else
             Debug.LogWarning($"TotemUnitedBuff({name}): speedBuffAmount = 0.");
 
@@ -52,10 +55,13 @@ public class TotemUnitedBuff : TotemBase
         if (!_buffApplied) return;
         _buffApplied = false;
 
-        if (totemData.attackBuffAmount > 0f)
-            _totemBuffManager.RemoveAttackBuff(totemData.attackBuffAmount);
-        if (totemData.speedBuffAmount > 0f)
-            _totemBuffManager.RemoveSpeedBuff(totemData.speedBuffAmount);
+        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+
+        if (attackAmount > 0f)
+            _totemBuffManager.RemoveAttackBuff(attackAmount);
+        if (speedAmount > 0f)
+            _totemBuffManager.RemoveSpeedBuff(speedAmount);
     }
 
     public override List<GridCell> GetAffectedCells()

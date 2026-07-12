@@ -37,16 +37,8 @@ public class TotemTotemCount : TotemBase
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
@@ -59,20 +51,14 @@ public class TotemTotemCount : TotemBase
 
         // 현재 토템 수 기준으로 재계산 (이 토템 포함)
         int count = _totemBuffManager.GetActiveTotemCount();
-        _appliedCritChance = count * totemData.critChanceBuffAmount;
-        _appliedCritDamage = count * totemData.critDamageBuffAmount;
+        _appliedCritChance = count * totemData.GetSimpleAmount(TotemBuffKind.CritChance);
+        _appliedCritDamage = count * totemData.GetSimpleAmount(TotemBuffKind.CritDamage);
 
         if (_appliedCritChance > 0f) _totemBuffManager.AddCritChanceBuff(_appliedCritChance);
         if (_appliedCritDamage > 0f) _totemBuffManager.AddCritDamageBuff(_appliedCritDamage);
 
         // 셀 시각화
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
-            cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);
-        }
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
+            cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
     }
 }

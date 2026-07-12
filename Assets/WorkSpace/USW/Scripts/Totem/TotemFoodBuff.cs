@@ -13,18 +13,20 @@ public class TotemFoodBuff : TotemBase
 
     protected override void ApplyBuff()
     {
-        if (totemData.foodSpeedBuffAmount <= 0f)
+        float amount = totemData.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        if (amount <= 0f)
         {
             Debug.LogWarning($"TotemFoodBuff({name}): foodSpeedBuffAmount = 0. TotemData를 확인하세요.");
             return;
         }
-        _totemBuffManager.AddFoodSpeedBuff(totemData.foodSpeedBuffAmount);
+        _totemBuffManager.AddFoodSpeedBuff(amount);
     }
 
     protected override void RemoveBuff()
     {
-        if (totemData.foodSpeedBuffAmount <= 0f) return;
-        _totemBuffManager.RemoveFoodSpeedBuff(totemData.foodSpeedBuffAmount);
+        float amount = totemData.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        if (amount <= 0f) return;
+        _totemBuffManager.RemoveFoodSpeedBuff(amount);
     }
 
     public override List<GridCell> GetAffectedCells()

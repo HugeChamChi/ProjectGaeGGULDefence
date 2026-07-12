@@ -37,7 +37,7 @@ public class TotemProximityBuff : TotemBase
         if (totemData == null || CurrentCell == null || !IsActive) return;
 
         int count = CountUnitsInRange();
-        float newAmount = count * totemData.attackBuffAmount;
+        float newAmount = count * totemData.GetSimpleAmount(TotemBuffKind.Attack);
 
         // delta 적용
         float delta = newAmount - _appliedAmount;
@@ -54,42 +54,22 @@ public class TotemProximityBuff : TotemBase
     private int CountUnitsInRange()
     {
         int count = 0;
-        var pos   = CurrentCell.GridPosition;
-
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null && cell.OccupyingUnit != null)
-                count++;
-        }
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
+            if (cell.OccupyingUnit != null) count++;
         return count;
     }
 
     public override List<GridCell> GetAffectedCells()
     {
-        var list = new List<GridCell>();
-        if (CurrentCell == null || totemData == null) return list;
-
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell != null) list.Add(cell);
-        }
-        return list;
+        if (CurrentCell == null || totemData == null) return new List<GridCell>();
+        return totemData.GetEffectCells(this, _gridManager);
     }
 
     public override void PaintAffectedCells()
     {
         if (CurrentCell == null || totemData == null) return;
 
-        var pos = CurrentCell.GridPosition;
-        foreach (var offset in totemData.effectRange)
-        {
-            var cell = _gridManager.GetCell(pos.x + offset.x, pos.y + offset.y);
-            if (cell == null) continue;
-
-            cell.SetBuffFlags(atk: true || cell.HasAttackBuff, spd: cell.HasSpeedBuff);
-        }
+        foreach (var cell in totemData.GetEffectCells(this, _gridManager))
+            cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
     }
 }

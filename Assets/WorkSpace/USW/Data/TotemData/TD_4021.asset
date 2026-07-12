@@ -40,5 +40,17 @@ MonoBehaviour:
   effectRange:
   - {x: -2, y: 1}
   attackDisabledRange: []
+  functions: []
+  effectRanges:
+  - rid: 7076784764168962112
+  attackDisabledRanges: []
   totemId: 4021
   isRotatable: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784764168962112
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: -2, y: 1}

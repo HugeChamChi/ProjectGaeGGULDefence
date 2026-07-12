@@ -256,8 +256,8 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
 
         _cells[TotemRow * GridCols + TotemCol].color = colorCenter;
 
-        var effectRange   = (sheet?.EffectRange?.Count   > 0) ? sheet.EffectRange   : data.effectRange;
-        var disabledRange = (sheet?.AttackDisabledRange?.Count > 0) ? sheet.AttackDisabledRange : data.attackDisabledRange;
+        var effectRange   = (sheet?.EffectRange?.Count   > 0) ? sheet.EffectRange   : data.GetEffectPreviewOffsets();
+        var disabledRange = (sheet?.AttackDisabledRange?.Count > 0) ? sheet.AttackDisabledRange : data.GetAttackDisabledPreviewOffsets();
 
         foreach (var offset in effectRange)
         {
@@ -312,12 +312,12 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var sb = new StringBuilder();
 
-        float atk      = sheet != null ? sheet.AtkIncreaseRate         : data.attackBuffAmount;
-        float spd      = sheet != null ? sheet.AttackSpeedIncreaseRate : data.speedBuffAmount;
-        float fProd    = sheet != null ? sheet.FoodProductionRate      : data.foodSpeedBuffAmount;
-        float fAmt     = sheet != null ? sheet.FoodAmount              : data.foodAmountBuffAmount;
-        float cCh      = sheet != null ? sheet.CriticalChanceRate      : data.critChanceBuffAmount;
-        float cDmg     = sheet != null ? sheet.CriticalDamageRate      : data.critDamageBuffAmount;
+        float atk      = sheet != null ? sheet.AtkIncreaseRate         : data.GetSimpleAmount(TotemBuffKind.Attack);
+        float spd      = sheet != null ? sheet.AttackSpeedIncreaseRate : data.GetSimpleAmount(TotemBuffKind.Speed);
+        float fProd    = sheet != null ? sheet.FoodProductionRate      : data.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        float fAmt     = sheet != null ? sheet.FoodAmount              : data.GetSimpleAmount(TotemBuffKind.FoodAmount);
+        float cCh      = sheet != null ? sheet.CriticalChanceRate      : data.GetSimpleAmount(TotemBuffKind.CritChance);
+        float cDmg     = sheet != null ? sheet.CriticalDamageRate      : data.GetSimpleAmount(TotemBuffKind.CritDamage);
 
         float atkDeb   = sheet?.AtkDecreaseRate         ?? 0f;
         float spdDeb   = sheet?.AttackSpeedDecreaseRate ?? 0f;

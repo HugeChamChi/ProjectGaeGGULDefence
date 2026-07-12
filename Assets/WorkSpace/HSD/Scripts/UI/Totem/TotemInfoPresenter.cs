@@ -23,20 +23,26 @@ public class TotemInfoPresenter
     {
         StringBuilder sb = new StringBuilder();
 
-        if (data.attackBuffAmount > 0)
-            sb.AppendLine($"공격력 <color=#FFD700>{data.attackBuffAmount * 100:0}%</color> 증가");
-        
-        if (data.speedBuffAmount > 0)
-            sb.AppendLine($"공격 속도 <color=#FFD700>{data.speedBuffAmount * 100:0}%</color> 증가");
+        float attack     = data.GetSimpleAmount(TotemBuffKind.Attack);
+        float speed      = data.GetSimpleAmount(TotemBuffKind.Speed);
+        float foodSpeed  = data.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        float critDamage = data.GetSimpleAmount(TotemBuffKind.CritDamage);
+        float critChance = data.GetSimpleAmount(TotemBuffKind.CritChance);
 
-        if (data.foodSpeedBuffAmount > 0)
-            sb.AppendLine($"식량 생산 간격 <color=#FFD700>{data.foodSpeedBuffAmount * 100:0}%</color> 감소");
+        if (attack > 0)
+            sb.AppendLine($"공격력 <color=#FFD700>{attack * 100:0}%</color> 증가");
 
-        if (data.critDamageBuffAmount > 0)
-            sb.AppendLine($"치명타 데미지 <color=#FFD700>{data.critDamageBuffAmount * 100:0}%</color> 증가");
+        if (speed > 0)
+            sb.AppendLine($"공격 속도 <color=#FFD700>{speed * 100:0}%</color> 증가");
 
-        if (data.critChanceBuffAmount > 0)
-            sb.AppendLine($"치명타 확률 <color=#FFD700>{data.critChanceBuffAmount * 100:0}%</color> 증가");
+        if (foodSpeed > 0)
+            sb.AppendLine($"식량 생산 간격 <color=#FFD700>{foodSpeed * 100:0}%</color> 감소");
+
+        if (critDamage > 0)
+            sb.AppendLine($"치명타 데미지 <color=#FFD700>{critDamage * 100:0}%</color> 증가");
+
+        if (critChance > 0)
+            sb.AppendLine($"치명타 확률 <color=#FFD700>{critChance * 100:0}%</color> 증가");
 
         return sb.ToString().TrimEnd();
     }

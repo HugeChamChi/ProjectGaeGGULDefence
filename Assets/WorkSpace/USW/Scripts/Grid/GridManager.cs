@@ -249,7 +249,6 @@ public class GridManager : MonoBehaviour
             return;
 
         _previewedTotem = totem;
-        var origin = totem.CurrentCell.GridPosition;
 
         // 영향 셀은 토템별 GetAffectedCells()로 계산한다.
         // effectRange를 쓰지 않는 특수 토템(전진배치 등)도 올바르게 칠해진다.
@@ -259,10 +258,8 @@ public class GridManager : MonoBehaviour
             cell.Model.SetTotemRangePreview(effectRange: true, disabledRange: false);
         }
 
-        foreach (var offset in totem.Data.attackDisabledRange)
+        foreach (var cell in totem.Data.GetAttackDisabledCells(totem, this))
         {
-            var rotated = totem.RotateOffset(offset);
-            var cell = GetCell(origin.x + rotated.x, origin.y + rotated.y);
             if (cell == null) continue;
 
             cell.Model.SetTotemRangePreview(
