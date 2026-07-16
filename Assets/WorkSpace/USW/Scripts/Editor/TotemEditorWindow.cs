@@ -147,27 +147,21 @@ public class TotemEditorWindow : EditorWindow
         for (int i = 0; i < _data.functions.Count; i++)
             DrawFunctionEntry(i);
 
-        using (new EditorGUILayout.HorizontalScope())
+        if (GUILayout.Button("+ 버프 추가 ▾", GUILayout.Width(140f)))
         {
-            if (GUILayout.Button("+ 단순 버프 추가", GUILayout.Width(140f)))
-            {
-                Undo.RecordObject(_data, "Add Simple Buff");
-                _data.functions.Add(new SimpleBuffFunction());
-                EditorUtility.SetDirty(_data);
-            }
-            if (GUILayout.Button("+ 조건부 버프 추가", GUILayout.Width(140f)))
-            {
-                Undo.RecordObject(_data, "Add Conditional Buff");
-                _data.functions.Add(new ConditionalBuffFunction { condition = new PositionThresholdCondition() });
-                EditorUtility.SetDirty(_data);
-            }
-            if (GUILayout.Button("+ 식량 생성 버프 추가", GUILayout.Width(150f)))
-            {
-                Undo.RecordObject(_data, "Add Food Generator");
-                _data.functions.Add(new FoodGeneratorFunction());
-                EditorUtility.SetDirty(_data);
-            }
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("단순 버프"), false, () => AddFunction(new SimpleBuffFunction()));
+            menu.AddItem(new GUIContent("조건부 버프"), false, () => AddFunction(new ConditionalBuffFunction { condition = new PositionThresholdCondition() }));
+            menu.AddItem(new GUIContent("식량 생성 버프"), false, () => AddFunction(new FoodGeneratorFunction()));
+            menu.ShowAsContext();
         }
+    }
+
+    private void AddFunction(ITotemFunction fn)
+    {
+        Undo.RecordObject(_data, "Add Buff");
+        _data.functions.Add(fn);
+        EditorUtility.SetDirty(_data);
     }
 
     private void DrawFunctionEntry(int index)
@@ -306,14 +300,13 @@ public class TotemEditorWindow : EditorWindow
         for (int i = 0; i < ranges.Count; i++)
             DrawRangeEntry(ranges, i);
 
-        using (new EditorGUILayout.HorizontalScope())
+        if (GUILayout.Button("+ 범위 추가 ▾", GUILayout.Width(140f)))
         {
-            if (GUILayout.Button("+ 토템 기준 지정", GUILayout.Width(120f)))
-                AddRange(ranges, new TotemRelativeOffsetRange());
-            if (GUILayout.Button("+ 고정", GUILayout.Width(70f)))
-                AddRange(ranges, new FixedOffsetRange());
-            if (GUILayout.Button("+ 방향", GUILayout.Width(70f)))
-                AddRange(ranges, new DirectionalLineRange());
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("토템 기준 지정"), false, () => AddRange(ranges, new TotemRelativeOffsetRange()));
+            menu.AddItem(new GUIContent("고정"), false, () => AddRange(ranges, new FixedOffsetRange()));
+            menu.AddItem(new GUIContent("특정 방향으로 쭉"), false, () => AddRange(ranges, new DirectionalLineRange()));
+            menu.ShowAsContext();
         }
     }
 

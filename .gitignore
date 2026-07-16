@@ -94,3 +94,6 @@ Assets/GEMINI.md.meta
 /docs
 /.agent_orchestrator
 /KeyStore
+
+# HotReload (local dev tool, per-user)
+/Packages/com.singularitygroup.hotreload/
