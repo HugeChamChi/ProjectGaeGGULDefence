@@ -9,7 +9,10 @@ using UnityEngine.UI;
 /// </summary>
 public class UI_GachaProduction : MonoBehaviour
 {
-    [Header("Production Objects")]
+    [Header("Cutscene")]
+    [SerializeField] private GachaCutsceneDirector cutsceneDirector; // 물가/개구리 실루엣 시네마틱 연출
+
+    [Header("Production Objects (Fallback)")]
     [SerializeField] private RectTransform productionRoot; // 연출용 루트 오브젝트
     [SerializeField] private Image gachaBoxImage;         // 흔들릴 상자 이미지
     [SerializeField] private GameObject effectLight;      // 연출 중 활성화될 빛 이펙트
@@ -24,6 +27,13 @@ public class UI_GachaProduction : MonoBehaviour
     /// </summary>
     public async UniTask PlayAsync(ICharacterData[] results)
     {
+        if (cutsceneDirector != null)
+        {
+            await cutsceneDirector.PlayAsync();
+            return;
+        }
+
+        // Fallback: 컷씬이 아직 씬에 연결되지 않은 경우 기존 placeholder 연출 사용
         if (productionRoot != null) productionRoot.gameObject.SetActive(true);
         if (effectLight != null) effectLight.SetActive(false);
 

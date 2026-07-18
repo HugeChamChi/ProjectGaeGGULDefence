@@ -4,27 +4,37 @@ using Cysharp.Threading.Tasks;
 public class UI_GachaPresenter
 {
     private readonly UI_GachaPanel _view;
-    private readonly GachaSystem<ICharacterData> _gachaSystem;
+    private GachaSystem<ICharacterData> _gachaSystem;
 
     public UI_GachaPresenter(UI_GachaPanel view)
     {
         _view = view;
-        _gachaSystem = Table.Gacha.CharacterGacha;
     }
 
-    public void Initialize()
+    public async UniTask Initialize()
     {
+        if (_gachaSystem == null)
+        {
+            // 백엔드/테이블 초기화가 끝나기 전에 가챠 패널이 열릴 수 있으므로 대기
+            await UniTask.WaitUntil(() => Table.Gacha.CharacterGacha != null);
+            _gachaSystem = Table.Gacha.CharacterGacha;
+        }
+
         RefreshButtons();
     }
 
     public void RefreshButtons()
     {
+        if (_gachaSystem == null) return;
+
         _view.UpdateGachaButton(_gachaSystem.Cost, 1);
         _view.UpdateGachaButton(_gachaSystem.Cost * 10, 10);
     }
 
     public async UniTask StartGachaCycle(int count)
     {
+        if (_gachaSystem == null) return;
+
         _view.SetInteractable(false);
 
         if (!Player.PlayerData.SpendDiamond(_gachaSystem.Cost * count))

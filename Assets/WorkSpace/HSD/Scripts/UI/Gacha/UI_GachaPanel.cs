@@ -27,7 +27,7 @@ public class UI_GachaPanel : UI_Base
         Player.PlayerData.OnUpdateUI += RefreshUI;
         chanceButton.onClick.AddListener(ShowChancePopup);
         
-        _presenter.Initialize();
+        _presenter.Initialize().Forget();
         if (production != null) production.ResetProduction();
     }
 
