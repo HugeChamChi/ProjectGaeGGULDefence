@@ -32,6 +32,8 @@ public class UnitData : ScriptableObject, ILoadableAsset
 
     [Header("Skill")]
     public string skillName;    // 스킬 이름
+    [Tooltip("스킬 발동 방식을 데이터로 정의. 비워두면 기존 GetSkillDamage()/GetSkillShotCount() 오버라이드 방식을 사용한다.")]
+    public SkillData skillData;
 
     [Header("Economy")]
     public float foodProduction; // 초당 식량 생산량

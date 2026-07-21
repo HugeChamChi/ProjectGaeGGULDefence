@@ -179,11 +179,19 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            // 0 = 보스 투사체를 쏘지 않는 스킬(예: 사제의 아군 버프 스킬). 기존 유닛은 모두
-            // 기본값 1 이상을 반환하므로 이 변경으로 동작이 바뀌지 않는다.
-            int shotCount = Mathf.Max(0, _unit.GetSkillShotCount());
-            for (int i = 0; i < shotCount; i++)
-                LaunchProjectile(_unit.GetSkillDamage());
+            var skillAction = _unit.unitData?.skillData?.action;
+            if (skillAction != null)
+            {
+                skillAction.Execute(_unit, this);
+            }
+            else
+            {
+                // 0 = 보스 투사체를 쏘지 않는 스킬(예: 사제의 아군 버프 스킬). 기존 유닛은 모두
+                // 기본값 1 이상을 반환하므로 이 변경으로 동작이 바뀌지 않는다.
+                int shotCount = Mathf.Max(0, _unit.GetSkillShotCount());
+                for (int i = 0; i < shotCount; i++)
+                    LaunchProjectile(_unit.GetSkillDamage());
+            }
         }
 
         var lu = _deps?.LevelUpManager;
