@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// 전진배치 토템 — 그리드 최상단 행(y=0) 전체 칸의 유닛에게만 공격력 버프.
 /// 토템 배치 위치 및 회전과 무관하게 항상 최상단 가로 한 줄(0,0 ~ N,0)에 고정 적용.
 ///
-/// 버프 방식: 전역(AttackMultiplier)이 아닌 셀별 보너스(TotemCellAttackBonus).
+/// 버프 방식: 전역(AttackMultiplier)이 아닌 셀별 보너스(GetTotemCellBonus(StatKind.AttackPercent)).
 ///   → 최상단 줄에 있는 유닛만 공격력 상승. (스펙: 0,0 / 1,0 / 2,0 / 3,0 / 4,0 / 5,0)
 /// 장판: 빨강(공격 버프).
 ///
@@ -40,14 +40,14 @@ public class TotemAttackTopBuff : TotemBase
     {
         if (totemData == null) return;
 
-        float amount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float amount = totemData.GetSimpleAmount(StatKind.AttackPercent);
         if (amount <= 0f) return;
 
         float efficiency = 1f + (_totemBuffManager != null ? _totemBuffManager.TotemEfficiencyBonus : 0f);
 
         foreach (var cell in GetAffectedCells())
         {
-            cell.AddTotemCellAttackBonus(amount * efficiency);
+            cell.AddTotemCellBonus(StatKind.AttackPercent, amount * efficiency);
             cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
         }
     }

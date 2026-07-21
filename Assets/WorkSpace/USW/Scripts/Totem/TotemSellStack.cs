@@ -38,7 +38,7 @@ public class TotemSellStack : TotemBase
     {
         if (totemData == null) return;
 
-        float increment = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float increment = totemData.GetSimpleAmount(StatKind.AttackPercent);
         _stackCount++;
         _appliedAmount += increment;
         _totemBuffManager.AddAttackBuff(increment);

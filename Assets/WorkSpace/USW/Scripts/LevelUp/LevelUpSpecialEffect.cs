@@ -43,4 +43,7 @@ public enum LevelUpSpecialEffect
     WizardPhysicalMode,         // 3055: 마법사 스킬 제거, 공격력+공격속도 primaryValue%
     UnemployedFoodNegate,       // 3056: 무직 식량 획득 제거, 스킬 풀마다 공격력+primaryValue
     ProjectileSizeScalesAtk,    // 3051: 투사체 크기 10%당 공격력 primaryValue% 증가
+
+    // ── 파티 전용 선택지 ─────────────────────────────────────
+    GrantCourageBuff,           // 9001~9004: "용기" 버프 specialValue스택 전체 유닛에게 부여 (1스택=투사체 크기 10%)
 }

@@ -6,7 +6,7 @@ using System;
 [Serializable]
 public class SimpleBuffFunction : ITotemFunction
 {
-    public TotemBuffKind kind;
+    public StatKind kind;
     public float amount;
 
     public void Apply(TotemBase totem, GridCell cell, TotemBuffManager buffManager)
@@ -14,33 +14,24 @@ public class SimpleBuffFunction : ITotemFunction
         if (cell == null || amount <= 0f) return;
 
         float efficiency = 1f + (buffManager != null ? buffManager.TotemEfficiencyBonus : 0f);
+        float appliedAmount = kind == StatKind.FoodSpeed ? amount : amount * efficiency;
 
         switch (kind)
         {
-            case TotemBuffKind.Attack:
+            case StatKind.AttackPercent:
+            case StatKind.CritChance:
+            case StatKind.CritDamage:
                 cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
-                cell.AddTotemCellAttackBonus(amount * efficiency);
                 break;
-            case TotemBuffKind.Speed:
+            case StatKind.Speed:
                 cell.SetBuffFlags(atk: cell.HasAttackBuff, spd: true);
-                cell.AddTotemCellSpeedBonus(amount * efficiency);
                 break;
-            case TotemBuffKind.FoodSpeed:
+            case StatKind.FoodSpeed:
+            case StatKind.FoodAmount:
                 cell.SetFoodBuff(true);
-                cell.AddTotemCellFoodSpeedBonus(amount);
-                break;
-            case TotemBuffKind.FoodAmount:
-                cell.SetFoodBuff(true);
-                cell.AddTotemCellFoodAmountBonus(amount * efficiency);
-                break;
-            case TotemBuffKind.CritChance:
-                cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
-                cell.AddTotemCellCritChanceBonus(amount * efficiency);
-                break;
-            case TotemBuffKind.CritDamage:
-                cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
-                cell.AddTotemCellCritDamageBonus(amount * efficiency);
                 break;
         }
+
+        cell.AddTotemCellBonus(kind, appliedAmount);
     }
 }

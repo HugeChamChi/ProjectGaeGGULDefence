@@ -13,6 +13,9 @@ public class ProjectilePool : MonoBehaviour
     [Tooltip("null이면 원형 Image를 코드로 자동 생성")]
     [SerializeField] private Projectile _prefab;
 
+    [Tooltip("Launch()에 ProjectileData를 지정하지 않았을 때 사용할 기본 이동/이펙트 구성")]
+    [SerializeField] private ProjectileData _defaultData;
+
     [SerializeField] private Color   _projectileColor = new Color(1f, 0.45f, 0.1f, 0.95f);
     [SerializeField] private float   _projectileSize  = 22f;
     [SerializeField] private int     _initialPoolSize = 20;
@@ -36,15 +39,20 @@ public class ProjectilePool : MonoBehaviour
 
     // ── 외부 API ──────────────────────────────────────────────────
 
-    /// <summary>from → to 로 투사체 발사. 도착 후 onHitCallback 호출 및 자동 풀 반환.</summary>
-    public void Launch(Vector3 from, Vector3 to, System.Action onHitCallback = null)
+    /// <summary>from → to 로 투사체 발사(기본 구성 사용). 도착 후 onHitCallback 호출 및 자동 풀 반환.</summary>
+    public void Launch(Vector3 from, Vector3 to, System.Action onHitCallback = null, UnitBase sourceUnit = null)
+        => Launch(from, to, _defaultData, onHitCallback, sourceUnit);
+
+    /// <summary>from → to 로 투사체 발사(지정 ProjectileData 사용). 도착 후 onHitCallback 호출 및 자동 풀 반환.
+    /// sourceUnit을 전달하면 발사 유닛의 BuffController(예: "용기" 버프)로 인한 투사체 크기 증가분도 함께 반영된다.</summary>
+    public void Launch(Vector3 from, Vector3 to, ProjectileData data, System.Action onHitCallback = null, UnitBase sourceUnit = null)
     {
         var p = _pool.Get();
-        p.Launch(from, to, proj => 
+        p.Launch(from, to, proj =>
         {
             onHitCallback?.Invoke();
             ReturnToPool(proj);
-        });
+        }, data, sourceUnit);
     }
 
     // ── 내부 ──────────────────────────────────────────────────────

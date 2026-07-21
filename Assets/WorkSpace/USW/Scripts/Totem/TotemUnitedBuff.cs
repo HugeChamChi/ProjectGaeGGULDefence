@@ -34,8 +34,8 @@ public class TotemUnitedBuff : TotemBase
             return;
         }
 
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
             _totemBuffManager.AddAttackBuff(attackAmount);
@@ -55,8 +55,8 @@ public class TotemUnitedBuff : TotemBase
         if (!_buffApplied) return;
         _buffApplied = false;
 
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
             _totemBuffManager.RemoveAttackBuff(attackAmount);

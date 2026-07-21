@@ -7,8 +7,9 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private Button btn_Skill;
-    [SerializeField] private Image img_CooldownFill; 
+    [SerializeField] private Image img_CooldownFill;
     [SerializeField] private TMP_Text txt_Cooldown;
+    [SerializeField] private Image img_Icon;
 
     private UI_ChiefSkillPresenter _presenter;
 
@@ -97,6 +98,14 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
         if (txt_Cooldown != null)
         {
             txt_Cooldown.text = text;
+        }
+    }
+
+    public void SetIcon(Sprite icon)
+    {
+        if (img_Icon != null && icon != null)
+        {
+            img_Icon.sprite = icon;
         }
     }
 

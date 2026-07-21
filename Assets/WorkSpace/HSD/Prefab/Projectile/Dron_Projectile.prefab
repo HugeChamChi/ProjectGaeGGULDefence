@@ -94,14 +94,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2614372103386353376}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b3ed363022d2a249bf34a166842b98f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _hitEffectPrefab: {fileID: 4724403908840859334, guid: 188f42b66f3e9cc4e83024322f7fb2f3,
-    type: 3}
-  _hitEffectDuration: 0.5
-  _startSpeed: 3
-  _maxSpeed: 10
-  _acceleration: 15
-  _turnSpeed: 5
-  _randomAngleMax: 60
+  m_Script: {fileID: 11500000, guid: 778858fc40866644f9b0e354aaa74e9c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _data: {fileID: 11400000, guid: 81830e9ce3f2d9c089410117fe4be3ed, type: 2}

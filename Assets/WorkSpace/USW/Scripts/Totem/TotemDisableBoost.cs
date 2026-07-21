@@ -34,8 +34,8 @@ public class TotemDisableBoost : TotemBase
     {
         if (CurrentCell == null || totemData == null) return;
 
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         // effectRange → 공격력 또는 공격속도 증폭 (셀 단위)
         foreach (var cell in totemData.GetEffectCells(this, _gridManager))

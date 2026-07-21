@@ -1606,9 +1606,10 @@ MonoBehaviour:
   turnDuration: 0.4
   frogCamHeight: -1.5
   defaultFov: 25
+  bubbleZoomBlendDuration: 0.5
   bubbleZoomHoldDuration: 0
   bubbleZoomCamHeight: -1
-  bubbleZoomDistance: 0
+  bubbleZoomFov: 40
   leapAnticipationDuration: 0
   leapJumpPower: 300
   leapDuration: 0.7

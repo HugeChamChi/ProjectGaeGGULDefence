@@ -30,7 +30,8 @@ public class UnitFactory : MonoBehaviour
             BossManager = _resolver.Resolve<BossManager>(),
             ProjectileManager = _resolver.Resolve<ProjectilePool>(),
             AudioManager = _resolver.Resolve<AudioManager>(),
-            CurrencyManager = _resolver.Resolve<CurrencyManager>()
+            CurrencyManager = _resolver.Resolve<CurrencyManager>(),
+            BuffManager = _resolver.Resolve<BuffManager>()
         };
         if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
         {

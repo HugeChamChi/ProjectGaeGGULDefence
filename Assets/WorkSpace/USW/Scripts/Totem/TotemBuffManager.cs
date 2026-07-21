@@ -63,6 +63,23 @@ public class TotemBuffManager : MonoBehaviour
     private float _totemProjectileSizeBonus = 0f;
     public float ProjectileSizeMultiplier => Mathf.Max(0.1f, 1f + _totemProjectileSizeBonus);
 
+    /// <summary>kind에 해당하는 토템/레벨업 전역 가산 보너스를 반환한다.</summary>
+    public float GetGlobalStatBonus(StatKind kind)
+    {
+        switch (kind)
+        {
+            case StatKind.AttackPercent: return _totemAttackBonus * (1f + _totemEfficiencyBonus) + _levelUpAttackBonus;
+            case StatKind.Speed: return _totemSpeedBonus * (1f + _totemEfficiencyBonus) + _levelUpSpeedBonus;
+            case StatKind.FoodSpeed: return _totemFoodSpeedBonus;
+            case StatKind.FoodAmount: return _totemFoodAmountBonus * (1f + _totemEfficiencyBonus) - _debuffFoodAmount;
+            case StatKind.CritChance: return _totemCritChanceBonus * (1f + _totemEfficiencyBonus);
+            case StatKind.CritDamage: return _totemCritDamageBonus * (1f + _totemEfficiencyBonus);
+            case StatKind.GaugeSpeed: return _totemGaugeSpeedBonus;
+            case StatKind.ProjectileSize: return _totemProjectileSizeBonus;
+            default: return 0f;
+        }
+    }
+
     // ── 토템 등록/해제 ─────────────────────────────────────────
 
     public void RegisterTotem(TotemBase totem)

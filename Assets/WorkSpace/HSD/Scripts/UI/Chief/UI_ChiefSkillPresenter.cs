@@ -14,6 +14,7 @@ public class UI_ChiefSkillPresenter
     public void SetChiefUnit(ChiefUnit chiefUnit)
     {
         _chiefUnit = chiefUnit;
+        _view.SetIcon(_chiefUnit != null ? _chiefUnit.unitData?.icon : null);
     }
 
     public void OnUpdate(float deltaTime)

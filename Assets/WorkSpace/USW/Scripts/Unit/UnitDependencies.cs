@@ -14,4 +14,5 @@ public class UnitDependencies
     public ProjectilePool ProjectileManager { get; set; }
     public AudioManager AudioManager { get; set; }
     public CurrencyManager CurrencyManager { get; set; }
+    public BuffManager BuffManager { get; set; }
 }

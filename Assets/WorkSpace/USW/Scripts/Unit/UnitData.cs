@@ -43,6 +43,10 @@ public class UnitData : ScriptableObject, ILoadableAsset
     [Header("Drone")]
     public int maxDroneCount;
 
+    [Header("패시브")]
+    [Tooltip("이 유닛 자신에게 항상 적용되는 패시브. 파티 리더(족장)로 배치되면 파티의 모든 유닛에게도 적용된다.")]
+    public PassiveData passive;
+
 
 
     /// <summary>

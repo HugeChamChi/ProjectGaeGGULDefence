@@ -35,6 +35,8 @@ public class LevelUpManager : MonoBehaviour
             else
                 _gameDataManager.OnLoaded += SyncStatsWithSheet;
         }
+
+        RebuildEffectivePool();
     }
 
     [Inject] private GridManager _gridManager;
@@ -45,16 +47,37 @@ public class LevelUpManager : MonoBehaviour
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GameDataManager _gameDataManager;
+    [Inject] private BuffManager _buffManager;
 
     [SerializeField] private LevelUpData[] levelUpPool;
+
+    [Header("파티 전용 선택지 연동")]
+    [SerializeField] private BuffData courageBuffData;
 
     public event System.Action<System.Action> OnTotemSelectionRequested;
     public event System.Action OnChieftainBuffChanged;
 
     public IEnumerable<int> ChosenIds => _chosenIds;
-    public LevelUpData[] LevelUpPool => levelUpPool;
+    public LevelUpData[] LevelUpPool => _effectivePool;
 
     private readonly HashSet<int> _chosenIds = new();
+
+    // levelUpPool(공용 풀) + 현재 선택된 파티의 exclusiveLevelUpChoices(파티 전용 풀)를 합친 실제 사용 풀.
+    private LevelUpData[] _effectivePool;
+
+    private void RebuildEffectivePool()
+    {
+        var exclusive = GlobalData.SelectedParty?.exclusiveLevelUpChoices;
+        if (exclusive == null || exclusive.Count == 0)
+        {
+            _effectivePool = levelUpPool;
+            return;
+        }
+
+        var combined = new List<LevelUpData>(levelUpPool);
+        combined.AddRange(exclusive);
+        _effectivePool = combined.ToArray();
+    }
 
     private void SyncStatsWithSheet()
     {
@@ -77,6 +100,8 @@ public class LevelUpManager : MonoBehaviour
             
             levelUpPool[i] = clone;
         }
+
+        RebuildEffectivePool();
     }
 
     // ── 기본 스탯 ──────────────────────────────────────────────
@@ -177,7 +202,9 @@ public class LevelUpManager : MonoBehaviour
 
     public List<LevelUpData> GetRandomChoices(int count = 3)
     {
-        if (levelUpPool == null || levelUpPool.Length == 0)
+        if (_effectivePool == null) RebuildEffectivePool();
+
+        if (_effectivePool == null || _effectivePool.Length == 0)
         {
             Debug.LogError("LevelUpManager: levelUpPool이 비어있습니다.");
             return new List<LevelUpData>();
@@ -186,7 +213,7 @@ public class LevelUpManager : MonoBehaviour
         var presentTribes = GetPresentTribes();
         var filtered = new List<LevelUpData>();
 
-        foreach (var data in levelUpPool)
+        foreach (var data in _effectivePool)
         {
             if (data != null && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
@@ -447,6 +474,10 @@ public class LevelUpManager : MonoBehaviour
                 HasProjectileSizeScalesAtk = false;
                 ProjectileSizeAtkPerUnit = 0f;
                 break;
+
+            case LevelUpSpecialEffect.GrantCourageBuff:
+                _buffManager?.RemoveGlobalBuff(courageBuffData);
+                break;
         }
     }
 
@@ -673,6 +704,11 @@ public class LevelUpManager : MonoBehaviour
                 HasProjectileSizeScalesAtk = true;
                 ProjectileSizeAtkPerUnit   = data.primaryValue / 100f;
                 break;
+
+            case LevelUpSpecialEffect.GrantCourageBuff:
+                for (int i = 0; i < (int)data.specialValue; i++)
+                    _buffManager?.ApplyGlobalBuff(courageBuffData, null);
+                break;
         }
     }
 
@@ -710,11 +746,16 @@ public class LevelUpManager : MonoBehaviour
 
     // ── 투사체 크기 → 공격력 스케일 계산 ─────────────────────
 
-    /// <summary>현재 투사체 크기 배율 기준 공격력 보너스 비율 반환</summary>
-    public float GetProjectileSizeAtkBonus()
+    /// <summary>
+    /// 현재 투사체 크기 배율 기준 공격력 보너스 비율 반환.
+    /// unitProjectileSizeMultiplier: 유닛 자신의 BuffController(예: "용기" 버프)로 인한
+    /// 투사체 크기 배율. 전달하지 않으면 기존과 동일하게 전역(토템/레벨업) 배율만 반영한다.
+    /// </summary>
+    public float GetProjectileSizeAtkBonus(float unitProjectileSizeMultiplier = 1f)
     {
         if (!HasProjectileSizeScalesAtk) return 0f;
-        float sizeBonus = _totemBuffManager.ProjectileSizeMultiplier - 1f; // 0 이상
+        float combinedMultiplier = _totemBuffManager.ProjectileSizeMultiplier * unitProjectileSizeMultiplier;
+        float sizeBonus = combinedMultiplier - 1f; // 0 이상
         return Mathf.Max(0f, sizeBonus / 0.1f * ProjectileSizeAtkPerUnit);
     }
 }

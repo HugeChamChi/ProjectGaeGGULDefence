@@ -31,38 +31,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: c539adeb8c5bf7b408296beb77a05d74, type: 3}
   description: "\uACF5\uACA9\uB825 10%, \uACF5\uACA9 \uC18D\uB3C4 10%, \uCFE8\uD0C0\uC784
     10% \uAC10\uC18C"
-  attackBuffAmount: 0.1
-  speedBuffAmount: 0.1
-  foodSpeedBuffAmount: 0
-  foodAmountBuffAmount: 0
-  critDamageBuffAmount: 0
-  critChanceBuffAmount: 0
-  foodGenInterval: 10
-  effectRange:
-  - {x: -3, y: -2}
-  - {x: -3, y: -1}
-  - {x: -3, y: 0}
-  - {x: -3, y: 1}
-  - {x: -2, y: -2}
-  - {x: -2, y: -1}
-  - {x: -2, y: 0}
-  - {x: -2, y: 1}
-  - {x: -1, y: -2}
-  - {x: -1, y: -1}
-  - {x: -1, y: 0}
-  - {x: -1, y: 1}
-  - {x: 0, y: -2}
-  - {x: 0, y: -1}
-  - {x: 0, y: 1}
-  - {x: 1, y: -2}
-  - {x: 1, y: -1}
-  - {x: 1, y: 0}
-  - {x: 1, y: 1}
-  - {x: 2, y: -2}
-  - {x: 2, y: -1}
-  - {x: 2, y: 0}
-  - {x: 2, y: 1}
-  attackDisabledRange: []
   functions:
   - rid: 7076784764168962081
   - rid: 7076784764168962082

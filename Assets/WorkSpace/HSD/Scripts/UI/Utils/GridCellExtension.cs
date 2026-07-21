@@ -31,7 +31,7 @@ namespace GaeGGUL.Extension
             if (cell == null || cell.Model == null) return 1f;
             var model = cell.Model;
             float globalMult = TotemManager != null ? TotemManager.AttackMultiplier : 1f;
-            float cellBonus = model.TotemCellAttackBonus;
+            float cellBonus = model.GetTotemCellBonus(StatKind.AttackPercent);
             return (model.NullifyDamageDebuff ? 1f : model.DamageModifier) * model.TotemAttackModifier * (globalMult + cellBonus);
         }
 
@@ -40,7 +40,7 @@ namespace GaeGGUL.Extension
             if (cell == null || cell.Model == null) return 1f;
             var model = cell.Model;
             float globalMult = TotemManager != null ? TotemManager.SpeedMultiplier : 1f;
-            float cellBonusMult = Mathf.Max(0.1f, 1f - model.TotemCellSpeedBonus);
+            float cellBonusMult = Mathf.Max(0.1f, 1f - model.GetTotemCellBonus(StatKind.Speed));
             return model.SpeedModifier * model.TotemSpeedModifier * globalMult * cellBonusMult;
         }
 

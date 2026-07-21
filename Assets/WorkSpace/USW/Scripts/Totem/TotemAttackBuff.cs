@@ -46,10 +46,10 @@ public class TotemAttackBuff : TotemBase
         foreach (var cell in GetAffectedCells())
         {
             cell.SetBuffFlags(atk: true, spd: cell.HasSpeedBuff);
-            float amount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
+            float amount = totemData.GetSimpleAmount(StatKind.AttackPercent);
             if (amount > 0f)
             {
-                cell.AddTotemCellAttackBonus(amount * efficiency);
+                cell.AddTotemCellBonus(StatKind.AttackPercent, amount * efficiency);
             }
         }
     }

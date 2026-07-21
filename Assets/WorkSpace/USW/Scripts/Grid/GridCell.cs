@@ -108,12 +108,7 @@ public class GridCell : MonoBehaviour
     public void SetTotemSpeedModifier(float value)   => Model.SetTotemSpeedModifier(value);
     public void SetNullifyDamageDebuff(bool value)   => Model.SetNullifyDamageDebuff(value);
 
-    public void AddTotemCellAttackBonus(float v)     => Model.AddTotemCellAttackBonus(v);
-    public void AddTotemCellSpeedBonus(float v)      => Model.AddTotemCellSpeedBonus(v);
-    public void AddTotemCellFoodSpeedBonus(float v)  => Model.AddTotemCellFoodSpeedBonus(v);
-    public void AddTotemCellFoodAmountBonus(float v) => Model.AddTotemCellFoodAmountBonus(v);
-    public void AddTotemCellCritChanceBonus(float v) => Model.AddTotemCellCritChanceBonus(v);
-    public void AddTotemCellCritDamageBonus(float v) => Model.AddTotemCellCritDamageBonus(v);
+    public void AddTotemCellBonus(StatKind kind, float v) => Model.AddTotemCellBonus(kind, v);
 
     /// <summary>RebuildCellBuffFlags()에서 토템 전용 효과 일괄 초기화 시 호출</summary>
     public void ClearTotemEffects()                  => Model.ClearTotemEffects();

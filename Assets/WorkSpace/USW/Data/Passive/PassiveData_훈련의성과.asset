@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5175c1308ec0b65468ba2800ec7fb886, type: 3}
+  m_Name: "PassiveData_\uD6C8\uB828\uC758\uC131\uACFC"
+  m_EditorClassIdentifier: 
+  passiveId: 1
+  passiveName: "\uD6C8\uB828\uC758 \uC131\uACFC"
+  description: "\uBAA8\uB4E0 \uC720\uB2DB\uC774 \uD22C\uC0AC\uCCB4 \uD06C\uAE30\uC5D0
+    \uB530\uB77C \uB370\uBBF8\uC9C0\uAC00 \uC99D\uAC00\uD569\uB2C8\uB2E4.\n\uD06C\uAE30
+    \uC99D\uAC00 10% \uB2F9 \uB370\uBBF8\uC9C0\uAC00 1% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  iconAddress: 
+  icon: {fileID: 0}
+  selfEffects: []
+  partyEffects:
+  - rid: 7076784972529664003
+  references:
+    version: 2
+    RefIds:
+    - rid: 7076784972529664003
+      type: {class: StatScalingPassiveEffect, ns: , asm: Assembly-CSharp}
+      data:
+        sourceStat: 6
+        targetStat: 0
+        sourceStepPercent: 10
+        targetBonusPerStep: 1

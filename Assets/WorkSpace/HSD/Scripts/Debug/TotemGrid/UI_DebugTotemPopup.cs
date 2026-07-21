@@ -29,8 +29,8 @@ namespace HSD.InGameDebug
             float rowAtkBonus = (rowAtkMult - 1f) * 100f;
             float rowSpdBonus = (rowSpdMult - 1f) * 100f;
 
-            float totemAtkBonus = model.TotemCellAttackBonus * 100f;
-            float totemSpdBonus = model.TotemCellSpeedBonus * 100f;
+            float totemAtkBonus = model.GetTotemCellBonus(StatKind.AttackPercent) * 100f;
+            float totemSpdBonus = model.GetTotemCellBonus(StatKind.Speed) * 100f;
 
             float totalAtkBonus = totemAtkBonus + rowAtkBonus;
             float totalSpdBonus = totemSpdBonus + rowSpdBonus;
@@ -39,10 +39,14 @@ namespace HSD.InGameDebug
             info += $"<color=#00ffff>Attack Bonus:</color> {totalAtkBonus:+0.##;-0.##;0}% <color=#aaaaaa>(Totem: {totemAtkBonus:+0.##;-0.##;0}%, Row: {rowAtkBonus:+0.##;-0.##;0}%)</color>\n";
             info += $"<color=#00ffff>Speed Bonus:</color> {totalSpdBonus:+0.##;-0.##;0}% <color=#aaaaaa>(Totem: {totemSpdBonus:+0.##;-0.##;0}%, Row: {rowSpdBonus:+0.##;-0.##;0}%)</color>\n";
             
-            if (model.TotemCellFoodSpeedBonus != 0) info += $"<color=#00ffff>Food Speed Bonus:</color> {model.TotemCellFoodSpeedBonus * 100f:+0.##;-0.##;0}%\n";
-            if (model.TotemCellFoodAmountBonus != 0) info += $"<color=#00ffff>Food Amount Bonus:</color> {model.TotemCellFoodAmountBonus * 100f:+0.##;-0.##;0}%\n";
-            if (model.TotemCellCritChanceBonus != 0) info += $"<color=#00ffff>Crit Chance Bonus:</color> {model.TotemCellCritChanceBonus * 100f:+0.##;-0.##;0}%\n";
-            if (model.TotemCellCritDamageBonus != 0) info += $"<color=#00ffff>Crit Damage Bonus:</color> {model.TotemCellCritDamageBonus * 100f:+0.##;-0.##;0}%\n";
+            float totemFoodSpeedBonus = model.GetTotemCellBonus(StatKind.FoodSpeed);
+            float totemFoodAmountBonus = model.GetTotemCellBonus(StatKind.FoodAmount);
+            float totemCritChanceBonus = model.GetTotemCellBonus(StatKind.CritChance);
+            float totemCritDamageBonus = model.GetTotemCellBonus(StatKind.CritDamage);
+            if (totemFoodSpeedBonus != 0) info += $"<color=#00ffff>Food Speed Bonus:</color> {totemFoodSpeedBonus * 100f:+0.##;-0.##;0}%\n";
+            if (totemFoodAmountBonus != 0) info += $"<color=#00ffff>Food Amount Bonus:</color> {totemFoodAmountBonus * 100f:+0.##;-0.##;0}%\n";
+            if (totemCritChanceBonus != 0) info += $"<color=#00ffff>Crit Chance Bonus:</color> {totemCritChanceBonus * 100f:+0.##;-0.##;0}%\n";
+            if (totemCritDamageBonus != 0) info += $"<color=#00ffff>Crit Damage Bonus:</color> {totemCritDamageBonus * 100f:+0.##;-0.##;0}%\n";
 
             if (model.TotemAttackDisabled) info += $"\n<color=#ff0000>[Status] Attack Disabled by Totem</color>";
             if (model.TotemAttackModifier != 1f) info += $"\n<color=#ff00ff>Attack Multiplier:</color> x{model.TotemAttackModifier:0.##}";

@@ -26,6 +26,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<BossManager>();
         builder.RegisterComponentInHierarchy<TotemSpawner>();
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
+        builder.RegisterComponentInHierarchy<BuffManager>();
 
         builder.RegisterComponentInHierarchy<ChieftainSpawner>();
 

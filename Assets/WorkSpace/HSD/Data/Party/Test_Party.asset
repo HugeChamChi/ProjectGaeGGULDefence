@@ -15,19 +15,13 @@ MonoBehaviour:
   partyName: "\uD14C\uC2A4\uD2B8 \uB371"
   isUnlock: 1
   unitDataList:
-  - {fileID: 11400000, guid: c3bb090a590c87248abc5561ef2833cd, type: 2}
-  - {fileID: 11400000, guid: a3171cc8ad3d7124d8803d4720d5efaa, type: 2}
-  - {fileID: 11400000, guid: 921ecd073721bb44b8ae2585b6f1ef20, type: 2}
-  - {fileID: 11400000, guid: f1c73a5d331cbe54391d031dab33ffec, type: 2}
-  - {fileID: 11400000, guid: 2afbc4a8555572b4782de99875470d47, type: 2}
-  - {fileID: 11400000, guid: 6fda0ad9b6fb4954a94655cb62c78cc5, type: 2}
-  - {fileID: 11400000, guid: 450c68fb72582564b9a9cac8dfc39910, type: 2}
-  - {fileID: 11400000, guid: 7e0134e61fee5754aa24846fed555350, type: 2}
-  - {fileID: 11400000, guid: 059e292697c373547a35058aeb5133f0, type: 2}
-  - {fileID: 11400000, guid: 883c4b3a0360bd842aa7536fdbd81abb, type: 2}
-  - {fileID: 11400000, guid: 65429e12034a42844bc4faed04d1975b, type: 2}
-  - {fileID: 11400000, guid: 91b64b70c62c630499f9a53d80a68a7a, type: 2}
-  - {fileID: 11400000, guid: 438f1da2acc20044b80eeefc7332a02c, type: 2}
-  - {fileID: 11400000, guid: 7472622295d3c4b429c3cc6924913d94, type: 2}
-  - {fileID: 11400000, guid: 76d33db32cb170c44a7441a5c33f8023, type: 2}
-  - {fileID: 11400000, guid: b24cb10852489bd45a2382933cf47f63, type: 2}
+  - {fileID: 11400000, guid: 9be061eeef3ac984b803199acd97d628, type: 2}
+  - {fileID: 11400000, guid: 054cf655cfdd39241a886de8c64d6d3f, type: 2}
+  - {fileID: 11400000, guid: c1adfb35d73d9714db864be394eeabf4, type: 2}
+  - {fileID: 11400000, guid: 55f2fe0b1aefd77448fc7e110327b990, type: 2}
+  chieftainData: {fileID: 11400000, guid: c5c2b6131e43e584aba669f17e1df816, type: 2}
+  exclusiveLevelUpChoices:
+  - {fileID: 11400000, guid: bfe59e3060fc74fe8305c10b5665d7ea, type: 2}
+  - {fileID: 11400000, guid: d5d10b654ef8d7934bc3725d2d6c839f, type: 2}
+  - {fileID: 11400000, guid: a3e171d4f666bc324e54ce8d4e288cf2, type: 2}
+  - {fileID: 11400000, guid: 6c93dd4b2c4f4585acdab8e8cc6521fa, type: 2}

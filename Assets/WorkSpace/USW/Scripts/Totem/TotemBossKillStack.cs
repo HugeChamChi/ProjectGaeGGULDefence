@@ -46,8 +46,8 @@ public class TotemBossKillStack : TotemBase
 
         _killCount++;
 
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
         {
@@ -75,8 +75,8 @@ public class TotemBossKillStack : TotemBase
     {
         if (CurrentCell == null || totemData == null) return;
 
-        bool hasAtk = totemData.GetSimpleAmount(TotemBuffKind.Attack) > 0f;
-        bool hasSpd = totemData.GetSimpleAmount(TotemBuffKind.Speed)  > 0f;
+        bool hasAtk = totemData.GetSimpleAmount(StatKind.AttackPercent) > 0f;
+        bool hasSpd = totemData.GetSimpleAmount(StatKind.Speed)  > 0f;
 
         foreach (var cell in totemData.GetEffectCells(this, _gridManager))
         {

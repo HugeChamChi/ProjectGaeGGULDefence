@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.annulusgames.alchemy": "https://github.com/annulusgames/Alchemy.git?path=/Alchemy/Assets/Alchemy",
     "com.gamelovers.mcp-unity": "https://github.com/CoderGamester/mcp-unity.git",
     "com.unity.addressables": "1.22.3",
     "com.unity.cinemachine": "2.10.7",

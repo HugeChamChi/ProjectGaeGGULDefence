@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
+  m_Name: ProjectileData_DroneMissile
+  m_EditorClassIdentifier:
+  movement:
+    rid: 7858129984794406655
+  fireEffect:
+    rid: -2
+  hitEffect:
+    rid: 3762085238544798792
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 7858129984794406655
+      type: {class: GuidedMissileMovement, ns: , asm: Assembly-CSharp}
+      data:
+        startSpeed: 3
+        maxSpeed: 10
+        acceleration: 15
+        turnSpeed: 5
+        randomAngleMax: 60
+    - rid: 3762085238544798792
+      type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
+      data:
+        effectPrefab: {fileID: 4724403908840859334, guid: 188f42b66f3e9cc4e83024322f7fb2f3,
+          type: 3}
+        duration: 0.5
+        sfxName: 05.Drone_Attack_Hit

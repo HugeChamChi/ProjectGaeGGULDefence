@@ -59,9 +59,9 @@ namespace HSD.InGameDebug
             if (cell == null) return;
 
             var m = cell.Model;
-            bool hasBuff = m.TotemCellAttackBonus != 0 || m.TotemCellSpeedBonus != 0 || 
-                           m.TotemCellFoodSpeedBonus != 0 || m.TotemCellFoodAmountBonus != 0 ||
-                           m.TotemCellCritChanceBonus != 0 || m.TotemCellCritDamageBonus != 0 ||
+            bool hasBuff = m.GetTotemCellBonus(StatKind.AttackPercent) != 0 || m.GetTotemCellBonus(StatKind.Speed) != 0 ||
+                           m.GetTotemCellBonus(StatKind.FoodSpeed) != 0 || m.GetTotemCellBonus(StatKind.FoodAmount) != 0 ||
+                           m.GetTotemCellBonus(StatKind.CritChance) != 0 || m.GetTotemCellBonus(StatKind.CritDamage) != 0 ||
                            m.TotemAttackDisabled || m.TotemAttackModifier != 1f || m.TotemSpeedModifier != 1f;
 
             if (cell.IsOccupied && cell.OccupyingTotem != null)

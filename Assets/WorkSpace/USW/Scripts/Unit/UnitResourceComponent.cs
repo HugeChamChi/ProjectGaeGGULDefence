@@ -17,8 +17,8 @@ public class UnitResourceComponent : MonoBehaviour
     {
         if (_deps?.CurrencyManager == null || _unit == null || _unit.unitData == null || deltaTime <= 0f) return;
 
-        float cellFoodSpeedBonus = _unit.currentCell?.Model?.TotemCellFoodSpeedBonus ?? 0f;
-        float speedMultiplier = Mathf.Max((_deps?.TotemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellFoodSpeedBonus, 0.01f);
+        float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
+        float speedMultiplier = 1f / Mathf.Max(0.1f, 1f + cellFoodSpeedBonus);
         if (!_unit.IsFoodProductionBuffable) speedMultiplier = 1f;
 
         _foodTimer += deltaTime / speedMultiplier;
@@ -35,9 +35,9 @@ public class UnitResourceComponent : MonoBehaviour
         int elapsedTicks = Mathf.FloorToInt(_foodTimer);
         _foodTimer -= elapsedTicks;
 
-        float cellFoodAmountBonus = _unit.currentCell?.Model?.TotemCellFoodAmountBonus ?? 0f;
+        float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
         float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-        float amountMultiplier = (_deps?.TotemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
+        float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
         if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
         float amountPerTick = baseAmount * amountMultiplier;
@@ -60,15 +60,15 @@ public class UnitResourceComponent : MonoBehaviour
             float baseAmount = _unit.GetBaseFoodPerSecond();
             if (baseAmount <= 0f) return 0f;
 
-            float cellFoodAmountBonus = _unit.currentCell?.Model?.TotemCellFoodAmountBonus ?? 0f;
+            float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
             float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-            float amountMultiplier = (_deps?.TotemBuffManager?.FoodAmountMultiplier ?? 1f) + cellFoodAmountBonus + chieftainFoodBonus;
+            float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
             if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
             float amountPerTick = baseAmount * amountMultiplier;
 
-            float cellIntervalBonus = _unit.currentCell?.Model?.TotemCellFoodSpeedBonus ?? 0f;
-            float intervalMultiplier = Mathf.Max(0.1f, (_deps?.TotemBuffManager?.FoodSpeedMultiplier ?? 1f) - cellIntervalBonus);
+            float cellIntervalBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
+            float intervalMultiplier = 1f / Mathf.Max(0.1f, 1f + cellIntervalBonus);
             if (!_unit.IsFoodProductionBuffable) intervalMultiplier = 1f;
 
             return amountPerTick / intervalMultiplier;

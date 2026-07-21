@@ -312,12 +312,12 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
     {
         var sb = new StringBuilder();
 
-        float atk      = sheet != null ? sheet.AtkIncreaseRate         : data.GetSimpleAmount(TotemBuffKind.Attack);
-        float spd      = sheet != null ? sheet.AttackSpeedIncreaseRate : data.GetSimpleAmount(TotemBuffKind.Speed);
-        float fProd    = sheet != null ? sheet.FoodProductionRate      : data.GetSimpleAmount(TotemBuffKind.FoodSpeed);
-        float fAmt     = sheet != null ? sheet.FoodAmount              : data.GetSimpleAmount(TotemBuffKind.FoodAmount);
-        float cCh      = sheet != null ? sheet.CriticalChanceRate      : data.GetSimpleAmount(TotemBuffKind.CritChance);
-        float cDmg     = sheet != null ? sheet.CriticalDamageRate      : data.GetSimpleAmount(TotemBuffKind.CritDamage);
+        float atk      = sheet != null ? sheet.AtkIncreaseRate         : data.GetSimpleAmount(StatKind.AttackPercent);
+        float spd      = sheet != null ? sheet.AttackSpeedIncreaseRate : data.GetSimpleAmount(StatKind.Speed);
+        float fProd    = sheet != null ? sheet.FoodProductionRate      : data.GetSimpleAmount(StatKind.FoodSpeed);
+        float fAmt     = sheet != null ? sheet.FoodAmount              : data.GetSimpleAmount(StatKind.FoodAmount);
+        float cCh      = sheet != null ? sheet.CriticalChanceRate      : data.GetSimpleAmount(StatKind.CritChance);
+        float cDmg     = sheet != null ? sheet.CriticalDamageRate      : data.GetSimpleAmount(StatKind.CritDamage);
 
         float atkDeb   = sheet?.AtkDecreaseRate         ?? 0f;
         float spdDeb   = sheet?.AttackSpeedDecreaseRate ?? 0f;

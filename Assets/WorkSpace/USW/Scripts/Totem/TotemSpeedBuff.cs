@@ -17,7 +17,7 @@ public class TotemSpeedBuff : TotemBase
 
     protected override void ApplyBuff()
     {
-        float amount = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float amount = totemData.GetSimpleAmount(StatKind.Speed);
         if (amount <= 0f)
         {
             Debug.LogWarning($"TotemSpeedBuff({name}): speedBuffAmount = 0. TotemData를 확인하세요.");
@@ -28,7 +28,7 @@ public class TotemSpeedBuff : TotemBase
 
     protected override void RemoveBuff()
     {
-        float amount = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float amount = totemData.GetSimpleAmount(StatKind.Speed);
         if (amount <= 0f) return;
         _totemBuffManager.RemoveSpeedBuff(amount);
     }

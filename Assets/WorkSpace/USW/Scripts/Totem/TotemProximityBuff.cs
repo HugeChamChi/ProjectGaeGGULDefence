@@ -37,7 +37,7 @@ public class TotemProximityBuff : TotemBase
         if (totemData == null || CurrentCell == null || !IsActive) return;
 
         int count = CountUnitsInRange();
-        float newAmount = count * totemData.GetSimpleAmount(TotemBuffKind.Attack);
+        float newAmount = count * totemData.GetSimpleAmount(StatKind.AttackPercent);
 
         // delta 적용
         float delta = newAmount - _appliedAmount;

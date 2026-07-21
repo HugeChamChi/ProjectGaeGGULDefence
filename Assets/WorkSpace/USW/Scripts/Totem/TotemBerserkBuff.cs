@@ -15,8 +15,8 @@ public class TotemBerserkBuff : TotemBase
 
     protected override void ApplyBuff()
     {
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
             _totemBuffManager.AddAttackBuff(attackAmount);
@@ -31,8 +31,8 @@ public class TotemBerserkBuff : TotemBase
 
     protected override void RemoveBuff()
     {
-        float attackAmount = totemData.GetSimpleAmount(TotemBuffKind.Attack);
-        float speedAmount  = totemData.GetSimpleAmount(TotemBuffKind.Speed);
+        float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
+        float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
             _totemBuffManager.RemoveAttackBuff(attackAmount);

@@ -51,8 +51,8 @@ public class TotemTotemCount : TotemBase
 
         // 현재 토템 수 기준으로 재계산 (이 토템 포함)
         int count = _totemBuffManager.GetActiveTotemCount();
-        _appliedCritChance = count * totemData.GetSimpleAmount(TotemBuffKind.CritChance);
-        _appliedCritDamage = count * totemData.GetSimpleAmount(TotemBuffKind.CritDamage);
+        _appliedCritChance = count * totemData.GetSimpleAmount(StatKind.CritChance);
+        _appliedCritDamage = count * totemData.GetSimpleAmount(StatKind.CritDamage);
 
         if (_appliedCritChance > 0f) _totemBuffManager.AddCritChanceBuff(_appliedCritChance);
         if (_appliedCritDamage > 0f) _totemBuffManager.AddCritDamageBuff(_appliedCritDamage);

@@ -31,6 +31,17 @@ public class UnitCombatComponent : MonoBehaviour
         _resource = resource;
     }
 
+    // 공격/스킬 타이머는 매 Update마다 실시간으로 누적합니다. UnitControlLoopAsync는 공격/스킬
+    // 애니메이션 재생 동안 다음 루프 반복으로 넘어가지 못해 값을 여기서 관리하지 않으면 그 시간만큼
+    // 게이지가 멈춰 보였다가 한 번에 점프하는 문제(예: 족장 스킬 쿨타임 UI)가 생깁니다.
+    private void Update()
+    {
+        if (_paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
+
+        _attackTimer += Time.deltaTime;
+        _skillTimer += Time.deltaTime;
+    }
+
     public void StartLoops()
     {
         if (_unit.IsFirstPlacement)
@@ -91,8 +102,6 @@ public class UnitCombatComponent : MonoBehaviour
                 continue;
             }
 
-            _attackTimer += dt;
-            _skillTimer += dt;
             _resource.TickFoodProduction(dt);
 
             float attackInterval = _stats.GetCurrentAttackInterval();
@@ -170,7 +179,11 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile(_stats.GetSkillDamage());
+            // 0 = 보스 투사체를 쏘지 않는 스킬(예: 사제의 아군 버프 스킬). 기존 유닛은 모두
+            // 기본값 1 이상을 반환하므로 이 변경으로 동작이 바뀌지 않는다.
+            int shotCount = Mathf.Max(0, _unit.GetSkillShotCount());
+            for (int i = 0; i < shotCount; i++)
+                LaunchProjectile(_unit.GetSkillDamage());
         }
 
         var lu = _deps?.LevelUpManager;
@@ -230,13 +243,13 @@ public class UnitCombatComponent : MonoBehaviour
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
             Vector3 targetPos = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
             
-            _deps.ProjectileManager.Launch(spawnPos, targetPos, () => 
+            _deps.ProjectileManager.Launch(spawnPos, targetPos, () =>
             {
                 if (boss != null && !boss.IsDead)
                 {
                     boss.TakeDamage(damage, targetPos);
                 }
-            });
+            }, _unit);
         }
     }
 

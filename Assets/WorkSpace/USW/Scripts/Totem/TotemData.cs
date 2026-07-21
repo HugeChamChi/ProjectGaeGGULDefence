@@ -47,7 +47,7 @@ public class TotemData : ScriptableObject, ILoadableAsset
     public List<ITotemRange> attackDisabledRanges = new List<ITotemRange>();
 
     /// <summary>functions 중 kind가 일치하는 첫 SimpleBuffFunction의 amount. 없으면 0.</summary>
-    public float GetSimpleAmount(TotemBuffKind kind)
+    public float GetSimpleAmount(StatKind kind)
     {
         foreach (var fn in functions)
             if (fn is SimpleBuffFunction simple && simple.kind == kind) return simple.amount;
@@ -114,12 +114,12 @@ public class TotemData : ScriptableObject, ILoadableAsset
         // 2. functions 재구성 (시트의 flat 수치 기준 — 조건부 버프 등 SO 전용 구성은 시트에 없으므로
         //    여기서는 항상 단순 버프로만 재구성한다)
         functions = new List<ITotemFunction>();
-        AddSimpleFunctionIfPositive(TotemBuffKind.Attack,     row.AtkIncreaseRate);
-        AddSimpleFunctionIfPositive(TotemBuffKind.Speed,      row.AttackSpeedIncreaseRate);
-        AddSimpleFunctionIfPositive(TotemBuffKind.FoodSpeed,  row.FoodProductionRate);
-        AddSimpleFunctionIfPositive(TotemBuffKind.FoodAmount, row.FoodAmount);
-        AddSimpleFunctionIfPositive(TotemBuffKind.CritChance, row.CriticalChanceRate);
-        AddSimpleFunctionIfPositive(TotemBuffKind.CritDamage, row.CriticalDamageRate);
+        AddSimpleFunctionIfPositive(StatKind.AttackPercent,     row.AtkIncreaseRate);
+        AddSimpleFunctionIfPositive(StatKind.Speed,      row.AttackSpeedIncreaseRate);
+        AddSimpleFunctionIfPositive(StatKind.FoodSpeed,  row.FoodProductionRate);
+        AddSimpleFunctionIfPositive(StatKind.FoodAmount, row.FoodAmount);
+        AddSimpleFunctionIfPositive(StatKind.CritChance, row.CriticalChanceRate);
+        AddSimpleFunctionIfPositive(StatKind.CritDamage, row.CriticalDamageRate);
 
         // 3. 범위 데이터 덮어쓰기 (시트에 데이터가 존재할 경우에만 — 없으면 SO에 설정된 범위 유지)
         if (row.EffectRange != null && row.EffectRange.Count > 0)
@@ -133,7 +133,7 @@ public class TotemData : ScriptableObject, ILoadableAsset
         }
     }
 
-    private void AddSimpleFunctionIfPositive(TotemBuffKind kind, float amount)
+    private void AddSimpleFunctionIfPositive(StatKind kind, float amount)
     {
         if (amount > 0f) functions.Add(new SimpleBuffFunction { kind = kind, amount = amount });
     }

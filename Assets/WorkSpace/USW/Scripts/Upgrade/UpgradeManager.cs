@@ -69,12 +69,10 @@ public class UpgradeManager : MonoBehaviour
         return _jobLevel.TryGetValue(upgradeTarget, out var lv) ? lv : 1;
     }
 
-    /// <summary>현재 강화 레벨 기준 공격력을 반환합니다.</summary>
-    public float GetCurrentAtk(int characterId)
+    /// <summary>현재 강화 레벨 기준 공격력 배율(1.0 = 강화 없음)을 반환합니다. 호출자가 자신의 기준 공격력에 곱해서 사용합니다.</summary>
+    public float GetAtkUpgradeMultiplier(int characterId)
     {
-        if (_gameDataManager == null || !_gameDataManager.IsLoaded) return 0f;
-        var row = _gameDataManager.GetCharacterRow(characterId);
-        if (row == null) return 0f;
+        if (_gameDataManager == null || !_gameDataManager.IsLoaded) return 1f;
 
         string jobType = GetJobType(characterId);
         int level = GetUpgradeLevel(jobType);
@@ -86,15 +84,13 @@ public class UpgradeManager : MonoBehaviour
             if (upg != null) mult += upg.AtkIncreaseRate / 100f;
         }
 
-        return row.Atk * mult;
+        return mult;
     }
 
-    /// <summary>현재 강화 레벨 기준 공격 간격(초)을 반환합니다. 낮을수록 빠름.</summary>
-    public float GetCurrentAttackSpeed(int characterId)
+    /// <summary>현재 강화 레벨 기준 공격 속도 배율(1.0 = 강화 없음, 클수록 빠름)을 반환합니다. 호출자가 자신의 기준 공격 간격을 이 값으로 나눠서 사용합니다.</summary>
+    public float GetAttackSpeedUpgradeMultiplier(int characterId)
     {
         if (_gameDataManager == null || !_gameDataManager.IsLoaded) return 1f;
-        var row = _gameDataManager.GetCharacterRow(characterId);
-        if (row == null) return 1f;
 
         string jobType = GetJobType(characterId);
         int level = GetUpgradeLevel(jobType);
@@ -106,8 +102,7 @@ public class UpgradeManager : MonoBehaviour
             if (upg != null) speedMult += upg.AtkSpeedIncreaseRate / 100f;
         }
 
-        // 공격속도가 n% 증가하면 쿨타임(Interval)은 1/(1+n) 으로 감소
-        return row.AttackSpeed / Mathf.Max(speedMult, 0.01f);
+        return speedMult;
     }
 
     /// <summary>다음 강화 비용을 반환합니다. 최대 레벨이거나 데이터 없으면 -1.</summary>

@@ -13,6 +13,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private GridManager _gridManager;
     [Inject] private PopulationManager _populationManager;
     [Inject] private TotemBuffManager _totemBuffManager;
+    [Inject] private BuffManager _buffManager;
     [Inject] private MergeManager _mergeManager;
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private UpgradeManager _upgradeManager;
@@ -37,6 +38,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
         if (_gridManager != null) _gridManager.Init();
         if (_populationManager != null) _populationManager.Init();
         if (_totemBuffManager != null) _totemBuffManager.Init();
+        if (_buffManager != null) _buffManager.Init();
         if (_mergeManager != null) _mergeManager.Init();
         if (_levelUpManager != null) _levelUpManager.Init();
         if (_upgradeManager != null) _upgradeManager.Init();

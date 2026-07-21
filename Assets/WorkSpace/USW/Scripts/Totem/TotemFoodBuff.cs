@@ -13,7 +13,7 @@ public class TotemFoodBuff : TotemBase
 
     protected override void ApplyBuff()
     {
-        float amount = totemData.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        float amount = totemData.GetSimpleAmount(StatKind.FoodSpeed);
         if (amount <= 0f)
         {
             Debug.LogWarning($"TotemFoodBuff({name}): foodSpeedBuffAmount = 0. TotemData를 확인하세요.");
@@ -24,7 +24,7 @@ public class TotemFoodBuff : TotemBase
 
     protected override void RemoveBuff()
     {
-        float amount = totemData.GetSimpleAmount(TotemBuffKind.FoodSpeed);
+        float amount = totemData.GetSimpleAmount(StatKind.FoodSpeed);
         if (amount <= 0f) return;
         _totemBuffManager.RemoveFoodSpeedBuff(amount);
     }

@@ -30,17 +30,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e704064b4149c29479a7d6c8f63a6ca1, type: 3}
   - {fileID: 21300000, guid: d11531403826f2745b246aa506f5485a, type: 3}
   description: "\uCFE8\uD0C0\uC784 30% \uAC10\uC18C"
-  attackBuffAmount: 0
-  speedBuffAmount: 0
-  foodSpeedBuffAmount: 0
-  foodAmountBuffAmount: 0
-  critDamageBuffAmount: 0
-  critChanceBuffAmount: 0
-  foodGenInterval: 10
-  effectRange:
-  - {x: -1, y: 1}
-  - {x: 1, y: 1}
-  attackDisabledRange: []
   functions: []
   effectRanges:
   - rid: 7076784764168962113

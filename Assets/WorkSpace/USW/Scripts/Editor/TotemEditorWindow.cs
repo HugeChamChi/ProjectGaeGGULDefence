@@ -216,7 +216,7 @@ public class TotemEditorWindow : EditorWindow
         {
             EditorGUILayout.LabelField("종류", GUILayout.Width(35f));
             EditorGUI.BeginChangeCheck();
-            var kind        = (TotemBuffKind)EditorGUILayout.EnumPopup(simple.kind, GUILayout.Width(100f));
+            var kind        = (StatKind)EditorGUILayout.EnumPopup(simple.kind, GUILayout.Width(100f));
             GUILayout.Space(6f);
             EditorGUILayout.LabelField("수치(%)", GUILayout.Width(45f));
             var amountPercent = EditorGUILayout.FloatField(simple.amount * 100f, GUILayout.Width(60f));

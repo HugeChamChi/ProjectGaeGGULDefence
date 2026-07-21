@@ -188,16 +188,16 @@ public class DroneUnit : MonoBehaviour
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
 
-                p.Launch(transform.position, targetPos, proj => 
+                p.Launch(transform.position, targetPos, proj =>
                 {
                     onHitCallback?.Invoke();
                     RM.Destroy(proj.gameObject);
-                });
+                }, null, _owner);
             }
         }
         else if (_projectileManager != null)
         {
-            _projectileManager.Launch(transform.position, targetPos, onHitCallback);
+            _projectileManager.Launch(transform.position, targetPos, onHitCallback, _owner);
         }
     }
 }

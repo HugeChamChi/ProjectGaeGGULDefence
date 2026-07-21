@@ -9,24 +9,47 @@ public class UnitStatsModifier : MonoBehaviour
     public float BurstEndTime { get; set; }
     public float UnemployedAtkBonus { get; set; }
 
+    // 지원가(사제) 버프 — 다른 유닛이 부여하는 임시 공격력/공격속도 증폭
+    private float _supportAtkBonus;
+    private float _supportSpeedBonus;
+    private float _supportBuffEndTime;
+
+    public void ApplySupportBuff(float atkBonusPct, float speedBonusPct, float duration)
+    {
+        _supportAtkBonus = atkBonusPct;
+        _supportSpeedBonus = speedBonusPct;
+        _supportBuffEndTime = Time.time + duration;
+    }
+
+    private float SupportAtkMultiplier => Time.time < _supportBuffEndTime ? 1f + _supportAtkBonus : 1f;
+    private float SupportSpeedMultiplier => Time.time < _supportBuffEndTime ? Mathf.Max(0.01f, 1f + _supportSpeedBonus) : 1f;
+
     public void Init(UnitBase unit, UnitDependencies deps)
     {
         _unit = unit;
         _deps = deps;
     }
 
-    private float UpgradedAtk => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetCurrentAtk(_unit.unitData.characterId)
-        : _unit.unitData.atk;
+    private float AtkUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
+        ? _deps.UpgradeManager.GetAtkUpgradeMultiplier(_unit.unitData.characterId)
+        : 1f;
 
-    private float UpgradedAttackInterval => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetCurrentAttackSpeed(_unit.unitData.characterId)
-        : (_unit.unitData != null ? _unit.unitData.attackSpeed : 1.0f);
+    private float AttackSpeedUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
+        ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId)
+        : 1f;
+
+    private float UpgradedAtk => _unit.unitData.atk * AtkUpgradeMultiplier;
+
+    private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed : 1.0f)
+        / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
     public int GetSkillDamage()  => ComputeDamage(_unit.unitData.skillAtk);
 
-    private int ComputeDamage(float baseDamage)
+    /// <summary>패시브 공격력 보너스 배율을 적용해 스킬 데미지를 계산합니다.</summary>
+    public int GetSkillDamage(float projAtkBonusMultiplier) => ComputeDamage(_unit.unitData.skillAtk, projAtkBonusMultiplier);
+
+    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier = 1f)
     {
         if (_unit.unitData == null) return 0;
 
@@ -39,7 +62,8 @@ public class UnitStatsModifier : MonoBehaviour
         float rowModifier = lu?.GetRowAttackMultiplier(row) ?? 1f;
 
         float tribeAtk = 1f + (lu?.GetTribeAtkBonus(_unit.unitData.unitTribe) ?? 0f);
-        float projAtk = 1f + (lu?.GetProjectileSizeAtkBonus() ?? 0f);
+        float unitProjSizeMult = _unit.Buffs?.GetStatMultiplier(StatKind.ProjectileSize) ?? 1f;
+        float projAtk = 1f + (lu?.GetProjectileSizeAtkBonus(unitProjSizeMult) ?? 0f) * projAtkBonusMultiplier;
 
         float burstAtk = (Time.time < BurstEndTime && lu != null)
             ? (1f + lu.BurstAttackBonus)
@@ -60,10 +84,11 @@ public class UnitStatsModifier : MonoBehaviour
         }
         globalPopPenalty = Mathf.Max(0.01f, globalPopPenalty);
 
-        float cellAttackBonus = _unit.currentCell?.Model.TotemCellAttackBonus ?? 0f;
+        float cellAttackBonus = _unit.GetStatBonus(StatKind.AttackPercent, projAtkBonusMultiplier);
+        float flatAttackBonus = _unit.GetStatBonus(StatKind.AttackFlat, projAtkBonusMultiplier);
 
-        float damage = (baseDamage + UnemployedAtkBonus)
-                     * ((_deps?.TotemBuffManager?.AttackMultiplier ?? 1f) + cellAttackBonus)
+        float damage = (baseDamage + UnemployedAtkBonus + flatAttackBonus)
+                     * (1f + cellAttackBonus)
                      * cellModifier
                      * totemModifier
                      * rowModifier
@@ -71,16 +96,16 @@ public class UnitStatsModifier : MonoBehaviour
                      * projAtk
                      * burstAtk
                      * chieftainAtk
-                     * globalPopPenalty;
+                     * globalPopPenalty
+                     * SupportAtkMultiplier;
 
-        float cellCritChance = _unit.currentCell?.Model.TotemCellCritChanceBonus ?? 0f;
-        float critChance = (lu?.CritChance ?? 0f) + (_deps?.TotemBuffManager?.CritChanceBonus ?? 0f) + cellCritChance;
+        float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
+        float critChance = (lu?.CritChance ?? 0f) + cellCritChance;
         if (UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
-            float cellCritDamage = _unit.currentCell?.Model.TotemCellCritDamageBonus ?? 0f;
-            float totemCritDamage = _deps?.TotemBuffManager?.CritDamageBonus ?? 0f;
-            damage *= (critMultiplier + totemCritDamage + cellCritDamage);
+            float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
+            damage *= (critMultiplier + cellCritDamage);
         }
 
         return Mathf.Max(1, DamageCalculator.ApplyRounding(damage));
@@ -93,15 +118,15 @@ public class UnitStatsModifier : MonoBehaviour
         float tribeSpeedMult = Mathf.Max(1f + (_deps?.LevelUpManager?.GetTribeSpeedBonus(_unit.unitData.unitTribe) ?? 0f), 0.01f);
         
         float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
-        float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + (_unit.currentCell?.Model.TotemCellSpeedBonus ?? 0f));
+        float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 
         float interval = baseInterval
-                       * (_deps?.TotemBuffManager?.SpeedMultiplier ?? 1f)
                        * cellSpeedBonusMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
-                       / tribeSpeedMult;
+                       / tribeSpeedMult
+                       / SupportSpeedMultiplier;
         return Mathf.Max(interval, 0.05f);
     }
 
@@ -109,8 +134,9 @@ public class UnitStatsModifier : MonoBehaviour
     {
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult = Mathf.Max(_deps?.LevelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
+        float cellGaugeSpeedMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.GaugeSpeed));
         float interval = _unit.unitData.skillCooldown
-                       * (_deps?.TotemBuffManager?.GaugeSpeedMultiplier ?? 1f)
+                       * cellGaugeSpeedMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
         return Mathf.Max(interval, 0.05f);

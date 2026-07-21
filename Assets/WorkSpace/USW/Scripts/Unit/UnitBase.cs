@@ -30,7 +30,30 @@ public abstract class UnitBase : MonoBehaviour
     private UnitStatsModifier _stats;
     private UnitCombatComponent _combat;
     private UnitResourceComponent _resource;
+    private BuffController _buff;
     private UnitDependencies _deps;
+
+    /// <summary>이 유닛에 걸린 버프(예: "용기")를 보관/집계하는 컴포넌트.</summary>
+    public BuffController Buffs => _buff;
+
+    /// <summary>kind 스탯의 토템 전역/셀/버프/자기 패시브/리더 패시브 보너스 합을 반환한다.</summary>
+    public float GetStatBonus(StatKind kind, float leaderPassiveBonusScale = 1f)
+    {
+        float globalBonus = _deps?.TotemBuffManager?.GetGlobalStatBonus(kind) ?? 0f;
+        float cellBonus = currentCell?.Model.GetTotemCellBonus(kind) ?? 0f;
+        float buffBonus = Buffs != null ? Buffs.GetStatMultiplier(kind) - 1f : 0f;
+
+        float selfPassiveBonus = unitData?.passive != null
+            ? unitData.passive.GetSelfBonus(kind, this, _deps, leaderPassiveBonusScale)
+            : 0f;
+
+        var leaderPassive = _deps?.ChieftainManager?.ChieftainUnit?.unitData?.passive;
+        float leaderPassiveBonus = leaderPassive != null
+            ? leaderPassive.GetPartyBonus(kind, this, _deps, leaderPassiveBonusScale)
+            : 0f;
+
+        return globalBonus + cellBonus + buffBonus + selfPassiveBonus + leaderPassiveBonus;
+    }
 
     protected virtual void Awake()
     {
@@ -49,10 +72,13 @@ public abstract class UnitBase : MonoBehaviour
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
         _combat = gameObject.AddComponent<UnitCombatComponent>();
-        
+        _buff = gameObject.AddComponent<BuffController>();
+
         _stats.Init(this, deps);
         _resource.Init(this, deps);
         _combat.Init(this, deps, _stats, _resource);
+        _buff.Init(this, deps);
+        deps.BuffManager?.ApplyActiveGlobalBuffsTo(this);
     }
 
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
@@ -165,6 +191,7 @@ public abstract class UnitBase : MonoBehaviour
     public LevelUpManager _levelUpManager => _deps?.LevelUpManager;
     public AudioManager _audioManager => _deps?.AudioManager;
     public BossBase _boss => Boss;
+    public GridManager _gridManager => _deps?.GridManager;
     
     public float _unemployedAtkBonus 
     { 
@@ -173,7 +200,15 @@ public abstract class UnitBase : MonoBehaviour
     }
 
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
-    public int GetSkillDamage() => _stats?.GetSkillDamage() ?? 0;
+    public virtual int GetSkillDamage() => _stats?.GetSkillDamage() ?? 0;
+    protected int GetSkillDamage(float projAtkBonusMultiplier) => _stats?.GetSkillDamage(projAtkBonusMultiplier) ?? 0;
+
+    /// <summary>다른 유닛이 부여하는 임시 공격력/공격속도 버프를 적용합니다.</summary>
+    public void ApplySupportBuff(float atkBonusPct, float speedBonusPct, float duration)
+        => _stats?.ApplySupportBuff(atkBonusPct, speedBonusPct, duration);
+
+    /// <summary>액티브 스킬 1회당 발사되는 투사체 횟수.</summary>
+    public virtual int GetSkillShotCount() => 1;
 
     public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;
     public float GetCurrentSkillInterval() => _stats?.GetCurrentSkillInterval() ?? 1f;

@@ -23,11 +23,11 @@ public class TotemInfoPresenter
     {
         StringBuilder sb = new StringBuilder();
 
-        float attack     = data.GetSimpleAmount(TotemBuffKind.Attack);
-        float speed      = data.GetSimpleAmount(TotemBuffKind.Speed);
-        float foodSpeed  = data.GetSimpleAmount(TotemBuffKind.FoodSpeed);
-        float critDamage = data.GetSimpleAmount(TotemBuffKind.CritDamage);
-        float critChance = data.GetSimpleAmount(TotemBuffKind.CritChance);
+        float attack     = data.GetSimpleAmount(StatKind.AttackPercent);
+        float speed      = data.GetSimpleAmount(StatKind.Speed);
+        float foodSpeed  = data.GetSimpleAmount(StatKind.FoodSpeed);
+        float critDamage = data.GetSimpleAmount(StatKind.CritDamage);
+        float critChance = data.GetSimpleAmount(StatKind.CritChance);
 
         if (attack > 0)
             sb.AppendLine($"공격력 <color=#FFD700>{attack * 100:0}%</color> 증가");
