@@ -42,7 +42,7 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
         ProcessInitializationAsync().Forget();
     }
 
-    public async System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellation)
+    public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
         if (_uiManager != null)
         {

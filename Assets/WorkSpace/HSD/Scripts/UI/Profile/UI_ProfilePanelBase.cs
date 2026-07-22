@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public abstract class UI_ProfilePanelBase : UI_Base
 {
-    [SerializeField] protected GameObject background => backgroundCloseButton.gameObject;
+    protected GameObject background => backgroundCloseButton.gameObject;
 
     [Header("UI")]
     [SerializeField] protected TextMeshProUGUI playerName;

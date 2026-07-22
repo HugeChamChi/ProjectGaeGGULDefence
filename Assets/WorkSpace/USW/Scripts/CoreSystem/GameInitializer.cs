@@ -54,7 +54,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
         Debug.Log("=========================================\n[GameInitializer] 모든 VContainer 매니저(Init) 초기화 완벽 성공! 🎉\n=========================================");
     }
 
-    public async System.Threading.Tasks.Task StartAsync(System.Threading.CancellationToken cancellation)
+    public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
         // 1. 필요한 사운드 식별 및 프리로드
         var sfxToLoad = new System.Collections.Generic.HashSet<string>();
