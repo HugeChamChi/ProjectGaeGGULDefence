@@ -26,16 +26,18 @@ public class GuidedMissileMovement : MovementBase
         Vector3 currentPos = from;
         to.z = currentPos.z;
         movingTransform.position = currentPos;
+        Quaternion baseRotation = GetBaseRotation(movingTransform);
 
-        // 미사일 사출 시 유닛 전방(movingTransform.up)을 기준으로 퍼지며 사출된 후 유도됩니다.
-        Vector3 spawnUp = movingTransform.up;
+        // 미사일 사출 시 프리팹 원본 방향(baseRotation의 up)을 기준으로 퍼지며 사출된 후 유도됩니다.
+        // (풀링으로 재사용된 경우 movingTransform.up은 이전 발사 때 남은 값일 수 있어 사용하지 않는다.)
+        Vector3 spawnUp = baseRotation * Vector3.up;
         if (spawnUp.sqrMagnitude < 0.001f) spawnUp = Vector3.up;
 
         float randomAngle = UnityEngine.Random.Range(-randomAngleMax, randomAngleMax);
         Vector3 initialDir = Quaternion.Euler(0, 0, randomAngle) * spawnUp;
         Vector3 currentVelocity = initialDir.normalized * startSpeed;
 
-        FaceDirection(movingTransform, currentVelocity);
+        FaceDirection(movingTransform, currentVelocity, baseRotation);
 
         float maxLifetime = 3.0f; // 최대 비행 시간 (안전 타임아웃)
         float lifetime = 0f;
@@ -63,7 +65,7 @@ public class GuidedMissileMovement : MovementBase
             movingTransform.position = currentPos;
 
             // 진행 방향에 맞춰 회전 (lookAtTarget == false면 회전하지 않음)
-            FaceDirection(movingTransform, currentVelocity);
+            FaceDirection(movingTransform, currentVelocity, baseRotation);
 
             // 타겟 도달 또는 타겟 오버슈트(지나침) 체크
             float distToTarget = Vector3.Distance(to, currentPos);

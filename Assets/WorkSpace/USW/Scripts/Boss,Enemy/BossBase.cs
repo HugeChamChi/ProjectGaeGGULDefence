@@ -56,6 +56,10 @@ public abstract class BossBase : MonoBehaviour
     public int  CurrentHp => _currentHp;
     public bool IsDead    => _currentHp <= 0;
 
+    /// <summary>true면 TakeDamage가 무시된다(체력 무한). 스킬 테스트 씬처럼 보스가 죽지 않아야
+    /// 하는 특수 상황에서만 코드로 켠다 — 기본값 false로 일반 게임플레이엔 영향 없다.</summary>
+    public bool Invincible { get; set; } = false;
+
     // ── 트윈 관련 ──────────────────────────────────────────────────
     private Vector3 _originalScale;
     private Tween _hitTween;
@@ -81,7 +85,7 @@ public abstract class BossBase : MonoBehaviour
     // ── 데미지 처리 ─────────────────────────────────────────────────
     public void TakeDamage(int amount, Vector3? hitPos = null)
     {
-        if (IsDead) return;
+        if (IsDead || Invincible) return;
 
         float amplification = _droneManager?.BossDebuffMultiplier ?? 1f;
         int actualAmount = Mathf.RoundToInt(amount * amplification);

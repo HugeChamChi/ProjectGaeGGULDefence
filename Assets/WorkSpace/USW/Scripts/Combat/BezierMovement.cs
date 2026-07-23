@@ -31,6 +31,7 @@ public class BezierMovement : MovementBase
 
         float elapsed = 0f;
         Vector3 prevPos = from;
+        Quaternion baseRotation = GetBaseRotation(movingTransform);
 
         while (elapsed < duration)
         {
@@ -41,7 +42,7 @@ public class BezierMovement : MovementBase
             Vector3 pos = QuadraticBezier(from, control, to, t);
             movingTransform.position = pos;
 
-            FaceDirection(movingTransform, pos - prevPos);
+            FaceDirection(movingTransform, pos - prevPos, baseRotation);
             prevPos = pos;
 
             await UniTask.Yield(token);

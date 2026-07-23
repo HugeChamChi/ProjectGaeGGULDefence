@@ -26,11 +26,12 @@ public class SkillEditorWindow : EditorWindow
         { typeof(BuffData), ("Assets/WorkSpace/HSD/Data/Buff", "BD") },
     };
 
-    [MenuItem("Tools/Skill Editor")]
+    [MenuItem("Tools/GGD_Editor/Skill Editor")]
     public static void Open()
     {
         var win = GetWindow<SkillEditorWindow>("Skill Editor");
         win.minSize = new Vector2(420f, 520f);
+        win.position = new Rect(win.position.x, win.position.y, 720f, 860f);
     }
 
     private SkillData _selected;

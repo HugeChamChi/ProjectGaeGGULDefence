@@ -43,6 +43,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameConfig config;
     public GameConfig Config => config;
 
+    [Tooltip("체크 시 레벨업 상태로 전환하지 않고 Playing 상태를 유지합니다 (스킬 테스트 씬 등에서 사용).")]
+    [SerializeField] private bool disableLevelUp = false;
+
     public void OnStartButtonPressed()
     {
         if (CurrentState != GameState.Idle) return;
@@ -65,6 +68,8 @@ public class GameManager : MonoBehaviour
     private void HandleLevelUp()
     {
         if (CurrentState != GameState.Playing) return;
+        if (disableLevelUp) return; // 레벨은 오르되 선택 UI는 띄우지 않고 Playing 상태를 유지한다.
+
         CurrentState = GameState.LevelUp;
         OnLevelUpStateEntered?.Invoke();
     }

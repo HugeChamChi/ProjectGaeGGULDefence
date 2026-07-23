@@ -20,7 +20,7 @@ MonoBehaviour:
   fireEffect:
     rid: -2
   hitEffect:
-    rid: -2
+    rid: 7076785018807517339
   references:
     version: 2
     RefIds:
@@ -31,3 +31,10 @@ MonoBehaviour:
       data:
         lookAtTarget: 1
         duration: 0.35
+    - rid: 7076785018807517339
+      type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
+      data:
+        effectPrefab: {fileID: 1854899779442152, guid: 5848d6535d700e348932df2c9eeefaf0,
+          type: 3}
+        duration: 1
+        sfxName: 

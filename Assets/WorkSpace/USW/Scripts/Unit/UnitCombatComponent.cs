@@ -17,11 +17,15 @@ public class UnitCombatComponent : MonoBehaviour
     private float _skillTimer;
     private int _hitCount;
 
-    public float SkillTimer 
-    { 
-        get => _skillTimer; 
-        set => _skillTimer = value; 
+    public float SkillTimer
+    {
+        get => _skillTimer;
+        set => _skillTimer = value;
     }
+
+    /// <summary>CanAutoSkill이 꺼져있는 유닛(예: TestUnit)도 스킬을 즉시 발동시켜볼 수 있도록,
+    /// 자동 루프의 타이머/쿨타임 체크를 거치지 않고 바로 ExecuteSkill을 호출한다.</summary>
+    public void TriggerSkillManually() => ExecuteSkill();
 
     public void Init(UnitBase unit, UnitDependencies deps, UnitStatsModifier stats, UnitResourceComponent resource)
     {

@@ -16,6 +16,7 @@ public class StraightMovement : MovementBase
         from.z = 0f;
         to.z = 0f;
         float elapsed = 0f;
+        Quaternion baseRotation = GetBaseRotation(movingTransform);
 
         while (elapsed < duration)
         {
@@ -26,7 +27,7 @@ public class StraightMovement : MovementBase
             movingTransform.position = Vector3.Lerp(from, to, t);
 
             // 기본적으로 목표점을 향해 회전 (lookAtTarget == false면 회전하지 않음)
-            FaceDirection(movingTransform, to - movingTransform.position);
+            FaceDirection(movingTransform, to - movingTransform.position, baseRotation);
 
             await UniTask.Yield(token);
         }
