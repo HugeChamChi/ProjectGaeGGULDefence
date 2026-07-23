@@ -8,7 +8,7 @@ using UnityEngine;
 /// 기존 MissileProjectile(Projectile 상속 서브클래스)의 MoveAsync 알고리즘을 그대로 옮긴 것.
 /// </summary>
 [Serializable]
-public class GuidedMissileMovement : IMovement
+public class GuidedMissileMovement : MovementBase
 {
     [Tooltip("초기 발사 속도 (Unit/s)")]
     public float startSpeed = 8.0f;
@@ -21,7 +21,7 @@ public class GuidedMissileMovement : IMovement
     [Tooltip("발사 시 퍼지는 최대 무작위 각도 (0이면 무조건 타겟 방향 직선)")]
     public float randomAngleMax = 60f;
 
-    public async UniTask MoveAsync(Transform movingTransform, Vector3 from, Vector3 to, CancellationToken token)
+    public override async UniTask MoveAsync(Transform movingTransform, Vector3 from, Vector3 to, CancellationToken token)
     {
         Vector3 currentPos = from;
         to.z = currentPos.z;
@@ -35,7 +35,7 @@ public class GuidedMissileMovement : IMovement
         Vector3 initialDir = Quaternion.Euler(0, 0, randomAngle) * spawnUp;
         Vector3 currentVelocity = initialDir.normalized * startSpeed;
 
-        movingTransform.up = currentVelocity.normalized;
+        FaceDirection(movingTransform, currentVelocity);
 
         float maxLifetime = 3.0f; // 최대 비행 시간 (안전 타임아웃)
         float lifetime = 0f;
@@ -62,9 +62,8 @@ public class GuidedMissileMovement : IMovement
             currentPos += currentVelocity * dt;
             movingTransform.position = currentPos;
 
-            // 진행 방향에 맞춰 회전
-            if (currentVelocity.sqrMagnitude > 0.001f)
-                movingTransform.up = currentVelocity.normalized;
+            // 진행 방향에 맞춰 회전 (lookAtTarget == false면 회전하지 않음)
+            FaceDirection(movingTransform, currentVelocity);
 
             // 타겟 도달 또는 타겟 오버슈트(지나침) 체크
             float distToTarget = Vector3.Distance(to, currentPos);

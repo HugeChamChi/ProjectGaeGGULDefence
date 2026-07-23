@@ -9,21 +9,6 @@ public class UnitStatsModifier : MonoBehaviour
     public float BurstEndTime { get; set; }
     public float UnemployedAtkBonus { get; set; }
 
-    // 지원가(사제) 버프 — 다른 유닛이 부여하는 임시 공격력/공격속도 증폭
-    private float _supportAtkBonus;
-    private float _supportSpeedBonus;
-    private float _supportBuffEndTime;
-
-    public void ApplySupportBuff(float atkBonusPct, float speedBonusPct, float duration)
-    {
-        _supportAtkBonus = atkBonusPct;
-        _supportSpeedBonus = speedBonusPct;
-        _supportBuffEndTime = Time.time + duration;
-    }
-
-    private float SupportAtkMultiplier => Time.time < _supportBuffEndTime ? 1f + _supportAtkBonus : 1f;
-    private float SupportSpeedMultiplier => Time.time < _supportBuffEndTime ? Mathf.Max(0.01f, 1f + _supportSpeedBonus) : 1f;
-
     public void Init(UnitBase unit, UnitDependencies deps)
     {
         _unit = unit;
@@ -96,8 +81,7 @@ public class UnitStatsModifier : MonoBehaviour
                      * projAtk
                      * burstAtk
                      * chieftainAtk
-                     * globalPopPenalty
-                     * SupportAtkMultiplier;
+                     * globalPopPenalty;
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
         float critChance = (lu?.CritChance ?? 0f) + cellCritChance;
@@ -125,8 +109,7 @@ public class UnitStatsModifier : MonoBehaviour
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
-                       / tribeSpeedMult
-                       / SupportSpeedMultiplier;
+                       / tribeSpeedMult;
         return Mathf.Max(interval, 0.05f);
     }
 

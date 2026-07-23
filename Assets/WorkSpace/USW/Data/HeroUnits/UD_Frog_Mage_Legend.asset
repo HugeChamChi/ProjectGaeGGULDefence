@@ -10,24 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
-  m_Name: UnitData_Frog_Priest_Normal
+  m_Name: UD_Frog_Mage_Legend
   m_EditorClassIdentifier: 
-  characterId: 1020
-  unitType: 1020
-  unitName: Frog_Priest
-  unitTier: 0
-  unitTribe: 8
+  characterId: 1026
+  unitType: 1026
+  unitName: Frog_Mage
+  unitTier: 3
+  unitTribe: 5
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
-  prefabAddress: Frog_Priest
+  prefabAddress: Frog_Mage
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
-  prefab: {fileID: 8349506017049941861, guid: 8cef1c8d28abf50419b88a31d277a0be, type: 3}
+  prefab: {fileID: 4850036060423387760, guid: 39c5b4c3a353c1d4ebd6494a5b17d10b, type: 3}
   description: 
   attackSoundAddress: 
-  atk: 70
+  atk: 80
   attackSpeed: 1
-  skillAtk: 0
-  skillCooldown: 12
+  skillAtk: 3500
+  skillCooldown: 8
   skillName: 
+  skillData: {fileID: 11400000, guid: fb6043cb8c8a1f16dff97012b68b9546, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

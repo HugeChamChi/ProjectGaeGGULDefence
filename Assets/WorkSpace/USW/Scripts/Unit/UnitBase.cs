@@ -33,7 +33,7 @@ public abstract class UnitBase : MonoBehaviour
     private BuffController _buff;
     private UnitDependencies _deps;
 
-    /// <summary>이 유닛에 걸린 버프(예: "용기")를 보관/집계하는 컴포넌트.</summary>
+    /// <summary>이 유닛에 걸린 버프("용기")를 보관/집계하는 컴포넌트.</summary>
     public BuffController Buffs => _buff;
 
     /// <summary>kind 스탯의 토템 전역/셀/버프/자기 패시브/리더 패시브 보너스 합을 반환한다.</summary>
@@ -202,10 +202,6 @@ public abstract class UnitBase : MonoBehaviour
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
     public virtual int GetSkillDamage() => _stats?.GetSkillDamage() ?? 0;
     protected int GetSkillDamage(float projAtkBonusMultiplier) => _stats?.GetSkillDamage(projAtkBonusMultiplier) ?? 0;
-
-    /// <summary>다른 유닛이 부여하는 임시 공격력/공격속도 버프를 적용합니다.</summary>
-    public void ApplySupportBuff(float atkBonusPct, float speedBonusPct, float duration)
-        => _stats?.ApplySupportBuff(atkBonusPct, speedBonusPct, duration);
 
     /// <summary>액티브 스킬 1회당 발사되는 투사체 횟수.</summary>
     public virtual int GetSkillShotCount() => 1;

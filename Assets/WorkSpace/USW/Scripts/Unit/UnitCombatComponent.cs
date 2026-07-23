@@ -179,7 +179,10 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            var skillAction = _unit.unitData?.skillData?.action;
+            var skillData = _unit.unitData?.skillData;
+            skillData?.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
+
+            var skillAction = skillData?.action;
             if (skillAction != null)
             {
                 skillAction.Execute(_unit, this);
@@ -238,7 +241,9 @@ public class UnitCombatComponent : MonoBehaviour
         }
     }
 
-    public void LaunchProjectile(int damage)
+    /// <summary>sizeMultiplier: 이 발사 1회에만 적용되는 추가 투사체 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).
+    /// projectileData: 이 발사에만 쓸 투사체 구성(이동/이펙트/프리팹). null이면 ProjectilePool의 기본 구성을 사용한다.</summary>
+    public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null)
     {
         var boss = LiveBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
@@ -250,14 +255,19 @@ public class UnitCombatComponent : MonoBehaviour
             // 발사 시작 위치를 유닛의 중심(발밑 + 0.5f)으로 조정
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
             Vector3 targetPos = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
-            
-            _deps.ProjectileManager.Launch(spawnPos, targetPos, () =>
+
+            Action onHit = () =>
             {
                 if (boss != null && !boss.IsDead)
                 {
                     boss.TakeDamage(damage, targetPos);
                 }
-            }, _unit);
+            };
+
+            if (projectileData != null)
+                _deps.ProjectileManager.Launch(spawnPos, targetPos, projectileData, onHit, _unit, sizeMultiplier);
+            else
+                _deps.ProjectileManager.Launch(spawnPos, targetPos, onHit, _unit, sizeMultiplier);
         }
     }
 

@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
-  m_Name: UnitData_Frog_Archer_Normal
+  m_Name: UD_Frog_Priest_Legend
   m_EditorClassIdentifier: 
-  characterId: 1018
-  unitType: 1018
-  unitName: Frog_Archer
-  unitTier: 0
-  unitTribe: 6
+  characterId: 1029
+  unitType: 1029
+  unitName: Frog_Priest
+  unitTier: 3
+  unitTribe: 8
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
-  prefabAddress: Frog_Archer
+  prefabAddress: Frog_Priest
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
-  prefab: {fileID: 8965103283368684651, guid: 6193232055718244baa1c271e2991c4d, type: 3}
+  prefab: {fileID: 8349506017049941861, guid: 8cef1c8d28abf50419b88a31d277a0be, type: 3}
   description: 
   attackSoundAddress: 
-  atk: 90
+  atk: 70
   attackSpeed: 1
   skillAtk: 0
-  skillCooldown: 8
-  skillName:
-  skillData: {fileID: 11400000, guid: 45122e87b28c470429e847b70457daf0, type: 2}
+  skillCooldown: 12
+  skillName: 
+  skillData: {fileID: 11400000, guid: 124c3775a4e1ab3cf5984016b74b8dc9, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

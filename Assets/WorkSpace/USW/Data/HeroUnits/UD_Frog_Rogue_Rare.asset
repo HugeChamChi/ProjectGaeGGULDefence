@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
-  m_Name: UnitData_Frog_Rogue_Normal
+  m_Name: UD_Frog_Rogue_Rare
   m_EditorClassIdentifier: 
-  characterId: 1019
-  unitType: 1019
+  characterId: 1030
+  unitType: 1030
   unitName: Frog_Rogue
-  unitTier: 0
+  unitTier: 1
   unitTribe: 7
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
   prefabAddress: Frog_Rogue
@@ -27,8 +27,8 @@ MonoBehaviour:
   attackSpeed: 1
   skillAtk: 0
   skillCooldown: 8
-  skillName:
-  skillData: {fileID: 11400000, guid: 17cef4bd615021b4f8f0ac80283641c4, type: 2}
+  skillName: 
+  skillData: {fileID: 11400000, guid: 4b4974eea8b359e734e1f63823fcfe37, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

@@ -9,6 +9,13 @@ using Alchemy.Inspector;
 [CreateAssetMenu(fileName = "ProjectileData", menuName = "Game/ProjectileData")]
 public class ProjectileData : ScriptableObject
 {
+    [BoxGroup("투사체 프리팹 (모두 비워두면 ProjectilePool의 기본 투사체 사용)")]
+    [Tooltip("직접 프리팹 참조. 비워두고 아래 주소만 채우면 Addressable 주소로 로드합니다.")]
+    public Projectile projectilePrefab;
+    [BoxGroup("투사체 프리팹 (모두 비워두면 ProjectilePool의 기본 투사체 사용)")]
+    [Tooltip("projectilePrefab이 비어있을 때 사용할 Addressable 주소")]
+    public string projectileAddress;
+
     [BoxGroup("이동")]
     [SerializeReference, SelectableReference]
     public IMovement movement = new StraightMovement();

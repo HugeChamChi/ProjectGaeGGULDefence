@@ -10,24 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
-  m_Name: UnitData_Frog_Mage_Normal
+  m_Name: UD_Frog_Archer_Epic
   m_EditorClassIdentifier: 
-  characterId: 1017
-  unitType: 1017
-  unitName: Frog_Mage
-  unitTier: 0
-  unitTribe: 5
+  characterId: 1022
+  unitType: 1022
+  unitName: Frog_Archer
+  unitTier: 2
+  unitTribe: 6
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
-  prefabAddress: Frog_Mage
+  prefabAddress: Frog_Archer
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
-  prefab: {fileID: 4850036060423387760, guid: 39c5b4c3a353c1d4ebd6494a5b17d10b, type: 3}
+  prefab: {fileID: 8965103283368684651, guid: 6193232055718244baa1c271e2991c4d, type: 3}
   description: 
   attackSoundAddress: 
-  atk: 80
+  atk: 90
   attackSpeed: 1
-  skillAtk: 500
+  skillAtk: 0
   skillCooldown: 8
   skillName: 
+  skillData: {fileID: 11400000, guid: e515904a1808231fd0e38d327c16d9e5, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

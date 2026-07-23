@@ -7,8 +7,8 @@
 ///   표준 UnitBase → UnitCombatComponent 파이프라인을 그대로 사용합니다 (atk 비례 피해).
 ///
 /// 액티브 스킬 (연발 사격): unitData.skillData(MultiShotSkillAction)로 데이터 정의되어
-///   있으며(atkPercent=100, shotCount는 티어별 UnitData 에셋에 각각 연결), 별도 코드가
-///   필요 없습니다.
+///   있으며(attackPower=100%, shotCount·sizeMultiplier(투사체 크기 증가)는 티어별
+///   SkillData 에셋에 각각 연결), 별도 코드가 필요 없습니다.
 /// </summary>
 public class FrogArcher : UnitBase
 {

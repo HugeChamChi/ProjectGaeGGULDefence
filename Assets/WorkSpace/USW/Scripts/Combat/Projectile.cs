@@ -8,8 +8,10 @@ using System.Threading;
 /// 투사체 베이스 클래스. 실제 이동/이펙트 동작은 ProjectileData(SerializeReference 구성)에 위임한다.
 /// Projectile 프리팹 자체는 공유되고, ProjectileData로 직선/유도 이동, 발사/피격 이펙트 조합이 갈린다.
 /// ProjectilePool 또는 RM.Instantiate 등을 통해 소환됩니다.
+/// 크기 배율은 BaseObject.ApplyScale()을 통해 항상 프리팹 원본 스케일(BaseScale) 기준으로 재계산되므로,
+/// 풀링으로 재사용되어도 Launch()를 반복 호출할 때마다 크기가 누적되어 계속 커지지 않는다.
 /// </summary>
-public class Projectile : MonoBehaviour
+public class Projectile : BaseObject
 {
     [Inject] protected TotemBuffManager _totemBuffManager;
     [Inject] protected AudioManager _audioManager;
@@ -20,21 +22,13 @@ public class Projectile : MonoBehaviour
     protected Action<Projectile>      _onComplete;
     protected CancellationTokenSource _moveCts;
 
-    // 풀링으로 재사용되는 오브젝트라 Launch()마다 transform.localScale에 곱연산하면 재사용될 때마다 계속 커진다.
-    // Awake()는 실제 인스턴스 생성 시 한 번만 호출되므로, 여기서 프리팹 원본 스케일을 고정해 두고
-    // 매 Launch()마다 이 값을 기준으로 다시 계산한다.
-    private Vector3 _baseScale;
-
     // _data가 전혀 설정되지 않은 경우를 위한 안전한 기본값 (기존 하드코딩 동작과 동일한 직선 이동 + 피격 사운드).
     private static readonly IMovement _fallbackMovement = new StraightMovement();
     private static readonly IProjectileEffect _fallbackHitEffect = new PrefabProjectileEffect { sfxName = "05.Drone_Attack_Hit" };
 
-    protected virtual void Awake()
-    {
-        _baseScale = transform.localScale;
-    }
-
-    public virtual void Launch(Vector3 from, Vector3 to, Action<Projectile> onComplete, ProjectileData data = null, UnitBase sourceUnit = null)
+    /// <summary>from → to로 투사체를 발사한다.
+    /// sizeMultiplier: 이 발사 1회에만 적용되는 추가 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).</summary>
+    public virtual void Launch(Vector3 from, Vector3 to, Action<Projectile> onComplete, ProjectileData data = null, UnitBase sourceUnit = null, float sizeMultiplier = 1f)
     {
         StopMove();
 
@@ -45,7 +39,7 @@ public class Projectile : MonoBehaviour
         transform.position = from;
         float totemMult = _totemBuffManager?.ProjectileSizeMultiplier ?? 1f;
         float unitBuffMult = sourceUnit?.Buffs?.GetStatMultiplier(StatKind.ProjectileSize) ?? 1f;
-        transform.localScale = _baseScale * (totemMult * unitBuffMult);
+        ApplyScale(totemMult * unitBuffMult * sizeMultiplier);
         _onComplete        = onComplete;
 
         _moveCts = CancellationTokenSource.CreateLinkedTokenSource(

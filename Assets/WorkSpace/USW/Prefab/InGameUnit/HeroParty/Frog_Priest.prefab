@@ -110,8 +110,6 @@ MonoBehaviour:
       m_Calls: []
   animator: {fileID: 0}
   IsPopulationReserved: 0
-  _buffRangeCells: 8
-  _buffDuration: 10
 --- !u!114 &337719129048064945
 MonoBehaviour:
   m_ObjectHideFlags: 0

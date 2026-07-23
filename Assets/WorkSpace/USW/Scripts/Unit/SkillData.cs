@@ -12,4 +12,8 @@ public class SkillData : ScriptableObject
     [Header("발동 방식 (SelectableReference)")]
     [SerializeReference, SelectableReference]
     public ISkillAction action;
+
+    [Header("시전 이펙트 (비워두면 사용 안 함)")]
+    [SerializeReference, SelectableReference]
+    public IProjectileEffect castEffect;
 }

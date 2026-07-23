@@ -13,19 +13,13 @@
 ///   강화, 상승효과를 따로 받는다" — 즉 스킬 데미지는 unitData.atk에서 파생되는 값이 아니라
 ///   티어별 고정 수치(노말 500 / 레어 1500 / 에픽 2500 / 레전드 3500)입니다.
 ///
-///   표준 파이프라인의 UnitStatsModifier.GetSkillDamage()는 이미
-///   ComputeDamage(unitData.skillAtk)를 사용하며, skillAtk는 atk와 무관한 별도 필드이자
-///   UpgradeManager의 강화 곡선(atk 전용)에도 영향받지 않으므로 — 티어별 UnitData 에셋의
-///   skillAtk 값을 500/1500/2500/3500으로 데이터 설정하는 것만으로 기획 요구사항이
-///   그대로 충족됩니다. "훈련의 성과"(투사체 크기→데미지, LevelUpManager.
-///   GetProjectileSizeAtkBonus) 패시브 역시 기본 배율(1배)로 표준 파이프라인에서 자동
-///   적용되며, 기획서에도 마법사 스킬에 대한 별도 배율(리더의 2배 같은)이 명시되어 있지
-///   않으므로 GetSkillDamage() 오버라이드가 필요하지 않습니다.
-///
-/// 확인 필요 (최종 보고 참고): 스킬 화염구의 투사체 "크기"(150%~300%, 티어별)는 현재
-/// ProjectilePool/Projectile이 유닛·스킬별 개별 크기 파라미터를 지원하지 않고
-/// TotemBuffManager.ProjectileSizeMultiplier 단일 전역 배율만 적용하는 구조라, 코드
-/// 변경 없이 스킬 전용 VFX 프리팹 자체의 스케일로 구현되어야 합니다.
+///   unitData.skillData(MultiShotSkillAction, useSkillAtk=true)로 데이터 정의되어 있습니다.
+///   useSkillAtk는 caster.GetAttackDamage() 대신 caster.GetSkillDamage()(내부적으로 기존과
+///   동일한 UnitStatsModifier.ComputeDamage(unitData.skillAtk) 경로)를 기준 데미지로 사용하는
+///   MultiShotSkillAction의 옵션이라, 티어별 skillAtk(500/1500/2500/3500)만 UnitData 에셋에
+///   데이터로 넣으면 기획 요구사항이 그대로 충족됩니다. 스킬 투사체 크기(150%~300%, 티어별)도
+///   같은 SkillData의 sizeMultiplier로 표현되어 있어 별도 코드가 필요 없습니다(단, 화염구
+///   전용 VFX 프리팹/이펙트 에셋은 아직 없어 ProjectileData_Mage에는 비워두었습니다).
 /// </summary>
 public class FrogMage : UnitBase
 {

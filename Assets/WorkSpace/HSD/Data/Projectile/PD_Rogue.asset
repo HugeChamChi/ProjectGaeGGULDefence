@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
+  m_Name: PD_Rogue
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  projectilePrefab: {fileID: 7189797441605394283, guid: 9017b1742078ed04f93dfae82a8a6a81,
+    type: 3}
+  projectileAddress: 
+  movement:
+    rid: 7076785014224191599
+  fireEffect:
+    rid: -2
+  hitEffect:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 7076785014224191599
+      type: {class: StraightMovement, ns: , asm: Assembly-CSharp}
+      data:
+        lookAtTarget: 1
+        duration: 0.35
