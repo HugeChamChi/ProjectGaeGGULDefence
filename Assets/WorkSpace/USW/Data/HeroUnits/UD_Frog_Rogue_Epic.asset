@@ -29,6 +29,7 @@ MonoBehaviour:
   skillCooldown: 8
   skillName: 
   skillData: {fileID: 11400000, guid: acf7c7753c999ab7ba6776ec68087cae, type: 2}
+  basicAttackData: {fileID: 11400000, guid: 1183b273a1c543618cd954bdcd014797, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

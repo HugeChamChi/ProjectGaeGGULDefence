@@ -166,7 +166,18 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile(_stats.GetAttackDamage());
+            var attackData = _unit.unitData.basicAttackData;
+            var attackAction = attackData?.action;
+            if (attackAction != null)
+            {
+                attackData.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
+                attackAction.Execute(_unit, this);
+            }
+            else
+            {
+                LaunchProjectile(_stats.GetAttackDamage());
+            }
+
             _unit.InvokeOnAttack();
             _hitCount++;
             TriggerBonusAttacks(attackDisabled);
