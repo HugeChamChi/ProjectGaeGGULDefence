@@ -25,7 +25,6 @@ MonoBehaviour:
   attackSoundAddress: 
   atk: 90
   attackSpeed: 1
-  skillAtk: 0
   skillCooldown: 8
   skillName: 
   skillData: {fileID: 11400000, guid: 17cef4bd615021b4f8f0ac80283641c4, type: 2}

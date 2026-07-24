@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
-  m_Name: "SD_\uD654\uC5FC\uAD6C_Epic"
-  m_EditorClassIdentifier: 
-  skillId: 3
-  skillName: "\uD654\uC5FC\uAD6C"
-  description: "\uD654\uC5FC\uAD6C\uB97C \uD22C\uCC99\uD574 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+  m_Name: "SD_정의구현"
+  m_EditorClassIdentifier:
+  skillId: 5
+  skillName: "정의 구현"
+  description: "검을 바닥에 꽂아 정신을 집중한 후 검을 소환해 공격력의
+    200%의 피해를 줍니다. 스킬은 패시브의 데미지 증가가 2배로 적용됩니다."
   action:
-    rid: 8123456789012345003
+    rid: 8123456789012345005
   hitEffects:
-  - rid: 8123456789012345002
+  - rid: 8123456789012345004
   castEffect:
     rid: -2
   references:
@@ -26,15 +27,12 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 8123456789012345002
-      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+    - rid: 8123456789012345004
+      type: {class: WarriorJudgementHitEffect, ns: , asm: Assembly-CSharp}
       data:
-        fixedPower: 2500
-        coefficient: 1
-    - rid: 8123456789012345003
+        basePower: 200
+        projAtkBonusMultiplier: 2
+    - rid: 8123456789012345005
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount: 1
-        sizeMultiplier: 2.5
-        projectileData: {fileID: 11400000, guid: 8ccd4d632f41dea0ad5ef610aa62604f,
-          type: 2}

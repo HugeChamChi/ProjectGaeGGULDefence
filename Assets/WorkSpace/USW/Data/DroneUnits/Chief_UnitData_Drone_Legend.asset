@@ -25,7 +25,6 @@ MonoBehaviour:
   attackSoundAddress: 05.Leader_Skill_Effect
   atk: 0
   attackSpeed: 0
-  skillAtk: 0
   skillCooldown: 15
   skillName: 
   foodProduction: 0

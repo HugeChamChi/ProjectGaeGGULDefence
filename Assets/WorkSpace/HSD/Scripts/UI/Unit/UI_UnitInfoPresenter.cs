@@ -55,8 +55,8 @@ namespace GaeGGUL.UI.Unit
             _view.UpdateBasicInfo(data.unitName, data.icon, data.unitTier);
 
             // skillData가 있으면 그쪽이 스킬의 단일 소스(skillName/description)이고,
-            // UnitData.skillName/description은 skillData 없이 GetSkillDamage()/GetSkillShotCount()
-            // 오버라이드로 스킬을 구현하는 구형 유닛(전사/마법사(고블린)/무직/드론 등)을 위한 폴백이다.
+            // UnitData.skillName/description은 skillData 없이 OnSkillFull() 오버라이드로
+            // 스킬을 구현하는 구형 유닛(무직/드론 등)을 위한 폴백이다.
             string skillName = data.skillData != null ? data.skillData.skillName : data.skillName;
             string skillDescription = data.skillData != null ? data.skillData.description : data.description;
             _view.UpdateSkillInfo(skillName, skillDescription, cooldownText);

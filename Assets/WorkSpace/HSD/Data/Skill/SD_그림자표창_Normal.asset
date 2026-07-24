@@ -18,6 +18,8 @@ MonoBehaviour:
     \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   action:
     rid: 8123456789012345002
+  hitEffects:
+  - rid: 8123456789012345001
   castEffect:
     rid: -2
   references:
@@ -25,12 +27,15 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 8123456789012345001
+      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+      data:
+        fixedPower: 0
+        coefficient: 0.8
     - rid: 8123456789012345002
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount: 2
-        atkCoefficient: 0.8
-        useSkillAtk: 0
         sizeMultiplier: 1.5
         projectileData: {fileID: 11400000, guid: 4f6be4a3fd49f4275b101120d6fdaa19,
           type: 2}

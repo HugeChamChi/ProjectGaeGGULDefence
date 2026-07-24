@@ -27,15 +27,13 @@ public class UnitData : ScriptableObject, ILoadableAsset
     [Header("Attack")]
     public float atk;           // 일반 공격력
     public float attackSpeed;   // 공격 속도 (초)
-    public float skillAtk;      // 스킬 공격력
     public float skillCooldown; // 스킬 쿨다운 (초)
 
     [Tooltip("기본 공격 발동 방식을 데이터로 정의(SkillData 재사용). 비워두면 기존 LaunchProjectile(GetAttackDamage()) 1발 고정 방식을 사용한다.")]
     public SkillData basicAttackData;
 
     [Header("Skill")]
-    public string skillName;    // 스킬 이름
-    [Tooltip("스킬 발동 방식을 데이터로 정의. 비워두면 기존 GetSkillDamage()/GetSkillShotCount() 오버라이드 방식을 사용한다.")]
+    public string skillName;    // 스킬 이름 (skillData 없을 때 UI 표시용 폴백)
     public SkillData skillData;
 
     [Header("Economy")]

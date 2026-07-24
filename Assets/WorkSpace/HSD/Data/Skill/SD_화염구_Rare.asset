@@ -17,6 +17,8 @@ MonoBehaviour:
   description: "\uD654\uC5FC\uAD6C\uB97C \uD22C\uCC99\uD574 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   action:
     rid: 8123456789012345003
+  hitEffects:
+  - rid: 8123456789012345002
   castEffect:
     rid: -2
   references:
@@ -24,12 +26,15 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 8123456789012345002
+      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+      data:
+        fixedPower: 1500
+        coefficient: 1
     - rid: 8123456789012345003
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount: 1
-        atkCoefficient: 1
-        useSkillAtk: 1
         sizeMultiplier: 2
         projectileData: {fileID: 11400000, guid: 8ccd4d632f41dea0ad5ef610aa62604f,
           type: 2}

@@ -37,10 +37,10 @@ public abstract class ChiefUnit : UnitBase
 
     private async UniTask TriggerManualSkillAsync()
     {
-        // OnSkillFull 오버라이드한 곳에서 실제 스킬 로직 발동
-        OnSkillFull();
+        // 일반 유닛과 동일한 파이프라인(skillData 우선, 없으면 OnSkillFull()/legacy 폴백)을 태운다.
+        TriggerSkillManually();
 
-        if (animator != null) 
+        if (animator != null)
         {
             CurrentState = UnitState.Skilling;
             animator.SetSpeed(1f);

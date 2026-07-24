@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -171,7 +172,7 @@ public class UnitCombatComponent : MonoBehaviour
             if (attackAction != null)
             {
                 attackData.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
-                attackAction.Execute(_unit, this);
+                attackAction.Execute(_unit, this, attackData.hitEffects);
             }
             else
             {
@@ -198,18 +199,7 @@ public class UnitCombatComponent : MonoBehaviour
             skillData?.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
 
             var skillAction = skillData?.action;
-            if (skillAction != null)
-            {
-                skillAction.Execute(_unit, this);
-            }
-            else
-            {
-                // 0 = 보스 투사체를 쏘지 않는 스킬(예: 사제의 아군 버프 스킬). 기존 유닛은 모두
-                // 기본값 1 이상을 반환하므로 이 변경으로 동작이 바뀌지 않는다.
-                int shotCount = Mathf.Max(0, _unit.GetSkillShotCount());
-                for (int i = 0; i < shotCount; i++)
-                    LaunchProjectile(_unit.GetSkillDamage());
-            }
+            skillAction?.Execute(_unit, this, skillData.hitEffects);
         }
 
         var lu = _deps?.LevelUpManager;
@@ -259,6 +249,18 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>sizeMultiplier: 이 발사 1회에만 적용되는 추가 투사체 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).
     /// projectileData: 이 발사에만 쓸 투사체 구성(이동/이펙트/프리팹). null이면 ProjectilePool의 기본 구성을 사용한다.</summary>
     public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null)
+        => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) => boss.TakeDamage(damage, targetPos));
+
+    /// <summary>적중 시 결과를 hitEffects에 위임하는 발사(데미지 외의 효과도 가능).</summary>
+    public void LaunchProjectile(List<IHitEffect> hitEffects, float sizeMultiplier = 1f, ProjectileData projectileData = null)
+        => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) =>
+        {
+            if (hitEffects == null) return;
+            foreach (var effect in hitEffects)
+                effect?.Apply(_unit, boss, targetPos);
+        });
+
+    private void LaunchProjectileInternal(float sizeMultiplier, ProjectileData projectileData, Action<BossBase, Vector3> onHitApply)
     {
         var boss = LiveBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
@@ -275,7 +277,7 @@ public class UnitCombatComponent : MonoBehaviour
             {
                 if (boss != null && !boss.IsDead)
                 {
-                    boss.TakeDamage(damage, targetPos);
+                    onHitApply(boss, targetPos);
                 }
             };
 

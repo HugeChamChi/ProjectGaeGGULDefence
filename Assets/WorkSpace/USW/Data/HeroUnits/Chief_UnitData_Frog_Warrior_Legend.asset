@@ -25,10 +25,10 @@ MonoBehaviour:
   attackSoundAddress: 
   atk: 100
   attackSpeed: 1
-  skillAtk: 200
   skillCooldown: 10
   basicAttackData: {fileID: 11400000, guid: 068ce850b5a24ff4bbabeab9a730815c, type: 2}
   skillName:
+  skillData: {fileID: 11400000, guid: 877cc28581b94d3aaa52d46163c6356a, type: 2}
   foodProduction: 0
   populationCost: 1
   maxDroneCount: 0

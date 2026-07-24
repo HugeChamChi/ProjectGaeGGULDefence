@@ -185,6 +185,11 @@ public abstract class UnitBase : MonoBehaviour
     public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
+    public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;
+
+    /// <summary>ChiefUnit의 수동 스킬 발동 등에서 UnitCombatComponent.ExecuteSkill()(skillData 우선, 없으면 legacy 폴백) 전체 파이프라인을 그대로 태운다.</summary>
+    public void TriggerSkillManually() => _combat?.TriggerSkillManually();
 
     // ── Backward Compatibility Wrappers for Subclasses & UI ──
     public TotemBuffManager _totemBuffManager => _deps?.TotemBuffManager;
@@ -200,11 +205,6 @@ public abstract class UnitBase : MonoBehaviour
     }
 
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
-    public virtual int GetSkillDamage() => _stats?.GetSkillDamage() ?? 0;
-    protected int GetSkillDamage(float projAtkBonusMultiplier) => _stats?.GetSkillDamage(projAtkBonusMultiplier) ?? 0;
-
-    /// <summary>액티브 스킬 1회당 발사되는 투사체 횟수.</summary>
-    public virtual int GetSkillShotCount() => 1;
 
     public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;
     public float GetCurrentSkillInterval() => _stats?.GetCurrentSkillInterval() ?? 1f;

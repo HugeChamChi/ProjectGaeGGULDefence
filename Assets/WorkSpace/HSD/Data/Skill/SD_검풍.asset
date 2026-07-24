@@ -18,6 +18,8 @@ MonoBehaviour:
     날려 피해를 줍니다."
   action:
     rid: 9123456789012345101
+  hitEffects:
+  - rid: 9123456789012345100
   castEffect:
     rid: -2
   references:
@@ -25,8 +27,12 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 9123456789012345100
+      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+      data:
+        fixedPower: 0
+        coefficient: 1
     - rid: 9123456789012345101
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount: 1
-        atkCoefficient: 1

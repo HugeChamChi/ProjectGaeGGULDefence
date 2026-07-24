@@ -14,14 +14,6 @@ public class FrogUnemployed : UnitBase
         // 3056 식충이 — 식량 생산 제거, 스킬마다 공격력 +N 누적
         _unemployedAtkBonus += lu.UnemployedSkillAtkGain;
 
-        bool attackDisabled = currentCell != null &&
-            (currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled);
-
-        if (!attackDisabled && _boss != null && !_boss.IsDead)
-        {
-            LaunchProjectile(GetSkillDamage());
-        }
-
         onSkillFull?.Invoke();
     }
 }

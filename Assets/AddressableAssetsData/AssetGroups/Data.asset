@@ -53,12 +53,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 059e292697c373547a35058aeb5133f0
-    m_Address: Data/Ninja_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0a076844ae7ca6344bb6f67629bca336
     m_Address: "Data/LevelUpData_3108_\uD3ED\uD48D_\uC5F0\uACA9"
     m_ReadOnly: 0
@@ -197,12 +191,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2afbc4a8555572b4782de99875470d47
-    m_Address: Data/Gunner_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2f2310580a884c34e852dac0d1cb3ac7
     m_Address: "Data/LevelUpData_3040_\uC911\uB7C9\uD0C4"
     m_ReadOnly: 0
@@ -325,18 +313,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40236e64701f6f2260902ebe0857a9ee
     m_Address: Data/TD_4027
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 438f1da2acc20044b80eeefc7332a02c
-    m_Address: Data/Wizard_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 450c68fb72582564b9a9cac8dfc39910
-    m_Address: Data/Gunner_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -491,12 +467,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 65429e12034a42844bc4faed04d1975b
-    m_Address: Data/Ninja_Normal
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 659782379edf2f848ad2effcb9d56ea1
     m_Address: "Data/LevelUpData_3203_\uC6B0\uB450\uBA38\uB9AC"
     m_ReadOnly: 0
@@ -557,12 +527,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6fda0ad9b6fb4954a94655cb62c78cc5
-    m_Address: Data/Gunner_Legend
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7001fe1e01bac2f4b940b20f6285e298
     m_Address: Data/Normal_DamageStyle
     m_ReadOnly: 0
@@ -599,20 +563,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7472622295d3c4b429c3cc6924913d94
-    m_Address: Data/Wizard_Legend
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7602d5cf01d43334dac45f0931984c47
     m_Address: "Data/LevelUpData_3037_\uAC70\uB300\uD654"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 76d33db32cb170c44a7441a5c33f8023
-    m_Address: Data/Wizard_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -631,12 +583,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79e772c67cd27d445b9f649d7f0a0bd5
     m_Address: "Data/LevelUpData_3015_\uBCF4\uAE09\uAD00"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7e0134e61fee5754aa24846fed555350
-    m_Address: Data/Gunner_Rare
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -707,12 +653,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 883c4b3a0360bd842aa7536fdbd81abb
-    m_Address: Data/Ninja_Legend
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 886f353dbdf5b0e46b7eb5333ed1b5fc
     m_Address: "Data/LevelUpData_3033_\uC9C8\uD48D"
     m_ReadOnly: 0
@@ -745,18 +685,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ff5f3f4c238125409999a555e201aad
     m_Address: Data/UnitData_DebuffDroneUnit_Normal
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 91b64b70c62c630499f9a53d80a68a7a
-    m_Address: Data/Ninja_Rare
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 921ecd073721bb44b8ae2585b6f1ef20
-    m_Address: Data/Frog_Normal
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -881,12 +809,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - CharacterData
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a3171cc8ad3d7124d8803d4720d5efaa
-    m_Address: Data/Frog_Legend
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a36327a61f0647a41ac8edf878ffb5c0
     m_Address: PlayerIcon/IconItemDataSO 1
     m_ReadOnly: 0
@@ -943,12 +865,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1aef105842ea71439624945e458046a
     m_Address: "Data/LevelUpData_3303_\uC774\uAE00\uC544\uC774"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b24cb10852489bd45a2382933cf47f63
-    m_Address: Data/Wizard_Rare
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -1051,12 +967,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c39813e7c222d814cbf2503f99fa2999
     m_Address: Data/WaveData_Round08
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c3bb090a590c87248abc5561ef2833cd
-    m_Address: Data/Frog_Epic
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -1261,12 +1171,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f0f4d2ccafb733d4fb60e295fb112436
     m_Address: "Data/LevelUpData_3101_\uBB35\uC9C1\uD55C_\uD55C_\uBC29"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f1c73a5d331cbe54391d031dab33ffec
-    m_Address: Data/Frog_Rare
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data

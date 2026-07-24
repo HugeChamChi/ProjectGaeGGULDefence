@@ -24,7 +24,6 @@ public static class HeroPartyTestSetup
         public int CharacterId;
         public float Atk;
         public float AttackSpeed;
-        public float SkillAtk;
         public float SkillCooldown;
     }
 
@@ -43,11 +42,11 @@ public static class HeroPartyTestSetup
 
         var specs = new List<HeroSpec>
         {
-            new HeroSpec { Name = "Frog_Warrior", ScriptType = typeof(FrogWarrior), Tribe = UnitTribe.Warrior, CharacterId = 1016, Atk = 100, AttackSpeed = 1f, SkillAtk = 200, SkillCooldown = 10 },
-            new HeroSpec { Name = "Frog_Mage",    ScriptType = typeof(FrogMage),    Tribe = UnitTribe.Mage,    CharacterId = 1017, Atk = 80,  AttackSpeed = 1f, SkillAtk = 500, SkillCooldown = 8 },
-            new HeroSpec { Name = "Frog_Archer",  ScriptType = typeof(FrogArcher),  Tribe = UnitTribe.Archer,  CharacterId = 1018, Atk = 90,  AttackSpeed = 1f, SkillAtk = 0,   SkillCooldown = 8 },
-            new HeroSpec { Name = "Frog_Rogue",   ScriptType = typeof(FrogRogue),   Tribe = UnitTribe.Rogue,   CharacterId = 1019, Atk = 90,  AttackSpeed = 1f, SkillAtk = 0,   SkillCooldown = 8 },
-            new HeroSpec { Name = "Frog_Priest",  ScriptType = typeof(FrogPriest),  Tribe = UnitTribe.Support, CharacterId = 1020, Atk = 70,  AttackSpeed = 1f, SkillAtk = 0,   SkillCooldown = 12 },
+            new HeroSpec { Name = "Frog_Warrior", ScriptType = typeof(FrogWarrior), Tribe = UnitTribe.Warrior, CharacterId = 1016, Atk = 100, AttackSpeed = 1f, SkillCooldown = 10 },
+            new HeroSpec { Name = "Frog_Mage",    ScriptType = typeof(FrogMage),    Tribe = UnitTribe.Mage,    CharacterId = 1017, Atk = 80,  AttackSpeed = 1f, SkillCooldown = 8 },
+            new HeroSpec { Name = "Frog_Archer",  ScriptType = typeof(FrogArcher),  Tribe = UnitTribe.Archer,  CharacterId = 1018, Atk = 90,  AttackSpeed = 1f, SkillCooldown = 8 },
+            new HeroSpec { Name = "Frog_Rogue",   ScriptType = typeof(FrogRogue),   Tribe = UnitTribe.Rogue,   CharacterId = 1019, Atk = 90,  AttackSpeed = 1f, SkillCooldown = 8 },
+            new HeroSpec { Name = "Frog_Priest",  ScriptType = typeof(FrogPriest),  Tribe = UnitTribe.Support, CharacterId = 1020, Atk = 70,  AttackSpeed = 1f, SkillCooldown = 12 },
         };
 
         var createdUnitData = new List<UnitData>();
@@ -75,7 +74,6 @@ public static class HeroPartyTestSetup
             unitData.unitTribe = spec.Tribe;
             unitData.atk = spec.Atk;
             unitData.attackSpeed = spec.AttackSpeed;
-            unitData.skillAtk = spec.SkillAtk;
             unitData.skillCooldown = spec.SkillCooldown;
             unitData.populationCost = 1;
             unitData.prefab = prefabAsset;

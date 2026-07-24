@@ -25,7 +25,6 @@ MonoBehaviour:
   attackSoundAddress: 05.Drone_Summon
   atk: 0
   attackSpeed: 0
-  skillAtk: 0
   skillCooldown: 999
   skillName: 
   foodProduction: 8

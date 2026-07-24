@@ -25,7 +25,6 @@ MonoBehaviour:
   attackSoundAddress: 05.Drone_Attack
   atk: 170
   attackSpeed: 1.4
-  skillAtk: 0
   skillCooldown: 12
   skillName: 
   foodProduction: 3

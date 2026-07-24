@@ -29,10 +29,12 @@ public class UnitStatsModifier : MonoBehaviour
         / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
-    public int GetSkillDamage()  => ComputeDamage(_unit.unitData.skillAtk);
 
-    /// <summary>패시브 공격력 보너스 배율을 적용해 스킬 데미지를 계산합니다.</summary>
-    public int GetSkillDamage(float projAtkBonusMultiplier) => ComputeDamage(_unit.unitData.skillAtk, projAtkBonusMultiplier);
+    /// <summary>임의의 기준값을 GetAttackDamage()와 동일한 보정 파이프라인(크리티컬/토템/부족/버스트 등)에 통과시킨다.</summary>
+    public int ComputeDamageFrom(float baseDamage) => ComputeDamage(baseDamage);
+
+    /// <summary>projAtkBonusMultiplier: "훈련의 성과" 류 투사체 크기 보너스 항목에만 추가로 곱해지는 배율(기본 1).</summary>
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => ComputeDamage(baseDamage, projAtkBonusMultiplier);
 
     private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier = 1f)
     {

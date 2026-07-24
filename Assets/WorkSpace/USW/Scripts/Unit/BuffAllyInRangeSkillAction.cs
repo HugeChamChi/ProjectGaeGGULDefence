@@ -13,7 +13,7 @@ public class BuffAllyInRangeSkillAction : ISkillAction
     [Tooltip("대상에게 부여할 버프")]
     public BuffData buff;
 
-    public void Execute(UnitBase caster, UnitCombatComponent combat)
+    public void Execute(UnitBase caster, UnitCombatComponent combat, List<IHitEffect> hitEffects)
     {
         var target = GetRandomAllyInRange(caster);
         if (target == null || buff == null) return;
