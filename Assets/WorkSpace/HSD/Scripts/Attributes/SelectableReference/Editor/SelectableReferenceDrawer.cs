@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,7 +25,10 @@ public class SelectableReferenceDrawer : PropertyDrawer
         Rect labelRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
         string fullTypeName = property.managedReferenceFullTypename;
-        string typeName = string.IsNullOrEmpty(fullTypeName) ? "None (Empty)" : fullTypeName.Split(' ').Last().Split('.').Last();
+        Type currentType = property.managedReferenceValue?.GetType();
+        string typeName = currentType != null
+            ? GetDisplayName(currentType)
+            : string.IsNullOrEmpty(fullTypeName) ? "None (Empty)" : fullTypeName.Split(' ').Last().Split('.').Last();
 
         Rect buttonRect = EditorGUI.PrefixLabel(labelRect, label);
         if (EditorGUI.DropdownButton(buttonRect, new GUIContent(typeName), FocusType.Passive))
@@ -73,7 +77,7 @@ public class SelectableReferenceDrawer : PropertyDrawer
 
         foreach (var type in types)
         {
-            menu.AddItem(new GUIContent(type.Name), false, () =>
+            menu.AddItem(new GUIContent(GetDisplayName(type)), false, () =>
             {
                 property.serializedObject.Update();
 
@@ -100,6 +104,12 @@ public class SelectableReferenceDrawer : PropertyDrawer
             });
         }
         menu.ShowAsContext();
+    }
+
+    private static string GetDisplayName(Type type)
+    {
+        var korean = type.GetCustomAttribute<KoreanNameAttribute>();
+        return korean != null ? korean.Name : type.Name;
     }
 
     private Type GetElementType(Type type)

@@ -6,12 +6,16 @@ using UnityEngine;
 /// 사운드 이름을 지정하면 AudioManager로 함께 재생한다.
 /// </summary>
 [Serializable]
-public class PrefabProjectileEffect : IProjectileEffect
+[KoreanName("프리팹 이펙트")]
+public class PrefabProjectileEffect : IEffectSpawner
 {
     [Tooltip("비워두면 프리팹 스폰 없이 사운드만 재생")]
+    [KoreanLabel("이펙트 프리팹")]
     public GameObject effectPrefab;
+    [KoreanLabel("지속 시간")]
     public float duration = 1.0f;
     [Tooltip("비워두면 사운드 재생 안 함")]
+    [KoreanLabel("효과음 이름")]
     public string sfxName;
 
     public void Play(Vector3 position, Transform parent, AudioManager audioManager)

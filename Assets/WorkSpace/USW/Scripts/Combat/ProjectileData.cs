@@ -22,9 +22,9 @@ public class ProjectileData : ScriptableObject
 
     [BoxGroup("이펙트 (비워두면 사용 안 함)")]
     [SerializeReference, SelectableReference]
-    public IProjectileEffect fireEffect;
+    public IEffectSpawner fireEffect;
 
     [BoxGroup("이펙트 (비워두면 사용 안 함)")]
     [SerializeReference, SelectableReference]
-    public IProjectileEffect hitEffect;
+    public IEffectSpawner hitEffect;
 }

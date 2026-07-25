@@ -172,7 +172,7 @@ public class UnitCombatComponent : MonoBehaviour
             if (attackAction != null)
             {
                 attackData.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
-                attackAction.Execute(_unit, this, attackData.hitEffects);
+                attackAction.Execute(_unit, this, attackData.hitEffects, attackData.additionalEffects);
             }
             else
             {
@@ -199,7 +199,7 @@ public class UnitCombatComponent : MonoBehaviour
             skillData?.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
 
             var skillAction = skillData?.action;
-            skillAction?.Execute(_unit, this, skillData.hitEffects);
+            skillAction?.Execute(_unit, this, skillData.hitEffects, skillData.additionalEffects);
         }
 
         var lu = _deps?.LevelUpManager;
@@ -251,13 +251,17 @@ public class UnitCombatComponent : MonoBehaviour
     public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null)
         => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) => boss.TakeDamage(damage, targetPos));
 
-    /// <summary>적중 시 결과를 hitEffects에 위임하는 발사(데미지 외의 효과도 가능).</summary>
-    public void LaunchProjectile(List<IHitEffect> hitEffects, float sizeMultiplier = 1f, ProjectileData projectileData = null)
+    /// <summary>적중 시 결과를 hitEffects에, 부가 연출을 additionalEffects에 위임하는 발사(데미지 외의 효과도 가능).</summary>
+    public void LaunchProjectile(List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, float sizeMultiplier = 1f, ProjectileData projectileData = null)
         => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) =>
         {
-            if (hitEffects == null) return;
-            foreach (var effect in hitEffects)
-                effect?.Apply(_unit, boss, targetPos);
+            if (hitEffects != null)
+                foreach (var effect in hitEffects)
+                    effect?.Apply(_unit, boss, targetPos);
+
+            if (additionalEffects != null)
+                foreach (var effect in additionalEffects)
+                    effect?.Apply(_unit, boss, targetPos);
         });
 
     private void LaunchProjectileInternal(float sizeMultiplier, ProjectileData projectileData, Action<BossBase, Vector3> onHitApply)

@@ -18,28 +18,28 @@ public class MultiShotSkillAction : ISkillAction
     [Tooltip("이 스킬 투사체의 이동/이펙트/프리팹 구성 (비워두면 ProjectilePool 기본 구성 사용)")]
     public ProjectileData projectileData;
 
-    public void Execute(UnitBase caster, UnitCombatComponent combat, List<IHitEffect> hitEffects)
+    public void Execute(UnitBase caster, UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects)
     {
         if (shotInterval <= 0f)
         {
             for (int i = 0; i < shotCount; i++)
-                combat.LaunchProjectile(hitEffects, sizeMultiplier, projectileData);
+                combat.LaunchProjectile(hitEffects, additionalEffects, sizeMultiplier, projectileData);
             return;
         }
 
-        FireShotsAsync(combat, hitEffects).Forget(e =>
+        FireShotsAsync(combat, hitEffects, additionalEffects).Forget(e =>
         {
             if (e is not OperationCanceledException) Debug.LogException(e);
         });
     }
 
-    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IHitEffect> hitEffects)
+    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects)
     {
         var token = combat.GetCancellationTokenOnDestroy();
         for (int i = 0; i < shotCount; i++)
         {
             if (token.IsCancellationRequested) return;
-            combat.LaunchProjectile(hitEffects, sizeMultiplier, projectileData);
+            combat.LaunchProjectile(hitEffects, additionalEffects, sizeMultiplier, projectileData);
 
             if (i < shotCount - 1)
                 await UniTask.Delay(TimeSpan.FromSeconds(shotInterval), cancellationToken: token);

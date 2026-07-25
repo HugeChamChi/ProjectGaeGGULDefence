@@ -24,7 +24,7 @@ public class Projectile : BaseObject
 
     // _data가 전혀 설정되지 않은 경우를 위한 안전한 기본값 (기존 하드코딩 동작과 동일한 직선 이동 + 피격 사운드).
     private static readonly IMovement _fallbackMovement = new StraightMovement();
-    private static readonly IProjectileEffect _fallbackHitEffect = new PrefabProjectileEffect { sfxName = "05.Drone_Attack_Hit" };
+    private static readonly IEffectSpawner _fallbackHitEffect = new PrefabProjectileEffect { sfxName = "05.Drone_Attack_Hit" };
 
     /// <summary>from → to로 투사체를 발사한다.
     /// sizeMultiplier: 이 발사 1회에만 적용되는 추가 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).</summary>
