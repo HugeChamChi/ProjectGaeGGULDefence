@@ -5,6 +5,7 @@ using UnityEngine.Events;
 public abstract class UnitBase : MonoBehaviour
 {
     public UnitData unitData;
+    public Tier currentTier = Tier.Normal;
     public UnityEvent onSkillFull;
     public UnityEvent onAttack;
     public static event Action OnAnyUnitChanged;
@@ -96,7 +97,7 @@ public abstract class UnitBase : MonoBehaviour
 
         if (_visual != null && unitData != null)
         {
-            _visual.UpdateVisual(unitData.unitTier);
+            _visual.UpdateVisual(currentTier);
         }
 
         Boss = boss;
@@ -109,7 +110,7 @@ public abstract class UnitBase : MonoBehaviour
         
         if (!IsPopulationReserved)
         {
-            _deps?.PopulationManager?.Add(unitData?.populationCost ?? 1);
+            _deps?.PopulationManager?.Add(unitData != null ? unitData.populationCost.Get(currentTier) : 1);
             IsPopulationReserved = true;
         }
         
@@ -129,7 +130,7 @@ public abstract class UnitBase : MonoBehaviour
         _combat.StopLoops();
         if (IsPopulationReserved)
         {
-            _deps?.PopulationManager?.Remove(unitData?.populationCost ?? 1);
+            _deps?.PopulationManager?.Remove(unitData != null ? unitData.populationCost.Get(currentTier) : 1);
             IsPopulationReserved = false;
         }
         currentCell = null;
@@ -182,7 +183,7 @@ public abstract class UnitBase : MonoBehaviour
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;

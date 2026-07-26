@@ -304,7 +304,7 @@ namespace HSD.InGameDebug
                 
                 if (factory != null && spawner != null)
                 {
-                    var unit = factory.CreateUnitByCharacterId(data.characterId);
+                    var unit = factory.CreateUnitFromData(data, Tier.Normal);
                     if (unit != null)
                     {
                         spawner.PlaceUnitWithEffect(unit, cell);

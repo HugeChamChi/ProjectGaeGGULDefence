@@ -10,6 +10,7 @@ public enum TotemDirection { Up, Down, Left, Right, UpLeft, UpRight, DownLeft, D
 /// rotationAware가 true면 토템의 RotationStep만큼 direction도 함께 회전한다.
 /// </summary>
 [Serializable]
+[DisplayName("직선 범위")]
 public class DirectionalLineRange : ITotemRange
 {
     /// <summary>에디터 미리보기 그리드(6x4) 안에서 어느 위치에서 시작하든 끝까지 닿기에 충분한 칸 수.</summary>

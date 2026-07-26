@@ -80,10 +80,13 @@ public class UnitSpawner : MonoBehaviour
         foreach (var data in _unitFactory.UnitDataList)
         {
             if (data == null) continue;
-            var row = _gameDataManager.GetCharacterRow(data.characterId);
-            if (row != null)
+            foreach (var tier in TierUtil.All)
             {
-                data.ApplySheetData(row);
+                var row = _gameDataManager.GetCharacterRow(data.characterId.Get(tier));
+                if (row != null)
+                {
+                    data.ApplySheetData(tier, row);
+                }
             }
         }
         Debug.Log($"[UnitSpawner] 모든 UnitData SO에 시트 스탯 동기화 완료 ({_unitFactory.UnitDataList.Length}종)");
@@ -146,7 +149,7 @@ public class UnitSpawner : MonoBehaviour
         // 비동기 스폰 지연 전에 인구수 즉시 선점 (광클 초과 방지)
         if (_populationManager != null)
         {
-            _populationManager.Add(unit.unitData?.populationCost ?? 1);
+            _populationManager.Add(unit.unitData != null ? unit.unitData.populationCost.Get(unit.currentTier) : 1);
             unit.IsPopulationReserved = true;
         }
 
@@ -270,13 +273,13 @@ public class UnitSpawner : MonoBehaviour
     public void SellUnit(UnitBase unit)
     {
         if (unit == null) return;
-        if (unit.unitData?.unitTier == Tier.Chieftain) return;
+        if (unit.currentTier == Tier.Chieftain) return;
 
         var cell = FindCellByUnit(unit);
         if (cell == null) return;
 
         // 강화 레벨 조회 (UpgradeManager 기준)
-        int charId  = unit.unitData != null ? unit.unitData.characterId : -1;
+        int charId  = unit.unitData != null ? unit.unitData.characterId.Get(unit.currentTier) : -1;
         string jobType = unit.unitData != null
             ? _upgradeManager?.GetJobType(charId) ?? string.Empty
             : string.Empty;

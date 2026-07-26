@@ -64,7 +64,7 @@ public class MergeManager : MonoBehaviour
 
         var targets   = GetMergeTargets(_selectedUnit);
         var spawnCell = targets[0].cell;
-        var nextTier  = (Tier)((int)_selectedUnit.unitData.unitTier + 1);
+        var nextTier  = (Tier)((int)_selectedUnit.currentTier + 1);
         var tribe     = _selectedUnit.unitData.unitTribe;
 
         ClearSelection();
@@ -117,8 +117,8 @@ public class MergeManager : MonoBehaviour
     public bool CanMerge(UnitBase unit)
     {
         if (unit?.unitData == null) return false;
-        if (unit.unitData.unitTier == Tier.Legend) return false;
-        if (unit.unitData.unitTier == Tier.Chieftain) return false;
+        if (unit.currentTier == Tier.Legend) return false;
+        if (unit.currentTier == Tier.Chieftain) return false;
         return GetMergeTargets(unit).Count >= 2;
     }
 
@@ -130,8 +130,8 @@ public class MergeManager : MonoBehaviour
             var u = cell.OccupyingUnit;
             if (u != null &&
                 u.unitData != null &&
-                u.unitData.unitType == unit.unitData.unitType &&
-                u.unitData.unitTier == unit.unitData.unitTier)
+                u.unitData == unit.unitData &&
+                u.currentTier == unit.currentTier)
             {
                 result.Add((u, cell));
                 if (result.Count >= 2) break;

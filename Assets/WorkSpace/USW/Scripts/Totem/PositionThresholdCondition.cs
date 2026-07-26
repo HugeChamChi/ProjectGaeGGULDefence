@@ -5,6 +5,7 @@ using System;
 /// 예) TotemUnitedBuff의 "앞쪽에 배치된 경우에만" / TotemPositionBuff의 "앞줄/뒷줄 판정"과 동일한 패턴.
 /// </summary>
 [Serializable]
+[DisplayName("위치 조건")]
 public class PositionThresholdCondition : ITotemCondition
 {
     public enum Axis { X, Y }

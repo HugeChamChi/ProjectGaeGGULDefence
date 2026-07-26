@@ -57,14 +57,18 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var data = System.Array.Find(unitDataList, d => d != null && d.unitType == type);
-        if (data == null)
+        foreach (var data in unitDataList)
         {
-            Debug.LogError($"UnitFactory: unitType={type}인 UnitData를 찾지 못했습니다.");
-            return null;
+            if (data == null) continue;
+            foreach (var tier in TierUtil.All)
+            {
+                if (data.unitType.Get(tier) == type)
+                    return InstantiateFromData(data, tier);
+            }
         }
 
-        return InstantiateFromData(data);
+        Debug.LogError($"UnitFactory: unitType={type}인 UnitData를 찾지 못했습니다.");
+        return null;
     }
 
     /// <summary>Normal 티어 유닛만 랜덤 생성 (소환 버튼용)</summary>
@@ -73,13 +77,18 @@ public class UnitFactory : MonoBehaviour
     /// <summary>characterId 기준 유닛 생성 (소환 확률 시트 연동용). 없으면 Normal 랜덤 폴백.</summary>
     public UnitBase CreateUnitByCharacterId(int characterId)
     {
-        var data = System.Array.Find(unitDataList, d => d != null && d.characterId == characterId);
-        if (data == null)
+        foreach (var data in unitDataList)
         {
-            Debug.LogWarning($"UnitFactory: characterId={characterId} 미등록 — Normal 랜덤 폴백");
-            return CreateRandomNormalUnit();
+            if (data == null) continue;
+            foreach (var tier in TierUtil.All)
+            {
+                if (data.characterId.Get(tier) == characterId)
+                    return InstantiateFromData(data, tier);
+            }
         }
-        return InstantiateFromData(data);
+
+        Debug.LogWarning($"UnitFactory: characterId={characterId} 미등록 — Normal 랜덤 폴백");
+        return CreateRandomNormalUnit();
     }
 
     /// <summary>전체 풀에서 랜덤 생성</summary>
@@ -94,7 +103,7 @@ public class UnitFactory : MonoBehaviour
         var data = unitDataList[Random.Range(0, unitDataList.Length)];
         if (data == null) return null;
 
-        return InstantiateFromData(data);
+        return InstantiateFromData(data, Tier.Normal);
     }
 
     /// <summary>지정 티어에서 랜덤 유닛 생성 (머지 결과물 스폰에 사용)</summary>
@@ -106,15 +115,14 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var pool = System.Array.FindAll(unitDataList, d => d != null && d.unitTier == tier);
+        var pool = System.Array.FindAll(unitDataList, d => d != null);
         if (pool.Length == 0)
         {
-            Debug.LogError($"UnitFactory: unitTier={tier} 인 유닛 데이터가 없습니다.");
+            Debug.LogError("UnitFactory: 유닛 데이터가 없습니다.");
             return null;
         }
 
-        // unitType 중복과 무관하게 data 객체를 직접 사용
-        return InstantiateFromData(pool[Random.Range(0, pool.Length)]);
+        return InstantiateFromData(pool[Random.Range(0, pool.Length)], tier);
     }
 
     /// <summary>부족 + 티어로 랜덤 유닛 생성 (GainUnit 레벨업 효과용)</summary>
@@ -126,24 +134,23 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var pool = System.Array.FindAll(unitDataList,
-            d => d != null && d.unitTribe == tribe && d.unitTier == tier);
+        var pool = System.Array.FindAll(unitDataList, d => d != null && d.unitTribe == tribe);
 
         if (pool.Length == 0)
         {
-            Debug.LogWarning($"UnitFactory: tribe={tribe} tier={tier} 유닛 없음 — tier 폴백");
+            Debug.LogWarning($"UnitFactory: tribe={tribe} 유닛 없음 — tier 폴백");
             return CreateRandomUnitOfTier(tier);
         }
 
-        return InstantiateFromData(pool[Random.Range(0, pool.Length)]);
+        return InstantiateFromData(pool[Random.Range(0, pool.Length)], tier);
     }
 
     /// <summary>UnitData SO를 직접 넘겨 생성 — unitDataList 등록 없이도 동작 (테스트 소환 등)</summary>
-    public UnitBase CreateUnitFromData(UnitData data) => InstantiateFromData(data);
+    public UnitBase CreateUnitFromData(UnitData data, Tier tier = Tier.Normal) => InstantiateFromData(data, tier);
 
     // ── 공통 인스턴스화 ────────────────────────────────────────
 
-    private UnitBase InstantiateFromData(UnitData data)
+    private UnitBase InstantiateFromData(UnitData data, Tier tier)
     {
         if (data.prefab == null)
         {
@@ -162,6 +169,7 @@ public class UnitFactory : MonoBehaviour
         }
 
         unit.unitData = data;
+        unit.currentTier = tier;
         unit.animator?.Initialize(unit);
 
         unit.Init(_deps);

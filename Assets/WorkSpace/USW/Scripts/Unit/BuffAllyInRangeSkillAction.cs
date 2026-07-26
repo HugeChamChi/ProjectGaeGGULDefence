@@ -6,6 +6,7 @@ using UnityEngine;
 /// 스킬 액션. (TotemData의 TotemRelativeOffsetRange와 동일한 "중심 기준 상대 좌표" 패턴 —
 /// Inspector에서 OffsetGridDataDrawer가 그리드 클릭 UI로 편집을 지원한다.)</summary>
 [Serializable]
+[DisplayName("범위 아군 버프")]
 public class BuffAllyInRangeSkillAction : ISkillAction
 {
     [Tooltip("버프 대상을 찾는 칸 (캐스터 중심 기준 상대 좌표). Inspector의 그리드를 클릭해 편집하세요.")]

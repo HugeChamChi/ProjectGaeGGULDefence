@@ -72,9 +72,9 @@ public class GameInitializer : IInitializable, IAsyncStartable
         {
             foreach (var unit in GlobalData.SelectedParty.unitDataList)
             {
-                if (unit != null && !string.IsNullOrEmpty(unit.attackSoundAddress))
+                if (unit != null && unit.basicAttackData != null && !string.IsNullOrEmpty(unit.basicAttackData.attackSoundAddress))
                 {
-                    sfxToLoad.Add(unit.attackSoundAddress);
+                    sfxToLoad.Add(unit.basicAttackData.attackSoundAddress);
                 }
             }
         }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>적중 시 보스에게 데미지를 주는 효과.</summary>
 [Serializable]
-[KoreanName("데미지")]
+[DisplayName("데미지")]
 public class DamageHitEffect : IEffect
 {
     [Tooltip("0보다 크면 공격력 대신 이 고정 수치를 기준 데미지로 사용한다 (예: 마법사 화염구 500). 등급별로 다르면 등급별값을 선택.")]
@@ -17,7 +17,7 @@ public class DamageHitEffect : IEffect
 
     public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
     {
-        var tier = caster.unitData.unitTier;
+        var tier = caster.currentTier;
         float power = fixedPower.Get(tier);
         int damage = power > 0f
             ? caster.ComputeDamageFrom(power)

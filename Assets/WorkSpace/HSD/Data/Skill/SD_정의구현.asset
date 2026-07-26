@@ -10,16 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
-  m_Name: "SD_정의구현"
-  m_EditorClassIdentifier:
+  m_Name: "SD_\uC815\uC758\uAD6C\uD604"
+  m_EditorClassIdentifier: 
   skillId: 5
-  skillName: "정의 구현"
-  description: "검을 바닥에 꽂아 정신을 집중한 후 검을 소환해 공격력의
-    200%의 피해를 줍니다. 스킬은 패시브의 데미지 증가가 2배로 적용됩니다."
+  skillName: "\uC815\uC758 \uAD6C\uD604"
+  description: "\uAC80\uC744 \uBC14\uB2E5\uC5D0 \uAF42\uC544 \uC815\uC2E0\uC744 \uC9D1\uC911\uD55C
+    \uD6C4 \uAC80\uC744 \uC18C\uD658\uD574 \uACF5\uACA9\uB825\uC758 200%\uC758 \uD53C\uD574\uB97C
+    \uC90D\uB2C8\uB2E4. \uC2A4\uD0AC\uC740 \uD328\uC2DC\uBE0C\uC758 \uB370\uBBF8\uC9C0
+    \uC99D\uAC00\uAC00 2\uBC30\uB85C \uC801\uC6A9\uB429\uB2C8\uB2E4."
   action:
     rid: 8123456789012345005
   hitEffects:
   - rid: 8123456789012345004
+  additionalEffects: []
   castEffect:
     rid: -2
   references:
@@ -37,8 +40,10 @@ MonoBehaviour:
       data:
         shotCount:
           rid: 8123456789012345006
+        shotInterval: 0
         sizeMultiplier:
           rid: 8123456789012345007
+        projectileData: {fileID: 0}
     - rid: 8123456789012345006
       type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
       data:

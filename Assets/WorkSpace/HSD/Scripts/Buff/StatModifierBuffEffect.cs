@@ -7,6 +7,7 @@ using UnityEngine;
 /// (TotemBuffManager의 dirty flag 캐시와 동일한 철학), 여기서는 별도 처리가 필요 없다.
 /// </summary>
 [Serializable]
+[DisplayName("스탯 증감")]
 public class StatModifierBuffEffect : IBuffEffect
 {
     public StatKind kind;

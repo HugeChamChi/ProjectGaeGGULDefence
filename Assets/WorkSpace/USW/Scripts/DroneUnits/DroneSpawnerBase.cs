@@ -43,7 +43,7 @@ public abstract class DroneSpawnerBase : UnitBase
     {
         if (!HasValidData()) return;
         
-        for (int i = 0; i < unitData.maxDroneCount; i++)
+        for (int i = 0; i < unitData.maxDroneCount.Get(currentTier); i++)
         {
             SpawnOneDrone();
         }
@@ -52,7 +52,7 @@ public abstract class DroneSpawnerBase : UnitBase
     protected void SpawnOneDrone()
     {
         if (!HasValidData()) return;
-        if (_ownedDrones.Count >= unitData.maxDroneCount) return;
+        if (_ownedDrones.Count >= unitData.maxDroneCount.Get(currentTier)) return;
 
         var slots  = SlotOffsets;
         var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];

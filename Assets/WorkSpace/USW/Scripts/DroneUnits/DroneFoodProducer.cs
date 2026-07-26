@@ -29,6 +29,6 @@ public class DroneFoodProducer : UnitBase
 
     public override float GetBaseFoodPerSecond()
     {
-        return unitData != null ? unitData.foodProduction : 0f;
+        return unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
     }
 }

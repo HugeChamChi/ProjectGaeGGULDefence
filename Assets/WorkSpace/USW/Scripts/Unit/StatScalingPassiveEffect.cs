@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>sourceStat이 sourceStepPercent(%)만큼 증가할 때마다 targetStat이 targetBonusPerStep(%) 증가하는 패시브 효과.</summary>
 [Serializable]
+[DisplayName("스탯 비례 패시브")]
 public class StatScalingPassiveEffect : IUnitPassiveEffect
 {
     public StatKind sourceStat = StatKind.ProjectileSize;

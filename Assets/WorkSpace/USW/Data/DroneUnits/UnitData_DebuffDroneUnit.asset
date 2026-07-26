@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
+  m_Name: UnitData_DebuffDroneUnit
+  m_EditorClassIdentifier: 
+  characterId:
+    normal: 1000
+    rare: 1001
+    epic: 1002
+    legend: 1003
+  unitType:
+    normal: 7
+    rare: 7
+    epic: 7
+    legend: 7
+  unitName: "\uB35C\uD0D5"
+  unitTribe: 0
+  iconAddress: ANIM_DroneFrogDebuffer_Idle_sprite sheet_0
+  prefabAddress: DroneUnit_Debuff
+  icon: {fileID: -715474386, guid: f261046b3dd94ae4684e904a2fc3ef9f, type: 3}
+  prefab: {fileID: 8592549132893361823, guid: 875376496d093484f8a5fd2aca2c2789, type: 3}
+  description: 
+  atk:
+    normal: 80
+    rare: 80
+    epic: 80
+    legend: 80
+  attackSpeed:
+    normal: 1.5
+    rare: 1.5
+    epic: 1.5
+    legend: 1.5
+  skillCooldown:
+    normal: 25
+    rare: 22
+    epic: 19
+    legend: 16
+  basicAttackData: {fileID: 11400000, guid: 2dca9bda6e90dc343b2255e2df90aa74, type: 2}
+  skillData: {fileID: 0}
+  foodProduction:
+    normal: 1.5
+    rare: 3
+    epic: 5
+    legend: 6
+  populationCost:
+    normal: 1
+    rare: 1
+    epic: 1
+    legend: 1
+  maxDroneCount:
+    normal: 1
+    rare: 2
+    epic: 3
+    legend: 4
+  passive: {fileID: 0}

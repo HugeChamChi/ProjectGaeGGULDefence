@@ -14,6 +14,6 @@ public class UnitSoundController
 
     private void PlayAttackSound()
     {
-        _audioManager.PlaySFX(_owner.unitData.attackSoundAddress);
+        _audioManager.PlaySFX(_owner.unitData.basicAttackData?.attackSoundAddress);
     }
 }

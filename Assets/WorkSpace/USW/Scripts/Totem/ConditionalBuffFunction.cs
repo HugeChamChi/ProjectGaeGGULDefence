@@ -5,6 +5,7 @@ using UnityEngine;
 /// 특정 조건을 만족할 때만 내부 버프(buff)를 적용하는 기능.
 /// </summary>
 [Serializable]
+[DisplayName("조건부 버프")]
 public class ConditionalBuffFunction : ITotemFunction
 {
     [SerializeReference, SelectableReference]

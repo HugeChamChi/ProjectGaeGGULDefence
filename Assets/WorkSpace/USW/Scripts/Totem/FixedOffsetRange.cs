@@ -7,6 +7,7 @@ using UnityEngine;
 /// (토템이 어느 방향을 보든 항상 같은 상대 위치를 가리켜야 하는 범위에 사용)
 /// </summary>
 [Serializable]
+[DisplayName("고정 범위(회전 무시)")]
 public class FixedOffsetRange : ITotemRange
 {
     public List<Vector2Int> offsets = new List<Vector2Int>();

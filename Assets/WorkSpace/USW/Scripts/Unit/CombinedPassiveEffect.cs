@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>여러 PassiveData를 하나로 묶는 조합 패시브 효과.</summary>
 [Serializable]
+[DisplayName("패시브 묶음")]
 public class CombinedPassiveEffect : IUnitPassiveEffect
 {
     public List<PassiveData> passives = new List<PassiveData>();

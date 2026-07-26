@@ -3166,23 +3166,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitDataList:
-  - {fileID: 11400000, guid: d93f83520434d014fa0616819c6d95bd, type: 2}
-  - {fileID: 11400000, guid: 894afdf21c5e44447b6fe63fce1f00d9, type: 2}
   - {fileID: 11400000, guid: 8ff5f3f4c238125409999a555e201aad, type: 2}
-  - {fileID: 11400000, guid: d809951a103cdd442af2a127ff6e5cea, type: 2}
-  - {fileID: 11400000, guid: 01a810c55514d68489c206c5adad5cb9, type: 2}
-  - {fileID: 11400000, guid: 7e0f68e6ca54a5b4695a0c91302b587c, type: 2}
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
-  - {fileID: 11400000, guid: dbbc1525002c1454883df4988a576b4e, type: 2}
   - {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
-  - {fileID: 11400000, guid: 22e7ea8178e288b49ba1e3bc2306ee49, type: 2}
-  - {fileID: 11400000, guid: 1418c0b230f8af442839b23b393aebc2, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
-  - {fileID: 11400000, guid: 0a933980e221ba146a96058f4a0bad00, type: 2}
-  - {fileID: 11400000, guid: f1f390c0958a41b42be7d8d9a87dc697, type: 2}
-  - {fileID: 11400000, guid: 16362edd6359b2a43957e943baa705fd, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
-  - {fileID: 11400000, guid: d2b861ed62e927249b018664b3e47395, type: 2}
   defaultSpawnOffsetY: 0
   defaultSpawnScale: {x: 1, y: 1, z: 1}
 --- !u!4 &248640386

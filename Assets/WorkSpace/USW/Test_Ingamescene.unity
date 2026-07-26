@@ -1572,10 +1572,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitDataList:
-  - {fileID: 11400000, guid: f1f390c0958a41b42be7d8d9a87dc697, type: 2}
-  - {fileID: 11400000, guid: 16362edd6359b2a43957e943baa705fd, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
-  - {fileID: 11400000, guid: d2b861ed62e927249b018664b3e47395, type: 2}
 --- !u!4 &248640386
 Transform:
   m_ObjectHideFlags: 0

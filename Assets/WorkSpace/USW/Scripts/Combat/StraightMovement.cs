@@ -7,6 +7,7 @@ using UnityEngine;
 /// 직선(Lerp) 이동 — 기존 Projectile의 기본 이동(0.35초 고정 직선)과 동일한 동작.
 /// </summary>
 [Serializable]
+[DisplayName("직선 이동")]
 public class StraightMovement : MovementBase
 {
     public float duration = 0.35f;

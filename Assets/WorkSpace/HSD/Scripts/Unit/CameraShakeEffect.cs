@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>메인 카메라를 흔드는 연출 전용 이펙트. 게임 상태(데미지 등)에는 관여하지 않는다.</summary>
 [Serializable]
-[KoreanName("카메라 흔들림")]
+[DisplayName("카메라 흔들림")]
 public class CameraShakeEffect : IAdditionalEffect
 {
     [Tooltip("흔들리는 시간(초)")]

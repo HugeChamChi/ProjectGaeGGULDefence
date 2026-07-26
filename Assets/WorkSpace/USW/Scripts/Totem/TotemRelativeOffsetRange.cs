@@ -7,6 +7,7 @@ using UnityEngine;
 /// TotemEditorWindow로 편집하던 기존 effectRange/attackDisabledRange와 동일한 개념의 후속 타입.
 /// </summary>
 [Serializable]
+[DisplayName("상대 범위(회전 반영)")]
 public class TotemRelativeOffsetRange : ITotemRange
 {
     public List<Vector2Int> offsets = new List<Vector2Int>();

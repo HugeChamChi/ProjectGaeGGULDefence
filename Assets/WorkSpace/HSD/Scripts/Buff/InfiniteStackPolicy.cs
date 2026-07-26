@@ -2,6 +2,7 @@ using System;
 
 /// <summary>무한 중첩 — 재적용마다 스택 +1, 상한 없음.</summary>
 [Serializable]
+[DisplayName("무한 중첩")]
 public class InfiniteStackPolicy : IBuffStackPolicy
 {
     public bool refreshDurationOnReapply = true;

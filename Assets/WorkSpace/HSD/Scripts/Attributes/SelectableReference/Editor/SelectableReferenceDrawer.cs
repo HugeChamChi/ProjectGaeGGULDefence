@@ -38,8 +38,16 @@ public class SelectableReferenceDrawer : PropertyDrawer
 
         if (!string.IsNullOrEmpty(fullTypeName))
         {
-            Rect contentRect = new Rect(position.x, position.y, position.width, position.height);
-            EditorGUI.PropertyField(contentRect, property, GUIContent.none, true);
+            if (PerTierValueDrawer.IsPerTierType(currentType))
+            {
+                Rect tierRect = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight + 2f, position.width, PerTierValueDrawer.GetFieldsHeight());
+                PerTierValueDrawer.DrawFields(tierRect, property);
+            }
+            else
+            {
+                Rect contentRect = new Rect(position.x, position.y, position.width, position.height);
+                EditorGUI.PropertyField(contentRect, property, GUIContent.none, true);
+            }
         }
 
         EditorGUI.EndProperty();
@@ -47,6 +55,10 @@ public class SelectableReferenceDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
+        Type currentType = property.managedReferenceValue?.GetType();
+        if (PerTierValueDrawer.IsPerTierType(currentType))
+            return EditorGUIUtility.singleLineHeight + 2f + PerTierValueDrawer.GetFieldsHeight();
+
         return EditorGUI.GetPropertyHeight(property, true);
     }
 
@@ -108,8 +120,8 @@ public class SelectableReferenceDrawer : PropertyDrawer
 
     private static string GetDisplayName(Type type)
     {
-        var korean = type.GetCustomAttribute<KoreanNameAttribute>();
-        return korean != null ? korean.Name : type.Name;
+        var displayName = type.GetCustomAttribute<DisplayNameAttribute>();
+        return displayName != null ? displayName.Name : type.Name;
     }
 
     private Type GetElementType(Type type)

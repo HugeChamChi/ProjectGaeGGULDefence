@@ -5,6 +5,7 @@ using UnityEngine;
 
 /// <summary>hitEffects를 shotCount번 발사하는 스킬 액션. 적중 시 결과(데미지 등)는 hitEffects가 담당한다.</summary>
 [Serializable]
+[DisplayName("다단 발사")]
 public class MultiShotSkillAction : ISkillAction
 {
     [Tooltip("동시/연속 발사 횟수. 등급별로 다르면 등급별값을 선택.")]
@@ -22,7 +23,7 @@ public class MultiShotSkillAction : ISkillAction
 
     public void Execute(UnitBase caster, UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects)
     {
-        var tier = caster.unitData.unitTier;
+        var tier = caster.currentTier;
         int shots = shotCount.Get(tier);
         float size = sizeMultiplier.Get(tier);
 

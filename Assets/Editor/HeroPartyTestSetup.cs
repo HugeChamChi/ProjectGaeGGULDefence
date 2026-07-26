@@ -67,18 +67,16 @@ public static class HeroPartyTestSetup
             var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 
             var unitData = ScriptableObject.CreateInstance<UnitData>();
-            unitData.characterId = spec.CharacterId;
-            unitData.unitType = spec.CharacterId;
+            unitData.characterId.normal = spec.CharacterId;
+            unitData.unitType.normal = spec.CharacterId;
             unitData.unitName = spec.Name;
-            unitData.unitTier = Tier.Normal;
             unitData.unitTribe = spec.Tribe;
-            unitData.atk = spec.Atk;
-            unitData.attackSpeed = spec.AttackSpeed;
-            unitData.skillCooldown = spec.SkillCooldown;
-            unitData.populationCost = 1;
+            unitData.atk.normal = spec.Atk;
+            unitData.attackSpeed.normal = spec.AttackSpeed;
+            unitData.skillCooldown.normal = spec.SkillCooldown;
             unitData.prefab = prefabAsset;
 
-            string dataPath = $"{DataOutputDir}/UnitData_{spec.Name}_Normal.asset";
+            string dataPath = $"{DataOutputDir}/UnitData_{spec.Name}.asset";
             AssetDatabase.CreateAsset(unitData, dataPath);
             createdUnitData.Add(unitData);
         }

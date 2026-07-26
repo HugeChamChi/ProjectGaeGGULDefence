@@ -9,6 +9,8 @@ public class SkillData : ScriptableObject
     public int skillId;
     public string skillName;
     [TextArea] public string description;
+    [Tooltip("발동 시 재생할 SFX 주소 (AudioManager.PlaySFX 인자). 비워두면 재생 안 함.")]
+    public string attackSoundAddress;
 
     [Header("발동 방식 (SelectableReference)")]
     [SerializeReference, SelectableReference]

@@ -20,44 +20,46 @@ namespace GaeGGUL.UI.Unit
 
             var data = unit.unitData;
             var cell = unit.currentCell;
+            var tier = unit.currentTier;
 
-            string atkValue = cell.GetFinalAttack(data.atk).ToString();
-            string atkBonus = cell.GetAttackBonusText(data.atk);
+            string atkValue = cell.GetFinalAttack(data.atk.Get(tier)).ToString();
+            string atkBonus = cell.GetAttackBonusText(data.atk.Get(tier));
 
-            float finalAtkSpeed = cell.GetFinalAttackSpeed(data.attackSpeed);
+            float finalAtkSpeed = cell.GetFinalAttackSpeed(data.attackSpeed.Get(tier));
             string atkSpeedValue = $"{finalAtkSpeed:F2}s";
-            string atkSpeedBonus = cell.GetAttackSpeedBonusText(data.attackSpeed);
+            string atkSpeedBonus = cell.GetAttackSpeedBonusText(data.attackSpeed.Get(tier));
 
-            float finalCooldown = cell.GetFinalCooldown(data.skillCooldown);
+            float finalCooldown = cell.GetFinalCooldown(data.skillCooldown.Get(tier));
             string cooldownText = $"{finalCooldown:F1}s";
 
-            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}";
+            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId.Get(tier)):F0}";
             string foodBonus = cell.GetFoodBonusText();
 
-            UpdateView(data, atkValue, atkBonus, atkSpeedValue, atkSpeedBonus, foodValue, foodBonus, cooldownText);
+            UpdateView(data, tier, atkValue, atkBonus, atkSpeedValue, atkSpeedBonus, foodValue, foodBonus, cooldownText);
         }
 
         public void SetUnitData(UnitData data)
         {
             if (data == null) return;
+            var tier = Tier.Normal;
 
-            string atkValue = data.atk.ToString();
-            string atkSpeedValue = $"{data.attackSpeed:F2}s";
-            string cooldownValue = $"{data.skillCooldown:F1}s";
+            string atkValue = data.atk.Get(tier).ToString();
+            string atkSpeedValue = $"{data.attackSpeed.Get(tier):F2}s";
+            string cooldownValue = $"{data.skillCooldown.Get(tier):F1}s";
             string cooldownText = cooldownValue;
-            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId):F0}";
+            string foodValue = $"+{_gdm.GetCurrencyPerSecond(data.characterId.Get(tier)):F0}";
 
-            UpdateView(data, atkValue, "", atkSpeedValue, "", foodValue, "", cooldownText);
+            UpdateView(data, tier, atkValue, "", atkSpeedValue, "", foodValue, "", cooldownText);
         }
 
-        private void UpdateView(UnitData data, string atk, string atkBonus, string atkSpeed, string atkSpeedBonus, string food, string foodBonus, string cooldownText)
+        private void UpdateView(UnitData data, Tier tier, string atk, string atkBonus, string atkSpeed, string atkSpeedBonus, string food, string foodBonus, string cooldownText)
         {
-            _view.UpdateBasicInfo(data.unitName, data.icon, data.unitTier);
+            _view.UpdateBasicInfo(data.unitName, data.icon, tier);
 
             // skillData가 있으면 그쪽이 스킬의 단일 소스(skillName/description)이고,
-            // UnitData.skillName/description은 skillData 없이 OnSkillFull() 오버라이드로
-            // 스킬을 구현하는 구형 유닛(무직/드론 등)을 위한 폴백이다.
-            string skillName = data.skillData != null ? data.skillData.skillName : data.skillName;
+            // 없으면 OnSkillFull() 오버라이드로 스킬을 구현하는 구형 유닛(무직/드론 등)을 위해
+            // UnitData.description만 폴백으로 쓴다.
+            string skillName = data.skillData != null ? data.skillData.skillName : string.Empty;
             string skillDescription = data.skillData != null ? data.skillData.description : data.description;
             _view.UpdateSkillInfo(skillName, skillDescription, cooldownText);
 

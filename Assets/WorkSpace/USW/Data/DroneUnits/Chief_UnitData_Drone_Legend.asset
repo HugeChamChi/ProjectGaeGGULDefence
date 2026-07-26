@@ -12,21 +12,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Chief_UnitData_Drone_Legend
   m_EditorClassIdentifier: 
-  characterId: 5020
-  unitType: 9
+  characterId:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  unitType:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
   unitName: "\uB4DC\uB860 \uC871\uC7A5 (\uC804\uC124)"
-  unitTier: 4
   unitTribe: 0
   iconAddress: ANIM_DroneFrogLeader_Idle_sprite sheet_0
   prefabAddress: DroneUnit_Cheiftain
   icon: {fileID: 1471017148, guid: 9a2629c3e477a99478af9be35681d975, type: 3}
   prefab: {fileID: 3717258970254922025, guid: dc07e7fd43b13954e9796c7484ea6ab3, type: 3}
   description: 
-  attackSoundAddress: 05.Leader_Skill_Effect
-  atk: 0
-  attackSpeed: 0
-  skillCooldown: 15
-  skillName: 
-  foodProduction: 0
-  populationCost: 1
-  maxDroneCount: 4
+  atk:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  attackSpeed:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  skillCooldown:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  basicAttackData: {fileID: 11400000, guid: a7ce7dcd278faeb44965857791bcf7a1, type: 2}
+  skillData: {fileID: 0}
+  foodProduction:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  populationCost:
+    normal: 1
+    rare: 1
+    epic: 1
+    legend: 1
+  maxDroneCount:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  passive: {fileID: 0}

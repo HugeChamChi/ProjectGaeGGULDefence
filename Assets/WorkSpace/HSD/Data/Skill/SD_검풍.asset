@@ -10,16 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
-  m_Name: "SD_검풍"
-  m_EditorClassIdentifier:
+  m_Name: "SD_\uAC80\uD48D"
+  m_EditorClassIdentifier: 
   skillId: 101
-  skillName: "검풍"
-  description: "검을 빠르게 휘둘러 검풍을
-    날려 피해를 줍니다."
+  skillName: "\uAC80\uD48D"
+  description: "\uAC80\uC744 \uBE60\uB974\uAC8C \uD718\uB458\uB7EC \uAC80\uD48D\uC744
+    \uB0A0\uB824 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+  attackSoundAddress: 
   action:
     rid: 9123456789012345101
   hitEffects:
   - rid: 9123456789012345100
+  additionalEffects: []
   castEffect:
     rid: -2
   references:
@@ -39,8 +41,10 @@ MonoBehaviour:
       data:
         shotCount:
           rid: 9123456789012345112
+        shotInterval: 0
         sizeMultiplier:
           rid: 9123456789012345113
+        projectileData: {fileID: 0}
     - rid: 9123456789012345110
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:

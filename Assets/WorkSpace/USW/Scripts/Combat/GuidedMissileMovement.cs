@@ -8,6 +8,7 @@ using UnityEngine;
 /// 기존 MissileProjectile(Projectile 상속 서브클래스)의 MoveAsync 알고리즘을 그대로 옮긴 것.
 /// </summary>
 [Serializable]
+[DisplayName("유도 미사일")]
 public class GuidedMissileMovement : MovementBase
 {
     [Tooltip("초기 발사 속도 (Unit/s)")]

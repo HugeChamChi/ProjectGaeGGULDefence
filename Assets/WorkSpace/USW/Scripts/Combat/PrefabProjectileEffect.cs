@@ -6,7 +6,7 @@ using UnityEngine;
 /// 사운드 이름을 지정하면 AudioManager로 함께 재생한다.
 /// </summary>
 [Serializable]
-[KoreanName("프리팹 이펙트")]
+[DisplayName("프리팹 이펙트")]
 public class PrefabProjectileEffect : IEffectSpawner
 {
     [Tooltip("비워두면 프리팹 스폰 없이 사운드만 재생")]

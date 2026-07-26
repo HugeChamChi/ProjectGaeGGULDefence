@@ -134,7 +134,7 @@ public class ChieftainSpawner : MonoBehaviour
             return;
         }
 
-        var unit = _unitFactory.CreateUnitFromData(unitData);
+        var unit = _unitFactory.CreateUnitFromData(unitData, Tier.Chieftain);
         if (unit == null) return;
 
         ChieftainUnit = unit;
@@ -154,6 +154,7 @@ public class ChieftainSpawner : MonoBehaviour
         var unit = _unitFactory.CreateUnit(unitType);
         if (unit == null) return;
 
+        unit.currentTier = Tier.Chieftain;
         ChieftainUnit = unit;
         _unitSpawner.PlaceUnitWithEffect(unit, cell);
         OnChieftainSpawned?.Invoke(unit as ChiefUnit);

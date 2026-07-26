@@ -6,6 +6,7 @@ using System;
 /// 셀 단위로 적용되는 게 아니므로 Apply()는 아무 일도 하지 않는다.
 /// </summary>
 [Serializable]
+[DisplayName("식량 생성")]
 public class FoodGeneratorFunction : ITotemFunction
 {
     public float interval = 10f;

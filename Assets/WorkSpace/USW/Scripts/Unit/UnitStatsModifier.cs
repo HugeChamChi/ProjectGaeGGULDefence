@@ -16,16 +16,16 @@ public class UnitStatsModifier : MonoBehaviour
     }
 
     private float AtkUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetAtkUpgradeMultiplier(_unit.unitData.characterId)
+        ? _deps.UpgradeManager.GetAtkUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
         : 1f;
 
     private float AttackSpeedUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId)
+        ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
         : 1f;
 
-    private float UpgradedAtk => _unit.unitData.atk * AtkUpgradeMultiplier;
+    private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier;
 
-    private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed : 1.0f)
+    private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
         / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
@@ -120,7 +120,7 @@ public class UnitStatsModifier : MonoBehaviour
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult = Mathf.Max(_deps?.LevelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float cellGaugeSpeedMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.GaugeSpeed));
-        float interval = _unit.unitData.skillCooldown
+        float interval = _unit.unitData.skillCooldown.Get(_unit.currentTier)
                        * cellGaugeSpeedMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;

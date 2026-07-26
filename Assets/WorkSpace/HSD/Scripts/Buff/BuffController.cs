@@ -84,7 +84,7 @@ public class BuffController : MonoBehaviour
     {
         _cachedMultipliers.Clear();
 
-        var tier = _unit.unitData.unitTier;
+        var tier = _unit.currentTier;
         foreach (var instance in _active)
         {
             if (instance.Def.effects == null) continue;

@@ -159,7 +159,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteAttack()
     {
-        if (_unit.unitData == null || _unit.unitData.atk <= 0) return;
+        if (_unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
 
         bool attackDisabled = _unit.currentCell != null &&
             (_unit.currentCell.Model.IsAttackDisabled || _unit.currentCell.Model.TotemAttackDisabled);
