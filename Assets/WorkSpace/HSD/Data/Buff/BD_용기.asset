@@ -10,12 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3dca7db9a18c270d373f134bf105873, type: 3}
-  m_Name: "BuffData_용기"
-  m_EditorClassIdentifier:
+  m_Name: "BD_\uC6A9\uAE30"
+  m_EditorClassIdentifier: 
   buffId: 9001
-  buffName: "용기"
-  description: "투사체 크기 1스택당 10% 증가 (무한 중첩, 영구)"
-  iconAddress:
+  buffName: "\uC6A9\uAE30"
+  description: "\uD22C\uC0AC\uCCB4 \uD06C\uAE30 1\uC2A4\uD0DD\uB2F9 10% \uC99D\uAC00
+    (\uBB34\uD55C \uC911\uCCA9, \uC601\uAD6C)"
+  iconAddress: 
   icon: {fileID: 0}
   duration: 0
   stackPolicy:
