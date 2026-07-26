@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
-  m_Name: "SD_연발사격"
+  m_Name: "SD_그림자표창"
   m_EditorClassIdentifier:
-  skillId: 1
-  skillName: "연발 사격"
-  description: "활 시위를 당겨 화살을 연속으로
-    발사합니다."
+  skillId: 2
+  skillName: "그림자 표창"
+  description: "한번에 표창을 여러 개 투척해
+    피해를 줍니다."
   action:
-    rid: 8123456789012345001
+    rid: 8123456789012345002
   hitEffects:
-  - rid: 8123456789012345000
+  - rid: 8123456789012345001
   castEffect:
     rid: -2
   references:
@@ -27,39 +27,41 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 8123456789012345000
+    - rid: 8123456789012345001
       type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
       data:
         fixedPower:
-          rid: 8123456789012345030
+          rid: 8123456789012345020
         coefficient:
-          rid: 8123456789012345031
-    - rid: 8123456789012345001
+          rid: 8123456789012345021
+    - rid: 8123456789012345002
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount:
-          rid: 8123456789012345032
-        shotInterval: 0.1
+          rid: 8123456789012345022
         sizeMultiplier:
-          rid: 8123456789012345033
-        projectileData: {fileID: 11400000, guid: 0117396e692f5b24d80a61ec4ba2245b,
+          rid: 8123456789012345023
+        projectileData: {fileID: 11400000, guid: 4f6be4a3fd49f4275b101120d6fdaa19,
           type: 2}
-    - rid: 8123456789012345030
+    - rid: 8123456789012345020
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:
         value: 0
-    - rid: 8123456789012345031
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+    - rid: 8123456789012345021
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
       data:
-        value: 1
-    - rid: 8123456789012345032
+        normal: 0.8
+        rare: 0.9
+        epic: 0.9
+        legend: 1
+    - rid: 8123456789012345022
       type: {class: PerTierInt, ns: , asm: Assembly-CSharp}
       data:
         normal: 2
         rare: 3
         epic: 4
-        legend: 5
-    - rid: 8123456789012345033
+        legend: 6
+    - rid: 8123456789012345023
       type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
       data:
         normal: 1.5

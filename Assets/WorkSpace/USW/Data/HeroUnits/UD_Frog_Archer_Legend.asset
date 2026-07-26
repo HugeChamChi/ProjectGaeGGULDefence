@@ -27,7 +27,7 @@ MonoBehaviour:
   attackSpeed: 1
   skillCooldown: 8
   skillName: 
-  skillData: {fileID: 11400000, guid: 51c4d9355cf91ddb1f4c1aef29915b69, type: 2}
+  skillData: {fileID: 11400000, guid: 45122e87b28c470429e847b70457daf0, type: 2}
   basicAttackData: {fileID: 11400000, guid: 66a8796666174c07940f7c4c08ca332a, type: 2}
   foodProduction: 0
   populationCost: 1

@@ -30,9 +30,30 @@ MonoBehaviour:
     - rid: 9123456789012345104
       type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
       data:
-        fixedPower: 0
-        coefficient: 1
+        fixedPower:
+          rid: 9123456789012345150
+        coefficient:
+          rid: 9123456789012345151
     - rid: 9123456789012345105
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
-        shotCount: 1
+        shotCount:
+          rid: 9123456789012345152
+        sizeMultiplier:
+          rid: 9123456789012345153
+    - rid: 9123456789012345150
+      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      data:
+        value: 0
+    - rid: 9123456789012345151
+      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 9123456789012345152
+      type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 9123456789012345153
+      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      data:
+        value: 1

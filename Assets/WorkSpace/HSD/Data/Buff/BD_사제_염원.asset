@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3dca7db9a18c270d373f134bf105873, type: 3}
-  m_Name: "BD_\uC0AC\uC81C_\uC5FC\uC6D0_Legend"
-  m_EditorClassIdentifier: 
-  buffId: 4
-  buffName: "\uC5FC\uC6D0"
-  description: "\uACF5\uACA9\uB825/\uACF5\uACA9\uC18D\uB3C4 30%, \uD22C\uC0AC\uCCB4
-    \uD06C\uAE30 100% \uC99D\uAC00 (10\uCD08)"
-  iconAddress: 
+  m_Name: "BD_사제_염원"
+  m_EditorClassIdentifier:
+  buffId: 1
+  buffName: "염원"
+  description: "공격력/공격속도, 투사체 크기 증가
+    (등급에 따라 증가폭이 다름, 10초)"
+  iconAddress:
   icon: {fileID: 0}
   duration: 10
   stackPolicy:
@@ -37,14 +37,38 @@ MonoBehaviour:
       type: {class: StatModifierBuffEffect, ns: , asm: Assembly-CSharp}
       data:
         kind: 0
-        amountPerStack: 0.3
+        amountPerStack:
+          rid: 5
     - rid: 3
       type: {class: StatModifierBuffEffect, ns: , asm: Assembly-CSharp}
       data:
         kind: 1
-        amountPerStack: 0.3
+        amountPerStack:
+          rid: 6
     - rid: 4
       type: {class: StatModifierBuffEffect, ns: , asm: Assembly-CSharp}
       data:
         kind: 6
-        amountPerStack: 1
+        amountPerStack:
+          rid: 7
+    - rid: 5
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
+      data:
+        normal: 0.05
+        rare: 0.1
+        epic: 0.2
+        legend: 0.3
+    - rid: 6
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
+      data:
+        normal: 0.05
+        rare: 0.1
+        epic: 0.2
+        legend: 0.3
+    - rid: 7
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
+      data:
+        normal: 0.5
+        rare: 0.6
+        epic: 0.8
+        legend: 1

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// 스택 1당 kind 스탯에 amountPerStack만큼 배율을 누산하는 효과.
@@ -9,7 +10,8 @@ using System;
 public class StatModifierBuffEffect : IBuffEffect
 {
     public StatKind kind;
-    public float amountPerStack;
+    [SerializeReference, SelectableReference]
+    public IScaledFloat amountPerStack = new ConstantFloat();
 
     public void OnApply(BuffInstance instance, UnitBase target) { }
     public void OnStackChanged(BuffInstance instance, UnitBase target) { }

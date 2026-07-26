@@ -84,6 +84,7 @@ public class BuffController : MonoBehaviour
     {
         _cachedMultipliers.Clear();
 
+        var tier = _unit.unitData.unitTier;
         foreach (var instance in _active)
         {
             if (instance.Def.effects == null) continue;
@@ -93,7 +94,7 @@ public class BuffController : MonoBehaviour
                 if (effect is StatModifierBuffEffect stat)
                 {
                     _cachedMultipliers.TryGetValue(stat.kind, out var accumulated);
-                    _cachedMultipliers[stat.kind] = accumulated + stat.amountPerStack * instance.StackCount;
+                    _cachedMultipliers[stat.kind] = accumulated + stat.amountPerStack.Get(tier) * instance.StackCount;
                 }
             }
         }

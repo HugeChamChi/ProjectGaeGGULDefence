@@ -10,16 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
-  m_Name: "SD_쿠나이투척"
+  m_Name: "SD_화염구"
   m_EditorClassIdentifier:
-  skillId: 104
-  skillName: "쿠나이 투척"
-  description: "쿠나이를 1개 투척해 피해를
-    입힌다."
+  skillId: 3
+  skillName: "화염구"
+  description: "화염구를 투척해 피해를 줍니다."
   action:
-    rid: 9123456789012345104
+    rid: 8123456789012345003
   hitEffects:
-  - rid: 9123456789012345103
+  - rid: 8123456789012345002
   castEffect:
     rid: -2
   references:
@@ -27,33 +26,41 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 9123456789012345103
+    - rid: 8123456789012345002
       type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
       data:
         fixedPower:
-          rid: 9123456789012345140
+          rid: 8123456789012345010
         coefficient:
-          rid: 9123456789012345141
-    - rid: 9123456789012345104
+          rid: 8123456789012345011
+    - rid: 8123456789012345003
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
         shotCount:
-          rid: 9123456789012345142
+          rid: 8123456789012345012
         sizeMultiplier:
-          rid: 9123456789012345143
-    - rid: 9123456789012345140
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+          rid: 8123456789012345013
+        projectileData: {fileID: 11400000, guid: 8ccd4d632f41dea0ad5ef610aa62604f,
+          type: 2}
+    - rid: 8123456789012345010
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
       data:
-        value: 0
-    - rid: 9123456789012345141
+        normal: 500
+        rare: 1500
+        epic: 2500
+        legend: 3500
+    - rid: 8123456789012345011
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:
         value: 1
-    - rid: 9123456789012345142
+    - rid: 8123456789012345012
       type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
       data:
         value: 1
-    - rid: 9123456789012345143
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+    - rid: 8123456789012345013
+      type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
       data:
-        value: 1
+        normal: 1.5
+        rare: 2
+        epic: 2.5
+        legend: 3

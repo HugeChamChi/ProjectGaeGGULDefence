@@ -35,4 +35,15 @@ MonoBehaviour:
     - rid: 8123456789012345005
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
-        shotCount: 1
+        shotCount:
+          rid: 8123456789012345006
+        sizeMultiplier:
+          rid: 8123456789012345007
+    - rid: 8123456789012345006
+      type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
+      data:
+        value: 1
+    - rid: 8123456789012345007
+      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      data:
+        value: 1
