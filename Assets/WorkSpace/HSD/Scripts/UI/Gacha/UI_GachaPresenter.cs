@@ -43,6 +43,10 @@ public class UI_GachaPresenter
             return;
         }
 
+        // 다이아 차감을 먼저 서버에 확정한 뒤 캐릭터 획득을 저장한다.
+        // (역순이면 차감 전에 캐릭터 획득이 먼저 서버에 남아, 크래시 시 무료 획득이 발생할 수 있음)
+        await Player.PlayerData.SaveAsync();
+
         var results = await _gachaSystem.GetDatas(count);
 
         // 획득 처리 (Model Update)

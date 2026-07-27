@@ -15,6 +15,7 @@ namespace GaeGGUL.Shop
 
         private List<ShopItemData> _dailyItems = new List<ShopItemData>();
         private HashSet<int> _purchasedItemIDs = new HashSet<int>();
+        private string _inDate = string.Empty;
 
         public List<ShopItemData> DailyItems => _dailyItems;
         public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
@@ -23,6 +24,7 @@ namespace GaeGGUL.Shop
         {
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
+            _inDate = string.Empty;
         }
 
         public async UniTask InitializeAsync()
@@ -38,6 +40,7 @@ namespace GaeGGUL.Shop
             else
             {
                 JsonData row = bro.FlattenRows()[0];
+                _inDate = row["inDate"].ToString();
                 _dailyItems.Clear();
                 JsonData dailyItemIds = row[COLUMN_DAILY_ITEM_IDS];
                 for (int i = 0; i < dailyItemIds.Count; i++)
@@ -94,15 +97,17 @@ namespace GaeGGUL.Shop
             List<int> purchasedIds = new List<int>(_purchasedItemIDs);
             param.Add(COLUMN_PURCHASED_ITEM_IDS, purchasedIds);
 
-            var bro = Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where());
-            if (bro.IsSuccess() && bro.FlattenRows().Count > 0)
+            if (!string.IsNullOrEmpty(_inDate))
             {
-                string inDate = bro.FlattenRows()[0]["inDate"].ToString();
-                Backend.GameData.UpdateV2(PLAYER_SHOP_DATA_TABLE, inDate, Backend.UserInDate, param);
+                Backend.GameData.UpdateV2(PLAYER_SHOP_DATA_TABLE, _inDate, Backend.UserInDate, param);
             }
             else
             {
-                Backend.GameData.Insert(PLAYER_SHOP_DATA_TABLE, param);
+                var bro = Backend.GameData.Insert(PLAYER_SHOP_DATA_TABLE, param);
+                if (bro.IsSuccess())
+                {
+                    _inDate = bro.GetInDate();
+                }
             }
         }
 
@@ -128,6 +133,10 @@ namespace GaeGGUL.Shop
 
             if (success)
             {
+                // 재화 차감을 먼저 서버에 확정한 뒤 보상 지급/구매완료를 저장한다.
+                // (역순이면 재화 차감 전에 구매완료가 먼저 서버에 남아, 크래시 시 무료 획득이 발생할 수 있음)
+                await Player.PlayerData.SaveAsync();
+
                 item.GetReward()?.GetReward();
                 _purchasedItemIDs.Add(shopID);
                 await SaveAsync();
