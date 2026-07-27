@@ -43,7 +43,7 @@ public class TotemEditorWindow : EditorWindow
         { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
 
     // ── 메뉴 ──────────────────────────────────────────────────────
-    [MenuItem("Tools/GGD_Editor/Totem Editor")]
+    [MenuItem("Tools/GGD_Editor/Totem Editor", false, 0)]
     public static void Open()
     {
         var win = GetWindow<TotemEditorWindow>("Totem Editor");

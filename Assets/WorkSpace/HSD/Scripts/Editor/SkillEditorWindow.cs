@@ -26,7 +26,7 @@ public class SkillEditorWindow : EditorWindow
         { typeof(BuffData), ("Assets/WorkSpace/HSD/Data/Buff", "BD") },
     };
 
-    [MenuItem("Tools/GGD_Editor/Skill Editor")]
+    [MenuItem("Tools/GGD_Editor/Skill Editor", false, 0)]
     public static void Open()
     {
         var win = GetWindow<SkillEditorWindow>("Skill Editor");
