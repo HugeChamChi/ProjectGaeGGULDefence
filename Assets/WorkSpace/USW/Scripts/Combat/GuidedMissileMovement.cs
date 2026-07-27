@@ -65,7 +65,7 @@ public class GuidedMissileMovement : MovementBase
             currentPos += currentVelocity * dt;
             movingTransform.position = currentPos;
 
-            // 진행 방향에 맞춰 회전 (lookAtTarget == false면 회전하지 않음)
+            // 진행 방향에 맞춰 회전
             FaceDirection(movingTransform, currentVelocity, baseRotation);
 
             // 타겟 도달 또는 타겟 오버슈트(지나침) 체크

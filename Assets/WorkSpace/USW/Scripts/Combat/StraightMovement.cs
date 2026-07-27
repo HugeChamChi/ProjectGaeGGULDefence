@@ -19,6 +19,9 @@ public class StraightMovement : MovementBase
         float elapsed = 0f;
         Quaternion baseRotation = GetBaseRotation(movingTransform);
 
+        // 직선 이동은 진행 방향이 고정이므로 시작 시 한 번만 회전을 적용한다.
+        FaceDirection(movingTransform, to - from, baseRotation);
+
         while (elapsed < duration)
         {
             token.ThrowIfCancellationRequested();
@@ -26,9 +29,6 @@ public class StraightMovement : MovementBase
             float t = elapsed / duration;
 
             movingTransform.position = Vector3.Lerp(from, to, t);
-
-            // 기본적으로 목표점을 향해 회전 (lookAtTarget == false면 회전하지 않음)
-            FaceDirection(movingTransform, to - movingTransform.position, baseRotation);
 
             await UniTask.Yield(token);
         }
