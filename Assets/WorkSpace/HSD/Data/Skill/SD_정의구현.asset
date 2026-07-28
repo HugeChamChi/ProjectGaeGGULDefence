@@ -31,7 +31,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 8123456789012345004
-      type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
+      type: {class: AtkCoefficientDamageWithPassiveBonus, ns: , asm: Assembly-CSharp}
       data:
         coefficient:
           rid: 8123456789012345008

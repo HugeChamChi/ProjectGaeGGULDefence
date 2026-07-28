@@ -34,7 +34,6 @@ MonoBehaviour:
       data:
         coefficient:
           rid: 9123456789012345111
-        passiveBonusMultiplier: 1
     - rid: 9123456789012345101
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
