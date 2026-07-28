@@ -31,11 +31,11 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 8123456789012345004
-      type: {class: WarriorJudgementHitEffect, ns: , asm: Assembly-CSharp}
+      type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
       data:
         coefficient:
           rid: 8123456789012345008
-        projAtkBonusMultiplier: 2
+        passiveBonusMultiplier: 2
     - rid: 8123456789012345005
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:

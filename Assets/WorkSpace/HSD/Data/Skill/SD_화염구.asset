@@ -27,12 +27,10 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 8123456789012345002
-      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+      type: {class: FixedDamage, ns: , asm: Assembly-CSharp}
       data:
-        fixedPower:
+        power:
           rid: 8123456789012345010
-        coefficient:
-          rid: 8123456789012345011
     - rid: 8123456789012345003
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
@@ -49,10 +47,6 @@ MonoBehaviour:
         rare: 1500
         epic: 2500
         legend: 3500
-    - rid: 8123456789012345011
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
-      data:
-        value: 1
     - rid: 8123456789012345012
       type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
       data:

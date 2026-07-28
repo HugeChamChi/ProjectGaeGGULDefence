@@ -28,12 +28,11 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 9123456789012345102
-      type: {class: DamageHitEffect, ns: , asm: Assembly-CSharp}
+      type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
       data:
-        fixedPower:
-          rid: 9123456789012345130
         coefficient:
           rid: 9123456789012345131
+        passiveBonusMultiplier: 1
     - rid: 9123456789012345103
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
       data:
@@ -41,10 +40,6 @@ MonoBehaviour:
           rid: 9123456789012345132
         sizeMultiplier:
           rid: 9123456789012345133
-    - rid: 9123456789012345130
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
-      data:
-        value: 0
     - rid: 9123456789012345131
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:
