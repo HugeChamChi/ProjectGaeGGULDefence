@@ -81,12 +81,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 13c3da6aec656e84288bd42fee6e7920
-    m_Address: "Data/LevelUpData_3055_\uBB3C\uB9AC_\uB9C8\uBC95\uC0AC"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 143e1fe08df08a243bb45e02de4e3b07
     m_Address: Data/WaveData_Round03
     m_ReadOnly: 0
@@ -327,12 +321,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4ee6a8fc34bfb7e45a76ee0c4ac53697
-    m_Address: "Data/LevelUpData_3046_\uB099\uB8B0_\uB9C8\uBC95"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51e079fabd4193327b1c6134585ef301
     m_Address: Data/TD_4010
     m_ReadOnly: 0
@@ -345,12 +333,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5645087951c8f93409d4ff7f2b86ac83
-    m_Address: "Data/LevelUpData_3025_\uB178\uB828\uD55C_\uCD1D\uC7A1\uC774"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 58164dfd7823a8944888607a82f95d1b
     m_Address: "Data/LevelUpData_3304_\uC591\uC190\uC7A1\uC774"
     m_ReadOnly: 0
@@ -359,12 +341,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 591587a492d73354d8cdbd2a0c553fc2
     m_Address: "Data/LevelUpData_3205_\uC5F0\uC1C4_\uD0C0\uACA9"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5ab96368acae0834bafb171194a7a4ed
-    m_Address: "Data/LevelUpData_3049_\uB354\uBE14_\uD0ED"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -383,12 +359,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e715a5c45098e14f9244c2260643e87
     m_Address: "Data/LevelUpData_3204_\uC790\uAE09\uC790\uC871"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5e9f540bac5396741b4d58e444b2d5d0
-    m_Address: "Data/LevelUpData_3056_\uC2DD\uCDA9\uC774"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -519,12 +489,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 72f8e950c2370f14397b40d62b6b46b1
-    m_Address: "Data/LevelUpData_3050_\uB300\uB9C8\uBC95\uC758_\uD750\uB984"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73324132d3a349c4992929e7ee143b98
     m_Address: "Data/LevelUpData_3106_\uD1A0\uD15C_\uB9C8\uC2A4\uD130\uB9AC"
     m_ReadOnly: 0
@@ -563,12 +527,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e794755e87c59e51fbd9d1d88c99cd2
     m_Address: Data/TD_4006
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7f438447f15841f4ba140aeeeb88108d
-    m_Address: "Data/LevelUpData_3027_\uC11C\uD074_\uBA54\uC774\uC9C0"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -783,12 +741,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a94b21cf223de72468e3fdd2c9bf79c6
-    m_Address: "Data/LevelUpData_3026_\uC911\uAE09_\uB2CC\uC790"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9b71555e72a4114db4974fb2c77fefd
     m_Address: "Data/LevelUpData_3051_\uC9C8\uB7C9_\uAC00\uC18D\uB3C4"
     m_ReadOnly: 0
@@ -909,12 +861,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c16b0e44942efa64c956820b57b8011e
-    m_Address: "Data/LevelUpData_3048_\uB2CC\uC790_\uBE44\uC220\uC11C"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c2036ab09e386747981422365c931f58
     m_Address: Data/TD_4015
     m_ReadOnly: 0
@@ -977,12 +923,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1deb28b6d82b992808437e0aec9bf21
     m_Address: Data/TD_4023
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1e10c5c959d3b743920d6733bf36d9a
-    m_Address: "Data/LevelUpData_3028_\uAC74\uC2E4\uD55C_\uB178\uB3D9\uC790"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data

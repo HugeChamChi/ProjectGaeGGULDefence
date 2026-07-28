@@ -23,7 +23,7 @@ MonoBehaviour:
     epic: 5
     legend: 5
   unitName: "\uBCA0\uD0D5"
-  unitTribe: 0
+  unitTribe: 5
   iconAddress: ANIM_DroneFrogMaker_Idle_sprite sheet_0
   prefabAddress: DroneUnit_Producer
   icon: {fileID: -1807137302, guid: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7, type: 3}

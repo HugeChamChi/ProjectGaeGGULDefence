@@ -23,7 +23,7 @@ MonoBehaviour:
     epic: 0
     legend: 0
   unitName: "\uB4DC\uB860 \uC871\uC7A5 (\uC804\uC124)"
-  unitTribe: 0
+  unitTribe: 5
   iconAddress: ANIM_DroneFrogLeader_Idle_sprite sheet_0
   prefabAddress: DroneUnit_Cheiftain
   icon: {fileID: 1471017148, guid: 9a2629c3e477a99478af9be35681d975, type: 3}

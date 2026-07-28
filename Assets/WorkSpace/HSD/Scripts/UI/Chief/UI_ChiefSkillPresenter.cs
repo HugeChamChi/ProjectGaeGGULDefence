@@ -21,9 +21,10 @@ public class UI_ChiefSkillPresenter
     {
         if (_chiefUnit == null || _chiefUnit.unitData == null || !_chiefUnit.gameObject.activeInHierarchy || _chiefUnit.currentCell == null)
         {
-            _view.SetCooldownFillAmount(1f);
+            _view.SetCooldownSliderValue(1f);
             _view.SetCooldownText("");
             _view.SetButtonInteractable(false);
+            _view.SetDisabledVisual(true);
             return;
         }
 
@@ -32,9 +33,10 @@ public class UI_ChiefSkillPresenter
         float progress = _chiefUnit.SkillGaugeProgress; // 0f ~ 1f
         bool isReady = _chiefUnit.IsSkillReady; // progress >= 1f
 
-        // Fill이 0일 때가 사용 가능하도록 역전 (1 - progress)
-        _view.SetCooldownFillAmount(Mathf.Clamp01(1f - progress));
+        // 슬라이더 값이 0일 때가 사용 가능하도록 역전 (1 - progress)
+        _view.SetCooldownSliderValue(Mathf.Clamp01(1f - progress));
         _view.SetButtonInteractable(isReady);
+        _view.SetDisabledVisual(!isReady);
 
         if (isReady)
         {

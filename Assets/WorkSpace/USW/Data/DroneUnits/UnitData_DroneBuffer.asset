@@ -23,7 +23,7 @@ MonoBehaviour:
     epic: 6
     legend: 6
   unitName: "\uAC10\uB9DD"
-  unitTribe: 0
+  unitTribe: 5
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
   prefabAddress: DroneUnit_Buffer
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}

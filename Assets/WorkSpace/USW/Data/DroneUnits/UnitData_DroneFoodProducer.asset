@@ -23,7 +23,7 @@ MonoBehaviour:
     epic: 8
     legend: 8
   unitName: "\uC824\uD0D5"
-  unitTribe: 0
+  unitTribe: 5
   iconAddress: ANIM_DroneFrogSupporter_Idle_sprite sheet_0
   prefabAddress: DroneUnit_FoodProducer
   icon: {fileID: -634094045, guid: 5ba91dfaf38d4444da5dd60e60812e95, type: 3}
