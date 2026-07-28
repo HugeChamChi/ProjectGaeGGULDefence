@@ -7,7 +7,6 @@ public class UnitStatsModifier : MonoBehaviour
     
     // 레벨업 스킬 특수 효과
     public float BurstEndTime { get; set; }
-    public float UnemployedAtkBonus { get; set; }
 
     public void Init(UnitBase unit, UnitDependencies deps)
     {
@@ -77,7 +76,7 @@ public class UnitStatsModifier : MonoBehaviour
         float cellAttackBonus = _unit.GetStatBonus(StatKind.AttackPercent, projAtkBonusMultiplier);
         float flatAttackBonus = _unit.GetStatBonus(StatKind.AttackFlat, projAtkBonusMultiplier);
 
-        float damage = (baseDamage + UnemployedAtkBonus + flatAttackBonus)
+        float damage = (baseDamage + flatAttackBonus)
                      * (1f + cellAttackBonus)
                      * cellModifier
                      * totemModifier

@@ -4,7 +4,7 @@
 public class JobUpgradeCostRow
 {
     public string UpgradeType;    // "Job_Upgrade" | "Currency"
-    public string UpgradeTarget;  // "Frog" | "Frog_Gunner" | "Frog_Ninja" | "Frog_Magician" | "All"
+    public string UpgradeTarget;  // 유닛 unitName (예: "Frog_Warrior") | "All"
     public int    InitialCost;
     public float  CostRate;       // 배율 증가 (Job_Upgrade: ×2.0)
     public int    CostIncrease;   // 고정 증가 (Currency: +50)
@@ -16,7 +16,7 @@ public class JobUpgradeCostRow
 public class CharacterStatRow
 {
     public int    CharacterId;
-    public string CharacterType;  // "Frog" | "Frog_Gunner" | "Frog_Ninja" | "Frog_Magician"
+    public string CharacterType;  // 유닛 unitName (예: "Frog_Warrior")
     public int    Level;          // 강화 레벨 1~10
     public float  Atk;
     public float  AttackSpeed;    // 공격 간격(초) — 낮을수록 빠름

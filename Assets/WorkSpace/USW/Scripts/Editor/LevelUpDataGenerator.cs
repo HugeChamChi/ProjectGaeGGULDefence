@@ -5,8 +5,8 @@ using System.IO;
 
 /// <summary>
 /// Tools > USW > Generate LevelUp Assets 실행 시
-/// Assets/WorkSpace/USW/Data/LevelupSelection/ 에 60개 LevelUpData SO 자동 생성
-/// (시트 choose_id 3000~3059 전체 대응)
+/// Assets/WorkSpace/USW/Data/LevelupSelection/ 에 LevelUpData SO 자동 생성
+/// (시트 choose_id 3000~3059 대응. 구 로스터 전용 항목 10개는 제외)
 /// </summary>
 public static class LevelUpDataGenerator
 {
@@ -29,10 +29,6 @@ public static class LevelUpDataGenerator
     }
 
     private static readonly UnitTribe[] AllTribes  = System.Array.Empty<UnitTribe>();
-    private static readonly UnitTribe[] Ninja       = { UnitTribe.Ninja };
-    private static readonly UnitTribe[] Gunner      = { UnitTribe.Gunner };
-    private static readonly UnitTribe[] Wizard      = { UnitTribe.Wizard };
-    private static readonly UnitTribe[] Unemployed  = { UnitTribe.UnEmployed };
 
     // 타입 별명
     private const LevelUpEffectType    ETN  = LevelUpEffectType.None;
@@ -116,18 +112,6 @@ public static class LevelUpDataGenerator
             sp=LevelUpSpecialEffect.SellBonusFood, spv=5 },
 
         // ── Rare (3025~3044) ────────────────────────────────────
-        new ItemDef { id=3025, name="노련한 총잡이",grade=Tier.Rare, rate=0.015f,
-            desc="[Rare~Epic] 총잡이 기물 획득",
-            sp=LevelUpSpecialEffect.GainGunnerUnit },
-        new ItemDef { id=3026, name="중급 닌자",    grade=Tier.Rare, rate=0.015f,
-            desc="[Rare~Epic] 닌자 기물 획득",
-            sp=LevelUpSpecialEffect.GainNinjaUnit },
-        new ItemDef { id=3027, name="서클 메이지",  grade=Tier.Rare, rate=0.015f,
-            desc="[Rare~Epic] 마법사 기물 획득",
-            sp=LevelUpSpecialEffect.GainWizardUnit },
-        new ItemDef { id=3028, name="건실한 노동자",grade=Tier.Rare, rate=0.015f,
-            desc="[Rare~Epic] 무직 기물 획득",
-            sp=LevelUpSpecialEffect.GainUnemployedUnit },
         new ItemDef { id=3029, name="대형 군량미",  grade=Tier.Rare, rate=0.015f,
             desc="식량 500개 즉시 획득",
             sp=LevelUpSpecialEffect.GiveFoodAmount, spv=500 },
@@ -172,24 +156,9 @@ public static class LevelUpDataGenerator
         new ItemDef { id=3045, name="풍요로운 영토",grade=Tier.Epic, rate=0.015f,
             desc="최대 인구수 2 증가",
             sp=LevelUpSpecialEffect.PopulationIncrease, spv=2 },
-        new ItemDef { id=3046, name="낙뢰 마법",    grade=Tier.Epic, rate=0.015f,
-            desc="마법사 기본공격 제거. 게이지 가득차면 번개 마법 사용",
-            tribes=Wizard, sp=LevelUpSpecialEffect.WizardLightningMode },
         new ItemDef { id=3047, name="연쇄 타격",    grade=Tier.Epic, rate=0.015f,
             desc="공격 시 30% 확률로 추가 공격",
             sp=LevelUpSpecialEffect.RandomBonusAttack, spv=30 },
-        new ItemDef { id=3048, name="닌자 비술서",  grade=Tier.Epic, rate=0.015f,
-            desc="닌자 공격력 30%, 공격속도 20% 증가",
-            tribes=Ninja, pe=ETN, pv=30, se=ETN, sv=20,
-            sp=LevelUpSpecialEffect.BuffNinjaTribe },
-        new ItemDef { id=3049, name="더블 탭",      grade=Tier.Epic, rate=0.015f,
-            desc="총잡이 공격력 30%, 공격속도 20% 증가",
-            tribes=Gunner, pe=ETN, pv=30, se=ETN, sv=20,
-            sp=LevelUpSpecialEffect.BuffGunnerTribe },
-        new ItemDef { id=3050, name="대마법의 흐름",grade=Tier.Epic, rate=0.015f,
-            desc="마법사 공격력 30%, 쿨타임 20% 감소",
-            tribes=Wizard, pe=ETN, pv=30, se=ETN, sv=20,
-            sp=LevelUpSpecialEffect.BuffWizardTribe },
         new ItemDef { id=3051, name="질량 가속도",  grade=Tier.Epic, rate=0.015f,
             desc="투사체 크기 10%당 공격력 20% 증가",
             pe=ETN, pv=20, sp=LevelUpSpecialEffect.ProjectileSizeScalesAtk },
@@ -203,12 +172,6 @@ public static class LevelUpDataGenerator
             pe=ETN, pv=100, sp=LevelUpSpecialEffect.BurstOnSkillFull, spv=3 },
 
         // ── Legend (3055~3059) ───────────────────────────────────
-        new ItemDef { id=3055, name="물리 마법사",  grade=Tier.Legend, rate=0.010f,
-            desc="마법사 스킬 제거. 공격력, 공격속도 100% 증가",
-            tribes=Wizard, pe=ETN, pv=100, sp=LevelUpSpecialEffect.WizardPhysicalMode },
-        new ItemDef { id=3056, name="식충이",       grade=Tier.Legend, rate=0.010f,
-            desc="무직 식량 획득 제거. 게이지 가득찰 때마다 공격력 1 증가",
-            tribes=Unemployed, pe=ETN, pv=1, sp=LevelUpSpecialEffect.UnemployedFoodNegate },
         new ItemDef { id=3057, name="마력 치환",    grade=Tier.Legend, rate=0.010f,
             desc="식량 생산량 60% 감소, 쿨타임 200% 감소",  pe=ETFP, pv=-60, se=ETGS, sv=200 },
         new ItemDef { id=3058, name="원맨쇼",       grade=Tier.Legend, rate=0.010f,

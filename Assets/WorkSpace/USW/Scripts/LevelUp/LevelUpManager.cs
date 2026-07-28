@@ -9,13 +9,11 @@ using Cysharp.Threading.Tasks;
 /// 다른 시스템이 참조하는 프로퍼티
 ///   UnitBase  : GetRowAttackMultiplier, GetRowSpeedMultiplier,
 ///               CritChance, CritDamageMultiplier, ExpGainMultiplier,
-///               GetTribeAtkBonus, GetTribeSpeedBonus, GetWizardCooldownBonus,
+///               GetTribeAtkBonus, GetTribeSpeedBonus,
 ///               HasBurstOnSkillFull, BurstAttackBonus, BurstDurationSeconds,
 ///               BonusAttackEveryNHits, RandomExtraAttackChance,
 ///               HasRandomProcAttack, RandomProcChance, RandomProcDamagePct,
 ///               HasExtraAttackEveryAttack, HasExtraAttackOnSkillFull,
-///               HasWizardLightningMode, HasWizardPhysicalMode,
-///               HasUnemployedFoodNegate, UnemployedSkillAtkGain,
 ///               ProjectileSizeAtkPerUnit
 ///   UnitSpawner: SummonDiscountRate, SellBonusFoodAmount,
 ///               HasSellDealsDamage, SellDamagePct,
@@ -123,32 +121,9 @@ public class LevelUpManager : MonoBehaviour
     public float ChieftainAttackBonus { get; private set; } = 0f;
     public float ChieftainFoodProductionBonus { get; private set; } = 0f;
 
-    // ── 부족별 특수 버프 ───────────────────────────────────────
-    public float NinjaAtkBonus       { get; private set; } = 0f;
-    public float NinjaSpeedBonus     { get; private set; } = 0f;
-    public float GunnerAtkBonus      { get; private set; } = 0f;
-    public float GunnerSpeedBonus    { get; private set; } = 0f;
-    public float WizardAtkBonus      { get; private set; } = 0f;
-    public float WizardSpeedBonus    { get; private set; } = 0f;
-    public float WizardCooldownBonus { get; private set; } = 0f; // 양수=쿨타임 감소(빠름)
-
-    public float GetTribeAtkBonus(UnitTribe tribe) => tribe switch
-    {
-        UnitTribe.Ninja   => NinjaAtkBonus,
-        UnitTribe.Gunner  => GunnerAtkBonus,
-        UnitTribe.Wizard  => WizardAtkBonus,
-        _                 => 0f,
-    };
-
-    public float GetTribeSpeedBonus(UnitTribe tribe) => tribe switch
-    {
-        UnitTribe.Ninja   => NinjaSpeedBonus,
-        UnitTribe.Gunner  => GunnerSpeedBonus,
-        UnitTribe.Wizard  => WizardSpeedBonus,
-        _                 => 0f,
-    };
-
-    public float GetWizardCooldownBonus() => WizardCooldownBonus;
+    // ── 부족별 특수 버프 (현재 사용하는 부족 중 개별 버프 대상 없음) ─
+    public float GetTribeAtkBonus(UnitTribe tribe) => 0f;
+    public float GetTribeSpeedBonus(UnitTribe tribe) => 0f;
 
     // ── 공격 관련 특수 플래그 (UnitBase 참조) ─────────────────
     public readonly List<int> BonusAttackEveryNHits = new();
@@ -161,12 +136,6 @@ public class LevelUpManager : MonoBehaviour
     public bool  HasBurstOnSkillFull       { get; private set; }
     public float BurstAttackBonus          { get; private set; } = 0f;
     public float BurstDurationSeconds      { get; private set; } = 0f;
-
-    // ── 유닛 특성 변경 플래그 (UnitBase 참조) ─────────────────
-    public bool  HasWizardLightningMode  { get; private set; }
-    public bool  HasWizardPhysicalMode   { get; private set; }
-    public bool  HasUnemployedFoodNegate { get; private set; }
-    public float UnemployedSkillAtkGain  { get; private set; } = 1f;
 
     // ── 투사체 크기 → 공격력 스케일 (UnitBase 참조) ───────────
     public bool  HasProjectileSizeScalesAtk { get; private set; }
@@ -391,18 +360,6 @@ public class LevelUpManager : MonoBehaviour
         {
             case LevelUpSpecialEffect.None: break;
 
-            case LevelUpSpecialEffect.BuffNinjaTribe:
-                NinjaAtkBonus -= data.primaryValue / 100f;
-                NinjaSpeedBonus -= data.secondaryValue / 100f;
-                break;
-            case LevelUpSpecialEffect.BuffGunnerTribe:
-                GunnerAtkBonus -= data.primaryValue / 100f;
-                GunnerSpeedBonus -= data.secondaryValue / 100f;
-                break;
-            case LevelUpSpecialEffect.BuffWizardTribe:
-                WizardAtkBonus -= data.primaryValue / 100f;
-                WizardCooldownBonus -= data.secondaryValue / 100f;
-                break;
             case LevelUpSpecialEffect.AttackEveryNHits:
                 BonusAttackEveryNHits.Remove((int)data.specialValue);
                 break;
@@ -457,18 +414,6 @@ public class LevelUpManager : MonoBehaviour
                 break;
             case LevelUpSpecialEffect.AllowTotemOverlap:
                 HasAllowTotemOverlap = false;
-                break;
-            case LevelUpSpecialEffect.WizardLightningMode:
-                HasWizardLightningMode = false;
-                break;
-            case LevelUpSpecialEffect.WizardPhysicalMode:
-                HasWizardPhysicalMode = false;
-                WizardAtkBonus -= data.primaryValue / 100f;
-                WizardSpeedBonus -= data.primaryValue / 100f;
-                break;
-            case LevelUpSpecialEffect.UnemployedFoodNegate:
-                HasUnemployedFoodNegate = false;
-                UnemployedSkillAtkGain = 0f;
                 break;
             case LevelUpSpecialEffect.ProjectileSizeScalesAtk:
                 HasProjectileSizeScalesAtk = false;
@@ -581,37 +526,6 @@ public class LevelUpManager : MonoBehaviour
                 SpawnUnitAsync(null, Tier.Normal, Tier.Rare).Forget();
                 break;
 
-            case LevelUpSpecialEffect.GainGunnerUnit:
-                SpawnUnitAsync(UnitTribe.Gunner, Tier.Rare, Tier.Epic).Forget();
-                break;
-
-            case LevelUpSpecialEffect.GainNinjaUnit:
-                SpawnUnitAsync(UnitTribe.Ninja, Tier.Rare, Tier.Epic).Forget();
-                break;
-
-            case LevelUpSpecialEffect.GainWizardUnit:
-                SpawnUnitAsync(UnitTribe.Wizard, Tier.Rare, Tier.Epic).Forget();
-                break;
-
-            case LevelUpSpecialEffect.GainUnemployedUnit:
-                SpawnUnitAsync(UnitTribe.UnEmployed, Tier.Rare, Tier.Epic).Forget();
-                break;
-
-            case LevelUpSpecialEffect.BuffNinjaTribe:
-                NinjaAtkBonus   += data.primaryValue  / 100f;
-                NinjaSpeedBonus += data.secondaryValue / 100f;
-                break;
-
-            case LevelUpSpecialEffect.BuffGunnerTribe:
-                GunnerAtkBonus   += data.primaryValue  / 100f;
-                GunnerSpeedBonus += data.secondaryValue / 100f;
-                break;
-
-            case LevelUpSpecialEffect.BuffWizardTribe:
-                WizardAtkBonus      += data.primaryValue  / 100f;
-                WizardCooldownBonus += data.secondaryValue / 100f;
-                break;
-
             // ── 공격 패시브 ────────────────────────────────────
             case LevelUpSpecialEffect.AttackEveryNHits:
                 BonusAttackEveryNHits.Add((int)data.specialValue);
@@ -682,22 +596,6 @@ public class LevelUpManager : MonoBehaviour
 
             case LevelUpSpecialEffect.AllowTotemOverlap:
                 HasAllowTotemOverlap = true;
-                break;
-
-            // ── 유닛 행동 변경 ─────────────────────────────────
-            case LevelUpSpecialEffect.WizardLightningMode:
-                HasWizardLightningMode = true;
-                break;
-
-            case LevelUpSpecialEffect.WizardPhysicalMode:
-                HasWizardPhysicalMode = true;
-                WizardAtkBonus   += data.primaryValue / 100f;
-                WizardSpeedBonus += data.primaryValue / 100f;
-                break;
-
-            case LevelUpSpecialEffect.UnemployedFoodNegate:
-                HasUnemployedFoodNegate = true;
-                UnemployedSkillAtkGain  = data.primaryValue; // +N 공격력/스킬
                 break;
 
             case LevelUpSpecialEffect.ProjectileSizeScalesAtk:

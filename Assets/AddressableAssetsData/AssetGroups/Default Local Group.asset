@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 2a1e57ad30f1cd8459f99453f766853b
   m_SerializeEntries:
-  - m_GUID: 01cadda2b2564544f9cd8465153b574f
-    m_Address: 03.Wizard_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 027d603aca78cbf48a8d47fa97ed3a90
     m_Address: Totem_009_90_L
     m_ReadOnly: 0
@@ -30,18 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 05a05dab70ffe7045a01a8ff6071014a
-    m_Address: FrogGunnerIcon_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07828d40f9c1cfe4e90b04ff49ee5b07
     m_Address: DroneUnit_Buffer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0963f26c8c90c8b46897cbfeda3529a2
-    m_Address: Frog_Magician
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -72,16 +57,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1236c5ebc6105c14aa58318d2a8a122a
     m_Address: Totem_002_90_L
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1322a00d4dc9da14fb41b99f6bdf7c0d
-    m_Address: FrogMagicianIcon_Normal
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 14075db5768936e4e99db99e3a3d70a6
-    m_Address: FrogMagicianIcon_Legendary
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -117,16 +92,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 221c3b8f1af730c4a8ec8e290382013b
     m_Address: Totem_020_180
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2a7627eaf6f68e6439b5af3e9eccb5a5
-    m_Address: 03.Ninja_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2ba537965e46d5442a2bcf0426e384fd
-    m_Address: 03.Gunner_attack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -180,16 +145,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3aed75f9eeb1aac4fb589344b7fc1a22
-    m_Address: FrogGunnerIcon_Normal
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3f25299148718034c8eab73a61d7aa4f
-    m_Address: Frog_Gunner
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3ffca19cdbb44484c9bf98203aa2c4ad
     m_Address: Totem_024
     m_ReadOnly: 0
@@ -202,11 +157,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
     m_Address: 05.Drone_Attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 44f99b37e3a78de46be904450bbcccdc
-    m_Address: 03.Frog_attack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -305,28 +255,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 665793f07c435bf4c82d73ab42bc5626
-    m_Address: Frog
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 66cd5a7684d6ccc4c823e81c8e09f3f5
     m_Address: Totem_019_90_L
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6778f56314db7964394b533018d42370
-    m_Address: FrogIcon_Rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 67f1b5a1b2a3a3d40820570fe4e7cc23
-    m_Address: FrogNinjaIcon_Legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6bb38eeb365982247bdb30b806bbbaba
-    m_Address: FrogNinjaIcon_Rare
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -455,11 +385,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 949fc35c815747348b57b79b23f76ec5
-    m_Address: FrogIcon_Normal_
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9607b3078d6f09b4385b9a0bf5690844
     m_Address: Totem_004_180
     m_ReadOnly: 0
@@ -475,33 +400,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9933526b8c1ee9e40905056f2c37a4d0
-    m_Address: FrogIcon_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9a2629c3e477a99478af9be35681d975
     m_Address: ANIM_DroneFrogLeader_Idle_sprite sheet_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9a9e635adee04504a863d905b091a8e7
-    m_Address: FrogMagicianIcon_Epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c7dbd7ab89421345b9394959235e27b
     m_Address: CurrencyTextPrefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9cd2ddaed3ecb3b4eae5b6ac1bdeed63
-    m_Address: FrogMagicianIcon_Rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9d09cbadb705dbc4ab1de11aeec74d0f
-    m_Address: FrogGunnerIcon_Legendary
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -575,11 +480,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c51f3fcc631cce34e9b96b9848b3ba4b
-    m_Address: FrogGunnerIcon_Rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c539adeb8c5bf7b408296beb77a05d74
     m_Address: Totem_011_90_L
     m_ReadOnly: 0
@@ -620,11 +520,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d7709e26f5c9f8c4cb2f1c51561bfae4
-    m_Address: Frog_Ninja
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d9844ca51382e004994ae4c957905cfd
     m_Address: Totem_019_90_R
     m_ReadOnly: 0
@@ -647,16 +542,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e3822f1ab8168074f882869602887a30
     m_Address: Totem_002_180
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e3eba7f844f7a084a99177d46ab96ba7
-    m_Address: FrogIcon_Legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e42cbf8b1b1703e45842cfe3a5fc438f
-    m_Address: FrogNinjaIcon_Normal
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -712,11 +597,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7
     m_Address: ANIM_DroneFrogMaker_Idle_sprite sheet_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fdd4d47a337037640ba169771c5cc8bb
-    m_Address: FrogNinjaIcon_Epic
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

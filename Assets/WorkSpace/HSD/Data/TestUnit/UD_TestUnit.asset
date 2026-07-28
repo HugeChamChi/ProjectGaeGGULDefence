@@ -20,7 +20,7 @@ MonoBehaviour:
   iconAddress: 
   prefabAddress: 
   icon: {fileID: 0}
-  prefab: {fileID: 6208595264389202587, guid: 012882f890ac0e144a5fa4117b572550, type: 3}
+  prefab: {fileID: 7106599845109891056, guid: 012882f890ac0e144a5fa4117b572550, type: 3}
   description: 
   attackSoundAddress: 
   atk: 90

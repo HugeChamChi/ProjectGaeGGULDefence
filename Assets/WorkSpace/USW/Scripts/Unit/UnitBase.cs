@@ -200,12 +200,6 @@ public abstract class UnitBase : MonoBehaviour
     public BossBase _boss => Boss;
     public GridManager _gridManager => _deps?.GridManager;
     
-    public float _unemployedAtkBonus 
-    { 
-        get => _stats?.UnemployedAtkBonus ?? 0f; 
-        set { if (_stats != null) _stats.UnemployedAtkBonus = value; } 
-    }
-
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
 
     public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;
