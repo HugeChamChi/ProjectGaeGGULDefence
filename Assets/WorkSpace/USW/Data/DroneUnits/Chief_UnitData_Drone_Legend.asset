@@ -44,7 +44,7 @@ MonoBehaviour:
     rare: 0
     epic: 0
     legend: 0
-  basicAttackData: {fileID: 11400000, guid: a7ce7dcd278faeb44965857791bcf7a1, type: 2}
+  basicAttackData: {fileID: 0}
   skillData: {fileID: 0}
   foodProduction:
     normal: 0

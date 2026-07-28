@@ -33,7 +33,8 @@ MonoBehaviour:
     - rid: 8123456789012345004
       type: {class: WarriorJudgementHitEffect, ns: , asm: Assembly-CSharp}
       data:
-        basePower: 200
+        coefficient:
+          rid: 8123456789012345008
         projAtkBonusMultiplier: 2
     - rid: 8123456789012345005
       type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
@@ -52,3 +53,7 @@ MonoBehaviour:
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:
         value: 1
+    - rid: 8123456789012345008
+      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      data:
+        value: 2

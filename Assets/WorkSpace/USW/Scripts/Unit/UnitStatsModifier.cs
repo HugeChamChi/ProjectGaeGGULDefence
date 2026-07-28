@@ -30,6 +30,9 @@ public class UnitStatsModifier : MonoBehaviour
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
 
+    /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
+    public float GetUpgradedAtk() => UpgradedAtk;
+
     /// <summary>임의의 기준값을 GetAttackDamage()와 동일한 보정 파이프라인(크리티컬/토템/부족/버스트 등)에 통과시킨다.</summary>
     public int ComputeDamageFrom(float baseDamage) => ComputeDamage(baseDamage);
 

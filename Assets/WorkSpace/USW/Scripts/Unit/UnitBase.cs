@@ -186,6 +186,7 @@ public abstract class UnitBase : MonoBehaviour
     public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
+    public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;
 

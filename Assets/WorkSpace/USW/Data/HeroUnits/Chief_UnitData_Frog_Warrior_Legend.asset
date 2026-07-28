@@ -11,25 +11,56 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: Chief_UnitData_Frog_Warrior_Legend
-  m_EditorClassIdentifier: 
-  characterId: 1016
-  unitType: 1016
+  m_EditorClassIdentifier:
+  characterId:
+    normal: 1016
+    rare: 1016
+    epic: 1016
+    legend: 1016
+  unitType:
+    normal: 1016
+    rare: 1016
+    epic: 1016
+    legend: 1016
   unitName: Frog_Warrior
-  unitTier: 4
   unitTribe: 4
   iconAddress: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
   prefabAddress: Frog_Warrior
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
   prefab: {fileID: 1380487753624790257, guid: 3a64ba5fd54b120408374f2248c6d1fc, type: 3}
-  description: 
-  attackSoundAddress: 
-  atk: 100
-  attackSpeed: 1
-  skillCooldown: 10
-  basicAttackData: {fileID: 11400000, guid: 068ce850b5a24ff4bbabeab9a730815c, type: 2}
+  description:
+  attackSoundAddress:
+  atk:
+    normal: 100
+    rare: 100
+    epic: 100
+    legend: 100
+  attackSpeed:
+    normal: 1
+    rare: 1
+    epic: 1
+    legend: 1
+  skillCooldown:
+    normal: 10
+    rare: 10
+    epic: 10
+    legend: 10
   skillName:
   skillData: {fileID: 11400000, guid: 877cc28581b94d3aaa52d46163c6356a, type: 2}
-  foodProduction: 0
-  populationCost: 1
-  maxDroneCount: 0
+  basicAttackData: {fileID: 11400000, guid: 068ce850b5a24ff4bbabeab9a730815c, type: 2}
+  foodProduction:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  populationCost:
+    normal: 1
+    rare: 1
+    epic: 1
+    legend: 1
+  maxDroneCount:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
   passive: {fileID: 11400000, guid: 36a315bee5cde3c4a8ac6f08a1218afc, type: 2}

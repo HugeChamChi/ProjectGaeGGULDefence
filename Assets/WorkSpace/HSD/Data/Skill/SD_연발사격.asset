@@ -16,6 +16,7 @@ MonoBehaviour:
   skillName: "\uC5F0\uBC1C \uC0AC\uACA9"
   description: "\uD65C \uC2DC\uC704\uB97C \uB2F9\uACA8 \uD654\uC0B4\uC744 \uC5F0\uC18D\uC73C\uB85C
     \uBC1C\uC0AC\uD569\uB2C8\uB2E4."
+  attackSoundAddress: 
   action:
     rid: 8123456789012345001
   hitEffects:
