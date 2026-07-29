@@ -18,7 +18,7 @@ public class SellButtonUI : MonoBehaviour
         GetComponent<Button>().onClick.AddListener(OnSellButtonClicked);
     }
 
-    /// <summary>UnitActionPopupUI.Show()에서 호출 — 판매 대상 유닛 설정</summary>
+    /// <summary>UI_UnitInfoPanel.SetData()에서 호출 — 판매 대상 유닛 설정</summary>
     public void SetUnit(UnitBase unit) => _targetUnit = unit;
 
     public void SetState(bool canSell)

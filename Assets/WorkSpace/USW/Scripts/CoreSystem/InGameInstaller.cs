@@ -16,9 +16,6 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private TotemSpawner _totemManager;
 
     [Header("Unit Action Popup")]
-    [SerializeField] private UnitActionPopupUI _unitActionPopup;
-    [SerializeField] private MergeButtonUI _mergeButton;
-    [SerializeField] private SellButtonUI _sellButton;
     [SerializeField] private GaeGGUL.UI.Unit.UI_UnitInfoPanel _unitInfoPanel;
 
     [Header("Totem Action Popup")]
@@ -108,26 +105,18 @@ public class InGameInstaller : MonoBehaviour
 
     private void WireUnitActionPopup()
     {
-        if (_unitActionPopup == null) { Debug.LogError("[InGameInstaller] _unitActionPopup 미연결"); return; }
-        if (_mergeButton == null) Debug.LogError("[InGameInstaller] _mergeButton 미연결");
-        if (_sellButton == null) Debug.LogError("[InGameInstaller] _sellButton 미연결");
-        if (_unitInfoPanel == null) Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결");
+        if (_unitInfoPanel == null) { Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결"); return; }
+        if (_unitInfoPanel.MergeButton == null) Debug.LogError("[InGameInstaller] mergeButton 미연결");
+        if (_unitInfoPanel.SellButton == null) Debug.LogError("[InGameInstaller] sellButton 미연결");
         if (_mergeManager == null) { Debug.LogError("[InGameInstaller] _mergeManager null — MergeManager 씬에 없음"); return; }
 
-        _mergeManager.OnUnitSelected += _unitActionPopup.Show;
-        _mergeManager.OnUnitSelected += HandleUnitSelected;
-        _mergeManager.OnSelectionCleared += _unitActionPopup.Hide;
+        _mergeManager.OnUnitSelected += _unitInfoPanel.SetData;
         _mergeManager.OnSelectionCleared += _unitInfoPanel.Close;
         _mergeManager.OnSelectionCleared += _totemInfoPanel.Close;
 
-        _mergeButton.OnMergeRequested += _mergeManager.ExecuteMerge;
-        _sellButton.OnSellRequested += OnSellUnitRequested;
-        _unitActionPopup.OnDismissRequested += _mergeManager.ClearSelection;
-    }
-
-    private void HandleUnitSelected(UnitBase unit, bool canMerge)
-    {
-        _unitInfoPanel.SetData(unit);
+        _unitInfoPanel.MergeButton.OnMergeRequested += _mergeManager.ExecuteMerge;
+        _unitInfoPanel.SellButton.OnSellRequested += OnSellUnitRequested;
+        _unitInfoPanel.OnDismissRequested += _mergeManager.ClearSelection;
     }
 
     private void OnSellUnitRequested(UnitBase unit)
@@ -191,15 +180,13 @@ public class InGameInstaller : MonoBehaviour
         var merge = _mergeManager;
         if (merge != null)
         {
-            merge.OnUnitSelected -= _unitActionPopup.Show;
-            merge.OnUnitSelected -= HandleUnitSelected;
-            merge.OnSelectionCleared -= _unitActionPopup.Hide;
+            merge.OnUnitSelected -= _unitInfoPanel.SetData;
             merge.OnSelectionCleared -= _unitInfoPanel.Close;
-            _mergeButton.OnMergeRequested -= merge.ExecuteMerge;
-            _unitActionPopup.OnDismissRequested -= merge.ClearSelection;
+            _unitInfoPanel.MergeButton.OnMergeRequested -= merge.ExecuteMerge;
+            _unitInfoPanel.OnDismissRequested -= merge.ClearSelection;
         }
 
-        _sellButton.OnSellRequested -= OnSellUnitRequested;
+        _unitInfoPanel.SellButton.OnSellRequested -= OnSellUnitRequested;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         _totemActionPopup.OnSellTotemRequested -= OnSellTotemRequested;
         _totemActionPopup.OnDismissRequested -= ClearTotemRangePreview;

@@ -20,11 +20,17 @@ public class InputManager : MonoBehaviour
     private Vector2 _pointerDownScreenPos;
     private bool _pointerDown = false;
 
+    private static readonly Plane GroundPlane = new Plane(Vector3.forward, Vector3.zero);
+
     private Vector2 GetWorldPos(Vector2 screenPos)
     {
         if (_mainCamera == null) return Vector2.zero;
-        Vector3 posWithZ = new Vector3(screenPos.x, screenPos.y, Mathf.Abs(_mainCamera.transform.position.z));
-        return _mainCamera.ScreenToWorldPoint(posWithZ);
+        Ray ray = _mainCamera.ScreenPointToRay(screenPos);
+        if (GroundPlane.Raycast(ray, out float distance))
+        {
+            return ray.GetPoint(distance);
+        }
+        return Vector2.zero;
     }
 
     private void Awake()

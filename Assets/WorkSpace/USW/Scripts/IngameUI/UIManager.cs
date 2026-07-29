@@ -32,7 +32,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text currencyText;
     [SerializeField] private TMP_Text spawnCostText;
     [SerializeField] private TMP_Text bossHpText;
-    [SerializeField] private TextMeshProUGUI bossHpLineText;
     [SerializeField] private Slider   currentLineSlider;
     [SerializeField] private Slider   nextLineSlider;
     [SerializeField] private TMP_Text totalFoodProductionText;
@@ -274,11 +273,6 @@ public class UIManager : MonoBehaviour
             if (bossHpText != null)
             {
                 bossHpText.text = $"{x} / {_displayedHpMax}";
-            }
-
-            if (bossHpLineText != null)
-            {
-                bossHpLineText.text = $"x{currentLine}";
             }
 
         }, current, sliderTweenDuration)

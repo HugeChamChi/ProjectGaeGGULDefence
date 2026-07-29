@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using GaeGGUL.Extension;
 using GaeGGUL.UI.Common;
@@ -10,7 +13,6 @@ namespace GaeGGUL.UI.Unit
     {
         [Header("Basic Info")]
         [SerializeField] private UI_IconTierSlot iconSlot;
-        [SerializeField] private TextMeshProUGUI txt_UnitTier;
         [SerializeField] private TextMeshProUGUI txt_UnitName;
 
         [Header("Skill")]
@@ -23,8 +25,21 @@ namespace GaeGGUL.UI.Unit
         [SerializeField] private UI_StatSlot statSlot_AtkSpeed;
         [SerializeField] private UI_StatSlot statSlot_Food;
 
+        [Header("Actions")]
+        [SerializeField] private MergeButtonUI mergeButton;
+        [SerializeField] private SellButtonUI sellButton;
+
+        public MergeButtonUI MergeButton => mergeButton;
+        public SellButtonUI SellButton => sellButton;
+
+        /// <summary>바깥 클릭으로 닫힘 요청 시 발행 (InGameInstaller가 구독)</summary>
+        public event Action OnDismissRequested;
+
         [VContainer.Inject] public GameDataManager _gameDataManager;
         private UI_UnitInfoPresenter _presenter;
+
+        private bool _isShowing;
+        private bool _justShown;
 
         protected override void Awake()
         {
@@ -32,12 +47,16 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
         }
 
-        public void SetData(UnitBase unit)
+        public void SetData(UnitBase unit, bool canMerge = true)
         {
             if (unit == null) return;
             EnsurePresenter();
             _presenter.SetUnitData(unit);
+            if (mergeButton != null) mergeButton.SetState(canMerge);
+            if (sellButton != null) sellButton.SetUnit(unit);
             Open();
+            _isShowing = true;
+            _justShown = true;
         }
 
         public void SetData(UnitData data)
@@ -45,6 +64,30 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
             _presenter.SetUnitData(data);
             Open();
+        }
+
+        public override void Close()
+        {
+            base.Close();
+            _isShowing = false;
+        }
+
+        private void LateUpdate()
+        {
+            if (_justShown) { _justShown = false; return; }
+            if (!_isShowing || !Input.GetMouseButtonDown(0)) return;
+
+            var pointer = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, results);
+
+            foreach (var r in results)
+            {
+                if (r.gameObject.transform.IsChildOf(transform)) return;
+            }
+
+            _isShowing = false;
+            OnDismissRequested?.Invoke();
         }
 
         private void EnsurePresenter()
@@ -57,7 +100,6 @@ namespace GaeGGUL.UI.Unit
 
         public void UpdateBasicInfo(string unitName, Sprite icon, Tier tier)
         {
-            if (txt_UnitTier != null) txt_UnitTier.text = $"[{tier.GetName()}]".ToColor(tier.GetTextColor());
             if (txt_UnitName != null) txt_UnitName.text = unitName;
             if (iconSlot != null)     iconSlot.SetData(icon, tier);
         }
