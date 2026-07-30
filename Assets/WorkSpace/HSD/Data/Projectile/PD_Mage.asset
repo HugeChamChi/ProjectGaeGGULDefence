@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
   m_Name: PD_Mage
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  id: 2
   projectilePrefab: {fileID: 3122451260196350715, guid: b26c93062e8625444b623f6448206648,
     type: 3}
   projectileAddress: 

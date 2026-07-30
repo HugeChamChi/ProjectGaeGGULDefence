@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
   m_Name: ProjectileData_DroneMissile
   m_EditorClassIdentifier:
+  id: 5
   movement:
     rid: 7858129984794406655
   fireEffect:

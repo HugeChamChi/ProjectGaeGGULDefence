@@ -42,8 +42,7 @@ MonoBehaviour:
         shotInterval: 0.1
         sizeMultiplier:
           rid: 8123456789012345033
-        projectileData: {fileID: 11400000, guid: 0117396e692f5b24d80a61ec4ba2245b,
-          type: 2}
+        projectileDataId: 1
     - rid: 8123456789012345031
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:

@@ -10,6 +10,7 @@ public static class Table
     public static ItemTable Item                { get; private set; } = new();
     public static ShopTables Shop               { get; private set; } = new();
     public static GachaTable Gacha              { get; private set; } = new();
+    public static ProjectileTable Projectile    { get; private set; } = new();
 
     public static async UniTask InitializeAsync()
     {
@@ -21,7 +22,8 @@ public static class Table
             Profile.InitializeAsync(),
             Character.InitializeAsync(),
             Item.InitializeAsync(),
-            Shop.InitializeAsync()
+            Shop.InitializeAsync(),
+            Projectile.InitializeAsync()
         );
 
         // GachaManager는 CharacterManager의 데이터에 의존할 수 있으므로 (Data Resolver)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -155,33 +156,125 @@ public class SkillEditorWindow : EditorWindow
 
         foreach (var field in action.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
         {
-            if (!typeof(ScriptableObject).IsAssignableFrom(field.FieldType)) continue;
-
-            container.Add(Separator());
-
-            var label = new Label($"{ObjectNames.NicifyVariableName(field.Name)} ({field.FieldType.Name})");
-            label.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(label);
-
-            var value = field.GetValue(action) as ScriptableObject;
-            if (value != null)
+            if (typeof(ScriptableObject).IsAssignableFrom(field.FieldType))
             {
-                container.Add(new InspectorElement(value));
+                BuildDirectReferenceUI(container, field, action);
                 continue;
             }
 
-            container.Add(new HelpBox($"연결된 {field.FieldType.Name}가 없습니다.", HelpBoxMessageType.Info));
-
-            var nameField = new TextField("생성할 이름") { value = ResolveDefaultName(field.FieldType, _selected) };
-            container.Add(nameField);
-
-            container.Add(new Button(() =>
+            var idRef = field.GetCustomAttribute<SoIdReferenceAttribute>();
+            if (idRef != null && field.FieldType == typeof(int))
             {
-                CreateAndAssign(field.FieldType, nameField.value, action, field, _selected);
-                RebuildNestedEditors();
-            })
-            { text = "생성하기" });
+                BuildIdReferenceUI(container, idRef.SoType, field, action);
+            }
         }
+    }
+
+    // ── 직접 참조(SerializeReference/ScriptableObject 필드) 편집 ───
+    private void BuildDirectReferenceUI(VisualElement container, FieldInfo field, object action)
+    {
+        container.Add(Separator());
+
+        var label = new Label($"{ObjectNames.NicifyVariableName(field.Name)} ({field.FieldType.Name})");
+        label.style.unityFontStyleAndWeight = FontStyle.Bold;
+        container.Add(label);
+
+        var value = field.GetValue(action) as ScriptableObject;
+        if (value != null)
+        {
+            container.Add(new InspectorElement(value));
+            return;
+        }
+
+        container.Add(new HelpBox($"연결된 {field.FieldType.Name}가 없습니다.", HelpBoxMessageType.Info));
+
+        var nameField = new TextField("생성할 이름") { value = ResolveDefaultName(field.FieldType, _selected) };
+        container.Add(nameField);
+
+        container.Add(new Button(() =>
+        {
+            CreateAndAssign(field.FieldType, nameField.value, action, field, _selected);
+            RebuildNestedEditors();
+        })
+        { text = "생성하기" });
+    }
+
+    // ── id 참조(SoIdReference 붙은 int 필드) 편집 ──────────────────
+    private void BuildIdReferenceUI(VisualElement container, Type soType, FieldInfo field, object action)
+    {
+        container.Add(Separator());
+
+        var label = new Label($"{ObjectNames.NicifyVariableName(field.Name)} ({soType.Name}, id 참조)");
+        label.style.unityFontStyleAndWeight = FontStyle.Bold;
+        container.Add(label);
+
+        int currentId = (int)field.GetValue(action);
+        var candidates = FindAllOfType(soType); // (id, name, asset)
+
+        var idField = new IntegerField("id") { value = currentId };
+        idField.RegisterValueChangedCallback(e =>
+        {
+            Undo.RecordObject(_selected, $"Set {field.Name}");
+            field.SetValue(action, e.newValue);
+            EditorUtility.SetDirty(_selected);
+            RebuildNestedEditors();
+        });
+        container.Add(idField);
+
+        var options = new List<string> { "(없음)" };
+        options.AddRange(candidates.Select(c => $"{c.id}: {c.asset.name}"));
+        int selectedIndex = currentId == 0 ? 0 : candidates.FindIndex(c => c.id == currentId) + 1;
+        var popup = new PopupField<string>("목록에서 선택", options, Mathf.Max(selectedIndex, 0));
+        popup.RegisterValueChangedCallback(e =>
+        {
+            int newIndex = options.IndexOf(e.newValue);
+            int newId = newIndex <= 0 ? 0 : candidates[newIndex - 1].id;
+            if (newId == currentId) return;
+            Undo.RecordObject(_selected, $"Set {field.Name}");
+            field.SetValue(action, newId);
+            EditorUtility.SetDirty(_selected);
+            RebuildNestedEditors();
+        });
+        container.Add(popup);
+
+        var resolved = candidates.Find(c => c.id == currentId).asset;
+        if (currentId != 0 && resolved != null)
+        {
+            container.Add(new InspectorElement(resolved));
+            return;
+        }
+
+        if (currentId != 0 && resolved == null)
+            container.Add(new HelpBox($"id {currentId}에 해당하는 {soType.Name}를 찾을 수 없습니다.", HelpBoxMessageType.Warning));
+        else
+            container.Add(new HelpBox($"연결된 {soType.Name}가 없습니다(id 0 = 기본값 사용).", HelpBoxMessageType.Info));
+
+        var nameField = new TextField("생성할 이름") { value = ResolveDefaultName(soType, _selected) };
+        container.Add(nameField);
+
+        container.Add(new Button(() =>
+        {
+            CreateAndAssignId(soType, nameField.value, action, field, _selected, candidates);
+            RebuildNestedEditors();
+        })
+        { text = "생성하기" });
+    }
+
+    /// <summary>프로젝트 내 soType 에셋을 모두 찾아 (id, name, asset) 목록으로 반환. soType은 public int id 필드를 가져야 한다.</summary>
+    private static List<(int id, string name, ScriptableObject asset)> FindAllOfType(Type soType)
+    {
+        var result = new List<(int, string, ScriptableObject)>();
+        var idField = soType.GetField("id", BindingFlags.Public | BindingFlags.Instance);
+        if (idField == null) return result;
+
+        foreach (var guid in AssetDatabase.FindAssets($"t:{soType.Name}"))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            var asset = AssetDatabase.LoadAssetAtPath(path, soType) as ScriptableObject;
+            if (asset == null) continue;
+            result.Add(((int)idField.GetValue(asset), asset.name, asset));
+        }
+        return result;
     }
 
     // ── 생성 ──────────────────────────────────────────────────────
@@ -210,6 +303,32 @@ public class SkillEditorWindow : EditorWindow
         AssetDatabase.SaveAssets();
 
         Debug.Log($"[SkillEditor] '{path}' 생성 및 연결 완료.");
+    }
+
+    /// <summary>새 soType 에셋을 만들고 기존 id들과 겹치지 않는 새 id를 부여한 뒤, idField(int)에 그 id를 대입한다.</summary>
+    private static void CreateAndAssignId(Type soType, string assetName, object owner, FieldInfo idField, SkillData contextAsset,
+        List<(int id, string name, ScriptableObject asset)> existing)
+    {
+        string folder = KnownSoTypes.TryGetValue(soType, out var info)
+            ? info.folder
+            : $"Assets/WorkSpace/HSD/Data/{soType.Name}";
+        EnsureFolder(folder);
+
+        string path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{assetName}.asset");
+        var instance = ScriptableObject.CreateInstance(soType);
+
+        int newId = (existing.Count == 0 ? 0 : existing.Max(e => e.id)) + 1;
+        soType.GetField("id", BindingFlags.Public | BindingFlags.Instance).SetValue(instance, newId);
+
+        AssetDatabase.CreateAsset(instance, path);
+
+        Undo.RecordObject(contextAsset, $"Create {soType.Name}");
+        idField.SetValue(owner, newId);
+        EditorUtility.SetDirty(contextAsset);
+        EditorUtility.SetDirty(instance);
+        AssetDatabase.SaveAssets();
+
+        Debug.Log($"[SkillEditor] '{path}' 생성(id: {newId}) 및 연결 완료. Addressables 라벨은 Tools/Antigravity/Setup SO Addressables로 등록해야 런타임 조회가 가능합니다.");
     }
 
     private static void EnsureFolder(string path)

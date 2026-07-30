@@ -9,6 +9,9 @@ using Alchemy.Inspector;
 [CreateAssetMenu(fileName = "ProjectileData", menuName = "Game/ProjectileData")]
 public class ProjectileData : ScriptableObject
 {
+    [Tooltip("시트/코드에서 이 데이터를 직접 참조 대신 id로 찾아 쓸 때 사용하는 식별자. ProjectileDataTable에 등록해야 id로 조회됩니다.")]
+    public int id;
+
     [BoxGroup("투사체 프리팹 (모두 비워두면 ProjectilePool의 기본 투사체 사용)")]
     [Tooltip("직접 프리팹 참조. 비워두고 아래 주소만 채우면 Addressable 주소로 로드합니다.")]
     public Projectile projectilePrefab;

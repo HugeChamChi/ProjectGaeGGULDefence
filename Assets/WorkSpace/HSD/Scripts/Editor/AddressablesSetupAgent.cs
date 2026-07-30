@@ -92,6 +92,11 @@ public class AddressablesSetupAgent
                 labelName = "PlayerFrame";
                 address = $"PlayerFrame/{fileName}";
             }
+            else if (asset is ProjectileData)
+            {
+                labelName = "ProjectileData";
+                address = $"ProjectileData/{fileName}";
+            }
 
             AddressableAssetGroup targetGroup = settings.FindGroup(groupName) ?? group;
 

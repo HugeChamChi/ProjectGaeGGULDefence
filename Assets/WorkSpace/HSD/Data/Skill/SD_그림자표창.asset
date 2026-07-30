@@ -39,8 +39,7 @@ MonoBehaviour:
           rid: 8123456789012345022
         sizeMultiplier:
           rid: 8123456789012345023
-        projectileData: {fileID: 11400000, guid: 4f6be4a3fd49f4275b101120d6fdaa19,
-          type: 2}
+        projectileDataId: 3
     - rid: 8123456789012345021
       type: {class: PerTierFloat, ns: , asm: Assembly-CSharp}
       data:

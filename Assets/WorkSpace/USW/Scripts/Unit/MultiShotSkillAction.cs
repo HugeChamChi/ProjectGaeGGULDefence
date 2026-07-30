@@ -18,14 +18,16 @@ public class MultiShotSkillAction : ISkillAction
     [SerializeReference, SelectableReference]
     public IScaledFloat sizeMultiplier = new ConstantFloat { value = 1f };
 
-    [Tooltip("이 스킬 투사체의 이동/이펙트/프리팹 구성 (비워두면 ProjectilePool 기본 구성 사용)")]
-    public ProjectileData projectileData;
+    [Tooltip("이 스킬 투사체의 이동/이펙트/프리팹 구성 id (ProjectileData.id, Table.Projectile로 조회). 0이면 ProjectilePool 기본 구성 사용")]
+    [SoIdReference(typeof(ProjectileData))]
+    public int projectileDataId;
 
     public void Execute(UnitBase caster, UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects)
     {
         var tier = caster.currentTier;
         int shots = shotCount.Get(tier);
         float size = sizeMultiplier.Get(tier);
+        var projectileData = Table.Projectile.Get(projectileDataId);
 
         if (shotInterval <= 0f)
         {
@@ -34,13 +36,13 @@ public class MultiShotSkillAction : ISkillAction
             return;
         }
 
-        FireShotsAsync(combat, hitEffects, additionalEffects, shots, size).Forget(e =>
+        FireShotsAsync(combat, hitEffects, additionalEffects, shots, size, projectileData).Forget(e =>
         {
             if (e is not OperationCanceledException) Debug.LogException(e);
         });
     }
 
-    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, int shots, float size)
+    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, int shots, float size, ProjectileData projectileData)
     {
         var token = combat.GetCancellationTokenOnDestroy();
         for (int i = 0; i < shots; i++)

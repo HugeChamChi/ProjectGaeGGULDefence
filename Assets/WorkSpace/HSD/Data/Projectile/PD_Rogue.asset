@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
   m_Name: PD_Rogue
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  id: 3
   projectilePrefab: {fileID: 7189797441605394283, guid: 9017b1742078ed04f93dfae82a8a6a81,
     type: 3}
   projectileAddress: 

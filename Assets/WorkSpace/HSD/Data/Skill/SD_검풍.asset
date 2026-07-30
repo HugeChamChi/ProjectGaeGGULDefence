@@ -42,7 +42,7 @@ MonoBehaviour:
         shotInterval: 0
         sizeMultiplier:
           rid: 9123456789012345113
-        projectileData: {fileID: 0}
+        projectileDataId: 0
     - rid: 9123456789012345111
       type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
       data:
