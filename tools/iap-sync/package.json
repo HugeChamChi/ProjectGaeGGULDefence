@@ -1,0 +1,13 @@
+{
+  "name": "iap-catalog-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Syncs Assets/Resources/IAPProductCatalog.json to Google Play Console in-app products via the Android Publisher API.",
+  "main": "sync.js",
+  "scripts": {
+    "sync": "node sync.js"
+  },
+  "dependencies": {
+    "googleapis": "*"
+  }
+}
