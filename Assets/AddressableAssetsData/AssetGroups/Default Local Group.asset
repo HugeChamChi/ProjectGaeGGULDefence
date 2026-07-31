@@ -240,6 +240,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5fc5c720520d48c468f93a3b20d84404
+    m_Address: Master
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6193232055718244baa1c271e2991c4d
     m_Address: Frog_Archer
     m_ReadOnly: 0
