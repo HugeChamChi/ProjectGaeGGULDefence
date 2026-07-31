@@ -44,6 +44,7 @@ public static class PerTierValueDrawer
 
             EditorGUI.DrawRect(headerRect, color);
             EditorGUI.LabelField(headerRect, tierLabel, headerStyle);
+            EditorGUI.DrawRect(fieldRect, new Color(color.r, color.g, color.b, 0.18f));
             EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(field), GUIContent.none);
         }
     }

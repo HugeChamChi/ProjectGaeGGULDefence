@@ -5,22 +5,20 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "PassiveData", menuName = "Game/PassiveData")]
 public class PassiveData : ScriptableObject, ILoadableAsset
 {
-    [Header("기본 정보")]
-    public int passiveId;
-    public string passiveName;
-    [TextArea] public string description;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public int passiveId;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public string passiveName;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98"), TextArea] public string description;
 
-    [Header("Addressables")]
-    public string iconAddress;
+    [ColorFoldoutGroup("Addressables", "#14B8A6")] public string iconAddress;
     [HideInInspector] public Sprite icon;
 
     public bool IsLoaded => icon != null;
 
-    [Header("자기 자신에게 항상 적용되는 효과")]
+    [ColorFoldoutGroup("자기 자신에게 항상 적용되는 효과", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public List<IUnitPassiveEffect> selfEffects = new List<IUnitPassiveEffect>();
 
-    [Header("리더로 배치됐을 때 파티 전체에 적용되는 효과")]
+    [ColorFoldoutGroup("리더로 배치됐을 때 파티 전체에 적용되는 효과", "#A855F7")]
     [SerializeReference, SelectableReference]
     public List<IUnitPassiveEffect> partyEffects = new List<IUnitPassiveEffect>();
 

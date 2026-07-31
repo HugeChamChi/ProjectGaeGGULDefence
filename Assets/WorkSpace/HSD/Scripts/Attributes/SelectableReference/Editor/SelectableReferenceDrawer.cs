@@ -22,9 +22,9 @@ public class SelectableReferenceDrawer : PropertyDrawer
     {
         EditorGUI.BeginProperty(position, label, property);
 
+        string fullTypeName = property.managedReferenceFullTypename;
         Rect labelRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-        string fullTypeName = property.managedReferenceFullTypename;
         Type currentType = property.managedReferenceValue?.GetType();
         string typeName = currentType != null
             ? GetDisplayName(currentType)
@@ -43,6 +43,11 @@ public class SelectableReferenceDrawer : PropertyDrawer
                 Rect tierRect = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight + 2f, position.width, PerTierValueDrawer.GetFieldsHeight());
                 PerTierValueDrawer.DrawFields(tierRect, property);
             }
+            else if (ColorFieldGroupDrawer.HasGroups(currentType))
+            {
+                Rect groupRect = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight + 2f, position.width, ColorFieldGroupDrawer.GetHeight(property, currentType));
+                ColorFieldGroupDrawer.Draw(groupRect, property, currentType);
+            }
             else
             {
                 Rect contentRect = new Rect(position.x, position.y, position.width, position.height);
@@ -58,6 +63,9 @@ public class SelectableReferenceDrawer : PropertyDrawer
         Type currentType = property.managedReferenceValue?.GetType();
         if (PerTierValueDrawer.IsPerTierType(currentType))
             return EditorGUIUtility.singleLineHeight + 2f + PerTierValueDrawer.GetFieldsHeight();
+
+        if (ColorFieldGroupDrawer.HasGroups(currentType))
+            return EditorGUIUtility.singleLineHeight + 2f + ColorFieldGroupDrawer.GetHeight(property, currentType);
 
         return EditorGUI.GetPropertyHeight(property, true);
     }

@@ -9,16 +9,20 @@ using UnityEngine;
 public class MultiShotSkillAction : ISkillAction
 {
     [Tooltip("동시/연속 발사 횟수. 등급별로 다르면 등급별값을 선택.")]
+    [ColorFoldoutGroup("등급별 수치", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public IScaledInt shotCount = new ConstantInt { value = 1 };
-    [Tooltip("발사 사이 간격(초). 0이면 shotCount발을 동시에 발사합니다(예: 표창 동시 투척). " +
-             "0보다 크면 그 간격만큼 텀을 두고 순서대로 발사합니다(예: 연발 사격).")]
-    public float shotInterval = 0f;
     [Tooltip("이 스킬 투사체에만 적용되는 추가 크기 배율 (1 = 기본 투사체와 동일, 1.5 = 50% 증가). 등급별로 다르면 등급별값을 선택.")]
+    [ColorFoldoutGroup("등급별 수치", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public IScaledFloat sizeMultiplier = new ConstantFloat { value = 1f };
 
+    [Tooltip("발사 사이 간격(초). 0이면 shotCount발을 동시에 발사합니다(예: 표창 동시 투척). " +
+             "0보다 크면 그 간격만큼 텀을 두고 순서대로 발사합니다(예: 연발 사격).")]
+    [ColorFoldoutGroup("기타 설정", "#8A8F98")]
+    public float shotInterval = 0f;
     [Tooltip("이 스킬 투사체의 이동/이펙트/프리팹 구성 id (ProjectileData.id, Table.Projectile로 조회). 0이면 ProjectilePool 기본 구성 사용")]
+    [ColorFoldoutGroup("기타 설정", "#8A8F98")]
     [SoIdReference(typeof(ProjectileData))]
     public int projectileDataId;
 

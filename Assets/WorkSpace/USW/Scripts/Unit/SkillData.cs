@@ -5,26 +5,25 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "SkillData", menuName = "Game/SkillData")]
 public class SkillData : ScriptableObject
 {
-    [Header("기본 정보")]
-    public int skillId;
-    public string skillName;
-    [TextArea] public string description;
-    [Tooltip("발동 시 재생할 SFX 주소 (AudioManager.PlaySFX 인자). 비워두면 재생 안 함.")]
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public int skillId;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public string skillName;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98"), TextArea] public string description;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98"), Tooltip("발동 시 재생할 SFX 주소 (AudioManager.PlaySFX 인자). 비워두면 재생 안 함.")]
     public string attackSoundAddress;
 
-    [Header("발동 방식 (SelectableReference)")]
+    [ColorFoldoutGroup("발동 방식 (SelectableReference)", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public ISkillAction action;
 
-    [Header("적중 결과 (SelectableReference, 여러 개 조합 가능)")]
+    [ColorFoldoutGroup("적중 결과 (SelectableReference, 여러 개 조합 가능)", "#F97316")]
     [SerializeReference, SelectableReference]
     public List<IEffect> hitEffects;
 
-    [Header("추가 연출 (SelectableReference, 여러 개 조합 가능, 예: 카메라 흔들림)")]
+    [ColorFoldoutGroup("추가 연출 (SelectableReference, 여러 개 조합 가능, 예: 카메라 흔들림)", "#A855F7")]
     [SerializeReference, SelectableReference]
     public List<IAdditionalEffect> additionalEffects;
 
-    [Header("시전 이펙트 (비워두면 사용 안 함)")]
+    [ColorFoldoutGroup("시전 이펙트 (비워두면 사용 안 함)", "#22C55E")]
     [SerializeReference, SelectableReference]
     public IEffectSpawner castEffect;
 }

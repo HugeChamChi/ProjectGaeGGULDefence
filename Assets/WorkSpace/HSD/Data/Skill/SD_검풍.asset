@@ -39,19 +39,19 @@ MonoBehaviour:
       data:
         shotCount:
           rid: 9123456789012345112
-        shotInterval: 0
         sizeMultiplier:
           rid: 9123456789012345113
+        shotInterval: 0
         projectileDataId: 0
     - rid: 9123456789012345111
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      type: {class: ConstantFloat, ns: , asm: GGD.Core}
       data:
         value: 1
     - rid: 9123456789012345112
-      type: {class: ConstantInt, ns: , asm: Assembly-CSharp}
+      type: {class: ConstantInt, ns: , asm: GGD.Core}
       data:
         value: 1
     - rid: 9123456789012345113
-      type: {class: ConstantFloat, ns: , asm: Assembly-CSharp}
+      type: {class: ConstantFloat, ns: , asm: GGD.Core}
       data:
         value: 1

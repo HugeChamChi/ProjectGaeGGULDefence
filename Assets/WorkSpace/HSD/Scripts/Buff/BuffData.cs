@@ -4,23 +4,22 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "BuffData", menuName = "Game/BuffData")]
 public class BuffData : ScriptableObject, ILoadableAsset
 {
-    [Header("기본 정보")]
-    public int buffId;
-    public string buffName;
-    [TextArea] public string description;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public int buffId;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98")] public string buffName;
+    [ColorFoldoutGroup("기본 정보", "#8A8F98"), TextArea] public string description;
 
-    [Header("Addressables")]
-    public string iconAddress;
+    [ColorFoldoutGroup("Addressables", "#14B8A6")] public string iconAddress;
     [HideInInspector] public Sprite icon;
 
     public bool IsLoaded => icon != null;
 
-    [Header("지속시간 (0 이하 = 영구)")]
+    [ColorFoldoutGroup("지속시간 (0 이하 = 영구)", "#F59E0B")]
     public float duration = 0f;
 
-    [Header("스택 정책 / 효과 (SelectableReference)")]
+    [ColorFoldoutGroup("스택 정책 / 효과 (SelectableReference)", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public IBuffStackPolicy stackPolicy = new InfiniteStackPolicy();
+    [ColorFoldoutGroup("스택 정책 / 효과 (SelectableReference)", "#4C8BF5")]
     [SerializeReference, SelectableReference]
     public List<IBuffEffect> effects = new List<IBuffEffect>();
 

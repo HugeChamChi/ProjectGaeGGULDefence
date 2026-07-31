@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "GGD.Core",
+        "Alchemy",
         "Alchemy.Editor"
     ],
     "includePlatforms": [
