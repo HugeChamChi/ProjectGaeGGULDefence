@@ -40,6 +40,16 @@ public class UI_PartySelectPresenter
 
         if (_selectedParty != null)
         {
+            var staminaConfig = RM.Load<StaminaConfig>("Data/StaminaConfig");
+            int cost = staminaConfig != null ? staminaConfig.stageEntryCost : 5;
+
+            if (!Player.PlayerData.UseStamina(cost))
+            {
+                Debug.LogWarning($"UI_PartySelectPresenter: 스태미나가 부족합니다. 현재: {Player.PlayerData.Data.Stamina} / 필요: {cost}");
+                StaminaInsufficientPopup.Instance?.Show(Player.PlayerData.Data.Stamina, cost);
+                return;
+            }
+
             _isProcessing = true;
 
             // 전역 데이터에 선택된 파티 저장

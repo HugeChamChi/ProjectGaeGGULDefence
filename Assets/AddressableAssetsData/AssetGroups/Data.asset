@@ -435,6 +435,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5aa1fe3c93884f843aa5bd383ce4f3af
+    m_Address: GlobalData/ButtonReactionData
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5b8941667af93334ebc5a7a4f26e573e
     m_Address: Data/WaveData_Round04
     m_ReadOnly: 0
@@ -446,6 +451,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e6046dea10939145ab417c348179702
+    m_Address: Data/GameConfig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e715a5c45098e14f9244c2260643e87
     m_Address: "Data/LevelUpData_3204_\uC790\uAE09\uC790\uC871"
@@ -716,6 +726,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f9170ebafb0aac43ac45b7ef011b846
+    m_Address: Data/StaminaConfig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ff5f3f4c238125409999a555e201aad
     m_Address: Data/UnitData_DebuffDroneUnit

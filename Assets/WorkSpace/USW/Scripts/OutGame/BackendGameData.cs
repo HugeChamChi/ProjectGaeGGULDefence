@@ -19,6 +19,25 @@ public class BackendGameData
     private const string COLUMN_LAST_RESET_DATE = "LastResetDate";
     private string _inDate;
 
+    // 기획 데이터(회복 주기/기본 최대치)는 Resources/StaminaConfig에서 읽어와 코드 수정 없이 조절 가능하게 한다.
+    private static StaminaConfig _staminaConfig;
+    private static StaminaConfig StaminaConfig
+    {
+        get
+        {
+            if (_staminaConfig == null)
+            {
+                _staminaConfig = RM.Load<StaminaConfig>("Data/StaminaConfig");
+                if (_staminaConfig == null)
+                    Debug.LogWarning("Addressables 'Data/StaminaConfig'를 찾을 수 없어 기본값(10분당 1, 최대 30)을 사용합니다.");
+            }
+            return _staminaConfig;
+        }
+    }
+
+    private static int RecoveryIntervalSeconds => StaminaConfig != null ? StaminaConfig.recoveryIntervalSeconds : 600;
+    private static int DefaultMaxStamina => StaminaConfig != null ? StaminaConfig.defaultMaxStamina : 30;
+
     public BackendGameData()
     {
 #if UNITY_EDITOR
@@ -93,8 +112,8 @@ public class BackendGameData
             PlayerName = Backend.UserNickName ?? "유저",
             Gold = 0,
             Diamond = 0,
-            Stamina = 30,
-            MaxStamina = 30,
+            Stamina = DefaultMaxStamina,
+            MaxStamina = DefaultMaxStamina,
             LastStaminaRecoveryTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             PlayerLevel = 1,
             PlayerExp = 0,
@@ -155,8 +174,8 @@ public class BackendGameData
             PlayerName = data.GetString(COLUMN_PLAYER_NAME, "유저"),
             Gold       = data.GetInt(COLUMN_GOLD, 0),
             Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
-            Stamina    = data.GetInt(COLUMN_STAMINA, 30),
-            MaxStamina = data.GetInt(COLUMN_MAX_STAMINA, 30),
+            Stamina    = data.GetInt(COLUMN_STAMINA, DefaultMaxStamina),
+            MaxStamina = data.GetInt(COLUMN_MAX_STAMINA, DefaultMaxStamina),
             LastStaminaRecoveryTime = data.GetLong(COLUMN_LAST_STAMINA_RECOVERY_TIME, DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
             PlayerLevel = data.GetInt(COLUMN_PLAYER_LEVEL, 1),
             PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),
@@ -188,7 +207,7 @@ public class BackendGameData
     {
         long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         long elapsed = now - lastRecoveryTime;
-        int recoveryInterval = 300;
+        int recoveryInterval = RecoveryIntervalSeconds;
         int recoveredCount = (int)(elapsed / recoveryInterval);
 
         if (recoveredCount <= 0) return (currentStamina, lastRecoveryTime);
@@ -203,7 +222,7 @@ public class BackendGameData
     {
         long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         long elapsed = now - lastRecoveryTime;
-        int recoveryInterval = 300;
+        int recoveryInterval = RecoveryIntervalSeconds;
         int remaining = recoveryInterval - (int)(elapsed % recoveryInterval);
         return remaining;
     }

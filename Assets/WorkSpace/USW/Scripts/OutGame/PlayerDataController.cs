@@ -191,6 +191,16 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
 
     // -------------------------
+    // 스태미나 회복 (다이아 즉시 회복 등)
+    // -------------------------
+    public void AddStamina(int amount)
+    {
+        if (amount <= 0) return;
+        _data.Stamina = Mathf.Min(_data.Stamina + amount, _data.MaxStamina);
+        SaveAndRefresh();
+    }
+
+    // -------------------------
     // 스태미나 소모
     // -------------------------
     public bool UseStamina(int amount)
