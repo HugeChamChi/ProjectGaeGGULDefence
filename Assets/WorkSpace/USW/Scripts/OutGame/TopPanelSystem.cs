@@ -78,10 +78,11 @@ public class TopPanelSystem : MonoBehaviour
 
         if (remainingSeconds <= 0)
         {
-            _staminaTimerText.text = "FULL";
+            _staminaTimerText.gameObject.SetActive(false);
             return;
         }
 
+        _staminaTimerText.gameObject.SetActive(true);
         int minutes = remainingSeconds / 60;
         int seconds = remainingSeconds % 60;
         _staminaTimerText.text = $"{minutes:D2}:{seconds:D2}";

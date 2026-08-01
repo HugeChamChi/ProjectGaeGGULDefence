@@ -98,9 +98,14 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private void UpdateStaminaTimer()
     {
         if (_data != null && _data.Stamina < _data.MaxStamina)
+        {
             StartStaminaTimer();
+        }
         else
+        {
             StopStaminaTimer();
+            OnStaminaRecoveryTimer?.Invoke(0);
+        }
     }
 
     private async UniTask StaminaTimerAsync(CancellationToken token)
@@ -196,7 +201,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public void AddStamina(int amount)
     {
         if (amount <= 0) return;
-        _data.Stamina = Mathf.Min(_data.Stamina + amount, _data.MaxStamina);
+        _data.Stamina += amount;
         SaveAndRefresh();
     }
 

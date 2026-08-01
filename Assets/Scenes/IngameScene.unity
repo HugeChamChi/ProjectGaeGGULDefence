@@ -5443,7 +5443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   particleImage: {fileID: 3106312864058731523, guid: 968d9fedb03a3c74db485ecb4cea91e6,
     type: 3}
-  spawnPoint: {fileID: 0}
+  spawnPoint: {fileID: 507422208}
   attractorTarget: {fileID: 1656681304}
 --- !u!1 &514447780
 GameObject:

@@ -1207,7 +1207,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &189955515
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1241,6 +1241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StaminaInsufficientPopup
   _popupPanel: {fileID: 1224695301}
+  _panelTransform: {fileID: 1225163399}
   _messageText: {fileID: 1664934601}
   _closeButton: {fileID: 1636165004}
   _backgroundButton: {fileID: 1215902305}

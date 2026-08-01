@@ -10,6 +10,7 @@ public class StaminaInsufficientPopup : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private GameObject _popupPanel;
+    [SerializeField] private RectTransform _panelTransform;
     [SerializeField] private TextMeshProUGUI _messageText;
     [SerializeField] private Button _closeButton;
     [SerializeField] private Button _backgroundButton;
@@ -83,13 +84,13 @@ public class StaminaInsufficientPopup : MonoBehaviour
     private void Open()
     {
         _popupPanel.SetActive(true);
-        _popupPanel.transform.localScale = Vector3.zero;
-        _popupPanel.transform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack);
+        _panelTransform.localScale = Vector3.zero;
+        _panelTransform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack);
     }
 
     public void Hide()
     {
-        _popupPanel.transform.DOScale(Vector3.zero, 0.2f)
+        _panelTransform.DOScale(Vector3.zero, 0.2f)
             .SetEase(Ease.InBack)
             .OnComplete(() => _popupPanel.SetActive(false));
     }
