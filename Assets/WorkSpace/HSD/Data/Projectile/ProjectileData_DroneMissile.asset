@@ -11,8 +11,10 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
   m_Name: ProjectileData_DroneMissile
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   id: 5
+  projectilePrefab: {fileID: 0}
+  projectileAddress: 
   movement:
     rid: 7858129984794406655
   fireEffect:
@@ -24,14 +26,6 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 7858129984794406655
-      type: {class: GuidedMissileMovement, ns: , asm: Assembly-CSharp}
-      data:
-        startSpeed: 3
-        maxSpeed: 10
-        acceleration: 15
-        turnSpeed: 5
-        randomAngleMax: 60
     - rid: 3762085238544798792
       type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
       data:
@@ -39,3 +33,11 @@ MonoBehaviour:
           type: 3}
         duration: 0.5
         sfxName: 05.Drone_Attack_Hit
+    - rid: 7858129984794406655
+      type: {class: GuidedMissileMovement, ns: , asm: Assembly-CSharp}
+      data:
+        startSpeed: 3
+        maxSpeed: 10
+        acceleration: 15
+        turnSpeed: 5
+        randomAngleMax: 90

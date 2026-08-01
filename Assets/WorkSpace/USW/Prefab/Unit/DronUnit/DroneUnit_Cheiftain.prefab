@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8805120042669687640
+--- !u!1 &3717258970254922025
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,27 +8,27 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5887759775538644587}
-  - component: {fileID: 9095047579103541211}
-  - component: {fileID: 7880654020649884974}
-  - component: {fileID: 8868742873359336193}
-  - component: {fileID: 6898161763120470246}
-  - component: {fileID: -8386744111362138302}
-  - component: {fileID: 836831251040206434}
+  - component: {fileID: 1348634356461595779}
+  - component: {fileID: -6065545121610476320}
+  - component: {fileID: 2776749999051140862}
+  - component: {fileID: 4934754073861769645}
+  - component: {fileID: 7632997261150564425}
+  - component: {fileID: -2151780009173924763}
+  - component: {fileID: 913786458717755855}
   m_Layer: 0
-  m_Name: DroneUnit_Producer
+  m_Name: DroneUnit_Cheiftain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5887759775538644587
+--- !u!4 &1348634356461595779
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -37,13 +37,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &9095047579103541211
+--- !u!212 &-6065545121610476320
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -54,6 +55,11 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75,10 +81,12 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1815747135
   m_SortingLayer: 1
   m_SortingOrder: 2
-  m_Sprite: {fileID: -1807137302, guid: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7, type: 3}
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 1471017148, guid: 9a2629c3e477a99478af9be35681d975, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -87,21 +95,21 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7880654020649884974
+--- !u!114 &2776749999051140862
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02eaf7f5cb3560445b6ff61570f64dd9, type: 3}
+  m_Script: {fileID: 11500000, guid: 34da2a043d013a14fb5531f804e5b4b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   unitData: {fileID: 0}
+  currentTier: 0
   onSkillFull:
     m_PersistentCalls:
       m_Calls: []
@@ -110,65 +118,62 @@ MonoBehaviour:
       m_Calls: []
   animator: {fileID: 0}
   IsPopulationReserved: 0
-  dronePrefab: {fileID: -1013402522113950437, guid: 78dd10562d3fbe84bb1c1a746c14961f,
-    type: 3}
-  selfDestructPrefab: {fileID: -2181070433245593686, guid: ffc761a047444e446a97aebc507137a9,
-    type: 3}
-  selfDestructCount: 1
-  selfDestructDamage: 50
---- !u!114 &8868742873359336193
+  damagePerDrone: 80
+--- !u!114 &4934754073861769645
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 177a89d0a571efc47a2df76835b4e2c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!95 &6898161763120470246
+--- !u!95 &7632997261150564425
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 22100000, guid: 6ee7aff90f7c71d4487aa41e51140155, type: 2}
+  m_Controller: {fileID: 22100000, guid: 2464a3953b2e8b14592165ab86ecc316, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &-8386744111362138302
+--- !u!114 &-2151780009173924763
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3af0d71a20255e74fb8ab10c87041045, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!61 &836831251040206434
+--- !u!61 &913786458717755855
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8805120042669687640}
+  m_GameObject: {fileID: 3717258970254922025}
   m_Enabled: 1
+  serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -192,7 +197,8 @@ BoxCollider2D:
     m_Bits: 4294967295
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_UsedByComposite: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0.4}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,6 +209,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  serializedVersion: 2
   m_Size: {x: 1, y: 0.8}
   m_EdgeRadius: 0

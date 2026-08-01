@@ -111,7 +111,7 @@ public class UIManager : MonoBehaviour
             _currencyTextBaseScale = _currencyTextRect.localScale;
             _currencyTextBaseColor = currencyText.color;
             _displayedCurrency = Mathf.FloorToInt(_currencyManager.Currency);
-            currencyText.text = $"식량: {_displayedCurrency}";
+            currencyText.text = _displayedCurrency.ToString();
             _currencyManager.OnCurrencyChanged += UpdateCurrencyDisplay;
         }
 
