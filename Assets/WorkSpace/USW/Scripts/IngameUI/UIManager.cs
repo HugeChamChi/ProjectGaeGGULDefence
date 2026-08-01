@@ -289,7 +289,7 @@ public class UIManager : MonoBehaviour
         int target = Mathf.FloorToInt(current);
         if (target == _displayedCurrency)
         {
-            currencyText.text = $"식량: {target}";
+            currencyText.text = target.ToString();
             return;
         }
 
@@ -297,7 +297,7 @@ public class UIManager : MonoBehaviour
         DOTween.To(() => _displayedCurrency, value =>
         {
             _displayedCurrency = value;
-            currencyText.text = $"식량: {value}";
+            currencyText.text = value.ToString();
         }, target, currencyTweenDuration).SetEase(Ease.OutCubic).SetTarget(currencyText);
 
         if (_currencyTextRect == null) return;
