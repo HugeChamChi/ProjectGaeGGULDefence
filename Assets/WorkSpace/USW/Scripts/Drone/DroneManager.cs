@@ -65,8 +65,6 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private float _rallyMaxWidth   = 2.0f;
     [Tooltip("집결 대형의 최대 세로 폭 (Unit) (넘으면 간격 자동 축소)")]
     [SerializeField] private float _rallyMaxHeight  = 1.5f;
-    [Tooltip("보스 중심 기준 아래 방향 오프셋 (Unit)")]
-    [SerializeField] private float _rallyBossOffset = 0.5f;
 
     [Header("집결 연출")]
     [Tooltip("집결 이동 시간 (초)")]
@@ -86,8 +84,6 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private Material _electricLineMaterial;
     [Tooltip("전기 선 굵기 (Unit)")]
     [SerializeField] private float _electricLineWidth = 0.02f;
-    [Tooltip("지터링 세기 (Unit)")]
-    [SerializeField] private float _electricJitterAmount = 0.02f;
     [SerializeField] private Color _electricColorA = Color.cyan;
     [SerializeField] private Color _electricColorB = Color.white;
 
