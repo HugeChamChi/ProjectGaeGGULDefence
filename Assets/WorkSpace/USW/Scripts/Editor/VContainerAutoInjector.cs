@@ -11,7 +11,7 @@ public class VContainerAutoInjector : EditorWindow
     public static void AutoAssign()
     {
         // 1. 씬에 있는 LifetimeScope 찾기
-        var scope = FindObjectOfType<LifetimeScope>(true);
+        var scope = FindFirstObjectByType<LifetimeScope>(FindObjectsInactive.Include);
         if (scope == null)
         {
             Debug.LogError("[VContainer] 씬에 LifetimeScope가 없습니다.");
@@ -19,7 +19,7 @@ public class VContainerAutoInjector : EditorWindow
         }
 
         // 2. 씬에 있는 모든 MonoBehaviour 찾기 (비활성화된 오브젝트 포함)
-        var allMonoBehaviours = FindObjectsOfType<MonoBehaviour>(true);
+        var allMonoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         var injectGameObjects = new HashSet<GameObject>();
 
         foreach (var mono in allMonoBehaviours)

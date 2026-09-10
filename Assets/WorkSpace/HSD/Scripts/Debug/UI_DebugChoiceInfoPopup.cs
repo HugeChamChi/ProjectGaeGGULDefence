@@ -68,7 +68,7 @@ namespace HSD.InGameDebug
 
         public void OnOpen()
         {
-            var levelUpManager = Object.FindObjectOfType<LevelUpManager>(true);
+            var levelUpManager = Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
             if (levelUpManager == null || levelUpManager.LevelUpPool == null)
             {
                 _view.UpdateStatsText("LevelUpManager not found.");

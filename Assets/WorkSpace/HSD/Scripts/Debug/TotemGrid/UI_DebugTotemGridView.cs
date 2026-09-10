@@ -11,7 +11,7 @@ namespace HSD.InGameDebug
 
         public void InitOrRefresh(UI_DebugTotemPopup detailPopup)
         {
-            var gm = FindObjectOfType<GridManager>(true);
+            var gm = FindFirstObjectByType<GridManager>(FindObjectsInactive.Include);
             if (gm == null) return;
 
             if (!_isInit)

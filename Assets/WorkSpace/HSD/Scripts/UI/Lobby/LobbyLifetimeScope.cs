@@ -20,7 +20,7 @@ public class LobbyLifetimeScope : LifetimeScope
         else 
         {
             // 인스펙터 슬롯이 비어있다면, 강제로 꺼진(Inactive) 오브젝트까지 뒤져서 등록합니다.
-            var view = FindObjectOfType<UI_PartySelectView>(true);
+            var view = FindFirstObjectByType<UI_PartySelectView>(FindObjectsInactive.Include);
             if (view != null) builder.RegisterComponent(view);
         }
             

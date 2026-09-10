@@ -16,7 +16,7 @@ namespace GaeGGUL.Tutorial
             {
                 if (_instance == null)
                 {
-                    _instance = FindObjectOfType<TutorialManager>();
+                    _instance = FindFirstObjectByType<TutorialManager>();
                     if (_instance == null)
                     {
                         var go = new GameObject("TutorialManager");
@@ -84,8 +84,8 @@ namespace GaeGGUL.Tutorial
         /// </summary>
         private void TryFindSceneLocalUI()
         {
-            if (_highlighter == null) _highlighter = FindObjectOfType<UI_TutorialHighlighter>(true);
-            if (_raycastFilter == null) _raycastFilter = FindObjectOfType<UI_TutorialRaycastFilter>(true);
+            if (_highlighter == null) _highlighter = FindFirstObjectByType<UI_TutorialHighlighter>(FindObjectsInactive.Include);
+            if (_raycastFilter == null) _raycastFilter = FindFirstObjectByType<UI_TutorialRaycastFilter>(FindObjectsInactive.Include);
             if (_dimCanvasGroup == null)
             {
                 // 특정 태그나 이름을 가진 객체를 찾도록 규칙을 정할 수 있습니다.
@@ -98,9 +98,9 @@ namespace GaeGGUL.Tutorial
         public void RefreshRegistry()
         {
             TutorialRegistry.Clear();
-            var uiTargets = FindObjectsOfType<UI_TutorialTarget>(true);
+            var uiTargets = FindObjectsByType<UI_TutorialTarget>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var target in uiTargets) TutorialRegistry.RegisterUI(target.UITargetID, target);
-            var actors = FindObjectsOfType<TutorialActor>(true);
+            var actors = FindObjectsByType<TutorialActor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var actor in actors) TutorialRegistry.RegisterActor(actor.ActorID, actor);
             Debug.Log($"[TutorialManager] Registry Refreshed: {uiTargets.Length} UI Targets, {actors.Length} Actors found in current scene.");
         }

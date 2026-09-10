@@ -523,6 +523,100 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 218977607}
   m_CullTransparentMesh: 1
+--- !u!1 &266060909
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 266060910}
+  - component: {fileID: 266060913}
+  - component: {fileID: 266060912}
+  - component: {fileID: 266060911}
+  m_Layer: 0
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &266060910
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266060909}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 860219420}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &266060911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266060909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8efb8c385c907b94895be7d85d86e69e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHpBreakFlipbook
+  _hpBar: {fileID: 860219422}
+  _target: {fileID: 266060912}
+  _frames: []
+  _lineInterval: 10
+  _duration: 0.45
+  _tint: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &266060912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266060909}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &266060913
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266060909}
+  m_CullTransparentMesh: 1
 --- !u!1 &271305116
 GameObject:
   m_ObjectHideFlags: 0
@@ -645,7 +739,8 @@ GameObject:
   m_Component:
   - component: {fileID: 860219420}
   - component: {fileID: 860219422}
-  - component: {fileID: 860219421}
+  - component: {fileID: 860219424}
+  - component: {fileID: 860219423}
   m_Layer: 0
   m_Name: BossHpRoot
   m_TagString: Untagged
@@ -670,6 +765,7 @@ RectTransform:
   - {fileID: 23585320}
   - {fileID: 1152378044}
   - {fileID: 872809048}
+  - {fileID: 266060910}
   m_Father: {fileID: 156579568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
@@ -677,21 +773,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -60}
   m_SizeDelta: {x: 700, y: 100.7}
   m_Pivot: {x: 0.5, y: 1}
---- !u!114 &860219421
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 860219419}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3320af4ccadb04a429b3cfa56c4e5032, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossHpBarTester
-  _hpBar: {fileID: 860219422}
-  _maxHp: 10000
-  _currentHp: 5082
 --- !u!114 &860219422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -709,41 +790,58 @@ MonoBehaviour:
   _patternOverlay: {fileID: 1066774457}
   _hpPercentText: {fileID: 1152378045}
   _hpLineText: {fileID: 872809049}
-  _lineCount: 100
-  _lineGradient:
-    serializedVersion: 2
-    key0: {r: 0.3, g: 0.85, b: 0.35, a: 1}
-    key1: {r: 0.95, g: 0.85, b: 0.25, a: 1}
-    key2: {r: 0.95, g: 0.55, b: 0.15, a: 0}
-    key3: {r: 0.9, g: 0.25, b: 0.25, a: 0}
-    key4: {r: 0.65, g: 0.3, b: 0.85, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 16384
-    ctime2: 32768
-    ctime3: 49151
-    ctime4: 65535
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 5
-    m_NumAlphaKeys: 2
+  _lineCount: 200
+  _colorMode: 2
+  _lineColors:
+  - {r: 0.3, g: 0.85, b: 0.35, a: 1}
+  - {r: 0.95, g: 0.85, b: 0.25, a: 1}
+  - {r: 0.95, g: 0.55, b: 0.15, a: 1}
+  - {r: 0.9, g: 0.25, b: 0.25, a: 1}
+  - {r: 0.65, g: 0.3, b: 0.85, a: 1}
   _patternColor: {r: 1, g: 1, b: 1, a: 1}
   _patternAlpha: 0.35
   _percentFormat: 0.00
   _lineSuffix: "\uC904"
+  _smooth: 1
+  _tweenDuration: 0.3
+--- !u!114 &860219423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860219419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ac4558de11f7fc43be12d12bb15ab80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHpBarShake
+  _hpBar: {fileID: 860219422}
+  _shakeTarget: {fileID: 860219420}
+  _lineInterval: 10
+  _duration: 0.4
+  _strength: 24
+  _vibrato: 18
+  _randomness: 90
+--- !u!114 &860219424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860219419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d11674ecf71eb98459b541013cc27305, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHpDamageTester
+  _hpBar: {fileID: 860219422}
+  _maxHp: 10000
+  _currentHp: 10000
+  _flatDamage: 500
+  _percentDamage: 5
+  _showOnGuiButtons: 1
+  _guiScale: 1.5
 --- !u!1 &872809047
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,7 +899,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "51\uC904"
+  m_text: "182\uC904"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
   m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
@@ -917,7 +1015,7 @@ RectTransform:
   m_Father: {fileID: 860219420}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0.5082, y: 1}
+  m_AnchorMax: {x: 0.9064, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1150,7 +1248,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 50.82%
+  m_text: 90.64%
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
   m_sharedMaterial: {fileID: -7636050231400051262, guid: 8863727b6c787ba4a910762f78e8fd55,
@@ -1325,6 +1423,7 @@ GameObject:
   - component: {fileID: 1339137090}
   - component: {fileID: 1339137092}
   - component: {fileID: 1339137091}
+  - component: {fileID: 1339137093}
   m_Layer: 0
   m_Name: Card
   m_TagString: Untagged
@@ -1392,6 +1491,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339137089}
   m_CullTransparentMesh: 1
+--- !u!114 &1339137093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1339137089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a85b0114453fa834e8da7e48a8d785e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHpDebugWindow
+  _hpBar: {fileID: 860219422}
+  _damageTester: {fileID: 860219424}
+  _show: 1
+  _guiScale: 1.5
+  _defaultMaxHp: 100000
+  _defaultLineCount: 200
 --- !u!1 &1437781719
 GameObject:
   m_ObjectHideFlags: 0
@@ -1806,7 +1923,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.94899136, g: 0.5439483, b: 0.15201725, a: 1}
+  m_Color: {r: 0.74045223, g: 0.28190956, b: 0.6329146, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

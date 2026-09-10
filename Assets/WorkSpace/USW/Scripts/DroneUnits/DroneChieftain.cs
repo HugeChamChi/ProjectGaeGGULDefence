@@ -30,7 +30,7 @@ public class DroneChieftain : ChiefUnit
         _audioManager?.PlaySFX("05.Leader_Skill_Effect");
 
         // 2. UI 컷신 연출 발동 (비활성화 상태인 컷신 UI를 찾아 실행)
-        var skillEffectUI = FindObjectOfType<HSD.UI.Effect.UI_ChiefSkillEffect>(true);
+        var skillEffectUI = FindFirstObjectByType<HSD.UI.Effect.UI_ChiefSkillEffect>(FindObjectsInactive.Include);
         if (skillEffectUI != null)
         {
             Sprite chieftainSprite = unitData != null ? unitData.icon : null;

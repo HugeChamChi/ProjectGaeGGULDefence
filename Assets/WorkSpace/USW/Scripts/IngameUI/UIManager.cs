@@ -85,11 +85,11 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        _gridManager = Object.FindObjectOfType<GridManager>();
-        _chieftainSpawner = Object.FindObjectOfType<ChieftainSpawner>();
-        _levelUpManager = Object.FindObjectOfType<LevelUpManager>();
-        _totemBuffManager = Object.FindObjectOfType<TotemBuffManager>();
-        _droneManager = Object.FindObjectOfType<DroneManager>();
+        _gridManager = Object.FindFirstObjectByType<GridManager>();
+        _chieftainSpawner = Object.FindFirstObjectByType<ChieftainSpawner>();
+        _levelUpManager = Object.FindFirstObjectByType<LevelUpManager>();
+        _totemBuffManager = Object.FindFirstObjectByType<TotemBuffManager>();
+        _droneManager = Object.FindFirstObjectByType<DroneManager>();
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);

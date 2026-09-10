@@ -48,7 +48,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     {
         if (_presenter == null)
         {
-            var spawner = FindObjectOfType<ChieftainSpawner>();
+            var spawner = FindFirstObjectByType<ChieftainSpawner>();
             if (spawner != null)
             {
                 Construct(spawner);

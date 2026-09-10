@@ -87,7 +87,7 @@ namespace HSD.InGameDebug
 
             if (_currentTab == DebugTabType.Totem)
             {
-                var pool = UnityEngine.Object.FindObjectOfType<TotemSelectUI>(true)?.TotemPool;
+                var pool = UnityEngine.Object.FindFirstObjectByType<TotemSelectUI>(FindObjectsInactive.Include)?.TotemPool;
                 if (pool != null)
                 {
                     foreach (var data in pool)
@@ -103,7 +103,7 @@ namespace HSD.InGameDebug
             }
             else if (_currentTab == DebugTabType.LevelUp)
             {
-                var levelUpManager = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true);
+                var levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
                 var pool = levelUpManager?.LevelUpPool;
                 if (pool != null)
                 {
@@ -126,7 +126,7 @@ namespace HSD.InGameDebug
             }
             else if (_currentTab == DebugTabType.Unit)
             {
-                var pool = UnityEngine.Object.FindObjectOfType<UnitFactory>(true)?.UnitDataList;
+                var pool = UnityEngine.Object.FindFirstObjectByType<UnitFactory>(FindObjectsInactive.Include)?.UnitDataList;
                 if (pool != null)
                 {
                     foreach (var data in pool)
@@ -144,7 +144,7 @@ namespace HSD.InGameDebug
         // --- Totem Logic ---
         private void RefreshTotemList()
         {
-            var activeTotems = Object.FindObjectsOfType<TotemBase>();
+            var activeTotems = Object.FindObjectsByType<TotemBase>(FindObjectsSortMode.None);
             foreach (var totem in activeTotems)
             {
                 var data = totem.Data;
@@ -168,7 +168,7 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemBase totem)
             {
-                var spawner = UnityEngine.Object.FindObjectOfType<TotemSpawner>(true);
+                var spawner = UnityEngine.Object.FindFirstObjectByType<TotemSpawner>(FindObjectsInactive.Include);
                 spawner?.SellTotem(totem);
                 RefreshList();
             }
@@ -178,7 +178,7 @@ namespace HSD.InGameDebug
         {
             if (obj is TotemData data)
             {
-                var spawner = UnityEngine.Object.FindObjectOfType<TotemSpawner>(true);
+                var spawner = UnityEngine.Object.FindFirstObjectByType<TotemSpawner>(FindObjectsInactive.Include);
                 spawner?.SpawnTotemByData(data).Forget();
                 _view.HideAddView();
                 RefreshList();
@@ -188,7 +188,7 @@ namespace HSD.InGameDebug
         // --- LevelUp Logic ---
         private void RefreshLevelUpList()
         {
-            var levelUpManager = UnityEngine.Object.FindObjectOfType<LevelUpManager>(true);
+            var levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
             if (levelUpManager == null) return;
 
             var chosenIds = levelUpManager.ChosenIds.ToList();
@@ -213,7 +213,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.RemoveEffect(data);
+                UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include)?.RemoveEffect(data);
                 RefreshList();
             }
         }
@@ -222,7 +222,7 @@ namespace HSD.InGameDebug
         {
             if (obj is LevelUpData data)
             {
-                UnityEngine.Object.FindObjectOfType<LevelUpManager>(true)?.ApplyEffect(data);
+                UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include)?.ApplyEffect(data);
                 _view.HideAddView();
                 RefreshList();
             }
@@ -252,7 +252,7 @@ namespace HSD.InGameDebug
                 if (Player.Chief != null && Player.Chief.SelectedChiefId == data.Id) return;
 
                 Player.Chief?.SetSelectedChief(data.Id);
-                UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true)?.ChangeChieftain(data.Id);
+                UnityEngine.Object.FindFirstObjectByType<ChieftainSpawner>(FindObjectsInactive.Include)?.ChangeChieftain(data.Id);
                 RefreshList();
             }
         }
@@ -260,7 +260,7 @@ namespace HSD.InGameDebug
         // --- Unit Logic ---
         private void RefreshUnitList()
         {
-            var cells = UnityEngine.Object.FindObjectOfType<GridManager>(true)?.GetOccupiedCells();
+            var cells = UnityEngine.Object.FindFirstObjectByType<GridManager>(FindObjectsInactive.Include)?.GetOccupiedCells();
             if (cells == null) return;
 
             foreach (var cell in cells)
@@ -269,7 +269,7 @@ namespace HSD.InGameDebug
                 if (unit == null || unit.unitData == null) continue;
 
                 // 족장은 제외 (족장 탭에서 관리)
-                var chieftainSpawner = UnityEngine.Object.FindObjectOfType<ChieftainSpawner>(true);
+                var chieftainSpawner = UnityEngine.Object.FindFirstObjectByType<ChieftainSpawner>(FindObjectsInactive.Include);
                 if (chieftainSpawner != null && chieftainSpawner.ChieftainUnit == unit) continue;
 
                 _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
@@ -291,7 +291,7 @@ namespace HSD.InGameDebug
         {
             if (obj is UnitData data)
             {
-                var emptyCells = UnityEngine.Object.FindObjectOfType<GridManager>(true)?.GetEmptyCells();
+                var emptyCells = UnityEngine.Object.FindFirstObjectByType<GridManager>(FindObjectsInactive.Include)?.GetEmptyCells();
                 if (emptyCells == null || emptyCells.Count == 0)
                 {
                     Debug.LogWarning("[Debug] 빈 셀 없음 — 유닛 생성 취소");
@@ -299,8 +299,8 @@ namespace HSD.InGameDebug
                 }
 
                 var cell = emptyCells[Random.Range(0, emptyCells.Count)];
-                var factory = UnityEngine.Object.FindObjectOfType<UnitFactory>(true);
-                var spawner = UnityEngine.Object.FindObjectOfType<UnitSpawner>(true);
+                var factory = UnityEngine.Object.FindFirstObjectByType<UnitFactory>(FindObjectsInactive.Include);
+                var spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
                 
                 if (factory != null && spawner != null)
                 {

@@ -25,7 +25,7 @@
 | 브랜치 | 용도 | 예시 |
 |---|---|---|
 | `GGD` | 기획 Branch | `GGD_SY`, `GGD_기획내용` |
-| `Develop` | 개발 Branch | `USW_Frog`, `KMS_Grid` |
+| `Develop` | 개발 Branch | `USW_Frog`, `USW_Grid` |
 
 - **기획 Branch** : `GGD_` 뒤에 본인 이니셜 또는 작업 내용을 붙인다.
 - **개발 Branch** : `이니셜_작업내용` 형식으로 작성한다.

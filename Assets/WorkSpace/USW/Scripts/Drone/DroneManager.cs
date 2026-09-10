@@ -396,7 +396,7 @@ public class DroneManager : MonoBehaviour
             if (count > 0 && _currencyManager != null)
             {
                 float chieftainFood = 0f;
-                var lu = Object.FindObjectOfType<LevelUpManager>();
+                var lu = Object.FindFirstObjectByType<LevelUpManager>();
                 if (lu != null) chieftainFood = lu.ChieftainFoodProductionBonus;
 
                 float food = count * _baseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f) + chieftainFood);

@@ -1,10 +1,13 @@
-# Session State — 2026-05-27
+# Session State — 2026-09-11
 
 <!-- STATUS -->
-Epic: 인게임 시스템
-Feature: 드론 유닛 시스템
-Task: Inspector 연결 + characterId 시트 맞추기
+Epic: 프로젝트 지침 / 협업 인프라
+Feature: Claude×Codex 협업 구조
+Task: 지침 통일 완료 — 다음 작업 대기
 <!-- /STATUS -->
+
+> 이 파일은 교대 협업의 **배턴**이다 (`docs/AI-COLLAB-PROTOCOL.md` §3).
+> 세션을 끝내기 전 활성 에이전트가 갱신하고, 다음 에이전트는 이 파일을 **가장 먼저** 읽는다.
 
 ---
 
@@ -13,93 +16,40 @@ Task: Inspector 연결 + characterId 시트 맞추기
 
 ---
 
-## 이번 세션에서 완성한 것
+## 이번 세션에서 완성한 것 (2026-09-11)
 
-### 신규 스크립트
-| 파일 | 설명 |
-|------|------|
-| `Drone/DroneManager.cs` | 드론 등록/해제, 식량 틱, 버프/디버프, 집결(ExecuteRallyAsync) |
-| `Drone/DronePool.cs` | DroneUnit(50) + SelfDestructDrone(20) 오브젝트 풀 |
-| `Drone/DroneUnit.cs` | 궤도 맴돌기 + 자동 공격 + 집결 이동 |
-| `Drone/SelfDestructDrone.cs` | 보스 방향 비행 후 폭발 |
-| `Drone/DroneHoverAnimation.cs` | DOTween 상하 호버 |
-| `DroneUnits/DroneProducer.cs` | 스킬마다 드론 1마리 추가 (최대 N마리 캡) |
-| `DroneUnits/DroneBuffer.cs` | 배치 시 드론 1마리, 스킬마다 전체 버프 |
-| `DroneUnits/DebuffDroneUnit.cs` | 배치 시 드론 1마리, 스킬마다 보스 디버프 |
-| `DroneUnits/DroneFoodProducer.cs` | 패시브 — 고정 식량 + 드론당 기여 증가 |
-| `DroneUnits/DroneChieftain.cs` | 스킬마다 전 드론 집결 → 일제 사격 → 귀환 |
-| `DroneUnits/*Data.cs` | 각 유닛 전용 SO (DroneProducerData 등 5종) |
-| `Editor/DroneUnitAssetCreator.cs` | Tools > USW > Create Drone Unit Assets (SO 40개 자동 생성) |
+**HSD 인수 반영 + 지침 통일 (Claude×Codex 한 마인드 구조 확립)**
 
-### 기존 파일 수정
+### 만진 파일
 | 파일 | 변경 내용 |
 |------|-----------|
-| `CoreSystem/Manager.cs` | `Manager.Drone`, `Manager.DronePool` 추가 |
-| `Boss,Enemy/BossBase.cs` | `TakeDamage`에 `Manager.Drone?.BossDebuffMultiplier` 적용 |
-| `Unit/UnitBase.cs` | `GetBaseFoodPerSecond()` → `protected virtual`, `ExecuteAttack()`에 `atk<=0` 조기 return 추가 |
-| `Unit/UnitFactory.cs` | `unit.animator.Initialize` → `unit.animator?.Initialize` (NullRef 방지) |
+| `.claude/docs/directory-structure.md` | HSD "관여 금지" → "USW 인수"로 변경. 빈 JSY/KMS 참조 완전 삭제. 영역 요약표 USW 단독화 |
+| `AGENTS.md` | **공용 규칙 정본화** — 정본 선언 + AI Collaboration 요약 + CancellationToken 소유 표·Allowed Libraries·Code Quality 흡수 |
+| `CLAUDE.md` | 얇게 재작성 — `@AGENTS.md`로 공용 규칙 로드, Claude 전용(coordination/context/design 기준)만 유지 |
+| `.claude/docs/coding-standards.md` | 슬림 — 중복 규칙 제거, 디자인문서 기준 + 검증 기준만 |
+| `.claude/docs/technical-preferences.md` | 슬림 — 중복 제거, 플랫폼/테스팅/ADR/스페셜리스트 라우팅만 |
+| `README.md` | 브랜치 예시 `KMS_Grid` → `USW_Grid` (죽은 팀원 참조 제거) |
+| `docs/AI-COLLAB-PROTOCOL.md` | **신규** — Claude×Codex 협업 합의문 |
+| `Assets/WorkSpace/JSY`, `KMS` (+`.meta`) | 빈 폴더 삭제 |
 
-### 아키텍처 결정
-- 드론 유닛 5종 모두 `_dataByTier[]` 배열 패턴 사용 → 프리팹 1개로 4등급 수치 분기
-- DroneBuffer / DebuffDroneUnit: **배치 시** 드론 1마리 생성, 제거 시 반환
-- DroneProducer: **스킬마다** 1마리 추가, 최대 Normal=1 / Rare=2 / Epic=3 / Legend=4
-- `unitData.atk <= 0` 인 유닛은 UnitBase에서 공격 루프 건너뜀
-
----
-
-## Unity에서 완료한 것
-- DroneUnit, SelfDestructDrone 프리팹 제작
-- DronePool GameObject + Inspector 연결
-- DroneManager GameObject 씬 추가
-- 유닛 프리팹 5종 제작
+> 참고: Claude 자동 메모리 2건도 갱신(`project_hsd_handover`, `project_ai_collab_instruction_arch`)했으나 **repo 밖**이라 Codex는 못 봄 → 핵심 내용은 위 repo 파일에 이미 반영됨.
 
 ---
 
-## 남은 작업 (다음 스레드)
+## 다음 할 일
 
-### Unity Inspector 작업
-1. **Tools > USW > Create Drone Unit Assets 재실행**
-   - DroneProducerData `normalDroneCount` → `maxDroneCount` 반영
-   - UnitData SO 20개 신규 생성 (attackSpeed=9999 포함)
-
-2. **유닛 프리팹 5종 — `_dataByTier[]` 배열 연결**
-   - [0]=Normal / [1]=Rare / [2]=Epic / [3]=Legend 순서로 각 SO 연결
-
-3. **UnitData SO 20개 — `prefab` 필드 연결**
-   - 5종 프리팹 각각 해당 UnitData SO에 연결
-
-4. **UnitFactory — unitDataList에 UnitData SO 20개 추가**
-
-5. **DroneManager Inspector 수치 확인**
-   - Rally Spacing: 50 / Rally Boss Offset: 200 (플레이테스트 후 튜닝)
-
-### characterId 시트 맞추기 (코드 작업 필요할 수 있음)
-- 현재 소환 버튼이 백엔드 시트 characterId(1000, 1012 등)로 유닛을 요청하는데
-  로컬 UnitData SO의 characterId와 불일치 → `CreateUnitByCharacterId` 경고 + NullRef
-- 시트 URL: `https://docs.google.com/spreadsheets/d/1gDHU35aPDHn2s4XiOch2s3Bl2s4iXF0rya37VMxmyiM/edit#gid=1984586417`
-- 시트의 1열 characterId 목록을 확인 후 로컬 UnitData SO의 characterId 필드를 맞춰야 함
-- 기존 Frog/Gunner/Ninja/Wizard UnitData SO 16개 + 드론 유닛 UnitData SO 20개 모두 해당
+- **없음 (지침 정리 완결).** 다음 기능 작업을 여기에 채우고 STATUS 블록 갱신할 것.
 
 ---
 
-## 핵심 수치 요약
+## 열린 질문 (사용자 결정 대기)
 
-### DroneProducer
-| 등급 | 최대드론 | 자폭드론 | 드론공격력 | 공격간격 | 쿨타임 |
-|------|:---:|:---:|---:|---:|---:|
-| Normal | 1 | 0 | 8 | 1.5s | 12s |
-| Rare | 2 | 0 | 12 | 1.4s | 12s |
-| Epic | 3 | 0 | 17 | 1.3s | 12s |
-| Legend | 4 | 2 | 20 | 1.2s | 12s |
+1. 빈 `Assets/WorkSpace/JSY/`, `KMS/` **폴더 자체**를 삭제할지 (현재 지침 참조만 제거, 실제 폴더+.meta는 그대로 둠).
+2. 이번 지침 변경들을 `[Docs]` 커밋으로 묶을지 (현재 **미커밋**).
 
-### DroneBuffer 버프 / 쿨타임
-Normal: +15%/+12% 5s / 20s → Legend: +55%/+45% 12s / 12s
+---
 
-### DebuffDroneUnit 디버프 / 쿨타임
-Normal: +15% 6s / 25s → Legend: +52% 14s / 16s
+## 미완 상태 경고
 
-### DroneFoodProducer (패시브)
-Normal: 1.5/s 고정 + 드론당 0.40 → Legend: 6.0/s + 1.00
-
-### DroneChieftain 집결 / 쿨타임
-Normal: 드론당 25 / 25s → Legend: 드론당 110 / 15s
+- 반쯤 편집한 씬/프리팹 **없음**.
+- 단, git 워킹트리에 **이번 작업과 무관한 미커밋 변경 다수** 존재 (HpBar 연출, GameDataManager DI 리팩토링, URP/셰이더, TutorialManager 등). 이는 별개 작업 흐름 — 이번 세션이 건드리지 않았음. 커밋 시 범위 분리 주의.

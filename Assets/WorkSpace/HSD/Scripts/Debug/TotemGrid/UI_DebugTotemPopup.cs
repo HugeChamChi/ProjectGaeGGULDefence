@@ -22,7 +22,7 @@ namespace HSD.InGameDebug
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
 
-            var levelUpManager = FindObjectOfType<LevelUpManager>(true);
+            var levelUpManager = FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
             float rowAtkMult = levelUpManager != null ? levelUpManager.GetRowAttackMultiplier(pos.y) : 1f;
             float rowSpdMult = levelUpManager != null ? levelUpManager.GetRowSpeedMultiplier(pos.y) : 1f;
 

@@ -44,7 +44,7 @@ public class UI_PartySelectView : UI_Base
         // VContainer를 통해 주입받지 못한 경우(예: 런타임 동적 생성 또는 두 번째 인스턴스) 직접 Resolve 시도
         if (_presenter == null)
         {
-            var scope = FindObjectOfType<VContainer.Unity.LifetimeScope>();
+            var scope = FindFirstObjectByType<VContainer.Unity.LifetimeScope>();
             if (scope != null && scope.Container != null)
             {
                 try
