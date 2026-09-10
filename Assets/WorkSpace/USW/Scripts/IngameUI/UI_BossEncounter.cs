@@ -193,7 +193,7 @@ public class UI_BossEncounter : UI_Base
             {
                 if (currentWave == 1)
                 {
-                    transitionSeq.AppendCallback(() => {
+                    _ = transitionSeq.AppendCallback(() => {
                         waveText.text = "WAVE 1";
                         waveText.alpha = 1f;
                     })
@@ -201,7 +201,7 @@ public class UI_BossEncounter : UI_Base
                 }
                 else
                 {
-                    transitionSeq.AppendCallback(() => waveText.text = $"WAVE {currentWave.ToString()}")
+                    _ = transitionSeq.AppendCallback(() => waveText.text = $"WAVE {currentWave.ToString()}")
                     .Join(waveText.rectTransform.DOPunchScale(Vector3.one * 0.5f, 0.4f, 10, 1f));
                 }
             }

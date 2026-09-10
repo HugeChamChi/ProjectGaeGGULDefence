@@ -26,7 +26,7 @@ namespace HSD.UI.Setting
             get
             {
                 if (_presenterValue == null)
-                    _presenterValue = new UI_SettingPresenter(this, _audioManager);
+                    _presenterValue = new UI_SettingPresenter(this, _settingsAudioManager);
 
                 return _presenterValue;
             }
@@ -34,12 +34,12 @@ namespace HSD.UI.Setting
             set => _presenterValue = value;
         }
         private UI_SettingPresenter _presenterValue;
-        private AudioManager _audioManager;
+        private AudioManager _settingsAudioManager;
 
         [VContainer.Inject]
         public void Construct(AudioManager audioManager)
         {
-            _audioManager = audioManager;
+            _settingsAudioManager = audioManager;
         }
 
         protected override void Awake()

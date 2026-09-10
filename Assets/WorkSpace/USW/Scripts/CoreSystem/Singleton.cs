@@ -27,7 +27,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 
     /// <summary>
     /// 런타임에 싱글톤 인스턴스를 생성하고 DontDestroyOnLoad 등록
-    /// Manager.cs의 RuntimeInitializeOnLoadMethod에서 호출
+    /// 레거시 싱글톤의 명시적 생성 경로. 신규 서비스는 LifetimeScope에서 등록한다.
     /// </summary>
     public static T CreateInstance()
     {

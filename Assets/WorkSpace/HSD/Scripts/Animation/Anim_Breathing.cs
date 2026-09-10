@@ -48,10 +48,10 @@ namespace GaeGGUL.Animation
 
             if (isLoop)
             {
-                _currentSeq.SetLoops(-1);
+                _ = _currentSeq.SetLoops(-1);
             }
 
-            await _currentSeq.Play().ToUniTask();
+            await _currentSeq.Play().ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
     }
 }

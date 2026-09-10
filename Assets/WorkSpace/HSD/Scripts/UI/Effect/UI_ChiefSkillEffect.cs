@@ -110,7 +110,7 @@ namespace HSD.UI.Effect
             // 4. 애니메이션 시퀀스 생성 및 실행
             var masterSeq = DOTween.Sequence();
 
-            masterSeq.OnUpdate(() =>
+            _ = masterSeq.OnUpdate(() =>
             {
                 if (rect_Paching != null && rect_Paching.gameObject.activeSelf)
                 {
@@ -119,31 +119,31 @@ namespace HSD.UI.Effect
             });
 
             // 연출 단계 1: 라인 확장, 아이콘 이동, 배경 어두워짐
-            masterSeq.Insert(0f, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, lineOpenHeight), lineOpenDuration).SetEase(lineOpenEase));
-            masterSeq.Insert(0f, img_ChiefIcon.transform.DOMove(finalTargetPos, moveDuration).SetEase(moveEase));
-            masterSeq.Insert(0f, img_Background.DOFade(bgDarkAlpha, lineOpenDuration));
+            _ = masterSeq.Insert(0f, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, lineOpenHeight), lineOpenDuration).SetEase(lineOpenEase));
+            _ = masterSeq.Insert(0f, img_ChiefIcon.transform.DOMove(finalTargetPos, moveDuration).SetEase(moveEase));
+            _ = masterSeq.Insert(0f, img_Background.DOFade(bgDarkAlpha, lineOpenDuration));
 
             // 연출 단계 2: 파칭 연출 시작
             float pachingStartTime = moveDuration * pachingStartRatio; 
-            masterSeq.Insert(pachingStartTime, rect_Paching.DORotate(pachingRotateAngle, pachingRotateDuration, RotateMode.FastBeyond360).SetEase(pachingRotateEase));
+            _ = masterSeq.Insert(pachingStartTime, rect_Paching.DORotate(pachingRotateAngle, pachingRotateDuration, RotateMode.FastBeyond360).SetEase(pachingRotateEase));
             
             foreach (var pachingImg in img_Pachings)
             {
                 if (pachingImg == null) continue;
-                masterSeq.Insert(pachingStartTime, pachingImg.DOFade(pachingMaxAlpha, pachingFadeInDuration));
+                _ = masterSeq.Insert(pachingStartTime, pachingImg.DOFade(pachingMaxAlpha, pachingFadeInDuration));
             }
 
             // 연출 단계 3: 마무리 (라인 닫힘, 배경 및 파칭 페이드 아웃)
             float closeStartTime = pachingStartTime + (pachingRotateDuration * 0.8f); 
             
-            masterSeq.Insert(closeStartTime, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, 0), lineCloseDuration).SetEase(lineCloseEase));
-            masterSeq.Insert(closeStartTime, img_Background.DOFade(0f, lineCloseDuration));
-            masterSeq.Insert(closeStartTime, img_ChiefIcon.DOFade(0f, lineCloseDuration));
+            _ = masterSeq.Insert(closeStartTime, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, 0), lineCloseDuration).SetEase(lineCloseEase));
+            _ = masterSeq.Insert(closeStartTime, img_Background.DOFade(0f, lineCloseDuration));
+            _ = masterSeq.Insert(closeStartTime, img_ChiefIcon.DOFade(0f, lineCloseDuration));
             
             foreach (var pachingImg in img_Pachings)
             {
                 if (pachingImg == null) continue;
-                masterSeq.Insert(closeStartTime, pachingImg.DOFade(0f, pachingFadeOutDuration));
+                _ = masterSeq.Insert(closeStartTime, pachingImg.DOFade(0f, pachingFadeOutDuration));
             }
 
             // 시퀀스 완료 대기

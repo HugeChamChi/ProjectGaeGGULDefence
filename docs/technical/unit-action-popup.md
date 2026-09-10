@@ -1,5 +1,7 @@
 # UnitActionPopup 시스템 기술 문서
 
+> Historical reference: this document predates the DI/UI refactoring. Use repository-root AGENTS.md and its refactoring references for current implementation rules. Legacy Manager/singleton API examples below are historical, not current instructions.
+
 **작업 브랜치**: `USW_InGameScene_Setting`  
 **작업 범위**: `Assets/WorkSpace/USW/Scripts/UI/`, `Assets/WorkSpace/USW/Scripts/IngameUI/`, `Assets/WorkSpace/USW/Scripts/Unit/`  
 **변경 파일**: 5개 / 신규 파일: 2개

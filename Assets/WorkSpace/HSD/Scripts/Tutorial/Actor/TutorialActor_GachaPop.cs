@@ -47,7 +47,10 @@ namespace GaeGGUL.Tutorial
             await UniTask.Delay(200);
 
             // 3. [Step 2] 목적지로 빠르게 이동
-            _itemUI.DOMove(_targetPos.position + (Vector3)_targetPosOffset, _moveDuration).SetEase(Ease.InQuad);
+            // 이동은 이후 도착 반응과 동시에 재생합니다.
+            _ = _itemUI.DOMove(_targetPos.position + (Vector3)_targetPosOffset, _moveDuration)
+                .SetEase(Ease.InQuad)
+                .SetLink(gameObject);
             
             // 이동 시간만큼 대기
             await UniTask.Delay(TimeSpan.FromSeconds(_arrivalDelay));

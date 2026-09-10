@@ -16,8 +16,9 @@ public class UI_TotemInfoPanel : UI_Base
 
     private TotemInfoPresenter _presenter;
 
-    protected void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         EnsurePresenter();
     }
 
@@ -26,6 +27,7 @@ public class UI_TotemInfoPanel : UI_Base
         EnsurePresenter();
         _presenter.SetData(data);
         gameObject.SetActive(true);
+        if (_canvas != null) _canvas.enabled = true;
     }
 
     private void EnsurePresenter()
