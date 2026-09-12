@@ -11,12 +11,19 @@ using System.Collections.Generic;
 ///   - Manager 통해 접근 통일
 /// </summary>
 
-public abstract class TotemBase : MonoBehaviour
+public abstract class TotemBase : MonoBehaviour, IDebuffSource
 {
+    /// <inheritdoc />
+    public bool TryGetDebuffBinding(out DebuffBinding binding)
+    { binding = default; return totemData != null && totemData.TryGetDebuffBinding(out binding); }
     [Inject] protected TotemBuffManager _totemBuffManager;
     [Inject] protected PopulationManager _populationManager;
     [Inject] protected GridManager _gridManager;
     [Inject] protected GameDataManager _gameDataManager;
+    [Inject] private BossManager _debuffBossManager;
+    [Inject] private ProjectilePool _debuffProjectilePool;
+    [Inject] private GameManager _debuffGameManager;
+    private TotemDebuffEmitter _debuffEmitter;
 
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
@@ -60,6 +67,11 @@ public abstract class TotemBase : MonoBehaviour
 
         CurrentCell = cell;
         IsActive    = true;
+        if (TryGetDebuffBinding(out var binding) && binding.Trigger == DebuffTrigger.ProjectileHit)
+        {
+            if (_debuffEmitter == null) _debuffEmitter = gameObject.AddComponent<TotemDebuffEmitter>();
+            _debuffEmitter.Initialize(this, _debuffBossManager, _debuffProjectilePool, _debuffGameManager);
+        }
 
         UpdateSprite();
         ApplyBuff();
@@ -87,6 +99,7 @@ public abstract class TotemBase : MonoBehaviour
             _gridManager.ClearTotemRangePreview();
 
         IsActive    = false;
+        if (_debuffEmitter != null) _debuffEmitter.enabled = false;
         CurrentCell = null;
 
         RemoveBuff();

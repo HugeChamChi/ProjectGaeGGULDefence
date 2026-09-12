@@ -4,6 +4,8 @@ using VContainer;
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
 public class UnitData : ScriptableObject, ILoadableAsset
 {
+    /// <summary>등급별 디버프 FK/발동 설정.</summary>
+    public PerTierDebuffBinding DebuffBindings = new PerTierDebuffBinding();
     [Header("Info")]
     [TierTabGroup("등급")] public PerTierInt characterId = new PerTierInt();
     [TierTabGroup("등급")] public PerTierInt unitType = new PerTierInt();
@@ -55,6 +57,7 @@ public class UnitData : ScriptableObject, ILoadableAsset
         atk.Set(tier, row.Atk);
         attackSpeed.Set(tier, row.AttackSpeed);
         foodProduction.Set(tier, row.FoodProduction);
+        if (row.DebuffBinding.HasValue) DebuffBindings.Set(tier, row.DebuffBinding.Value);
     }
 
     public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()

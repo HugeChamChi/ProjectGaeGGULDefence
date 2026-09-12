@@ -5,7 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// 드론 군단 관리 매니저.
-/// 드론 등록/해제, 초당 식량 틱, 드론 버프/보스 디버프 상태,
+/// 드론 등록/해제, 초당 식량 틱, 드론 버프 상태,
 /// 족장 집결 폭발(ExecuteRallyAsync)을 담당한다.
 /// </summary>
 public class DroneManager : MonoBehaviour
@@ -37,11 +37,6 @@ public class DroneManager : MonoBehaviour
     public float DroneAtkMultiplier   => Time.time < _buffEndTime ? _droneAtkMult   : 1f;
     public float DroneSpeedMultiplier => Time.time < _buffEndTime ? _droneSpeedMult : 1f;
 
-    // ── 보스 디버프 ─────────────────────────────────────────────────
-    private float _bossDebuffMult = 1f;
-    private float _debuffEndTime;
-
-    public float BossDebuffMultiplier => Time.time < _debuffEndTime ? _bossDebuffMult : 1f;
 
     // ── 집결 상태 ───────────────────────────────────────────────────
     private bool _isRallying;
@@ -123,11 +118,6 @@ public class DroneManager : MonoBehaviour
         _buffEndTime    = Time.time + duration;
     }
 
-    public void ApplyBossDebuff(float multiplier, float duration)
-    {
-        _bossDebuffMult = multiplier;
-        _debuffEndTime  = Time.time + duration;
-    }
 
     // ── 족장 집결 폭발 ──────────────────────────────────────────────
 

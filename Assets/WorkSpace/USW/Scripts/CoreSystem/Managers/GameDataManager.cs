@@ -41,6 +41,11 @@ using UnityEngine.Networking;
 /// </summary>
 public class GameDataManager
 {
+    private readonly DebuffCatalog _debuffCatalog;
+    private readonly DebuffSettings _debuffSettings;
+    /// <summary>루트 수명 정의 저장소와 로딩 설정 주입.</summary>
+    public GameDataManager(DebuffCatalog debuffCatalog, DebuffSettings debuffSettings)
+    { _debuffCatalog = debuffCatalog; _debuffSettings = debuffSettings; }
  
     public void Init()
     {
@@ -120,6 +125,7 @@ public class GameDataManager
 
     public async UniTask LoadAllAsync(CancellationToken token = default)
     {
+        IsLoaded = false;
         while (!token.IsCancellationRequested)
         {
             try
@@ -144,6 +150,13 @@ public class GameDataManager
                 }
 
                 ParseSpawnRates(csv0);
+                List<DebuffDefinition> pendingDebuffs = null;
+                if (!string.IsNullOrWhiteSpace(_debuffSettings.SheetGid))
+                {
+                    string debuffCsv = await FetchCsvAsync(_debuffSettings.SheetGid, token);
+                    if (string.IsNullOrWhiteSpace(debuffCsv)) throw new FormatException("Debuff CSV could not be loaded.");
+                    pendingDebuffs = DebuffSheetParser.Parse(SplitCsvRows(debuffCsv));
+                }
                 ParseBossData(csv1);
                 ParseExpTable(csv2);
                 ParseTotemData(csv3);
@@ -151,6 +164,8 @@ public class GameDataManager
                 await ParseWaveTimeAsync(csv5);
                 ParseLevelUpData(csv6);
                 ParseUpgradeData(csv7);
+                ValidateDebuffBindings(pendingDebuffs);
+                if (pendingDebuffs != null) _debuffCatalog.Replace(pendingDebuffs);
 
                 IsLoaded = true;
                 OnLoaded?.Invoke();
@@ -163,6 +178,27 @@ public class GameDataManager
                 await UniTask.Delay(3000, cancellationToken: token);
             }
         }
+    }
+
+    private void ValidateDebuffBindings(List<DebuffDefinition> pending)
+    {
+        var definitions = pending != null ? DebuffCatalog.Validate(pending) : null;
+        if (definitions != null)
+            foreach (var local in _debuffSettings.CreateDefinitions())
+                if (!definitions.TryGetValue(local.Id, out var remote) || remote.Kind != local.Kind || remote.StackGroup != local.StackGroup)
+                    throw new FormatException($"Debuff sheet must preserve local identity {local.Id}/{local.Key}/{local.StackGroup}.");
+        void Validate(DebuffBinding? optional, string source)
+        {
+            if (!optional.HasValue || !optional.Value.IsConfigured) return;
+            var binding = optional.Value;
+            DebuffDefinition definition;
+            bool found = definitions != null ? definitions.TryGetValue(binding.DebuffId, out definition) : _debuffCatalog.TryGet(binding.DebuffId, out definition);
+            if (!found) throw new FormatException($"{source}: unknown debuff_id={binding.DebuffId}");
+            if (binding.Trigger == DebuffTrigger.AffectedUnitBasicAttackAttempt && definition.Kind != DebuffKind.ArmorBreak)
+                throw new FormatException($"{source}: attack-attempt binding must be ArmorBreak.");
+        }
+        foreach (var row in _characterData.Values) Validate(row.DebuffBinding, $"Character {row.CharacterId}");
+        foreach (var row in _totemRows.Values) Validate(row.DebuffBinding, $"Totem {row.TotemId}");
     }
 
     private async UniTask<string> FetchCsvAsync(string gid, CancellationToken token)
@@ -230,14 +266,26 @@ public class GameDataManager
 
     private void ParseBossData(string csv)
     {
+        _bossByRoundId.Clear();
         var lines = csv.Split('\n');
+        var bossHeaders = ParseCsvRow(lines[0]);
+        int defenseColumn = DebuffSheetParser.Column(bossHeaders, "defense");
         for (int i = 1; i < lines.Length; i++)
         {
             var cols = lines[i].Trim().Split(',');
             if (cols.Length < 6) continue;
             if (!int.TryParse(cols[0].Trim(), out var bossId)) continue;
             if (!int.TryParse(cols[1].Trim(), out var roundId)) continue;
-            if (!int.TryParse(cols[3].Trim(), out var hp)) continue;
+            if (!decimal.TryParse(cols[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var hp))
+                throw new FormatException($"Boss row {i + 1}: invalid HP.");
+            if (CombatHealth.ToUnits(hp) <= 0) throw new FormatException($"Boss row {i + 1}: HP must be positive.");
+            double? defense = null;
+            if (defenseColumn >= 0 && defenseColumn < cols.Length && !string.IsNullOrWhiteSpace(cols[defenseColumn]))
+            {
+                defense = double.Parse(cols[defenseColumn], NumberStyles.Float, CultureInfo.InvariantCulture);
+                if (defense < 0 || double.IsNaN(defense.Value) || double.IsInfinity(defense.Value))
+                    throw new FormatException($"Boss row {i + 1}: invalid defense.");
+            }
             if (!float.TryParse(cols[4].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var expPerHp)) continue;
             if (!float.TryParse(cols[5].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var expAmt)) continue;
 
@@ -246,6 +294,7 @@ public class GameDataManager
                 BossId = bossId,
                 RoundId = roundId,
                 MaxHealth = hp,
+                Defense = defense,
                 DropExpPerHealth = expPerHp,
                 DropExpAmount = expAmt,
             };
@@ -272,6 +321,7 @@ public class GameDataManager
 
     private void ParseTotemData(string csv)
     {
+        _totemRows.Clear();
         var rows = SplitCsvRows(csv);
         if (rows.Count < 2) return;
 
@@ -315,6 +365,19 @@ public class GameDataManager
             if (!int.TryParse(cols[iId], out int id)) continue;
 
             var row = new TotemSheetRow { TotemId = id };
+            row.DebuffBinding = DebuffSheetParser.ParseBinding(headers, cols, false, $"Totem row {i + 1} id={id}");
+            if (row.DebuffBinding.HasValue && row.DebuffBinding.Value.Trigger == DebuffTrigger.ProjectileHit)
+            {
+                int intervalColumn = DebuffSheetParser.Column(headers, "debuff_fire_interval_sec");
+                int damageColumn = DebuffSheetParser.Column(headers, "debuff_impact_damage");
+                if (intervalColumn < 0 || damageColumn < 0 || intervalColumn >= cols.Length || damageColumn >= cols.Length)
+                    throw new FormatException($"Totem {id}: missing projectile settings.");
+                row.DebuffFireInterval = double.Parse(cols[intervalColumn], NumberStyles.Float, CultureInfo.InvariantCulture);
+                row.DebuffImpactDamage = decimal.Parse(cols[damageColumn], NumberStyles.Float, CultureInfo.InvariantCulture);
+                if (row.DebuffFireInterval <= 0 || double.IsNaN(row.DebuffFireInterval.Value) || double.IsInfinity(row.DebuffFireInterval.Value) ||
+                    row.DebuffImpactDamage < 0 || row.DebuffImpactDamage > CombatHealth.MaximumHp)
+                    throw new FormatException($"Totem {id}: invalid projectile settings.");
+            }
 
             if (iName >= 0 && iName < cols.Length) row.TotemName = cols[iName];
             if (iGrade >= 0 && iGrade < cols.Length) row.Grade = ParseTotemTier(cols[iGrade]);
@@ -529,8 +592,12 @@ public class GameDataManager
         return row != null ? row.FoodProduction : 0f;
     }
 
-    public int GetBossMaxHp(int roundId, int fallback = 1000)
+    public decimal GetBossMaxHp(int roundId, decimal fallback = 1000)
         => _bossByRoundId.TryGetValue(roundId, out var row) ? row.MaxHealth : fallback;
+
+    /// <summary>시트에서 지정한 방어력 또는 보스 SO 설정.</summary>
+    public double GetBossDefense(int roundId, double fallback)
+        => _bossByRoundId.TryGetValue(roundId, out var row) ? row.Defense ?? fallback : fallback;
 
     public float GetExpMultiplierForRound(int roundId)
     {
@@ -539,7 +606,7 @@ public class GameDataManager
         // (DropExpAmount / DropExpPerHealth)는 보스를 100% 잡았을 때 줄 총 경험치 양입니다.
         // 이를 MaxHealth로 나누어 데미지 1당 줄 경험치 수치를 계산합니다.
         float totalExpForBoss = row.DropExpAmount / Mathf.Max(row.DropExpPerHealth, 0.001f);
-        return totalExpForBoss / row.MaxHealth;
+        return totalExpForBoss / (float)row.MaxHealth;
     }
 
     public void SetCurrentBossRound(int roundId) => _currentBossRoundId = roundId;
@@ -570,7 +637,10 @@ public class GameDataManager
         if (string.IsNullOrWhiteSpace(csv)) return;
 
         UpgradeTypes.Clear();
+        _characterData.Clear();
         var rows = SplitCsvRows(csv);
+        if (rows.Count == 0) throw new FormatException("Character sheet is empty.");
+        var characterHeaders = rows[0];
         
         for (int i = 2; i < rows.Count; i++)
         {
@@ -594,6 +664,7 @@ public class GameDataManager
                 FoodProduction = ParseFloat(cols[9])
             };
             row.Level = GradeToLevel(row.Grade);
+            row.DebuffBinding = DebuffSheetParser.ParseBinding(characterHeaders, cols, true, $"Character row {i + 1} id={id}");
 
             Debug.Log($"[GameDataManager] Parsed Character {id} - Name: {row.Name}, FoodProduction: {row.FoodProduction}");
 
@@ -628,13 +699,15 @@ public class GameDataManager
     {
         public int BossId;
         public int RoundId;
-        public int MaxHealth;
+        public decimal MaxHealth;
+        public double? Defense;
         public float DropExpPerHealth;
         public float DropExpAmount;
     }
 
     public class CharacterSheetRow
     {
+        public DebuffBinding? DebuffBinding;
         public int CharacterId;
         public string Name;
         public string LocalKey;
@@ -656,6 +729,9 @@ public class GameDataManager
     /// </summary>
     public class TotemSheetRow
     {
+        public DebuffBinding? DebuffBinding;
+        public double? DebuffFireInterval;
+        public decimal? DebuffImpactDamage;
         public int TotemId;
         public string TotemName;
         public Tier Grade;

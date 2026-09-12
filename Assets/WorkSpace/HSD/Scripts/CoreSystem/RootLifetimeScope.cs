@@ -32,6 +32,10 @@ public class RootLifetimeScope : LifetimeScope
         
         builder.Register<AssetLifecycleManager>(Lifetime.Singleton);
         builder.Register<SceneChangeManager>(Lifetime.Singleton);
+        var debuffSettings = Resources.Load<DebuffSettings>("DebuffSettings");
+        if (debuffSettings == null) throw new System.InvalidOperationException("Resources/DebuffSettings is required.");
+        builder.RegisterInstance(debuffSettings);
+        builder.Register<DebuffCatalog>(Lifetime.Singleton);
         builder.Register<GameDataManager>(Lifetime.Singleton);
 
         // 정적 주입 (UI_Base 전체가 하나의 AudioManager를 공유하도록 명시적 주입)

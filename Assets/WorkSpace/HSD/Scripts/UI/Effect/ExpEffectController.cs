@@ -81,11 +81,11 @@ public class ExpEffectController : MonoBehaviour
         }
     }
 
-    private void OnBossDamaged(int damage, Vector3? hitPos)
+    private void OnBossDamaged(decimal damage, Vector3? hitPos)
     {
         if (particleImage == null) return;
 
-        float expAmount = _expManager.CalculateExpFromDamage(damage);
+        float expAmount = _expManager.CalculateExpFromDamage((float)damage);
         if (expAmount <= 0) return;
 
         _accumulatedExp += expAmount;

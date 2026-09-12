@@ -19,6 +19,14 @@ public class TotemBuffManager : MonoBehaviour
 
     // 활성 토템 목록 직접 관리 (FindObjectsOfType 대체)
     private readonly List<TotemBase> _activeTotem = new();
+    private readonly Dictionary<GridCell, TotemBase> _attackDebuffSources = new Dictionary<GridCell, TotemBase>();
+
+    /// <summary>겹친 토템 수와 무관하게 일반 공격 시도당 공유 아머 스택 하나만 부여한다.</summary>
+    public void ApplyAttackDebuff(GridCell cell, BossBase boss)
+    {
+        if (cell == null || boss == null || !_attackDebuffSources.TryGetValue(cell, out var source) || source == null || !source.IsActive) return;
+        if (source.TryGetDebuffBinding(out var binding)) boss.TryApplyDebuff(binding, source.GetInstanceID());
+    }
 
     public event System.Action OnTotemBuffChanged;
 
@@ -231,6 +239,7 @@ public class TotemBuffManager : MonoBehaviour
     // ── 전체 셀 버프 색상 플래그 재계산 ───────────────────────
     public void RebuildCellBuffFlags()
     {
+        _attackDebuffSources.Clear();
         if (_gridManager == null) return;
 
         // 1) 모든 셀 토템 버프 플래그 초기화 (기본 + 토템 전용 효과)
@@ -248,6 +257,9 @@ public class TotemBuffManager : MonoBehaviour
         {
             if (totem == null || !totem.IsActive) continue;
             totem.PaintAffectedCells();
+            if (totem.TryGetDebuffBinding(out var binding) && binding.Trigger == DebuffTrigger.AffectedUnitBasicAttackAttempt)
+                foreach (var cell in totem.GetAffectedCells())
+                    if (cell != null && !_attackDebuffSources.ContainsKey(cell)) _attackDebuffSources.Add(cell, totem);
         }
     }
 }

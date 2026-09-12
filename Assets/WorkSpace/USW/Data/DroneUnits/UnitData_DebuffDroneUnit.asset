@@ -17,6 +17,23 @@ MonoBehaviour:
     rare: 1001
     epic: 1002
     legend: 1003
+  DebuffBindings:
+    _normal:
+      _debuffId: 1003
+      _trigger: 1
+      _stacksPerApply: 1
+    _rare:
+      _debuffId: 1003
+      _trigger: 1
+      _stacksPerApply: 1
+    _epic:
+      _debuffId: 1003
+      _trigger: 1
+      _stacksPerApply: 1
+    _legend:
+      _debuffId: 1003
+      _trigger: 1
+      _stacksPerApply: 1
   unitType:
     normal: 7
     rare: 7

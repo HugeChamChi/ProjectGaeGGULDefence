@@ -167,6 +167,7 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (!attackDisabled && boss != null && !boss.IsDead)
         {
+            _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, boss);
             var attackData = _unit.unitData.basicAttackData;
             var attackAction = attackData?.action;
             if (attackAction != null)

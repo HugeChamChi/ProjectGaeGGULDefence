@@ -2,8 +2,22 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class UnitBase : MonoBehaviour
+public abstract class UnitBase : MonoBehaviour, IDebuffSource
 {
+    /// <summary>툴팁·디버그가 현재 등급의 연결을 조회한다.</summary>
+    public bool TryGetDebuffBinding(out DebuffBinding binding)
+    {
+        binding = unitData != null ? unitData.DebuffBindings.Get(currentTier) : default;
+        return binding.IsConfigured;
+    }
+
+    /// <summary>기존 스킬 훅에서 시트 설정을 사용해 현재 보스에 부여한다.</summary>
+    protected bool ApplySkillDebuff()
+    {
+        if (!TryGetDebuffBinding(out var binding) || binding.Trigger != DebuffTrigger.SkillActivated) return false;
+        var target = _deps?.BossManager?.CurrentBoss;
+        return target != null && target.TryApplyDebuff(binding, GetInstanceID());
+    }
     public UnitData unitData;
     public Tier currentTier = Tier.Normal;
     public UnityEvent onSkillFull;
@@ -168,6 +182,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         onSkillFull?.Invoke();
         OnSkillFull();
+        ApplySkillDebuff();
     }
     
     protected virtual void OnSkillFull() { }

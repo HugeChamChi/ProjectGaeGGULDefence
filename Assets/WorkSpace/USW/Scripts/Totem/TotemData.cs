@@ -14,8 +14,22 @@ public enum TotemType
 }
 
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
-public class TotemData : ScriptableObject, ILoadableAsset
+public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
+    [SerializeField] private DebuffBinding _debuffBinding;
+    [SerializeField] private double _debuffFireInterval;
+    [SerializeField] private double _debuffImpactDamage;
+    private decimal? _sheetDebuffImpactDamage;
+    [SerializeField] private ProjectileData _debuffProjectile;
+    /// <summary>발사 간격(초), 부여자 설정.</summary>
+    public double DebuffFireInterval => _debuffFireInterval;
+    /// <summary>화염구 즉발 기본 피해, 부여자 설정.</summary>
+    public decimal DebuffImpactDamage => _sheetDebuffImpactDamage ?? (decimal)_debuffImpactDamage;
+    /// <summary>발사체 시각/이동 구성.</summary>
+    public ProjectileData DebuffProjectile => _debuffProjectile;
+    /// <inheritdoc />
+    public bool TryGetDebuffBinding(out DebuffBinding binding)
+    { binding = _debuffBinding; return binding.IsConfigured; }
     [Header("기본 정보")]
     public TotemType   totemType;
     public Tier        tier;
@@ -109,6 +123,9 @@ public class TotemData : ScriptableObject, ILoadableAsset
         // 1. 기본 정보 덮어쓰기
         if (!string.IsNullOrEmpty(row.TotemName)) totemName = row.TotemName;
         tier = row.Grade;
+        if (row.DebuffBinding.HasValue) _debuffBinding = row.DebuffBinding.Value;
+        if (row.DebuffFireInterval.HasValue) _debuffFireInterval = row.DebuffFireInterval.Value;
+        if (row.DebuffImpactDamage.HasValue) _sheetDebuffImpactDamage = row.DebuffImpactDamage.Value;
         isRotatable = row.IsRotatable;
 
         // 2. functions 재구성 (시트의 flat 수치 기준 — 조건부 버프 등 SO 전용 구성은 시트에 없으므로

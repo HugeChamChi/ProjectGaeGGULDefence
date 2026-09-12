@@ -92,7 +92,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
         }
     }
 
-    private void OnBossDamaged(int damage, Vector3? hitPos)
+    private void OnBossDamaged(decimal damage, Vector3? hitPos)
     {
         if (_subscribedBoss == null) return;
         
@@ -104,7 +104,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
     /// <summary>
     /// 월드 좌표를 입력받아 현재 컨테이너(Canvas) 설정에 맞춰 적절히 배치합니다.
     /// </summary>
-    public void SpawnDamageText(Vector3 worldPosition, int damage, bool isCritical = false)
+    public void SpawnDamageText(Vector3 worldPosition, decimal damage, bool isCritical = false)
     {
         if (_loadedPrefab == null)
         {

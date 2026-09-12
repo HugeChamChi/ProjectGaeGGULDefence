@@ -53,8 +53,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private ParticleImage hitEffectPrefab;   // 보스 피격 시 생성될 ParticleImage 프리팹
     [SerializeField] private Transform particleTarget;
 
-    private int _displayedHp;
-    private int _displayedHpMax;
+    private decimal _displayedHp;
+    private decimal _displayedHpMax;
     private int _displayedCurrency;
     private RectTransform _currencyTextRect;
     private Vector3 _currencyTextBaseScale = Vector3.one;
@@ -197,7 +197,7 @@ public class UIManager : MonoBehaviour
         totalFoodProductionText.text = $"{total:F1}";
     }
 
-    public void UpdateBossHp(int current, int max)
+    public void UpdateBossHp(decimal current, decimal max)
     {
         if (max <= 0) return;
 
@@ -230,31 +230,33 @@ public class UIManager : MonoBehaviour
             nextLineSlider.value = 1f; // 다음 줄은 꽉 차있는 상태
         }
 
-        int hpPerLine = healthBarSettings != null && healthBarSettings.healthPerLine > 0 ? healthBarSettings.healthPerLine : max;
-        int from = _displayedHp;
+        decimal hpPerLine = healthBarSettings != null && healthBarSettings.healthPerLine > 0 ? healthBarSettings.healthPerLine : max;
+        decimal from = _displayedHp;
+        float progress = 0;
 
-        DOTween.To(() => from, x =>
+        DOTween.To(() => progress, value =>
         {
-            from = x;
+            progress = value;
+            decimal x = decimal.Round(from + (current - from) * (decimal)value, 4);
             _displayedHp = x;
 
-            int currentLine = Mathf.CeilToInt((float)x / hpPerLine);
+            decimal currentLine = decimal.Ceiling(x / hpPerLine);
             if (x <= 0) currentLine = 0;
 
-            int currentLineHp = x - (currentLine - 1) * hpPerLine;
+            decimal currentLineHp = x - (currentLine - 1) * hpPerLine;
             if (x <= 0) currentLineHp = 0;
 
             if (currentLineSlider != null)
             {
-                currentLineSlider.value = (float)currentLineHp / hpPerLine;
+                currentLineSlider.value = (float)(currentLineHp / hpPerLine);
             }
 
             if (healthBarSettings != null && healthBarSettings.lineColors != null && healthBarSettings.lineColors.Length > 0)
             {
                 int colorLen = healthBarSettings.lineColors.Length;
                 
-                int currentColorIndex = currentLine > 0 ? (currentLine - 1) % colorLen : 0;
-                int nextColorIndex = currentLine > 1 ? (currentLine - 2) % colorLen : -1;
+                int currentColorIndex = currentLine > 0 ? (int)((currentLine - 1) % colorLen) : 0;
+                int nextColorIndex = currentLine > 1 ? (int)((currentLine - 2) % colorLen) : -1;
 
                 Color currentColor = currentLine > 0 ? healthBarSettings.lineColors[currentColorIndex] : Color.clear;
                 Color nextColor = nextColorIndex >= 0 ? healthBarSettings.lineColors[nextColorIndex] : Color.clear;
@@ -272,10 +274,10 @@ public class UIManager : MonoBehaviour
 
             if (bossHpText != null)
             {
-                bossHpText.text = $"{x} / {_displayedHpMax}";
+                bossHpText.text = $"{x:0.####} / {_displayedHpMax:0.####}";
             }
 
-        }, current, sliderTweenDuration)
+        }, 1f, sliderTweenDuration)
         .SetEase(Ease.OutCubic)
         .SetTarget(bossHpText);
 

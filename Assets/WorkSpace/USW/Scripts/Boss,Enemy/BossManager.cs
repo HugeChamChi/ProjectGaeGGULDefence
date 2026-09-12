@@ -21,6 +21,11 @@ public class BossManager : MonoBehaviour
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private WaveManager _waveManager;
     [Inject] private UIManager _uiManager;
+    [Inject] private GameManager _gameManager;
+    [Inject] private DebuffCatalog _debuffCatalog;
+    [Inject] private DebuffSettings _debuffSettings;
+    [Inject] private BossPatternController _patternController;
+    [Inject] private TimerController _combatTimer;
 
     [SerializeField] private GameObject bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]
@@ -63,17 +68,24 @@ public class BossManager : MonoBehaviour
         }
 
         // 시트 HP 우선 — 미로드 시 WaveData SO의 hp 폴백
-        int hp = _gameDataManager != null && _gameDataManager.IsLoaded
+        decimal hp = _gameDataManager != null && _gameDataManager.IsLoaded
             ? _gameDataManager.GetBossMaxHp(100 + _waveManager.CurrentWave, entry.hp)
             : entry.hp;
+        double defense = _gameDataManager != null && _gameDataManager.IsLoaded
+            ? _gameDataManager.GetBossDefense(100 + _waveManager.CurrentWave, entry.Defense) : entry.Defense;
+        boss.ConfigureDebuffs(_debuffCatalog, _debuffSettings, _gameManager, defense, _combatTimer);
         boss.Init(hp);
 
         _currentBosses.Add(boss);
 
-        boss.OnHpChanged += (cur, max) => _uiManager.UpdateBossHp(cur, max);
+        boss.OnHpChanged += (cur, max) =>
+        {
+            if (cur <= 0) _combatTimer.StopTimer();
+            _uiManager.UpdateBossHp(cur, max);
+        };
         boss.OnDeath     += () =>
         {
-            BossPatternController.Instance.UnregisterBoss(boss);
+            _patternController.UnregisterBoss(boss);
             _currentBosses.Remove(boss);
             Destroy(boss.gameObject);
             onDefeated?.Invoke();
@@ -81,7 +93,7 @@ public class BossManager : MonoBehaviour
 
         boss.gameObject.AddComponent<BossAreaTarget>();
 
-        BossPatternController.Instance.RegisterBoss(boss, boss.Patterns);
+        _patternController.RegisterBoss(boss, boss.Patterns);
         _uiManager.UpdateBossHp(boss.CurrentHp, boss.MaxHp);
 
         OnBossEntryed?.Invoke(_prevBossEntry, entry);
@@ -93,7 +105,7 @@ public class BossManager : MonoBehaviour
 
     private void ClearAllBosses()
     {
-        BossPatternController.Instance.UnregisterAll();
+        _patternController.UnregisterAll();
 
         foreach (var boss in _currentBosses)
         {

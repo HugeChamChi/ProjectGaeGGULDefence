@@ -16,6 +16,8 @@ public class BossEntry
 
     [Tooltip("이 보스의 HP (WaveManager가 주입)")]
     public int hp = 500;
+    /// <summary>보스 기본 방어력. 시트 defense가 있으면 시트 값 우선.</summary>
+    [Min(0)] public double Defense;
 }
 
 [CreateAssetMenu(fileName = "WaveData", menuName = "Game/Wave/WaveData")]

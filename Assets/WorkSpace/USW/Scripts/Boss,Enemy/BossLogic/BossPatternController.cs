@@ -15,7 +15,7 @@ using System.Threading;
 ///   - UnregisterBoss(boss)         : 개별 해제
 ///   - UnregisterAll()              : 웨이브 교체 등 전체 해제
 /// </summary>
-public class BossPatternController : InGameSingleton<BossPatternController>
+public class BossPatternController : MonoBehaviour
 {
     [Inject] private GridManager _gridManager;
 
@@ -24,7 +24,7 @@ public class BossPatternController : InGameSingleton<BossPatternController>
         public BossPatternData[]        patterns;
         public HashSet<BossPatternData> firedPhasePatterns = new HashSet<BossPatternData>();
         public CancellationTokenSource  timerCts;
-        public Action<int, int>         hpHandler;
+        public Action<decimal, decimal> hpHandler;
     }
 
     private readonly Dictionary<BossBase, BossPatternEntry> _entries = new Dictionary<BossBase, BossPatternEntry>();
@@ -49,7 +49,7 @@ public class BossPatternController : InGameSingleton<BossPatternController>
         entry.hpHandler = (cur, max) => CheckPhasePatterns(boss, entry, cur, max);
         boss.OnHpChanged += entry.hpHandler;
 
-        entry.timerCts = new CancellationTokenSource();
+        entry.timerCts = CancellationTokenSource.CreateLinkedTokenSource(boss.GetCancellationTokenOnDestroy(), this.GetCancellationTokenOnDestroy());
 
         foreach (var pattern in patterns)
         {
@@ -98,9 +98,12 @@ public class BossPatternController : InGameSingleton<BossPatternController>
 
         _entries.Clear();
 
-        foreach (var cell in _gridManager.AllCells())
-            cell.Model.ClearBossDebuffs();
+        if (_gridManager != null)
+            foreach (var cell in _gridManager.AllCells())
+                if (cell != null) cell.Model.ClearBossDebuffs();
     }
+
+    private void OnDestroy() => UnregisterAll();
 
     // ── 타이머 기반 패턴 ──────────────────────────────────────────
 
@@ -129,11 +132,11 @@ public class BossPatternController : InGameSingleton<BossPatternController>
 
     // ── 페이즈 기반 패턴 ──────────────────────────────────────────
 
-    private void CheckPhasePatterns(BossBase boss, BossPatternEntry entry, int currentHp, int maxHp)
+    private void CheckPhasePatterns(BossBase boss, BossPatternEntry entry, decimal currentHp, decimal maxHp)
     {
         if (entry.patterns == null) return;
 
-        float hpRatio = maxHp > 0 ? (float)currentHp / maxHp : 0f;
+        decimal hpRatio = maxHp > 0 ? currentHp / maxHp : 0;
 
         foreach (var pattern in entry.patterns)
         {
@@ -142,12 +145,12 @@ public class BossPatternController : InGameSingleton<BossPatternController>
                 pattern.triggerType != PatternTriggerType.Both) continue;
             if (entry.firedPhasePatterns.Contains(pattern)) continue;
 
-            if (hpRatio <= pattern.hpThreshold)
+            if (hpRatio <= (decimal)pattern.hpThreshold)
             {
                 entry.firedPhasePatterns.Add(pattern);
                 boss.ExecutePattern(pattern);
                 Debug.Log($"[BossPatternController] {boss.name} 페이즈 패턴 발동: {pattern.patternName} " +
-                          $"(HP {hpRatio * 100f:F0}%)");
+                          $"(HP {hpRatio * 100m:F0}%)");
             }
         }
     }

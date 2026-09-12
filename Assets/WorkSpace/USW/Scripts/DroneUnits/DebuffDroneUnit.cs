@@ -1,5 +1,4 @@
 using UnityEngine;
-using VContainer;
 
 /// <summary>
 /// 디버프 드론 소환 유닛.
@@ -10,16 +9,11 @@ public class DebuffDroneUnit : DroneSpawnerBase
 {
 
 
-    [Header("Debuff Settings")]
-    [SerializeField] private float damageAmplificationMultiplier = 1.2f;
-    [SerializeField] private float debuffDuration = 5f;
 
     protected override void OnSkillFull()
     {
-        onSkillFull?.Invoke();
 
         if (unitData == null) return;
         _audioManager?.PlaySFX("05.Drone_Debuff");
-        _droneManager?.ApplyBossDebuff(damageAmplificationMultiplier, debuffDuration);
     }
 }
