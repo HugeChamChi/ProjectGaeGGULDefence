@@ -4,7 +4,6 @@ public enum LevelUpSpecialEffect
 
     // ── 즉시 효과 ────────────────────────────────────────────
     GiveFoodAmount = 1,             // 3015, 3029: 식량 specialValue개 즉시 획득
-    PopulationIncrease = 2,         // 3023, 3045: 최대 인구수 specialValue 증가
     TriggerTotemSelection = 3,      // 3030: 토템 선택지 즉시 출력
     GainRandomUnit = 4,             // 3022: Normal~Rare 무작위 기물 획득
 

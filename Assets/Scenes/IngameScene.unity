@@ -19134,48 +19134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d340d4964c425dd49a882ea60c18af15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelUpPool:
-  - {fileID: 11400000, guid: e33131dbb4a1a8e4186e3bcb5faed242, type: 2}
-  - {fileID: 11400000, guid: dcd964e76cabcb145ab5ba915723fcee, type: 2}
-  - {fileID: 11400000, guid: 10aab659fdfb8b744949c4ef5806e355, type: 2}
-  - {fileID: 11400000, guid: 3cb0c612f2efb5b46b975c301ce6ef2f, type: 2}
-  - {fileID: 11400000, guid: a19954a4a4763e849b50e987a162edf6, type: 2}
-  - {fileID: 11400000, guid: 713b0ec8f793ef04a9b83a58804a094e, type: 2}
-  - {fileID: 11400000, guid: e9fae28102b10d243a479a37d770a8a7, type: 2}
-  - {fileID: 11400000, guid: cd2cb2d838984b64d93f863e2caa8d9a, type: 2}
-  - {fileID: 11400000, guid: 72a4623c9fd72d449aa0fa026e3cba94, type: 2}
-  - {fileID: 11400000, guid: c080051d834fb584da2937c2e76142e4, type: 2}
-  - {fileID: 11400000, guid: 9a177caae212cc048a88ca554732cea4, type: 2}
-  - {fileID: 11400000, guid: caa594112fdc0bb47aaf4372c53b9c3c, type: 2}
-  - {fileID: 11400000, guid: 2f3a20e6b8cd8ca438db4666cea355bd, type: 2}
-  - {fileID: 11400000, guid: 8d9f816167bdf554ab525a3c5a532fb3, type: 2}
-  - {fileID: 11400000, guid: 31e0e5c40d5735c4a8553a4282dd1da6, type: 2}
-  - {fileID: 11400000, guid: f0f4d2ccafb733d4fb60e295fb112436, type: 2}
-  - {fileID: 11400000, guid: 2f9d4173e489cb24a8e3eb178f3d4787, type: 2}
-  - {fileID: 11400000, guid: 81dc7cc8ed2f6f841b7abcff6680f61d, type: 2}
-  - {fileID: 11400000, guid: 693b9c601918109458978f4ad6f4589c, type: 2}
-  - {fileID: 11400000, guid: 235b04cee09dd2f4caf65cc0d2f3f228, type: 2}
-  - {fileID: 11400000, guid: 73324132d3a349c4992929e7ee143b98, type: 2}
-  - {fileID: 11400000, guid: f2c56517c73b85643950c4b80150be21, type: 2}
-  - {fileID: 11400000, guid: 0a076844ae7ca6344bb6f67629bca336, type: 2}
-  - {fileID: 11400000, guid: 29a2db3eb5cc12647823dad88d778d8e, type: 2}
-  - {fileID: 11400000, guid: 4e27712765ac10e42a889ad6f1b1ccc2, type: 2}
-  - {fileID: 11400000, guid: 297282bd8edd1d34f917f7c3ffc378b4, type: 2}
-  - {fileID: 11400000, guid: 898be1c52c5729145aa27ffabbee1c65, type: 2}
-  - {fileID: 11400000, guid: be3f6aa86ae126b408b6589d54a591e8, type: 2}
-  - {fileID: 11400000, guid: 659782379edf2f848ad2effcb9d56ea1, type: 2}
-  - {fileID: 11400000, guid: 5e715a5c45098e14f9244c2260643e87, type: 2}
-  - {fileID: 11400000, guid: 591587a492d73354d8cdbd2a0c553fc2, type: 2}
-  - {fileID: 11400000, guid: 99b80fddf4e533f4ba9c20c9d84cb89e, type: 2}
-  - {fileID: 11400000, guid: 79ab3da95e471b649b7cf6e9d0ab5952, type: 2}
-  - {fileID: 11400000, guid: 7e5b28b5464769c478e9428bcfb0532e, type: 2}
-  - {fileID: 11400000, guid: a400e90dfce251a43a25c5c44ad1123c, type: 2}
-  - {fileID: 11400000, guid: 03ff59c83751b174db3879b16bc39f22, type: 2}
-  - {fileID: 11400000, guid: 38ac3779f77b4d5409635979e316506c, type: 2}
-  - {fileID: 11400000, guid: b1aef105842ea71439624945e458046a, type: 2}
-  - {fileID: 11400000, guid: 58164dfd7823a8944888607a82f95d1b, type: 2}
-  - {fileID: 11400000, guid: 1ad7d48dc98e7c2488d6704a8b9eb1d9, type: 2}
-  - {fileID: 11400000, guid: 32b89fdb3cced624598c2d6f15842ed3, type: 2}
+  levelUpPool: []
   courageBuffData: {fileID: 11400000, guid: 062f8b85f49d2a5c4577f708a8a38df6, type: 2}
 --- !u!4 &1714553164
 Transform:

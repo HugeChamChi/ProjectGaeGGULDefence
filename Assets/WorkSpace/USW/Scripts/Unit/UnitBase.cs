@@ -42,6 +42,49 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public bool IsFirstPlacement { get; private set; } = true;
     public bool IsPopulationReserved = false;
 
+    private bool _hasTemporaryTier;
+    private UnityEngine.Object _temporaryTierSource;
+    private UnitData _originalData;
+    private Tier _originalTier;
+    /// <summary>조커형 노말 합성 재료인지 여부.</summary>
+    public virtual bool IsWildcardMergeUnit => false;
+    /// <summary>합성/판매에 사용하는 실제 소유 등급.</summary>
+    public Tier OriginalTier => _hasTemporaryTier ? _originalTier : currentTier;
+    /// <summary>합성/판매에 사용하는 실제 소유 데이터.</summary>
+    public UnitData OriginalData => _hasTemporaryTier ? _originalData : unitData;
+    /// <summary>범위 효과에 의해 임시 등급을 사용 중인지 여부.</summary>
+    public bool HasTemporaryTier => _hasTemporaryTier;
+
+    /// <summary>전투 데이터만 한 등급 올린다. 중복 출처/전설/족장에는 적용하지 않는다.</summary>
+    public bool TryApplyTemporaryTier(UnityEngine.Object source, UnitData upgradedData = null)
+    {
+        if (source == null || unitData == null || _hasTemporaryTier ||
+            currentTier < Tier.Normal || currentTier >= Tier.Legend) return false;
+        _originalData = unitData;
+        _originalTier = currentTier;
+        _temporaryTierSource = source;
+        _hasTemporaryTier = true;
+        unitData = upgradedData != null ? upgradedData : unitData;
+        currentTier = (Tier)((int)_originalTier + 1);
+        _visual?.UpdateVisual(currentTier);
+        return true;
+    }
+
+    /// <summary>해당 출처의 임시 등급만 해제하고 원래 데이터/등급을 복구한다.</summary>
+    public void RemoveTemporaryTier(UnityEngine.Object source)
+    {
+        if (!_hasTemporaryTier || !ReferenceEquals(_temporaryTierSource, source)) return;
+        unitData = _originalData;
+        currentTier = _originalTier;
+        _hasTemporaryTier = false;
+        _temporaryTierSource = null;
+        _originalData = null;
+        _visual?.UpdateVisual(currentTier);
+    }
+
+    /// <summary>판매/영구 제거 직전에 원래 전투 데이터를 복구한다.</summary>
+    public void RestoreOriginalTier() => RemoveTemporaryTier(_temporaryTierSource);
+
     private UnitStatsModifier _stats;
     private UnitCombatComponent _combat;
     private UnitResourceComponent _resource;
@@ -116,15 +159,17 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
         Boss = boss;
         currentCell = cell;
+        // 첫 공격/스킬 전에 새 셀의 토템 효과와 공격 구독을 확정한다.
+        _deps?.TotemBuffManager?.RebuildCellBuffFlags();
         ApplyFacingByCell();
 
         _combat.StartLoops();
 
         OnUnitPlaced();
         
-        if (!IsPopulationReserved)
+        if (!IsPopulationReserved && !IsWildcardMergeUnit)
         {
-            _deps?.PopulationManager?.Add(unitData != null ? unitData.populationCost.Get(currentTier) : 1);
+            _deps?.PopulationManager?.Add(OriginalData != null ? OriginalData.populationCost.Get(OriginalTier) : 1);
             IsPopulationReserved = true;
         }
         
@@ -142,6 +187,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         OnUnitRemoved();
         _combat.StopLoops();
+        RemoveTemporaryTier(_temporaryTierSource);
         if (IsPopulationReserved)
         {
             _deps?.PopulationManager?.Remove(unitData != null ? unitData.populationCost.Get(currentTier) : 1);

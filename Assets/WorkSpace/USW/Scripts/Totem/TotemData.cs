@@ -16,6 +16,29 @@ public enum TotemType
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
 public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
+    /// <summary>기존 시트 동기화를 사용할지 여부. SO 제작 시 false.</summary>
+    [Header("데이터 원본")]
+    [Tooltip("끄면 SO의 수치/기능/범위/디버프를 그대로 사용합니다. 기존 시트 토템만 켜세요.")]
+    public bool UseSheetData = true;
+
+    /// <summary>일반 공격 반응 보조 투사체 구성.</summary>
+    [Header("보조 투사체 (TotemBonusProjectile)")]
+    public TotemBonusProjectileSettings BonusProjectile = new TotemBonusProjectileSettings();
+
+    /// <summary>처치 수별 범위 프리셋.</summary>
+    [Header("처치별 범위 성장 (TotemKillRangeGrowth)")]
+    public List<TotemGrowthStage> GrowthStages = new List<TotemGrowthStage>();
+
+    /// <summary>조커 생성 주기/유닛 구성.</summary>
+    [Header("조커 소환 (TotemWildcardSpawner)")]
+    public TotemWildcardSpawnSettings WildcardSpawn = new TotemWildcardSpawnSettings();
+
+    /// <summary>임시 등급의 전체 UnitData 교체 설정.</summary>
+    [Header("임시 등급업 (TotemTemporaryTierBoost)")]
+    [Tooltip("기본은 같은 UnitData의 다음 등급 수치. 스킬/패시브까지 바꾸려면 상위 UnitData를 등록합니다.")]
+    public List<TotemTierUpgrade> TierUpgrades = new List<TotemTierUpgrade>();
+
+    [Header("디버프 (TD1003 / TD1006)")]
     [SerializeField] private DebuffBinding _debuffBinding;
     [SerializeField] private double _debuffFireInterval;
     [SerializeField] private double _debuffImpactDamage;
@@ -118,7 +141,7 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     /// </summary>
     public void ApplySheetData(GameDataManager.TotemSheetRow row)
     {
-        if (row == null) return;
+        if (!UseSheetData || row == null) return;
 
         // 1. 기본 정보 덮어쓰기
         if (!string.IsNullOrEmpty(row.TotemName)) totemName = row.TotemName;

@@ -53,7 +53,6 @@ public class PopulationManager : MonoBehaviour
 
         var peek = _spawnQueue.Peek();
         if (peek.isTotem) {
-            if (!CanAdd(1)) return;
             var item = _spawnQueue.Dequeue();
             SpawnTotemAsync(item.totemData).Forget();
         } else {

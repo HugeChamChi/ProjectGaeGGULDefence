@@ -273,14 +273,16 @@ public class UnitSpawner : MonoBehaviour
     public void SellUnit(UnitBase unit)
     {
         if (unit == null) return;
-        if (unit.currentTier == Tier.Chieftain) return;
+        if (unit.OriginalTier == Tier.Chieftain) return;
 
         var cell = FindCellByUnit(unit);
         if (cell == null) return;
 
+        unit.RestoreOriginalTier();
+
         // 강화 레벨 조회 (UpgradeManager 기준)
-        int charId  = unit.unitData != null ? unit.unitData.characterId.Get(unit.currentTier) : -1;
-        string jobType = unit.unitData != null
+        int charId  = unit.OriginalData != null ? unit.OriginalData.characterId.Get(unit.OriginalTier) : -1;
+        string jobType = unit.OriginalData != null
             ? _upgradeManager?.GetJobType(charId) ?? string.Empty
             : string.Empty;
         int upgradeLevel = _upgradeManager != null && !string.IsNullOrEmpty(jobType)

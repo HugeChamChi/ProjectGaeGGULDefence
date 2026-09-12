@@ -17,7 +17,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     public bool TryGetDebuffBinding(out DebuffBinding binding)
     { binding = default; return totemData != null && totemData.TryGetDebuffBinding(out binding); }
     [Inject] protected TotemBuffManager _totemBuffManager;
-    [Inject] protected PopulationManager _populationManager;
     [Inject] protected GridManager _gridManager;
     [Inject] protected GameDataManager _gameDataManager;
     [Inject] private BossManager _debuffBossManager;
@@ -86,7 +85,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         {
             Debug.LogWarning($"TotemBase({name}): _totemBuffManager is null!");
         }
-        _populationManager?.Add(1);
 
         Debug.Log($"[토템] {totemData.totemName} 배치 @ {cell.GridPosition}");
     }
@@ -110,7 +108,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
             _totemBuffManager.UnregisterTotem(this);
             _totemBuffManager.RebuildCellBuffFlags();
         }
-        _populationManager?.Remove(1);
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
     }
@@ -160,7 +157,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
 
     protected virtual void SyncStatsWithSheet()
     {
-        if (totemData == null || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
+        if (totemData == null || !totemData.UseSheetData || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
 
         // 원본 ScriptableObject가 오염되는 것을 방지하기 위해 런타임 인스턴스로 복제
         if (!_isDataCloned)

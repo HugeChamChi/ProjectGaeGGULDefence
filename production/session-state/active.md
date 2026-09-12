@@ -1,4 +1,4 @@
-# Session State — 2026-09-12
+# Session State — 2026-09-13
 
 ## 다음 새 대화에서 한 번 상기 — 사용자 요청 (전달 완료: 2026-09-12, Codex)
 
@@ -11,12 +11,32 @@
 - 이 요청은 다음 대화의 안내이며 자동 구현 착수나 사용자의 새 요청을 대체하라는 뜻은 아니다.
 
 <!-- STATUS -->
-Epic: 레벨업 선택지 프로토타입
-Feature: 족장별 독립 카드 풀과 공유 카드 정의
-Task: 선택지 풀 DI 분리 및 IEffect 재사용 가능성 코드 검토 완료. 구현 미착수. 아래 2026-09-12 추가 검토 참고. 디버프 후속 작업 유지.
+Epic: 신규 토템 TD1001~1006
+Feature: SO 제작용 동작 스크립트 및 검증 도구
+Task: 코드 구현/Unity 컴파일/Preview Scene 48개 검증 완료. 사용자가 SO·프리팹·등장 풀 제작 후 PlayMode/Android 검증. 선택지 풀 구현은 아직 미착수.
 <!-- /STATUS -->
 
+## Codex 완료 — TD 토템 SO 제작용 기능 (2026-09-13)
+
+- 후속 검토 요청: 사용자가 Claude의 족장 레벨업 풀/시트 설명을 전달하여 문서·코드 재대조. 독립 풀·카드 공유·공통 풀 자동 합산 없음·SO 우선 방향은 합의이며 "미결"이 아니라 구현 미착수. 현행 LevelUpManager는 여전히 공용+파티 풀 자동 합산/시트 동기화, LevelUpData.ApplySheetData 존재. LevelUpPoolData/LevelUpCatalog는 아직 없음.
+- 별도 docs/technical/totem-sheet-schema-redesign.md(GPT 전달용)도 발견/검토. 시트 작업 브리핑은 이 파일일 가능성도 있어 사용자에게 구분 안내. 신규 Effect_Def/use_sheet_data/effect 슬롯/범위 stage 파서는 미구현. 문서의 인구수 미정/TD1005 미구현을 현행화하고 SO 대 시트 범위 소유권 혼재, 음수 값 미지원, 효과 키 공유에는 명시적 매핑 필요를 검토 메모로 추가. 라이브 시트는 재조회하지 않음. 선택지/신규 시트 구현에는 착수하지 않았다.
+
+- 사용자 승인: 기능 스크립트와 정리는 Codex, 실제 SO는 사용자가 제작. 인구수 시스템 폐기. TD1002는 해당 토템 배치 이후 처치만, TD1005 합성/판매는 원본 등급/데이터 기준으로 확정.
+- 구현: TD1001 TotemBonusProjectile(일반 공격 구독/확률/계수/투사체 SO), TD1002 TotemKillRangeGrowth(처치별 범위, 이동/회전 누적 보존), TD1004 TotemWildcardSpawner/TotemSpawnCharge/WildcardUnit(전투 중 충전, 완충 빈칸 대기, 인접 링 생성, 인구수 없음), TD1005 TotemTemporaryTierBoost/UnitBase 임시 데이터/등급 API(원복/상위 스킬 SO 교체). TD1003/1006은 기존 경로 재사용.
+- 기존 파일 수정: TotemData SO 설정/UseSheetData 토글, TotemBase 시트 동기화 가드 및 인구수 차감 제거, TotemSpawner 인구수 제한 제거, PopulationManager 토템 대기열 인구수 가드 제거. UnitBase 첫 공격 전 토템 재계산/원본 데이터 보관/조커 인구수 차감 제외. MergeManager 원본 등급/조커 양방향 매칭/선택 유닛 필수 포함. UnitSpawner 판매 계산 전 원본 복구. 기존 인구수 시스템 전체 참조를 삭제한 작업은 아니며 타 시스템에는 잔존 코드가 있다.
+- 신규 파일: TotemBonusProjectile.cs, TotemBonusProjectileSettings.cs, TotemGrowthStage.cs, TotemKillRangeGrowth.cs, TotemWildcardSpawnSettings.cs, TotemWildcardSpawner.cs, TotemSpawnCharge.cs, TotemTierUpgrade.cs, TotemTemporaryTierBoost.cs, UnitMergeRules.cs, WildcardUnit.cs, TotemSpawnGaugeUI.cs, Editor/TotemDataValidator.cs, Editor/TotemBehaviorChecks.cs, Tests/TotemCheckProjectile.cs 및 Unity 생성 meta.
+- 도구: Assets/Totems/Validate Selected SO, Assets/Totems/Set TD1002 Growth Ranges, Tools/Totems/Run Behavior Checks. 프리셋 편집은 사용자 메뉴 실행 때만 SO 변경, Undo 지원. 실제 SO/프리팹은 새로 만들지 않았다.
+- 문서: docs/technical/totem-so-authoring-guide.md 신규, totem-batch-td1001-1006.md 현행화. 기존 totem-system.md는 외부에서 삭제되어 복구하지 않았다. 이 기록이 아래 미구현/미승인/런 전체 처치 기준을 대체한다.
+- 검증: Unity 6000.3.11f1 live editor recompile 오류 없음; 2026-09-13 KST Preview Scene 테스트 48개 PASS. SO 보존/시트 호환, 충전, 조커 합성 대칭, 원본 등급, 성장/회전/제거, 공격 구독 중복 방지, 실제 풀 호출→적중 피해/원래 보스 유지, 겹친 아머 공격당 +1/재계산 무부여/제거 후 유지 확인. 투사체 비행은 편집기 대체 투사체로 제어. 기존 dotnet 디버프 36개 PASS. git diff --check 통과. 실제 콘텐츠 PlayMode/Android 미실행.
+- 다음: 가이드대로 SO/특수 프리팹 제작 후 TotemSelectUI.totemPool 등록. SO 전용은 UseSheetData OFF. TD1005 스킬이 다른 상위 데이터는 TierUpgrades 등록(기본은 같은 UnitData의 다음 등급 수치). 프리팹/행동 클래스 교체와 이미 생성된 드론/버프 인스턴스의 소급 재작성은 하지 않는다. TD1004 게이지는 TotemSpawnGaugeUI로 연결.
+- 외부 변경: 기존 선택지 SO/이미지/LevelUpDataGenerator 삭제, LevelUpManager/LevelUpSpecialEffect 수정, Addressables Data.asset 참조 정리가 관찰됨. 복구하거나 이 작업 결과로 주장하지 않는다. 반편집 씬/프리팹/ProjectSettings 없음. Preview Scene 정리 완료, 사용자 씬 저장 없음. 커밋/푸시 없음.
+
 ## Codex 추가 검토 — 선택지 풀 의존성과 효과 재사용 (2026-09-12)
+
+- TD1001~1006 실제 구현 조사: Totem 폴더 전 스크립트 목록, Assets의 ID/조커/등급업/투사체 관련 검색, UnitCombatComponent/MergeManager 및 TotemBase/Spawner/BuffManager/기존 BossKillStack 확인. TD1001 범위 내 일반 공격 확률 보조 발사 전용 연결 없음(기존 공격 이벤트/ProjectilePool 재사용 가능). TD1002 기존 BossKillStack은 전역 공격/공속 수치 누적이며 범위 확장과 다르고 배치/제거 시 카운터 초기화. TD1004 조커 소환/합성 훅 없음(현재 합성은 동일 UnitData+등급 요구). TD1005 임시 등급 상승/원복 경로 발견 못함. TD1003/1006은 공통 발사/적중 화상 및 셀 출처→일반 공격 아머 코드 있음. 로컬 Assets 검색에서 신규 6종 TotemData/전용 등록은 발견 못했고 totemId 직렬화 결과는 OldTreeStub(0)만 확인. 원격 시트 직접 조회/PlayMode 검증은 미수행.
+- 권고(미승인): 데이터는 수치/범위/효과 참조, 별도 동작 스크립트는 이벤트/시간/상태 담당. 기존 TotemBase 및 특수 프리팹 경로로 TD1001 보조 발사, TD1002 성장 범위, TD1004 조커 생성, TD1005 임시 등급 적용 구현. 효과별 재사용 이름을 쓰고 ID별 클래스 분기는 피함. TD1003 발사기/TD1006 공통 Binding은 재사용, 추가 전용 클래스 필수 아님. 범용 행동 프레임워크 신설은 보류. SO 우선 시 시트 functions 덮어쓰기 정책 정리. 구현 순서 제안 1003/1006 연결→1001/1002→1004/1005, 후자는 인구수/합성 및 등급 원복 계약 확정 필요. 이번 변경은 배턴만, 코드/Unity 자산 변경 및 테스트/커밋 없음.
+
+- TD 배치 문서 재확인: 사용자 지목으로 docs/technical/totem-batch-td1001-1006.md 전체 확인. 신규 6종은 기존 33종 대체 전제이며 일반 수치 버프만이 아님. TD1001 일반 공격 시 확률 보조 투사체, TD1002 처치 누적 범위 확장, TD1003 화염구/화상, TD1004 조커 소환, TD1005 임시 등급업, TD1006 공격 시 아머 누적. 앞선 '현재 구조 유지' 판단은 범위/데이터/실행 분리 골격에 한정하고 6종이 GenericBuffTotem만으로 구현된다는 의미가 아님을 설명. 문서상 TD1004 인구수 및 합성/TD1005 등급 전환 미결, 콘텐츠 연결/실전 검증 미완. 이번에는 문서 확인만 했고 6종별 현행 코드 구현 여부를 새로 전수 검증하지 않음. 배턴 외 변경 없음.
 
 - 후속 토템 검토: 사용자 질문에 TotemData/ITotemFunction/GenericBuffTotem/RangedBuffTotemBase/TotemBase/TotemBuffManager/TotemDebuffEmitter 및 기술 문서 확인. 범위와 기능 조합, 셀 재계산과 실제 공격/적중 디버프 분리는 유지 권고. ITotemFunction은 컨테이너 주입은 없지만 TotemBuffManager를 실행 인자로 받아 타입 의존성은 있음. TotemBase의 공통 전투 의존성과 TotemBuffManager의 IObjectResolver 조회는 추후 축소 가능하나 전면 재설계 사유는 아님. 주의: TotemData.ApplySheetData는 functions 목록을 단순 버프로 전면 재구성하므로 SO 조건부/특수 기능 보존 정책을 정해야 함. 셀 재계산 안에서 지속 버프/디버프를 반복 부여하면 중첩/시간 갱신 오류 위험. 코드 변경/실행 검증 없이 구조 검토만 수행.
 

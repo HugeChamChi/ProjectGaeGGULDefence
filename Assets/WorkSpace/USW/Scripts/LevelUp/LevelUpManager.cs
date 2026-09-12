@@ -514,9 +514,6 @@ public class LevelUpManager : MonoBehaviour
                 _currencyManager.AddCurrency(data.specialValue);
                 break;
 
-            case LevelUpSpecialEffect.PopulationIncrease:
-                _populationManager?.AddMaxBonus((int)data.specialValue);
-                break;
 
             case LevelUpSpecialEffect.TriggerTotemSelection:
                 OnTotemSelectionRequested?.Invoke(null);

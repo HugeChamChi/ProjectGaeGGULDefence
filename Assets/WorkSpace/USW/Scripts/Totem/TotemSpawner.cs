@@ -23,7 +23,6 @@ public class TotemSpawner : MonoBehaviour
 
     [Inject] private IObjectResolver _resolver;
     [Inject] private GridManager _gridManager;
-    [Inject] private PopulationManager _populationManager;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private UnitFactory _unitFactory;
 
@@ -57,7 +56,6 @@ public class TotemSpawner : MonoBehaviour
 
         var empty = _gridManager.GetEmptyCells();
         if (empty.Count == 0) return false;
-        if (_populationManager != null && !_populationManager.CanAdd(1)) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
         var go    = RM.Instantiate(prefab, cell.transform);
