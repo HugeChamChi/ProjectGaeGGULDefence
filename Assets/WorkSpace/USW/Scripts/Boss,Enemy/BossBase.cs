@@ -138,12 +138,24 @@ public abstract class BossBase : MonoBehaviour
     // ── 데미지 처리 ─────────────────────────────────────────────────
     /// <summary>최종 경계에서만 4자리로 반올림하는 일반 피해 경로.</summary>
     public void TakeDamage(decimal amount, Vector3? hitPos = null)
+        => TakeDamageAndRecord(amount, hitPos);
+
+    /// <summary>일반 피해를 적용하고 그림자 재현용 최종 피해 단위를 반환한다.</summary>
+    public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null)
     {
         AdvanceDebuffs();
-        if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return;
+        if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
         long units = DamageCalculator.Calculate(amount, _defense, _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
+        ApplyFinalDamage(units, hitPos);
+        return units;
+    }
+
+    /// <summary>이미 계산된 원본 피해를 방어력/치명타 재계산 없이 재현한다. 무적/전투 상태/남은 체력은 존중한다.</summary>
+    public void ApplyRecordedDamage(long units, Vector3? hitPos = null)
+    {
+        AdvanceDebuffs();
         ApplyFinalDamage(units, hitPos);
     }
 

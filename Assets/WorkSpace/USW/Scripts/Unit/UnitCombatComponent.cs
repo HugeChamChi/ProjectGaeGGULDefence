@@ -18,6 +18,11 @@ public class UnitCombatComponent : MonoBehaviour
     private float _skillTimer;
     private int _hitCount;
 
+    /// <summary>실제 일반 공격 시작 시에만 발행된다. 그림자/스킬/보너스 발사는 발행하지 않는다.</summary>
+    public event Action<BasicAttackReplay> OnBasicAttackStarted;
+    /// <summary>동기 액션이 시작한 일반 공격 문맥. 연발 액션은 이를 캡처해 각 발사로 전달한다.</summary>
+    public BasicAttackReplay CurrentBasicAttack { get; private set; }
+
     public float SkillTimer
     {
         get => _skillTimer;
@@ -170,15 +175,21 @@ public class UnitCombatComponent : MonoBehaviour
             _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, boss);
             var attackData = _unit.unitData.basicAttackData;
             var attackAction = attackData?.action;
-            if (attackAction != null)
+            CurrentBasicAttack = OnBasicAttackStarted != null ? new BasicAttackReplay(_unit, boss) : null;
+            try
             {
-                attackData.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
-                attackAction.Execute(_unit, this, attackData.hitEffects, attackData.additionalEffects);
+                if (CurrentBasicAttack != null) OnBasicAttackStarted?.Invoke(CurrentBasicAttack);
+                if (attackAction != null)
+                {
+                    attackData.castEffect?.Play(transform.position, transform, _deps?.AudioManager);
+                    attackAction.Execute(_unit, this, attackData.hitEffects, attackData.additionalEffects);
+                }
+                else
+                {
+                    LaunchProjectile(_stats.GetAttackDamage());
+                }
             }
-            else
-            {
-                LaunchProjectile(_stats.GetAttackDamage());
-            }
+            finally { CurrentBasicAttack = null; }
 
             _unit.InvokeOnAttack();
             _hitCount++;
@@ -250,11 +261,25 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>sizeMultiplier: 이 발사 1회에만 적용되는 추가 투사체 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).
     /// projectileData: 이 발사에만 쓸 투사체 구성(이동/이펙트/프리팹). null이면 ProjectilePool의 기본 구성을 사용한다.</summary>
     public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null)
-        => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) => boss.TakeDamage(damage, targetPos));
+    {
+        var replay = CurrentBasicAttack;
+        Action<BossBase, Vector3> hit = replay?.IsEnabled == true
+            ? new RecordedDamage(damage).Apply
+            : (boss, targetPos) => boss.TakeDamage(damage, targetPos);
+        LaunchProjectileInternal(sizeMultiplier, projectileData, hit, replay);
+    }
 
     /// <summary>적중 시 결과를 hitEffects에, 부가 연출을 additionalEffects에 위임하는 발사(데미지 외의 효과도 가능).</summary>
-    public void LaunchProjectile(List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, float sizeMultiplier = 1f, ProjectileData projectileData = null)
-        => LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) =>
+    public void LaunchProjectile(List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, float sizeMultiplier = 1f, ProjectileData projectileData = null, BasicAttackReplay replay = null)
+    {
+        replay ??= CurrentBasicAttack;
+        if (replay?.IsEnabled == true)
+        {
+            LaunchProjectileInternal(sizeMultiplier, projectileData,
+                new RecordedHitEffects(_unit, hitEffects, additionalEffects).Apply, replay);
+            return;
+        }
+        LaunchProjectileInternal(sizeMultiplier, projectileData, (boss, targetPos) =>
         {
             if (hitEffects != null)
                 foreach (var effect in hitEffects)
@@ -263,11 +288,12 @@ public class UnitCombatComponent : MonoBehaviour
             if (additionalEffects != null)
                 foreach (var effect in additionalEffects)
                     effect?.Apply(_unit, boss, targetPos);
-        });
+        }, replay);
+    }
 
-    private void LaunchProjectileInternal(float sizeMultiplier, ProjectileData projectileData, Action<BossBase, Vector3> onHitApply)
+    private void LaunchProjectileInternal(float sizeMultiplier, ProjectileData projectileData, Action<BossBase, Vector3> onHitApply, BasicAttackReplay replay = null)
     {
-        var boss = LiveBoss;
+        var boss = replay?.IsEnabled == true ? replay.Target : LiveBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
 
         if (gameObject == null) return;
@@ -278,18 +304,34 @@ public class UnitCombatComponent : MonoBehaviour
             Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
             Vector3 targetPos = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
 
-            Action onHit = () =>
+            bool originalHit = false;
+            bool shadowArrivedEarly = false;
+            Action applyHit = () =>
             {
                 if (boss != null && !boss.IsDead)
                 {
                     onHitApply(boss, targetPos);
                 }
             };
+            Action onHit = () =>
+            {
+                applyHit();
+                originalHit = true;
+                if (shadowArrivedEarly && replay?.CanReplay == true) applyHit();
+            };
+            Action shadowHit = () =>
+            {
+                // 이동 방식이 달라 그림자가 먼저 도착해도 원본 적중 결과를 기다린다.
+                if (originalHit) applyHit();
+                else shadowArrivedEarly = true;
+            };
 
             if (projectileData != null)
                 _deps.ProjectileManager.Launch(spawnPos, targetPos, projectileData, onHit, _unit, sizeMultiplier);
             else
                 _deps.ProjectileManager.Launch(spawnPos, targetPos, onHit, _unit, sizeMultiplier);
+
+            replay?.RecordShot(_deps.ProjectileManager, spawnPos, targetPos, projectileData, sizeMultiplier, shadowHit);
         }
     }
 

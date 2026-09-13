@@ -4,6 +4,10 @@ using VContainer;
 [CreateAssetMenu(fileName = "UnitData", menuName = "Game/UnitData")]
 public class UnitData : ScriptableObject, ILoadableAsset
 {
+    /// <summary>이 유닛을 족장으로 선택했을 때 사용하는 독립 레벨업 풀.</summary>
+    [Header("족장 레벨업 풀")]
+    public LevelUpPoolData LevelUpPool;
+
     /// <summary>등급별 디버프 FK/발동 설정.</summary>
     public PerTierDebuffBinding DebuffBindings = new PerTierDebuffBinding();
     [Header("Info")]

@@ -67,6 +67,12 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         SetConfirmInteractable(false);
 
         var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
+        if (choices.Count == 0)
+        {
+            // 풀 소진/설정 누락 시 빈 패널에서 게임이 정지하지 않도록 선택 단계를 마친다.
+            Hide();
+            return;
+        }
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);

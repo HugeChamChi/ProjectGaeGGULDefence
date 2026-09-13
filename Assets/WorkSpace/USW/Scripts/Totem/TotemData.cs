@@ -16,6 +16,10 @@ public enum TotemType
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
 public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
+    /// <summary>TD1007 일반 공격 그림자 재현 구성.</summary>
+    [Header("그림자 공격 (TotemShadowAttack)")]
+    public TotemShadowAttackSettings ShadowAttack = new TotemShadowAttackSettings();
+
     /// <summary>기존 시트 동기화를 사용할지 여부. SO 제작 시 false.</summary>
     [Header("데이터 원본")]
     [Tooltip("끄면 SO의 수치/기능/범위/디버프를 그대로 사용합니다. 기존 시트 토템만 켜세요.")]

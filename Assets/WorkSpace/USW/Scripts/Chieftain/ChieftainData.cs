@@ -10,6 +10,9 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "ChieftainData", menuName = "Game/ChieftainData")]
 public class ChieftainData : ScriptableObject
 {
+    /// <summary>ID 기반 족장 선택 경로에서 사용하는 독립 레벨업 풀.</summary>
+    public LevelUpPoolData LevelUpPool;
+
     [Header("Info")]
     public int    chieftainId;   // HSD ChiefData.Id와 일치
     public string chieftainName;

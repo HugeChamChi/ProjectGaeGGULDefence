@@ -34,6 +34,21 @@ public class ChieftainSpawner : MonoBehaviour
 
     public event System.Action<ChiefUnit> OnChieftainSpawned;
 
+    /// <summary>소환과 동일한 우선순위로 시작 시 족장 풀을 해석한다. 누락 시 다른 족장 풀을 섞지 않는다.</summary>
+    public LevelUpPoolData GetSelectedLevelUpPool()
+    {
+        if (GlobalData.SelectedParty?.chieftainData != null)
+            return GlobalData.SelectedParty.chieftainData.LevelUpPool;
+        if (_useTestSpawn && _testUnitData != null)
+            return _testUnitData.LevelUpPool;
+
+        int selectedId = Player.Chief.SelectedChiefId;
+        if (selectedId == 0 && _useTestSpawn) selectedId = GetTestChieftainId();
+        if (selectedId == 0 || chieftainDataList == null) return null;
+        return System.Array.Find(chieftainDataList,
+            data => data != null && data.chieftainId == selectedId)?.LevelUpPool;
+    }
+
     public void Init()
     {
         if (_gameManager != null)

@@ -11,6 +11,6 @@ public class PartyDataSO : ScriptableObject
     [Header("족장 데이터")]
     public UnitData chieftainData;
 
-    [Header("파티 전용 레벨업 선택지 (이 파티를 선택했을 때만 풀에 추가됨)")]
+    [HideInInspector] // 이전 자산 이관용으로 보존. 런타임에서는 더 이상 합산하지 않는다.
     public List<LevelUpData> exclusiveLevelUpChoices;
 }

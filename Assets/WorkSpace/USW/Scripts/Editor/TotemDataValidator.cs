@@ -32,6 +32,20 @@ public static class TotemDataValidator
         if (data.UseSheetData && behavior is not null && behavior is not GenericBuffTotem)
             Debug.LogWarning($"[{data.name}] SO 기능 구성을 유지하려면 Use Sheet Data를 끄세요.", data);
 
+        if (behavior is TotemShadowAttack)
+        {
+            var shadow = data.ShadowAttack;
+            if (shadow == null || !IsFinite(shadow.DelaySeconds) || shadow.DelaySeconds < 0 ||
+                !IsFinite(shadow.VisualSeconds) || shadow.VisualSeconds <= 0)
+                Fail(data, "그림자 공격 지연은 0 이상, 분신 표시 시간은 양수여야 합니다.");
+        }
+        if (behavior is TotemFoodGenerator)
+        {
+            var food = data.GetFoodGenerator();
+            if (food == null || !IsFinite(food.interval) || food.interval <= 0 || !IsFinite(food.amount) || food.amount <= 0)
+                Fail(data, "식량 생성 주기와 생산량을 양수로 지정하세요.");
+        }
+
         if (behavior is TotemBonusProjectile)
         {
             var settings = data.BonusProjectile;

@@ -31,28 +31,29 @@ public class MultiShotSkillAction : ISkillAction
         var tier = caster.currentTier;
         int shots = shotCount.Get(tier);
         float size = sizeMultiplier.Get(tier);
-        var projectileData = Table.Projectile.Get(projectileDataId);
+        var projectileData = projectileDataId == 0 ? null : Table.Projectile.Get(projectileDataId);
+        var replay = combat.CurrentBasicAttack;
 
         if (shotInterval <= 0f)
         {
             for (int i = 0; i < shots; i++)
-                combat.LaunchProjectile(hitEffects, additionalEffects, size, projectileData);
+                combat.LaunchProjectile(hitEffects, additionalEffects, size, projectileData, replay);
             return;
         }
 
-        FireShotsAsync(combat, hitEffects, additionalEffects, shots, size, projectileData).Forget(e =>
+        FireShotsAsync(combat, hitEffects, additionalEffects, shots, size, projectileData, replay).Forget(e =>
         {
             if (e is not OperationCanceledException) Debug.LogException(e);
         });
     }
 
-    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, int shots, float size, ProjectileData projectileData)
+    private async UniTask FireShotsAsync(UnitCombatComponent combat, List<IEffect> hitEffects, List<IAdditionalEffect> additionalEffects, int shots, float size, ProjectileData projectileData, BasicAttackReplay replay)
     {
         var token = combat.GetCancellationTokenOnDestroy();
         for (int i = 0; i < shots; i++)
         {
             if (token.IsCancellationRequested) return;
-            combat.LaunchProjectile(hitEffects, additionalEffects, size, projectileData);
+            combat.LaunchProjectile(hitEffects, additionalEffects, size, projectileData, replay);
 
             if (i < shots - 1)
                 await UniTask.Delay(TimeSpan.FromSeconds(shotInterval), cancellationToken: token);

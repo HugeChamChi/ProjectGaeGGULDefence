@@ -87,6 +87,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     private UnitStatsModifier _stats;
     private UnitCombatComponent _combat;
+    /// <summary>일반 공격 기록 구독 등 전투 확장을 위한 기존 컴포넌트.</summary>
+    public UnitCombatComponent Combat => _combat;
     private UnitResourceComponent _resource;
     private BuffController _buff;
     private UnitDependencies _deps;

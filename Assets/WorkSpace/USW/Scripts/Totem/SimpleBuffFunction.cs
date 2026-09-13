@@ -12,7 +12,7 @@ public class SimpleBuffFunction : ITotemFunction
 
     public void Apply(TotemBase totem, GridCell cell, TotemBuffManager buffManager)
     {
-        if (cell == null || amount <= 0f) return;
+        if (cell == null || amount == 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return;
 
         float efficiency = 1f + (buffManager != null ? buffManager.TotemEfficiencyBonus : 0f);
         float appliedAmount = kind == StatKind.FoodSpeed ? amount : amount * efficiency;

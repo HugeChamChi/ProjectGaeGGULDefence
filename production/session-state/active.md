@@ -11,10 +11,33 @@
 - 이 요청은 다음 대화의 안내이며 자동 구현 착수나 사용자의 새 요청을 대체하라는 뜻은 아니다.
 
 <!-- STATUS -->
-Epic: 신규 토템 TD1001~1006
-Feature: SO 제작용 동작 스크립트 및 검증 도구
-Task: 코드 구현/Unity 컴파일/Preview Scene 48개 검증 완료. 사용자가 SO·프리팹·등장 풀 제작 후 PlayMode/Android 검증. 선택지 풀 구현은 아직 미착수.
+Epic: 토템 TD1007~TD1010 확장
+Feature: 그림자 일반 공격 재현 / 사각 고리별 버프 / 공속 감소 / 식량 생성 재사용
+Task: 코드·SO 프리셋·검증 완료(확장 34/기존 토템 48/디버프 36). 사용자 SO/프리팹 연결 후 실제 애니메이션·PlayMode·Android 검증.
 <!-- /STATUS -->
+
+## Codex 완료 — TD1007~TD1010 (2026-09-13)
+
+- 사용자 요청: SPR_TD1007 그림자, TD1008 이중 범위, TD1009 공속 감소/공격력 증가, TD1010 식량 생산. 인접 8칸=max(abs(x),abs(y))=1, 바깥 16칸=2, 중심 제외. SO 수치/실제 콘텐츠는 사용자가 조정.
+- TD1007 사용자 확정: 일반 공격만, 연발·다중 발사와 적중 효과 재현, 0.2초 뒤 원본 최종 피해/치명타 결과까지 복사. 원본 대상 살아 있으면 유닛 이동/범위 이탈해도 예약 실행, 판매 시 취소(판매 외 아군 사망 없음). 반투명 스프라이트 복제. 그림자 범위 모양은 미지정이므로 SO effectRanges로 설정.
+- 구현: TotemShadowAttack/Settings, BasicAttackReplay로 공격 시작/연발 문맥 및 각 투사체 발사 기록. 일반 onAttack/스킬/보너스 공격을 재실행하지 않으며 중첩 영역도 한 번만 활성화. 토템 제거/재배치 시 이전 예약 무효화. ShadowAttackVisual은 Transform/SpriteRenderer만 복제·재사용, 원본 Attack 클립 샘플링, 클립 없으면 정적 외형. 실제 캐릭터 애니메이션 연결은 미검증.
+- 정확한 피해: IReplayableEffect, RecordedHitEffects, RecordedDamage 추가. AtkCoefficientDamage/FixedDamage Capture 지원(패시브 변형 상속 포함). BossBase.TakeDamageAndRecord/ApplyRecordedDamage로 원본 최종 단위 보관, 방어력 재계산 없이 재현하되 무적/전투 상태/남은 HP 존중. 미래 무작위 피해 IEffect는 IReplayableEffect 구현 필요. 비피해 적중 효과와 추가 연출은 다시 적용, TD1006 공격 시도 아머는 다시 적용하지 않음.
+- TD1008/9: TotemSquareRingRange, SquareRingBuffFunction 추가, SimpleBuffFunction의 유한 음수 지원. GenericBuffTotem 재사용. TD1010 기존 TotemFoodGenerator/FoodGeneratorFunction 재사용. 새 시트 로더 없음, 기존 시트 양수 변환 경로는 그대로.
+- 수정 파일: TotemData, SimpleBuffFunction, UnitBase(Combat 공개), UnitCombatComponent(일반 공격 기록 경계), MultiShotSkillAction(연발 문맥 전달 및 ID=0 기본 투사체), AtkCoefficientDamage, FixedDamage, BossBase, Editor/TotemDataValidator. 신규 파일: 위 클래스들 + Editor/TotemExpansionPresets, TotemExpansionChecks, Tests/TotemReplayProbeEffect 및 Unity 생성 meta.
+- 프리셋: Assets/Totems/Set TD1008 Dual Ring(+10%/+10%), TD1009 Attack Tradeoff(+50%/-20%), TD1010 Food Generator(기존 10초/30식량). 모두 제작 시작용 예시 수치, 선택 SO의 기능/범위 교체·Undo 지원, ID/주소/프리팹은 자동 변경하지 않음.
+- 검증: Unity 컴파일 completed/failed=false/errors=[]; 최종 eval에서 Error/Exception/Assert 로그를 수집해 0건 확인, TotemExpansionChecks PASS 34 / TotemBehaviorChecks PASS 48. 순수 C# 디버프 36 PASS. 중간 테스트의 edit-mode Destroy 오류는 테스트 임시 분신의 DestroyImmediate 정리로 수정 후 재검증. 한 eval 응답 시간 초과는 Unity에서는 완료된 것을 로그로 확인, 최종 eval 정상 응답. git diff --check 통과.
+- 문서: docs/technical/totem-expansion-td1007-1010.md 신규, totem-so-authoring-guide.md 링크, totem-sheet-schema-redesign.md 음수 지원 상태 현행화. 실제 SO/프리팹/씬 변경 없음. 프로젝트 설정 등 외부 변경 보존. 임시 씬/SO/이벤트 정리 완료, 반편집 Unity 자산 없음, 커밋/푸시 없음.
+- 다음: 사용자 제작한 SO와 전용 프리팹(TD1007 TotemShadowAttack / TD1008·9 GenericBuffTotem / TD1010 TotemFoodGenerator) 연결 및 등장 풀 등록. 분신 클립/정렬/각 캐릭터 연출과 실제 PlayMode/Android 성능은 콘텐츠 연결 후 확인. 족장 레벨업 풀 구현은 아래 완료 상태 유지.
+
+## Codex 완료 — 족장 레벨업 독립 풀 (2026-09-13)
+
+- 사용자 요청: 합의된 풀 교체 작업 진행. 게임플레이 프로그래머 스킬 적용, 별도 에이전트 없음. 이전 미착수 기록은 아래의 과거 이력이다.
+- 새 파일: LevelUp/LevelUpPoolData.cs, ILevelUpCatalog.cs, LevelUpCatalog.cs, Editor/LevelUpPoolChecks.cs 및 Unity 생성 meta. 풀=ID+카드 목록, 카탈로그=SO 기반 ID 조회/참조 검증, 런 상태와 효과=기존 매니저. 별도 DI 서비스 등록 없이 Init에서 데이터 카탈로그 구성.
+- 수정: LevelUpManager 공용/파티 풀 자동 합산 및 GameDataManager 시트 구독/클론 제거, ChieftainSpawner 주입으로 소환과 같은 우선순위의 풀을 시작 시 고정. UnitData 및 ChieftainData에 LevelUpPool 필드, ChieftainSpawner.GetSelectedLevelUpPool 추가. PartyDataSO 기존 exclusiveLevelUpChoices와 매니저 levelUpPool은 이관용 숨김 보존(런타임 미사용). LevelUpUI는 0장일 때 Hide로 진행 복구. 중복 효과 적용 방지.
+- 실제 로비는 PartyDataSO.chieftainData(UnitData) 경로이므로 풀은 해당 UnitData에 연결한다. 레거시 Chief ID 경로만 ChieftainData 풀 사용. 테스트 UnitData 경로 지원. 런 도중 교체 시 풀 고정, 새 씬 런에서 새 획득 상태.
+- 0장 정책은 2026-09-13 사용자 답변으로 확정: 이번 선택을 건너뛰고 게임 계속. 기존 구현과 같아 후속 코드 변경/재검증 없이 설계 문서와 이 기록만 갱신했다. 1~2장 그대로 표시, 반복 보상 없음. 실제 카드 목록/ID/콘텐츠 연결은 사용자 작업. 기존 효과 enum/버프/디버프 통합 재설계 및 시트 로더 추가 없음.
+- 검증: Unity recompile completed/failed=false/errors=[]; LevelUpPoolChecks.Run eval 성공, Editor.log PASS 26 assertions 확인. 풀 간 공유/격리, 누락 및 중복 ID, 실제 선택 전달, 획득/중복 적용/제거/새 런, 부족 조건 및 유효 가중치 검증. git diff --check 통과. 콘텐츠 PlayMode/Android 미실행.
+- docs/technical/chieftain-levelup-pool-design.md 상단에 구현 상태/제작 방법 추가. 기존 IngameScene.unity 외부 수정과 삭제 SO 등 사용자 변경 보존, 씬/프리팹 직접 편집 없음. Preview Scene/임시 SO/GlobalData.SelectedParty 복원 완료. 커밋/푸시 없음.
 
 ## Codex 완료 — TD 토템 SO 제작용 기능 (2026-09-13)
 

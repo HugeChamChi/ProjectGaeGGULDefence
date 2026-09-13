@@ -24,19 +24,26 @@ using Cysharp.Threading.Tasks;
 public class LevelUpManager : MonoBehaviour
 {
  
+    /// <summary>선택된 족장의 풀을 런 시작에 한 번 확정한다. 런 상태는 씬 수명을 따른다.</summary>
     public void Init()
     {
-        if (_gameDataManager != null)
+        if (_poolInitialized) return;
+        _poolInitialized = true;
+        var pool = _chieftainSpawner?.GetSelectedLevelUpPool();
+        try
         {
-            if (_gameDataManager.IsLoaded)
-                SyncStatsWithSheet();
-            else
-                _gameDataManager.OnLoaded += SyncStatsWithSheet;
+            _catalog = new LevelUpCatalog(new[] { pool });
+            var cards = new List<LevelUpData>();
+            foreach (int id in _catalog.GetCardIds(pool.PoolId))
+                if (_catalog.TryGetCard(id, out var card)) cards.Add(card);
+            _effectivePool = cards.ToArray();
         }
-
-        RebuildEffectivePool();
+        catch (System.ArgumentException exception)
+        {
+            Debug.LogError($"[LevelUp] 족장 풀 설정 오류: {exception.Message}", this);
+            _effectivePool = System.Array.Empty<LevelUpData>();
+        }
     }
-
     [Inject] private GridManager _gridManager;
     [Inject] private TotemBuffManager _totemBuffManager;
     [Inject] private CurrencyManager _currencyManager;
@@ -44,10 +51,10 @@ public class LevelUpManager : MonoBehaviour
     
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
-    [Inject] private GameDataManager _gameDataManager;
+    [Inject] private ChieftainSpawner _chieftainSpawner;
     [Inject] private BuffManager _buffManager;
 
-    [SerializeField] private LevelUpData[] levelUpPool;
+    [SerializeField, HideInInspector] private LevelUpData[] levelUpPool; // 이전 씬 이관용. 추첨에는 사용하지 않는다.
 
     [Header("파티 전용 선택지 연동")]
     [SerializeField] private BuffData courageBuffData;
@@ -56,52 +63,13 @@ public class LevelUpManager : MonoBehaviour
     public event System.Action OnChieftainBuffChanged;
 
     public IEnumerable<int> ChosenIds => _chosenIds;
-    public LevelUpData[] LevelUpPool => _effectivePool;
+    public LevelUpData[] LevelUpPool => (LevelUpData[])_effectivePool.Clone();
 
     private readonly HashSet<int> _chosenIds = new();
 
-    // levelUpPool(공용 풀) + 현재 선택된 파티의 exclusiveLevelUpChoices(파티 전용 풀)를 합친 실제 사용 풀.
-    private LevelUpData[] _effectivePool;
-
-    private void RebuildEffectivePool()
-    {
-        var exclusive = GlobalData.SelectedParty?.exclusiveLevelUpChoices;
-        if (exclusive == null || exclusive.Count == 0)
-        {
-            _effectivePool = levelUpPool;
-            return;
-        }
-
-        var combined = new List<LevelUpData>(levelUpPool);
-        combined.AddRange(exclusive);
-        _effectivePool = combined.ToArray();
-    }
-
-    private void SyncStatsWithSheet()
-    {
-        if (_gameDataManager == null || !_gameDataManager.IsLoaded) return;
-
-        for (int i = 0; i < levelUpPool.Length; i++)
-        {
-            var data = levelUpPool[i];
-            if (data == null) continue;
-
-            // SO 데이터 훼손 방지를 위한 런타임 클론
-            var clone = Instantiate(data);
-            clone.name = data.name + "_Runtime";
-            
-            var row = _gameDataManager.GetLevelUpRow(clone.chooseId);
-            if (row != null)
-            {
-                clone.ApplySheetData(row);
-            }
-            
-            levelUpPool[i] = clone;
-        }
-
-        RebuildEffectivePool();
-    }
-
+    private ILevelUpCatalog _catalog;
+    private bool _poolInitialized;
+    private LevelUpData[] _effectivePool = System.Array.Empty<LevelUpData>();
     // ── 기본 스탯 ──────────────────────────────────────────────
     public float CritChance           { get; private set; } = 0f;
     public float CritDamageMultiplier { get; private set; } = 1.5f;
@@ -171,11 +139,11 @@ public class LevelUpManager : MonoBehaviour
 
     public List<LevelUpData> GetRandomChoices(int count = 3)
     {
-        if (_effectivePool == null) RebuildEffectivePool();
+        if (!_poolInitialized) Init();
 
         if (_effectivePool == null || _effectivePool.Length == 0)
         {
-            Debug.LogError("LevelUpManager: levelUpPool이 비어있습니다.");
+            Debug.LogWarning("[LevelUp] 선택된 족장의 카드 후보가 없습니다.");
             return new List<LevelUpData>();
         }
 
@@ -184,7 +152,7 @@ public class LevelUpManager : MonoBehaviour
 
         foreach (var data in _effectivePool)
         {
-            if (data != null && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
+            if (data != null && data.spawnRate > 0f && !float.IsInfinity(data.spawnRate) && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
         }
 
@@ -272,7 +240,7 @@ public class LevelUpManager : MonoBehaviour
 
     public void ApplyEffect(LevelUpData data)
     {
-        _chosenIds.Add(data.chooseId);
+        if (data == null || !_chosenIds.Add(data.chooseId)) return;
         ApplyStatEffect(data.primaryEffect,   data.primaryValue);
         ApplyStatEffect(data.secondaryEffect, data.secondaryValue);
         ApplySpecialEffect(data);
