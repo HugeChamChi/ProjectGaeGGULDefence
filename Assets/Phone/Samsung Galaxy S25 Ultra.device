@@ -1,0 +1,147 @@
+{
+    "friendlyName": "Samsung Galaxy S25 Ultra",
+    "version": 1,
+    "screens": [
+        {
+            "width": 1440,
+            "height": 3120,
+            "navigationBarHeight": 0,
+            "dpi": 498.0,
+            "orientations": [
+                {
+                    "orientation": 1,
+                    "safeArea": {
+                        "serializedVersion": "2",
+                        "x": 0.0,
+                        "y": 0.0,
+                        "width": 1440.0,
+                        "height": 3024.0
+                    },
+                    "cutouts": [
+                        {
+                            "serializedVersion": "2",
+                            "x": 690.0,
+                            "y": 3030.0,
+                            "width": 60.0,
+                            "height": 60.0
+                        }
+                    ]
+                },
+                {
+                    "orientation": 2,
+                    "safeArea": {
+                        "serializedVersion": "2",
+                        "x": 0.0,
+                        "y": 96.0,
+                        "width": 1440.0,
+                        "height": 3024.0
+                    },
+                    "cutouts": [
+                        {
+                            "serializedVersion": "2",
+                            "x": 690.0,
+                            "y": 30.0,
+                            "width": 60.0,
+                            "height": 60.0
+                        }
+                    ]
+                },
+                {
+                    "orientation": 3,
+                    "safeArea": {
+                        "serializedVersion": "2",
+                        "x": 96.0,
+                        "y": 0.0,
+                        "width": 3024.0,
+                        "height": 1440.0
+                    },
+                    "cutouts": [
+                        {
+                            "serializedVersion": "2",
+                            "x": 30.0,
+                            "y": 690.0,
+                            "width": 60.0,
+                            "height": 60.0
+                        }
+                    ]
+                },
+                {
+                    "orientation": 4,
+                    "safeArea": {
+                        "serializedVersion": "2",
+                        "x": 0.0,
+                        "y": 0.0,
+                        "width": 3024.0,
+                        "height": 1440.0
+                    },
+                    "cutouts": [
+                        {
+                            "serializedVersion": "2",
+                            "x": 3030.0,
+                            "y": 690.0,
+                            "width": 60.0,
+                            "height": 60.0
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "systemInfo": {
+        "operatingSystem": "Android OS 15 / API-35",
+        "deviceModel": "SM-S938N",
+        "deviceType": 1,
+        "processorType": "Snapdragon 8 Elite for Galaxy",
+        "processorCount": 8,
+        "systemMemorySize": 12288,
+        "supportsAccelerometer": true,
+        "supportsGyroscope": true,
+        "supportsLocationService": true,
+        "supportsVibration": true,
+        "supportsAudio": true,
+        "graphicsDependentData": [
+            {
+                "graphicsDeviceType": 21,
+                "graphicsMemorySize": 4096,
+                "graphicsDeviceName": "Adreno (TM) 830",
+                "graphicsDeviceVendor": "Qualcomm",
+                "graphicsDeviceVersion": "Vulkan 1.3",
+                "graphicsShaderLevel": 50,
+                "graphicsUVStartsAtTop": true,
+                "maxTextureSize": 16384,
+                "maxCubemapSize": 16384,
+                "supportsComputeShaders": true,
+                "supportsInstancing": true,
+                "supports2DArrayTextures": true,
+                "supports3DTextures": true,
+                "supportsShadows": true,
+                "supportsRawShadowDepthSampling": true,
+                "supportsMotionVectors": true,
+                "supportsCubemapArrayTextures": true,
+                "supportsSparseTextures": false,
+                "supportsRayTracing": false
+            },
+            {
+                "graphicsDeviceType": 11,
+                "graphicsMemorySize": 4096,
+                "graphicsDeviceName": "Adreno (TM) 830",
+                "graphicsDeviceVendor": "Qualcomm",
+                "graphicsDeviceVersion": "OpenGL ES 3.2",
+                "graphicsShaderLevel": 50,
+                "graphicsUVStartsAtTop": false,
+                "maxTextureSize": 16384,
+                "maxCubemapSize": 16384,
+                "supportsComputeShaders": true,
+                "supportsInstancing": true,
+                "supports2DArrayTextures": true,
+                "supports3DTextures": true,
+                "supportsShadows": true,
+                "supportsRawShadowDepthSampling": true,
+                "supportsMotionVectors": true,
+                "supportsCubemapArrayTextures": false,
+                "supportsSparseTextures": false,
+                "supportsRayTracing": false
+            }
+        ]
+    }
+}
