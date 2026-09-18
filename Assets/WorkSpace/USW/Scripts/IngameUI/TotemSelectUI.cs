@@ -24,7 +24,7 @@ using UnityEngine.UI;
 ///   WaveManager.OnSingleBossDefeated()
 ///     → _totemSelectManager.Show(onChoiceMade)
 ///     → 카드 3장 표시 + 30초 타이머
-///     → 선택(또는 타임아웃) → TotemSpawner.SpawnTotemByData()
+///     → 선택(또는 타임아웃) → TotemInventory.TryAdd(), 가득 차면 식량 전환
 ///     → onChoiceMade 콜백 → 다음 보스/웨이브 진행
 /// </summary>
 public class TotemSelectUI : InGameSingleton<TotemSelectUI>
@@ -32,8 +32,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     [Inject] private TimerController _timerManager;
     [Inject] private GridManager _gridManager;
-    [Inject] private TotemSpawner _totemManager;
     [Inject] private CurrencyManager _currencyManager;
+    [Inject] private TotemInventory _inventory;
 
     [SerializeField] private Transform         cardContainer;
     [SerializeField] private TotemSelectCardUI[] cardPrefabs;
@@ -48,7 +48,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     public TotemData[] TotemPool => totemPool;
 
-    [Header("빈 셀 없을 때 대체 식량")]
+    [Header("인벤토리 가득 찼을 때 대체 식량")]
     [SerializeField] private float fallbackFood = 500f;
 
     [Header("Reroll")]
@@ -144,7 +144,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
 
     // ── 확인 버튼 ──────────────────────────────────────────────
 
-    public async void OnConfirmClicked()
+    public void OnConfirmClicked()
     {
         if (_selectedCard == null) return;
 
@@ -153,10 +153,10 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         {
             _chosenTotems.Add(data.totemId); // 중복 방지 캐싱
             
-            bool placed = await _totemManager.SpawnTotemByData(data);
-            if (!placed)
+            bool stored = _inventory.TryAdd(data);
+            if (!stored)
             {
-                Debug.Log($"[TotemSelectUI] 빈 셀 없음 — 식량 {fallbackFood} 지급");
+                Debug.Log($"[TotemSelectUI] 토템 인벤토리 가득 참 — 식량 {fallbackFood} 지급");
                 _currencyManager.AddCurrency(fallbackFood);
             }
         }

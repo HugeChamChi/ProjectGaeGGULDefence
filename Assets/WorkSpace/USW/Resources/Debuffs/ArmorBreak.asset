@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: ArmorBreak
   m_EditorClassIdentifier: 
   _id: 1002
+  _icon: {fileID: 21300000, guid: 4f6e47e9178c74d829311559ee337663, type: 3}
+  _displayName: "\uBC29\uC5B4 \uAC10\uC18C"
   _key: DBF_ARMOR_BREAK_001
   _kind: 2
   _stackGroup: ARMOR_BREAK

@@ -14,6 +14,73 @@ public class DroneManager : MonoBehaviour
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private TotemBuffManager _totemBuffManager;
     [VContainer.Inject] private GridManager _gridManager;
+    [VContainer.Inject] private LevelUpManager _levelUpManager;
+    [VContainer.Inject] private GameManager _gameManager;
+    private float _betanNormalTimer, _betanEpicTimer;
+    private DroneSelectionEffect _normalEffect, _epicEffect;
+    private readonly List<Drone_Betan> _betans = new();
+
+    private void Update()
+    {
+        if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return;
+        TickSelections(Time.deltaTime);
+    }
+
+    /// <summary>전투 시간에 따라 베탕 추가 소환을 실행한다. 에픽은 필드 합계 상한이다.</summary>
+    public void TickSelections(float deltaTime)
+    {
+        var state = _levelUpManager?.DroneSelections;
+        var normal = state?.Get(DroneSelectionKind.BetanPeriodicBomb);
+        var epic = state?.Get(DroneSelectionKind.BetanFleetBomb);
+        if (_normalEffect != normal) { _normalEffect = normal; _betanNormalTimer = 0; }
+        if (_epicEffect != epic) { _epicEffect = epic; _betanEpicTimer = 0; }
+        if (deltaTime <= 0 || (normal == null && epic == null)) return;
+        _betans.Clear();
+        int fleetCount = 0;
+        foreach (var drone in _drones)
+        {
+            if (drone == null || !drone.isActiveAndEnabled || drone.Owner is not Drone_Betan betan
+                || !betan.isActiveAndEnabled || betan.currentCell == null) continue;
+            fleetCount++;
+            if (!_betans.Contains(betan)) _betans.Add(betan);
+        }
+        if (fleetCount == 0) { _betanNormalTimer = _betanEpicTimer = 0; return; }
+        if (normal != null && normal.Interval > 0)
+        {
+            _betanNormalTimer += deltaTime;
+            while (_betanNormalTimer >= normal.Interval)
+            {
+                _betanNormalTimer -= normal.Interval;
+                foreach (var betan in _betans) betan.SpawnSelfDestructDrones(normal.Count);
+            }
+        }
+        if (epic != null && epic.Interval > 0)
+        {
+            _betanEpicTimer += deltaTime;
+            while (_betanEpicTimer >= epic.Interval)
+            {
+                _betanEpicTimer -= epic.Interval;
+                int remaining = Mathf.Min(fleetCount, epic.Count);
+                foreach (var drone in _drones)
+                {
+                    if (remaining == 0) break;
+                    if (drone != null && drone.isActiveAndEnabled && drone.Owner is Drone_Betan betan && _betans.Contains(betan))
+                    { betan.SpawnSelfDestructDrones(1); remaining--; }
+                }
+            }
+        }
+    }
+
+    /// <summary>알팡 액티브에서 배치된 감망의 버프를 각 한 번 발동한다.</summary>
+    public virtual void ApplyEmergencyBuffs()
+    {
+        if (_levelUpManager?.DroneSelections.Get(DroneSelectionKind.GammanEmergency) == null) return;
+        var owners = new HashSet<Drone_Gamman>();
+        foreach (var drone in _drones)
+            if (drone != null && drone.Owner is Drone_Gamman gamman && gamman.currentCell != null && gamman.isActiveAndEnabled)
+                owners.Add(gamman);
+        foreach (var gamman in owners) gamman.ApplyDroneBuff();
+    }
 
     private readonly List<DroneUnit> _drones = new();
 
@@ -27,7 +94,46 @@ public class DroneManager : MonoBehaviour
 
     public int DroneCount => _drones.Count;
     public IReadOnlyList<DroneUnit> Drones => _drones;
-    public float BaseFoodPerDrone => _baseFoodPerDrone;
+    private readonly List<Drone_Zeltan> _foodProducers = new();
+    /// <summary>가장 최근 배치된 유효 젤탕의 패시브를 사용하고, 없으면 기본 생산량을 사용한다.</summary>
+    public float BaseFoodPerDrone
+    {
+        get
+        {
+            for (int i = _foodProducers.Count - 1; i >= 0; i--)
+                if (_foodProducers[i] != null && _foodProducers[i].isActiveAndEnabled
+                    && _foodProducers[i].currentCell != null)
+                    return _foodProducers[i].FoodPerDronePerSecond;
+            return _baseFoodPerDrone;
+        }
+    }
+
+    /// <summary>젤탕을 군단 식량 생산자로 등록한다.</summary>
+    public void RegisterFoodProducer(Drone_Zeltan producer)
+    {
+        if (producer != null && !_foodProducers.Contains(producer)) _foodProducers.Add(producer);
+    }
+
+    /// <summary>제거된 젤탕만 해제하며 다른 젤탕의 패시브는 유지한다.</summary>
+    public void UnregisterFoodProducer(Drone_Zeltan producer) => _foodProducers.Remove(producer);
+
+    /// <summary>실제 자폭마다 배치된 베탕의 충전을 앞당긴다. 완충을 넘는 시간은 저장하지 않는다.</summary>
+    public void NotifySelfDestructExplosion()
+    {
+        float seconds = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.BetanRepairKit)?.Value ?? 0f;
+        if (seconds <= 0 || _gridManager == null) return;
+        foreach (var cell in _gridManager.GetOccupiedCells())
+            if (cell.OccupyingUnit is Drone_Betan betan && betan.isActiveAndEnabled && betan.Combat != null)
+                betan.Combat.SkillTimer = Mathf.Min(betan.GetCurrentSkillInterval(), betan.Combat.SkillTimer + seconds);
+    }
+
+    /// <summary>황금 모노클은 알팡 액티브에 확정 치명타 배율을 적용한다.</summary>
+    public decimal GetRallyDamage(int droneCount, float damagePerDrone)
+    {
+        decimal damage = Mathf.RoundToInt(droneCount * damagePerDrone);
+        var monocle = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.AlphanGoldenMonocle);
+        return monocle == null ? damage : damage * (decimal)monocle.Value;
+    }
 
     // ── 드론 버프 ───────────────────────────────────────────────────
     private float _droneAtkMult   = 1f;
@@ -40,6 +146,8 @@ public class DroneManager : MonoBehaviour
 
     // ── 집결 상태 ───────────────────────────────────────────────────
     private bool _isRallying;
+    /// <summary>액티브 버튼의 중복 실행 방지에 사용한다.</summary>
+    public bool IsRallying => _isRallying;
 
     [Header("드론 스폰 배치 간격 (늘어진 V자)")]
     [Tooltip("하단 드론의 X 간격 (좁게)")]
@@ -127,7 +235,7 @@ public class DroneManager : MonoBehaviour
     /// 3) 중앙 드론만 사격 + 전체 데미지
     /// 4) 원래 위치 귀환 후 궤도 재개
     /// </summary>
-    public async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token)
+    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, DroneSelectionEffect doubleShot = null)
     {
         if (_isRallying || _drones.Count == 0) return;
         _isRallying = true;
@@ -230,7 +338,22 @@ public class DroneManager : MonoBehaviour
                     SpawnLaserBeamAsync(rallyCenter, boss.transform.position, beamParent).Forget();
                 }
 
-                boss.TakeDamage(Mathf.RoundToInt(snapshot.Length * damagePerDrone));
+                decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
+                if (doubleShot == null) boss.TakeDamage(baseDamage);
+                else
+                {
+                    long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
+                    long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.Value, System.MidpointRounding.AwayFromZero);
+                    boss.ApplyRecordedDamage(shotUnits);
+                    for (int shot = 1; shot < doubleShot.Count; shot++)
+                    {
+                        if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
+                        if (boss == null || boss.IsDead) break;
+                        if (snapshot[centerIndex] != null) snapshot[centerIndex].FireRallyShot();
+                        SpawnLaserBeamAsync(rallyCenter, boss.transform.position, transform).Forget();
+                        boss.ApplyRecordedDamage(shotUnits);
+                    }
+                }
             }
 
             // ④ 귀환 전에 전기 이펙트(라인) 제거
@@ -389,7 +512,7 @@ public class DroneManager : MonoBehaviour
                 var lu = Object.FindFirstObjectByType<LevelUpManager>();
                 if (lu != null) chieftainFood = lu.ChieftainFoodProductionBonus;
 
-                float food = count * _baseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f) + chieftainFood);
+                float food = count * BaseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f) + chieftainFood);
                 _currencyManager.AddCurrency(food);
             }
         }

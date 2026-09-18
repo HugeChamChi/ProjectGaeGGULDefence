@@ -13,6 +13,8 @@ public class GridManager : MonoBehaviour
 
     private GridCell[,] _grid;
     private TotemBase _previewedTotem;
+    private static readonly int RangeTimeId = Shader.PropertyToID("_TotemRangeUnscaledTime");
+    private void LateUpdate() => Shader.SetGlobalFloat(RangeTimeId, Time.unscaledTime);
 
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
@@ -107,34 +109,6 @@ public class GridManager : MonoBehaviour
         Debug.Log("Grid 생성 및 직렬화 완료!");
     }
 
-    private void OnValidate()
-    {
-        if (Application.isPlaying || config == null || prebuiltCells == null) return;
-
-        // 이미 리스트에 맵이 세팅되어 있고 개수가 일치한다면, Spacing 변경 시 실시간으로 위치만 재조정합니다.
-        if (prebuiltCells.Count == config.gridColumns * config.gridRows)
-        {
-            Vector2 baseSize = GetCellVisualSize();
-            float stepX = baseSize.x + cellSpacing.x;
-            float stepY = baseSize.y + cellSpacing.y;
-
-            float startX = -(config.gridColumns - 1) * stepX / 2f;
-            float startZ = -(config.gridRows - 1) * stepY / 2f;
-
-            int index = 0;
-            for (int z = 0; z < config.gridRows; z++)
-            {
-                for (int x = 0; x < config.gridColumns; x++)
-                {
-                    var cell = prebuiltCells[index++];
-                    if (cell != null)
-                    {
-                        cell.transform.localPosition = new Vector3(startX + x * stepX, startZ + z * stepY, 0f);
-                    }
-                }
-            }
-        }
-    }
 #endif
 
     private void BuildGrid()
@@ -249,6 +223,26 @@ public class GridManager : MonoBehaviour
             return;
 
         _previewedTotem = totem;
+        PaintTotemPreview(totem);
+    }
+
+    /// <summary>Paints an inactive placement preview without registering a live totem.</summary>
+    public void ShowTotemPlacementPreview(TotemBase preview)
+    {
+        ClearTotemRangePreview();
+        if (preview == null || preview.CurrentCell == null || preview.Data == null) return;
+        PaintTotemPreview(preview);
+    }
+
+    private void PaintTotemPreview(TotemBase totem)
+    {
+        if (totem.Data.HasEffectGroups)
+        {
+            foreach (var group in totem.Data.EffectGroups)
+                if (group != null) foreach (var cell in group.GetCells(totem, this))
+                    cell.Model.SetTotemRangePreview(true, false, group.Color);
+            return;
+        }
 
         // 영향 셀은 토템별 GetAffectedCells()로 계산한다.
         // effectRange를 쓰지 않는 특수 토템(전진배치 등)도 올바르게 칠해진다.
@@ -258,14 +252,6 @@ public class GridManager : MonoBehaviour
             cell.Model.SetTotemRangePreview(effectRange: true, disabledRange: false);
         }
 
-        foreach (var cell in totem.Data.GetAttackDisabledCells(totem, this))
-        {
-            if (cell == null) continue;
-
-            cell.Model.SetTotemRangePreview(
-                effectRange: cell.Model.IsTotemRangePreviewed,
-                disabledRange: true);
-        }
     }
 
     public void ClearTotemRangePreview()

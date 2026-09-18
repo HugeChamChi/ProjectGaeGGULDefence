@@ -23,6 +23,6 @@ public class UI_BossIcon : MonoBehaviour
 
     private void ChangeIcon(BossEntry currentEntry, BossEntry nextEntry)
     {
-        _imgBossIcon.sprite = nextEntry.bossIcon;
+        if (_imgBossIcon != null) _imgBossIcon.sprite = nextEntry?.Icon;
     }
 }

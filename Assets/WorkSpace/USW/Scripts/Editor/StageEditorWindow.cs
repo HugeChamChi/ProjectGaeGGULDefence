@@ -440,7 +440,7 @@ public class StageEditorWindow : EditorWindow
         else if (_selectedBossIndex >= 0)
             slotHint = "  [배치 모드]  좌클릭: 배치 / 우클릭: 제거  —  빈 곳 클릭 시 선택 해제";
         else
-            slotHint = "  [편집 모드]  좌클릭: HP 수정 / 우클릭: 제거  —  보스 선택/드래그 시 배치";
+            slotHint = "  [편집 모드]  좌클릭: BossData 선택 / 기존 HP 수정, 우클릭: 제거";
 
         EditorGUILayout.LabelField(slotHint, EditorStyles.miniLabel);
         EditorGUILayout.Space(2f);
@@ -503,9 +503,9 @@ public class StageEditorWindow : EditorWindow
         {
             var entry = wave.bosses[slotIndex];
 
-            if (entry.prefab != null)
+            if (entry.Prefab != null)
             {
-                var thumb = GetThumbnail(entry.prefab);
+                var thumb = GetThumbnail(entry.Prefab);
                 if (thumb != null)
                     GUI.DrawTexture(
                         new Rect(slotRect.x + 4f, slotRect.y + 4f,
@@ -514,14 +514,14 @@ public class StageEditorWindow : EditorWindow
 
                 GUI.Label(
                     new Rect(slotRect.x, slotRect.y + slotRect.height - 28f, slotRect.width, 14f),
-                    entry.prefab.name,
+                    entry.Prefab.name,
                     new GUIStyle(EditorStyles.miniLabel)
                         { alignment = TextAnchor.MiddleCenter, fontSize = 9 });
             }
 
             GUI.Label(
                 new Rect(slotRect.x, slotRect.y + slotRect.height - 14f, slotRect.width, 14f),
-                $"HP {entry.hp}",
+                $"HP {entry.MaxHp}",
                 new GUIStyle(EditorStyles.miniLabel)
                 {
                     alignment = TextAnchor.MiddleCenter,
@@ -546,9 +546,16 @@ public class StageEditorWindow : EditorWindow
                 else if (hasEntry)
                 {
                     var entry = wave.bosses[slotIndex];
-                    entry.hp = EditorInputDialog.Show(
-                        "HP 수정", $"{entry.prefab?.name} HP", entry.hp);
-                    EditorUtility.SetDirty(wave);
+                    if (entry.Data != null)
+                    {
+                        Selection.activeObject = entry.Data;
+                        EditorGUIUtility.PingObject(entry.Data);
+                    }
+                    else
+                    {
+                        entry.hp = EditorInputDialog.Show("HP 수정", $"{entry.Prefab?.name} HP", entry.hp);
+                        EditorUtility.SetDirty(wave);
+                    }
                 }
             }
             else if (ev.button == 1 && hasEntry)

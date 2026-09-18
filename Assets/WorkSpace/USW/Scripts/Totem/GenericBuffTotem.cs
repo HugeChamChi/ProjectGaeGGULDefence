@@ -8,6 +8,15 @@ using UnityEngine;
 /// </summary>
 public class GenericBuffTotem : RangedBuffTotemBase
 {
+    /// <summary>Grouped effects apply only their own functions to their own cells.</summary>
+    public override void PaintAffectedCells()
+    {
+        if (totemData == null || !totemData.HasEffectGroups) { base.PaintAffectedCells(); return; }
+        if (CurrentCell == null) return;
+        foreach (var group in totemData.EffectGroups)
+            if (group != null) foreach (var cell in group.GetCells(this, _gridManager))
+                foreach (var function in group.Functions) function?.Apply(this, cell, _totemBuffManager);
+    }
     protected override void PaintRangeBuffs(GridCell cell)
     {
         foreach (var fn in totemData.functions)

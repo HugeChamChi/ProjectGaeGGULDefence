@@ -12,12 +12,14 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     /// <summary>기존 스킬 훅에서 시트 설정을 사용해 현재 보스에 부여한다.</summary>
-    protected bool ApplySkillDebuff()
+    protected virtual bool ApplySkillDebuff()
     {
         if (!TryGetDebuffBinding(out var binding) || binding.Trigger != DebuffTrigger.SkillActivated) return false;
         var target = _deps?.BossManager?.CurrentBoss;
         return target != null && target.TryApplyDebuff(binding, GetInstanceID());
     }
+    /// <summary>스킬 디버프가 적용될 현재 보스.</summary>
+    protected BossBase SkillDebuffTarget => _deps?.BossManager?.CurrentBoss;
     public UnitData unitData;
     public Tier currentTier = Tier.Normal;
     public UnityEvent onSkillFull;
@@ -37,10 +39,11 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public virtual bool IsFoodProductionBuffable => true;
     public virtual bool CanBasicAttack => true;
-    public virtual bool CanAutoSkill => true;
+    /// <summary>자동 및 수동 스킬, 스킬 이벤트와 게이지를 사용할 수 있는지 여부.</summary>
+    public virtual bool CanUseSkill => true;
+    public virtual bool CanAutoSkill => CanUseSkill;
 
     public bool IsFirstPlacement { get; private set; } = true;
-    public bool IsPopulationReserved = false;
 
     private bool _hasTemporaryTier;
     private UnityEngine.Object _temporaryTierSource;
@@ -67,6 +70,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         unitData = upgradedData != null ? upgradedData : unitData;
         currentTier = (Tier)((int)_originalTier + 1);
         _visual?.UpdateVisual(currentTier);
+        OnCombatTierChanged();
         return true;
     }
 
@@ -80,7 +84,11 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _temporaryTierSource = null;
         _originalData = null;
         _visual?.UpdateVisual(currentTier);
+        OnCombatTierChanged();
     }
+
+    /// <summary>임시 전투 등급의 적용/복구 후 등급에 종속된 소환물을 갱신한다.</summary>
+    protected virtual void OnCombatTierChanged() { }
 
     /// <summary>판매/영구 제거 직전에 원래 전투 데이터를 복구한다.</summary>
     public void RestoreOriginalTier() => RemoveTemporaryTier(_temporaryTierSource);
@@ -92,6 +100,12 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     private UnitResourceComponent _resource;
     private BuffController _buff;
     private UnitDependencies _deps;
+    /// <summary>팩토리가 주입한 런별 드론 선택지 상태.</summary>
+    public DroneSelectionState DroneSelections => _deps?.LevelUpManager?.DroneSelections;
+    /// <summary>개별 유닛의 선택지 쿨타임 배율.</summary>
+    public virtual float SkillCooldownMultiplier => 1f;
+    /// <summary>식량 지급을 묶는 기본 초 간격. 초당 생산량과 별개다.</summary>
+    public virtual float FoodPayoutInterval => 1f;
 
     /// <summary>이 유닛에 걸린 버프("용기")를 보관/집계하는 컴포넌트.</summary>
     public BuffController Buffs => _buff;
@@ -168,13 +182,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _combat.StartLoops();
 
         OnUnitPlaced();
-        
-        if (!IsPopulationReserved && !IsWildcardMergeUnit)
-        {
-            _deps?.PopulationManager?.Add(OriginalData != null ? OriginalData.populationCost.Get(OriginalTier) : 1);
-            IsPopulationReserved = true;
-        }
-        
+
         OnAnyUnitChanged?.Invoke();
 
         if (_deps?.AudioManager != null)
@@ -190,11 +198,6 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         OnUnitRemoved();
         _combat.StopLoops();
         RemoveTemporaryTier(_temporaryTierSource);
-        if (IsPopulationReserved)
-        {
-            _deps?.PopulationManager?.Remove(unitData != null ? unitData.populationCost.Get(currentTier) : 1);
-            IsPopulationReserved = false;
-        }
         currentCell = null;
         OnAnyUnitChanged?.Invoke();
     }
@@ -228,6 +231,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void InvokeOnAttack() => onAttack?.Invoke();
     public void InvokeOnSkillFull() 
     {
+        if (!CanUseSkill) return;
         onSkillFull?.Invoke();
         OnSkillFull();
         ApplySkillDebuff();
@@ -239,7 +243,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         get 
         {
-            if (unitData == null || _stats == null || _combat == null) return 0f;
+            if (!CanUseSkill || unitData == null || _stats == null || _combat == null) return 0f;
             float interval = _stats.GetCurrentSkillInterval();
             return Mathf.Clamp01(_combat.SkillTimer / interval);
         }
@@ -249,6 +253,12 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
+    /// <summary>강화와 버프를 포함한 비치명타 공격력. 난수 상태를 변경하지 않는다.</summary>
+    public int GetNonCriticalAttackDamage() => _stats?.GetNonCriticalAttackDamage() ?? 0;
+    /// <summary>정보창 공격력. 소환자는 소유 드론 공격력 합계로 재정의한다.</summary>
+    public virtual float GetDisplayAttackDamage() => GetNonCriticalAttackDamage();
+    /// <summary>정보창에 초 단위로 표시하는 현재 공격간격.</summary>
+    public virtual float GetDisplayAttackInterval() => GetCurrentAttackInterval();
     public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;

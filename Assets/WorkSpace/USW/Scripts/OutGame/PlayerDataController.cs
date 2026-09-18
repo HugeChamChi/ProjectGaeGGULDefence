@@ -208,8 +208,14 @@ public class PlayerDataController : IDisposable, Global.IClearable
     // -------------------------
     // 스태미나 소모
     // -------------------------
+    // TEMP: 테스트 중 스태미나 부족으로 막히지 않도록 임시로 소모 체크를 건너뜀.
+    // 테스트 끝나면 반드시 false로 되돌릴 것.
+    public static bool DebugSkipStaminaCost = true;
+
     public bool UseStamina(int amount)
     {
+        if (DebugSkipStaminaCost) return true;
+
         if (_data.Stamina < amount)
         {
             Debug.LogWarning($"스태미나 부족: 현재 {_data.Stamina}, 필요 {amount}");

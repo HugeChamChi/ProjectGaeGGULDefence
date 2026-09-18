@@ -15,11 +15,6 @@ public class UIManager : MonoBehaviour
     [VContainer.Inject] private GameManager _gameManager;
     [VContainer.Inject] private TimerController _timerController;
     [VContainer.Inject] private CurrencyManager _currencyManager;
-    [VContainer.Inject] private PopulationManager _populationManager;
-    private GridManager _gridManager;
-    private ChieftainSpawner _chieftainSpawner;
-    private LevelUpManager _levelUpManager;
-    private TotemBuffManager _totemBuffManager;
     private DroneManager _droneManager;
 
     [Header("Buttons")]
@@ -34,10 +29,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text bossHpText;
     [SerializeField] private Slider   currentLineSlider;
     [SerializeField] private Slider   nextLineSlider;
-    [SerializeField] private TMP_Text totalFoodProductionText;
-
-    [Header("Population")]
-    [SerializeField] private TMP_Text populationText;
+    [Tooltip("줄 수/전체 비율을 표시하는 실제 보스 HP 바. 연결 시 이 바가 HP 표시를 담당합니다.")]
+    [SerializeField] private UI_BossHpBar _bossHpBar;
 
     [Header("Slider Tween")]
     [SerializeField] private float sliderTweenDuration = 0.4f;
@@ -79,16 +72,19 @@ public class UIManager : MonoBehaviour
 
     protected void Awake()
     {
+        _bossHpBar?.UseRuntimeData();
+    }
+
+    /// <summary>Wires the boss status HUD after container injection has completed.</summary>
+    public void ConfigureBossDebuffs(BossManager bossManager, DebuffSettings settings)
+    {
+        _bossHpBar?.ConfigureDebuffs(bossManager, settings);
     }
 
     private void Start()
     {
         Time.timeScale = 1f;
 
-        _gridManager = Object.FindFirstObjectByType<GridManager>();
-        _chieftainSpawner = Object.FindFirstObjectByType<ChieftainSpawner>();
-        _levelUpManager = Object.FindFirstObjectByType<LevelUpManager>();
-        _totemBuffManager = Object.FindFirstObjectByType<TotemBuffManager>();
         _droneManager = Object.FindFirstObjectByType<DroneManager>();
 
         if (summonButton != null)
@@ -148,58 +144,37 @@ public class UIManager : MonoBehaviour
         if (homeButton != null)
             homeButton.onClick.AddListener(OnHomeButtonPressed);
 
-        if (populationText != null && _populationManager != null)
-        {
-            populationText.text = $"0 / {_populationManager.Max}";
-            _populationManager.OnPopulationChanged += (cur, max) =>
-                populationText.text = $"{cur} / {max}";
-        }
-
         if (resultPanel != null)
             resultPanel.SetActive(false);
-
-        if (totalFoodProductionText != null)
-        {
-            UnitBase.OnAnyUnitChanged += RefreshTotalFoodProduction;
-            if (_totemBuffManager != null) _totemBuffManager.OnTotemBuffChanged += RefreshTotalFoodProduction;
-            if (_levelUpManager != null) _levelUpManager.OnChieftainBuffChanged += RefreshTotalFoodProduction;
-            
-            RefreshTotalFoodProduction();
-        }
     }
 
-    private void OnDestroy()
+    /// <summary>새 보스의 체력과 줄 수를 설정하고 이전 보스의 연출을 초기화한다.
+    /// lineCount를 생략하면(0) UI_BossHpBar가 자신의 hpPerLine 설정으로 max에서 자동 계산한다.</summary>
+    public void BeginBossHp(decimal current, decimal max, int lineCount = 0)
     {
-        UnitBase.OnAnyUnitChanged -= RefreshTotalFoodProduction;
-        if (_totemBuffManager != null) _totemBuffManager.OnTotemBuffChanged -= RefreshTotalFoodProduction;
-        if (_levelUpManager != null) _levelUpManager.OnChieftainBuffChanged -= RefreshTotalFoodProduction;
+        if (_bossHpBar != null)
+        {
+            _bossHpBar.BeginBoss(current, max, lineCount);
+            _displayedHp = current;
+            _displayedHpMax = max;
+            return;
+        }
+        _displayedHp = current;
+        UpdateBossHp(current, max);
     }
 
-    private void RefreshTotalFoodProduction()
-    {
-        if (totalFoodProductionText == null) return;
-
-        float total = 0f;
-        if (_gridManager != null)
-        {
-            foreach (var cell in _gridManager.AllCells())
-            {
-                if (cell.OccupyingUnit != null)
-                    total += cell.OccupyingUnit.CurrentFoodProductionPerSecond;
-            }
-        }
-
-        if (_chieftainSpawner != null && _chieftainSpawner.ChieftainUnit != null)
-        {
-            total += _chieftainSpawner.ChieftainUnit.CurrentFoodProductionPerSecond;
-        }
-
-        totalFoodProductionText.text = $"{total:F1}";
-    }
-
+    /// <summary>실제 보스 HP 변경을 현재 체력바에 반영한다.</summary>
     public void UpdateBossHp(decimal current, decimal max)
     {
         if (max <= 0) return;
+
+        if (_bossHpBar != null)
+        {
+            _bossHpBar.SetHpExact(current, max);
+            _displayedHp = current;
+            _displayedHpMax = max;
+            return;
+        }
 
         _displayedHpMax = max;
 

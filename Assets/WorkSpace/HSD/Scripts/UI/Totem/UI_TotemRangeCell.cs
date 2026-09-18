@@ -19,5 +19,12 @@ namespace GaeGGUL.UI.Totem
                 img_Background.color = Color.white; // Ensure tint doesn't hide sprite
             }
         }
+
+        /// <summary>Applies the same tint used by the effect description and world preview.</summary>
+        public void SetColor(Color color)
+        {
+            if (img_Background == null) img_Background = GetComponent<Image>();
+            if (img_Background != null) img_Background.color = color;
+        }
     }
 }

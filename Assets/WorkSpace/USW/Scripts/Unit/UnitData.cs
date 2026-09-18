@@ -7,6 +7,8 @@ public class UnitData : ScriptableObject, ILoadableAsset
     /// <summary>이 유닛을 족장으로 선택했을 때 사용하는 독립 레벨업 풀.</summary>
     [Header("족장 레벨업 풀")]
     public LevelUpPoolData LevelUpPool;
+    /// <summary>지정하면 족장 선택 시 유닛 대신 그리드 밖 액티브 스킬을 사용한다.</summary>
+    public AlphanSkillData AlphanSkill;
 
     /// <summary>등급별 디버프 FK/발동 설정.</summary>
     public PerTierDebuffBinding DebuffBindings = new PerTierDebuffBinding();
@@ -39,13 +41,15 @@ public class UnitData : ScriptableObject, ILoadableAsset
 
     [TierTabGroup("등급")] public PerTierFloat foodProduction = new PerTierFloat(); // 초당 식량 생산량
 
-    [TierTabGroup("등급")] public PerTierInt populationCost = new PerTierInt { normal = 1, rare = 1, epic = 1, legend = 1 };
-
     [TierTabGroup("등급")] public PerTierInt maxDroneCount = new PerTierInt();
 
     [Header("패시브")]
     [Tooltip("이 유닛 자신에게 항상 적용되는 패시브. 파티 리더(족장)로 배치되면 파티의 모든 유닛에게도 적용된다.")]
     public PassiveData passive;
+
+    [Header("배치 시각 보정")]
+    [Tooltip("이 유닛만 스프라이트 여백 등으로 셀 기준 높이가 어긋날 때 보정하는 값. UnitFactory의 공통 spawnOffsetY에 더해진다.")]
+    public float spawnOffsetY = 0f;
 
 
 

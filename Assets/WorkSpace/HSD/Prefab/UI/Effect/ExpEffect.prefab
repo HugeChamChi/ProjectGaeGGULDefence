@@ -59,9 +59,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
+  m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -138,7 +138,7 @@ MonoBehaviour:
   _emitterConstraintEnabled:
     enabled: 0
   _emitterConstraintTransform: {fileID: 0}
-  _shape: 1
+  _shape: 0
   _spread: 0
   _spreadLoop: 1
   _startDelay: 0
@@ -152,59 +152,23 @@ MonoBehaviour:
   _emitterThickness: 0
   _loop: 0
   _prewarm: 0
-  _duration: 0.3
+  _duration: 0.05
   _playMode: 0
   _startSize:
     separable: 1
     separated: 0
     mainCurve:
       m_Mode: 3
-      m_CurveMultiplier: 1
+      m_CurveMultiplier: 0
       m_CurveMin:
         serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
+        m_Curve: []
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
       m_CurveMax:
         serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
+        m_Curve: []
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
@@ -340,8 +304,8 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    m_ConstantMin: 0.4
-    m_ConstantMax: 0.3
+    m_ConstantMin: 0
+    m_ConstantMax: 1.2
   _startSpeed:
     m_Mode: 0
     m_CurveMultiplier: 0
@@ -357,7 +321,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    m_ConstantMin: 5
+    m_ConstantMin: 0
     m_ConstantMax: 0
   _colorOverLifetime:
     m_Mode: 1
@@ -1137,58 +1101,22 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_ConstantMin: 0
-    m_ConstantMax: 0
+    m_ConstantMax: -1
   _targetModule:
     enabled: 1
   _attractorTarget: {fileID: 0}
   _toTarget:
-    m_Mode: 1
-    m_CurveMultiplier: 1
+    m_Mode: 0
+    m_CurveMultiplier: 0
     m_CurveMin:
       serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0.6946691
-        value: -0.0020119883
-        inSlope: 0.000033206496
-        outSlope: 0.000033206496
-        tangentMode: 0
-        weightedMode: 2
-        inWeight: 0
-        outWeight: 0.8866889
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 7.236108
-        outSlope: 7.236108
-        tangentMode: 0
-        weightedMode: 1
-        inWeight: 0.0961184
-        outWeight: 0
+      m_Curve: []
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_CurveMax:
       serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 1
-        outSlope: 1
-        tangentMode: 34
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: -0
-        outSlope: -0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.20833331
-        outWeight: 0
+      m_Curve: []
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -1202,7 +1130,7 @@ MonoBehaviour:
   _vortexModule:
     enabled: 0
   _velocityModule:
-    enabled: 1
+    enabled: 0
   _velocitySpace: 0
   _velocityOverLifetime:
     separable: 0
@@ -1407,10 +1335,13 @@ MonoBehaviour:
     to: 1
   _textureSheetFPS: 25
   _textureSheetCycles: 1
-  _rate: 1
+  _rate: 0
   _rateOverLifetime: 0
   _rateOverDistance: 0
-  _bursts: []
+  _bursts:
+  - time: 0
+    count: 1
+    used: 0
   _particleTrailRenderer: {fileID: 8774607140606261715}
   _trailModule:
     enabled: 1

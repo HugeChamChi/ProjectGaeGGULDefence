@@ -16,7 +16,15 @@ public class DroneUnit : MonoBehaviour
     [Inject] private AudioManager _audioManager;
 
     public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
-    public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval() : 1f;
+    public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
+        / (_owner is Drone_Betan ? 1f + (_owner.DroneSelections?.Get(DroneSelectionKind.BetanAttackSpeed)?.Value ?? 0f) : 1f) : 1f;
+    /// <summary>선택지 대상 판별에 사용하는 소유 유닛.</summary>
+    public UnitBase Owner => _owner;
+    /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>
+    public int NonCriticalAttackDamage => _owner != null
+        ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
+    /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격.</summary>
+    public float EffectiveAttackInterval => AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
     public Vector3 HomePosition   => (_owner != null ? _owner.transform.position : _homePositionFallback)
                                      + (Vector3)_spawnOffset;
 
@@ -25,16 +33,22 @@ public class DroneUnit : MonoBehaviour
 
     private Vector2   _spawnOffset;
 
-    [Header("Drone Offset")]
-    [SerializeField] private float _offsetRangeX =  0.12f;
-    [SerializeField] private float _offsetRangeY =  0.10f;
-
     [Header("투사체 프리팹 (지정 시 RM 풀링 사용, 비우면 기본 Pool 사용)")]
     [SerializeField] private Projectile _projectilePrefab;
 
+    [Header("스킬 발동 액션 스프라이트")]
+    [Tooltip("오너의 스킬이 발동될 때(감망 버프 / 델탕 디버프 / 베탕 자폭드론 발사) 잠깐 바뀌는 스프라이트. 비워두면 기능 꺼짐.")]
+    [SerializeField] private Sprite _actionSprite;
+    [Tooltip("액션 스프라이트를 유지하는 시간(초). 이후 자동으로 평소 스프라이트로 복귀.")]
+    [SerializeField] private float  _actionSpriteHoldSeconds = 0.15f;
+
+    private SpriteRenderer           _spriteRenderer;
+    private Sprite                   _normalSprite;
     private DroneHoverAnimation      _hoverAnim;
     private CancellationTokenSource  _attackCts;
+    private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
+    private int _attackLifetime;
 
     // ── 초기화 ──────────────────────────────────────────────────────
 
@@ -43,11 +57,14 @@ public class DroneUnit : MonoBehaviour
         _hoverAnim = GetComponent<DroneHoverAnimation>();
         _animator = GetComponent<Animator>();
         if (_animator == null) _animator = GetComponentInChildren<Animator>();
+
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
     }
 
-    /// <summary>DronePool.GetDrone() 에서 호출 — 스탯 주입 후 공격 루프 시작</summary>
-    /// <param name="fixedOffset">null 이면 랜덤 오프셋, 값 지정 시 해당 위치에 고정 (드론 간 겹침 방지용)</param>
-    public void Initialize(UnitBase owner, Vector2? fixedOffset = null)
+    /// <summary>DroneSpawnerBase.SpawnOneDrone() 에서 호출 — 스탯 주입 후 공격 루프 시작</summary>
+    /// <param name="slotOffset">오너 기준 고정 대형 슬롯 오프셋 (드론 간 겹침 방지용)</param>
+    public void Initialize(UnitBase owner, Vector2 slotOffset)
     {
         if (_animator == null)
         {
@@ -57,11 +74,7 @@ public class DroneUnit : MonoBehaviour
 
         _owner                = owner;
         _homePositionFallback = transform.position;
-
-        _spawnOffset = fixedOffset ?? new Vector2(
-            Random.Range(-_offsetRangeX, _offsetRangeX),
-            Random.Range(0f, _offsetRangeY)
-        );
+        _spawnOffset          = slotOffset;
 
         StopAll();
         transform.position = HomePosition;
@@ -123,6 +136,30 @@ public class DroneUnit : MonoBehaviour
         ShootProjectile(bossArea.GetRandomWorldPosition());
     }
 
+    // ── 스킬 발동 액션 스프라이트 (DroneSpawnerBase.FlashOwnedDrones 에서 호출) ──
+
+    /// <summary>오너의 스킬 발동 순간 잠깐 액션 스프라이트로 바뀌었다가 자동으로 복귀한다.</summary>
+    public void PlayActionFlash()
+    {
+        if (_spriteRenderer == null || _actionSprite == null) return;
+
+        _flashCts?.Cancel();
+        _flashCts?.Dispose();
+        _flashCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+
+        FlashSpriteAsync(_flashCts.Token).Forget();
+    }
+
+    private async UniTaskVoid FlashSpriteAsync(CancellationToken token)
+    {
+        _spriteRenderer.sprite = _actionSprite;
+
+        if (await UniTask.Delay(Mathf.RoundToInt(_actionSpriteHoldSeconds * 1000f), cancellationToken: token).SuppressCancellationThrow())
+            return;
+
+        _spriteRenderer.sprite = _normalSprite;
+    }
+
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
 
     private void OnDisable()
@@ -135,9 +172,15 @@ public class DroneUnit : MonoBehaviour
 
     private void StopAll()
     {
+        _attackLifetime++;
         _attackCts?.Cancel();
         _attackCts?.Dispose();
         _attackCts = null;
+
+        _flashCts?.Cancel();
+        _flashCts?.Dispose();
+        _flashCts = null;
+        if (_spriteRenderer != null) _spriteRenderer.sprite = _normalSprite;
         StopOrbit();
     }
 
@@ -147,8 +190,7 @@ public class DroneUnit : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
-            float speedMult = _droneManager?.DroneSpeedMultiplier ?? 1f;
-            int   delayMs   = Mathf.RoundToInt(AttackInterval / speedMult * 1000f);
+            int delayMs = Mathf.RoundToInt(EffectiveAttackInterval * 1000f);
 
             if (await UniTask.Delay(delayMs, cancellationToken: token).SuppressCancellationThrow())
                 return;
@@ -164,31 +206,55 @@ public class DroneUnit : MonoBehaviour
     {
         var boss = _bossManager?.CurrentBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null) return;
+        if (bossArea == null || boss.IsDead || _owner == null || _owner.currentCell == null) return;
+        var cell = _owner.currentCell.Model;
+        if (cell.IsSealed || cell.IsAttackDisabled || cell.TotemAttackDisabled) return;
+        var owner = _owner;
+        int lifetime = _attackLifetime;
+        Vector3 origin = transform.position;
+        var replay = owner.Combat?.BeginDroneBasicAttack(boss, transform,
+            () => this != null && _attackLifetime == lifetime && _owner == owner && owner.currentCell != null);
+        var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage) : null;
+        bool originalHit = false;
+        bool shadowArrivedEarly = false;
         
         Vector3 targetPos = bossArea.GetRandomWorldPosition();
-        ShootProjectile(targetPos, () => 
+        System.Action applyHit = () =>
         {
             if (boss != null && !boss.IsDead)
             {
-                boss.TakeDamage(damage, targetPos);
+                if (recorded != null) recorded.Apply(boss, targetPos);
+                else boss.TakeDamage(damage, targetPos);
             }
+        };
+        ShootProjectile(targetPos, () =>
+        {
+            applyHit();
+            originalHit = true;
+            if (shadowArrivedEarly && replay?.CanReplay == true) applyHit();
+        }, origin);
+        replay?.RecordShot(hit => ShootProjectile(targetPos, hit, origin), () =>
+        {
+            if (originalHit) applyHit();
+            else shadowArrivedEarly = true;
         });
+        owner.InvokeOnAttack();
     }
 
-    private void ShootProjectile(Vector3 targetPos, System.Action onHitCallback = null)
+    private void ShootProjectile(Vector3 targetPos, System.Action onHitCallback = null, Vector3? recordedOrigin = null)
     {
+        Vector3 origin = recordedOrigin ?? transform.position;
         _audioManager?.PlaySFX("05.Drone_Attack");
 
         if (_projectilePrefab != null)
         {
-            var p = RM.Instantiate(_projectilePrefab, transform.position, Quaternion.identity, true);
+            var p = RM.Instantiate(_projectilePrefab, origin, Quaternion.identity, true);
             if (p != null)
             {
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
 
-                p.Launch(transform.position, targetPos, proj =>
+                p.Launch(origin, targetPos, proj =>
                 {
                     onHitCallback?.Invoke();
                     RM.Destroy(proj.gameObject);
@@ -197,7 +263,7 @@ public class DroneUnit : MonoBehaviour
         }
         else if (_projectileManager != null)
         {
-            _projectileManager.Launch(transform.position, targetPos, onHitCallback, _owner);
+            _projectileManager.Launch(origin, targetPos, onHitCallback, _owner);
         }
     }
 }

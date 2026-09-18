@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: TD1002Data
+  m_EditorClassIdentifier: Assembly-CSharp::TotemData
+  EffectGroups: []
+  ShadowAttack:
+    DelaySeconds: 0.2
+    VisualSeconds: 0.35
+    Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
+    VisualOffset: {x: 0.15, y: 0.1, z: 0}
+  UseSheetData: 0
+  BonusProjectile:
+    Chance: 0.33
+    AttackCoefficient: 0.5
+    Projectile: {fileID: 0}
+  GrowthStages:
+  - RequiredKills: 0
+    Offsets:
+    - {x: -1, y: -1}
+    - {x: 0, y: -1}
+    - {x: 1, y: -1}
+    - {x: -1, y: 0}
+    - {x: 0, y: 0}
+    - {x: 1, y: 0}
+    - {x: -1, y: 1}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+  - RequiredKills: 1
+    Offsets:
+    - {x: -1, y: -1}
+    - {x: 0, y: -1}
+    - {x: 1, y: -1}
+    - {x: 2, y: -1}
+    - {x: -1, y: 0}
+    - {x: 0, y: 0}
+    - {x: 1, y: 0}
+    - {x: 2, y: 0}
+    - {x: -1, y: 1}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 2, y: 1}
+    - {x: -1, y: 2}
+    - {x: 0, y: 2}
+    - {x: 1, y: 2}
+    - {x: 2, y: 2}
+  - RequiredKills: 2
+    Offsets:
+    - {x: -2, y: -2}
+    - {x: -1, y: -2}
+    - {x: 0, y: -2}
+    - {x: 1, y: -2}
+    - {x: 2, y: -2}
+    - {x: -2, y: -1}
+    - {x: -1, y: -1}
+    - {x: 0, y: -1}
+    - {x: 1, y: -1}
+    - {x: 2, y: -1}
+    - {x: -2, y: 0}
+    - {x: -1, y: 0}
+    - {x: 0, y: 0}
+    - {x: 1, y: 0}
+    - {x: 2, y: 0}
+    - {x: -2, y: 1}
+    - {x: -1, y: 1}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 2, y: 1}
+    - {x: -2, y: 2}
+    - {x: -1, y: 2}
+    - {x: 0, y: 2}
+    - {x: 1, y: 2}
+    - {x: 2, y: 2}
+  WildcardSpawn:
+    IntervalSeconds: 40
+    Unit: {fileID: 0}
+  TierUpgrades: []
+  _debuffBinding:
+    _debuffId: 0
+    _trigger: 0
+    _stacksPerApply: 0
+  _debuffFireInterval: 0
+  _debuffImpactDamage: 0
+  _debuffProjectile: {fileID: 0}
+  totemType: 0
+  tier: 0
+  totemName: "\uC131\uC7A5\uD558\uB294 \uC601\uC5ED"
+  iconAddress: TotemIcon1002
+  prefabAddress: TotemTD1002
+  rotationSpriteAddresses:
+  - TotemIcon1002
+  - TotemIcon1002
+  - TotemIcon1002
+  - TotemIcon1002
+  icon: {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  prefab: {fileID: 8956907479240940453, guid: 8926cd92b8ab6c143b24f5f241947ffa, type: 3}
+  rotationSprites:
+  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  description: "\uBC94\uC704 \uC548 \uACF5\uACA9\uB825 +5%. \uBCF4\uC2A4 \uCC98\uCE58\uB9C8\uB2E4
+    \uCD5C\uB300 5x5\uAE4C\uC9C0 \uD655\uC7A5\uB429\uB2C8\uB2E4."
+  functions:
+  - rid: 1992779463445184610
+  effectRanges:
+  - rid: 1992779463445184622
+  attackDisabledRanges: []
+  totemId: 1002
+  isRotatable: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 1992779463445184610
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 0
+        amount: 0.05
+    - rid: 1992779463445184622
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: -1, y: -1}
+        - {x: 0, y: -1}
+        - {x: 1, y: -1}
+        - {x: -1, y: 0}
+        - {x: 0, y: 0}
+        - {x: 1, y: 0}
+        - {x: -1, y: 1}
+        - {x: 0, y: 1}
+        - {x: 1, y: 1}

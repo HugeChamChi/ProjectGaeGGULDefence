@@ -77,7 +77,7 @@ public sealed class TotemShadowAttack : RangedBuffTotemBase
         if (!IsActive || settings == null || float.IsNaN(settings.DelaySeconds) ||
             float.IsInfinity(settings.DelaySeconds) || settings.DelaySeconds < 0) return;
         ShadowAttackVisual available = null;
-        var castEffect = attack.Source.unitData?.basicAttackData?.castEffect;
+        var castEffect = attack.VisualSource == attack.Source.transform ? attack.Source.unitData?.basicAttackData?.castEffect : null;
         int placementVersion = _placementVersion;
         if (!attack.Enable((fire, first) =>
         {
@@ -95,10 +95,10 @@ public sealed class TotemShadowAttack : RangedBuffTotemBase
         })) return;
 
         foreach (var visual in _visuals)
-            if (visual != null && visual.Source == attack.Source && !visual.IsPlaying) { available = visual; break; }
+            if (visual != null && visual.Source == attack.Source && visual.VisualSource == attack.VisualSource && !visual.IsPlaying) { available = visual; break; }
         if (available == null)
         {
-            available = ShadowAttackVisual.Create(attack.Source, transform);
+            available = ShadowAttackVisual.Create(attack.Source, transform, attack.VisualSource);
             _visuals.Add(available);
         }
         available.Play(attack, settings);
@@ -120,7 +120,7 @@ public sealed class TotemShadowAttack : RangedBuffTotemBase
             shot.Fire();
         }
         for (int i = _visuals.Count - 1; i >= 0; i--)
-            if (_visuals[i] == null || _visuals[i].Source == null)
+            if (_visuals[i] == null || _visuals[i].Source == null || _visuals[i].VisualSource == null)
             {
                 if (_visuals[i] != null) Destroy(_visuals[i].gameObject);
                 _visuals.RemoveAt(i);

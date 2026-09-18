@@ -68,7 +68,11 @@ public class InputManager : MonoBehaviour
                     ProcessPointerMove(touch.position);
                 }
             }
-            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            else if (touch.phase == TouchPhase.Canceled)
+            {
+                CancelPointer();
+            }
+            else if (touch.phase == TouchPhase.Ended)
             {
                 if (_pointerDown)
                 {
@@ -107,6 +111,8 @@ public class InputManager : MonoBehaviour
         _isDragging = false;
         _currentDraggable = null;
 
+        // Totems may have been spawned or moved since the last physics step.
+        Physics2D.SyncTransforms();
         RaycastHit2D[] hits = Physics2D.RaycastAll(_pointerDownPos, Vector2.zero);
         foreach (var h in hits)
         {
@@ -116,6 +122,7 @@ public class InputManager : MonoBehaviour
                 if (draggable != null)
                 {
                     _currentDraggable = draggable;
+                    if (draggable is DragHandler handler) handler.BeginPress();
                     break;
                 }
             }
@@ -161,8 +168,18 @@ public class InputManager : MonoBehaviour
             }
         }
 
+        if (_currentDraggable is DragHandler released && released != null) released.EndPress();
         _pointerDown = false;
         _isDragging = false;
         _currentDraggable = null;
+    }
+
+    private void OnDisable() => CancelPointer();
+    private void OnApplicationFocus(bool focused) { if (!focused) CancelPointer(); }
+    private void CancelPointer()
+    {
+        if (_isDragging && _currentDraggable is DragHandler handler && handler != null) handler.CancelPointerDrag();
+        if (_currentDraggable is DragHandler pressed && pressed != null) pressed.EndPress();
+        _pointerDown = false; _isDragging = false; _currentDraggable = null;
     }
 }

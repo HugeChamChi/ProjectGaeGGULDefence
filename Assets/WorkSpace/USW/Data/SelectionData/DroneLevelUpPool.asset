@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 895b8df8b6f33b045ada2f3050a8ccd7, type: 3}
+  m_Name: DroneLevelUpPool
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpPoolData
+  PoolId: 9100
+  Cards:
+  - {fileID: 11400000, guid: 68e6d86379d56be41881f24652b48c47, type: 2}
+  - {fileID: 11400000, guid: d7b716518b1c92b44a95a21f1ef4cc5f, type: 2}
+  - {fileID: 11400000, guid: 2fd9e7747a4f61b488547f31b463dff0, type: 2}
+  - {fileID: 11400000, guid: 336f1df382f348f4fb601f8fae81f598, type: 2}
+  - {fileID: 11400000, guid: a6e5732dcc0c22845adb4c2442a5c8c5, type: 2}
+  - {fileID: 11400000, guid: 2995610e1b393ea4a9c66cff32c46113, type: 2}
+  - {fileID: 11400000, guid: bc4c748e27ffc85448fa237342157adb, type: 2}
+  - {fileID: 11400000, guid: e21d7bf323b86e74cb36c6b3edceb059, type: 2}
+  - {fileID: 11400000, guid: 429f8664f6ab1f14eb6a3ed4787c8805, type: 2}
+  - {fileID: 11400000, guid: e1b3c78d0f6b07249b943f9725ce28dd, type: 2}
+  - {fileID: 11400000, guid: a38e8efd723635e4c9a1ead2f22e8645, type: 2}
+  - {fileID: 11400000, guid: ea77c243af6e39a4088176ff56b4ab11, type: 2}
+  - {fileID: 11400000, guid: b5fe9ef8df0aa6745a8223c5cef12a3e, type: 2}
+  - {fileID: 11400000, guid: a75a0ab905fd2584ba0bb1921b952c8c, type: 2}
+  - {fileID: 11400000, guid: a908cf4c8670efe418647c0049c89eb0, type: 2}
+  - {fileID: 11400000, guid: ed4474ebff8650948b726725b4b69e8f, type: 2}
+  - {fileID: 11400000, guid: fe5c6515fa830f747a2c18a5c6888e31, type: 2}
+  - {fileID: 11400000, guid: f5ff2c9d422cc594eb39784a1f5d282e, type: 2}
+  - {fileID: 11400000, guid: 373d4a16344bd6144a7e029f42b06aa9, type: 2}
+  - {fileID: 11400000, guid: 1063e0f5856261944b9927c9f15f2a38, type: 2}
+  NormalWeight: 60
+  RareWeight: 30
+  EpicWeight: 10

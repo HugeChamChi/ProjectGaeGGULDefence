@@ -13,9 +13,6 @@ public class GameConfig : ScriptableObject
     public float startingFood = 20f;   // food given at game start
     public float placeCost    = 10f;   // cost to place one unit
 
-    [Header("Population")]
-    public int maxPopulation = 21;
-
     [Header("Visuals")]
     public UnitTierPalette tierPalette; // 등급별 비주얼 설정
 }

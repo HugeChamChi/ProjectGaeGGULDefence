@@ -73,7 +73,7 @@ public class WaveManager : MonoBehaviour
         // 유효한 보스만 추림
         _pendingBosses.Clear();
         foreach (var entry in wave.bosses)
-            if (entry?.prefab != null) _pendingBosses.Add(entry);
+            if (entry?.Prefab != null) _pendingBosses.Add(entry);
 
         if (_pendingBosses.Count == 0)
         {

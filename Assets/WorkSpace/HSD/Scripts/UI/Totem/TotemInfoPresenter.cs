@@ -21,6 +21,7 @@ public class TotemInfoPresenter
 
     private string BuildStatString(TotemData data)
     {
+        if (data.HasEffectGroups) return data.GetDisplayDescription();
         StringBuilder sb = new StringBuilder();
 
         float attack     = data.GetSimpleAmount(StatKind.AttackPercent);

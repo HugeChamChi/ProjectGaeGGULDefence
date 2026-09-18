@@ -77,7 +77,7 @@ public class TotemSelectCardUI : MonoBehaviour
         }
 
         if (nameText        != null) nameText.text        = data?.totemName   ?? string.Empty;
-        if (descriptionText != null) descriptionText.text = data?.description ?? string.Empty;
+        if (descriptionText != null) descriptionText.text = data?.GetDisplayDescription() ?? string.Empty;
         if (tierText        != null) tierText.text        = TierToLabel(data?.tier ?? Tier.Normal);
 
         RefreshGrid(data);
@@ -188,12 +188,15 @@ public class TotemSelectCardUI : MonoBehaviour
             }
         }
 
-        foreach (var offset in data.GetAttackDisabledPreviewOffsets())
+        if (!data.HasEffectGroups) return;
+        foreach (var group in data.EffectGroups)
         {
-            if (TryGetIndex(offset, out int idx))
+            if (group == null) continue;
+            foreach (var offset in group.GetPreviewOffsets())
             {
-                _cells[idx].sprite = spriteDisabled;
-                _cells[idx].color  = Color.white;
+                if (!TryGetIndex(offset, out int idx)) continue;
+                _cells[idx].sprite = spriteDefault;
+                _cells[idx].color = group.Color;
             }
         }
     }

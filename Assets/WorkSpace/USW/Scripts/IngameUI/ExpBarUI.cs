@@ -5,27 +5,63 @@ using DG.Tweening;
 using GaeGGUL.Animation;
 
 /// <summary>
-/// 플레이어 경험치 바 UI
+/// 플레이어 경험치 바 UI. SummonButton 위에 시각 오버레이로 얹는 용도로도 쓸 수 있다
+/// (마스크/Fill 이미지의 Raycast Target을 꺼두면 버튼 클릭과 기능적으로 겹치지 않는다).
+///
+/// Slider가 아니라 fillImage에 적용된 LiquidWaveFill 셰이더의 _Fill 프로퍼티로 채워진다:
+/// 셰이더가 진행도 주변을 사인파로 흔들어 물결처럼 차오르는 수면 경계선을 그린다.
+/// maskRect(RectMask2D)는 더 이상 채움 경계를 담당하지 않고 항상 완전히 열어 둔다
+/// (물결 파고가 경계에서 잘리지 않도록 하기 위함).
+///
+/// Scene 구성:
+///   (SummonButton 등 아무 부모)
+///     Background (Image, 빈 상태 배경 스프라이트, 풀 사이즈, Raycast Target 꺼짐)
+///     Mask (RectTransform + RectMask2D, anchor/pivot = (0.5, 0) 아래쪽 정렬)
+///       Fill (Image + LiquidWaveFill 머티리얼, 높이 = 바 전체 높이 고정, Raycast Target 꺼짐)
 /// </summary>
 public class ExpBarUI : MonoBehaviour
 {
     [Inject] private ExpManager _expManager;
     [Inject] private AudioManager _audioManager;
 
-    [SerializeField] private Slider expSlider;
-    [SerializeField] private float  tweenDuration = 0.35f;
-    [SerializeField] private float  animationSpeed = 1f;
+    [Header("마스킹 게이지 (아래→위)")]
+    [Tooltip("아래쪽 정렬된 RectMask2D 컨테이너. 물결 셰이더가 채움을 담당하므로 항상 완전히 개방해 둔다.")]
+    [SerializeField] private RectTransform maskRect;
+    [Tooltip("진행도 1일 때 maskRect의 목표 높이. 0이면 부모 RectTransform의 현재 높이를 사용.")]
+    [SerializeField] private float fullHeight = 0f;
+    [Tooltip("LiquidWaveFill 셰이더가 적용된 Fill 이미지. 진행도를 _Fill 프로퍼티로 흘려준다.")]
+    [SerializeField] private Image fillImage;
+
+    [SerializeField] private float tweenDuration  = 0.35f;
+    [SerializeField] private float animationSpeed = 1f;
     [SerializeField] private Anim_InOutBase scaleAnim;
+
+    private static readonly int FillId = Shader.PropertyToID("_Fill");
+
+    private float _currentProgress;
+    private float _lastSoundTime;
+    private Material _fillMaterial;
 
     private void Start()
     {
-        if (expSlider != null)
+        if (maskRect != null && fullHeight <= 0f)
         {
-            expSlider.minValue     = 0f;
-            expSlider.maxValue     = 1f;
-            expSlider.value        = 0f;
-            expSlider.interactable = false;
+            fullHeight = maskRect.parent is RectTransform parentRect
+                ? parentRect.rect.height
+                : maskRect.rect.height;
         }
+
+        if (maskRect != null)
+        {
+            // 물결 셰이더가 실제 채움 경계를 그리므로 마스크는 항상 완전히 열어 둔다.
+            Vector2 size = maskRect.sizeDelta;
+            size.y = fullHeight;
+            maskRect.sizeDelta = size;
+        }
+
+        _fillMaterial = fillImage != null ? fillImage.material : null;
+
+        SetProgressImmediate(0f);
 
         _expManager.OnExpChanged += OnExpChanged;
         _expManager.OnLevelUp   += OnLevelUp;
@@ -35,14 +71,12 @@ public class ExpBarUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        if ((_expManager != null))
+        if (_expManager != null)
         {
             _expManager.OnExpChanged -= OnExpChanged;
             _expManager.OnLevelUp   -= OnLevelUp;
         }
     }
-
-    private float _lastSoundTime = 0f;
 
     private void OnExpChanged(float _)
     {
@@ -64,30 +98,46 @@ public class ExpBarUI : MonoBehaviour
 
     private void Refresh(bool levelUp = false)
     {
-        if (expSlider == null) return;
+        if (maskRect == null) return;
 
         float expToLevelUp = _expManager.ExpToLevelUp;
-        float target       = expToLevelUp > 0f ? _expManager.CurrentExp / expToLevelUp : 0f;
+        float target        = expToLevelUp > 0f ? _expManager.CurrentExp / expToLevelUp : 0f;
 
-        expSlider.DOKill();
+        maskRect.DOKill();
 
         if (levelUp)
         {
             // 꽉 채운 뒤 새 값으로 리셋
-            expSlider.DOValue(1f, tweenDuration * 0.4f)
-                     .SetEase(Ease.OutCubic)
-                     .OnComplete(() =>
-                     {
-                         expSlider.value = 0f;
-                         expSlider.DOValue(target, tweenDuration)
-                                  .SetEase(Ease.OutCubic);
-                     });
+            DOTween.To(() => _currentProgress, SetProgress, 1f, tweenDuration * 0.4f)
+                   .SetTarget(maskRect)
+                   .SetEase(Ease.OutCubic)
+                   .OnComplete(() =>
+                   {
+                       SetProgressImmediate(0f);
+                       DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
+                              .SetTarget(maskRect)
+                              .SetEase(Ease.OutCubic);
+                   });
         }
         else
         {
-            expSlider.DOValue(target, tweenDuration)
-                     .SetEase(Ease.OutCubic);
+            DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
+                   .SetTarget(maskRect)
+                   .SetEase(Ease.OutCubic);
         }
+    }
+
+    private void SetProgress(float t)
+    {
+        _currentProgress = t;
+        if (_fillMaterial == null) return;
+        _fillMaterial.SetFloat(FillId, Mathf.Clamp01(t));
+    }
+
+    private void SetProgressImmediate(float t)
+    {
+        maskRect?.DOKill();
+        SetProgress(t);
     }
 
     private void ScaleAnimation()

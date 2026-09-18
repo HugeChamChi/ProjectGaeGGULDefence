@@ -16,6 +16,17 @@ namespace GaeGGUL.Animation
 
         private Vector2 _currentBreath = Vector2.one;
 
+        /// <summary>
+        /// 숨쉬기는 스케일만 바꾸고 포지션은 절대 건드리지 않는다. 베이스의 ResetToOrigin()은
+        /// 포지션까지 Awake 시점 값으로 되돌리는데, 그 값은 그리드 배치 오프셋이 적용되기 전(스폰 직후)
+        /// 캡처된 값이라 스폰 연출의 SetActive on/off마다 배치 위치가 덮어써지는 문제가 있었다.
+        /// </summary>
+        protected override void ResetToOrigin()
+        {
+            if (_target == null) return;
+            _target.localScale = useCustomBaseScale ? customBaseScale : _originScale;
+        }
+
         public override async UniTask Play()
         {
             Stop();

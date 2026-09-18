@@ -21,5 +21,12 @@ namespace GaeGGUL.UI.Totem
                 img_Color.color = Color.white; // Ensure tint doesn't hide sprite
             }
         }
+
+        /// <summary>Tints both the label and swatch to match an effect group.</summary>
+        public void SetColor(Color color)
+        {
+            if (img_Color != null) img_Color.color = color;
+            if (txt_Label != null) txt_Label.color = color;
+        }
     }
 }

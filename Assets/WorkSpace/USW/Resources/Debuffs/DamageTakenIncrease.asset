@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: DamageTakenIncrease
   m_EditorClassIdentifier: 
   _id: 1003
+  _icon: {fileID: 21300000, guid: f274178d747514da1a30a88d62739ea2, type: 3}
+  _displayName: "\uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00"
   _key: DBF_DAMAGE_TAKEN_UP_001
   _kind: 3
   _stackGroup: DAMAGE_TAKEN_UP

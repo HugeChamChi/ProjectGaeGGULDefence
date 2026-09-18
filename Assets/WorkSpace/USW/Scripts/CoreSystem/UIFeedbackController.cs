@@ -20,11 +20,8 @@ public class UIFeedbackController : MonoBehaviour
     [SerializeField] private ParticleImage clickEffectPrefab; // 클릭 시 생성될 ParticleImage 프리팹
     [SerializeField] private RectTransform effectParent;      // 이펙트가 생성될 UI 부모 (최상위 Canvas 권장)
 
-    private void Awake()
-    {
-        DontDestroyOnLoad(gameObject);
-        DontDestroyOnLoad(effectParent.gameObject);
-    }
+    // 컨트롤러와 effectParent는 RootLifetimeScope의 자식으로 함께 유지된다.
+    // 영속화는 루트 수명을 관리하는 VContainer에 맡긴다.
 
     private void Update()
     {

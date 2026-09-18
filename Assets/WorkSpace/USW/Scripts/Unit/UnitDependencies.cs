@@ -3,7 +3,6 @@ using UnityEngine;
 public class UnitDependencies
 {
     public GameDataManager GameDataManager { get; set; }
-    public PopulationManager PopulationManager { get; set; }
     public GridManager GridManager { get; set; }
     public UpgradeManager UpgradeManager { get; set; }
     public LevelUpManager LevelUpManager { get; set; }

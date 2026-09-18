@@ -20,7 +20,6 @@ public class UnitFactory : MonoBehaviour
         _deps = new UnitDependencies
         {
             GameDataManager = _resolver.Resolve<GameDataManager>(),
-            PopulationManager = _resolver.Resolve<PopulationManager>(),
             GridManager = _resolver.Resolve<GridManager>(),
             UpgradeManager = _resolver.Resolve<UpgradeManager>(),
             LevelUpManager = _resolver.Resolve<LevelUpManager>(),
@@ -56,7 +55,7 @@ public class UnitFactory : MonoBehaviour
             Debug.LogError("UnitFactory: unitDataList가 비어있습니다.");
             return null;
         }
-
+        
         foreach (var data in unitDataList)
         {
             if (data == null) continue;
@@ -71,6 +70,9 @@ public class UnitFactory : MonoBehaviour
         return null;
     }
 
+    
+    
+    
     /// <summary>Normal 티어 유닛만 랜덤 생성 (소환 버튼용)</summary>
     public UnitBase CreateRandomNormalUnit() => CreateRandomUnitOfTier(Tier.Normal);
 
@@ -100,9 +102,10 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var data = unitDataList[Random.Range(0, unitDataList.Length)];
-        if (data == null) return null;
+        var pool = System.Array.FindAll(unitDataList, IsRandomEligible);
+        if (pool.Length == 0) return null;
 
+        var data = pool[Random.Range(0, pool.Length)];
         return InstantiateFromData(data, Tier.Normal);
     }
 
@@ -115,7 +118,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var pool = System.Array.FindAll(unitDataList, d => d != null);
+        var pool = System.Array.FindAll(unitDataList, IsRandomEligible);
         if (pool.Length == 0)
         {
             Debug.LogError("UnitFactory: 유닛 데이터가 없습니다.");
@@ -134,7 +137,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        var pool = System.Array.FindAll(unitDataList, d => d != null && d.unitTribe == tribe);
+        var pool = System.Array.FindAll(unitDataList, d => IsRandomEligible(d) && d.unitTribe == tribe);
 
         if (pool.Length == 0)
         {
@@ -148,10 +151,18 @@ public class UnitFactory : MonoBehaviour
     /// <summary>UnitData SO를 직접 넘겨 생성 — unitDataList 등록 없이도 동작 (테스트 소환 등)</summary>
     public UnitBase CreateUnitFromData(UnitData data, Tier tier = Tier.Normal) => InstantiateFromData(data, tier);
 
+    /// <summary>랜덤 소환/합성 결과 후보로 쓸 수 있는지. 그리드 밖 액티브 스킬(족장)은 제외한다.</summary>
+    private static bool IsRandomEligible(UnitData data) => data != null && data.AlphanSkill == null;
+
     // ── 공통 인스턴스화 ────────────────────────────────────────
 
     private UnitBase InstantiateFromData(UnitData data, Tier tier)
     {
+        if (data.AlphanSkill != null)
+        {
+            Debug.LogWarning($"UnitFactory: [{data.unitName}]는 그리드 밖 액티브 스킬이므로 유닛을 생성하지 않습니다.");
+            return null;
+        }
         if (data.prefab == null)
         {
             Debug.LogError($"UnitFactory: [{data.unitName}] prefab 미연결");
@@ -193,6 +204,13 @@ public class UnitFactory : MonoBehaviour
     public void InitUnitTransform(UnitBase unit)
     {
         InitUnitTransform(unit.transform);
+
+        if (unit.unitData != null && unit.unitData.spawnOffsetY != 0f)
+        {
+            var pos = unit.transform.localPosition;
+            pos.y += unit.unitData.spawnOffsetY;
+            unit.transform.localPosition = pos;
+        }
     }
 
     private void ValidateUnitDataList()

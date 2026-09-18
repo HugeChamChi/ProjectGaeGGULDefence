@@ -43,6 +43,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     }
     public bool      IsActive    { get; private set; } = false;
     public int       RotationStep { get; private set; } = 0;
+    private int? _previewRotationStep;
 
     public GridCell CurrentCell { get; private set; }
 
@@ -117,8 +118,14 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     /// <summary>클릭 시 90° CW 회전. 스프라이트를 다음 회전 이미지로 교체하고 버프 플래그 재계산.</summary>
     public void Rotate()
     {
-        if (!IsActive) return;
-        RotationStep = (RotationStep + 1) % 4;
+        SetRotationStep(RotationStep + 1);
+    }
+
+    /// <summary>Commits one of four absolute directions and rebuilds actual effects.</summary>
+    public void SetRotationStep(int step)
+    {
+        if (!IsActive || totemData == null || !totemData.isRotatable) return;
+        RotationStep = ((step % 4) + 4) % 4;
         UpdateSprite();
         
         if (_totemBuffManager != null)
@@ -144,9 +151,32 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     public Vector2Int RotateOffset(Vector2Int offset)
     {
         var o = offset;
-        for (int i = 0; i < RotationStep; i++)
+        for (int i = 0; i < (_previewRotationStep ?? RotationStep); i++)
             o = new Vector2Int(o.y, -o.x);
         return o;
+    }
+
+    /// <summary>Paints a tentative range without changing sprites, stats or committed rotation.</summary>
+    public void PreviewRotation(int step)
+    {
+        _previewRotationStep = ((step % 4) + 4) % 4;
+        try { _gridManager?.ShowTotemRangePreview(this); }
+        finally { _previewRotationStep = null; }
+    }
+
+    /// <summary>Restores the committed range after cancelling a gesture.</summary>
+    public void RestoreRotationPreview() => _gridManager?.ShowTotemRangePreview(this);
+
+    /// <summary>Evaluates a disabled preview clone at a candidate cell without placement or buffs.</summary>
+    public void PreviewPlacement(TotemData data, GridCell cell, GridManager grid)
+    {
+        if (IsActive || cell == null || grid == null) return;
+        var oldData = totemData;
+        var oldCell = CurrentCell;
+        var oldGrid = _gridManager;
+        totemData = data; CurrentCell = cell; _gridManager = grid;
+        try { grid.ShowTotemPlacementPreview(this); }
+        finally { totemData = oldData; CurrentCell = oldCell; _gridManager = oldGrid; }
     }
 
     // ── 자식 구현 ──────────────────────────────────────────────

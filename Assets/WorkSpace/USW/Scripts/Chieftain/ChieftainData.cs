@@ -12,6 +12,8 @@ public class ChieftainData : ScriptableObject
 {
     /// <summary>ID 기반 족장 선택 경로에서 사용하는 독립 레벨업 풀.</summary>
     public LevelUpPoolData LevelUpPool;
+    /// <summary>ID 기반 선택도 유닛을 생성하지 않고 알팡 액티브를 사용할 수 있다.</summary>
+    public AlphanSkillData AlphanSkill;
 
     [Header("Info")]
     public int    chieftainId;   // HSD ChiefData.Id와 일치

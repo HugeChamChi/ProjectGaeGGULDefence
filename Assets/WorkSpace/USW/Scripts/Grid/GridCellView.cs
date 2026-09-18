@@ -13,11 +13,17 @@ using UnityEngine;
 public class GridCellView : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer cellRenderer;
+    [Header("Totem Range Preview")]
+    [SerializeField] private Material _effectPreviewMaterial;
+    private Material _originalMaterial;
+    private MaterialPropertyBlock _originalProperties;
+    private MaterialPropertyBlock _previewProperties;
+    private static readonly int StripeColorId = Shader.PropertyToID("_StripeColor");
+    private static readonly int FillColorId = Shader.PropertyToID("_FillColor");
 
     // ── 색상 정의 ──────────────────────────────────────────────
     // 토템 범위 프리뷰
     private static readonly Color ColorTotemPreviewEffect   = new Color(1.0f, 0.0f, 0.0f, 0.85f);
-    private static readonly Color ColorTotemPreviewDisabled = new Color(0.0f, 0.0f, 0.0f, 0.85f);
 
     // 보스 패턴 디버프
     private static readonly Color ColorSealed  = new Color(0.3f, 0.3f, 0.3f, 0.90f); // 짙은 회색 (봉인)
@@ -46,6 +52,10 @@ public class GridCellView : MonoBehaviour
     {
         if (_originalColorCaptured || cellRenderer == null) return;
         _originalColor         = cellRenderer.color;
+        _originalMaterial = cellRenderer.sharedMaterial;
+        _originalProperties = new MaterialPropertyBlock();
+        _previewProperties = new MaterialPropertyBlock();
+        cellRenderer.GetPropertyBlock(_originalProperties);
         _originalColorCaptured = true;
     }
 
@@ -78,18 +88,14 @@ public class GridCellView : MonoBehaviour
     {
         if (cellRenderer == null || _model == null) return;
 
-        if (_model.IsTotemDisabledRangePreviewed)
-        {
-            cellRenderer.color = ColorTotemPreviewDisabled;
-            return;
-        }
-
         if (_model.IsTotemRangePreviewed)
         {
-            cellRenderer.color = ColorTotemPreviewEffect;
+            ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect);
             return;
         }
 
+        cellRenderer.sharedMaterial = _originalMaterial;
+        cellRenderer.SetPropertyBlock(_originalProperties);
         // 보스 패턴 디버프 우선순위 높음
         if (_model.IsSealed)
         {
@@ -110,5 +116,23 @@ public class GridCellView : MonoBehaviour
         }
 
         cellRenderer.color = _originalColor;
+    }
+
+    private void ApplyPreview(Material material, Color fallback)
+    {
+        // Shared materials keep all cells in phase without allocating material instances.
+        cellRenderer.sharedMaterial = material != null ? material : _originalMaterial;
+        cellRenderer.color = material != null ? Color.white : fallback;
+        if (material != null && _model.TotemPreviewColor.HasValue)
+        {
+            var tint = _model.TotemPreviewColor.Value;
+            var stripe = tint; stripe.a *= material.GetColor(StripeColorId).a;
+            var fill = tint; fill.a *= material.GetColor(FillColorId).a;
+            cellRenderer.GetPropertyBlock(_previewProperties);
+            _previewProperties.SetColor(StripeColorId, stripe);
+            _previewProperties.SetColor(FillColorId, fill);
+            cellRenderer.SetPropertyBlock(_previewProperties);
+        }
+        else cellRenderer.SetPropertyBlock(_originalProperties);
     }
 }

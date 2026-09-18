@@ -29,6 +29,9 @@ public class UnitStatsModifier : MonoBehaviour
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
 
+    /// <summary>현재 보정을 포함하되 치명타 추첨과 적 방어 계산을 하지 않는 표시용 공격력.</summary>
+    public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, rollCritical: false);
+
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;
 
@@ -38,7 +41,7 @@ public class UnitStatsModifier : MonoBehaviour
     /// <summary>projAtkBonusMultiplier: "훈련의 성과" 류 투사체 크기 보너스 항목에만 추가로 곱해지는 배율(기본 1).</summary>
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => ComputeDamage(baseDamage, projAtkBonusMultiplier);
 
-    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier = 1f)
+    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier = 1f, bool rollCritical = true)
     {
         if (_unit.unitData == null) return 0;
 
@@ -62,17 +65,6 @@ public class UnitStatsModifier : MonoBehaviour
             ? 1f + lu.ChieftainAttackBonus
             : 1f;
 
-        float globalPopPenalty = 1f;
-        if (lu != null && lu.HasChieftainGainOnSell)
-        {
-            int excessPop = (_deps?.PopulationManager?.Current ?? 0) - 2;
-            if (excessPop > 0)
-            {
-                globalPopPenalty -= excessPop * lu.ChieftainSellPopPenalty;
-            }
-        }
-        globalPopPenalty = Mathf.Max(0.01f, globalPopPenalty);
-
         float cellAttackBonus = _unit.GetStatBonus(StatKind.AttackPercent, projAtkBonusMultiplier);
         float flatAttackBonus = _unit.GetStatBonus(StatKind.AttackFlat, projAtkBonusMultiplier);
 
@@ -84,19 +76,18 @@ public class UnitStatsModifier : MonoBehaviour
                      * tribeAtk
                      * projAtk
                      * burstAtk
-                     * chieftainAtk
-                     * globalPopPenalty;
+                     * chieftainAtk;
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
         float critChance = (lu?.CritChance ?? 0f) + cellCritChance;
-        if (UnityEngine.Random.value < critChance)
+        if (rollCritical && UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
             damage *= (critMultiplier + cellCritDamage);
         }
 
-        return Mathf.Max(1, DamageCalculator.ApplyRounding(damage));
+        return Mathf.Max(rollCritical ? 1 : 0, DamageCalculator.ApplyRounding(damage));
     }
 
     public float GetCurrentAttackInterval()
@@ -123,6 +114,7 @@ public class UnitStatsModifier : MonoBehaviour
         float rowSpeedMult = Mathf.Max(_deps?.LevelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float cellGaugeSpeedMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.GaugeSpeed));
         float interval = _unit.unitData.skillCooldown.Get(_unit.currentTier)
+                       * _unit.SkillCooldownMultiplier
                        * cellGaugeSpeedMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;

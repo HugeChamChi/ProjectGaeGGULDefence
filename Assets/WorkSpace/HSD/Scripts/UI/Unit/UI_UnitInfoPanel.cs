@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using GaeGGUL.Extension;
+using Cysharp.Threading.Tasks;
 using GaeGGUL.UI.Common;
 
 namespace GaeGGUL.UI.Unit
@@ -23,7 +23,6 @@ namespace GaeGGUL.UI.Unit
         [Header("Stats")]
         [SerializeField] private UI_StatSlot statSlot_Atk;
         [SerializeField] private UI_StatSlot statSlot_AtkSpeed;
-        [SerializeField] private UI_StatSlot statSlot_Food;
 
         [Header("Actions")]
         [SerializeField] private MergeButtonUI mergeButton;
@@ -35,7 +34,6 @@ namespace GaeGGUL.UI.Unit
         /// <summary>바깥 클릭으로 닫힘 요청 시 발행 (InGameInstaller가 구독)</summary>
         public event Action OnDismissRequested;
 
-        [VContainer.Inject] public GameDataManager _gameDataManager;
         private UI_UnitInfoPresenter _presenter;
 
         private bool _isShowing;
@@ -64,18 +62,42 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
             _presenter.SetUnitData(data);
             Open();
+            _isShowing = true;
+            _justShown = true;
         }
 
         public override void Close()
         {
-            base.Close();
             _isShowing = false;
+            _presenter?.Clear();
+            base.Close();
+        }
+
+        /// <summary>닫기 버튼의 직접 비동기 호출도 현재 유닛 추적을 정리한다.</summary>
+        public override async UniTask CloseAsync()
+        {
+            _isShowing = false;
+            _presenter?.Clear();
+            await base.CloseAsync();
+        }
+
+        private void OnDisable()
+        {
+            _isShowing = false;
+            _presenter?.Clear();
         }
 
         private void LateUpdate()
         {
+            if (_isShowing && _presenter != null && !_presenter.Refresh())
+            {
+                Close();
+                OnDismissRequested?.Invoke();
+                return;
+            }
             if (_justShown) { _justShown = false; return; }
             if (!_isShowing || !Input.GetMouseButtonDown(0)) return;
+            if (EventSystem.current == null) return;
 
             var pointer = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
             var results = new List<RaycastResult>();
@@ -94,7 +116,7 @@ namespace GaeGGUL.UI.Unit
         {
             if (_presenter == null)
             {
-                _presenter = new UI_UnitInfoPresenter(this, _gameDataManager);
+                _presenter = new UI_UnitInfoPresenter(this);
             }
         }
 
@@ -111,11 +133,11 @@ namespace GaeGGUL.UI.Unit
             if (txt_SkillCooldown != null) txt_SkillCooldown.text = cooldownText;
         }
 
-        public void UpdateStats(string atkValue, string atkBonus, string atkSpeedValue, string atkSpeedBonus, string foodValue, string foodBonus)
+        /// <summary>현재 합산 공격력과 공격간격만 표시한다. 별도 강화/식량 표시는 사용하지 않는다.</summary>
+        public void UpdateStats(string atkValue, string atkSpeedValue)
         {
-            if (statSlot_Atk != null)      statSlot_Atk.Setup(atkValue, atkBonus);
-            if (statSlot_AtkSpeed != null) statSlot_AtkSpeed.Setup(atkSpeedValue, atkSpeedBonus);
-            if (statSlot_Food != null)     statSlot_Food.Setup(foodValue, foodBonus);
+            if (statSlot_Atk != null)      statSlot_Atk.Setup(atkValue);
+            if (statSlot_AtkSpeed != null) statSlot_AtkSpeed.Setup(atkSpeedValue);
         }
     }
 }

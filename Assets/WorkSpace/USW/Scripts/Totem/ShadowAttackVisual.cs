@@ -20,18 +20,24 @@ public sealed class ShadowAttackVisual : MonoBehaviour
 
     /// <summary>분신의 외형 원본. 판매로 파괴되면 null이 된다.</summary>
     public UnitBase Source { get; private set; }
+    /// <summary>실제 외형 원본. 드론 공격은 드론 Transform을 사용한다.</summary>
+    public Transform VisualSource { get; private set; }
     /// <summary>지연/재생 중인지 여부.</summary>
     public bool IsPlaying { get; private set; }
 
     /// <summary>원본과 같은 이름/Transform/SpriteRenderer 계층만 생성한다.</summary>
-    public static ShadowAttackVisual Create(UnitBase source, Transform owner)
+    public static ShadowAttackVisual Create(UnitBase source, Transform owner, Transform visualSource = null)
     {
+        var visualRoot = visualSource != null ? visualSource : source.transform;
         var root = new GameObject(source.name + "_Shadow");
         root.transform.SetParent(owner, false);
         var visual = root.AddComponent<ShadowAttackVisual>();
         visual.Source = source;
-        visual._sourceAnimator = source.animator != null ? source.animator.GetComponent<Animator>() : null;
-        visual.CopyHierarchy(source.transform, root.transform);
+        visual.VisualSource = visualRoot;
+        visual._sourceAnimator = visualRoot == source.transform
+            ? (source.animator != null ? source.animator.GetComponent<Animator>() : null)
+            : visualRoot.GetComponentInChildren<Animator>();
+        visual.CopyHierarchy(visualRoot, root.transform);
         visual.SetVisible(false);
         return visual;
     }
@@ -86,9 +92,9 @@ public sealed class ShadowAttackVisual : MonoBehaviour
             }
         }
         _position = attack.Origin + settings.VisualOffset;
-        _rotation = Source.transform.rotation;
+        _rotation = VisualSource.rotation;
         var parentScale = transform.parent != null ? transform.parent.lossyScale : Vector3.one;
-        var sourceScale = Source.transform.lossyScale;
+        var sourceScale = VisualSource.lossyScale;
         _scale = new Vector3(
             Mathf.Approximately(parentScale.x, 0) ? sourceScale.x : sourceScale.x / parentScale.x,
             Mathf.Approximately(parentScale.y, 0) ? sourceScale.y : sourceScale.y / parentScale.y,

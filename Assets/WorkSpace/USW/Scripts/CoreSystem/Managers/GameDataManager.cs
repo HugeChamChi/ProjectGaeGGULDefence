@@ -861,7 +861,6 @@ public class GameDataManager
                 case 3208: sp = LevelUpSpecialEffect.SellDealsDamage; spv = 1500f; break;
                 
                 case 3304: sp = LevelUpSpecialEffect.ExtraAttackEveryAttack; break;
-                case 3305: sp = LevelUpSpecialEffect.ChieftainGainOnSell; pv = 5f; sv = 10f; break;
                 case 3306: sp = LevelUpSpecialEffect.SellDealsDamage; spv = 4000f; break;
             }
 

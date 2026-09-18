@@ -16,6 +16,21 @@ public enum TotemType
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
 public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
+    /// <summary>GenericBuffTotem groups replace shared functions/ranges when populated.</summary>
+    [Header("효과별 설명 · 색상 · 기능 · 범위 (GenericBuffTotem)")]
+    public List<TotemEffectGroup> EffectGroups = new List<TotemEffectGroup>();
+    /// <summary>Whether this data uses independent effect groups.</summary>
+    public bool HasEffectGroups => EffectGroups != null && EffectGroups.Exists(group => group != null);
+    /// <summary>Rich-text descriptions use the same color as each effect range.</summary>
+    public string GetDisplayDescription()
+    {
+        if (!HasEffectGroups) return description;
+        var lines = new List<string>();
+        foreach (var group in EffectGroups)
+            if (group != null && !string.IsNullOrWhiteSpace(group.Description))
+                lines.Add($"<color=#{ColorUtility.ToHtmlStringRGB(group.Color)}>{group.Description}</color>");
+        return string.Join("\n", lines);
+    }
     /// <summary>TD1007 일반 공격 그림자 재현 구성.</summary>
     [Header("그림자 공격 (TotemShadowAttack)")]
     public TotemShadowAttackSettings ShadowAttack = new TotemShadowAttackSettings();
@@ -104,7 +119,14 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     }
 
     public List<GridCell> GetEffectCells(TotemBase totem, GridManager gridManager)
-        => CollectCells(effectRanges, totem, gridManager);
+    {
+        if (!HasEffectGroups) return CollectCells(effectRanges, totem, gridManager);
+        var cells = new List<GridCell>();
+        foreach (var group in EffectGroups)
+            if (group != null) foreach (var cell in group.GetCells(totem, gridManager))
+                if (!cells.Contains(cell)) cells.Add(cell);
+        return cells;
+    }
 
     public List<GridCell> GetAttackDisabledCells(TotemBase totem, GridManager gridManager)
         => CollectCells(attackDisabledRanges, totem, gridManager);
@@ -122,7 +144,15 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     }
 
     /// <summary>배치 전 UI 미리보기용 오프셋 (GridManager 불필요).</summary>
-    public List<Vector2Int> GetEffectPreviewOffsets() => CollectPreviewOffsets(effectRanges);
+    public List<Vector2Int> GetEffectPreviewOffsets()
+    {
+        if (!HasEffectGroups) return CollectPreviewOffsets(effectRanges);
+        var offsets = new List<Vector2Int>();
+        foreach (var group in EffectGroups)
+            if (group != null) foreach (var offset in group.GetPreviewOffsets())
+                if (!offsets.Contains(offset)) offsets.Add(offset);
+        return offsets;
+    }
 
     public List<Vector2Int> GetAttackDisabledPreviewOffsets() => CollectPreviewOffsets(attackDisabledRanges);
 

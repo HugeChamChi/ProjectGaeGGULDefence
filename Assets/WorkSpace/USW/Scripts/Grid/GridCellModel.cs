@@ -33,6 +33,8 @@ public class GridCellModel
     // ── 셀별 토템 버프 보너스 (GenericBuffTotem effectRange 기반 누산, kind별 누적) ──
     private readonly Dictionary<StatKind, float> _totemCellBonuses = new();
     public bool  IsTotemRangePreviewed         { get; private set; }
+    /// <summary>Optional per-effect range color; null uses the shared material palette.</summary>
+    public Color? TotemPreviewColor { get; private set; }
     public bool  IsTotemDisabledRangePreviewed { get; private set; }
 
     // ── 보스 패턴 상태 (신규) ──────────────────────────────────
@@ -101,9 +103,10 @@ public class GridCellModel
         OnStateChanged?.Invoke();
     }
 
-    public void SetTotemRangePreview(bool effectRange, bool disabledRange)
+    public void SetTotemRangePreview(bool effectRange, bool disabledRange, Color? color = null)
     {
         IsTotemRangePreviewed         = effectRange;
+        TotemPreviewColor = color;
         IsTotemDisabledRangePreviewed = disabledRange;
         OnStateChanged?.Invoke();
     }
@@ -113,6 +116,7 @@ public class GridCellModel
         if (!IsTotemRangePreviewed && !IsTotemDisabledRangePreviewed) return;
 
         IsTotemRangePreviewed         = false;
+        TotemPreviewColor = null;
         IsTotemDisabledRangePreviewed = false;
         OnStateChanged?.Invoke();
     }

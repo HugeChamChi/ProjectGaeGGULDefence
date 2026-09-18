@@ -10,6 +10,8 @@ public sealed class DebuffController
     private readonly Func<bool> _alive;
     private bool _advancing;
     private double _now;
+    /// <summary>Combat time used for expiry; remains unchanged while combat is paused.</summary>
+    public double CurrentTime => _now;
     /// <summary>디버그용 읽기 전용 활성 상태 목록.</summary>
     public IReadOnlyList<DebuffInstance> Active => _view;
     /// <summary>공통 피해 차감과 대상 생존 검사를 주입한다.</summary>
@@ -59,7 +61,12 @@ public sealed class DebuffController
     /// <summary>현재 받피증 배율.</summary>
     public decimal DamageTakenMultiplier
     {
-        get { foreach (var x in _instances) if (x is DamageTakenIncreaseDebuff) return x.Definition.DamageMultiplier; return 1; }
+        get { foreach (var x in _instances) if (x is DamageTakenIncreaseDebuff damage) return x.Definition.DamageMultiplier + damage.Bonus; return 1; }
+    }
+    /// <summary>받피증 스킬에 동반된 방어력 감소율. 해당 디버프와 함께 만료된다.</summary>
+    public double DefenseReduction
+    {
+        get { foreach (var x in _instances) if (x is DamageTakenIncreaseDebuff damage) return damage.DefenseReduction; return 0; }
     }
     /// <summary>아머 방어 약화 계수 q.</summary>
     public double ArmorFactor

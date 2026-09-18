@@ -98,7 +98,7 @@ public class InGameInstaller : MonoBehaviour
     {
         int waveNum = _waveManager != null ? _waveManager.CurrentWave + 1 : 1;
 
-        _bossEncounterUI.PlayBossTransitionSequence(prevEntry?.bossIcon, nextEntry?.bossIcon, waveNum).Forget();
+        _bossEncounterUI.PlayBossTransitionSequence(prevEntry?.Icon, nextEntry?.Icon, waveNum).Forget();
     }
 
     // ── Unit Action ────────────────────────────────────────────
@@ -147,9 +147,9 @@ public class InGameInstaller : MonoBehaviour
 
     private void HandleTotemClicked(TotemBase totem)
     {
-        _totemActionPopup.Show(totem);
-        _totemInfoPanel.SetData(totem.Data);
-        _gridManager?.ShowTotemRangePreview(totem);
+        if (totem == null) return;
+        _totemActionPopup?.Show(totem);
+        _totemInfoPanel?.SetData(totem.Data);
     }
 
     private void OnSellTotemRequested(TotemBase totem)
@@ -167,6 +167,7 @@ public class InGameInstaller : MonoBehaviour
 
     private void OnDestroy()
     {
+        DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         if (_waveManager != null)
         {
             _waveManager.OnWaveChanged -= OnWaveChanged;

@@ -5,6 +5,15 @@ using UnityEngine;
 public sealed class DebuffData : ScriptableObject
 {
     [SerializeField] private int _id;
+    [Header("HUD")]
+    [SerializeField] private Sprite _icon;
+    [SerializeField] private string _displayName;
+    /// <summary>HUD lookup ID.</summary>
+    public int Id => _id;
+    /// <summary>Optional HUD artwork.</summary>
+    public Sprite Icon => _icon;
+    /// <summary>Label shown when artwork is not assigned.</summary>
+    public string DisplayName => _displayName;
     [SerializeField] private string _key;
     [SerializeField] private DebuffKind _kind;
     [SerializeField] private string _stackGroup;

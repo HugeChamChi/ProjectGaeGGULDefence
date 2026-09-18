@@ -151,8 +151,7 @@ namespace GaeGGUL.UI.Totem
             {
                 (settings.fieldLabel, settings.fieldSprite),
                 (settings.totemLabel, settings.totemSprite),
-                (settings.effectLabel, settings.effectSprite),
-                (settings.debuffLabel, settings.debuffSprite)
+                (settings.effectLabel, settings.effectSprite)
             };
 
             foreach (var data in legendData)
@@ -240,6 +239,41 @@ namespace GaeGGUL.UI.Totem
             else
             {
                 Debug.LogWarning($"[TotemUI] Totem position out of bounds: {_center}");
+            }
+        }
+
+        /// <summary>Shows effect-specific colors from the same SO used by gameplay.</summary>
+        public void SetData(TotemData data)
+        {
+            SetRange(data != null ? data.GetEffectPreviewOffsets() : null, null);
+            if (_cells == null) return;
+            if (data == null || !data.HasEffectGroups) { SetupLegend(); return; }
+            foreach (var group in data.EffectGroups)
+            {
+                if (group == null) continue;
+                foreach (var offset in group.GetPreviewOffsets())
+                {
+                    var pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
+                    if (pos != _center && IsValidPos(pos) && _cells[pos.x, pos.y] != null)
+                    {
+                        _cells[pos.x, pos.y].SetSprite(settings.fieldSprite);
+                        _cells[pos.x, pos.y].SetColor(group.Color);
+                    }
+                }
+            }
+            if (legendSlotPrefab == null || tr_LegendParent == null) return;
+            for (int i = tr_LegendParent.childCount - 1; i >= 0; i--)
+            {
+                var child = tr_LegendParent.GetChild(i).gameObject;
+                child.SetActive(false);
+                if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
+            }
+            foreach (var group in data.EffectGroups)
+            {
+                if (group == null) continue;
+                var slot = Instantiate(legendSlotPrefab, tr_LegendParent);
+                slot.SetData(string.IsNullOrWhiteSpace(group.Label) ? "효과" : group.Label, settings.fieldSprite);
+                slot.SetColor(group.Color);
             }
         }
 

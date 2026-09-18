@@ -23,10 +23,21 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>동기 액션이 시작한 일반 공격 문맥. 연발 액션은 이를 캡처해 각 발사로 전달한다.</summary>
     public BasicAttackReplay CurrentBasicAttack { get; private set; }
 
+    /// <summary>소환 드론의 일반 공격을 본체 셀의 디버프/그림자 구독에 전달한다. 본체 공격이나 스킬은 실행하지 않는다.</summary>
+    public BasicAttackReplay BeginDroneBasicAttack(BossBase target, Transform visualSource, Func<bool> isSourceValid)
+    {
+        if (_unit == null || target == null || target.IsDead) return null;
+        _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, target);
+        if (OnBasicAttackStarted == null) return null;
+        var replay = new BasicAttackReplay(_unit, target, visualSource, isSourceValid);
+        OnBasicAttackStarted.Invoke(replay);
+        return replay;
+    }
+
     public float SkillTimer
     {
         get => _skillTimer;
-        set => _skillTimer = value;
+        set => _skillTimer = _unit != null && !_unit.CanUseSkill ? 0f : value;
     }
 
     /// <summary>CanAutoSkill이 꺼져있는 유닛(예: TestUnit)도 스킬을 즉시 발동시켜볼 수 있도록,
@@ -46,17 +57,17 @@ public class UnitCombatComponent : MonoBehaviour
     // 게이지가 멈춰 보였다가 한 번에 점프하는 문제(예: 족장 스킬 쿨타임 UI)가 생깁니다.
     private void Update()
     {
-        if (_paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
+        if (_unit == null || _paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
 
-        _attackTimer += Time.deltaTime;
-        _skillTimer += Time.deltaTime;
+        if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
+        if (_unit.CanUseSkill) _skillTimer += Time.deltaTime;
     }
 
     public void StartLoops()
     {
         if (_unit.IsFirstPlacement)
         {
-            _attackTimer = _stats.GetCurrentAttackInterval();
+            _attackTimer = _unit.CanBasicAttack ? _stats.GetCurrentAttackInterval() : 0f;
             _skillTimer = 0f;
         }
 
@@ -114,12 +125,19 @@ public class UnitCombatComponent : MonoBehaviour
 
             _resource.TickFoodProduction(dt);
 
+            if (!_unit.CanBasicAttack && !_unit.CanUseSkill)
+            {
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                    return;
+                continue;
+            }
+
             float attackInterval = _stats.GetCurrentAttackInterval();
             float skillInterval = _stats.GetCurrentSkillInterval();
             
             bool canAttack = _unit.currentCell != null && !_unit.currentCell.Model.IsAttackDisabled && !_unit.currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
-            if (_unit.CanAutoSkill && _skillTimer >= skillInterval && canAttack)
+            if (_unit.CanUseSkill && _unit.CanAutoSkill && _skillTimer >= skillInterval && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Skilling);
                 _skillTimer = 0f;
@@ -164,7 +182,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteAttack()
     {
-        if (_unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
+        if (_unit == null || !_unit.CanBasicAttack || _unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
 
         bool attackDisabled = _unit.currentCell != null &&
             (_unit.currentCell.Model.IsAttackDisabled || _unit.currentCell.Model.TotemAttackDisabled);
@@ -199,6 +217,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteSkill()
     {
+        if (_unit == null || !_unit.CanUseSkill) return;
         _unit.InvokeOnSkillFull();
 
         bool attackDisabled = _unit.currentCell != null &&

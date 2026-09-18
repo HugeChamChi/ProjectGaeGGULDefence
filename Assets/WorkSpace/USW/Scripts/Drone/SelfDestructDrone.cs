@@ -10,6 +10,7 @@ using UnityEngine;
 public class SelfDestructDrone : MonoBehaviour
 {
     [Inject] private BossManager _bossManager;
+    [Inject] private DroneManager _droneManager;
 
     [SerializeField] private float _flyDuration = 0.4f;
 
@@ -56,6 +57,8 @@ public class SelfDestructDrone : MonoBehaviour
         boss = _bossManager?.CurrentBoss;
         if (boss != null && !boss.IsDead)
             boss.TakeDamage(Mathf.RoundToInt(damage), target);
+
+        _droneManager?.NotifySelfDestructExplosion();
 
         ReturnToPool();
     }

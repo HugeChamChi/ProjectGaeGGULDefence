@@ -81,6 +81,8 @@ public class MergeManager : MonoBehaviour
         // Use PlaceUnitWithEffect with the spawnCell as origin (so the effect plays without a long line traversal)
         _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
 
+        _spawnerManager.RequestMergeSupport();
+
         // [진로 계승] 진로 계승 보유 시 무작위 노멀 유닛 1기 추가 지급
         if (_levelUpManager?.HasMergeKeepsTribe == true)
         {

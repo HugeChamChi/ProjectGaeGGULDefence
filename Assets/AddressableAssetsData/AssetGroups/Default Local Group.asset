@@ -15,13 +15,43 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 2a1e57ad30f1cd8459f99453f766853b
   m_SerializeEntries:
+  - m_GUID: 0269d4965664f49439872d185b90b50d
+    m_Address: Betang_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0293ed68660dbae41b373eccc4a7a6ee
     m_Address: 01.Popup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03e1a8655e1fe60419f9f0b57619438f
+    m_Address: Gammang
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06756c20eb6adce499c3d17767b4296d
+    m_Address: TotemIcon1003
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06fcd8eb93eee3b41853b4c2a7d83b9d
+    m_Address: TotemTD1009
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07828d40f9c1cfe4e90b04ff49ee5b07
     m_Address: DroneUnit_Buffer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d15eeda8f5179e4899772cf440c6ca2
+    m_Address: TotemIcon1009
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d8f65a6a5567c245bbf3d402459948f
+    m_Address: TotemIcon1005
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -40,8 +70,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 188aa502517044c4d91d9ae5e000aa16
-    m_Address: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
+  - m_GUID: 1582a02bb543b984a9fb9b05ccc96132
+    m_Address: TotemTD1001
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -50,8 +80,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d0c195f567973e4e9f7bebf02dfacf0
+    m_Address: TotemTD1008
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1e4743ba941a490f99eeb277a582243d
     m_Address: Totem_AttackTop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21584bc7f4d8df342b34084908ef2525
+    m_Address: TotemIcon1007
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 264b31d4a453127419ba97cca65460a2
+    m_Address: TotemIcon1006
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2863fec59fe60c3408f3da3215541d57
+    m_Address: TotemTD1003
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -75,8 +125,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4767cf3a0adf01f42abec193bff0ab47
+    m_Address: TotemIcon1004
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4af1444cb4cb1454d9fa888c491ffae3
     m_Address: 03.Samurai_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f64d6feec6b00d4abe597cb65d37321
+    m_Address: TotemTD1004
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -120,6 +180,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c0b4318f27060d49b2356a144aad1f7
+    m_Address: TotemIcon1002
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f190a3e07ce66e4e86caf21fc98628b
+    m_Address: TotemIcon1008
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d2958068776c34e850ecd91827673b
     m_Address: 03.Magician_attack
     m_ReadOnly: 0
@@ -127,6 +197,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 74e086c8dfb5ef8429d72ea79bd836fa
     m_Address: DroneUnit_Producer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 773020149a2c6f84b8285362b5c11a47
+    m_Address: TotemTD1006
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -145,6 +220,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8903491e425434046a0d026f5d933189
+    m_Address: TotemTD1007
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8926cd92b8ab6c143b24f5f241947ffa
+    m_Address: TotemTD1002
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ca50cc660167d945a82416836e6d0d9
     m_Address: 01.Screen_touch(max vol)
     m_ReadOnly: 0
@@ -152,6 +237,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8cef1c8d28abf50419b88a31d277a0be
     m_Address: Frog_Priest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f0d0d586d0a2b64188e2640a06b6ba0
+    m_Address: TotemIcon1001
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -165,6 +255,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93479576baf767347a3607776979676c
+    m_Address: TotemTD1005
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9a2629c3e477a99478af9be35681d975
     m_Address: ANIM_DroneFrogLeader_Idle_sprite sheet_0
     m_ReadOnly: 0
@@ -175,13 +270,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9db28dea548971348984f593f77b080f
+    m_Address: Zetang_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0f55a7f71f8c904083647c541d79311
+    m_Address: TotemSampleAttackIcon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b6577599dbf469645b8ae34e27156203
     m_Address: 01.Button_Touch(max vol)
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb20b7c8894a08b4db7231b503aad6c9
+    m_Address: SampleAttackTotem
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c4deb9a02ea44663b6f3ee4d2452722b
     m_Address: Totem_FoodGenerator
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce829f5e2d6b16c49aa37ec746984c2d
+    m_Address: TotemWildcardUnit
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -200,6 +315,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e22076861c6d5d94aae92cdeb183139f
+    m_Address: Deltang
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
     m_Address: 05.Drone_Debuff
     m_ReadOnly: 0
@@ -207,6 +327,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f261046b3dd94ae4684e904a2fc3ef9f
     m_Address: ANIM_DroneFrogDebuffer_Idle_sprite sheet_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f68106d4e90c2084fa449ebf8134e8b3
+    m_Address: TotemIcon1010
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f901983369b66f742b03014899a08a16
+    m_Address: TotemTD1010
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

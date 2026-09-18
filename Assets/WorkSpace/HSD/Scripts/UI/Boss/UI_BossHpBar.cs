@@ -1,11 +1,36 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 using DG.Tweening;
 
+/// <summary>전체 체력 비율과 남은 체력줄을 표시하는 보스 체력바.</summary>
 public class UI_BossHpBar : MonoBehaviour
 {
+    [Header("Debuffs")]
+    [SerializeField] private Vector2 _debuffOffset = new Vector2(0f, -10f);
+    [SerializeField] private Vector2 _debuffSlotSize = new Vector2(58f, 58f);
+    [Tooltip("디버프 표시 영역. 자식 BossDebuffs의 RectTransform으로 위치를 조절합니다.")]
+    [SerializeField] private BossDebuffBar _debuffBar;
+
+    /// <summary>Connects active boss effects to the status row below this HP bar.</summary>
+    public void ConfigureDebuffs(BossManager manager, DebuffSettings settings)
+    {
+        if (_debuffBar == null) _debuffBar = GetComponentInChildren<BossDebuffBar>(true);
+        if (_debuffBar == null)
+        {
+            var row = new GameObject("BossDebuffs", typeof(RectTransform), typeof(BossDebuffBar));
+            row.transform.SetParent(transform, false);
+            var rect = (RectTransform)row.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = _debuffOffset;
+            rect.sizeDelta = new Vector2(400f, _debuffSlotSize.y);
+            _debuffBar = row.GetComponent<BossDebuffBar>();
+        }
+        _debuffBar.Configure(manager, settings, _debuffSlotSize, _hpLineText != null ? _hpLineText.font : null);
+    }
     [Header("Bar")]
     [Tooltip("HP에 따라 가로 길이가 줄어드는 Mask 영역")]
     [SerializeField] private RectTransform _hpFillMask;
@@ -13,12 +38,8 @@ public class UI_BossHpBar : MonoBehaviour
     [Tooltip("실제 HP 색상을 담당")]
     [SerializeField] private Image _hpColor;
 
-    [Tooltip("Tiled 방식의 스테인드글라스 패턴")]
-    [SerializeField] private Image _patternOverlay;
-
 
     [Header("Texts")]
-    [SerializeField] private TextMeshProUGUI _hpPercentText;
     [SerializeField] private TextMeshProUGUI _hpLineText;
 
 
@@ -47,18 +68,16 @@ public class UI_BossHpBar : MonoBehaviour
         new Color(0.90f, 0.25f, 0.25f), // Red
         new Color(0.65f, 0.30f, 0.85f), // Purple
     };
-
-
-    [Header("Pattern")]
-    [SerializeField] private Color _patternColor = Color.white;
-
-    [Range(0f, 1f)]
-    [SerializeField] private float _patternAlpha = 0.35f;
-
+    
 
     [Header("Text Format")]
-    [SerializeField] private string _percentFormat = "0.00";
-    [SerializeField] private string _lineSuffix = "줄";
+    [Tooltip("줄 수 앞에 붙는 접두사 (예: x182)")]
+    [FormerlySerializedAs("_lineSuffix")]
+    [SerializeField] private string _linePrefix = "x";
+
+    [Header("HP Per Line")]
+    [Tooltip("한 줄이 담당하는 체력량. BeginBoss에 줄 수를 명시하지 않으면(0 이하) 이 값으로 maxHp에서 자동 계산한다.")]
+    [SerializeField, Min(1)] private long _hpPerLine = 500;
 
 
     [Header("Damage Tween (DOTween)")]
@@ -69,9 +88,19 @@ public class UI_BossHpBar : MonoBehaviour
     private float _shownRatio;
     private bool _initialized;
     private Tween _barTween;
+    private decimal _currentHp;
+    private decimal _maxHp = 1m;
+    private float _targetRatio;
 
 
+    /// <summary>전체 체력줄 수.</summary>
     public int LineCount => Mathf.Max(1, _lineCount);
+
+    /// <summary>실제 보스가 이 바를 소유하면 독립 테스트 도구는 값을 덮어쓰지 않는다.</summary>
+    public bool IsRuntimeControlled { get; private set; }
+
+    /// <summary>보스 교체/줄 수 재설정 알림. 피해 연출의 기준을 초기화한다.</summary>
+    public event Action OnHpReset;
 
     /// <summary>현재 남은 체력줄 (0 = 사망).</summary>
     public int CurrentLine => _currentLine;
@@ -81,31 +110,34 @@ public class UI_BossHpBar : MonoBehaviour
     public event Action<int> OnCurrentLineChanged;
 
 
-    private void Awake() => ApplyPatternColor();
-
     private void OnDestroy() => _barTween?.Kill();
 
     /// <summary>런타임에서 총 체력줄 수 변경 (디버그/설정용). 이후 SetHp 호출 시 즉시 반영.</summary>
     public void SetLineCount(int count)
     {
-        _lineCount = Mathf.Max(1, count);
-        ApplyBarVisual(_shownRatio);
+        ResetHp(_currentHp, _maxHp, count);
     }
 
-
+    /// <summary>독립 테스트 도구에서 사용하는 실수 HP 입력.</summary>
     public void SetHp(float currentHp, float maxHp)
     {
-        if (maxHp <= 0f)
-            maxHp = 1f;
+        SetHpExact((decimal)currentHp, (decimal)maxHp);
+    }
 
-        float ratio = Mathf.Clamp01(currentHp / maxHp);
-        int lineCount = LineCount;
+    /// <summary>실제 전투의 decimal HP로 줄 수를 계산하고 표시 단계에서만 float로 변환한다.</summary>
+    public void SetHpExact(decimal currentHp, decimal maxHp)
+    {
+        _maxHp = maxHp > 0m ? maxHp : 1m;
+        _currentHp = Math.Min(_maxHp, Math.Max(0m, currentHp));
+        decimal exactRatio = _currentHp / _maxHp;
+        float ratio = (float)exactRatio;
+        _targetRatio = ratio;
 
         // 이벤트/줄 판정은 목표값 기준으로 즉시 (흔들림·유리깨짐이 바로 터지게)
         int targetLine =
-            ratio <= 0f
+            _currentHp <= 0m
                 ? 0
-                : Mathf.Clamp(Mathf.CeilToInt(ratio * lineCount), 1, lineCount);
+                : Math.Max(1, (int)decimal.Ceiling(exactRatio * LineCount));
 
         if (targetLine != _currentLine)
         {
@@ -116,7 +148,7 @@ public class UI_BossHpBar : MonoBehaviour
         // 바/퍼센트는 부드럽게 보간 (첫 세팅·에디터·비활성 시엔 즉시)
         _barTween?.Kill();
 
-        if (_smooth && _initialized && Application.isPlaying)
+        if (_smooth && _initialized && Application.isPlaying && isActiveAndEnabled)
         {
             _barTween = DOTween.To(
                     () => _shownRatio,
@@ -133,6 +165,39 @@ public class UI_BossHpBar : MonoBehaviour
         }
 
         _initialized = true;
+    }
+
+    /// <summary>독립 테스터보다 먼저 실제 보스용 표시로 지정한다.</summary>
+    public void UseRuntimeData() => IsRuntimeControlled = true;
+
+    /// <summary>새 보스를 즉시 표시하고 이전 보스의 보간/피격 연출을 초기화한다.
+    /// lineCount를 0 이하로 주면(생략 포함) <see cref="_hpPerLine"/> 기준 maxHp에서 자동 계산한다.</summary>
+    public void BeginBoss(decimal currentHp, decimal maxHp, int lineCount = 0)
+    {
+        UseRuntimeData();
+        ResetHp(currentHp, maxHp, ResolveLineCount(maxHp, lineCount));
+    }
+
+    /// <summary>lineCount가 명시(1 이상)되면 그대로, 아니면 hpPerLine 기준으로 maxHp에서 계산한다.</summary>
+    private int ResolveLineCount(decimal maxHp, int lineCount)
+    {
+        if (lineCount > 0) return lineCount;
+        long perLine = Math.Max(1, _hpPerLine);
+        return (int)Math.Max(1m, Math.Ceiling(maxHp / perLine));
+    }
+
+    private void ResetHp(decimal currentHp, decimal maxHp, int lineCount)
+    {
+        _barTween?.Kill();
+        _lineCount = Mathf.Max(1, lineCount);
+        _maxHp = maxHp > 0m ? maxHp : 1m;
+        _currentHp = Math.Min(_maxHp, Math.Max(0m, currentHp));
+        decimal ratio = _currentHp / _maxHp;
+        _targetRatio = _shownRatio = (float)ratio;
+        _currentLine = _currentHp <= 0m ? 0 : Math.Max(1, (int)decimal.Ceiling(ratio * LineCount));
+        _initialized = true;
+        ApplyBarVisual(_shownRatio);
+        OnHpReset?.Invoke();
     }
 
     /// <summary>보간된 표시 비율(shownRatio) 기준으로 바 길이·색·텍스트를 갱신.</summary>
@@ -159,7 +224,7 @@ public class UI_BossHpBar : MonoBehaviour
             _hpFillMask.offsetMax = offsetMax;
         }
 
-        int shownLine =
+        int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :
             shownRatio <= 0f
                 ? 0
                 : Mathf.Clamp(Mathf.CeilToInt(shownRatio * lineCount), 1, lineCount);
@@ -167,13 +232,8 @@ public class UI_BossHpBar : MonoBehaviour
         if (_hpColor != null && shownLine >= 1)
             _hpColor.color = EvaluateLineColor(shownLine, lineCount);
 
-        ApplyPatternColor();
-
-        if (_hpPercentText != null)
-            _hpPercentText.text = (shownRatio * 100f).ToString(_percentFormat) + "%";
-
         if (_hpLineText != null)
-            _hpLineText.text = shownLine + _lineSuffix;
+            _hpLineText.text = _linePrefix + shownLine;
     }
 
 
@@ -218,21 +278,4 @@ public class UI_BossHpBar : MonoBehaviour
     /// <summary>항상 0~m-1 을 반환하는 나머지 연산 (C# % 의 음수 결과 보정).</summary>
     private static int Mod(int a, int m) => ((a % m) + m) % m;
 
-    private void ApplyPatternColor()
-    {
-        if (_patternOverlay == null)
-            return;
-
-        Color c = _patternColor;
-        c.a = _patternAlpha;
-
-        _patternOverlay.color = c;
-    }
-
-
-#if UNITY_EDITOR
-
-    private void OnValidate() => ApplyPatternColor();
-
-#endif
 }

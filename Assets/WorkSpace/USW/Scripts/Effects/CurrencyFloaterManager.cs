@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -24,6 +26,14 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
     [Header("재화 스타일")]
     public DamageFloaterStyle currencyStyle;
 
+    [Header("식량 생산 합산 표시")]
+    [Tooltip("유닛별 식량 생산량을 개별 표시하지 않고 합산해서 띄울 위치 (예: currency text 위 빈 오브젝트)")]
+    [SerializeField] private Transform foodFloaterAnchor;
+    [Tooltip("식량 생산량을 합산해서 플로터 하나로 표시하는 주기(초)")]
+    [SerializeField] private float foodFloaterFlushInterval = 0.4f;
+
+    private float _pendingFoodAmount;
+
     private GameObject _loadedPrefab;
 
     public bool IsLoaded => _loadedPrefab != null;
@@ -48,11 +58,40 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
     private void Start()
     {
         _assetLifecycle?.LoadAsync(this).Forget();
+        FoodFloaterFlushLoopAsync(this.GetCancellationTokenOnDestroy())
+            .Forget(e => { if (e is not OperationCanceledException) Debug.LogException(e); });
     }
 
     private void OnDestroy()
     {
         _assetLifecycle?.Unload(this);
+    }
+
+    /// <summary>
+    /// 유닛들이 매 틱 생산한 식량을 개별 플로터 대신 합산 대기열에 쌓는다.
+    /// 실제 표시는 FoodFloaterFlushLoopAsync가 주기적으로 한 번에 처리한다.
+    /// </summary>
+    public void ReportFoodProduction(float amount)
+    {
+        if (amount <= 0f) return;
+        _pendingFoodAmount += amount;
+    }
+
+    private async UniTask FoodFloaterFlushLoopAsync(CancellationToken token)
+    {
+        while (true)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(foodFloaterFlushInterval), cancellationToken: token);
+
+            if (_pendingFoodAmount > 0f)
+            {
+                Transform anchor = foodFloaterAnchor != null ? foodFloaterAnchor : currencyTextContainer;
+                if (anchor != null)
+                    SpawnCurrencyText(anchor.position, _pendingFoodAmount);
+
+                _pendingFoodAmount = 0f;
+            }
+        }
     }
 
     /// <summary>

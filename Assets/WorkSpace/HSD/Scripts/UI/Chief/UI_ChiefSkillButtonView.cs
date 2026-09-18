@@ -35,12 +35,8 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
         if (_spawner != null)
         {
-            _spawner.OnChieftainSpawned += OnChieftainSpawned;
-            
-            if (_spawner.ChieftainUnit is ChiefUnit chief)
-            {
-                _presenter.SetChiefUnit(chief);
-            }
+            _spawner.OnActiveSkillChanged += OnActiveSkillChanged;
+            _presenter.SetActiveSkill(_spawner.ActiveSkill);
         }
     }
 
@@ -61,16 +57,16 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
         }
     }
 
-    private void OnChieftainSpawned(ChiefUnit chief)
+    private void OnActiveSkillChanged(IChiefActiveSkill skill)
     {
-        _presenter?.SetChiefUnit(chief);
+        _presenter?.SetActiveSkill(skill);
     }
 
     private void OnDestroy()
     {
         if (_spawner != null)
         {
-            _spawner.OnChieftainSpawned -= OnChieftainSpawned;
+            _spawner.OnActiveSkillChanged -= OnActiveSkillChanged;
         }
     }
 
@@ -114,7 +110,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     public void SetIcon(Sprite icon)
     {
-        if (img_Icon != null && icon != null)
+        if (img_Icon != null)
         {
             img_Icon.sprite = icon;
         }

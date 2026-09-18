@@ -43,7 +43,7 @@ public class UI_TotemInfoPanel : UI_Base
 
         if (rangeGrid != null)
         {
-            rangeGrid.SetRange(data.GetEffectPreviewOffsets(), data.GetAttackDisabledPreviewOffsets());
+            rangeGrid.SetData(data);
         }
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 public class UI_ChiefSkillPresenter
 {
     private readonly UI_ChiefSkillButtonView _view;
-    private ChiefUnit _chiefUnit;
+    private IChiefActiveSkill _skill;
 
     public UI_ChiefSkillPresenter(UI_ChiefSkillButtonView view)
     {
@@ -13,13 +13,19 @@ public class UI_ChiefSkillPresenter
 
     public void SetChiefUnit(ChiefUnit chiefUnit)
     {
-        _chiefUnit = chiefUnit;
-        _view.SetIcon(_chiefUnit != null ? _chiefUnit.unitData?.icon : null);
+        SetActiveSkill(chiefUnit != null ? new UnitChiefActiveSkill(chiefUnit) : null);
+    }
+    /// <summary>그리드 유무와 관계없는 액티브 스킬을 표시한다.</summary>
+    public void SetActiveSkill(IChiefActiveSkill skill)
+    {
+        _skill=skill;
+        _view.SetIcon(skill?.Icon);
+        OnUpdate(0);
     }
 
     public void OnUpdate(float deltaTime)
     {
-        if (_chiefUnit == null || _chiefUnit.unitData == null || !_chiefUnit.gameObject.activeInHierarchy || _chiefUnit.currentCell == null)
+        if (_skill == null || !_skill.IsAvailable)
         {
             _view.SetCooldownSliderValue(1f);
             _view.SetCooldownText("");
@@ -28,32 +34,27 @@ public class UI_ChiefSkillPresenter
             return;
         }
 
-        float interval = _chiefUnit.GetCurrentSkillInterval();
-        float timer = _chiefUnit.CurrentSkillTimer;
-        float progress = _chiefUnit.SkillGaugeProgress; // 0f ~ 1f
-        bool isReady = _chiefUnit.IsSkillReady; // progress >= 1f
+        float progress = _skill.CooldownProgress;
+        bool isReady = _skill.CanActivate;
 
         // 슬라이더 값이 0일 때가 사용 가능하도록 역전 (1 - progress)
         _view.SetCooldownSliderValue(Mathf.Clamp01(1f - progress));
         _view.SetButtonInteractable(isReady);
         _view.SetDisabledVisual(!isReady);
 
-        if (isReady)
+        if (_skill.CooldownRemaining <= 0)
         {
             _view.SetCooldownText(""); // 사용 가능할 때 텍스트 제거
         }
         else
         {
-            float remainTime = Mathf.Max(0f, interval - timer);
+            float remainTime = _skill.CooldownRemaining;
             _view.SetCooldownText($"{remainTime:F1}s");
         }
     }
 
     public void ExecuteSkill()
     {
-        if (_chiefUnit != null && _chiefUnit.gameObject.activeInHierarchy && _chiefUnit.currentCell != null && _chiefUnit.IsSkillReady)
-        {
-            _chiefUnit.ExecuteSkillManually();
-        }
+        _skill?.TryActivate();
     }
 }

@@ -17,15 +17,22 @@ public class InGameLifetimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<CurrencyManager>();
         builder.RegisterComponentInHierarchy<ExpManager>();
+        builder.RegisterComponentInHierarchy<ExpEffectController>();
+        builder.RegisterComponentInHierarchy<ExpBarUI>();
 
         builder.RegisterComponentInHierarchy<GridManager>();
         builder.RegisterComponentInHierarchy<UnitFactory>();
         builder.RegisterComponentInHierarchy<UnitSpawner>();
-        builder.RegisterComponentInHierarchy<PopulationManager>();
 
         builder.RegisterComponentInHierarchy<BossManager>();
         builder.RegisterComponentInHierarchy<BossPatternController>();
         builder.RegisterComponentInHierarchy<TotemSpawner>();
+        var totemInteractionSettings = Resources.Load<TotemInteractionSettings>("TotemInteractionSettings");
+        if (totemInteractionSettings == null) throw new System.InvalidOperationException("TotemInteractionSettings is required.");
+        builder.RegisterInstance(totemInteractionSettings);
+        builder.Register<TotemInventory>(Lifetime.Scoped);
+        builder.RegisterComponentInHierarchy<TotemRotationUI>();
+        builder.RegisterComponentInHierarchy<TotemInventoryUI>();
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
         builder.RegisterComponentInHierarchy<BuffManager>();
 
@@ -48,6 +55,7 @@ public class InGameLifetimeScope : LifetimeScope
             builder.RegisterComponentInHierarchy<DroneManager>();
         }
 
+        builder.RegisterEntryPoint<AlphanActiveSkill>(Lifetime.Scoped).AsSelf();
         builder.RegisterEntryPoint<GameInitializer>();
 
         builder.RegisterBuildCallback(resolver =>

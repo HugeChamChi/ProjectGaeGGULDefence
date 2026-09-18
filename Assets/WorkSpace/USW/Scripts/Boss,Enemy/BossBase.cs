@@ -55,13 +55,13 @@ public abstract class BossBase : MonoBehaviour
         Debuffs?.Advance(_debuffTime);
     }
     /// <summary>스킬/아머 부여. 화염구는 ApplyDebuffImpact로 피해 전 스냅샷을 전달한다.</summary>
-    public bool TryApplyDebuff(DebuffBinding binding, int sourceId)
+    public bool TryApplyDebuff(DebuffBinding binding, int sourceId, decimal damageTakenBonus = 0, double defenseReduction = 0)
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || Debuffs == null || _debuffCatalog == null) return false;
         if (!_debuffCatalog.TryGet(binding.DebuffId, out var definition))
         { Debug.LogError($"Unknown debuff_id: {binding.DebuffId}"); return false; }
-        return Debuffs.Apply(definition, new DebuffApplyContext(sourceId, binding.StacksPerApply, _health.CurrentUnits));
+        return Debuffs.Apply(definition, new DebuffApplyContext(sourceId, binding.StacksPerApply, _health.CurrentUnits, damageTakenBonus, defenseReduction));
     }
     /// <summary>실제 적중 대상에서 기존 틱 → 스냅샷 → 즉발 피해 → 생존 시 디버프 순서를 보장한다.</summary>
     public void ApplyDebuffImpact(DebuffBinding binding, int sourceId, decimal impactDamage, Vector3? hitPos = null)
@@ -111,6 +111,9 @@ public abstract class BossBase : MonoBehaviour
     /// 하는 특수 상황에서만 코드로 켠다 — 기본값 false로 일반 게임플레이엔 영향 없다.</summary>
     public bool Invincible { get; set; } = false;
 
+    /// <summary>데미지 1당 지급할 경험치 배율. BossManager.SpawnSingleBoss가 BossEntry 기준으로 설정한다.</summary>
+    public float ExpMultiplier { get; set; } = 0.01f;
+
     // ── 트윈 관련 ──────────────────────────────────────────────────
     private Vector3 _originalScale;
     private Tween _hitTween;
@@ -146,10 +149,19 @@ public abstract class BossBase : MonoBehaviour
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
-        long units = DamageCalculator.Calculate(amount, _defense, _defenseScale,
+        long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
         ApplyFinalDamage(units, hitPos);
         return units;
+    }
+
+    /// <summary>연속 공격이 공유할 방어/받피증 적용 후 피해. HP 차감 없이 계산한다.</summary>
+    public long CalculateFinalDamageUnits(decimal amount)
+    {
+        AdvanceDebuffs();
+        if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
+        return DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
+            Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, long.MaxValue);
     }
 
     /// <summary>이미 계산된 원본 피해를 방어력/치명타 재계산 없이 재현한다. 무적/전투 상태/남은 체력은 존중한다.</summary>

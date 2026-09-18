@@ -13,8 +13,8 @@ using UnityEngine.UI;
 // ─ Scene 구성 ────────────────────────────────────────
 //   LevelUpPanel  ← 이 GameObject에 LevelUpUI 컴포넌트 부착
 //     ├── CardContainer     ← HorizontalLayoutGroup (Inspector 연결)
-//     ├── SelectionTimer    ← TMP_Text 카운트다운 표시 (Inspector 연결)
-//     └── ConfirmButton     ← Button (Inspector 연결)
+//     └── SelectionTimer    ← TMP_Text 카운트다운 표시 (Inspector 연결)
+//   카드 클릭 시 즉시 선택+확정되므로 별도 확인 버튼은 없다.
 //
 // ─ Inspector 연결 ─────────────────────────────────────
 //   cardContainer, cardPrefab, selectionTimerText 연결 필요
@@ -29,7 +29,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
-    [SerializeField] private Button        confirmButton;
 
     [Header("Selection Timer")]
     [SerializeField] private TMP_Text selectionTimerText;
@@ -44,27 +43,18 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     protected override void Awake()
     {
         // base.Awake(); // Removed to prevent double call
-        if (confirmButton != null)
-            confirmButton.onClick.AddListener(OnConfirmClicked);
-            
-        SetConfirmInteractable(false);
-    }
-
-    private void SetConfirmInteractable(bool value)
-    {
-        if (confirmButton != null) confirmButton.interactable = value;
     }
 
     // ── 열기 ───────────────────────────────────────────────────
 
     public void Show()
     {
+        StopSelectionTimer();
         var layout = cardContainer.GetComponent<LayoutGroup>();
         if (layout != null) layout.enabled = true;
 
         ClearCards();
         _selectedCard = null;
-        SetConfirmInteractable(false);
 
         var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
         if (choices.Count == 0)
@@ -76,7 +66,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);
-            card.Setup(data, OnCardClicked);
+            card.Setup(data, OnCardClicked, _levelUpManager.GetChoiceDescription(data));
             _spawnedCards.Add(card);
         }
 
@@ -105,11 +95,13 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
+        if (!_spawnedCards.Contains(clicked)) return;
         if (_selectedCard == clicked) return;
         _selectedCard?.Deselect();
         _selectedCard = clicked;
         _selectedCard.Select();
-        SetConfirmInteractable(true);
+
+        OnConfirmClicked();
     }
 
     // ── 확인 버튼 ──────────────────────────────────────────────
@@ -122,6 +114,12 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         if (data != null)
             _levelUpManager.ApplyEffect(data);
 
+        if (data != null && data.specialEffect == LevelUpSpecialEffect.RerollChoices)
+        {
+            Show();
+            return;
+        }
+
         Hide();
     }
 
@@ -130,7 +128,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     private async UniTaskVoid RunSelectionTimer()
     {
         StopSelectionTimer();
-        _selectionCts = new CancellationTokenSource();
+        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         var token = _selectionCts.Token;
 
         try
@@ -149,7 +147,6 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
             if (_spawnedCards.Count > 0)
             {
                 OnCardClicked(_spawnedCards[0]);
-                OnConfirmClicked();
             }
         }
         catch (OperationCanceledException) { }
@@ -160,6 +157,12 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();
         _selectionCts = null;
+    }
+
+    protected override void OnDestroy()
+    {
+        StopSelectionTimer();
+        base.OnDestroy();
     }
 
     // ── 닫기 ───────────────────────────────────────────────────

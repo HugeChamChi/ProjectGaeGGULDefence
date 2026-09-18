@@ -23,7 +23,8 @@ public class UnitResourceComponent : MonoBehaviour
 
         _foodTimer += deltaTime / speedMultiplier;
 
-        if (_foodTimer < 1f) return;
+        float payoutInterval = Mathf.Max(1f, _unit.FoodPayoutInterval);
+        if (_foodTimer < payoutInterval) return;
 
         float baseAmount = _unit.GetBaseFoodPerSecond();
         if (baseAmount <= 0f)
@@ -32,22 +33,22 @@ public class UnitResourceComponent : MonoBehaviour
             return;
         }
 
-        int elapsedTicks = Mathf.FloorToInt(_foodTimer);
-        _foodTimer -= elapsedTicks;
+        int elapsedTicks = Mathf.FloorToInt(_foodTimer / payoutInterval);
+        _foodTimer -= elapsedTicks * payoutInterval;
 
         float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
         float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
         float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
         if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
-        float amountPerTick = baseAmount * amountMultiplier;
+        float amountPerTick = baseAmount * amountMultiplier * payoutInterval;
 
         if (amountPerTick > 0f)
         {
             for (int i = 0; i < elapsedTicks; i++)
             {
                 _deps.CurrencyManager.AddCurrency(amountPerTick);
-                _deps.CurrencyFloaterManager?.SpawnCurrencyText(transform.position + Vector3.up * 0.5f, amountPerTick);
+                _deps.CurrencyFloaterManager?.ReportFoodProduction(amountPerTick);
             }
         }
     }

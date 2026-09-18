@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waveName: Wave 8
   bosses:
-  - bossIcon: {fileID: 21300000, guid: 04dbe245063dec24a90a2afd5e1d66fb, type: 3}
+  - Data: {fileID: 11400000, guid: 19ed0ecb742ff5542b9cb9db2c7676f0, type: 2}
+    bossIcon: {fileID: 21300000, guid: 04dbe245063dec24a90a2afd5e1d66fb, type: 3}
     prefab: {fileID: 3523614666774652447, guid: 0d424e95097eabf4c9c7d8d41ee0cf12,
       type: 3}
-    hp: 38000
+    hp: 235000
+    Defense: 0

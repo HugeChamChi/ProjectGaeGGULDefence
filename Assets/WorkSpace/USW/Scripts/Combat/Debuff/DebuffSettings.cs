@@ -12,6 +12,14 @@ public sealed class DebuffSettings : ScriptableObject
     public string SheetGid => _sheetGid;
     /// <summary>공식의 K.</summary>
     public double DefenseScale => _defenseScale;
+    /// <summary>Finds SO presentation data without changing combat definitions.</summary>
+    public DebuffData FindPresentation(int id)
+    {
+        if (_definitions != null)
+            foreach (var data in _definitions)
+                if (data != null && data.Id == id) return data;
+        return null;
+    }
     /// <summary>로컬 초기 정의.</summary>
     public IEnumerable<DebuffDefinition> CreateDefinitions()
     {

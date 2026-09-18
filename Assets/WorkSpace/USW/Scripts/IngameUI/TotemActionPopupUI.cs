@@ -16,12 +16,10 @@ using UnityEngine.EventSystems;
 ///
 /// 씬 구조
 ///   TotemActionPopup  ← 이 컴포넌트, Pivot (0.5, 0.5)
-///     ├── RotateButton  ← Button, anchoredPosition (-60, -100) = 7시
-///     └── SellButton    ← Button, anchoredPosition ( 60, -100) = 5시
+///     └── SellButton — 회전은 배치된 토템의 짧은 드래그 조작으로 처리한다.
 /// </summary>
 public class TotemActionPopupUI : MonoBehaviour
 {
-    [SerializeField] private RotateButtonUI rotateButton;
     [SerializeField] private SellTotemButtonUI sellButton;
 
     public event Action              OnDismissRequested;
@@ -30,6 +28,8 @@ public class TotemActionPopupUI : MonoBehaviour
     private bool          _isShowing;
     private bool          _justShown;
     private TotemBase     _currentTotem;
+    private void OnEnable() => DragHandler.OnDragStartedEvent += Hide;
+    private void OnDisable() => DragHandler.OnDragStartedEvent -= Hide;
 
 
 
@@ -38,7 +38,6 @@ public class TotemActionPopupUI : MonoBehaviour
         _justShown    = true;
         _currentTotem = totem;
 
-        rotateButton.SetTotem(totem);
         sellButton.SetTotem(totem);
         sellButton.SetPopup(this);
 

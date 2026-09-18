@@ -29,6 +29,28 @@ public class UpgradeManager : MonoBehaviour
     public event Action OnLoaded;
 
     private readonly Dictionary<string, int> _jobLevel = new();
+    private readonly Dictionary<int, float> _discounts = new();
+    private readonly HashSet<int> _refundedCards = new();
+    /// <summary>이번 런에서 성공한 강화에 실제 결제한 식량의 합계. 환급은 지출 이력을 줄이지 않는다.</summary>
+    public float TotalSpent { get; private set; }
+    /// <summary>강화 가격 변경 시 표시를 갱신한다.</summary>
+    public event Action OnCostChanged;
+
+    /// <summary>카드 할인과 해당 시점 실제 누적 지출에 대한 일회성 환급을 적용한다.</summary>
+    public void ApplyDiscountAndRefund(int cardId, float rate)
+    {
+        if (float.IsNaN(rate) || float.IsInfinity(rate)) return;
+        rate = Mathf.Clamp01(rate);
+        _discounts[cardId] = rate;
+        if (_refundedCards.Add(cardId)) _currencyManager?.AddCurrency(TotalSpent * rate);
+        OnCostChanged?.Invoke();
+    }
+
+    /// <summary>할인만 제거한다. 이미 지급한 환급과 환급 여부는 보존한다.</summary>
+    public void RemoveDiscount(int cardId)
+    {
+        if (_discounts.Remove(cardId)) OnCostChanged?.Invoke();
+    }
 
     private async UniTaskVoid Start()
     {
@@ -118,15 +140,19 @@ public class UpgradeManager : MonoBehaviour
         var upg = _gameDataManager.GetUpgradeRow(currentLevel);
         if (upg == null) return -1;
 
-        return upg.UpgradeCost;
+        float rate = 0f;
+        foreach (float discount in _discounts.Values) rate += discount;
+        return Mathf.Max(0, Mathf.RoundToInt(upg.UpgradeCost * (1f - Mathf.Clamp01(rate))));
     }
 
     /// <summary>강화를 시도합니다. 재화 부족 또는 최대 레벨이면 false.</summary>
     public bool TryUpgrade(string upgradeTarget)
     {
+        if (upgradeTarget == null || !_jobLevel.ContainsKey(upgradeTarget)) return false;
         int cost = GetUpgradeCost(upgradeTarget);
         if (cost < 0) return false;
         if (_currencyManager == null || !_currencyManager.Spend(cost)) return false;
+        TotalSpent += cost;
 
         if (_jobLevel.ContainsKey(upgradeTarget))
             _jobLevel[upgradeTarget] = Mathf.Min(_jobLevel[upgradeTarget] + 1, MaxUpgradeLevel + 1);

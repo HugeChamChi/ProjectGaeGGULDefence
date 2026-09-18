@@ -33,6 +33,42 @@ public class ChieftainSpawner : MonoBehaviour
     public UnitBase ChieftainUnit { get; private set; }
 
     public event System.Action<ChiefUnit> OnChieftainSpawned;
+    /// <summary>현재 버튼이 표시할 액티브. 알팡은 ChieftainUnit 없이 존재한다.</summary>
+    public IChiefActiveSkill ActiveSkill { get; private set; }
+    /// <summary>선택된 독립 알팡 스킬 설정.</summary>
+    public AlphanSkillData SelectedAlphanSkill { get; private set; }
+    /// <summary>선택 데이터의 아이콘 폴백.</summary>
+    public Sprite SelectedAlphanIcon { get; private set; }
+    public event System.Action<IChiefActiveSkill> OnActiveSkillChanged;
+    public event System.Action<AlphanSkillData, Sprite> OnAlphanSkillSelected;
+
+    /// <summary>스킬 런타임/유닛 어댑터가 UI에 현재 액티브를 알린다.</summary>
+    public void SetActiveSkill(IChiefActiveSkill skill)
+    {
+        ActiveSkill=skill;
+        OnActiveSkillChanged?.Invoke(skill);
+    }
+    /// <summary>족장 선택을 독립 스킬로 전환한다. 그리드와 UnitFactory를 호출하지 않는다.</summary>
+    public void SelectAlphanSkill(AlphanSkillData data, Sprite fallbackIcon = null)
+    {
+        ClearCurrentChieftain();
+        SelectedAlphanSkill=data;SelectedAlphanIcon=fallbackIcon;
+        OnAlphanSkillSelected?.Invoke(data,fallbackIcon);
+    }
+    private void ClearCurrentChieftain()
+    {
+        SelectedAlphanSkill=null;SelectedAlphanIcon=null;
+        OnAlphanSkillSelected?.Invoke(null,null);
+        SetActiveSkill(null);
+        if (ChieftainUnit != null)
+        {
+            var cell=ChieftainUnit.currentCell;
+            if (cell != null) cell.RemoveUnit();
+            Destroy(ChieftainUnit.gameObject);
+            ChieftainUnit=null;
+        }
+        OnChieftainSpawned?.Invoke(null);
+    }
 
     /// <summary>소환과 동일한 우선순위로 시작 시 족장 풀을 해석한다. 누락 시 다른 족장 풀을 섞지 않는다.</summary>
     public LevelUpPoolData GetSelectedLevelUpPool()
@@ -109,14 +145,7 @@ public class ChieftainSpawner : MonoBehaviour
 
     public void ChangeChieftain(int selectedId)
     {
-        if (ChieftainUnit != null)
-        {
-            var cell = ChieftainUnit.currentCell;
-            if (cell != null) cell.RemoveUnit();
-            Destroy(ChieftainUnit.gameObject);
-            ChieftainUnit = null;
-            OnChieftainSpawned?.Invoke(null);
-        }
+        ClearCurrentChieftain();
         SpawnChieftainById(selectedId);
     }
 
@@ -137,11 +166,14 @@ public class ChieftainSpawner : MonoBehaviour
 
     private void PlaceChieftain(ChieftainData data)
     {
+        if (data.AlphanSkill != null) { SelectAlphanSkill(data.AlphanSkill); return; }
         SpawnToCenter(data.unitType);
     }
 
     private void SpawnChieftainByUnitData(UnitData unitData)
     {
+        if (unitData.AlphanSkill != null) { SelectAlphanSkill(unitData.AlphanSkill,unitData.icon); return; }
+        ClearCurrentChieftain();
         var cell = _gridManager.GetCenterCell();
         if (cell == null || !cell.IsAvailable)
         {
@@ -155,10 +187,12 @@ public class ChieftainSpawner : MonoBehaviour
         ChieftainUnit = unit;
         _unitSpawner.PlaceUnitWithEffect(unit, cell);
         OnChieftainSpawned?.Invoke(unit as ChiefUnit);
+        SetActiveSkill(unit is ChiefUnit chief ? new UnitChiefActiveSkill(chief) : null);
     }
 
     private void SpawnToCenter(int unitType)
     {
+        ClearCurrentChieftain();
         var cell = _gridManager.GetCenterCell();
         if (cell == null || !cell.IsAvailable)
         {
@@ -173,5 +207,6 @@ public class ChieftainSpawner : MonoBehaviour
         ChieftainUnit = unit;
         _unitSpawner.PlaceUnitWithEffect(unit, cell);
         OnChieftainSpawned?.Invoke(unit as ChiefUnit);
+        SetActiveSkill(unit is ChiefUnit chief ? new UnitChiefActiveSkill(chief) : null);
     }
 }

@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: TD1009Data
+  m_EditorClassIdentifier: Assembly-CSharp::TotemData
+  EffectGroups: []
+  ShadowAttack:
+    DelaySeconds: 0.2
+    VisualSeconds: 0.35
+    Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
+    VisualOffset: {x: 0.15, y: 0.1, z: 0}
+  UseSheetData: 0
+  BonusProjectile:
+    Chance: 0.33
+    AttackCoefficient: 0.5
+    Projectile: {fileID: 0}
+  GrowthStages: []
+  WildcardSpawn:
+    IntervalSeconds: 40
+    Unit: {fileID: 0}
+  TierUpgrades: []
+  _debuffBinding:
+    _debuffId: 0
+    _trigger: 0
+    _stacksPerApply: 0
+  _debuffFireInterval: 0
+  _debuffImpactDamage: 0
+  _debuffProjectile: {fileID: 0}
+  totemType: 0
+  tier: 0
+  totemName: "\uACF5\uACA9 \uC9D1\uC911"
+  iconAddress: TotemIcon1009
+  prefabAddress: TotemTD1009
+  rotationSpriteAddresses:
+  - TotemIcon1009
+  - TotemIcon1009
+  - TotemIcon1009
+  - TotemIcon1009
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  rotationSprites:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  description: "\uC778\uC811 8\uCE78 \uACF5\uACA9\uB825 +50%, \uACF5\uACA9\uC18D\uB3C4
+    -20%."
+  functions:
+  - rid: 1992779463445184618
+  - rid: 1992779463445184619
+  effectRanges:
+  - rid: 1992779463445184620
+  attackDisabledRanges: []
+  totemId: 1009
+  isRotatable: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 1992779463445184618
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 0
+        amount: 0.5
+    - rid: 1992779463445184619
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 1
+        amount: -0.2
+    - rid: 1992779463445184620
+      type: {class: TotemSquareRingRange, ns: , asm: Assembly-CSharp}
+      data:
+        MinRadius: 1
+        MaxRadius: 1

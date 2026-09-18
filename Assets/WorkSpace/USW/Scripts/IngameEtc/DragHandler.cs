@@ -14,6 +14,37 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private BossManager _bossManager;
     [Inject] private UnitFactory _unitFactory;
+    [Inject] private GridManager _gridManager;
+    [Inject] private TotemRotationUI _rotationUI;
+    [Inject] private TotemInteractionSettings _totemInteractionSettings;
+    private float _pressStartedAt;
+    private bool _rotating;
+
+    /// <summary>Records hold time without changing unit drag behavior.</summary>
+    public void BeginPress()
+    {
+        _pressStartedAt = Time.unscaledTime;
+        if (_totem != null) _gridManager?.ShowTotemRangePreview(_totem);
+    }
+
+    /// <summary>손을 뗐거나 입력이 취소되면 토템 범위를 숨긴다.</summary>
+    public void EndPress()
+    {
+        if (_totem != null) _gridManager?.ClearTotemRangePreview();
+    }
+
+    /// <summary>Cancels interrupted touch movement or rotation.</summary>
+    public void CancelPointerDrag()
+    {
+        if (_rotating) _rotationUI?.Cancel();
+        else
+        {
+            ReturnToOrigin();
+            if (_spriteRenderer != null) { _spriteRenderer.sortingLayerName = _originSortingLayer; _spriteRenderer.sortingOrder = _originSortingOrder; }
+        }
+        _rotating = false;
+        EndPress();
+    }
 
     public static event Action<UnitBase> OnUnitClickedEvent;
     public static event Action<TotemBase> OnTotemClickedGlobal;
@@ -74,6 +105,8 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void OnBeginDrag()
     {
         OnDragStartedEvent?.Invoke();
+        _rotating = _totem != null && _totemInteractionSettings != null && Time.unscaledTime - _pressStartedAt < _totemInteractionSettings.MoveHoldSeconds;
+        if (_rotating) { _rotationUI?.Begin(_totem); return; }
 
         if (_originCell == null)
         {
@@ -94,11 +127,14 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     public void OnDrag(Vector2 worldPosition)
     {
+        if (_rotating) { _rotationUI?.Drag(worldPosition); return; }
         transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
     }
 
     public void OnEndDrag(Vector2 worldPosition)
     {
+        EndPress();
+        if (_rotating) { _rotationUI?.End(worldPosition); _rotating = false; return; }
         if (_spriteRenderer != null)
         {
             _spriteRenderer.sortingLayerName = _originSortingLayer;

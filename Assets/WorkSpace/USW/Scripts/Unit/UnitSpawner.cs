@@ -12,7 +12,6 @@ public class UnitSpawner : MonoBehaviour
     private UpgradeManager _upgradeManager;
     private GameDataManager _gameDataManager;
     private GameManager _gameManager;
-    private PopulationManager _populationManager;
     private LevelUpManager _levelUpManager;
     private CurrencyManager _currencyManager;
     private GridManager _gridManager;
@@ -31,6 +30,50 @@ public class UnitSpawner : MonoBehaviour
 
     public float CurrentCost { get; private set; }
 
+    /// <summary>이번 씬에서 당첨되었지만 아직 배치하지 못한 노말 유닛 보상 수.</summary>
+    public int PendingSupportCount { get; private set; }
+    private bool _processingSupport;
+
+    /// <summary>성공한 합성마다 한 번 추첨한다. 당첨 보상은 만석이어도 소실되지 않는다.</summary>
+    public void RequestMergeSupport()
+    {
+        float chance = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.MergeSupport)?.Value ?? 0f;
+        if (chance > 0f && Random.value < Mathf.Clamp01(chance)) PendingSupportCount++;
+    }
+
+    // 합성/판매/드래그의 셀 변경이 끝난 프레임에 처리하여 합성 결과 자리를 선점하지 않는다.
+    private void LateUpdate() => ProcessPendingSupport();
+
+    /// <summary>전투 중 빈칸에 대기 보상을 배치한다. 효과 연출 전에 셀을 점유한다.</summary>
+    public void ProcessPendingSupport()
+    {
+        if (_processingSupport || PendingSupportCount <= 0 || _gridManager == null
+            || (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing)) return;
+        _processingSupport = true;
+        try
+        {
+            while (PendingSupportCount > 0)
+            {
+                var cells = _gridManager.GetEmptyCells();
+                if (cells.Count == 0) break;
+                var cell = cells[Random.Range(0, cells.Count)];
+                if (!TryPlaceSupportUnit(cell)) break;
+                PendingSupportCount--;
+            }
+        }
+        finally { _processingSupport = false; }
+    }
+
+    /// <summary>현재 파티의 노말 랜덤 유닛을 기존 생성/배치 경로로 지급한다.</summary>
+    protected virtual bool TryPlaceSupportUnit(GridCell cell)
+    {
+        if (_unitFactory == null || !cell.IsAvailable) return false;
+        var unit = _unitFactory.CreateRandomNormalUnit();
+        if (unit == null) return false;
+        PlaceUnitWithEffect(unit, cell);
+        return true;
+    }
+
     // UIManager가 구독해서 비용 텍스트 갱신
     public event System.Action<float> OnCostChanged;
 
@@ -42,7 +85,6 @@ public class UnitSpawner : MonoBehaviour
         _upgradeManager = _resolver.Resolve<UpgradeManager>();
         _gameDataManager = _resolver.Resolve<GameDataManager>();
         _gameManager = _resolver.Resolve<GameManager>();
-        _populationManager = _resolver.Resolve<PopulationManager>();
         _levelUpManager = _resolver.Resolve<LevelUpManager>();
         _currencyManager = _resolver.Resolve<CurrencyManager>();
         _gridManager = _resolver.Resolve<GridManager>();
@@ -100,12 +142,6 @@ public class UnitSpawner : MonoBehaviour
             return;
         }
 
-        if (_populationManager != null && !_populationManager.CanAdd(1))
-        {
-            Debug.Log("인구수가 부족합니다.");
-            return;
-        }
-
         // 소환 할인 (할인 티켓 레벨업 효과 등)
         float discountRate  = _levelUpManager?.SummonDiscountRate ?? 0f;
         float fixedDiscount = _levelUpManager?.SummonFixedDiscountAmount ?? 0f;
@@ -144,13 +180,6 @@ public class UnitSpawner : MonoBehaviour
             Debug.LogError("UnitSpawner: 유닛 생성 실패");
             _currencyManager.AddCurrency(effectiveCost);
             return;
-        }
-
-        // 비동기 스폰 지연 전에 인구수 즉시 선점 (광클 초과 방지)
-        if (_populationManager != null)
-        {
-            _populationManager.Add(unit.unitData != null ? unit.unitData.populationCost.Get(unit.currentTier) : 1);
-            unit.IsPopulationReserved = true;
         }
 
         // 환급 처리(소환 실패 시)는 effectiveCost 기준
@@ -326,12 +355,6 @@ public class UnitSpawner : MonoBehaviour
                 // 다음 프레임이나 약간 지연 후 스폰하여 그리드 충돌 회피
                 SpawnNormalUnitAfterSellAsync().Forget();
             }
-        }
-
-        // 판매 시 족장 공격력 증가 (원맨쇼 레벨업 효과)
-        if (lu != null && lu.HasChieftainGainOnSell)
-        {
-            lu.AddChieftainAttackBonus(lu.ChieftainSellAtkGain);
         }
 
         OnAnyUnitSold?.Invoke();

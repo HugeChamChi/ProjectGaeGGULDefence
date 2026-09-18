@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Burn
   m_EditorClassIdentifier: 
   _id: 1001
+  _icon: {fileID: 21300000, guid: 36e7b6560243b47b98fc57530c762a2f, type: 3}
+  _displayName: "\uD654\uC0C1"
   _key: DBF_BURN_001
   _kind: 1
   _stackGroup: BURN

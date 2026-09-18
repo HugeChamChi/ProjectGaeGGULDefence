@@ -38,6 +38,7 @@ namespace HSD.UI.Upgrade
         // SO는 인스펙터에서 설정되므로 런타임에 초기화가 필요할 수 있음
         public void Initialize()
         {
+            if (_upgradeManager != null) _upgradeManager.OnCostChanged += HandleCostChanged;
             if (_currencyManager != null)
             {
                 _currencyManager.OnCurrencyChanged += HandleCurrencyChanged;
@@ -46,6 +47,7 @@ namespace HSD.UI.Upgrade
 
         public void Release()
         {
+            if (_upgradeManager != null) _upgradeManager.OnCostChanged -= HandleCostChanged;
             if (_currencyManager != null)
             {
                 _currencyManager.OnCurrencyChanged -= HandleCurrencyChanged;
@@ -56,6 +58,8 @@ namespace HSD.UI.Upgrade
         {
             OnCurrencyChanged?.Invoke(amount);
         }
+
+        private void HandleCostChanged() => OnDataChanged?.Invoke();
 
         public List<UpgradeItemData> GetUpgradeItems()
         {

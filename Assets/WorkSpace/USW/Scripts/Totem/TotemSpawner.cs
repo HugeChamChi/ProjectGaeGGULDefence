@@ -1,6 +1,8 @@
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 /// <summary>
 /// 토템 소환 서비스. 배치 로직만 담당.
@@ -58,7 +60,25 @@ public class TotemSpawner : MonoBehaviour
         if (empty.Count == 0) return false;
 
         var cell  = empty[Random.Range(0, empty.Count)];
+        return PlaceLoadedTotem(data, prefab, cell);
+    }
+
+    /// <summary>Places a stored totem in the requested empty cell; never chooses a random cell.</summary>
+    public async UniTask<bool> PlaceTotemAtCellAsync(TotemData data, GridCell cell, CancellationToken token)
+    {
+        if (data == null || cell == null || !cell.IsAvailable) return false;
+        await data.LoadAssetsAsync().AttachExternalCancellation(token);
+        token.ThrowIfCancellationRequested();
+        if (cell == null || !cell.IsAvailable) return false;
+        var prefab = data.prefab != null ? data.prefab : genericPrefab;
+        if (prefab == null) return false;
+        return PlaceLoadedTotem(data, prefab, cell);
+    }
+
+    private bool PlaceLoadedTotem(TotemData data, GameObject prefab, GridCell cell)
+    {
         var go    = RM.Instantiate(prefab, cell.transform);
+        if (go == null) return false;
         var totem = go.GetComponent<TotemBase>();
 
         if (totem == null)

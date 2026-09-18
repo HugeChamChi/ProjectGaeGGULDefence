@@ -11,7 +11,6 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private ExpManager _expManager;
     [Inject] private GridManager _gridManager;
-    [Inject] private PopulationManager _populationManager;
     [Inject] private TotemBuffManager _totemBuffManager;
     [Inject] private BuffManager _buffManager;
     [Inject] private MergeManager _mergeManager;
@@ -36,7 +35,6 @@ public class GameInitializer : IInitializable, IAsyncStartable
         if (_currencyManager != null) _currencyManager.Init();
         if (_expManager != null) _expManager.Init();
         if (_gridManager != null) _gridManager.Init();
-        if (_populationManager != null) _populationManager.Init();
         if (_totemBuffManager != null) _totemBuffManager.Init();
         if (_buffManager != null) _buffManager.Init();
         if (_mergeManager != null) _mergeManager.Init();
