@@ -108,6 +108,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             var prefab = cardPrefabs[(int)data.tier];
             var card = Instantiate(prefab, cardContainer);
             card.Setup(data, OnCardClicked);
+            card.ConfigurePeek(GetComponentInChildren<UI_Peekthrough>(true));
             _spawnedCards.Add(card);
         }
 
@@ -199,6 +200,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
             var prefab = cardPrefabs[(int)data.tier];
             var card = Instantiate(prefab, cardContainer);
             card.Setup(data, OnCardClicked);
+            card.ConfigurePeek(GetComponentInChildren<UI_Peekthrough>(true));
             _spawnedCards.Add(card);
         }
 

@@ -15,11 +15,15 @@ public class GridCellView : MonoBehaviour
     [SerializeField] private SpriteRenderer cellRenderer;
     [Header("Totem Range Preview")]
     [SerializeField] private Material _effectPreviewMaterial;
+    [Header("Unit Drop Preview")]
+    [SerializeField] private Material _unitDropPreviewMaterial;
+    [SerializeField] private Color _unitDropPreviewColor = new Color(0.2f, 0.9f, 1f, 0.85f);
     private Material _originalMaterial;
     private MaterialPropertyBlock _originalProperties;
     private MaterialPropertyBlock _previewProperties;
     private static readonly int StripeColorId = Shader.PropertyToID("_StripeColor");
     private static readonly int FillColorId = Shader.PropertyToID("_FillColor");
+    private static readonly int CellRectId = Shader.PropertyToID("_CellRect");
 
     // ── 색상 정의 ──────────────────────────────────────────────
     // 토템 범위 프리뷰
@@ -88,9 +92,15 @@ public class GridCellView : MonoBehaviour
     {
         if (cellRenderer == null || _model == null) return;
 
+        if (_model.IsUnitDropPreviewed && _model.IsAvailable)
+        {
+            ApplyDropPreview();
+            return;
+        }
+
         if (_model.IsTotemRangePreviewed)
         {
-            ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect);
+            ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect, _model.TotemPreviewColor);
             return;
         }
 
@@ -118,14 +128,14 @@ public class GridCellView : MonoBehaviour
         cellRenderer.color = _originalColor;
     }
 
-    private void ApplyPreview(Material material, Color fallback)
+    private void ApplyPreview(Material material, Color fallback, Color? previewColor)
     {
         // Shared materials keep all cells in phase without allocating material instances.
         cellRenderer.sharedMaterial = material != null ? material : _originalMaterial;
         cellRenderer.color = material != null ? Color.white : fallback;
-        if (material != null && _model.TotemPreviewColor.HasValue)
+        if (material != null && previewColor.HasValue)
         {
-            var tint = _model.TotemPreviewColor.Value;
+            var tint = previewColor.Value;
             var stripe = tint; stripe.a *= material.GetColor(StripeColorId).a;
             var fill = tint; fill.a *= material.GetColor(FillColorId).a;
             cellRenderer.GetPropertyBlock(_previewProperties);
@@ -134,5 +144,17 @@ public class GridCellView : MonoBehaviour
             cellRenderer.SetPropertyBlock(_previewProperties);
         }
         else cellRenderer.SetPropertyBlock(_originalProperties);
+    }
+
+    private void ApplyDropPreview()
+    {
+        cellRenderer.sharedMaterial = _unitDropPreviewMaterial != null ? _unitDropPreviewMaterial : _originalMaterial;
+        cellRenderer.color = _unitDropPreviewMaterial != null ? Color.white : _unitDropPreviewColor;
+        cellRenderer.SetPropertyBlock(_originalProperties);
+        if (_unitDropPreviewMaterial == null || cellRenderer.sprite == null) return;
+        var bounds = cellRenderer.sprite.bounds;
+        cellRenderer.GetPropertyBlock(_previewProperties);
+        _previewProperties.SetVector(CellRectId, new Vector4(bounds.center.x, bounds.center.y, bounds.extents.x, bounds.extents.y));
+        cellRenderer.SetPropertyBlock(_previewProperties);
     }
 }

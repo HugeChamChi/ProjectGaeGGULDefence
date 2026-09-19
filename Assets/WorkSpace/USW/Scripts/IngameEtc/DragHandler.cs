@@ -31,6 +31,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     /// <summary>손을 뗐거나 입력이 취소되면 토템 범위를 숨긴다.</summary>
     public void EndPress()
     {
+        SetDropPreview(null);
         if (_totem != null) _gridManager?.ClearTotemRangePreview();
     }
 
@@ -59,6 +60,41 @@ public class DragHandler : MonoBehaviour, IDraggable
     private UnitBase  _unit;
     private TotemBase _totem;
     private SpriteRenderer _spriteRenderer;
+    private GridCell _dropPreviewCell;
+    private readonly List<RaycastHit2D> _dropHits = new List<RaycastHit2D>();
+    private readonly Dictionary<Collider2D, GridCell> _dropCellCache = new Dictionary<Collider2D, GridCell>();
+    private ContactFilter2D _dropFilter = new ContactFilter2D().NoFilter();
+
+    private void OnDisable() => EndPress();
+
+    private void SetDropPreview(GridCell cell)
+    {
+        if (_dropPreviewCell == cell) return;
+        if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(false);
+        _dropPreviewCell = cell;
+        if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(true);
+    }
+
+    // Preview and release must resolve the same cell. Ignore this dragged object's
+    // colliders: its parent remains the origin cell until placement finishes.
+    private GridCell FindDropCell(Vector2 worldPosition)
+    {
+        Physics2D.Raycast(worldPosition, Vector2.zero, _dropFilter, _dropHits);
+        foreach (var hit in _dropHits)
+        {
+            var collider = hit.collider;
+            if (collider == null || collider.transform.IsChildOf(transform)) continue;
+            if (!_dropCellCache.TryGetValue(collider, out var cell))
+            {
+                // GridCell owns its collider. An occupant's collider may extend over
+                // adjacent tiles and must not redirect the drop to its parent cell.
+                cell = collider.GetComponent<GridCell>();
+                _dropCellCache[collider] = cell;
+            }
+            if (cell != null) return cell;
+        }
+        return null;
+    }
 
     private void Awake()
     {
@@ -119,6 +155,7 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_originCell == null) return;
 
         _originPos = transform.position;
+        if (_unit != null) SetDropPreview(_originCell);
         
         if (_spriteRenderer != null)
         {
@@ -132,6 +169,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         if (_rotating) { _rotationUI?.Drag(worldPosition); return; }
         transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+        if (_unit != null && _originCell != null) SetDropPreview(FindDropCell(worldPosition));
     }
 
     public void OnEndDrag(Vector2 worldPosition)
@@ -144,28 +182,7 @@ public class DragHandler : MonoBehaviour, IDraggable
             _spriteRenderer.sortingOrder = _originSortingOrder;
         }
 
-        // Raycast를 쏴서 아래에 GridCell이 있는지 확인
-        // 자기 자신의 Collider를 꺼서 셀을 맞출 수 있게 함
-        var col = GetComponent<Collider2D>();
-        if (col != null) col.enabled = false;
-
-        RaycastHit2D[] hits = Physics2D.RaycastAll(worldPosition, Vector2.zero);
-        
-        if (col != null) col.enabled = true;
-
-        GridCell targetCell = null;
-        foreach (var h in hits)
-        {
-            if (h.collider != null)
-            {
-                var cell = h.collider.GetComponentInParent<GridCell>();
-                if (cell != null)
-                {
-                    targetCell = cell;
-                    break;
-                }
-            }
-        }
+        GridCell targetCell = FindDropCell(worldPosition);
 
         if (targetCell == null || targetCell == _originCell)
         {

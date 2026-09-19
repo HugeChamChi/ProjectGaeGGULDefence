@@ -12,6 +12,7 @@ namespace GaeGGUL.UI.Common
         [SerializeField] private Image img_Icon;
         [SerializeField] private Image img_Frame;
         [SerializeField] private Image img_BG;
+        [SerializeField] private UnitTierPalette _framePalette;
 
         /// <summary>
         /// 아이콘과 등급 정보를 바탕으로 비주얼을 설정합니다.
@@ -26,7 +27,9 @@ namespace GaeGGUL.UI.Common
 
             if (img_Frame != null)
             {
-                img_Frame.sprite = tier.GetFrame();
+                img_Frame.sprite = _framePalette != null
+                    ? _framePalette.GetInfo(tier)?.frameSprite
+                    : tier.GetFrame();
                 img_Frame.gameObject.SetActive(img_Frame.sprite != null);
             }
 

@@ -4,12 +4,14 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// 토템 선택 카드 하나의 UI
 ///
 /// ─ 프리팹 구성 ──────────────────────────────────────────
-///   CardRoot  (TotemSelectCardUI + Button)
+///   CardRoot  (TotemSelectCardUI)
+///     ├── Button (투명 입력 영역 — 런타임에 TotemCardPointerInput 연결)
 ///     ├── TierBorderImage   (Image  — 등급 테두리)
 ///     ├── IconBorderImage   (Image  — 아이콘 테두리)
 ///     ├── IconImage         (Image  — 토템 아이콘)
@@ -18,7 +20,7 @@ using UnityEngine.UI;
 ///     ├── DescriptionText   (TMP_Text — 효과 설명)
 ///     └── RangeGridContainer (GridLayoutGroup 7×7 — 범위 그리드)
 /// </summary>
-public class TotemSelectCardUI : MonoBehaviour
+public class TotemSelectCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image    iconImage;
     [SerializeField] private Image    iconBorderImage;
@@ -55,9 +57,96 @@ public class TotemSelectCardUI : MonoBehaviour
     private TotemData                 _data;
     private Action<TotemSelectCardUI> _onClicked;
 
+    [Header("Hold to view field")]
+    [SerializeField, Min(0.1f)] private float _holdSeconds = 0.4f;
+    private UI_Peekthrough _peek;
+    private int? _pointerId;
+    private int? _releasedPointerId;
+    private float _pressedAt;
+    private bool _suppressClick;
+
+    /// <summary>길게 누르는 동안 숨길 선택 패널을 연결한다.</summary>
+    public void ConfigurePeek(UI_Peekthrough peek)
+    {
+        CancelPress();
+        _peek = peek;
+    }
+
+    /// <summary>한 손가락의 짧은 선택 또는 긴 필드 보기를 시작한다.</summary>
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (!isActiveAndEnabled || eventData.button != PointerEventData.InputButton.Left ||
+            _pointerId.HasValue || button == null || !button.IsActive() || !button.IsInteractable()) return;
+        _pointerId = eventData.pointerId;
+        _releasedPointerId = null;
+        _pressedAt = Time.unscaledTime;
+        _suppressClick = false;
+    }
+
+    private void Update()
+    {
+        if (!_pointerId.HasValue) return;
+        if (button == null || !button.IsActive() || !button.IsInteractable())
+        {
+            CancelPress();
+            return;
+        }
+        if (!_suppressClick && _peek != null && Time.unscaledTime - _pressedAt >= _holdSeconds)
+        {
+            _suppressClick = true;
+            _peek.TryBeginPeek(this);
+        }
+    }
+
+    /// <summary>홀드 해제는 선택하지 않고 패널 표시만 복구한다.</summary>
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (_pointerId != eventData.pointerId) return;
+        if (_peek != null && Time.unscaledTime - _pressedAt >= _holdSeconds) _suppressClick = true;
+        _releasedPointerId = eventData.pointerId;
+        _pointerId = null;
+        _peek?.EndPeek(this);
+    }
+
+    /// <summary>카드 밖으로 나간 누름을 취소한다.</summary>
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_pointerId == eventData.pointerId) CancelPress();
+    }
+
+    /// <summary>같은 손가락으로 완료한 짧은 탭만 한 번 선택한다.</summary>
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
+        _releasedPointerId = null;
+        if (isActiveAndEnabled && !_suppressClick && button != null && button.IsActive() && button.IsInteractable())
+            _onClicked?.Invoke(this);
+    }
+
+    /// <summary>입력 취소 또는 자식 버튼 비활성화 시 필드 보기를 해제한다.</summary>
+    public void CancelPress()
+    {
+        _pointerId = null;
+        _releasedPointerId = null;
+        _suppressClick = true;
+        _peek?.EndPeek(this);
+    }
+
+    private void OnDisable() => CancelPress();
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus) CancelPress();
+    }
+
     private void Awake()
     {
-        button?.onClick.AddListener(() => _onClicked?.Invoke(this));
+        if (button != null && button.gameObject != gameObject)
+        {
+            var input = button.GetComponent<TotemCardPointerInput>();
+            if (input == null) input = button.gameObject.AddComponent<TotemCardPointerInput>();
+            input.Configure(this);
+        }
         CollectOrBuildGrid();
     }
 
@@ -65,6 +154,7 @@ public class TotemSelectCardUI : MonoBehaviour
 
     public void Setup(TotemData data, Action<TotemSelectCardUI> onClicked)
     {
+        CancelPress();
         _data      = data;
         _onClicked = onClicked;
         EnsureGridBuilt();

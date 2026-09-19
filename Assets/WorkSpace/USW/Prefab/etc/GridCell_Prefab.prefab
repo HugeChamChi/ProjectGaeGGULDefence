@@ -120,3 +120,6 @@ MonoBehaviour:
   cellRenderer: {fileID: 8616679984627637759}
   _effectPreviewMaterial: {fileID: 2100000, guid: 03f24346d089d074c835ee0808243de1,
     type: 2}
+  _unitDropPreviewMaterial: {fileID: 2100000, guid: 0676dd65a61f90840b9a539a408ab8cb,
+    type: 2}
+  _unitDropPreviewColor: {r: 0.2, g: 0.9, b: 1, a: 0.85}

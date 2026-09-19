@@ -33,6 +33,16 @@ public class GridCellModel
     // ── 셀별 토템 버프 보너스 (GenericBuffTotem effectRange 기반 누산, kind별 누적) ──
     private readonly Dictionary<StatKind, float> _totemCellBonuses = new();
     public bool  IsTotemRangePreviewed         { get; private set; }
+    /// <summary>유닛 드래그 중 손을 놓을 대상 칸인지 여부. 배치 상태에는 영향을 주지 않는다.</summary>
+    public bool IsUnitDropPreviewed { get; private set; }
+
+    /// <summary>유닛 이동 대상 표시만 갱신한다.</summary>
+    public void SetUnitDropPreview(bool visible)
+    {
+        if (IsUnitDropPreviewed == visible) return;
+        IsUnitDropPreviewed = visible;
+        OnStateChanged?.Invoke();
+    }
     /// <summary>Optional per-effect range color; null uses the shared material palette.</summary>
     public Color? TotemPreviewColor { get; private set; }
     public bool  IsTotemDisabledRangePreviewed { get; private set; }

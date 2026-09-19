@@ -67985,8 +67985,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   img_Icon: {fileID: 6205570755615981223}
-  img_Frame: {fileID: 0}
+  img_Frame: {fileID: 1777817893775689063}
   img_BG: {fileID: 0}
+  _framePalette: {fileID: 11400000, guid: 9ad2bc9d76b244a08d6074f274b726e1, type: 2}
 --- !u!114 &4459898108256439327
 MonoBehaviour:
   m_ObjectHideFlags: 0

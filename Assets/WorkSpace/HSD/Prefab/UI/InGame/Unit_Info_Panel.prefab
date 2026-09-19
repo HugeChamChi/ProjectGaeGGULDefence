@@ -1965,6 +1965,7 @@ MonoBehaviour:
   img_Icon: {fileID: 6205570754459728232}
   img_Frame: {fileID: 1777817894898385576}
   img_BG: {fileID: 8486685517377250309}
+  _framePalette: {fileID: 11400000, guid: 9ad2bc9d76b244a08d6074f274b726e1, type: 2}
 --- !u!1 &5049333800378558864
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: LiquidWaveFill
-  m_Shader: {fileID: 4800000, guid: 9915e4f18300406cacba0a7b344b5f8b, type: 3}
+  m_Name: UnitDropFrame
+  m_Shader: {fileID: 4800000, guid: f688bcf4a40a437b9f52ab76cfafc2e3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,20 +29,17 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _ColorMask: 15
-    - _CrestThickness: 0.012
-    - _Fill: 0.03529411
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    - _WaveAmplitude: 0.02
-    - _WaveFrequency: 6
-    - _WaveSpeed: 4.8
+    - _CornerLength: 0.3
+    - _CornerTravel: 0.035
+    - _GlowWidth: 0.07
+    - _Inset: 0.12
+    - _LineWidth: 0.022
+    - _PulseSpeed: 0.8
     m_Colors:
+    - _CellRect: {r: 0, g: 0, b: 0.5, a: 0.5}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _CrestColor: {r: 1, g: 1, b: 1, a: 0.8}
+    - _CornerColor: {r: 0.65, g: 1, b: 1, a: 0.95}
+    - _FrameColor: {r: 0.19999996, g: 0.85, b: 1, a: 0.7}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

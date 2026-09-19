@@ -14,7 +14,12 @@ public class GridManager : MonoBehaviour
     private GridCell[,] _grid;
     private TotemBase _previewedTotem;
     private static readonly int RangeTimeId = Shader.PropertyToID("_TotemRangeUnscaledTime");
-    private void LateUpdate() => Shader.SetGlobalFloat(RangeTimeId, Time.unscaledTime);
+    private static readonly int DropTimeId = Shader.PropertyToID("_UnitDropUnscaledTime");
+    private void LateUpdate()
+    {
+        Shader.SetGlobalFloat(RangeTimeId, Time.unscaledTime);
+        Shader.SetGlobalFloat(DropTimeId, Time.unscaledTime);
+    }
 
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
