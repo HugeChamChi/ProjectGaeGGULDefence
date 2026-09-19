@@ -95,14 +95,10 @@ public static class SelectionExpansionChecks
     private static void CheckRefund(LevelUpManager manager, LevelUpData discount)
     {
         var currency = Component<CurrencyManager>(); currency.AddCurrency(1000);
-        var upgrade = Component<UpgradeManager>(); var data = new GameDataManager(null, null);
-        Set(data, "<IsLoaded>k__BackingField", true);
-        var rows = (Dictionary<int, GameDataManager.UpgradeSheetRow>)Get(data, "_upgradeRows");
-        rows[1] = new GameDataManager.UpgradeSheetRow { UpgradeCost = 100 };
-        rows[2] = new GameDataManager.UpgradeSheetRow { UpgradeCost = 200 };
-        rows[3] = new GameDataManager.UpgradeSheetRow { UpgradeCost = 300 };
-        ((Dictionary<string, int>)Get(upgrade, "_jobLevel"))["test"] = 1;
-        Set(upgrade, "_currencyManager", currency); Set(upgrade, "_gameDataManager", data);
+        var upgrade = Component<UpgradeManager>(); var data = Asset<UpgradeSettings>();
+        data.TargetKeys = new[] { "test" };
+        data.Steps = new[] { new UpgradeSettings.Step { Cost = 100 }, new UpgradeSettings.Step { Cost = 200 }, new UpgradeSettings.Step { Cost = 300 } };
+        Set(upgrade, "_currencyManager", currency); Set(upgrade, "_settings", data);
         Set(manager, "_upgradeManager", upgrade);
         Check(!upgrade.TryUpgrade("unknown") && currency.Currency == 1000, "Unknown upgrade does not spend");
         Check(upgrade.TryUpgrade("test") && upgrade.TryUpgrade("test") && upgrade.TotalSpent == 300,
@@ -116,7 +112,7 @@ public static class SelectionExpansionChecks
         Check(upgrade.TryUpgrade("test") && upgrade.TotalSpent == 570, "Discounted actual charge recorded");
         manager.RemoveEffect(discount); manager.ApplyEffect(discount);
         Check(currency.Currency == 415, "Removal and reapply cannot repeat refund");
-        ((Dictionary<string, int>)Get(upgrade, "_jobLevel"))["test"] = 1;
+        ((Dictionary<string, int>)Get(upgrade, "_jobLevel"))["test"] = 0;
         currency.Spend(currency.Currency);
         Check(!upgrade.TryUpgrade("test") && upgrade.TotalSpent == 570, "Failed payment excluded");
         Check(Component<UpgradeManager>().TotalSpent == 0, "New run starts with zero spend");

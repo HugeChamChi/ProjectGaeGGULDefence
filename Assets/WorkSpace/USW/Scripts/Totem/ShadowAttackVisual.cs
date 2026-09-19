@@ -1,44 +1,34 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>게임플레이 컴포넌트 없이 스프라이트 계층만 복제하는 재사용 가능한 공격 분신.</summary>
+/// <summary>토템 범위에 있는 동안 원본 외형을 따라가는 분신. 유닛/드론/공격 컴포넌트는 만들지 않는다.</summary>
+[DefaultExecutionOrder(100)]
 public sealed class ShadowAttackVisual : MonoBehaviour
 {
-    private readonly List<SpriteRenderer> _renderers = new();
     private readonly List<Transform> _sources = new();
     private readonly List<Transform> _copies = new();
-    private Animator _sourceAnimator;
-    private AnimationClip _clip;
-    private BasicAttackReplay _attack;
+    private readonly List<SpriteRenderer> _sourceRenderers = new();
+    private readonly List<SpriteRenderer> _copyRenderers = new();
     private TotemShadowAttackSettings _settings;
     private float _elapsed;
-    private float _attackSeconds;
-    private Vector3 _position;
-    private Quaternion _rotation;
-    private Vector3 _scale;
 
-    /// <summary>분신의 외형 원본. 판매로 파괴되면 null이 된다.</summary>
+    /// <summary>외형을 소유한 배치 유닛.</summary>
     public UnitBase Source { get; private set; }
-    /// <summary>실제 외형 원본. 드론 공격은 드론 Transform을 사용한다.</summary>
+    /// <summary>실제 외형 원본. 드론은 소환 본체 대신 실제 드론을 따른다.</summary>
     public Transform VisualSource { get; private set; }
-    /// <summary>지연/재생 중인지 여부.</summary>
+    /// <summary>범위 효과에 연결되어 표시 중인지 여부.</summary>
     public bool IsPlaying { get; private set; }
 
-    /// <summary>원본과 같은 이름/Transform/SpriteRenderer 계층만 생성한다.</summary>
+    /// <summary>게임플레이 컴포넌트 없이 외형 계층을 한 번 생성한다.</summary>
     public static ShadowAttackVisual Create(UnitBase source, Transform owner, Transform visualSource = null)
     {
-        var visualRoot = visualSource != null ? visualSource : source.transform;
         var root = new GameObject(source.name + "_Shadow");
         root.transform.SetParent(owner, false);
         var visual = root.AddComponent<ShadowAttackVisual>();
         visual.Source = source;
-        visual.VisualSource = visualRoot;
-        visual._sourceAnimator = visualRoot == source.transform
-            ? (source.animator != null ? source.animator.GetComponent<Animator>() : null)
-            : visualRoot.GetComponentInChildren<Animator>();
-        visual.CopyHierarchy(visualRoot, root.transform);
-        visual.SetVisible(false);
+        visual.VisualSource = visualSource != null ? visualSource : source.transform;
+        visual.CopyHierarchy(visual.VisualSource, root.transform);
+        visual.Stop();
         return visual;
     }
 
@@ -47,106 +37,86 @@ public sealed class ShadowAttackVisual : MonoBehaviour
         _sources.Add(source);
         _copies.Add(copy);
         var renderer = source.GetComponent<SpriteRenderer>();
+        _sourceRenderers.Add(renderer);
+        SpriteRenderer clone = null;
         if (renderer != null)
         {
-            var clone = copy.gameObject.AddComponent<SpriteRenderer>();
-            clone.sprite = renderer.sprite;
+            clone = copy.gameObject.AddComponent<SpriteRenderer>();
             clone.sharedMaterial = renderer.sharedMaterial;
-            clone.sortingLayerID = renderer.sortingLayerID;
-            clone.sortingOrder = renderer.sortingOrder + 1;
-            clone.flipX = renderer.flipX;
-            clone.flipY = renderer.flipY;
-            _renderers.Add(clone);
+            clone.drawMode = renderer.drawMode;
+            clone.maskInteraction = renderer.maskInteraction;
         }
+        _copyRenderers.Add(clone);
         foreach (Transform child in source)
         {
-            // UI와 물리/게임플레이 컴포넌트는 복제하지 않는다.
-            if (child is RectTransform) continue;
+            if (child is RectTransform || child.GetComponent<ShadowAttackVisual>() != null) continue;
             var childCopy = new GameObject(child.name).transform;
             childCopy.SetParent(copy, false);
             CopyHierarchy(child, childCopy);
         }
     }
 
-    /// <summary>원본 공격 시작에 호출한다. 지연 중 원본 Animator가 선택한 실제 Attack 클립을 포착한다.</summary>
-    public void Play(BasicAttackReplay attack, TotemShadowAttackSettings settings)
+    /// <summary>범위 진입 시 연결한다. 이미 표시 중이면 공격마다 페이드를 다시 시작하지 않는다.</summary>
+    public void Attach(TotemShadowAttackSettings settings)
     {
-        _attack = attack;
         _settings = settings;
-        _elapsed = 0f;
-        _clip = null;
-        _attackSeconds = Mathf.Max(0.01f, Source.GetCurrentAttackInterval());
-        for (int i = 0; i < _copies.Count; i++)
-        {
-            if (_sources[i] == null) continue;
-            _copies[i].localPosition = _sources[i].localPosition;
-            _copies[i].localRotation = _sources[i].localRotation;
-            _copies[i].localScale = _sources[i].localScale;
-            var original = _sources[i].GetComponent<SpriteRenderer>();
-            var copy = _copies[i].GetComponent<SpriteRenderer>();
-            if (original != null && copy != null)
-            {
-                copy.sprite = original.sprite;
-                copy.flipX = original.flipX;
-                copy.flipY = original.flipY;
-            }
-        }
-        _position = attack.Origin + settings.VisualOffset;
-        _rotation = VisualSource.rotation;
-        var parentScale = transform.parent != null ? transform.parent.lossyScale : Vector3.one;
-        var sourceScale = VisualSource.lossyScale;
-        _scale = new Vector3(
-            Mathf.Approximately(parentScale.x, 0) ? sourceScale.x : sourceScale.x / parentScale.x,
-            Mathf.Approximately(parentScale.y, 0) ? sourceScale.y : sourceScale.y / parentScale.y,
-            Mathf.Approximately(parentScale.z, 0) ? sourceScale.z : sourceScale.z / parentScale.z);
-        transform.SetPositionAndRotation(_position, _rotation);
-        transform.localScale = _scale;
+        if (!IsPlaying) _elapsed = 0f;
         IsPlaying = true;
-        SetVisible(false);
+        AdvanceVisual(0f);
     }
 
-    private void LateUpdate()
+    /// <summary>기존 공격 호출과 호환하며 외형은 끊지 않고 유지한다. 지연 피해는 토템이 별도로 처리한다.</summary>
+    public void Play(BasicAttackReplay attack, TotemShadowAttackSettings settings) => Attach(settings);
+
+    private void LateUpdate() => AdvanceVisual(Time.deltaTime);
+
+    private void AdvanceVisual(float deltaTime)
     {
         if (!IsPlaying) return;
-        if (!_attack.CanReplay) { Stop(); return; }
-        if (_clip == null && _sourceAnimator != null && _sourceAnimator.runtimeAnimatorController != null &&
-            _sourceAnimator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+        if (Source == null || VisualSource == null || _settings == null) { Stop(); return; }
+        _elapsed += deltaTime;
+        float opacity = _settings.FadeSeconds > 0f ? Mathf.SmoothStep(0f, 1f, _elapsed / _settings.FadeSeconds) : 1f;
+        for (int i = 0; i < _copies.Count; i++)
         {
-            var clips = _sourceAnimator.GetCurrentAnimatorClipInfo(0);
-            if (clips.Length > 0) _clip = clips[0].clip;
-        }
-        _elapsed += Time.deltaTime;
-        float time = _elapsed - _settings.DelaySeconds;
-        if (time < 0f) return;
-        if (time >= Mathf.Max(_settings.VisualSeconds, _attackSeconds)) { Stop(); return; }
-        if (_clip != null)
-        {
-            var animationRoot = transform;
-            if (_sourceAnimator != null)
+            var source = _sources[i];
+            var copy = _copies[i];
+            if (source == null) { if (_copyRenderers[i] != null) _copyRenderers[i].enabled = false; continue; }
+            if (i > 0)
             {
-                int index = _sources.IndexOf(_sourceAnimator.transform);
-                if (index >= 0) animationRoot = _copies[index];
+                copy.localPosition = source.localPosition;
+                copy.localRotation = source.localRotation;
+                copy.localScale = source.localScale;
+                copy.gameObject.SetActive(source.gameObject.activeSelf);
             }
-            _clip.SampleAnimation(animationRoot.gameObject, Mathf.Clamp01(time / _attackSeconds) * _clip.length);
+            var original = _sourceRenderers[i];
+            var renderer = _copyRenderers[i];
+            if (original == null || renderer == null) continue;
+            renderer.sprite = original.sprite;
+            renderer.flipX = original.flipX; renderer.flipY = original.flipY;
+            renderer.sortingLayerID = original.sortingLayerID;
+            renderer.sortingOrder = original.sortingOrder + 1;
+            renderer.size = original.size;
+            var color = _settings.Tint;
+            color.a *= opacity * original.color.a;
+            renderer.color = color;
+            renderer.enabled = original.enabled;
+            renderer.forceRenderingOff = original.forceRenderingOff || !original.gameObject.activeInHierarchy;
         }
-        transform.SetPositionAndRotation(_position, _rotation);
-        transform.localScale = _scale;
-        SetVisible(true);
+        transform.SetPositionAndRotation(VisualSource.position + _settings.VisualOffset, VisualSource.rotation);
+        var parentScale = transform.parent != null ? transform.parent.lossyScale : Vector3.one;
+        var scale = VisualSource.lossyScale;
+        transform.localScale = new Vector3(
+            Mathf.Approximately(parentScale.x, 0f) ? scale.x : scale.x / parentScale.x,
+            Mathf.Approximately(parentScale.y, 0f) ? scale.y : scale.y / parentScale.y,
+            Mathf.Approximately(parentScale.z, 0f) ? scale.z : scale.z / parentScale.z);
     }
 
-    private void SetVisible(bool visible)
-    {
-        foreach (var renderer in _renderers)
-        {
-            renderer.enabled = visible;
-            if (_settings != null) renderer.color = _settings.Tint;
-        }
-    }
-
-    /// <summary>풀에서 재사용할 수 있도록 표시만 종료한다.</summary>
+    /// <summary>범위 이탈/회수 시 외형을 숨긴다. 재진입 시 기존 복사본을 재사용한다.</summary>
     public void Stop()
     {
         IsPlaying = false;
-        SetVisible(false);
+        foreach (var renderer in _copyRenderers) if (renderer != null) renderer.enabled = false;
     }
+
+    private void OnDisable() => Stop();
 }

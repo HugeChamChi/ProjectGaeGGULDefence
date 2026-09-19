@@ -15,6 +15,31 @@ namespace GaeGGUL.Animation
         [SerializeField] private Vector3 customBaseScale = Vector3.one;
 
         private Vector2 _currentBreath = Vector2.one;
+        private bool _statusPaused;
+        private bool _resumeAfterStatus;
+
+        /// <summary>호흡만 현재 재생 지점에서 정지/재개한다. 트윈을 재생성하지 않는다.</summary>
+        public void SetStatusPaused(bool paused)
+        {
+            if (_statusPaused == paused) return;
+            _statusPaused = paused;
+            if (paused)
+            {
+                _resumeAfterStatus = _currentSeq != null && _currentSeq.IsActive() && _currentSeq.IsPlaying();
+                if (_resumeAfterStatus) _currentSeq.Pause();
+            }
+            else
+            {
+                if (_resumeAfterStatus && _currentSeq != null && _currentSeq.IsActive()) _currentSeq.Play();
+                _resumeAfterStatus = false;
+            }
+        }
+
+        protected override void OnDisable()
+        {
+            _statusPaused = _resumeAfterStatus = false;
+            base.OnDisable();
+        }
 
         /// <summary>
         /// 숨쉬기는 스케일만 바꾸고 포지션은 절대 건드리지 않는다. 베이스의 ResetToOrigin()은
@@ -62,7 +87,9 @@ namespace GaeGGUL.Animation
                 _ = _currentSeq.SetLoops(-1);
             }
 
-            await _currentSeq.Play().ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+            _currentSeq.Play();
+            if (_statusPaused) { _resumeAfterStatus = true; _currentSeq.Pause(); }
+            await _currentSeq.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
     }
 }

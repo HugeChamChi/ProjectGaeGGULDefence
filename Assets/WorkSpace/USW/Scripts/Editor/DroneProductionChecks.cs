@@ -54,6 +54,7 @@ public static class DroneProductionChecks
 
             var drones = Component<DroneManager>(); Set(drones, "_levelUpManager", manager);
             beta = Component<CombatDroneCheckProbe>(); beta.unitData = Asset<UnitData>();
+            Set(beta, "_formation", AssetDatabase.LoadAssetAtPath<DroneFormationSettings>("Assets/WorkSpace/USW/Data/DroneUnits/BetanFormationSettings.asset"));
             beta.unitData.maxDroneCount.normal = 1; beta.unitData.maxDroneCount.rare = 2;
             beta.unitData.maxDroneCount.epic = 3; beta.unitData.maxDroneCount.legend = 4;
             beta.unitData.attackSpeed.legend = 1; beta.unitData.atk.legend = 10;
@@ -74,9 +75,12 @@ public static class DroneProductionChecks
             }
             Check(positions.Count == 5, "Five distinct home positions");
             var offsets = beta.Formation;
-            Check(Mathf.Approximately(offsets[0].y, offsets[1].y) && Mathf.Approximately(offsets[1].y, offsets[2].y)
-                && offsets[3].y < offsets[0].y && Mathf.Approximately(offsets[3].y, offsets[4].y)
-                && Mathf.Approximately(offsets[2].x - offsets[1].x, 2 * (offsets[4].x - offsets[1].x)), "Inverted trapezoid proportions");
+            Check(offsets.Length == 5 && offsets[0].x < offsets[2].x && offsets[2].x < offsets[4].x
+                && offsets[4].x < offsets[3].x && offsets[3].x < offsets[1].x
+                && Mathf.Approximately(offsets[0].y, offsets[1].y)
+                && Mathf.Approximately(offsets[2].y, offsets[3].y)
+                && offsets[0].y > offsets[2].y && offsets[2].y > offsets[4].y,
+                "Reference order: upper left/right, lower left/right, bottom center");
             manager.RemoveEffect(production); Check(beta.OwnedDroneCount == 4 && drones.DroneCount == 4, "Removal retracts extra drone");
             manager.ApplyEffect(production);
             beta.RemoveForCheck(); Check(drones.DroneCount == 0 && beta.OwnedDroneCount == 0, "Removal unregisters all owned drones");

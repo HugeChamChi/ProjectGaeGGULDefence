@@ -10,6 +10,10 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     [SerializeField] private Slider slider_Cooldown;
     [SerializeField] private TMP_Text txt_Cooldown;
     [SerializeField] private Image img_Icon;
+    [SerializeField] private ChiefSkillReadyBanner _readyBanner;
+
+    /// <summary>실제 사용 가능 여부와 독립적인 충전 완료 위치 표시.</summary>
+    public void SetChargedPresentation(bool charged, bool immediate = false) => _readyBanner?.SetCharged(charged, immediate);
 
     [Header("쿨타임 중 비활성화 연출")]
     [SerializeField] private Color disabledColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -113,6 +117,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
         if (img_Icon != null)
         {
             img_Icon.sprite = icon;
+            img_Icon.enabled = icon != null;
         }
     }
 

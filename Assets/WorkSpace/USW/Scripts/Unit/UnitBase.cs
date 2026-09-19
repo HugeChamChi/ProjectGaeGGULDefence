@@ -98,6 +98,19 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>일반 공격 기록 구독 등 전투 확장을 위한 기존 컴포넌트.</summary>
     public UnitCombatComponent Combat => _combat;
     private UnitResourceComponent _resource;
+    private UnitStunState _stun;
+    /// <summary>현재 공격/스킬/생산을 제한하는 스턴 상태.</summary>
+    public bool IsStunned => _stun != null && _stun.IsStunned;
+    /// <summary>향후 유닛별 스턴 면역 확장점.</summary>
+    public virtual bool StunImmune => false;
+    /// <summary>현재 유닛에게 스턴을 적용한다. 토템은 UnitBase가 아니므로 대상이 아니다.</summary>
+    public void ApplyStun(float seconds, StunVisualSettings visual = null)
+    {
+        if (_stun == null) _stun = gameObject.GetComponent<UnitStunState>() ?? gameObject.AddComponent<UnitStunState>();
+        _stun.Apply(seconds, visual);
+    }
+    /// <summary>전투 종료와 영구 제거 시 스턴을 정리한다.</summary>
+    public void ClearStun() => _stun?.Clear();
     private BuffController _buff;
     private UnitDependencies _deps;
     /// <summary>팩토리가 주입한 런별 드론 선택지 상태.</summary>
@@ -193,8 +206,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public void OnPlaced(CurrencyManager currency, BossBase boss) => OnPlaced(currency, boss, null);
 
-    public void OnRemoved()
+    public void OnRemoved(bool preserveStun = false)
     {
+        if (!preserveStun) ClearStun();
         OnUnitRemoved();
         _combat.StopLoops();
         RemoveTemporaryTier(_temporaryTierSource);
@@ -231,7 +245,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void InvokeOnAttack() => onAttack?.Invoke();
     public void InvokeOnSkillFull() 
     {
-        if (!CanUseSkill) return;
+        if (!CanUseSkill || IsStunned) return;
         onSkillFull?.Invoke();
         OnSkillFull();
         ApplySkillDebuff();

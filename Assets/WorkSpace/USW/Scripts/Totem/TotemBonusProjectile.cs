@@ -27,10 +27,22 @@ public sealed class TotemBonusProjectile : RangedBuffTotemBase
         _targets.Clear();
     }
 
-    /// <inheritdoc />
+    /// <summary>효과 그룹이 있으면(GenericBuffTotem과 동일 패턴) 그룹마다 자기 범위에만 자기 버프를
+    /// 적용한다. 없으면 기존처럼 base(top-level functions)로 처리한다. 보조 투사체 타겟팅은
+    /// 그룹 유무와 무관하게 항상 갱신한다.</summary>
     public override void PaintAffectedCells()
     {
-        base.PaintAffectedCells();
+        if (Data != null && Data.HasEffectGroups && CurrentCell != null)
+        {
+            foreach (var group in Data.EffectGroups)
+                if (group != null) foreach (var cell in group.GetCells(this, _gridManager))
+                    foreach (var function in group.Functions) function?.Apply(this, cell, _totemBuffManager);
+        }
+        else
+        {
+            base.PaintAffectedCells();
+        }
+
         RefreshTargets();
     }
 

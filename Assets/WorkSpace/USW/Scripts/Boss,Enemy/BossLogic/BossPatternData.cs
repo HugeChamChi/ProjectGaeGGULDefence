@@ -10,6 +10,7 @@ public enum BossPatternType
     AttackDisable,     // 범위 내 기물 공격 불가
     DestroyUnit,       // 범위 내 기물 파괴
     SealCell,          // 범위 내 셀 봉인 (배치 불가)
+    Earthquake,        // 필드 유닛 스턴 (토템 제외)
 }
 
 /// <summary>
@@ -73,4 +74,16 @@ public class BossPatternData : ScriptableObject
 
     [Tooltip("지속 시간 (초) — 0이면 영구 또는 웨이브 종료까지")]
     public float duration            = 3f;
+
+    [Header("시전 관리")]
+    public int Priority;
+    [Min(0f)] public float SkillDuration;
+    [Header("지진")]
+    [Min(0f)] public float ImpactTimeSec = 0.5f;
+    [Min(0.01f)] public float RetryDelay = 0.25f;
+    public StunVisualSettings StunVisual;
+    public bool UseScreenShake = true;
+    [Min(0f)] public float ShakeDuration = 1f;
+    [Min(0f)] public float ShakeIntensity = 0.08f;
+    public string AnimationTrigger = "Earthquake";
 }

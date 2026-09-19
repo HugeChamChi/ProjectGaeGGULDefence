@@ -84,6 +84,36 @@ public abstract class BossBase : MonoBehaviour
     [SerializeField] protected Animator _animator;
 
     public BossPatternData[] Patterns => _patterns;
+    /// <summary>패턴 시작 알림. 최종 아트가 없을 때도 연출을 독립적으로 연결할 수 있다.</summary>
+    public event Action<BossPatternData> OnPatternStarted;
+    private bool _isCastingPattern;
+    /// <summary>유효한 트리거만 발동한다. Impact 판정은 애니메이션 이벤트에 의존하지 않는다.</summary>
+    public void PlayPatternAnimation(BossPatternData pattern)
+    {
+        OnPatternStarted?.Invoke(pattern);
+        if (_animator == null || string.IsNullOrEmpty(pattern.AnimationTrigger)) return;
+        foreach (var parameter in _animator.parameters)
+            if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == pattern.AnimationTrigger)
+            {
+                _animator.SetTrigger(parameter.nameHash);
+                SuppressHitFeedbackDuring(pattern.SkillDuration);
+                break;
+            }
+    }
+
+    /// <summary>스킬 연출(스프라이트 프레임 교체) 도중엔 피격 스케일 펀치가 겹쳐 튀어 보이지 않도록 잠시 끈다.</summary>
+    private void SuppressHitFeedbackDuring(float seconds)
+    {
+        _isCastingPattern = true;
+        SuppressHitFeedbackAsync(seconds).Forget();
+    }
+
+    private async UniTaskVoid SuppressHitFeedbackAsync(float seconds)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, seconds)), cancellationToken: this.GetCancellationTokenOnDestroy())
+            .SuppressCancellationThrow();
+        _isCastingPattern = false;
+    }
 
     // ── 이벤트 ─────────────────────────────────────────────────────
     /// <summary>(현재HP, 최대HP) — UIManager가 구독하여 HP바 갱신</summary>
@@ -192,24 +222,29 @@ public abstract class BossBase : MonoBehaviour
         }
     }
 
+    /// <summary>애니메이터에 해당 이름의 Trigger 파라미터가 실제로 있을 때만 true. 전용 Hit/Death 아트가 없는 보스가 SetTrigger 콘솔 에러를 내지 않도록 한다.</summary>
+    private static bool HasTrigger(Animator animator, string name)
+    {
+        if (animator == null) return false;
+        foreach (var parameter in animator.parameters)
+            if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == name) return true;
+        return false;
+    }
+
     private async UniTaskVoid HandleDeathAsync()
     {
         Debug.Log($"[BossBase] HandleDeathAsync called for {gameObject.name}");
-        if (_animator != null)
+        if (HasTrigger(_animator, "Death"))
         {
             Debug.Log($"[BossBase] Triggering 'Death' animation on {_animator.name}");
-            _animator.ResetTrigger("Hit"); // 찌꺼기 트리거 초기화
+            if (HasTrigger(_animator, "Hit")) _animator.ResetTrigger("Hit"); // 찌꺼기 트리거 초기화
             _animator.SetTrigger("Death");
-            
+
             // 애니메이션 재생을 위해 1초 대기 후 파괴 이벤트 호출
             bool cancelled = await UniTask.Delay(TimeSpan.FromSeconds(1f), cancellationToken: this.GetCancellationTokenOnDestroy())
                          .SuppressCancellationThrow();
             if (cancelled) return;
             Debug.Log($"[BossBase] Finished 1-second death wait for {gameObject.name}");
-        }
-        else
-        {
-            Debug.LogWarning($"[BossBase] _animator is null on {gameObject.name}!");
         }
 
         Debug.Log($"[BossBase] Invoking OnDeath and OnAnyBossDied for {gameObject.name}");
@@ -219,11 +254,11 @@ public abstract class BossBase : MonoBehaviour
 
     private void PlayHitAnimation()
     {
-        if (_animator != null)
+        if (HasTrigger(_animator, "Hit"))
         {
             _animator.SetTrigger("Hit");
         }
-        else
+        else if (!_isCastingPattern) // 스킬 스프라이트 연출 중엔 스케일 펀치를 겹치지 않게 생략
         {
             _hitTween?.Kill();
             transform.localScale = _originalScale;

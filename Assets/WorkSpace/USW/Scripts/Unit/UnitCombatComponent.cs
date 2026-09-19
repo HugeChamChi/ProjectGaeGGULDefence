@@ -26,7 +26,7 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>소환 드론의 일반 공격을 본체 셀의 디버프/그림자 구독에 전달한다. 본체 공격이나 스킬은 실행하지 않는다.</summary>
     public BasicAttackReplay BeginDroneBasicAttack(BossBase target, Transform visualSource, Func<bool> isSourceValid)
     {
-        if (_unit == null || target == null || target.IsDead) return null;
+        if (_unit == null || _unit.IsStunned || target == null || target.IsDead) return null;
         _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, target);
         if (OnBasicAttackStarted == null) return null;
         var replay = new BasicAttackReplay(_unit, target, visualSource, isSourceValid);
@@ -61,6 +61,9 @@ public class UnitCombatComponent : MonoBehaviour
 
         if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
         if (_unit.CanUseSkill) _skillTimer += Time.deltaTime;
+        // 공격 애니메이션 대기 시간과 무관하게 생산을 진행한다. 스턴 시간은 누적하지 않는다.
+        if (_loopCts != null && _unit.currentCell != null && !_unit.IsStunned)
+            _resource?.TickFoodProduction(Time.deltaTime);
     }
 
     public void StartLoops()
@@ -103,14 +106,8 @@ public class UnitCombatComponent : MonoBehaviour
     {
         if (_unit.unitData == null) return;
 
-        float lastUpdateTime = Time.time;
-
         while (!token.IsCancellationRequested)
         {
-            float currentTime = Time.time;
-            float dt = currentTime - lastUpdateTime;
-            lastUpdateTime = currentTime;
-
             if (_paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed))
             {
                 if (_unit.CurrentState != UnitBase.UnitState.Idle && _unit.CurrentState != UnitBase.UnitState.Sealed)
@@ -123,7 +120,11 @@ public class UnitCombatComponent : MonoBehaviour
                 continue;
             }
 
-            _resource.TickFoodProduction(dt);
+            if (_unit.IsStunned)
+            {
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+                continue;
+            }
 
             if (!_unit.CanBasicAttack && !_unit.CanUseSkill)
             {
@@ -182,7 +183,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteAttack()
     {
-        if (_unit == null || !_unit.CanBasicAttack || _unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
+        if (_unit == null || _unit.IsStunned || !_unit.CanBasicAttack || _unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
 
         bool attackDisabled = _unit.currentCell != null &&
             (_unit.currentCell.Model.IsAttackDisabled || _unit.currentCell.Model.TotemAttackDisabled);
@@ -217,7 +218,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteSkill()
     {
-        if (_unit == null || !_unit.CanUseSkill) return;
+        if (_unit == null || _unit.IsStunned || !_unit.CanUseSkill) return;
         _unit.InvokeOnSkillFull();
 
         bool attackDisabled = _unit.currentCell != null &&

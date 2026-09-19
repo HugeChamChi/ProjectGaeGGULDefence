@@ -12,6 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UD_Frog_Archer
   m_EditorClassIdentifier: 
+  LevelUpPool: {fileID: 0}
+  AlphanSkill: {fileID: 0}
+  DebuffBindings:
+    _normal:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _rare:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _epic:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _legend:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
   characterId:
     normal: 1018
     rare: 1021
@@ -29,7 +48,6 @@ MonoBehaviour:
   icon: {fileID: -1054527545, guid: 188aa502517044c4d91d9ae5e000aa16, type: 3}
   prefab: {fileID: 8965103283368684651, guid: 6193232055718244baa1c271e2991c4d, type: 3}
   description: 
-  attackSoundAddress: 
   atk:
     normal: 90
     rare: 90
@@ -45,21 +63,17 @@ MonoBehaviour:
     rare: 8
     epic: 8
     legend: 8
-  skillName: 
-  skillData: {fileID: 11400000, guid: 45122e87b28c470429e847b70457daf0, type: 2}
   basicAttackData: {fileID: 11400000, guid: 66a8796666174c07940f7c4c08ca332a, type: 2}
+  skillData: {fileID: 11400000, guid: 45122e87b28c470429e847b70457daf0, type: 2}
   foodProduction:
     normal: 0
     rare: 0
     epic: 0
     legend: 0
-  populationCost:
-    normal: 1
-    rare: 1
-    epic: 1
-    legend: 1
   maxDroneCount:
     normal: 0
     rare: 0
     epic: 0
     legend: 0
+  passive: {fileID: 0}
+  spawnOffsetY: 0

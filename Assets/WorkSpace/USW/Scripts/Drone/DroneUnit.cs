@@ -42,6 +42,10 @@ public class DroneUnit : MonoBehaviour
     [Tooltip("액션 스프라이트를 유지하는 시간(초). 이후 자동으로 평소 스프라이트로 복귀.")]
     [SerializeField] private float  _actionSpriteHoldSeconds = 0.15f;
 
+    [Header("정렬")]
+    [Tooltip("오너 유닛의 DragHandler와 동일한 Y기반 정렬 공식을 따라가되, 항상 이 값만큼 앞에 그립니다.")]
+    [SerializeField] private int _sortingOrderOffset = 1;
+
     private SpriteRenderer           _spriteRenderer;
     private Sprite                   _normalSprite;
     private DroneHoverAnimation      _hoverAnim;
@@ -85,6 +89,14 @@ public class DroneUnit : MonoBehaviour
         AttackLoopAsync(_attackCts.Token).Forget();
 
         StartOrbit();
+    }
+
+    // ── 렌더 정렬 (오너보다 항상 앞) ──────────────────────────────────
+
+    private void LateUpdate()
+    {
+        if (_spriteRenderer != null && _owner != null)
+            _spriteRenderer.sortingOrder = Mathf.RoundToInt(-_owner.transform.position.y * 100f) + _sortingOrderOffset;
     }
 
     // ── 호버 제어 (DroneManager.ExecuteRallyAsync 에서도 호출) ──────
@@ -206,7 +218,7 @@ public class DroneUnit : MonoBehaviour
     {
         var boss = _bossManager?.CurrentBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || boss.IsDead || _owner == null || _owner.currentCell == null) return;
+        if (bossArea == null || boss.IsDead || _owner == null || _owner.IsStunned || _owner.currentCell == null) return;
         var cell = _owner.currentCell.Model;
         if (cell.IsSealed || cell.IsAttackDisabled || cell.TotemAttackDisabled) return;
         var owner = _owner;

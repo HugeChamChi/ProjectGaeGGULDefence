@@ -43,9 +43,9 @@ MonoBehaviour:
     legend: 0
   unitName: "\uC54C\uD321"
   unitTribe: 5
-  iconAddress: ANIM_DroneFrogLeader_Idle_sprite sheet_0
-  prefabAddress: DroneUnit_Cheiftain
-  icon: {fileID: 1471017148, guid: 9a2629c3e477a99478af9be35681d975, type: 3}
+  iconAddress: Alphang_2
+  prefabAddress: DroneUnit_Alphan
+  icon: {fileID: 21300000, guid: 47610902b826b9c408aaf4c22db9c43a, type: 3}
   prefab: {fileID: 3717258970254922025, guid: dc07e7fd43b13954e9796c7484ea6ab3, type: 3}
   description: 
   atk:

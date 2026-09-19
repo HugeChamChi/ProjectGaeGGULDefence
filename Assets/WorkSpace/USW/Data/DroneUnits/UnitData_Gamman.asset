@@ -12,6 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_Gamman
   m_EditorClassIdentifier: 
+  LevelUpPool: {fileID: 0}
+  AlphanSkill: {fileID: 0}
+  DebuffBindings:
+    _normal:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _rare:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _epic:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _legend:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
   characterId:
     normal: 1008
     rare: 1009
@@ -25,15 +44,16 @@ MonoBehaviour:
   unitName: "\uAC10\uB9DD"
   unitTribe: 5
   iconAddress: Gammang
-  prefabAddress: DroneUnit_Buffer
+  prefabAddress: DroneUnit_Gamman
   icon: {fileID: 21300000, guid: 03e1a8655e1fe60419f9f0b57619438f, type: 3}
   prefab: {fileID: 1563179443448772243, guid: 07828d40f9c1cfe4e90b04ff49ee5b07, type: 3}
-  description: 
+  description: "\uBB34\uC804\uAE30\uB85C \uBAA8\uB4E0 \uB4DC\uB860\uC5D0\uAC8C 5\uCD08\uAC04
+    \uACF5\uACA9\uB825\uACFC \uACF5\uACA9\uC18D\uB3C4 \uBC84\uD504\uB97C \uBD80\uC5EC\uD569\uB2C8\uB2E4 "
   atk:
     normal: 80
-    rare: 80
-    epic: 80
-    legend: 80
+    rare: 120
+    epic: 150
+    legend: 170
   attackSpeed:
     normal: 1.5
     rare: 1.5
@@ -51,11 +71,6 @@ MonoBehaviour:
     rare: 2
     epic: 3
     legend: 4
-  populationCost:
-    normal: 1
-    rare: 1
-    epic: 1
-    legend: 1
   maxDroneCount:
     normal: 1
     rare: 1

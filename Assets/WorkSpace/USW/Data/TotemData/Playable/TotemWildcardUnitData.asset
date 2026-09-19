@@ -41,14 +41,14 @@ MonoBehaviour:
     rare: 0
     epic: 0
     legend: 0
-  unitName: "\uC870\uCEE4 \uD569\uC131 \uC7AC\uB8CC"
+  unitName: "\uBA54\uD0C0\uBABD"
   unitTribe: 0
-  iconAddress: TotemIcon1004
+  iconAddress: TotemWildcardUnitIcon
   prefabAddress: TotemWildcardUnit
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  description: "\uC544\uBB34 \uB178\uB9D0 \uC720\uB2DB\uACFC \uD569\uC131\uD560 \uC218
-    \uC788\uB294 \uC7AC\uB8CC\uC785\uB2C8\uB2E4."
+  description: "\uB178\uB9D0 \uB4F1\uAE09 \uC720\uB2DB\uACFC \uC11C\uB85C \uB4DC\uB798\uADF8\uD558\uC5EC
+    \uD569\uC131\uD558\uBA74 \uB79C\uB364 \uB808\uC5B4 \uC720\uB2DB\uC774 \uB429\uB2C8\uB2E4."
   atk:
     normal: 0
     rare: 0

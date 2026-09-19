@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 2a1e57ad30f1cd8459f99453f766853b
   m_SerializeEntries:
+  - m_GUID: 012882f890ac0e144a5fa4117b572550
+    m_Address: TestUnit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0269d4965664f49439872d185b90b50d
     m_Address: Betang_1
     m_ReadOnly: 0
@@ -31,32 +36,37 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06756c20eb6adce499c3d17767b4296d
-    m_Address: TotemIcon1003
+    m_Address: SPR_TD1003
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06fcd8eb93eee3b41853b4c2a7d83b9d
-    m_Address: TotemTD1009
+    m_Address: TD1009
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07828d40f9c1cfe4e90b04ff49ee5b07
-    m_Address: DroneUnit_Buffer
+    m_Address: DroneUnit_Gamman
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d15eeda8f5179e4899772cf440c6ca2
-    m_Address: TotemIcon1009
+    m_Address: TD_1009
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d8f65a6a5567c245bbf3d402459948f
-    m_Address: TotemIcon1005
+    m_Address: SPR_TD1005
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0de5b5aab7e48cd40bf2588e7cd83aee
     m_Address: 05.Drone_Buff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0df5b6301faab3245877c13f2736c4ed
+    m_Address: TotemWildcardUnitIcon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -66,12 +76,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14b18c01ede94854d80abbe83f408456
-    m_Address: DroneUnit_FoodProducer
+    m_Address: DroneUnit_Zeltan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1582a02bb543b984a9fb9b05ccc96132
-    m_Address: TotemTD1001
+    m_Address: TD1001
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 188aa502517044c4d91d9ae5e000aa16
+    m_Address: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -81,7 +96,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1d0c195f567973e4e9f7bebf02dfacf0
-    m_Address: TotemTD1008
+    m_Address: TD1008
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -91,17 +106,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 21584bc7f4d8df342b34084908ef2525
-    m_Address: TotemIcon1007
+    m_Address: TD_1007
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 264b31d4a453127419ba97cca65460a2
-    m_Address: TotemIcon1006
+    m_Address: SPR_TD1006
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2863fec59fe60c3408f3da3215541d57
-    m_Address: TotemTD1003
+    m_Address: TD1003
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -122,6 +137,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
     m_Address: 05.Drone_Attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47610902b826b9c408aaf4c22db9c43a
+    m_Address: Alphang_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -181,12 +201,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c0b4318f27060d49b2356a144aad1f7
-    m_Address: TotemIcon1002
+    m_Address: SPR_TD1002
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f190a3e07ce66e4e86caf21fc98628b
-    m_Address: TotemIcon1008
+    m_Address: TD_1008
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -196,12 +216,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 74e086c8dfb5ef8429d72ea79bd836fa
-    m_Address: DroneUnit_Producer
+    m_Address: DroneUnit_Betan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 773020149a2c6f84b8285362b5c11a47
-    m_Address: TotemTD1006
+    m_Address: TD1006
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -211,7 +231,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 875376496d093484f8a5fd2aca2c2789
-    m_Address: DroneUnit_Debuff
+    m_Address: DroneUnit_Deltan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -221,12 +241,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8903491e425434046a0d026f5d933189
-    m_Address: TotemTD1007
+    m_Address: TD1007
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8926cd92b8ab6c143b24f5f241947ffa
-    m_Address: TotemTD1002
+    m_Address: TD1002
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -241,7 +261,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8f0d0d586d0a2b64188e2640a06b6ba0
-    m_Address: TotemIcon1001
+    m_Address: SPR_TD1001
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -256,7 +276,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 93479576baf767347a3607776979676c
-    m_Address: TotemTD1005
+    m_Address: TD1005
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -276,7 +296,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0f55a7f71f8c904083647c541d79311
-    m_Address: TotemSampleAttackIcon
+    m_Address: NormalTotemIconBorder
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -306,7 +326,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dc07e7fd43b13954e9796c7484ea6ab3
-    m_Address: DroneUnit_Cheiftain
+    m_Address: DroneUnit_Alphan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -331,12 +351,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f68106d4e90c2084fa449ebf8134e8b3
-    m_Address: TotemIcon1010
+    m_Address: TD_1010
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f901983369b66f742b03014899a08a16
-    m_Address: TotemTD1010
+    m_Address: TD1010
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

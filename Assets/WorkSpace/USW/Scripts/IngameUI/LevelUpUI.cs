@@ -66,6 +66,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);
+            card.ConfigurePeek(obj.GetComponentInChildren<UI_Peekthrough>(true));
             card.Setup(data, OnCardClicked, _levelUpManager.GetChoiceDescription(data));
             _spawnedCards.Add(card);
         }

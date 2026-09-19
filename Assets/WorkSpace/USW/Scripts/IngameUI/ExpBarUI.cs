@@ -147,7 +147,7 @@ public class ExpBarUI : MonoBehaviour
 
         // 퉁 튀는 느낌을 위해 살짝 커졌다가 원래대로 돌아오는 시퀀스
         // duration 대신 speed를 사용하여 상태에 상관없이 일정한 속도로 움직이게 함
-        transform.DOScale(1.1f, animationSpeed)
+        transform.DOScale(1.04f, animationSpeed)
                  .SetSpeedBased()
                  .SetEase(Ease.OutQuad)
                  .OnComplete(() =>

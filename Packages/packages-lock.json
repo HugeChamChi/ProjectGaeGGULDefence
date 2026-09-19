@@ -7,6 +7,17 @@
       "dependencies": {},
       "hash": "33e88d06919e847a4c5c6adca4a928e418c1ea69"
     },
+    "com.gamelovers.mcp-unity": {
+      "version": "https://github.com/CoderGamester/mcp-unity.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.unity.editorcoroutines": "1.0.0",
+        "com.unity.test-framework": "1.3.3"
+      },
+      "hash": "382a43a30f4dab4c7f02d770b4ec7d084813bbe4"
+    },
     "com.unity.2d.animation": {
       "version": "13.0.4",
       "depth": 1,
@@ -177,6 +188,13 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.unity.editorcoroutines": {
+      "version": "1.0.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.ext.nunit": {
       "version": "2.0.5",
       "depth": 1,
@@ -289,7 +307,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.pipeline": {
-      "version": "0.3.1-exp.1",
+      "version": "0.6.0-exp.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {

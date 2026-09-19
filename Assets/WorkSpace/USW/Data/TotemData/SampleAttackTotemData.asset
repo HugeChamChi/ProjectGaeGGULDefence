@@ -16,6 +16,7 @@ MonoBehaviour:
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -38,13 +39,13 @@ MonoBehaviour:
   totemType: 0
   tier: 0
   totemName: "\uACF5\uACA9 \uD1A0\uD15C (\uC0D8\uD50C)"
-  iconAddress: TotemSampleAttackIcon
+  iconAddress: NormalTotemIconBorder
   prefabAddress: SampleAttackTotem
   rotationSpriteAddresses:
-  - TotemSampleAttackIcon
-  - TotemSampleAttackIcon
-  - TotemSampleAttackIcon
-  - TotemSampleAttackIcon
+  - NormalTotemIconBorder
+  - NormalTotemIconBorder
+  - NormalTotemIconBorder
+  - NormalTotemIconBorder
   icon: {fileID: 21300000, guid: a0f55a7f71f8c904083647c541d79311, type: 3}
   prefab: {fileID: 3531471602008755158, guid: bb20b7c8894a08b4db7231b503aad6c9, type: 3}
   rotationSprites:
@@ -58,7 +59,8 @@ MonoBehaviour:
   - rid: 1992779463445184600
   effectRanges:
   - rid: 1992779463445184606
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779488821248090
   totemId: 99001
   isRotatable: 1
   references:
@@ -71,5 +73,9 @@ MonoBehaviour:
         amount: 0.1
     - rid: 1992779463445184606
       type: {class: FixedOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []
+    - rid: 1992779488821248090
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
       data:
         offsets: []

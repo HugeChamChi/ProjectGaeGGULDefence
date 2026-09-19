@@ -68,6 +68,23 @@ public class UnitData : ScriptableObject, ILoadableAsset
         if (row.DebuffBinding.HasValue) DebuffBindings.Set(tier, row.DebuffBinding.Value);
     }
 
+    /// <summary>description의 {0}~{4} 자리표시자에 현재 등급 수치를 채워 반환한다.
+    /// {0}=공격력 {1}=공격속도 {2}=스킬쿨타임 {3}=식량생산량 {4}=최대드론수.
+    /// 자리표시자가 없으면(또는 잘못 쓰였으면) description을 그대로 반환한다.</summary>
+    public string GetFormattedDescription(Tier tier)
+    {
+        if (string.IsNullOrEmpty(description)) return description;
+        try
+        {
+            return string.Format(description, atk.Get(tier), attackSpeed.Get(tier),
+                skillCooldown.Get(tier), foodProduction.Get(tier), maxDroneCount.Get(tier));
+        }
+        catch (System.FormatException)
+        {
+            return description;
+        }
+    }
+
     public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()
     {
         if (!string.IsNullOrEmpty(iconAddress) && icon == null)

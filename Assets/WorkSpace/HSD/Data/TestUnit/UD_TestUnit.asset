@@ -12,23 +12,68 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UD_TestUnit
   m_EditorClassIdentifier: Assembly-CSharp::UnitData
-  characterId: 1099
-  unitType: 1099
+  LevelUpPool: {fileID: 0}
+  AlphanSkill: {fileID: 0}
+  DebuffBindings:
+    _normal:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _rare:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _epic:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _legend:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+  characterId:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  unitType:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
   unitName: '"TestUnit"'
-  unitTier: 0
   unitTribe: 0
   iconAddress: 
-  prefabAddress: 
+  prefabAddress: TestUnit
   icon: {fileID: 0}
   prefab: {fileID: 7106599845109891056, guid: 012882f890ac0e144a5fa4117b572550, type: 3}
   description: 
-  attackSoundAddress: 
-  atk: 90
-  attackSpeed: 1
-  skillCooldown: 3
-  skillName: 
+  atk:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  attackSpeed:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  skillCooldown:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  basicAttackData: {fileID: 0}
   skillData: {fileID: 0}
-  foodProduction: 0
-  populationCost: 1
-  maxDroneCount: 0
+  foodProduction:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  maxDroneCount:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
   passive: {fileID: 0}
+  spawnOffsetY: 0

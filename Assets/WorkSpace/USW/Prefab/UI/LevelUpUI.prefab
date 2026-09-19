@@ -59,7 +59,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -553,7 +553,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -1153,16 +1153,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpCardUI
   iconImage: {fileID: 4485685425254821330}
-  iconBorderImage: {fileID: 0}
   borderImage: {fileID: 0}
   descriptionText: {fileID: 0}
-  tierText: {fileID: 0}
   nameText: {fileID: 0}
   button: {fileID: 0}
   borderSprites: []
-  iconBorderSprites: []
   selectedScale: 1.3
   scaleDuration: 0.25
+  _holdSeconds: 0.4
 --- !u!1 &8126597448692756764
 GameObject:
   m_ObjectHideFlags: 0

@@ -77,7 +77,7 @@ namespace HSD.UI.Upgrade
                     Icon = config.icon,
                     CurrentLevel = currentLevel,
                     UpgradeCost = cost,
-                    IsMaxLevel = cost < 0
+                    IsMaxLevel = _upgradeManager.IsMaxLevel(target)
                 });
             }
             return items;
@@ -91,10 +91,6 @@ namespace HSD.UI.Upgrade
         public bool TryUpgrade(string target)
         {
             bool success = _upgradeManager.TryUpgrade(target);
-            if (success)
-            {
-                OnDataChanged?.Invoke();
-            }
             return success;
         }
     }

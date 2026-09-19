@@ -14,14 +14,28 @@ public class TotemInfoPresenter
     public void SetData(TotemData data)
     {
         _currentData = data;
-        
+        if (data == null)
+        {
+            _view.UpdateUI(null, string.Empty, string.Empty, Tier.Normal, null);
+            return;
+        }
+
         string statString = BuildStatString(data);
         _view.UpdateUI(data.icon, data.totemName, statString, data.tier, data);
     }
 
     private string BuildStatString(TotemData data)
     {
-        if (data.HasEffectGroups) return data.GetDisplayDescription();
+        if (data == null) return string.Empty;
+
+        // 1. SO에 작성된 description 또는 EffectGroups 설명이 있는 경우 최우선 사용 ([대괄호] 강조 색상 처리 포함)
+        string displayDesc = data.GetDisplayDescription();
+        if (!string.IsNullOrWhiteSpace(displayDesc))
+        {
+            return displayDesc;
+        }
+
+        // 2. description이 없는 구버전/레거시 토템에 한해 단순 스탯(StatKind) 수치로 문자열 생성
         StringBuilder sb = new StringBuilder();
 
         float attack     = data.GetSimpleAmount(StatKind.AttackPercent);

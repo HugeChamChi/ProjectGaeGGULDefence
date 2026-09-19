@@ -30,8 +30,9 @@ namespace GaeGGUL.UI.Unit
         {
             Clear();
             if (data == null) return;
+            float attackSpeed = data.attackSpeed.Get(Tier.Normal);
             Show(data, Tier.Normal, data.atk.Get(Tier.Normal),
-                1f / Mathf.Max(data.attackSpeed.Get(Tier.Normal), 0.01f), data.skillCooldown.Get(Tier.Normal));
+                attackSpeed > 0f ? 1f / Mathf.Max(attackSpeed, 0.01f) : 0f, data.skillCooldown.Get(Tier.Normal));
         }
 
         /// <summary>열린 동안 현재 값을 갱신한다. 유닛 소멸/제거 시 false를 반환한다.</summary>
@@ -57,7 +58,7 @@ namespace GaeGGUL.UI.Unit
             if (identityChanged) _view.UpdateBasicInfo(data.unitName, data.icon, tier);
             if (identityChanged || !_hasStats || _cooldown != cooldown)
                 _view.UpdateSkillInfo(data.skillData != null ? data.skillData.skillName : string.Empty,
-                    data.skillData != null ? data.skillData.description : data.description,
+                    data.skillData != null ? data.skillData.description : data.GetFormattedDescription(tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
             if (!_hasStats || _attack != attack || _interval != interval)
                 _view.UpdateStats(attack.ToString("0.##"), $"{interval:F2}초");

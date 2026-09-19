@@ -19,6 +19,7 @@ public class UI_ChiefSkillPresenter
     public void SetActiveSkill(IChiefActiveSkill skill)
     {
         _skill=skill;
+        _view.SetChargedPresentation(false, true);
         _view.SetIcon(skill?.Icon);
         OnUpdate(0);
     }
@@ -31,11 +32,13 @@ public class UI_ChiefSkillPresenter
             _view.SetCooldownText("");
             _view.SetButtonInteractable(false);
             _view.SetDisabledVisual(true);
+            _view.SetChargedPresentation(false);
             return;
         }
 
         float progress = _skill.CooldownProgress;
         bool isReady = _skill.CanActivate;
+        _view.SetChargedPresentation(progress >= 1f);
 
         // 슬라이더 값이 0일 때가 사용 가능하도록 역전 (1 - progress)
         _view.SetCooldownSliderValue(Mathf.Clamp01(1f - progress));
@@ -56,5 +59,6 @@ public class UI_ChiefSkillPresenter
     public void ExecuteSkill()
     {
         _skill?.TryActivate();
+        OnUpdate(0f);
     }
 }

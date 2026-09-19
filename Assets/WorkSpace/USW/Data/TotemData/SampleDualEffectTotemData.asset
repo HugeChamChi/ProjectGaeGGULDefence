@@ -30,6 +30,7 @@ MonoBehaviour:
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -70,7 +71,8 @@ MonoBehaviour:
   functions: []
   effectRanges:
   - rid: 1992779463445184607
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779488821248091
   totemId: 99002
   isRotatable: 1
   references:
@@ -97,6 +99,10 @@ MonoBehaviour:
         offsets:
         - {x: 1, y: 0}
     - rid: 1992779463445184607
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []
+    - rid: 1992779488821248091
       type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
       data:
         offsets: []

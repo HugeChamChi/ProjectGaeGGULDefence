@@ -50,8 +50,17 @@ namespace GaeGGUL.UI.Unit
             if (unit == null) return;
             EnsurePresenter();
             _presenter.SetUnitData(unit);
-            if (mergeButton != null) mergeButton.SetState(canMerge);
-            if (sellButton != null) sellButton.SetUnit(unit);
+            bool showActions = !unit.IsWildcardMergeUnit;
+            if (mergeButton != null)
+            {
+                mergeButton.gameObject.SetActive(showActions);
+                mergeButton.SetState(showActions && canMerge);
+            }
+            if (sellButton != null)
+            {
+                sellButton.gameObject.SetActive(showActions);
+                sellButton.SetUnit(showActions ? unit : null);
+            }
             Open();
             _isShowing = true;
             _justShown = true;

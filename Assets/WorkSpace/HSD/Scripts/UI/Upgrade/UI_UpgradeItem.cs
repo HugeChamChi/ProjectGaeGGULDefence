@@ -13,15 +13,23 @@ namespace HSD.UI.Upgrade
         [SerializeField] private TextMeshProUGUI txt_Cost;
         [SerializeField] private Button btn_Upgrade;
         [SerializeField] private Image img_CostIcon;
+        [Header("Upgrade Button States")]
+        [SerializeField] private Sprite _normalSprite;
+        [SerializeField] private Sprite _pressedSprite;
+        [SerializeField] private Sprite _maxSprite;
 
         private string _target;
         private Action<string> _onUpgradeClicked;
+        private bool _canUpgrade;
 
         private void Awake()
         {
             if (btn_Upgrade != null)
             {
-                btn_Upgrade.onClick.AddListener(() => _onUpgradeClicked?.Invoke(_target));
+                btn_Upgrade.onClick.AddListener(() =>
+                {
+                    if (_canUpgrade && btn_Upgrade.interactable) _onUpgradeClicked?.Invoke(_target);
+                });
             }
         }
 
@@ -35,20 +43,22 @@ namespace HSD.UI.Upgrade
 
         public void UpdateUI(UpgradeModel.UpgradeItemData data)
         {
+            _canUpgrade = !data.IsMaxLevel && data.UpgradeCost >= 0;
             if (txt_Name != null) txt_Name.text = data.DisplayName;
             
             if (data.IsMaxLevel)
             {
-                if (txt_Level != null) txt_Level.text = "MaxLV";
+                if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
                 if (txt_Cost != null) txt_Cost.text = "MAX";
                 if (btn_Upgrade != null) btn_Upgrade.interactable = false;
             }
             else
             {
                 if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
-                if (txt_Cost != null) txt_Cost.text = data.UpgradeCost.ToString("N0");
-                if (btn_Upgrade != null) btn_Upgrade.interactable = true;
+                if (txt_Cost != null) txt_Cost.text = data.UpgradeCost >= 0 ? data.UpgradeCost.ToString("N0") : "—";
             }
+            if (img_CostIcon != null) img_CostIcon.gameObject.SetActive(!data.IsMaxLevel);
+            UpdateButton(data.IsMaxLevel);
 
             if (img_Icon != null && data.Icon != null)
             {
@@ -60,10 +70,26 @@ namespace HSD.UI.Upgrade
         {
             if (btn_Upgrade != null)
             {
-                // We should only enable if not Max level
-                // But the presenter will handle this logic usually.
-                btn_Upgrade.interactable = interactable;
+                btn_Upgrade.interactable = interactable && _canUpgrade;
             }
+        }
+
+        private void UpdateButton(bool isMax)
+        {
+            if (btn_Upgrade == null) return;
+            btn_Upgrade.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
+            var state = btn_Upgrade.spriteState;
+            state.highlightedSprite = _normalSprite;
+            state.selectedSprite = _normalSprite;
+            state.pressedSprite = _pressedSprite;
+            state.disabledSprite = isMax ? _maxSprite : _normalSprite;
+            btn_Upgrade.spriteState = state;
+            if (btn_Upgrade.targetGraphic is Image image)
+            {
+                image.sprite = isMax ? _maxSprite : _normalSprite;
+                image.overrideSprite = null;
+            }
+            btn_Upgrade.interactable = _canUpgrade;
         }
     }
 }

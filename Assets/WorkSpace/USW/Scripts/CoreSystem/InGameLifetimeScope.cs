@@ -47,6 +47,12 @@ public class InGameLifetimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<ProjectilePool>();
         builder.RegisterComponentInHierarchy<AudioManager>();
+        var upgradeKeyOverrides = Resources.Load<UpgradeKeyOverrides>("UpgradeKeyOverrides");
+        if (upgradeKeyOverrides == null) throw new System.InvalidOperationException("UpgradeKeyOverrides is required.");
+        builder.RegisterInstance(upgradeKeyOverrides);
+        var upgradeSettings = Resources.Load<UpgradeSettings>("UpgradeSettings");
+        if (upgradeSettings == null) throw new System.InvalidOperationException("UpgradeSettings is required.");
+        builder.RegisterInstance(upgradeSettings);
         builder.RegisterComponentInHierarchy<UpgradeManager>();
         builder.RegisterComponentInHierarchy<InputManager>();
 

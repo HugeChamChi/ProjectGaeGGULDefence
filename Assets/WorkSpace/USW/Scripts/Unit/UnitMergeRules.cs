@@ -8,7 +8,8 @@ public static class UnitMergeRules
             first.OriginalData == null || second.OriginalData == null) return false;
         var tier = first.OriginalTier;
         if (tier < Tier.Normal || tier >= Tier.Legend || second.OriginalTier != tier) return false;
-        return first.OriginalData == second.OriginalData ||
-            (tier == Tier.Normal && (first.IsWildcardMergeUnit || second.IsWildcardMergeUnit));
+        if (first.IsWildcardMergeUnit || second.IsWildcardMergeUnit)
+            return tier == Tier.Normal && first.IsWildcardMergeUnit != second.IsWildcardMergeUnit;
+        return first.OriginalData == second.OriginalData;
     }
 }

@@ -98,3 +98,4 @@ Assets/GEMINI.md.meta
 # HotReload (local dev tool, per-user)
 /Packages/com.singularitygroup.hotreload/
 production/session-state/active.md
+/AgentScripts

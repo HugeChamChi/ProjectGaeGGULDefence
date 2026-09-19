@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: TD1009Data
   m_EditorClassIdentifier: Assembly-CSharp::TotemData
   EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -37,29 +39,30 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uACF5\uACA9 \uC9D1\uC911"
-  iconAddress: TotemIcon1009
-  prefabAddress: TotemTD1009
+  totemName: "TD1013(\uBBF8\uC815)"
+  iconAddress: TD_1009
+  prefabAddress: TD1009
   rotationSpriteAddresses:
-  - TotemIcon1009
-  - TotemIcon1009
-  - TotemIcon1009
-  - TotemIcon1009
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  - TD_1009
+  - TD_1009
+  - TD_1009
+  - TD_1009
+  icon: {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  prefab: {fileID: 4482161701608774424, guid: 06fcd8eb93eee3b41853b4c2a7d83b9d, type: 3}
   rotationSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  description: "\uC778\uC811 8\uCE78 \uACF5\uACA9\uB825 +50%, \uACF5\uACA9\uC18D\uB3C4
-    -20%."
+  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  description: "\uC720\uB2DB\uC5D0\uAC8C [\uACF5\uACA9\uB825 +50%, \uACF5\uACA9\uC18D\uB3C4
+    -20%.] \uBD80\uC5EC\uD569\uB2C8\uB2E4."
   functions:
   - rid: 1992779463445184618
   - rid: 1992779463445184619
   effectRanges:
   - rid: 1992779463445184620
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779482763886699
   totemId: 1009
   isRotatable: 0
   references:
@@ -80,3 +83,7 @@ MonoBehaviour:
       data:
         MinRadius: 1
         MaxRadius: 1
+    - rid: 1992779482763886699
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []

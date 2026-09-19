@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DroneSelection18
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
   chooseId: 9118
-  chooseName: "\uD3EC\uBA67 USB"
+  chooseName: "\uACC4\uC57D \uBB34\uD6A8"
   tier: 1
   spawnRate: 1
   description: "\uC989\uC2DC \uC120\uD0DD\uC9C0 3\uC7A5\uC744 \uC0C8\uB85C \uBF51\uC2B5\uB2C8\uB2E4."
@@ -30,6 +30,6 @@ MonoBehaviour:
     Value: 0
     MaxValue: 0
     Count: 0
-  icon: {fileID: 21300000, guid: 30e379e9c4fc54d4bb3f1d37c196943f, type: 3}
+  icon: {fileID: 21300000, guid: 7b46d9124b74fb74f802ece2bac7652f, type: 3}
   animationFrames: []
   frameRate: 12

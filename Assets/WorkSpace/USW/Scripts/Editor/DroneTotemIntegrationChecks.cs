@@ -1,4 +1,4 @@
-/// <summary>실제 드론 공격/토템/등급 변경 경로를 Preview Scene에서 검증한다.</summary>
+﻿/// <summary>실제 드론 공격/토템/등급 변경 경로를 Preview Scene에서 검증한다.</summary>
 public static class DroneTotemIntegrationChecks
 {
 /// <summary>풀 생성과 비행 완료만 테스트 대역을 사용하며 실제 전투 콜백을 실행한다.</summary>
@@ -49,7 +49,7 @@ try {
     owner.onAttack=new UnityEngine.Events.UnityEvent(); int attempts=0; owner.onAttack.AddListener(()=>attempts++);
     owner.Init(new UnitDependencies {BossManager=bosses,ProjectileManager=pool,TotemBuffManager=buffs});
     cells[3,2].TryPlaceUnit(owner);Set(owner,"<currentCell>k__BackingField",cells[3,2]);
-    var drone=Comp<DroneUnit>();Set(drone,"_owner",owner);Set(drone,"_bossManager",bosses);Set(drone,"_projectileManager",pool);
+    var drone=Comp<DroneUnit>();drone.gameObject.AddComponent<UnityEngine.SpriteRenderer>();Set(drone,"_owner",owner);Set(drone,"_bossManager",bosses);Set(drone,"_projectileManager",pool);
     ((System.Collections.Generic.List<DroneUnit>)Field(owner,"_ownedDrones").GetValue(owner)).Add(drone);
     T Place<T>(TotemData data) where T:TotemBase {
         var t=Comp<T>();Set(t,"totemData",data);Set(t,"_gridManager",grid);Set(t,"_totemBuffManager",buffs);totems.Add(t);t.OnPlaced(cells[2,2]);return t;
@@ -68,10 +68,29 @@ try {
     Check(boss.Debuffs.Active.Count==1 && boss.Debuffs.Active[0].Stacks==1,"TD1006 one armor stack per drone attack");
     results.Add("TD1006 drone attack: active debuffs="+boss.Debuffs.Active.Count+"; expected armor stack 1");
     buffs.ApplyAttackDebuff(cells[3,2],boss);results.Add("TD1006 control: direct range routing gives stacks="+boss.Debuffs.Active[0].Stacks);armor.OnRemoved();
-    var shadow=Place<TotemShadowAttack>(RangeData());before=Launches();Call(drone,"LaunchProjectile",100);Call(shadow,"Advance",0.3f);
-    Check(Launches()-before==2,"TD1007 original and delayed shadow");
+    var shadow=Place<TotemShadowAttack>(RangeData());
     var visual=shadow.GetComponentInChildren<ShadowAttackVisual>(true);
-    Check(visual!=null && visual.VisualSource==drone.transform,"Shadow copies drone instead of owner");
+    Check(visual!=null && visual.VisualSource==drone.transform,"Shadow exists before first attack and copies drone instead of owner");
+    var shadowRenderer=visual.GetComponent<UnityEngine.SpriteRenderer>();
+    Call(visual,"AdvanceVisual",0.04f);
+    Check(shadowRenderer.enabled && shadowRenderer.color.a>0f && shadowRenderer.color.a<shadow.Data.ShadowAttack.Tint.a,"Range entry fades in once");
+    Call(visual,"AdvanceVisual",0.04f);
+    Check(UnityEngine.Mathf.Approximately(shadowRenderer.color.a,shadow.Data.ShadowAttack.Tint.a),"Shadow reaches authored opacity");
+    before=Launches();Call(drone,"LaunchProjectile",100);Call(shadow,"Advance",0.3f);
+    Check(Launches()-before==2,"TD1007 original and delayed shadow");
+    Call(visual,"AdvanceVisual",10f);
+    Check(visual.IsPlaying && shadowRenderer.enabled,"Shadow stays visible long after attack and without another attack");
+    drone.transform.position=new UnityEngine.Vector3(4,2,0);
+    drone.transform.localScale=new UnityEngine.Vector3(1.1f,.9f,1f);
+    Call(visual,"AdvanceVisual",.016f);
+    Check(UnityEngine.Vector3.Distance(visual.transform.position,drone.transform.position+shadow.Data.ShadowAttack.VisualOffset)<.001f && visual.transform.lossyScale==drone.transform.lossyScale,"Shadow continuously follows source movement and breathing scale");
+    var registry=Comp<DroneManager>();registry.RegisterDrone(drone);
+    Check(visual.GetComponentsInChildren<DroneUnit>(true).Length==0 && visual.GetComponentsInChildren<UnitBase>(true).Length==0 && registry.DroneCount==1 && registry.RallyAvailableDroneCount==1,"Shadow is visual-only and excluded from Alphan rally count");
+    Check(visual.GetComponentsInChildren<UnityEngine.SpriteRenderer>(true).Length==drone.GetComponentsInChildren<UnityEngine.SpriteRenderer>(true).Length,"Persistent shadow uses one renderer per original renderer");
+    cells[3,2].RemoveUnit();cells[4,2].TryPlaceUnit(owner);Set(owner,"<currentCell>k__BackingField",cells[4,2]);shadow.PaintAffectedCells();
+    Check(!visual.IsPlaying && !shadowRenderer.enabled,"Leaving shadow range hides attached visual");
+    cells[4,2].RemoveUnit();cells[3,2].TryPlaceUnit(owner);Set(owner,"<currentCell>k__BackingField",cells[3,2]);shadow.PaintAffectedCells();
+    Check(visual.IsPlaying && shadow.GetComponentsInChildren<ShadowAttackVisual>(true).Length==1,"Reentry reuses the same persistent visual");
     // Complete old shots first so only this original/shadow pair affects the following comparison.
     for(int i=0;i<shots.Count-2;i++)shots[i].Complete();
     decimal hp=boss.CurrentHp; shots[shots.Count-2].Complete(); decimal originalDamage=hp-boss.CurrentHp;

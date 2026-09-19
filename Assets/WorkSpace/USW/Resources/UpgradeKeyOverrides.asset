@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d408bcf159982e046a40bcd664ff65b4, type: 3}
+  m_Name: UpgradeKeyOverrides
+  m_EditorClassIdentifier:
+  overrides:
+  - characterId: 1000
+    upgradeKey: Deltan
+  - characterId: 1001
+    upgradeKey: Deltan
+  - characterId: 1002
+    upgradeKey: Deltan
+  - characterId: 1003
+    upgradeKey: Deltan
+  - characterId: 1008
+    upgradeKey: Gammang
+  - characterId: 1009
+    upgradeKey: Gammang
+  - characterId: 1010
+    upgradeKey: Gammang
+  - characterId: 1011
+    upgradeKey: Gammang
+  - characterId: 1012
+    upgradeKey: Betan
+  - characterId: 1013
+    upgradeKey: Betan
+  - characterId: 1014
+    upgradeKey: Betan
+  - characterId: 1015
+    upgradeKey: Betan

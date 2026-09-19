@@ -100,6 +100,8 @@ public static class TotemBehaviorChecks
         Check(UnitMergeRules.CanPair(first, second), "boosted unit merges using original data and tier");
         Check(!UnitMergeRules.CanPair(first, different), "ordinary different types do not merge");
         Check(UnitMergeRules.CanPair(first, joker) && UnitMergeRules.CanPair(joker, first), "joker pairing is symmetric");
+        var otherJoker = Unit<WildcardUnit>(joker.unitData);
+        Check(!UnitMergeRules.CanPair(joker, otherJoker), "two wildcards cannot merge even with matching data");
         Check(!UnitMergeRules.CanPair(first, first), "cannot merge with self");
         Check(!first.TryApplyTemporaryTier(otherSource), "temporary upgrades never stack");
         first.RemoveTemporaryTier(otherSource);

@@ -9,7 +9,6 @@ namespace HSD.UI.Upgrade
     {
         [Header("Currency")]
         [SerializeField] private TextMeshProUGUI txt_Gold;
-        [SerializeField] private TextMeshProUGUI txt_Silver; // If applicable
 
         [Header("Upgrade List")]
         [SerializeField] private Transform itemContainer;
@@ -40,23 +39,35 @@ namespace HSD.UI.Upgrade
             }
         }
 
-        public void SetCurrency(float gold, float silver = 0)
+        public void SetCurrency(float gold)
         {
             if (txt_Gold != null) txt_Gold.text = gold.ToString("N0");
-            if (txt_Silver != null) txt_Silver.text = silver.ToString("N0");
         }
 
+        /// <summary>displayConfigs 구성이 바뀌어도(항목 추가/삭제) 맞춰서 아이템을 생성/삭제한다.
+        /// 이미 있는 타겟은 새로 만들지 않고 데이터만 갱신한다.</summary>
         public void InitItems(List<UpgradeModel.UpgradeItemData> dataList, Action<string> onUpgradeClicked)
         {
-            // 이미 초기화되었다면 데이터만 업데이트
-            if (_items.Count > 0)
+            var currentKeys = new HashSet<string>();
+            foreach (var data in dataList) currentKeys.Add(data.UpgradeTarget);
+
+            var toRemove = new List<string>();
+            foreach (var kv in _items)
+                if (!currentKeys.Contains(kv.Key)) toRemove.Add(kv.Key);
+            foreach (var key in toRemove)
             {
-                UpdateAllItems(dataList);
-                return;
+                if (_items[key] != null) Destroy(_items[key].gameObject);
+                _items.Remove(key);
             }
 
             foreach (var data in dataList)
             {
+                if (_items.TryGetValue(data.UpgradeTarget, out var existing))
+                {
+                    existing.UpdateUI(data);
+                    continue;
+                }
+
                 // RM.Instantiate를 사용하는 것이 원칙이나, 프리팹 참조가 직접 연결된 경우 대응
                 UI_UpgradeItem item = Instantiate(itemPrefab, itemContainer);
                 item.Init(data, onUpgradeClicked);

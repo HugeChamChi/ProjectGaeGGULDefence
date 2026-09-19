@@ -14,6 +14,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private BossManager _bossManager;
     [Inject] private UnitFactory _unitFactory;
+    [Inject] private MergeManager _mergeManager;
     [Inject] private GridManager _gridManager;
     [Inject] private TotemRotationUI _rotationUI;
     [Inject] private TotemInteractionSettings _totemInteractionSettings;
@@ -105,7 +106,9 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void OnBeginDrag()
     {
         OnDragStartedEvent?.Invoke();
-        _rotating = _totem != null && _totemInteractionSettings != null && Time.unscaledTime - _pressStartedAt < _totemInteractionSettings.MoveHoldSeconds;
+        _rotating = _totem != null && _totem.Data != null && _totem.Data.isRotatable &&
+            _rotationUI != null && _totemInteractionSettings != null &&
+            Time.unscaledTime - _pressStartedAt < _totemInteractionSettings.MoveHoldSeconds;
         if (_rotating) { _rotationUI?.Begin(_totem); return; }
 
         if (_originCell == null)
@@ -193,6 +196,14 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         UnitBase  targetUnit  = targetCell.OccupyingUnit;
         TotemBase targetTotem = targetCell.OccupyingTotem;
+
+        if (_unit != null && targetUnit != null &&
+            (_unit.IsWildcardMergeUnit || targetUnit.IsWildcardMergeUnit))
+        {
+            if (_mergeManager == null || !_mergeManager.TryMergeWildcardPair(_unit, targetUnit))
+                ReturnToOrigin();
+            return;
+        }
 
         DragHandler targetDrag = null;
         if (targetUnit  != null) targetDrag = targetUnit.GetComponent<DragHandler>();

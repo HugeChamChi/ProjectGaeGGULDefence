@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a665f6b16a8c1046a8f6dec368ce7f1, type: 3}
   m_Name: BossData_Round01
   m_EditorClassIdentifier: Assembly-CSharp::BossData
-  _displayName: Boss_Snake
-  _prefab: {fileID: 3523614666774652447, guid: 0d424e95097eabf4c9c7d8d41ee0cf12, type: 3}
+  _displayName: DummyBoss01
+  _prefab: {fileID: 5097534829583230306, guid: e243159e266ef9a42b049445c8e3a3f3, type: 3}
   _icon: {fileID: 0}
   _maxHp: 25000
   _defense: 0

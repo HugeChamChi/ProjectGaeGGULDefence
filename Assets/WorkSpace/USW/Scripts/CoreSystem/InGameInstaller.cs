@@ -14,6 +14,9 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
     [Inject] private TotemSpawner _totemManager;
+    [Inject] private ChieftainSpawner _chieftainSpawner;
+    [Header("Chief Active Skill")]
+    [SerializeField] private UI_ChiefSkillButtonView _chiefSkillButtonView;
 
     [Header("Unit Action Popup")]
     [SerializeField] private GaeGGUL.UI.Unit.UI_UnitInfoPanel _unitInfoPanel;
@@ -39,6 +42,7 @@ public class InGameInstaller : MonoBehaviour
 
     private void Start()
     {
+        _chiefSkillButtonView?.Construct(_chieftainSpawner);
         WireUnitActionPopup();
         WireTotemActionPopup();
         WireBossEncounter();
@@ -139,7 +143,8 @@ public class InGameInstaller : MonoBehaviour
         _totemActionPopup.OnSellTotemRequested += OnSellTotemRequested;
 
         // 외부 클릭 → 팝업 닫기
-        _totemActionPopup.OnDismissRequested += ClearTotemRangePreview;
+        // Press/release owns range visibility. Dismissing the previous popup in
+        // LateUpdate must not clear the preview started by this frame's new press.
         _totemActionPopup.OnDismissRequested += _totemActionPopup.Hide;
         _totemActionPopup.OnDismissRequested += _totemInfoPanel.Close;
         _totemActionPopup.OnDismissRequested += _unitInfoPanel.Close;
@@ -156,11 +161,6 @@ public class InGameInstaller : MonoBehaviour
     {
         _gridManager?.ClearTotemRangePreview();
         _totemManager.SellTotem(totem);
-    }
-
-    private void ClearTotemRangePreview()
-    {
-        _gridManager?.ClearTotemRangePreview();
     }
 
     // ── 정리 ───────────────────────────────────────────────────
@@ -190,7 +190,6 @@ public class InGameInstaller : MonoBehaviour
         _unitInfoPanel.SellButton.OnSellRequested -= OnSellUnitRequested;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         _totemActionPopup.OnSellTotemRequested -= OnSellTotemRequested;
-        _totemActionPopup.OnDismissRequested -= ClearTotemRangePreview;
         _totemActionPopup.OnDismissRequested -= _totemActionPopup.Hide;
     }
 }

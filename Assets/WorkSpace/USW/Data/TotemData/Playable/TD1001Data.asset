@@ -12,10 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
   m_Name: TD1001Data
   m_EditorClassIdentifier: Assembly-CSharp::TotemData
-  EffectGroups: []
+  EffectGroups:
+  - Label: "\uD6A8\uACFC 1"
+    Description: "\uC720\uB2DB\uC774 \uACF5\uACA9\uD560\uB54C\uB9C8\uB2E4 \uC77C\uC815
+      \uD655\uB960\uB85C \uC801\uC5D0\uAC8C \uBCF4\uC870 \uD22C\uC0AC\uCCB4\uB97C
+      \uBC1C\uC0AC"
+    Color: {r: 0.6352941, g: 0, b: 0, a: 1}
+    Functions: []
+    Ranges:
+    - rid: 1992779482763886692
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -37,14 +47,14 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uBCF4\uC870 \uD22C\uC0AC\uCCB4"
-  iconAddress: TotemIcon1001
-  prefabAddress: TotemTD1001
+  totemName: "TD1001(\uBBF8\uC815)"
+  iconAddress: SPR_TD1001
+  prefabAddress: TD1001
   rotationSpriteAddresses:
-  - TotemIcon1001
-  - TotemIcon1001
-  - TotemIcon1001
-  - TotemIcon1001
+  - SPR_TD1001
+  - SPR_TD1001
+  - SPR_TD1001
+  - SPR_TD1001
   icon: {fileID: 21300000, guid: 8f0d0d586d0a2b64188e2640a06b6ba0, type: 3}
   prefab: {fileID: 818338022954027682, guid: 1582a02bb543b984a9fb9b05ccc96132, type: 3}
   rotationSprites:
@@ -52,19 +62,24 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 8f0d0d586d0a2b64188e2640a06b6ba0, type: 3}
   - {fileID: 21300000, guid: 8f0d0d586d0a2b64188e2640a06b6ba0, type: 3}
   - {fileID: 21300000, guid: 8f0d0d586d0a2b64188e2640a06b6ba0, type: 3}
-  description: "\uC720\uB2DB\uC758 \uC77C\uBC18 \uACF5\uACA9\uB9C8\uB2E4 33%\uD655\uB960\uB85C
-    \uACF5\uACA9\uB825 50%\uC758 \uBCF4\uC870 \uD22C\uC0AC\uCCB4\uB97C \uBC1C\uC0AC\uD569\uB2C8\uB2E4."
+  description: "\uC720\uB2DB\uC758 \uC77C\uBC18 \uACF5\uACA9\uB9C8\uB2E4 [33%\uD655\uB960\uB85C
+    \uACF5\uACA9\uB825 50%\uC758 \uBCF4\uC870 \uD22C\uC0AC\uCCB4]\uB97C \uBC1C\uC0AC\uD569\uB2C8\uB2E4."
   functions: []
-  effectRanges:
-  - rid: 1992779463445184609
-  attackDisabledRanges: []
+  effectRanges: []
+  attackDisabledRanges:
+  - rid: 1992779488821248092
   totemId: 1001
-  isRotatable: 0
+  isRotatable: 1
   references:
     version: 2
     RefIds:
-    - rid: 1992779463445184609
-      type: {class: TotemSquareRingRange, ns: , asm: Assembly-CSharp}
+    - rid: 1992779482763886692
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
       data:
-        MinRadius: 1
-        MaxRadius: 1
+        offsets:
+        - {x: 0, y: -1}
+        - {x: 0, y: 1}
+    - rid: 1992779488821248092
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []

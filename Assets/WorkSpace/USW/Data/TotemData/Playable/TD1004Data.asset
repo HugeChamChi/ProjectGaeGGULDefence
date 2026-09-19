@@ -16,6 +16,7 @@ MonoBehaviour:
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -37,7 +38,7 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uC870\uCEE4 \uC18C\uD658"
+  totemName: "TD1004(\uBBF8\uC815)"
   iconAddress: TotemIcon1004
   prefabAddress: TotemTD1004
   rotationSpriteAddresses:
@@ -56,9 +57,14 @@ MonoBehaviour:
     \uD569\uC131\uD560\uC218\uC788\uB294 \uBA54\uD0C0\uBABD\uC744 \uC18C\uD658\uD569\uB2C8\uB2E4."
   functions: []
   effectRanges: []
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779488821248095
   totemId: 1004
   isRotatable: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 1992779488821248095
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []

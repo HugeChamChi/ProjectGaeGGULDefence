@@ -44,6 +44,9 @@ public abstract class DroneSpawnerBase : UnitBase
     /// <summary>현재 소유한 전투 드론 수.</summary>
     public int OwnedDroneCount => _ownedDrones.Count;
 
+    /// <summary>현재 소유 전투 드론. 외형 효과는 이 목록을 참조하며 별도 드론을 등록하지 않는다.</summary>
+    public IReadOnlyList<DroneUnit> OwnedDrones => _ownedDrones;
+
     /// <inheritdoc />
     public override float GetDisplayAttackDamage()
     {

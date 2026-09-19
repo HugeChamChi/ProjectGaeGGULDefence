@@ -31,7 +31,7 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CrestThickness: 0.012
-    - _Fill: 0.023365976
+    - _Fill: 0.0036666663
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0

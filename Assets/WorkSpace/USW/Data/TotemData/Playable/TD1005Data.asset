@@ -16,6 +16,7 @@ MonoBehaviour:
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -37,14 +38,14 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uC784\uC2DC \uB4F1\uAE09 \uC0C1\uC2B9"
-  iconAddress: TotemIcon1005
-  prefabAddress: TotemTD1005
+  totemName: "TD1008(\uBBF8\uC815)"
+  iconAddress: SPR_TD1005
+  prefabAddress: TD1005
   rotationSpriteAddresses:
-  - TotemIcon1005
-  - TotemIcon1005
-  - TotemIcon1005
-  - TotemIcon1005
+  - SPR_TD1005
+  - SPR_TD1005
+  - SPR_TD1005
+  - SPR_TD1005
   icon: {fileID: 21300000, guid: 0d8f65a6a5567c245bbf3d402459948f, type: 3}
   prefab: {fileID: 9057575896517214751, guid: 93479576baf767347a3607776979676c, type: 3}
   rotationSprites:
@@ -57,7 +58,8 @@ MonoBehaviour:
   functions: []
   effectRanges:
   - rid: 1992779463445184611
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779488821248096
   totemId: 1005
   isRotatable: 1
   references:
@@ -68,3 +70,7 @@ MonoBehaviour:
       data:
         offsets:
         - {x: 0, y: 1}
+    - rid: 1992779488821248096
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []

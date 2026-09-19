@@ -315,7 +315,7 @@ public class UnitSpawner : MonoBehaviour
             ? _upgradeManager?.GetJobType(charId) ?? string.Empty
             : string.Empty;
         int upgradeLevel = _upgradeManager != null && !string.IsNullOrEmpty(jobType)
-            ? _upgradeManager.GetJobLevel(jobType)
+            ? _upgradeManager.GetJobLevel(jobType) + 1 // 판매 테이블은 기존 1 기반 레벨 계약 유지
             : 1;
 
         float refund = _gameDataManager != null && _gameDataManager.IsLoaded && charId >= 0

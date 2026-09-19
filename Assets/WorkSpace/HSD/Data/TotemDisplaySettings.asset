@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03b9836eb53f5b5458eaa148002a9b26, type: 3}
   m_Name: TotemDisplaySettings
   m_EditorClassIdentifier: 
-  fieldSprite: {fileID: -1698171833, guid: 0972f7c627f9a07419b3253307e7c846, type: 3}
+  fieldSprite: {fileID: 21300000, guid: f4bd849c2eca7274c9e8ea2621e4bdfc, type: 3}
   fieldLabel: "\uD544\uB4DC"
   totemSprite: {fileID: 1350895997, guid: 0972f7c627f9a07419b3253307e7c846, type: 3}
   totemLabel: "\uD1A0\uD15C \uC704\uCE58"

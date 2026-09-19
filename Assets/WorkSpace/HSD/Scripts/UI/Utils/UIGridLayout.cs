@@ -20,6 +20,10 @@ namespace GaeGGUL.UI
 
         [Header("Options")]
         public bool preserveSquare = true; // 셀을 항상 정사각형으로 유지할지 여부
+        [Tooltip("켜면 셀 크기를 컨테이너 크기에 맞춰 자동으로 늘리거나 줄이지 않고 fixedCellSize로 고정합니다.")]
+        public bool useFixedCellSize = false;
+        [Tooltip("useFixedCellSize가 켜져있을 때 사용할 셀 한 변의 픽셀 크기.")]
+        public float fixedCellSize = 30f;
 
         public event System.Action OnLayoutChanged;
 
@@ -44,24 +48,36 @@ namespace GaeGGUL.UI
         public (Vector2 position, Vector2 size) GetCellRect(Vector2Int gridSize, Vector2Int coord)
         {
             Rect rect = Rect.rect;
-            
-            // 사용 가능한 총 너비/높이 계산
-            float availableWidth = rect.width - paddingLeft - paddingRight - (spacing.x * (gridSize.x - 1));
-            float availableHeight = rect.height - paddingTop - paddingBottom - (spacing.y * (gridSize.y - 1));
 
-            // 기본 셀 사이즈 계산
-            float cellWidth = availableWidth / gridSize.x;
-            float cellHeight = availableHeight / gridSize.y;
-            
-            float finalCellWidth = cellWidth;
-            float finalCellHeight = cellHeight;
+            float finalCellWidth;
+            float finalCellHeight;
 
-            // 정사각형 유지 로직
-            if (preserveSquare)
+            if (useFixedCellSize)
             {
-                float size = Mathf.Min(cellWidth, cellHeight);
-                finalCellWidth = size;
-                finalCellHeight = size;
+                // 컨테이너 크기와 무관하게 항상 같은 셀 크기 사용 (그리드 전체 크기는 칸 수에 따라 커지거나 작아짐)
+                finalCellWidth = fixedCellSize;
+                finalCellHeight = fixedCellSize;
+            }
+            else
+            {
+                // 사용 가능한 총 너비/높이 계산
+                float availableWidth = rect.width - paddingLeft - paddingRight - (spacing.x * (gridSize.x - 1));
+                float availableHeight = rect.height - paddingTop - paddingBottom - (spacing.y * (gridSize.y - 1));
+
+                // 기본 셀 사이즈 계산
+                float cellWidth = availableWidth / gridSize.x;
+                float cellHeight = availableHeight / gridSize.y;
+
+                finalCellWidth = cellWidth;
+                finalCellHeight = cellHeight;
+
+                // 정사각형 유지 로직
+                if (preserveSquare)
+                {
+                    float size = Mathf.Min(cellWidth, cellHeight);
+                    finalCellWidth = size;
+                    finalCellHeight = size;
+                }
             }
 
             Vector2 cellSize = new Vector2(finalCellWidth, finalCellHeight);

@@ -44,10 +44,11 @@ MonoBehaviour:
   unitName: "\uC824\uD0D5"
   unitTribe: 5
   iconAddress: Zetang_1
-  prefabAddress: DroneUnit_FoodProducer
+  prefabAddress: DroneUnit_Zeltan
   icon: {fileID: 21300000, guid: 9db28dea548971348984f593f77b080f, type: 3}
   prefab: {fileID: 2509367199185363107, guid: 14b18c01ede94854d80abbe83f408456, type: 3}
-  description: 
+  description: "\uB3D9\uB8CC\uB4E4\uC744 \uC704\uD574 \uBC30\uCE58\uB418\uC5B4\uC788\uB294
+    \uB4DC\uB860 \uBE44\uB840\uD558\uC5EC {3}\uC2DD\uB7C9\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
   atk:
     normal: 0
     rare: 0
@@ -60,9 +61,9 @@ MonoBehaviour:
     legend: 0
   skillCooldown:
     normal: 0
-    rare: 999
-    epic: 999
-    legend: 999
+    rare: 0
+    epic: 0
+    legend: 0
   basicAttackData: {fileID: 11400000, guid: babb139463dfc08418bc07df3c073f4c, type: 2}
   skillData: {fileID: 0}
   foodProduction:

@@ -87,12 +87,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 30c0407ec38493540911d9ef30535baa
-    m_Address: Data/Totem_OldTreeStub
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32ebb2889a9384547be049b5b780e1a9
     m_Address: Data/GC_SkillTest
     m_ReadOnly: 0

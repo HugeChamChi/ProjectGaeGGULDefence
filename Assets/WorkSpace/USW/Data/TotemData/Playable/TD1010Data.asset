@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: TD1010Data
   m_EditorClassIdentifier: Assembly-CSharp::TotemData
   EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -37,26 +39,27 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uC2DD\uB7C9 \uC0DD\uC0B0"
-  iconAddress: TotemIcon1010
-  prefabAddress: TotemTD1010
+  totemName: "TD1022(\uBBF8\uC815)"
+  iconAddress: TD_1010
+  prefabAddress: TD1010
   rotationSpriteAddresses:
-  - TotemIcon1010
-  - TotemIcon1010
-  - TotemIcon1010
-  - TotemIcon1010
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  - TD_1010
+  - TD_1010
+  - TD_1010
+  - TD_1010
+  icon: {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
+  prefab: {fileID: 8527795941588617990, guid: f901983369b66f742b03014899a08a16, type: 3}
   rotationSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  description: "10\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 30\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
+  - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
+  - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
+  - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
+  - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
+  description: "10\uCD08\uB9C8\uB2E4 [\uC2DD\uB7C9 30]\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
   functions:
   - rid: 1992779463445184621
   effectRanges: []
-  attackDisabledRanges: []
+  attackDisabledRanges:
+  - rid: 1992779482763886700
   totemId: 1010
   isRotatable: 0
   references:
@@ -67,3 +70,7 @@ MonoBehaviour:
       data:
         interval: 10
         amount: 30
+    - rid: 1992779482763886700
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets: []

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a665f6b16a8c1046a8f6dec368ce7f1, type: 3}
   m_Name: BossData_Round07
   m_EditorClassIdentifier: Assembly-CSharp::BossData
-  _displayName: Boss_Snake
-  _prefab: {fileID: 3523614666774652447, guid: 0d424e95097eabf4c9c7d8d41ee0cf12, type: 3}
+  _displayName: DummyBoss7
+  _prefab: {fileID: 5097534829583230306, guid: 23e473e71a05cf947adc6a41ae710aac, type: 3}
   _icon: {fileID: 0}
   _maxHp: 225000
   _defense: 0
-  _hpLineCount: 200
+  _hpLineCount: 1820
   _expReward: 2250

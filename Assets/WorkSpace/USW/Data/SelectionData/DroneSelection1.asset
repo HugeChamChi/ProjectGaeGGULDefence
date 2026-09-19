@@ -31,6 +31,6 @@ MonoBehaviour:
     Value: 0
     MaxValue: 0
     Count: 1
-  icon: {fileID: 21300000, guid: 9a4afa0ada37a1541b4ef059d64cad8e, type: 3}
+  icon: {fileID: 21300000, guid: b1f1cc16bfe6bec488b841704062de38, type: 3}
   animationFrames: []
   frameRate: 12

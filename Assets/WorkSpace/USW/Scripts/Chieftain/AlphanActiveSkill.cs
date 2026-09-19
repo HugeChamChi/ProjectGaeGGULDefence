@@ -43,7 +43,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     public float CooldownRemaining => IsAvailable ? Mathf.Max(0, CooldownSeconds-_elapsed) : 0;
     /// <inheritdoc />
     public bool CanActivate => IsAvailable && IsPlaying && !_casting && !_drones.IsRallying
-        && _drones.DroneCount > 0 && _elapsed >= CooldownSeconds;
+        && _drones.RallyAvailableDroneCount > 0 && _elapsed >= CooldownSeconds;
 
     /// <summary>초기화는 GameInitializer의 족장 선택보다 먼저 실행된다.</summary>
     public void Initialize()

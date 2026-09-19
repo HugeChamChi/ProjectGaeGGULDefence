@@ -22,7 +22,7 @@ public abstract class ChiefUnit : UnitBase
     /// </summary>
     public void ExecuteSkillManually()
     {
-        if (currentCell == null || !gameObject.activeInHierarchy) return;
+        if (IsStunned || currentCell == null || !gameObject.activeInHierarchy) return;
 
         if (IsSkillReady)
         {

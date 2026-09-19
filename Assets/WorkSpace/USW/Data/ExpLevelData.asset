@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: ExpLevelData
   m_EditorClassIdentifier: 
   expRequired:
-  - 650
-  - 600
+  - 340
+  - 700
   - 1220
   - 3650
   - 4800
   - 16800
   - 22222
+  - 50000
+  - 140000

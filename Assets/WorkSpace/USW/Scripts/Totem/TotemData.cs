@@ -19,17 +19,51 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     /// <summary>GenericBuffTotem groups replace shared functions/ranges when populated.</summary>
     [Header("효과별 설명 · 색상 · 기능 · 범위 (GenericBuffTotem)")]
     public List<TotemEffectGroup> EffectGroups = new List<TotemEffectGroup>();
+    /// <summary>EffectGroups가 없거나, 대괄호 수가 그룹 수보다 많을 때 나머지 대괄호에 쓰는 색.</summary>
+    [Tooltip("description의 [대괄호] 하이라이트 색. EffectGroups가 없는 토템(TD1010처럼 functions/effectRanges만 쓰는 경우)도 이 색으로 대괄호가 칠해집니다.")]
+    public Color descriptionHighlightColor = new Color(1f, 0.5f, 0.05f, 1f);
     /// <summary>Whether this data uses independent effect groups.</summary>
     public bool HasEffectGroups => EffectGroups != null && EffectGroups.Exists(group => group != null);
-    /// <summary>Rich-text descriptions use the same color as each effect range.</summary>
+    /// <summary>Rich-text descriptions use the same color as each effect range.
+    /// description에 [대괄호]가 있으면 그 구간만 순서대로 EffectGroups 색(모자라면 descriptionHighlightColor)을 입힌 한 문장으로 표시하고,
+    /// 대괄호가 없고 EffectGroups가 있으면 description을 색 없는 일반 설명으로 먼저 보여준 뒤 그 아래 효과별 색상 줄을 붙인다.</summary>
     public string GetDisplayDescription()
     {
+        if (!string.IsNullOrEmpty(description) && description.Contains('['))
+            return ApplyInlineGroupColors(description, EffectGroups);
         if (!HasEffectGroups) return description;
         var lines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(description)) lines.Add(description);
         foreach (var group in EffectGroups)
             if (group != null && !string.IsNullOrWhiteSpace(group.Description))
                 lines.Add($"<color=#{ColorUtility.ToHtmlStringRGB(group.Color)}>{group.Description}</color>");
         return string.Join("\n", lines);
+    }
+
+    /// <summary>텍스트 안의 [대괄호] 구간을 나타난 순서대로 EffectGroups[0], [1]... 색으로 감싼다.
+    /// 그룹이 없거나 대괄호 수가 그룹 수보다 많으면 descriptionHighlightColor를 쓴다.
+    /// 대괄호 자체는 결과에서 사라지고 안쪽 글자만 남는다.</summary>
+    private string ApplyInlineGroupColors(string text, List<TotemEffectGroup> groups)
+    {
+        var sb = new System.Text.StringBuilder();
+        int groupIndex = 0;
+        int i = 0;
+        while (i < text.Length)
+        {
+            if (text[i] == '[')
+            {
+                int close = text.IndexOf(']', i + 1);
+                if (close < 0) { sb.Append(text, i, text.Length - i); break; } // 닫는 대괄호 없으면 나머지는 그대로 출력
+                string inner = text.Substring(i + 1, close - i - 1);
+                var group = groups != null && groupIndex < groups.Count ? groups[groupIndex] : null;
+                var color = group != null ? group.Color : descriptionHighlightColor;
+                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{inner}</color>");
+                groupIndex++;
+                i = close + 1;
+            }
+            else { sb.Append(text[i]); i++; }
+        }
+        return sb.ToString();
     }
     /// <summary>TD1007 일반 공격 그림자 재현 구성.</summary>
     [Header("그림자 공격 (TotemShadowAttack)")]

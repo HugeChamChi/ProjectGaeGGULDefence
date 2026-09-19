@@ -5,6 +5,7 @@ using TMPro;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// 레벨업 카드 하나의 UI (스프라이트 애니메이션 방식)
@@ -19,7 +20,7 @@ using System.Threading;
 ///   iconImage, borderImage, descriptionText, button
 ///   borderSprites[4] (0=Normal 1=Rare 2=Epic 3=Legend)
 /// </summary>
-public class LevelUpCardUI : MonoBehaviour
+public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image    iconImage;
     [SerializeField] private Image    borderImage;
@@ -37,13 +38,75 @@ public class LevelUpCardUI : MonoBehaviour
     private LevelUpData           _data;
     private Action<LevelUpCardUI> _onCardClicked;
     private CancellationTokenSource _animCts;
+    [Header("Hold to view field")]
+    [SerializeField, Min(0.1f)] private float _holdSeconds = 0.4f;
+    private UI_Peekthrough _peek;
+    private int? _pointerId;
+    private int? _releasedPointerId;
+    private float _pressedAt;
+    private bool _suppressClick;
+
+    /// <summary>카드가 길게 눌렸을 때 사용할 레벨업 창의 필드 보기를 연결한다.</summary>
+    public void ConfigurePeek(UI_Peekthrough peek) => _peek = peek;
+
+    /// <summary>짧은 선택과 긴 필드 보기를 구분하는 입력을 시작한다.</summary>
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left || _pointerId.HasValue ||
+            button == null || !button.IsInteractable()) return;
+        _pointerId = eventData.pointerId;
+        _releasedPointerId = null;
+        _pressedAt = Time.unscaledTime;
+        _suppressClick = false;
+    }
+
+    private void Update()
+    {
+        if (_pointerId.HasValue && !_suppressClick && _peek != null &&
+            Time.unscaledTime - _pressedAt >= _holdSeconds)
+        {
+            _suppressClick = true;
+            _peek.TryBeginPeek(this);
+        }
+    }
+
+    /// <summary>긴 누름의 해제는 카드를 선택하지 않고 필드 보기만 종료한다.</summary>
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (_pointerId != eventData.pointerId) return;
+        // A release can arrive before Update on the threshold frame.
+        if (_peek != null && Time.unscaledTime - _pressedAt >= _holdSeconds) _suppressClick = true;
+        _releasedPointerId = eventData.pointerId;
+        _pointerId = null;
+        _peek?.EndPeek(this);
+    }
+
+    /// <summary>카드 밖으로 이동하면 해당 누름을 취소한다.</summary>
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_pointerId == eventData.pointerId) CancelPress();
+    }
+
+    private void CancelPress()
+    {
+        _pointerId = null;
+        _releasedPointerId = null;
+        _suppressClick = true;
+        _peek?.EndPeek(this);
+    }
+
+    private void OnDisable() => CancelPress();
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus) CancelPress();
+    }
 
     private void Awake()
     {
         if (button == null)
             Debug.LogError("[LevelUpCardUI] Button 연결 안됨");
 
-        button?.onClick.AddListener(OnClick);
     }
 
     // ── 초기화 ─────────────────────────────────────────────────
@@ -97,7 +160,13 @@ public class LevelUpCardUI : MonoBehaviour
 
     // ── 내부 ───────────────────────────────────────────────────
 
-    private void OnClick() => _onCardClicked?.Invoke(this);
+    /// <summary>같은 손가락의 짧은 탭만 한 번 선택한다.</summary>
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
+        _releasedPointerId = null;
+        if (!_suppressClick && button != null && button.IsInteractable()) _onCardClicked?.Invoke(this);
+    }
 
     private void ApplyTierSprites(Tier tier)
     {

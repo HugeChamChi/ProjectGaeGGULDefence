@@ -156,7 +156,7 @@ public class TotemInfoPopupUI : InGameSingleton<TotemInfoPopupUI>
         if (data == null) return;
         EnsureGridBuilt();
 
-        var sheet = _gameData?.GetTotemRow(data.totemId);
+        var sheet = data.UseSheetData ? _gameData?.GetTotemRow(data.totemId) : null;
 
         string displayName = sheet != null && !string.IsNullOrEmpty(sheet.TotemName)
                              ? sheet.TotemName : data.totemName;

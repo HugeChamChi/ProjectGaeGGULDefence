@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: TD1002Data
   m_EditorClassIdentifier: Assembly-CSharp::TotemData
   EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
+    FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
   UseSheetData: 0
@@ -93,14 +95,14 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "\uC131\uC7A5\uD558\uB294 \uC601\uC5ED"
-  iconAddress: TotemIcon1002
-  prefabAddress: TotemTD1002
+  totemName: "TD1002(\uBBF8\uC815)"
+  iconAddress: SPR_TD1002
+  prefabAddress: TD1002
   rotationSpriteAddresses:
-  - TotemIcon1002
-  - TotemIcon1002
-  - TotemIcon1002
-  - TotemIcon1002
+  - SPR_TD1002
+  - SPR_TD1002
+  - SPR_TD1002
+  - SPR_TD1002
   icon: {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   prefab: {fileID: 8956907479240940453, guid: 8926cd92b8ab6c143b24f5f241947ffa, type: 3}
   rotationSprites:
@@ -108,15 +110,16 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  description: "\uBC94\uC704 \uC548 \uACF5\uACA9\uB825 +5%. \uBCF4\uC2A4 \uCC98\uCE58\uB9C8\uB2E4
+  description: "\uBC94\uC704 \uC548 \uACF5\uACA9\uB825 [+5%]. \uBCF4\uC2A4 \uCC98\uCE58\uB9C8\uB2E4
     \uCD5C\uB300 5x5\uAE4C\uC9C0 \uD655\uC7A5\uB429\uB2C8\uB2E4."
   functions:
   - rid: 1992779463445184610
   effectRanges:
-  - rid: 1992779463445184622
-  attackDisabledRanges: []
+  - rid: 1992779482763886693
+  attackDisabledRanges:
+  - rid: 1992779488821248093
   totemId: 1002
-  isRotatable: 1
+  isRotatable: 0
   references:
     version: 2
     RefIds:
@@ -125,16 +128,12 @@ MonoBehaviour:
       data:
         kind: 0
         amount: 0.05
-    - rid: 1992779463445184622
+    - rid: 1992779482763886693
+      type: {class: TotemSquareRingRange, ns: , asm: Assembly-CSharp}
+      data:
+        MinRadius: 1
+        MaxRadius: 1
+    - rid: 1992779488821248093
       type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
       data:
-        offsets:
-        - {x: -1, y: -1}
-        - {x: 0, y: -1}
-        - {x: 1, y: -1}
-        - {x: -1, y: 0}
-        - {x: 0, y: 0}
-        - {x: 1, y: 0}
-        - {x: -1, y: 1}
-        - {x: 0, y: 1}
-        - {x: 1, y: 1}
+        offsets: []

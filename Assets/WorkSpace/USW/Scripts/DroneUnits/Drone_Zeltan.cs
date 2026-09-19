@@ -17,6 +17,10 @@ public class Drone_Zeltan : UnitBase
     public override bool CanBasicAttack => false;
     /// <summary>식량 생산 전용 유닛으로 자동·수동 스킬을 사용하지 않는다.</summary>
     public override bool CanUseSkill => false;
+    /// <summary>공격하지 않는 식량 생산자는 전투 보정과 관계없이 공격력을 0으로 표시한다.</summary>
+    public override float GetDisplayAttackDamage() => 0f;
+    /// <summary>공격하지 않는 식량 생산자는 공격 주기도 0으로 표시한다.</summary>
+    public override float GetDisplayAttackInterval() => 0f;
     /// <inheritdoc />
     public override float FoodPayoutInterval => DroneSelections?.Get(DroneSelectionKind.ZeltanAirFryer)?.Interval ?? 1f;
 

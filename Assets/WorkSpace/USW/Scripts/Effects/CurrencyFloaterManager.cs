@@ -135,7 +135,7 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
                     Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, worldPosition);
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(currencyTextContainer as RectTransform, screenPoint, canvas.worldCamera, out Vector2 localPoint);
                     rect.anchoredPosition = localPoint;
-                    
+
                     Vector3 localPos = rect.localPosition;
                     localPos.z = 0f;
                     rect.localPosition = localPos;

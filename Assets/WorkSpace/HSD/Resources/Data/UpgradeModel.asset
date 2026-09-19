@@ -13,15 +13,12 @@ MonoBehaviour:
   m_Name: UpgradeModel
   m_EditorClassIdentifier: 
   displayConfigs:
-  - targetKey: "\uB3CC\uACA9"
-    displayName: "\uB3CC\uACA9"
-    icon: {fileID: 21300000, guid: 531f72a1c5e76fc42aa0aef2412bca9b, type: 3}
-  - targetKey: "\uC0AC\uACA9"
-    displayName: "\uC0AC\uACA9"
-    icon: {fileID: 21300000, guid: ac3727e83ce83b44c9ccfdb47d3c2783, type: 3}
-  - targetKey: "\uB9C8\uBC95"
-    displayName: "\uB9C8\uBC95"
-    icon: {fileID: 21300000, guid: 8b2623e1eaa16b04587e0a8308df3e30, type: 3}
-  - targetKey: "\uC9C0\uC6D0"
-    displayName: "\uC9C0\uC6D0"
-    icon: {fileID: 21300000, guid: a90abc9c19c7b8a43a8a4669e8e92210, type: 3}
+  - targetKey: Deltan
+    displayName: "\uB378\uD0D5"
+    icon: {fileID: 21300000, guid: e22076861c6d5d94aae92cdeb183139f, type: 3}
+  - targetKey: Gammang
+    displayName: "\uAC10\uB9DD"
+    icon: {fileID: 21300000, guid: 03e1a8655e1fe60419f9f0b57619438f, type: 3}
+  - targetKey: Betan
+    displayName: "\uBCA0\uD0D5"
+    icon: {fileID: 21300000, guid: 0269d4965664f49439872d185b90b50d, type: 3}

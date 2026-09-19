@@ -24,6 +24,7 @@ public class DroneManager : MonoBehaviour
     {
         if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return;
         TickSelections(Time.deltaTime);
+        TickFood(Time.deltaTime);
     }
 
     /// <summary>전투 시간에 따라 베탕 추가 소환을 실행한다. 에픽은 필드 합계 상한이다.</summary>
@@ -83,6 +84,7 @@ public class DroneManager : MonoBehaviour
     }
 
     private readonly List<DroneUnit> _drones = new();
+    private readonly Dictionary<DroneUnit, float> _foodProgress = new();
 
     // ── 식량 ────────────────────────────────────────────────────────
     [Header("식량 (재화)")]
@@ -93,6 +95,17 @@ public class DroneManager : MonoBehaviour
     public event System.Action OnDroneCountChanged;
 
     public int DroneCount => _drones.Count;
+    /// <summary>새 집결 사격에 참가 가능한 드론 수. 이미 진행 중인 집결은 다시 필터링하지 않는다.</summary>
+    public int RallyAvailableDroneCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (var drone in _drones)
+                if (drone != null && (drone.Owner == null || !drone.Owner.IsStunned)) count++;
+            return count;
+        }
+    }
     public IReadOnlyList<DroneUnit> Drones => _drones;
     private readonly List<Drone_Zeltan> _foodProducers = new();
     /// <summary>가장 최근 배치된 유효 젤탕의 패시브를 사용하고, 없으면 기본 생산량을 사용한다.</summary>
@@ -208,6 +221,7 @@ public class DroneManager : MonoBehaviour
     {
         if (_drones.Remove(drone))
         {
+            _foodProgress.Remove(drone);
             OnDroneCountChanged?.Invoke();
         }
     }
@@ -237,7 +251,7 @@ public class DroneManager : MonoBehaviour
     /// </summary>
     public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, DroneSelectionEffect doubleShot = null)
     {
-        if (_isRallying || _drones.Count == 0) return;
+        if (_isRallying || RallyAvailableDroneCount == 0) return;
         _isRallying = true;
 
         GameObject lrObj = null;
@@ -245,7 +259,7 @@ public class DroneManager : MonoBehaviour
 
         try
         {
-            var snapshot = _drones.ToArray();
+            var snapshot = _drones.FindAll(d => d != null && (d.Owner == null || !d.Owner.IsStunned)).ToArray();
 
             // 집결 위치 계산 — 그리드 기하학적 정중앙 기준
             Vector3 rallyCenter = Vector3.zero;
@@ -494,25 +508,26 @@ public class DroneManager : MonoBehaviour
     protected void Awake()
     {
         _baseFoodPerDrone = _defaultFoodPerDrone;
-        FoodTickAsync(this.GetCancellationTokenOnDestroy()).Forget();
     }
 
     // ── 식량 틱 ─────────────────────────────────────────────────────
 
-    private async UniTaskVoid FoodTickAsync(CancellationToken token)
+    private void TickFood(float deltaTime)
     {
-        while (!token.IsCancellationRequested)
+        if (deltaTime <= 0f || _currencyManager == null) return;
+        // 개별 드론의 생산 진행도를 보존한다. 스턴 중 시간은 지급 주기에 포함하지 않는다.
+        foreach (var drone in _drones)
         {
-            await UniTask.Delay(1000, cancellationToken: token);
-
-            int count = _drones.Count;
-            if (count > 0 && _currencyManager != null)
+            if (drone == null || !drone.isActiveAndEnabled || drone.Owner == null
+                || drone.Owner.currentCell == null || drone.Owner.IsStunned) continue;
+            _foodProgress.TryGetValue(drone, out float progress);
+            progress += deltaTime;
+            int ticks = Mathf.FloorToInt(progress);
+            _foodProgress[drone] = progress - ticks;
+            if (ticks > 0)
             {
-                float chieftainFood = 0f;
-                var lu = Object.FindFirstObjectByType<LevelUpManager>();
-                if (lu != null) chieftainFood = lu.ChieftainFoodProductionBonus;
-
-                float food = count * BaseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f) + chieftainFood);
+                float food = ticks * BaseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f)
+                    + (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f));
                 _currencyManager.AddCurrency(food);
             }
         }

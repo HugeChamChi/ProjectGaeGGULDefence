@@ -44,15 +44,16 @@ MonoBehaviour:
   unitName: "\uB378\uD0D5"
   unitTribe: 5
   iconAddress: Deltang
-  prefabAddress: DroneUnit_Debuff
+  prefabAddress: DroneUnit_Deltan
   icon: {fileID: 21300000, guid: e22076861c6d5d94aae92cdeb183139f, type: 3}
   prefab: {fileID: 8592549132893361823, guid: 875376496d093484f8a5fd2aca2c2789, type: 3}
-  description: 
+  description: "\uB4DC\uB860\uC73C\uB85C \uBCF4\uC2A4\uC5D0\uAC8C \uBC1B\uB294 \uD53C\uD574
+    \uC99D\uAC00 \uB514\uBC84\uD504\uB97C \uBD80\uC5EC\uD569\uB2C8\uB2E4. "
   atk:
     normal: 80
-    rare: 80
-    epic: 80
-    legend: 80
+    rare: 140
+    epic: 160
+    legend: 170
   attackSpeed:
     normal: 1.5
     rare: 1.5
