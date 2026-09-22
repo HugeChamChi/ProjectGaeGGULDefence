@@ -43,6 +43,17 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual bool CanUseSkill => true;
     public virtual bool CanAutoSkill => CanUseSkill;
 
+    /// <summary>자동/수동 스킬의 쿨다운 표시 여부. 패시브·조커·0 쿨다운은 회색 바로 표시합니다.</summary>
+    public bool HasSkillCooldownGauge
+    {
+        get
+        {
+            if (!CanUseSkill || IsWildcardMergeUnit || unitData == null || unitData.SkillGaugeMode == SkillGaugeMode.PassiveOnly) return false;
+            float seconds = unitData.skillCooldown.Get(currentTier);
+            return seconds > 0f && !float.IsInfinity(seconds);
+        }
+    }
+
     public bool IsFirstPlacement { get; private set; } = true;
 
     private bool _hasTemporaryTier;
@@ -166,6 +177,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _combat.Init(this, deps, _stats, _resource);
         _buff.Init(this, deps);
         deps.BuffManager?.ApplyActiveGlobalBuffsTo(this);
+        deps.GridManager?.RegisterUnitStatus(this);
     }
 
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)

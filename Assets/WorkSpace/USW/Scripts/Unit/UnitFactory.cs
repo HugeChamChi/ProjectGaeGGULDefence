@@ -194,13 +194,14 @@ public class UnitFactory : MonoBehaviour
     [SerializeField] private float defaultSpawnOffsetY = 0f;
     [SerializeField] private Vector3 defaultSpawnScale = Vector3.one;
 
-    /// <summary>유닛/토템의 Transform을 그리드 셀 배치에 최적화된 기본값으로 초기화합니다.</summary>
-    public void InitUnitTransform(Transform t)
+    // 유닛별 보정을 빠뜨리지 않도록 외부 배치는 UnitBase 오버로드만 사용한다.
+    private void InitUnitTransform(Transform t)
     {
         t.localPosition = new Vector3(0f, defaultSpawnOffsetY, 0f);
         t.localRotation = Quaternion.identity;
     }
 
+    /// <summary>소환·합성·이동에 동일한 기본 위치와 유닛 SO의 Y 보정을 적용합니다.</summary>
     public void InitUnitTransform(UnitBase unit)
     {
         InitUnitTransform(unit.transform);
@@ -211,6 +212,14 @@ public class UnitFactory : MonoBehaviour
             pos.y += unit.unitData.spawnOffsetY;
             unit.transform.localPosition = pos;
         }
+    }
+
+    /// <summary>토템의 Transform을 셀 배치용 기본값으로 초기화합니다. 유닛 전용 스폰 Y보정은 적용하지 않습니다.
+    /// 최초 설치(TotemSpawner)와 이동(DragHandler.PlaceSelfAt) 양쪽에서 이 함수 하나로 통일해 사용합니다.</summary>
+    public void InitTotemTransform(Transform t)
+    {
+        t.localPosition = Vector3.zero;
+        t.localRotation = Quaternion.identity;
     }
 
     private void ValidateUnitDataList()

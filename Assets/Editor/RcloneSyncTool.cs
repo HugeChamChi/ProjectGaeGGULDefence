@@ -7,7 +7,7 @@ public class RcloneSyncTool : EditorWindow
 {
     private string rclonePath = "rclone";
     private string localPath = "";
-    private string remotePath = "gdrive_ggd:GGD_Imports";
+    private string remotePath = "gdrive_ggd:";
 
     // 성능 옵션
     private int transfers = 16;
@@ -27,7 +27,7 @@ public class RcloneSyncTool : EditorWindow
     {
         rclonePath = EditorPrefs.GetString("Rclone_ExecutablePath", "rclone");
         localPath = EditorPrefs.GetString("Rclone_LocalPath", Application.dataPath + "/Imports");
-        remotePath = EditorPrefs.GetString("Rclone_RemotePath", "gdrive_ggd:GGD_Imports");
+        remotePath = EditorPrefs.GetString("Rclone_RemotePath", "gdrive_ggd:");
         transfers = EditorPrefs.GetInt("Rclone_Transfers", 16);
         checkers = EditorPrefs.GetInt("Rclone_Checkers", 64);
     }

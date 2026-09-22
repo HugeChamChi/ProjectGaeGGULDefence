@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: LiquidWaveFill
-  m_Shader: {fileID: 4800000, guid: 9915e4f18300406cacba0a7b344b5f8b, type: 3}
+  m_Name: UnitSkillGauge
+  m_Shader: {fileID: 4800000, guid: 478bcb6633a14c6d807dd8b3867b2bfe, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -30,19 +30,18 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorMask: 15
-    - _CrestThickness: 0.012
-    - _Fill: 0.3838509
+    - _HighlightHeight: 0.3
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
     - _UseUIAlphaClip: 0
-    - _WaveAmplitude: 0.02
-    - _WaveFrequency: 6
-    - _WaveSpeed: 4.8
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _CrestColor: {r: 1, g: 1, b: 1, a: 0.8}
+    - _FillColor: {r: 0.43499997, g: 0.847, b: 0.29799998, a: 1}
+    - _HighlightColor: {r: 0.76899993, g: 0.965, b: 0.518, a: 1}
+    - _PassiveColor: {r: 0.29999998, g: 0.32999998, b: 0.33999997, a: 1}
+    - _PassiveMarkColor: {r: 0.6, g: 0.63, b: 0.63, a: 1}
+    - _TrackColor: {r: 0.16099995, g: 0.22699997, b: 0.18799996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

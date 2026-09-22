@@ -35,6 +35,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 04d5d4ec0ac28ab46b14e79b3cd17c5f
+    m_Address: SPR_UI2000_FoodBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06756c20eb6adce499c3d17767b4296d
     m_Address: SPR_TD1003
     m_ReadOnly: 0
@@ -49,6 +56,13 @@ MonoBehaviour:
     m_Address: DroneUnit_Gamman
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0caa23f6c80053f4ab21e7b07af451e3
+    m_Address: SPR_UI2000_ChieftainSkill
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d15eeda8f5179e4899772cf440c6ca2
     m_Address: TD_1009
@@ -75,6 +89,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 128339253886af84b918d4e1dcffdb29
+    m_Address: SPR_UI1100_BgmIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1100_SettingsCommon
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14b18c01ede94854d80abbe83f408456
     m_Address: DroneUnit_Zeltan
     m_ReadOnly: 0
@@ -85,20 +106,29 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 188aa502517044c4d91d9ae5e000aa16
-    m_Address: ANIM_DroneFrogBuffer_Idle_sprite sheet_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1945ed76f564cae45918943538b938bd
     m_Address: Frog_Rogue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 195f5d3220731e54eab4d54fc6d52fa9
+    m_Address: SPR_UI2000_DebuffSlotFrame
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1d0c195f567973e4e9f7bebf02dfacf0
     m_Address: TD1008
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d99bbab58fb64e48bb5211311090408
+    m_Address: SPR_UI1000_ButtonArrow_Off
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1000_Common
+    - UI_Shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1e4743ba941a490f99eeb277a582243d
     m_Address: Totem_AttackTop
@@ -109,6 +139,27 @@ MonoBehaviour:
     m_Address: TD_1007
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22fb6dd03eb2da44a9c90916b2b2d84f
+    m_Address: SPR_UI2200_UnitSlotFrame
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2324ea1227f4ece4c9d7d90caf64cd52
+    m_Address: SPR_UI2000_SummonMask_B
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24d69497e3380f74eac4d2e5be50789d
+    m_Address: SPR_UI2200_Button_Disabled
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 264b31d4a453127419ba97cca65460a2
     m_Address: SPR_TD1006
@@ -125,6 +176,34 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 308385c9c90d3694e848ed64081f9e12
+    m_Address: SPR_UI2500_StatRowBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 352f943e2ede4da48ab3e08e60411561
+    m_Address: SPR_UI1000_AdIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1000_Common
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35ce4249a39955149993419139b44498
+    m_Address: SPR_UI2400_Frame_Epic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 362cff682954f104c9dc13e88c1196f6
+    m_Address: SPR_UI2000_UpgradeButtonBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 39c5b4c3a353c1d4ebd6494a5b17d10b
     m_Address: Frog_Mage
     m_ReadOnly: 0
@@ -134,6 +213,13 @@ MonoBehaviour:
     m_Address: Frog_Warrior
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f773bd73f287f8449d3bb59dc858ea0
+    m_Address: SPR_UI2100_ScreenBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2100_LevelUp
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 438cefb7cc16a1a4e9d9cac92c478e37
     m_Address: 05.Drone_Attack
@@ -150,15 +236,43 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ae5d1e6b9173da49bb42c192990a3e1
+    m_Address: SPR_UI2600_ClearBanner
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2600_BattleResult
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4af1444cb4cb1454d9fa888c491ffae3
     m_Address: 03.Samurai_attack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ba91a9d5d4e2fe46b976eead9842d2e
+    m_Address: SPR_UI2300_PanelBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2300_TotemInventory
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4f64d6feec6b00d4abe597cb65d37321
     m_Address: TotemTD1004
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 501580faff959394ca3548b4acfbefa2
+    m_Address: SPR_UI2000_BossHpBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51cf24d5afdae0142b103da3667c62a6
+    m_Address: SPR_UI1100_MasterVolumeIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1100_SettingsCommon
+    - UI_Shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 536415d54e63732488f7348ec40061eb
     m_Address: 05.Drone_Summon
@@ -185,10 +299,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5ba91dfaf38d4444da5dd60e60812e95
-    m_Address: ANIM_DroneFrogSupporter_Idle_sprite sheet_0
+  - m_GUID: 59297b33e0d1aa54f9f67b5cb2fdd4e0
+    m_Address: SPR_UI2000_MergeButton_Idle
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5fc5c720520d48c468f93a3b20d84404
     m_Address: Master
@@ -200,15 +316,64 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 660d0eb09cb3fa04eafae6faad82435e
+    m_Address: SPR_UI1100_MuteIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1100_SettingsCommon
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 678620c1e312ff640a2db2d69b696f24
+    m_Address: SPR_UI2500_Frame_Rare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68001ccde77ad124f9880d58e11510a9
+    m_Address: SPR_UI2400_EffectDescBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69752b98a86779742b593cc570f10fc0
+    m_Address: SPR_UI2500_Frame_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c0b4318f27060d49b2356a144aad1f7
     m_Address: SPR_TD1002
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c258d243df1a7b42ba25bf4c1b9a428
+    m_Address: SPR_UI2500_PanelBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e8c0cf04d0cd2642aeb056187f2b11b
+    m_Address: SPR_UI2400_RangeCell_Origin
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f190a3e07ce66e4e86caf21fc98628b
     m_Address: TD_1008
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71ed9007bb27dc547902c5e57366ca0e
+    m_Address: SPR_UI2000_SummonMask_A
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d2958068776c34e850ecd91827673b
     m_Address: 03.Magician_attack
@@ -220,15 +385,43 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7611086b2c57fe0468878ff69b013ba1
+    m_Address: SPR_UI2000_BossHpFrame
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 773020149a2c6f84b8285362b5c11a47
     m_Address: TD1006
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 780e7d49a4967dd4fb2dcc4d1ec7cb87
+    m_Address: SPR_UI2500_SkillDescBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e1e7edaa182b5045ad2d21bf41f5079
     m_Address: 01.Touch_block
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e309d80e63ca2b4fa8418e689f9c919
+    m_Address: SPR_UI2500_AttackIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83a6150ea4c8c65439d8eb6be5d935a4
+    m_Address: SPR_UI2000_SummonButton
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 875376496d093484f8a5fd2aca2c2789
     m_Address: DroneUnit_Deltan
@@ -280,10 +473,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9a2629c3e477a99478af9be35681d975
-    m_Address: ANIM_DroneFrogLeader_Idle_sprite sheet_0
+  - m_GUID: 93bc00a8e94b8064eb7bacd51ad03945
+    m_Address: SPR_UI2400_Frame_Normal
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 990092f9b0b4af1419295bb0b2cfceff
+    m_Address: SPR_UI2100_CardFrame_Rare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2100_LevelUp
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b0a9927b3d0f9d498ac9997e0072bfa
+    m_Address: SPR_UI2400_Frame_Rare
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c09a63873be85c4aad15efa207dd114
+    m_Address: SPR_UI2600_ClearBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2600_BattleResult
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c7dbd7ab89421345b9394959235e27b
     m_Address: CurrencyTextPrefab
@@ -295,10 +511,73 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0ab8be25765bc44f98ddc40f07639c7
+    m_Address: SPR_UI2200_UpgradeIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0f55a7f71f8c904083647c541d79311
     m_Address: NormalTotemIconBorder
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6425a41eb4f79948b4269aeda1ec53d
+    m_Address: SPR_UI2000_TotemButtonBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7050a8046fc1e44da2f5ae08403c9f9
+    m_Address: SPR_UI2000_MenuButton_Idle
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7c9a484b7d40cc46b5808720d73616f
+    m_Address: SPR_UI2000_TimerIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8aa1fd853a22f047b9f3b779f1fa669
+    m_Address: SPR_UI1100_MenuButtonBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1100_SettingsCommon
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ae05a766c16426f4688e31b0432beebc
+    m_Address: SPR_UI2100_CardFrame_Epic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2100_LevelUp
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aeee9540093afa84db69e20fc09b1441
+    m_Address: SPR_UI1100_LanguageIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1100_SettingsCommon
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b441e875be11aa34b8199d9c172aef47
+    m_Address: SPR_UI2200_Button_Pressed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b630e300118ec6242bfbd42da44d195a
+    m_Address: SPR_UI2000_BossPortraitFrame
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b6577599dbf469645b8ae34e27156203
     m_Address: 01.Button_Touch(max vol)
@@ -310,15 +589,92 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbde5ee2a3f2b5f4c96dd369af1050fd
+    m_Address: SPR_UI1000_AdIconBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1000_Common
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcf35cd7fa1a78e41b3ff06985ef98e8
+    m_Address: SPR_UI2000_MenuIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: befa7973c54d7274381e202d558a0622
+    m_Address: SPR_UI2000_MergeButton_Disabled
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0a6c7d03cbe1574681e4ec6f9411079
+    m_Address: SPR_UI2500_AttackSpeedIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2c461e606354f244852c1ead1a7b7a3
+    m_Address: SPR_UI2100_CardBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2100_LevelUp
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c4deb9a02ea44663b6f3ee4d2452722b
     m_Address: Totem_FoodGenerator
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c62ea078c92e745479a0527732560f5d
+    m_Address: SPR_UI2200_Button_Idle
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c76fa86931d74e443b7d123ec3962adf
+    m_Address: SPR_UI1000_GoldIcon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1000_Common
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9833fade0a322540a346fe810778a6a
+    m_Address: SPR_UI2200_PanelBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2200_Upgrade
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca02f1b0aeaca254992e21c9a14ed565
+    m_Address: SPR_UI2500_Frame_Legend
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ce829f5e2d6b16c49aa37ec746984c2d
     m_Address: TotemWildcardUnit
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2e67c3dfdcf5b040aab754baba8ea64
+    m_Address: SPR_UI2400_PanelBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5fb689d14855cb4182e11164dab48e7
+    m_Address: SPR_UI2100_CardFrame_Legend
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2100_LevelUp
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7113f2e884f1a745b0fde642d211a4f
     m_Address: TotemDisableBoost
@@ -330,6 +686,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e190dd662cd974341bc3488c9459c6a5
+    m_Address: SPR_UI2400_RangeGridBg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2140818c5333f3478c7094f8e5d42f3
     m_Address: 02.Summon
     m_ReadOnly: 0
@@ -340,30 +703,55 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e321716fba04b1642b5d5fc1e5cd8049
+    m_Address: SPR_UI2000_TimerIcon_Urgent
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2000_BattleHud
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e5da07723cdf8c44398179308d84d193
+    m_Address: SPR_UI2500_Frame_Epic
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI2500_UnitInfo
+    - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
     m_Address: 05.Drone_Debuff
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f261046b3dd94ae4684e904a2fc3ef9f
-    m_Address: ANIM_DroneFrogDebuffer_Idle_sprite sheet_0
+  - m_GUID: f4bd849c2eca7274c9e8ea2621e4bdfc
+    m_Address: SPR_UI2400_RangeCell_Empty
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - UI2400_TotemInfo
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f68106d4e90c2084fa449ebf8134e8b3
     m_Address: TD_1010
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f76f2b969e091ae48ae92b2338ec0941
+    m_Address: SPR_UI1000_ButtonArrow_On
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UI1000_Common
+    - UI_Shared
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f901983369b66f742b03014899a08a16
     m_Address: TD1010
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fcefb1e8f4aadfa4fb7e95d5dfb1e6c7
-    m_Address: ANIM_DroneFrogMaker_Idle_sprite sheet_0
+  - m_GUID: ff244a879a2d82747bcc489929625fa5
+    m_Address: SPR_UI2600_DefeatBanner
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - UI2600_BattleResult
+    - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 62ecb7143346cd947a725445b3886c08, type: 2}

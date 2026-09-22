@@ -99,3 +99,6 @@ Assets/GEMINI.md.meta
 /Packages/com.singularitygroup.hotreload/
 production/session-state/active.md
 /AgentScripts
+/outputs
+/Tools
+/production

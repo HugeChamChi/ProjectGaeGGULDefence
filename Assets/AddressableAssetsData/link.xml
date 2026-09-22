@@ -162,6 +162,7 @@
     <type fullname="UI_BossHpBar" preserve="all" />
     <type fullname="UI_ChiefButton" preserve="all" />
     <type fullname="UI_ChiefSkillButtonView" preserve="all" />
+    <type fullname="UI_Debug_Background" preserve="all" />
     <type fullname="UI_Debug_TimeScale" preserve="all" />
     <type fullname="UI_DynamicPanel" preserve="all" />
     <type fullname="UI_DynamicShopButton" preserve="all" />

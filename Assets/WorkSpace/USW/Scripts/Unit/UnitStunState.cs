@@ -6,6 +6,7 @@ using UnityEngine;
 public sealed class UnitStunState : MonoBehaviour
 {
     private UnitBase _unit;
+    private DragHandler _dragHandler;
     private Anim_Breathing[] _breathing;
     private StunStarsVisual _visual;
     private float _remaining;
@@ -17,6 +18,7 @@ public sealed class UnitStunState : MonoBehaviour
     private void Awake()
     {
         _unit = GetComponent<UnitBase>();
+        _dragHandler = GetComponent<DragHandler>();
         _breathing = GetComponentsInChildren<Anim_Breathing>(true);
     }
 
@@ -25,6 +27,7 @@ public sealed class UnitStunState : MonoBehaviour
     {
         if (_unit == null || !_unit.isActiveAndEnabled || _unit.currentCell == null || _unit.StunImmune || seconds <= 0f) return;
         _remaining = Mathf.Max(_remaining, seconds);
+        _dragHandler?.CancelPointerDrag();
         foreach (var breath in _breathing) if (breath != null) breath.SetStatusPaused(true);
         if (_visual != null || visual == null || visual.Material == null) return;
         try

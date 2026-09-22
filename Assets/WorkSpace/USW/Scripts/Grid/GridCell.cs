@@ -23,6 +23,14 @@ public class GridCell : MonoBehaviour
     public Vector2Int GridPosition   { get; private set; }
     public UnitBase   OccupyingUnit  { get; private set; }
     public TotemBase  OccupyingTotem { get; private set; }
+    private SpriteRenderer _cellRenderer;
+
+    /// <summary>셀 내부 UI 배치에 사용하는 타일의 실제 월드 경계입니다.</summary>
+    public bool TryGetVisualBounds(out Bounds bounds)
+    {
+        bounds = _cellRenderer != null ? _cellRenderer.bounds : default;
+        return _cellRenderer != null && _cellRenderer.sprite != null && bounds.size.x > 0f && bounds.size.y > 0f;
+    }
 
     /// <summary>봉인된 셀은 배치 불가</summary>
     public bool IsOccupied => OccupyingUnit != null || OccupyingTotem != null;
@@ -36,6 +44,7 @@ public class GridCell : MonoBehaviour
     private void Awake()
     {
         Model = new GridCellModel();
+        _cellRenderer = GetComponentInChildren<SpriteRenderer>();
 
         // GridCellView에 Model 주입
         var view = GetComponent<GridCellView>();

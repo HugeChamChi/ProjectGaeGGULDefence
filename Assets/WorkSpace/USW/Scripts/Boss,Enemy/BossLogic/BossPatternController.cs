@@ -79,6 +79,7 @@ public class BossPatternController : MonoBehaviour
         _entries.Clear();
         _shake?.Stop();
         if (_gridManager == null) return;
+        _gridManager.SetBossTelegraphAll(false);
         foreach (var cell in _gridManager.AllCells())
         {
             if (cell == null) continue;
@@ -143,7 +144,8 @@ public class BossPatternController : MonoBehaviour
         entry.ShakeDuration = data.ShakeDuration;
         entry.ShakeIntensity = data.ShakeIntensity;
         boss.PlayPatternAnimation(data);
-        if (data.patternType != BossPatternType.Earthquake) boss.ExecutePattern(data);
+        if (data.patternType == BossPatternType.Earthquake) _gridManager?.SetBossTelegraphAll(true);
+        else boss.ExecutePattern(data);
     }
 
     private bool HasTarget()
@@ -157,6 +159,7 @@ public class BossPatternController : MonoBehaviour
     private void ApplyEarthquake(BossPatternEntry entry)
     {
         if (_gridManager == null) return;
+        _gridManager.SetBossTelegraphAll(false);
         foreach (var cell in _gridManager.AllCells())
         {
             var unit = cell?.OccupyingUnit;

@@ -33,14 +33,29 @@ public class GridCellModel
     // ── 셀별 토템 버프 보너스 (GenericBuffTotem effectRange 기반 누산, kind별 누적) ──
     private readonly Dictionary<StatKind, float> _totemCellBonuses = new();
     public bool  IsTotemRangePreviewed         { get; private set; }
-    /// <summary>유닛 드래그 중 손을 놓을 대상 칸인지 여부. 배치 상태에는 영향을 주지 않는다.</summary>
+    /// <summary>유닛/토템 드래그 중 손을 놓을 대상 칸인지 여부. 배치 상태에는 영향을 주지 않는다.</summary>
     public bool IsUnitDropPreviewed { get; private set; }
 
-    /// <summary>유닛 이동 대상 표시만 갱신한다.</summary>
-    public void SetUnitDropPreview(bool visible)
+    /// <summary>드롭 대상이 드래그 합성 대상(합성 가능한 유닛이 있는 칸)인지 여부.</summary>
+    public bool IsUnitDropMergePreviewed { get; private set; }
+
+    /// <summary>드래그 이동 대상 표시만 갱신한다 (유닛/토템 공용). merge면 합성 색으로 표시한다.</summary>
+    public void SetUnitDropPreview(bool visible, bool merge = false)
     {
-        if (IsUnitDropPreviewed == visible) return;
+        merge &= visible;
+        if (IsUnitDropPreviewed == visible && IsUnitDropMergePreviewed == merge) return;
         IsUnitDropPreviewed = visible;
+        IsUnitDropMergePreviewed = merge;
+        OnStateChanged?.Invoke();
+    }
+
+    /// <summary>보스 스킬 예고(텔레그래프) 표시 여부. 스킬 판정이 적용되는 순간 꺼진다.</summary>
+    public bool IsBossTelegraphPreviewed { get; private set; }
+
+    public void SetBossTelegraph(bool visible)
+    {
+        if (IsBossTelegraphPreviewed == visible) return;
+        IsBossTelegraphPreviewed = visible;
         OnStateChanged?.Invoke();
     }
     /// <summary>Optional per-effect range color; null uses the shared material palette.</summary>

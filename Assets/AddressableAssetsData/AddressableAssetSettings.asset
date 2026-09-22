@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 2a1e57ad30f1cd8459f99453f766853b
   m_currentHash:
     serializedVersion: 2
-    Hash: 00000000000000000000000000000000
+    Hash: 8be90058d5f72714809a68330f9bb9d7
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -122,6 +122,17 @@ MonoBehaviour:
     - Locale-ja
     - Locale-ko
     - ProjectileData
+    - UI_Shared
+    - UI1000_Common
+    - UI1100_SettingsCommon
+    - UI_InGame
+    - UI2000_BattleHud
+    - UI2100_LevelUp
+    - UI2200_Upgrade
+    - UI2300_TotemInventory
+    - UI2400_TotemInfo
+    - UI2500_UnitInfo
+    - UI2600_BattleResult
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 3e69f746f7d542a48976b79de975305a, type: 2}

@@ -26,6 +26,7 @@ public class TotemSpawner : MonoBehaviour
     [Inject] private IObjectResolver _resolver;
     [Inject] private GridManager _gridManager;
     [Inject] private CurrencyManager _currencyManager;
+    [Inject] private UnitFactory _unitFactory;
 
     [SerializeField] private GameObject genericPrefab;
 
@@ -94,11 +95,10 @@ public class TotemSpawner : MonoBehaviour
             return false;
         }
 
-        // 유닛용 UnitFactory.InitUnitTransform()은 유닛 스프라이트 피벗 정렬을 위한
-        // defaultSpawnOffsetY(-0.2)를 적용한다. 토템은 그 보정이 필요 없으므로 별도로 0을 사용한다.
+        // 최초 설치와 이동(DragHandler.PlaceSelfAt) 양쪽 모두 UnitFactory.InitTotemTransform()
+        // 하나로 통일한다. 유닛 전용 스폰 Y보정은 여기서 적용하지 않는다.
         var t = go.transform;
-        t.localPosition = Vector3.zero;
-        t.localRotation = Quaternion.identity;
+        _unitFactory.InitTotemTransform(t);
         t.localScale = spawnScale;
 
         var drag = go.GetComponent<DragHandler>();

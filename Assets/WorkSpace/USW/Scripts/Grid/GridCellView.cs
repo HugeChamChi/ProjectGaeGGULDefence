@@ -18,12 +18,21 @@ public class GridCellView : MonoBehaviour
     [Header("Unit Drop Preview")]
     [SerializeField] private Material _unitDropPreviewMaterial;
     [SerializeField] private Color _unitDropPreviewColor = new Color(0.2f, 0.9f, 1f, 0.85f);
+    [Tooltip("드래그 합성 대상 칸의 테두리 색. 알파는 머티리얼 알파에 곱해진다.")]
+    [SerializeField] private Color _unitDropMergeFrameColor = new Color(1f, 0.8f, 0.15f, 1f);
+    [Tooltip("드래그 합성 대상 칸의 모서리 색. 알파는 머티리얼 알파에 곱해진다.")]
+    [SerializeField] private Color _unitDropMergeCornerColor = new Color(1f, 0.95f, 0.6f, 1f);
+    [Header("Boss Skill Telegraph")]
+    [Tooltip("토템 범위 셰이더의 줄무늬와 채움을 보스 경고색으로 표시한다.")]
+    [SerializeField] private Color _bossTelegraphColor = new Color(1f, 0f, 0f, 1f);
     private Material _originalMaterial;
     private MaterialPropertyBlock _originalProperties;
     private MaterialPropertyBlock _previewProperties;
     private static readonly int StripeColorId = Shader.PropertyToID("_StripeColor");
     private static readonly int FillColorId = Shader.PropertyToID("_FillColor");
     private static readonly int CellRectId = Shader.PropertyToID("_CellRect");
+    private static readonly int FrameColorId = Shader.PropertyToID("_FrameColor");
+    private static readonly int CornerColorId = Shader.PropertyToID("_CornerColor");
 
     // ── 색상 정의 ──────────────────────────────────────────────
     // 토템 범위 프리뷰
@@ -98,6 +107,12 @@ public class GridCellView : MonoBehaviour
             return;
         }
 
+        if (_model.IsBossTelegraphPreviewed)
+        {
+            ApplyBossTelegraph();
+            return;
+        }
+
         if (_model.IsTotemRangePreviewed)
         {
             ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect, _model.TotemPreviewColor);
@@ -148,13 +163,29 @@ public class GridCellView : MonoBehaviour
 
     private void ApplyDropPreview()
     {
+        bool merge = _model.IsUnitDropMergePreviewed;
         cellRenderer.sharedMaterial = _unitDropPreviewMaterial != null ? _unitDropPreviewMaterial : _originalMaterial;
-        cellRenderer.color = _unitDropPreviewMaterial != null ? Color.white : _unitDropPreviewColor;
+        cellRenderer.color = _unitDropPreviewMaterial != null ? Color.white
+            : merge ? _unitDropMergeFrameColor : _unitDropPreviewColor;
         cellRenderer.SetPropertyBlock(_originalProperties);
         if (_unitDropPreviewMaterial == null || cellRenderer.sprite == null) return;
         var bounds = cellRenderer.sprite.bounds;
         cellRenderer.GetPropertyBlock(_previewProperties);
         _previewProperties.SetVector(CellRectId, new Vector4(bounds.center.x, bounds.center.y, bounds.extents.x, bounds.extents.y));
+        if (merge)
+        {
+            // 공유 머티리얼의 알파는 유지하고 RGB만 합성 색으로 덮는다.
+            var frame = _unitDropMergeFrameColor; frame.a *= _unitDropPreviewMaterial.GetColor(FrameColorId).a;
+            var corner = _unitDropMergeCornerColor; corner.a *= _unitDropPreviewMaterial.GetColor(CornerColorId).a;
+            _previewProperties.SetColor(FrameColorId, frame);
+            _previewProperties.SetColor(CornerColorId, corner);
+        }
         cellRenderer.SetPropertyBlock(_previewProperties);
+    }
+
+    /// <summary>토템 범위 줄무늬를 빨간 경고색으로 표시한다. 공유 머티리얼의 색은 변경하지 않는다.</summary>
+    private void ApplyBossTelegraph()
+    {
+        ApplyPreview(_effectPreviewMaterial, _bossTelegraphColor, _bossTelegraphColor);
     }
 }

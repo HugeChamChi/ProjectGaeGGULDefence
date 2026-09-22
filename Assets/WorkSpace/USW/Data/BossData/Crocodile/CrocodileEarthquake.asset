@@ -26,7 +26,7 @@ MonoBehaviour:
   duration: 1
   Priority: 0
   SkillDuration: 1.5
-  ImpactTimeSec: 0.5
+  ImpactTimeSec: 1.5
   RetryDelay: 0.25
   StunVisual: {fileID: 11400000, guid: 2ab425e3b1c5ad04f8812519ca16abd3, type: 2}
   UseScreenShake: 1

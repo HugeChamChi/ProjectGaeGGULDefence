@@ -67,18 +67,21 @@ public class MergeManager : MonoBehaviour
         MergeTargets(targets, targets[0].cell, nextTier);
     }
 
-    /// <summary>노말 일반 유닛과 와일드카드를 양방향 드래그로 합성하여 드롭한 셀에 배치한다.</summary>
-    public bool TryMergeWildcardPair(UnitBase dragged, UnitBase target)
+    /// <summary>
+    /// 드래그 합성. 합성 가능한 두 유닛(동일 유닛·동일 등급, 또는 노말 + 와일드카드)을
+    /// 드래그로 겹치면 다음 등급 랜덤 유닛 1기를 드롭한 셀에 배치한다. 합성 버튼 경로와 병행된다.
+    /// </summary>
+    public bool TryMergeByDrag(UnitBase dragged, UnitBase target)
     {
-        if (!UnitMergeRules.CanPair(dragged, target) ||
-            !(dragged.IsWildcardMergeUnit || target.IsWildcardMergeUnit)) return false;
+        if (dragged == null || target == null || dragged.IsStunned || target.IsStunned) return false;
+        if (!UnitMergeRules.CanPair(dragged, target)) return false;
         var sourceCell = dragged.currentCell;
         var targetCell = target.currentCell;
         if (sourceCell == null || targetCell == null || sourceCell == targetCell ||
             sourceCell.OccupyingUnit != dragged || targetCell.OccupyingUnit != target ||
             sourceCell.Model.IsSealed || targetCell.Model.IsSealed) return false;
         return MergeTargets(new List<(UnitBase unit, GridCell cell)>
-            { (dragged, sourceCell), (target, targetCell) }, targetCell, Tier.Rare);
+            { (dragged, sourceCell), (target, targetCell) }, targetCell, (Tier)((int)dragged.OriginalTier + 1));
     }
 
     private bool MergeTargets(List<(UnitBase unit, GridCell cell)> targets, GridCell spawnCell, Tier nextTier)

@@ -12,6 +12,17 @@ public class GridManager : MonoBehaviour
     [SerializeField] private List<GridCell>   prebuiltCells = new List<GridCell>(); // 에디터에서 생성된 타일들
 
     private GridCell[,] _grid;
+    private UnitStatusOverlay _unitStatusOverlay;
+    [SerializeField, Tooltip("미지정 시 Resources/UnitStatus 공통 프리팹 사용")]
+    private UnitStatusGraphic _unitStatusPrefab;
+
+    /// <summary>유닛의 발밑 상태 표시를 그리드 수명의 공용 UI에 연결합니다.</summary>
+    public void RegisterUnitStatus(UnitBase unit)
+    {
+        if (_unitStatusOverlay == null) _unitStatusOverlay = UnitStatusOverlay.Create(transform, _unitStatusPrefab);
+        _unitStatusOverlay.Register(unit);
+    }
+
     private TotemBase _previewedTotem;
     private static readonly int RangeTimeId = Shader.PropertyToID("_TotemRangeUnscaledTime");
     private static readonly int DropTimeId = Shader.PropertyToID("_UnitDropUnscaledTime");
@@ -213,6 +224,14 @@ public class GridManager : MonoBehaviour
     {
         foreach (var cell in _grid)
             yield return cell;
+    }
+
+    /// <summary>보스 스킬 예고(텔레그래프)를 그리드 전체 셀에 표시/해제한다.</summary>
+    public void SetBossTelegraphAll(bool visible)
+    {
+        if (_grid == null) return;
+        foreach (var cell in _grid)
+            cell?.Model?.SetBossTelegraph(visible);
     }
 
     public bool IsPreviewingTotem(TotemBase totem)

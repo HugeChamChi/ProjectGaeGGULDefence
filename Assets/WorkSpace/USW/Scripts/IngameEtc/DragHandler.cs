@@ -20,6 +20,10 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private TotemInteractionSettings _totemInteractionSettings;
     private float _pressStartedAt;
     private bool _rotating;
+    private bool _isDragging;
+
+    /// <summary>드래그 시작 위치에서의 이동량입니다. 발밑 상태 표시가 같은 간격으로 따라갑니다.</summary>
+    public Vector3 DragOffset => _isDragging ? transform.position - _originPos : Vector3.zero;
 
     /// <summary>Records hold time without changing unit drag behavior.</summary>
     public void BeginPress()
@@ -31,6 +35,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     /// <summary>손을 뗐거나 입력이 취소되면 토템 범위를 숨긴다.</summary>
     public void EndPress()
     {
+        _isDragging = false;
         SetDropPreview(null);
         if (_totem != null) _gridManager?.ClearTotemRangePreview();
     }
@@ -39,7 +44,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void CancelPointerDrag()
     {
         if (_rotating) _rotationUI?.Cancel();
-        else
+        else if (_isDragging)
         {
             ReturnToOrigin();
             if (_spriteRenderer != null) { _spriteRenderer.sortingLayerName = _originSortingLayer; _spriteRenderer.sortingOrder = _originSortingOrder; }
@@ -69,10 +74,18 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     private void SetDropPreview(GridCell cell)
     {
+        if (cell != null && cell.OccupyingUnit != null && cell.OccupyingUnit.IsStunned) cell = null;
         if (_dropPreviewCell == cell) return;
         if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(false);
         _dropPreviewCell = cell;
-        if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(true);
+        if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(true, IsMergeTarget(_dropPreviewCell));
+    }
+
+    // 놓으면 드래그 합성이 일어나는 칸인지 — TrySwap의 합성 분기와 같은 조건.
+    private bool IsMergeTarget(GridCell cell)
+    {
+        return _unit != null && cell != _originCell && cell.Model != null && cell.Model.IsAvailable &&
+               UnitMergeRules.CanPair(_unit, cell.OccupyingUnit);
     }
 
     // Preview and release must resolve the same cell. Ignore this dragged object's
@@ -141,6 +154,7 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     public void OnBeginDrag()
     {
+        if (_unit != null && _unit.IsStunned) return;
         OnDragStartedEvent?.Invoke();
         _rotating = _totem != null && _totem.Data != null && _totem.Data.isRotatable &&
             _rotationUI != null && _totemInteractionSettings != null &&
@@ -155,7 +169,8 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_originCell == null) return;
 
         _originPos = transform.position;
-        if (_unit != null) SetDropPreview(_originCell);
+        _isDragging = true;
+        if (_unit != null || _totem != null) SetDropPreview(_originCell);
         
         if (_spriteRenderer != null)
         {
@@ -167,13 +182,17 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     public void OnDrag(Vector2 worldPosition)
     {
+        if (_unit != null && _unit.IsStunned) { CancelPointerDrag(); return; }
         if (_rotating) { _rotationUI?.Drag(worldPosition); return; }
+        if (!_isDragging) return;
         transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
-        if (_unit != null && _originCell != null) SetDropPreview(FindDropCell(worldPosition));
+        if ((_unit != null || _totem != null) && _originCell != null) SetDropPreview(FindDropCell(worldPosition));
     }
 
     public void OnEndDrag(Vector2 worldPosition)
     {
+        if (_unit != null && _unit.IsStunned) { CancelPointerDrag(); return; }
+        if (!_isDragging && !_rotating) { EndPress(); return; }
         EndPress();
         if (_rotating) { _rotationUI?.End(worldPosition); _rotating = false; return; }
         if (_spriteRenderer != null)
@@ -213,12 +232,22 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         UnitBase  targetUnit  = targetCell.OccupyingUnit;
         TotemBase targetTotem = targetCell.OccupyingTotem;
+        // 다른 유닛/토템으로 스턴 유닛을 밀거나 드래그 합성하여 이동 제한을 우회하지 않는다.
+        if (targetUnit != null && targetUnit.IsStunned) { ReturnToOrigin(); return; }
 
+        // 드래그 합성: 합성 가능한 유닛 위에 놓으면 스왑 대신 합성한다.
+        if (_unit != null && targetUnit != null && UnitMergeRules.CanPair(_unit, targetUnit))
+        {
+            if (_mergeManager == null || !_mergeManager.TryMergeByDrag(_unit, targetUnit))
+                ReturnToOrigin();
+            return;
+        }
+
+        // 와일드카드는 합성 짝이 아닌 유닛과 스왑하지 않는다 (기존 동작 유지).
         if (_unit != null && targetUnit != null &&
             (_unit.IsWildcardMergeUnit || targetUnit.IsWildcardMergeUnit))
         {
-            if (_mergeManager == null || !_mergeManager.TryMergeWildcardPair(_unit, targetUnit))
-                ReturnToOrigin();
+            ReturnToOrigin();
             return;
         }
 
@@ -246,7 +275,7 @@ public class DragHandler : MonoBehaviour, IDraggable
         {
             cell.TryPlaceUnit(_unit);
             transform.SetParent(cell.transform, false);
-            if (_unitFactory != null) _unitFactory.InitUnitTransform(transform);
+            if (_unitFactory != null) _unitFactory.InitUnitTransform(_unit);
             else transform.localPosition = Vector3.zero;
             
             _originCell = cell;
@@ -259,9 +288,9 @@ public class DragHandler : MonoBehaviour, IDraggable
         {
             cell.TryPlaceTotem(_totem);
             transform.SetParent(cell.transform, false);
-            if (_unitFactory != null) _unitFactory.InitUnitTransform(transform);
+            if (_unitFactory != null) _unitFactory.InitTotemTransform(transform);
             else transform.localPosition = Vector3.zero;
-            
+
             _originCell = cell;
 
             _totem.OnPlaced(cell);
