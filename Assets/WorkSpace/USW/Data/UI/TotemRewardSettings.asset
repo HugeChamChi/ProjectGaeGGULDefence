@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7609eac6928357a4e9ba8e8a4edac487, type: 3}
+  m_Name: TotemRewardSettings
+  m_EditorClassIdentifier: Assembly-CSharp::TotemRewardSettings
+  _showDescriptionOnOverview: 1
+  _allowDetailSwipe: 1
+  _useTierColors: 0
+  _slotColors:
+  - {r: 0.16, g: 0.84, b: 0.96, a: 1}
+  - {r: 0.95, g: 0.3, b: 0.17, a: 1}
+  - {r: 0.96, g: 0.74, b: 0.17, a: 1}
+  _tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
+  _edgeColor: {r: 0, g: 0, b: 0, a: 1}
+  _edgeWidth: 16
+  _dimAlpha: 0.7
+  _upperBoundary: {x: 0.38, y: 0.22}
+  _lowerBoundary: {x: 0.6, y: 0.78}
+  _font: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  _backIcon: {fileID: 21300000, guid: 14a7ee0e32e7440fa97ff8b85aee8206, type: 3}
+  _overviewNameSize: 72
+  _overviewDescriptionSize: 42
+  _detailNameSize: 72
+  _detailDescriptionSize: 44
+  _confirmLabel: "\uD655\uC815"
+  _swipeHint: "\uC88C\uC6B0\uB85C \uB118\uACA8 \uBE44\uAD50"
+  _overviewIconSize: 380
+  _detailIconSize: 360
+  _rangeDisplaySettings: {fileID: 11400000, guid: bc35f0151471b044eb49e43bfd377839,
+    type: 2}
+  _rangeCellPrefab: {fileID: 7661997699564753732, guid: 54f6bff9ebd0bae439fc326706930116,
+    type: 3}
+  _rangeBoxSprite: {fileID: 21300000, guid: e190dd662cd974341bc3488c9459c6a5, type: 3}
+  _rangeBoxSize: {x: 233, y: 284}
+  _rangeBoxScale: 1.6
+  _dimSeconds: 0.35
+  _bandSlideSeconds: 0.3
+  _bandStaggerSeconds: 0.1
+  _switchSeconds: 0.2
+  _swipeThreshold: 120

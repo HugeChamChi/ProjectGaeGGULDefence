@@ -34,3 +34,8 @@ Assets/WorkSpace/USW/Scripts/Unit/UnitAnimator.cs
 Assets/WorkSpace/USW/Scripts/Unit/UnitBase.cs
 ---
 
+## Session End: 20260925_015143
+### Commits
+8ec001e3 [Feat] 2026.09.25 UX 개선
+---
+

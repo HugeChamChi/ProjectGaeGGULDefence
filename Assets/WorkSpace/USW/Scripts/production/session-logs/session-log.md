@@ -163,3 +163,11 @@ Assets/WorkSpace/USW/Scripts/Unit/UnitSpawner.cs
 Assets/WorkSpace/USW/Scripts/Unit/UnitStatsModifier.cs
 ---
 
+## Session End: 20260925_022142
+### Commits
+8ec001e3 [Feat] 2026.09.25 UX 개선
+### Uncommitted Changes
+Assets/WorkSpace/HSD/Shaders/UI/LiquidWaveFill.mat
+Assets/WorkSpace/production/session-logs/session-log.md
+---
+

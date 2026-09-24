@@ -55,6 +55,29 @@ namespace GaeGGUL.UI.Totem
             }
         }
 
+        /// <summary>
+        /// 코드로 만든 화면(토템 보상 상세 등)에서 인스펙터 연결 대신 설정·칸 프리팹·레이아웃을 넘겨 쓴다.
+        /// 범례는 연결하지 않는다.
+        /// </summary>
+        public void Configure(TotemDisplaySettings displaySettings, UI_TotemRangeCell rangeCellPrefab, UIGridLayout layout)
+        {
+            if (gridLayout != null) gridLayout.OnLayoutChanged -= RefreshLayoutPositions;
+            settings = displaySettings;
+            cellPrefab = rangeCellPrefab;
+            gridLayout = layout;
+            if (gridLayout != null && isActiveAndEnabled) gridLayout.OnLayoutChanged += RefreshLayoutPositions;
+        }
+
+        /// <summary>켜면 적용 범위 칸들이 부드럽게 깜빡인다 (토템 보상 상세에서 사용, 정보창은 기본 꺼짐).</summary>
+        public bool BlinkRangeCells { get; set; }
+
+        private static void SetBlink(UI_TotemRangeCell cell, bool on)
+        {
+            var blink = cell.GetComponent<UI_TotemCellBlink>();
+            if (on && blink == null) blink = cell.gameObject.AddComponent<UI_TotemCellBlink>();
+            if (blink != null) blink.enabled = on;
+        }
+
         /// <summary>데이터 없이 토템 칸만 보여주는 미리보기 상태로 준비합니다.</summary>
         public void Initialize()
         {
@@ -169,6 +192,7 @@ namespace GaeGGUL.UI.Totem
                     cell.SetRange(fill, BrightenForOutline(e.Color), settings.rangeOutlineSprite,
                         settings.outlineThicknessMultiplier);
                 }
+                SetBlink(cell, BlinkRangeCells && e.Kind == CellKind.Range);
             }
 
             UpdateCaption();

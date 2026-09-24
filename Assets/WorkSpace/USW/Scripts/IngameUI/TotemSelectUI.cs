@@ -281,56 +281,7 @@ public class TotemSelectUI : MonoBehaviour
             return new List<TotemData>();
         }
 
-        var filtered = new List<TotemData>();
-        foreach (var data in totemPool)
-        {
-            if (data != null && !_chosenTotems.Contains(data.totemId))
-                filtered.Add(data);
-        }
-
-        var tierGroups = new Dictionary<Tier, List<TotemData>>();
-        foreach (var d in filtered)
-        {
-            if (!tierGroups.ContainsKey(d.tier)) tierGroups[d.tier] = new List<TotemData>();
-            tierGroups[d.tier].Add(d);
-        }
-
-        if (tierGroups.Count == 0) return new List<TotemData>();
-
-        float roll = UnityEngine.Random.Range(0f, filtered.Count);
-        float cumul = 0f;
-        Tier selectedTier = Tier.Normal;
-
-        foreach (var kvp in tierGroups)
-        {
-            cumul += kvp.Value.Count;
-            if (roll <= cumul)
-            {
-                selectedTier = kvp.Key;
-                break;
-            }
-        }
-
-        var group = tierGroups[selectedTier];
-        var result = new List<TotemData>();
-        int pickCount = Mathf.Min(count, group.Count);
-
-        for (int i = 0; i < pickCount; i++)
-        {
-            int idx = UnityEngine.Random.Range(0, group.Count);
-            result.Add(group[idx]);
-            group.RemoveAt(idx);
-        }
-
-        filtered.RemoveAll(x => result.Contains(x));
-        while (result.Count < count && filtered.Count > 0)
-        {
-            int idx = UnityEngine.Random.Range(0, filtered.Count);
-            result.Add(filtered[idx]);
-            filtered.RemoveAt(idx);
-        }
-
-        return result;
+        return TotemChoiceRoller.Roll(totemPool, _chosenTotems, count);
     }
 
     private void ClearCards()
