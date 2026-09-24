@@ -1,11 +1,16 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace HSD.UI.Upgrade
 {
-    public class UI_UpgradeItem : MonoBehaviour
+    /// <summary>
+    /// 강화 카드 한 장. 카드 어디를 눌러도(배경·아이콘·텍스트) 강화를 요청한다 — 자식 그래픽의 클릭이 이 루트로 올라온다.
+    /// 결과 연출은 UI_UpgradeItemFeedback이 담당한다.
+    /// </summary>
+    public class UI_UpgradeItem : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private Image img_Icon;
         [SerializeField] private TextMeshProUGUI txt_Name;
@@ -21,17 +26,38 @@ namespace HSD.UI.Upgrade
         private string _target;
         private Action<string> _onUpgradeClicked;
         private bool _canUpgrade;
+        private int _currentCost;
+        private int _requestedCost;
+        private UI_UpgradeItemFeedback _feedback;
 
         private void Awake()
         {
-            if (btn_Upgrade != null)
-            {
-                btn_Upgrade.onClick.AddListener(() =>
-                {
-                    if (_canUpgrade && btn_Upgrade.interactable) _onUpgradeClicked?.Invoke(_target);
-                });
-            }
+            if (btn_Upgrade != null) btn_Upgrade.onClick.AddListener(RequestUpgrade);
+            _feedback = GetComponent<UI_UpgradeItemFeedback>();
+            if (_feedback == null) _feedback = gameObject.AddComponent<UI_UpgradeItemFeedback>();
+            _feedback.Bind(transform as RectTransform, txt_Level, txt_Cost, img_Icon != null ? img_Icon.rectTransform : null);
         }
+
+        /// <summary>버튼 밖(카드 배경·아이콘·텍스트)을 눌렀을 때. 버튼 위 클릭은 버튼이 먼저 처리한다.</summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            RequestUpgrade();
+        }
+
+        private void RequestUpgrade()
+        {
+            if (!_canUpgrade) return; // 최대 레벨
+            // 강화 성공 시 UpdateUI가 다음 비용으로 덮어쓰므로, 이번에 쓴 비용을 먼저 기억한다.
+            _requestedCost = _currentCost;
+            _onUpgradeClicked?.Invoke(_target);
+        }
+
+        /// <summary>강화 성공 연출 (이번에 쓴 비용 표시 포함).</summary>
+        public void PlayUpgradeSuccess() => _feedback?.PlaySuccess(_requestedCost);
+
+        /// <summary>강화 실패 연출 (재화 부족 등).</summary>
+        public void PlayUpgradeRejected() => _feedback?.PlayRejected();
 
         public void Init(UpgradeModel.UpgradeItemData data, Action<string> onUpgradeClicked)
         {
@@ -44,6 +70,7 @@ namespace HSD.UI.Upgrade
         public void UpdateUI(UpgradeModel.UpgradeItemData data)
         {
             _canUpgrade = !data.IsMaxLevel && data.UpgradeCost >= 0;
+            _currentCost = data.UpgradeCost;
             if (txt_Name != null) txt_Name.text = data.DisplayName;
             
             if (data.IsMaxLevel)

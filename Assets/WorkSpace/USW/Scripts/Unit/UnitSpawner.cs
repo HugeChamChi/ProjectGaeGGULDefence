@@ -199,7 +199,10 @@ public class UnitSpawner : MonoBehaviour
     /// 지정된 셀에 유닛을 배치하며 스폰 이펙트(SpawnLine, ParticleImage)를 재생합니다.
     /// 외부 요인(레벨업 보상 등)에 의한 스폰 시에도 동일하게 사용합니다.
     /// </summary>
-    public void PlaceUnitWithEffect(UnitBase unit, GridCell cell, Vector3? originWorldPos = null)
+    /// <param name="startDelaySeconds">이펙트 시작 전 대기(게임 시간). 합성 먼지구름 연출 동안 사용</param>
+    /// <param name="lineCurveHeight">SpawnLine 포물선 높이 덮어쓰기. null이면 프리팹 값</param>
+    public void PlaceUnitWithEffect(UnitBase unit, GridCell cell, Vector3? originWorldPos = null,
+        float startDelaySeconds = 0f, float? lineCurveHeight = null)
     {
         // 1. 점유 상태 설정 (다른 스폰과 겹치지 않도록 미리 점유)
         cell.TryPlaceUnit(unit);
@@ -212,15 +215,23 @@ public class UnitSpawner : MonoBehaviour
         if (drag != null) drag.SetOriginCell(cell);
 
         // 2. 비동기 이펙트 재생 (끝나면 OnPlaced 호출 및 활성화)
-        SpawnProcessAsync(unit, cell, originWorldPos).Forget();
+        SpawnProcessAsync(unit, cell, originWorldPos, startDelaySeconds, lineCurveHeight).Forget();
     }
 
-    private async UniTaskVoid SpawnProcessAsync(UnitBase unit, GridCell cell, Vector3? originWorldPos)
+    private async UniTaskVoid SpawnProcessAsync(UnitBase unit, GridCell cell, Vector3? originWorldPos,
+        float startDelaySeconds, float? lineCurveHeight)
     {
         if (unit == null || cell == null) return;
         
         // 이펙트 재생 동안 유닛을 숨김
         unit.gameObject.SetActive(false);
+
+        if (startDelaySeconds > 0f)
+        {
+            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: false,
+                cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+            if (canceled || unit == null || cell == null) return;
+        }
         
         Transform lineParent = effectParent != null ? effectParent : transform;
 
@@ -265,6 +276,7 @@ public class UnitSpawner : MonoBehaviour
 
                 Vector3 endPos = cell.transform.position;
 
+                if (lineCurveHeight.HasValue) line.curveHeight = lineCurveHeight.Value;
                 line.Fire(startPos, endPos);
                 await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: false);
             }

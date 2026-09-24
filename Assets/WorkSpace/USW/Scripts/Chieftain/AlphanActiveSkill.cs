@@ -75,6 +75,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
         _castCts=new CancellationTokenSource();
         var cts=_castCts;
         ExecuteAsync(cts).Forget(e => { if (e is not OperationCanceledException) Debug.LogException(e); });
+        ChiefActiveSkillSignals.RaiseActivated(); // 보스 예고 패턴 카운터
         return true;
     }
     private async UniTask ExecuteAsync(CancellationTokenSource cts)

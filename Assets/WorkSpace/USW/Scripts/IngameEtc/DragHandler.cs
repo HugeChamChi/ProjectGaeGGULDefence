@@ -18,6 +18,9 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private GridManager _gridManager;
     [Inject] private TotemRotationUI _rotationUI;
     [Inject] private TotemInteractionSettings _totemInteractionSettings;
+    [Inject] private TotemHoldFeedback _holdFeedback;
+    [Inject] private TotemDragRangePreview _dragRangePreview;
+    [Inject] private DragSellService _sellService;
     private float _pressStartedAt;
     private bool _rotating;
     private bool _isDragging;
@@ -25,19 +28,36 @@ public class DragHandler : MonoBehaviour, IDraggable
     /// <summary>드래그 시작 위치에서의 이동량입니다. 발밑 상태 표시가 같은 간격으로 따라갑니다.</summary>
     public Vector3 DragOffset => _isDragging ? transform.position - _originPos : Vector3.zero;
 
+    /// <summary>현재 이 오브젝트를 손가락으로 끌고 있는지. 소속 드론 추적 등에 쓴다.</summary>
+    public bool IsDragging => _isDragging;
+
     /// <summary>Records hold time without changing unit drag behavior.</summary>
     public void BeginPress()
     {
         _pressStartedAt = Time.unscaledTime;
-        if (_totem != null) _gridManager?.ShowTotemRangePreview(_totem);
+        if (_totem != null)
+        {
+            _gridManager?.ShowTotemRangePreview(_totem);
+            _holdFeedback?.Begin(_totem);
+        }
     }
+
+    // 게이지가 차기 전에 끌었을 때 회전으로 처리할 수 있는 토템인지.
+    private bool CanRotateTotem => _totem != null && _totem.Data != null && _totem.Data.isRotatable &&
+        _rotationUI != null && _totemInteractionSettings != null;
 
     /// <summary>손을 뗐거나 입력이 취소되면 토템 범위를 숨긴다.</summary>
     public void EndPress()
     {
         _isDragging = false;
+        _sellService?.EndMove(this);
         SetDropPreview(null);
-        if (_totem != null) _gridManager?.ClearTotemRangePreview();
+        if (_totem != null)
+        {
+            _dragRangePreview?.End();
+            _gridManager?.ClearTotemRangePreview();
+            _holdFeedback?.End(_totem);
+        }
     }
 
     /// <summary>Cancels interrupted touch movement or rotation.</summary>
@@ -156,10 +176,16 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         if (_unit != null && _unit.IsStunned) return;
         OnDragStartedEvent?.Invoke();
-        _rotating = _totem != null && _totem.Data != null && _totem.Data.isRotatable &&
-            _rotationUI != null && _totemInteractionSettings != null &&
-            Time.unscaledTime - _pressStartedAt < _totemInteractionSettings.MoveHoldSeconds;
+        // 모든 토템은 홀드 게이지가 가득 찬 뒤(MoveHoldSeconds)에만 이동한다.
+        // 그 전에 끌면 회전 가능 토템은 회전, 회전 불가 토템은 아무 동작도 하지 않는다.
+        bool holdComplete = _totemInteractionSettings == null ||
+            Time.unscaledTime - _pressStartedAt >= _totemInteractionSettings.MoveHoldSeconds;
+        _rotating = _totem != null && !holdComplete && CanRotateTotem;
+        bool ignoreEarlyDrag = _totem != null && !holdComplete && !_rotating;
+        if (_totem != null) _holdFeedback?.OnDragStarted(_totem, !_rotating && !ignoreEarlyDrag);
         if (_rotating) { _rotationUI?.Begin(_totem); return; }
+        // 드래그 시작 이벤트가 범위를 지우므로, 이동하지 않는 경우에도 누르는 동안은 다시 보여준다.
+        if (ignoreEarlyDrag) { _gridManager?.ShowTotemRangePreview(_totem); return; }
 
         if (_originCell == null)
         {
@@ -170,7 +196,9 @@ public class DragHandler : MonoBehaviour, IDraggable
 
         _originPos = transform.position;
         _isDragging = true;
+        _sellService?.BeginMove(this); // 이동 드래그만 (회전·이른 드래그 무시는 위에서 이미 반환)
         if (_unit != null || _totem != null) SetDropPreview(_originCell);
+        if (_totem != null) _dragRangePreview?.Begin(_totem, _originCell);
         
         if (_spriteRenderer != null)
         {
@@ -186,7 +214,13 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_rotating) { _rotationUI?.Drag(worldPosition); return; }
         if (!_isDragging) return;
         transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
-        if ((_unit != null || _totem != null) && _originCell != null) SetDropPreview(FindDropCell(worldPosition));
+        if ((_unit != null || _totem != null) && _originCell != null)
+        {
+            var hoverCell = FindDropCell(worldPosition);
+            SetDropPreview(hoverCell);
+            if (_totem != null) _dragRangePreview?.Hover(hoverCell);
+        }
+        _sellService?.UpdateMove(this, worldPosition);
     }
 
     public void OnEndDrag(Vector2 worldPosition)
@@ -200,6 +234,9 @@ public class DragHandler : MonoBehaviour, IDraggable
             _spriteRenderer.sortingLayerName = _originSortingLayer;
             _spriteRenderer.sortingOrder = _originSortingOrder;
         }
+
+        // 판매 띠 위에서 놓으면 판매 (띠가 없는 씬에서는 항상 false)
+        if (_sellService != null && _sellService.TrySell(_unit, _totem, worldPosition)) return;
 
         GridCell targetCell = FindDropCell(worldPosition);
 

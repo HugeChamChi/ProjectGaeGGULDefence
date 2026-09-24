@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
-/// <summary>보스별 쿨타임과 우선순위를 관리하며 한 보스는 한 패턴만 시전한다.</summary>
+/// <summary>
+/// 보스별 쿨타임과 우선순위를 관리하며 한 보스는 한 패턴만 시전한다.
+/// 예고(텔레그래프)가 있는 패턴은 판정 전에 족장 액티브 스킬이 발동되면 취소된다 (카운터).
+/// </summary>
 [DefaultExecutionOrder(32000)]
 public class BossPatternController : MonoBehaviour
 {
@@ -32,10 +35,51 @@ public class BossPatternController : MonoBehaviour
     private readonly Dictionary<BossBase, BossPatternEntry> _entries = new();
     private readonly List<BossBase> _iteration = new();
 
+    /// <summary>족장 스킬로 예고 패턴이 취소됐을 때 (보스, 취소된 패턴). 카운터 연출 연결용.</summary>
+    public event Action<BossBase, BossPatternData> OnPatternCountered;
+
     private void Start()
     {
         var camera = Camera.main;
         if (camera != null) _shake = camera.GetComponent<BattleCameraShake>() ?? camera.gameObject.AddComponent<BattleCameraShake>();
+        ChiefActiveSkillSignals.OnActivated += HandleChiefSkillActivated;
+    }
+
+    private void HandleChiefSkillActivated() => TryCounterTelegraphedPatterns();
+
+    /// <summary>
+    /// 판정 전인 예고 패턴(현재 지진)을 모두 취소한다. 쿨타임은 이미 시전 시점에 소모되어 그대로 유지된다.
+    /// </summary>
+    /// <returns>하나 이상 취소했으면 true.</returns>
+    public bool TryCounterTelegraphedPatterns()
+    {
+        bool countered = false;
+        _iteration.Clear();
+        _iteration.AddRange(_entries.Keys);
+        foreach (var boss in _iteration)
+        {
+            if (boss == null || !_entries.TryGetValue(boss, out var entry) || !IsCounterable(entry)) continue;
+            var pattern = entry.Casting;
+            ResetCast(entry);
+            boss.InterruptPatternAnimation(pattern);
+            countered = true;
+            Debug.Log($"[BossPattern] 족장 스킬 카운터: {boss.name} 패턴 취소 ({pattern.name})");
+            OnPatternCountered?.Invoke(boss, pattern);
+        }
+        if (countered && !AnyTelegraphActive()) _gridManager?.SetBossTelegraphAll(false);
+        return countered;
+    }
+
+    /// <summary>예고 중이고 아직 판정(Impact)이 오지 않은 시전.</summary>
+    private static bool IsCounterable(BossPatternEntry entry) =>
+        entry.Casting != null && entry.Casting.patternType == BossPatternType.Earthquake &&
+        !entry.ImpactApplied && entry.PendingImpactFrame < 0;
+
+    private bool AnyTelegraphActive()
+    {
+        foreach (var entry in _entries.Values)
+            if (IsCounterable(entry)) return true;
+        return false;
     }
 
     /// <summary>전투 시작/보스 스폰 시 최초 쿨타임을 부여한다.</summary>
@@ -179,5 +223,9 @@ public class BossPatternController : MonoBehaviour
         entry.ImpactApplied = false;
         entry.PendingImpactFrame = -1;
     }
-    private void OnDestroy() => UnregisterAll();
+    private void OnDestroy()
+    {
+        ChiefActiveSkillSignals.OnActivated -= HandleChiefSkillActivated;
+        UnregisterAll();
+    }
 }

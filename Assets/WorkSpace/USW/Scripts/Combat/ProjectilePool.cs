@@ -3,7 +3,7 @@ using UnityEngine.Pool;
 using UnityEngine.UI;
 
 /// <summary>
-/// 투사체 오브젝트 풀 — InGameSingleton.
+/// 투사체 오브젝트 풀 — 씬 컴포넌트 (InGameLifetimeScope에 등록, 주입으로 사용).
 /// 투사체 시각은 Unity 내장 Knob 스프라이트(원형)를 SpriteRenderer로 사용.
 /// 2D 월드 공간에서 동작합니다.
 /// </summary>

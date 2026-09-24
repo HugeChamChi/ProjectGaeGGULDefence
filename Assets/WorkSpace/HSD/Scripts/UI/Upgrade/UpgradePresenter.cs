@@ -26,10 +26,8 @@ namespace HSD.UI.Upgrade
 
         private void HandleUpgradeClicked(string target)
         {
-            if (_model.TryUpgrade(target))
-            {
-                // UI에서 즉각적인 피드백이 필요하다면 여기서 처리 (ex: 효과음)
-            }
+            bool success = _model.TryUpgrade(target);
+            _view.PlayUpgradeResult(target, success);
         }
 
         private void UpdateView()

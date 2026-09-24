@@ -6,6 +6,8 @@ public class UI_Debug_TimeScale : MonoBehaviour
     [Header("Time Setting")]
     [SerializeField] private Toggle tog_TimeStop;
 
+    [VContainer.Inject] private TimeScaleService _timeScale;
+
     private void Awake()
     {
         tog_TimeStop.onValueChanged.AddListener((b) => SetTimeScale(b));
@@ -13,7 +15,8 @@ public class UI_Debug_TimeScale : MonoBehaviour
 
     private void SetTimeScale(bool isTrue)
     {
-        float value = isTrue ? 0 : 1;
-        Time.timeScale = value;
+        if (_timeScale == null) { Debug.LogWarning("[UI_Debug_TimeScale] TimeScaleService 미주입", this); return; }
+        if (isTrue) _timeScale.Pause(this);
+        else _timeScale.Release(this);
     }
 }

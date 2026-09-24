@@ -251,6 +251,18 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public void PauseLoops() => _combat.PauseLoops();
     public void ResumeLoops() => _combat.ResumeLoops();
+
+    /// <summary>레벨업 등 일시정지 중 대기 모션 유지 (시각 전용). 기절한 유닛은 기절 연출을 유지한다.</summary>
+    public void SetPauseIdle(bool on)
+    {
+        if (on && IsStunned) return;
+        if (animator != null) { animator.SetPauseIdle(on); return; }
+        // UnitAnimator가 없는 유닛(드론 유닛 등)은 숨쉬기 트윈만 unscaled로 전환한다.
+        if (_idleAnim == null) _idleAnim = GetComponentInChildren<GaeGGUL.Animation.Anim_Base>();
+        if (_idleAnim != null) _idleAnim.SetForceUnscaled(on);
+    }
+
+    private GaeGGUL.Animation.Anim_Base _idleAnim;
     protected virtual void SyncStatsWithSheet() { }
 
     public void SetState(UnitState state) => CurrentState = state;
@@ -279,6 +291,12 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
+    /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
+    public int GetAttackDamage(out bool critical)
+    {
+        critical = false;
+        return _stats != null ? _stats.GetAttackDamage(out critical) : 0;
+    }
     /// <summary>강화와 버프를 포함한 비치명타 공격력. 난수 상태를 변경하지 않는다.</summary>
     public int GetNonCriticalAttackDamage() => _stats?.GetNonCriticalAttackDamage() ?? 0;
     /// <summary>정보창 공격력. 소환자는 소유 드론 공격력 합계로 재정의한다.</summary>
@@ -288,6 +306,12 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;
+    /// <summary>ComputeDamageFrom과 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+    {
+        critical = false;
+        return _stats != null ? _stats.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier, out critical) : 0;
+    }
 
     /// <summary>ChiefUnit의 수동 스킬 발동 등에서 UnitCombatComponent.ExecuteSkill()(skillData 우선, 없으면 legacy 폴백) 전체 파이프라인을 그대로 태운다.</summary>
     public void TriggerSkillManually() => _combat?.TriggerSkillManually();

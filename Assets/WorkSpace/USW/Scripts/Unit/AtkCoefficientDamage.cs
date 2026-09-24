@@ -14,15 +14,21 @@ public class AtkCoefficientDamage : IReplayableEffect
     protected virtual float PassiveBonusMultiplier => 1f;
 
     public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
-        => target.TakeDamage(CalculateDamage(caster), hitPosition);
+    {
+        int damage = CalculateDamage(caster, out bool critical);
+        target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal);
+    }
 
     /// <inheritdoc />
     public Action<BossBase, Vector3> Capture(UnitBase caster)
-        => new RecordedDamage(CalculateDamage(caster)).Apply;
+    {
+        int damage = CalculateDamage(caster, out bool critical);
+        return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal).Apply;
+    }
 
-    private int CalculateDamage(UnitBase caster)
+    private int CalculateDamage(UnitBase caster, out bool critical)
     {
         float baseDamage = caster.GetUpgradedAtk() * coefficient.Get(caster.currentTier);
-        return caster.ComputeDamageFrom(baseDamage, PassiveBonusMultiplier);
+        return caster.ComputeDamageFrom(baseDamage, PassiveBonusMultiplier, out critical);
     }
 }

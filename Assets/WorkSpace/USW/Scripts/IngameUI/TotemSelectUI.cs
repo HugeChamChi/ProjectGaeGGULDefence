@@ -27,10 +27,11 @@ using UnityEngine.UI;
 ///     → 선택(또는 타임아웃) → TotemInventory.TryAdd(), 가득 차면 식량 전환
 ///     → onChoiceMade 콜백 → 다음 보스/웨이브 진행
 /// </summary>
-public class TotemSelectUI : InGameSingleton<TotemSelectUI>
+public class TotemSelectUI : MonoBehaviour
 {
 
     [Inject] private TimerController _timerManager;
+    [Inject] private TimeScaleService _timeScale;
     [Inject] private GridManager _gridManager;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private TotemInventory _inventory;
@@ -65,9 +66,8 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
     
     private readonly HashSet<int> _chosenTotems = new HashSet<int>();
 
-    protected override void Awake()
+    private void Awake()
     {
-        // base.Awake();
         confirmButton?.onClick.AddListener(OnConfirmClicked);
         rerollButton?.onClick.AddListener(OnRerollClicked);
         SetConfirmInteractable(false);
@@ -116,7 +116,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         
         FreezeLayoutAsync(layout).Forget();
 
-        Time.timeScale = 0f;
+        _timeScale.Pause(this);
         _timerManager.StopTimer();
 
         foreach (var cell in _gridManager.GetOccupiedCells())
@@ -260,7 +260,7 @@ public class TotemSelectUI : InGameSingleton<TotemSelectUI>
         StopSelectionTimer();
         ClearCards();
         gameObject.SetActive(false);
-        Time.timeScale = 1f;
+        _timeScale.Release(this);
         _timerManager.ResumeTimer();
 
         foreach (var cell in _gridManager.GetOccupiedCells())

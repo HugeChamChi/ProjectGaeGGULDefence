@@ -101,6 +101,22 @@ public abstract class BossBase : MonoBehaviour
             }
     }
 
+    /// <summary>
+    /// 패턴이 카운터로 취소됐을 때: 아직 소비되지 않은 패턴 트리거를 지우고 피격 연출 억제를 해제한다.
+    /// 이미 재생 중인 패턴 애니메이션은 컨트롤러 전이에 맡긴다.
+    /// </summary>
+    public void InterruptPatternAnimation(BossPatternData pattern)
+    {
+        _isCastingPattern = false;
+        if (_animator == null || pattern == null || string.IsNullOrEmpty(pattern.AnimationTrigger)) return;
+        foreach (var parameter in _animator.parameters)
+            if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == pattern.AnimationTrigger)
+            {
+                _animator.ResetTrigger(parameter.nameHash);
+                break;
+            }
+    }
+
     /// <summary>스킬 연출(스프라이트 프레임 교체) 도중엔 피격 스케일 펀치가 겹쳐 튀어 보이지 않도록 잠시 끈다.</summary>
     private void SuppressHitFeedbackDuring(float seconds)
     {
@@ -121,6 +137,9 @@ public abstract class BossBase : MonoBehaviour
 
     /// <summary>데미지량, 타격위치 — ExpManager가 구독하여 경험치 추가 및 데미지 플로터 띄움</summary>
     public event Action<decimal, Vector3?> OnDamaged;
+
+    /// <summary>OnDamaged와 같은 시점에 피해 종류(일반/치명타/화상)까지 알린다 — 데미지 표시용.</summary>
+    public event Action<decimal, Vector3?, BossDamageKind> OnDamageDealt;
 
     /// <summary>사망 — WaveManager가 구독하여 다음 웨이브 처리</summary>
     public event Action           OnDeath;
@@ -154,7 +173,7 @@ public abstract class BossBase : MonoBehaviour
     {
         _health.Reset(hp);
         Debuffs?.Clear();
-        Debuffs = new DebuffController(units => ApplyFinalDamage(units, null), () => !IsDead);
+        Debuffs = new DebuffController(units => ApplyFinalDamage(units, null, BossDamageKind.Burn), () => !IsDead);
         _debuffTime = 0; _combatTimeOrigin = _combatTimer != null ? _combatTimer.ElapsedCombatTime : 0; _deathStarted = false;
 
         if (_originalScale == Vector3.zero)
@@ -170,18 +189,18 @@ public abstract class BossBase : MonoBehaviour
 
     // ── 데미지 처리 ─────────────────────────────────────────────────
     /// <summary>최종 경계에서만 4자리로 반올림하는 일반 피해 경로.</summary>
-    public void TakeDamage(decimal amount, Vector3? hitPos = null)
-        => TakeDamageAndRecord(amount, hitPos);
+    public void TakeDamage(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
+        => TakeDamageAndRecord(amount, hitPos, kind);
 
     /// <summary>일반 피해를 적용하고 그림자 재현용 최종 피해 단위를 반환한다.</summary>
-    public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null)
+    public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
         long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
-        ApplyFinalDamage(units, hitPos);
+        ApplyFinalDamage(units, hitPos, kind);
         return units;
     }
 
@@ -195,13 +214,13 @@ public abstract class BossBase : MonoBehaviour
     }
 
     /// <summary>이미 계산된 원본 피해를 방어력/치명타 재계산 없이 재현한다. 무적/전투 상태/남은 체력은 존중한다.</summary>
-    public void ApplyRecordedDamage(long units, Vector3? hitPos = null)
+    public void ApplyRecordedDamage(long units, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
     {
         AdvanceDebuffs();
-        ApplyFinalDamage(units, hitPos);
+        ApplyFinalDamage(units, hitPos, kind);
     }
 
-    private void ApplyFinalDamage(long units, Vector3? hitPos)
+    private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind)
     {
         if (IsDead || Invincible || !CombatAllowsDamage || units <= 0) return;
         long actual = _health.ApplyDamage(units);
@@ -214,7 +233,9 @@ public abstract class BossBase : MonoBehaviour
         }
 
         OnHpChanged?.Invoke(CurrentHp, MaxHp);
-        OnDamaged?.Invoke((decimal)actual / CombatHealth.Scale, hitPos);
+        decimal dealt = (decimal)actual / CombatHealth.Scale;
+        OnDamaged?.Invoke(dealt, hitPos);
+        OnDamageDealt?.Invoke(dealt, hitPos, kind);
 
         if (died && _deathStarted)
         {
@@ -278,6 +299,7 @@ public abstract class BossBase : MonoBehaviour
         Debuffs?.Clear();
         OnHpChanged = null;
         OnDamaged   = null;
+        OnDamageDealt = null;
         OnDeath     = null;
     }
 

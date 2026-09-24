@@ -33,6 +33,13 @@ public class DroneUnit : MonoBehaviour
 
     private Vector2   _spawnOffset;
 
+    [Header("오너 드래그 추적")]
+    [Tooltip("오너 유닛을 드래그하는 동안 드론이 따라붙는 민첩도 (클수록 바짝 붙음).")]
+    [SerializeField, Min(0.1f)] private float _dragFollowSharpness = 18f;
+    private DragHandler _ownerDrag;
+    private bool _followingOwnerDrag;
+    private bool _moving; // 집결/귀환 이동 중에는 추적하지 않는다
+
     [Header("투사체 프리팹 (지정 시 RM 풀링 사용, 비우면 기본 Pool 사용)")]
     [SerializeField] private Projectile _projectilePrefab;
 
@@ -66,6 +73,20 @@ public class DroneUnit : MonoBehaviour
         if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
     }
 
+    private AnimatorUpdateMode _updateModeBeforePause;
+    private bool _inPauseIdle;
+
+    /// <summary>레벨업 등 일시정지 중 부유/애니메이션을 unscaled로 유지한다 (시각 전용).</summary>
+    public void SetPauseIdle(bool on)
+    {
+        if (on == _inPauseIdle) return;
+        _inPauseIdle = on;
+        if (_hoverAnim != null) _hoverAnim.SetForceUnscaled(on);
+        if (_animator == null) return;
+        if (on) { _updateModeBeforePause = _animator.updateMode; _animator.updateMode = AnimatorUpdateMode.UnscaledTime; }
+        else _animator.updateMode = _updateModeBeforePause;
+    }
+
     /// <summary>DroneSpawnerBase.SpawnOneDrone() 에서 호출 — 스탯 주입 후 공격 루프 시작</summary>
     /// <param name="slotOffset">오너 기준 고정 대형 슬롯 오프셋 (드론 간 겹침 방지용)</param>
     public void Initialize(UnitBase owner, Vector2 slotOffset)
@@ -79,6 +100,8 @@ public class DroneUnit : MonoBehaviour
         _owner                = owner;
         _homePositionFallback = transform.position;
         _spawnOffset          = slotOffset;
+        _ownerDrag            = owner != null ? owner.GetComponent<DragHandler>() : null;
+        _followingOwnerDrag   = false;
 
         StopAll();
         transform.position = HomePosition;
@@ -97,6 +120,35 @@ public class DroneUnit : MonoBehaviour
     {
         if (_spriteRenderer != null && _owner != null)
             _spriteRenderer.sortingOrder = Mathf.RoundToInt(-_owner.transform.position.y * 100f) + _sortingOrderOffset;
+        FollowOwnerDrag();
+    }
+
+    /// <summary>
+    /// 오너를 드래그하는 동안 호버를 멈추고 오너 쪽 슬롯으로 부드럽게 따라간다.
+    /// 드래그가 끝나면 홈 위치에 붙은 뒤 호버를 재개한다 (배치가 바뀌면 오너가 드론을 새로 소환한다).
+    /// </summary>
+    private void FollowOwnerDrag()
+    {
+        if (_moving || _owner == null || _ownerDrag == null) return;
+        bool dragging = _ownerDrag.IsDragging;
+        if (!dragging && !_followingOwnerDrag) return;
+
+        if (dragging && !_followingOwnerDrag)
+        {
+            _followingOwnerDrag = true;
+            StopOrbit();
+        }
+
+        Vector3 home = HomePosition;
+        float t = 1f - Mathf.Exp(-_dragFollowSharpness * Time.unscaledDeltaTime);
+        transform.position = Vector3.Lerp(transform.position, home, t);
+
+        if (!dragging && (transform.position - home).sqrMagnitude < 0.0004f)
+        {
+            transform.position = home;
+            _followingOwnerDrag = false;
+            StartOrbit();
+        }
     }
 
     // ── 호버 제어 (DroneManager.ExecuteRallyAsync 에서도 호출) ──────
@@ -119,7 +171,14 @@ public class DroneUnit : MonoBehaviour
     public async UniTask MoveToAsync(Vector3 target, float duration, CancellationToken token)
     {
         StopOrbit();
+        _followingOwnerDrag = false;
+        _moving = true;
+        try { await MoveToCoreAsync(target, duration, token); }
+        finally { _moving = false; }
+    }
 
+    private async UniTask MoveToCoreAsync(Vector3 target, float duration, CancellationToken token)
+    {
         Vector3 start   = transform.position;
         float   elapsed = 0f;
 
@@ -209,13 +268,16 @@ public class DroneUnit : MonoBehaviour
 
             var boss = _bossManager?.CurrentBoss;
             if (boss == null || boss.IsDead) continue;
-            float dmg = Atk * (_droneManager?.DroneAtkMultiplier ?? 1f);
-            LaunchProjectile(Mathf.RoundToInt(dmg));
+            bool critical = false;
+            int ownerDamage = _owner != null ? _owner.GetAttackDamage(out critical) : 0;
+            float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
+            LaunchProjectile(Mathf.RoundToInt(dmg), critical);
         }
     }
 
-    private void LaunchProjectile(int damage)
+    private void LaunchProjectile(int damage, bool critical = false)
     {
+        var kind = critical ? BossDamageKind.Critical : BossDamageKind.Normal;
         var boss = _bossManager?.CurrentBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
         if (bossArea == null || boss.IsDead || _owner == null || _owner.IsStunned || _owner.currentCell == null) return;
@@ -226,7 +288,7 @@ public class DroneUnit : MonoBehaviour
         Vector3 origin = transform.position;
         var replay = owner.Combat?.BeginDroneBasicAttack(boss, transform,
             () => this != null && _attackLifetime == lifetime && _owner == owner && owner.currentCell != null);
-        var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage) : null;
+        var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage, kind) : null;
         bool originalHit = false;
         bool shadowArrivedEarly = false;
         
@@ -236,7 +298,7 @@ public class DroneUnit : MonoBehaviour
             if (boss != null && !boss.IsDead)
             {
                 if (recorded != null) recorded.Apply(boss, targetPos);
-                else boss.TakeDamage(damage, targetPos);
+                else boss.TakeDamage(damage, targetPos, kind);
             }
         };
         ShootProjectile(targetPos, () =>

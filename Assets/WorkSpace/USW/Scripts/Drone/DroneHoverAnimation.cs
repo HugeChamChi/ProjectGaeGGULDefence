@@ -40,6 +40,13 @@ public class DroneHoverAnimation : MonoBehaviour
         PlayHover();
     }
 
+    /// <summary>일시정지(timeScale=0) 중에도 부유 모션을 유지하도록 unscaled 시간으로 전환한다.</summary>
+    public void SetForceUnscaled(bool unscaled)
+    {
+        if (_hoverTween != null && _hoverTween.IsActive()) _ = _hoverTween.SetUpdate(unscaled);
+        if (_tiltTween != null && _tiltTween.IsActive()) _ = _tiltTween.SetUpdate(unscaled);
+    }
+
     private void OnDisable()
     {
         _hoverTween?.Kill();

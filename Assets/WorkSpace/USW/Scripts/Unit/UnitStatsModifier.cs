@@ -27,22 +27,30 @@ public class UnitStatsModifier : MonoBehaviour
     private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
         / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
-    public int GetAttackDamage() => ComputeDamage(UpgradedAtk);
+    public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _);
+
+    /// <summary>GetAttackDamage와 같고, 이번 추첨이 치명타였는지도 알려준다 (데미지 표시용).</summary>
+    public int GetAttackDamage(out bool critical) => ComputeDamage(UpgradedAtk, 1f, true, out critical);
 
     /// <summary>현재 보정을 포함하되 치명타 추첨과 적 방어 계산을 하지 않는 표시용 공격력.</summary>
-    public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, rollCritical: false);
+    public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _);
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;
 
     /// <summary>임의의 기준값을 GetAttackDamage()와 동일한 보정 파이프라인(크리티컬/토템/부족/버스트 등)에 통과시킨다.</summary>
-    public int ComputeDamageFrom(float baseDamage) => ComputeDamage(baseDamage);
+    public int ComputeDamageFrom(float baseDamage) => ComputeDamage(baseDamage, 1f, true, out _);
 
     /// <summary>projAtkBonusMultiplier: "훈련의 성과" 류 투사체 크기 보너스 항목에만 추가로 곱해지는 배율(기본 1).</summary>
-    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => ComputeDamage(baseDamage, projAtkBonusMultiplier);
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out _);
 
-    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier = 1f, bool rollCritical = true)
+    /// <summary>ComputeDamageFrom과 같고, 이번 추첨이 치명타였는지도 알려준다 (데미지 표시용).</summary>
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical);
+
+    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical)
     {
+        critical = false;
         if (_unit.unitData == null) return 0;
 
         float cellModifier = _unit.currentCell != null
@@ -85,6 +93,7 @@ public class UnitStatsModifier : MonoBehaviour
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
             damage *= (critMultiplier + cellCritDamage);
+            critical = true;
         }
 
         return Mathf.Max(rollCritical ? 1 : 0, DamageCalculator.ApplyRounding(damage));

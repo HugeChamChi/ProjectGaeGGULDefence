@@ -71,6 +71,30 @@ public class UnitAnimator : MonoBehaviour
         }
     }
 
+    private bool _inPauseIdle;
+    private AnimatorUpdateMode _updateModeBeforePause;
+
+    /// <summary>
+    /// 일시정지(timeScale=0) 중 대기 모션 유지. 켜면 Idle로 전환하고 Animator/숨쉬기를 unscaled로 돌려
+    /// 공격 도중 자세로 얼어붙지 않게 한다. 끄면 원래 업데이트 모드로 복구한다. 전투 로직은 건드리지 않는다.
+    /// </summary>
+    public void SetPauseIdle(bool on)
+    {
+        if (on == _inPauseIdle) return;
+        _inPauseIdle = on;
+        if (_animator != null)
+        {
+            if (on)
+            {
+                _updateModeBeforePause = _animator.updateMode;
+                PlayIdle();
+                _animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+            }
+            else _animator.updateMode = _updateModeBeforePause;
+        }
+        if (_breathingAnim != null) _breathingAnim.SetForceUnscaled(on);
+    }
+
     /// <summary>
     /// 애니메이션 재생 속도를 설정합니다.
     /// </summary>

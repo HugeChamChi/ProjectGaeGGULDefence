@@ -21,6 +21,7 @@ public sealed class UnitChiefActiveSkill : IChiefActiveSkill
     {
         if (!CanActivate) return false;
         _unit.ExecuteSkillManually();
+        ChiefActiveSkillSignals.RaiseActivated(); // 보스 예고 패턴 카운터
         return true;
     }
 }

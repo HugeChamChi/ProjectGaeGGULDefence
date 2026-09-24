@@ -38,8 +38,11 @@ public class TotemActionPopupUI : MonoBehaviour
         _justShown    = true;
         _currentTotem = totem;
 
-        sellButton.SetTotem(totem);
-        sellButton.SetPopup(this);
+        if (sellButton != null) // 드래그 판매만 쓰는 씬은 판매 버튼이 없다
+        {
+            sellButton.SetTotem(totem);
+            sellButton.SetPopup(this);
+        }
 
         gameObject.SetActive(true);
 

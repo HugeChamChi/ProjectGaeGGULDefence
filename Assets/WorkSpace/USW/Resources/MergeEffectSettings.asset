@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 175759187db378d44b46e927b9bf793f, type: 3}
+  m_Name: MergeEffectSettings
+  m_EditorClassIdentifier: Assembly-CSharp::MergeEffectSettings
+  _gatherSeconds: 0.2
+  _gatherEndScale: 0.35
+  _dustSprites:
+  - {fileID: 21300000, guid: 91d285045ac37d24aa965c0d250fbc01, type: 3}
+  - {fileID: 21300000, guid: 8ad2c4a5433ef3b489941bbd8961a3bd, type: 3}
+  - {fileID: 21300000, guid: 9ed7dc3368bfad1409a19e8599f9c0df, type: 3}
+  _tickSprite: {fileID: 21300000, guid: 19d99c22bf2eb6b47b04565c029a660a, type: 3}
+  _sortingLayerName: FX
+  _sortingOrder: -100
+  _puffCount: 4
+  _centerPuffSize: 1.1
+  _sidePuffSize: 0.6
+  _puffSpread: 0.55
+  _puffSeconds: 0.45
+  _tickCount: 4
+  _tickSize: 0.3
+  _tickDistance: 0.75
+  _lineDelaySeconds: 0.3
+  _lineStartOffset: {x: 0, y: 0}
+  _lineCurveHeight: 3

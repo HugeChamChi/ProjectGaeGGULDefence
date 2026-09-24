@@ -111,7 +111,7 @@ public class InGameInstaller : MonoBehaviour
     {
         if (_unitInfoPanel == null) { Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결"); return; }
         if (_unitInfoPanel.MergeButton == null) Debug.LogError("[InGameInstaller] mergeButton 미연결");
-        if (_unitInfoPanel.SellButton == null) Debug.LogError("[InGameInstaller] sellButton 미연결");
+        // 판매 버튼은 선택 사항 — 드래그 판매만 쓰는 씬(IngameTest)은 판매 버튼이 없다.
         if (_mergeManager == null) { Debug.LogError("[InGameInstaller] _mergeManager null — MergeManager 씬에 없음"); return; }
 
         _mergeManager.OnUnitSelected += _unitInfoPanel.SetData;
@@ -119,7 +119,7 @@ public class InGameInstaller : MonoBehaviour
         _mergeManager.OnSelectionCleared += _totemInfoPanel.Close;
 
         _unitInfoPanel.MergeButton.OnMergeRequested += _mergeManager.ExecuteMerge;
-        _unitInfoPanel.SellButton.OnSellRequested += OnSellUnitRequested;
+        if (_unitInfoPanel.SellButton != null) _unitInfoPanel.SellButton.OnSellRequested += OnSellUnitRequested;
         _unitInfoPanel.OnDismissRequested += _mergeManager.ClearSelection;
     }
 
@@ -134,7 +134,7 @@ public class InGameInstaller : MonoBehaviour
     private void WireTotemActionPopup()
     {
         // SellTotemButtonUI에 팝업 참조 주입 (이벤트 발행 경로 확보)
-        _sellTotemButton.SetPopup(_totemActionPopup);
+        if (_sellTotemButton != null) _sellTotemButton.SetPopup(_totemActionPopup);
 
         // DragHandler static 이벤트 → 팝업 Show
         DragHandler.OnTotemClickedGlobal += HandleTotemClicked;
@@ -187,7 +187,7 @@ public class InGameInstaller : MonoBehaviour
             _unitInfoPanel.OnDismissRequested -= merge.ClearSelection;
         }
 
-        _unitInfoPanel.SellButton.OnSellRequested -= OnSellUnitRequested;
+        if (_unitInfoPanel.SellButton != null) _unitInfoPanel.SellButton.OnSellRequested -= OnSellUnitRequested;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         _totemActionPopup.OnSellTotemRequested -= OnSellTotemRequested;
         _totemActionPopup.OnDismissRequested -= _totemActionPopup.Hide;

@@ -107,16 +107,19 @@ public class ExpBarUI : MonoBehaviour
 
         if (levelUp)
         {
-            // 꽉 채운 뒤 새 값으로 리셋
+            // 꽉 채운 뒤 새 값으로 리셋. 레벨업 선택 중 timeScale=0이므로 unscaled로 돌려
+            // 게이지가 꽉 차는 순간이 레벨업 등장 연출(LevelUpRevealSequence)과 맞물리게 한다.
             DOTween.To(() => _currentProgress, SetProgress, 1f, tweenDuration * 0.4f)
                    .SetTarget(maskRect)
                    .SetEase(Ease.OutCubic)
+                   .SetUpdate(true)
                    .OnComplete(() =>
                    {
                        SetProgressImmediate(0f);
                        DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
                               .SetTarget(maskRect)
-                              .SetEase(Ease.OutCubic);
+                              .SetEase(Ease.OutCubic)
+                              .SetUpdate(true);
                    });
         }
         else

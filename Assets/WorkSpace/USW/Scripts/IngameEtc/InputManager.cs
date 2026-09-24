@@ -114,19 +114,34 @@ public class InputManager : MonoBehaviour
         // Totems may have been spawned or moved since the last physics step.
         Physics2D.SyncTransforms();
         RaycastHit2D[] hits = Physics2D.RaycastAll(_pointerDownPos, Vector2.zero);
+        _currentDraggable = PickDraggable(hits, _pointerDownPos);
+        if (_currentDraggable is DragHandler handler) handler.BeginPress();
+    }
+
+    // 유닛 콜라이더는 위 칸까지, 토템 콜라이더는 옆 칸까지 겹칠 수 있고 RaycastAll의 겹침 순서는 보장되지 않는다.
+    // 손가락 아래 칸(GridCell)을 차지한 오브젝트를 우선하고, 없으면 콜라이더 중심이 가장 가까운 것을 고른다.
+    private static IDraggable PickDraggable(RaycastHit2D[] hits, Vector2 worldPos)
+    {
+        GridCell pointerCell = null;
         foreach (var h in hits)
         {
-            if (h.collider != null)
-            {
-                var draggable = h.collider.GetComponent<IDraggable>();
-                if (draggable != null)
-                {
-                    _currentDraggable = draggable;
-                    if (draggable is DragHandler handler) handler.BeginPress();
-                    break;
-                }
-            }
+            if (h.collider == null) continue;
+            pointerCell = h.collider.GetComponent<GridCell>();
+            if (pointerCell != null) break;
         }
+
+        IDraggable nearest = null;
+        float nearestSqr = float.MaxValue;
+        foreach (var h in hits)
+        {
+            if (h.collider == null) continue;
+            var draggable = h.collider.GetComponent<IDraggable>();
+            if (draggable == null) continue;
+            if (pointerCell != null && h.collider.GetComponentInParent<GridCell>() == pointerCell) return draggable;
+            float sqr = ((Vector2)h.collider.bounds.center - worldPos).sqrMagnitude;
+            if (sqr < nearestSqr) { nearestSqr = sqr; nearest = draggable; }
+        }
+        return nearest;
     }
 
     private void ProcessPointerMove(Vector2 screenPos)

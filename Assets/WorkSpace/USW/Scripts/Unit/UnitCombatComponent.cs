@@ -205,7 +205,7 @@ public class UnitCombatComponent : MonoBehaviour
                 }
                 else
                 {
-                    LaunchProjectile(_stats.GetAttackDamage());
+                    LaunchAttackProjectile();
                 }
             }
             finally { CurrentBasicAttack = null; }
@@ -242,7 +242,7 @@ public class UnitCombatComponent : MonoBehaviour
 
         if (lu.HasExtraAttackOnSkillFull && !attackDisabled && boss != null && !boss.IsDead)
         {
-            LaunchProjectile(_stats.GetAttackDamage());
+            LaunchAttackProjectile();
         }
     }
 
@@ -258,35 +258,45 @@ public class UnitCombatComponent : MonoBehaviour
         {
             if (n > 0 && _hitCount % n == 0)
             {
-                LaunchProjectile(_stats.GetAttackDamage());
+                LaunchAttackProjectile();
             }
         }
 
         if (lu.RandomExtraAttackChance > 0f && UnityEngine.Random.value < lu.RandomExtraAttackChance)
         {
-            LaunchProjectile(_stats.GetAttackDamage());
+            LaunchAttackProjectile();
         }
 
         if (lu.HasRandomProcAttack && UnityEngine.Random.value < lu.RandomProcChance)
         {
-            LaunchProjectile(Mathf.RoundToInt(_stats.GetAttackDamage() * lu.RandomProcDamagePct));
+            LaunchAttackProjectile(lu.RandomProcDamagePct);
         }
 
         if (lu.HasExtraAttackEveryAttack)
         {
-            LaunchProjectile(_stats.GetAttackDamage());
+            LaunchAttackProjectile();
         }
     }
 
     /// <summary>sizeMultiplier: 이 발사 1회에만 적용되는 추가 투사체 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).
     /// projectileData: 이 발사에만 쓸 투사체 구성(이동/이펙트/프리팹). null이면 ProjectilePool의 기본 구성을 사용한다.</summary>
-    public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null)
+    /// <param name="critical">표시용 — 이 피해가 치명타 추첨에 당첨됐는지.</param>
+    public void LaunchProjectile(int damage, float sizeMultiplier = 1f, ProjectileData projectileData = null, bool critical = false)
     {
         var replay = CurrentBasicAttack;
+        var kind = critical ? BossDamageKind.Critical : BossDamageKind.Normal;
         Action<BossBase, Vector3> hit = replay?.IsEnabled == true
-            ? new RecordedDamage(damage).Apply
-            : (boss, targetPos) => boss.TakeDamage(damage, targetPos);
+            ? new RecordedDamage(damage, kind).Apply
+            : (boss, targetPos) => boss.TakeDamage(damage, targetPos, kind);
         LaunchProjectileInternal(sizeMultiplier, projectileData, hit, replay);
+    }
+
+    // 기본/보너스 공격 1발 — 공격력 추첨(치명타 포함) 결과를 표시용 종류와 함께 넘긴다.
+    private void LaunchAttackProjectile(float damageScale = 1f)
+    {
+        int damage = _stats.GetAttackDamage(out bool critical);
+        if (!Mathf.Approximately(damageScale, 1f)) damage = Mathf.RoundToInt(damage * damageScale);
+        LaunchProjectile(damage, critical: critical);
     }
 
     /// <summary>적중 시 결과를 hitEffects에, 부가 연출을 additionalEffects에 위임하는 발사(데미지 외의 효과도 가능).</summary>

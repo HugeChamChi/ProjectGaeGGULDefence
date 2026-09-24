@@ -3,6 +3,7 @@ using VContainer;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,12 +20,14 @@ using UnityEngine.UI;
 // ─ Inspector 연결 ─────────────────────────────────────
 //   cardContainer, cardPrefab, selectionTimerText 연결 필요
 // ════════════════════════════════════════════════════════
-public class LevelUpUI : InGameSingleton<LevelUpUI>
+public class LevelUpUI : MonoBehaviour
 {
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private TimerController _timerManager;
     [Inject] private GridManager _gridManager;
     [Inject] private GameManager _gameManager;
+    [Inject] private TimeScaleService _timeScale;
+    [Inject] private IObjectResolver _resolver; // DroneManager는 드론 씬에서만 등록되므로 선택적으로 조회
 
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
@@ -40,9 +43,25 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     private          LevelUpCardUI       _selectedCard;
     private          CancellationTokenSource _selectionCts;
 
-    protected override void Awake()
+    // 연출 컴포넌트 (IngameUI/LevelUpPresentation) — 모두 선택 사항. 없으면 즉시 표시/즉시 정지.
+    private LevelUpRevealSequence _reveal;
+    private LevelUpSelectSequence _select;
+    private LevelUpPeekHighlighter _peek;
+    private LevelUpTimeDirector _time;
+    private CanvasGroup _panelGroup;
+    private bool _isRerolling;
+
+    private void Awake()
     {
-        // base.Awake(); // Removed to prevent double call
+        _reveal = GetComponent<LevelUpRevealSequence>();
+        _select = GetComponent<LevelUpSelectSequence>();
+        _peek   = GetComponent<LevelUpPeekHighlighter>();
+        _time   = GetComponent<LevelUpTimeDirector>();
+        if (_reveal != null && obj != null)
+        {
+            _panelGroup = obj.GetComponent<CanvasGroup>();
+            if (_panelGroup == null) _panelGroup = obj.AddComponent<CanvasGroup>();
+        }
     }
 
     // ── 열기 ───────────────────────────────────────────────────
@@ -68,28 +87,93 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
             var card = Instantiate(cardPrefab, cardContainer);
             card.ConfigurePeek(obj.GetComponentInChildren<UI_Peekthrough>(true));
             card.Setup(data, OnCardClicked, _levelUpManager.GetChoiceDescription(data));
+            if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
         }
+
+        bool fromGauge = !_isRerolling;
+        _isRerolling = false;
+        if (_reveal != null) _reveal.Prepare(_spawnedCards, _panelGroup, fromGauge);
 
         obj.SetActive(true);
         gameObject.SetActive(true);
 
-        FreezeLayoutAsync(layout).Forget();
-
-        Time.timeScale = 0f;
         _timerManager.StopTimer();
 
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.PauseLoops();
+        // 게이지 레벨업이면 슬로우모션으로 서서히 멈춘 뒤 유닛을 정지(대기 모션 유지)시킨다.
+        if (_time != null && fromGauge)
+            _time.SlowDownTime(PauseField);
+        else
+        {
+            if (_time != null) _time.PauseNow();
+            else _timeScale.Pause(this);
+            PauseField();
+        }
 
-        RunSelectionTimer().Forget();
+        OpenAsync(layout, fromGauge).Forget();
     }
 
-    private async UniTaskVoid FreezeLayoutAsync(LayoutGroup layout)
+    /// <summary>카드를 꾹 눌러 필드보기 중일 때 그 카드의 대상 유닛을 강조한다.</summary>
+    private void OnCardPeekChanged(LevelUpCardUI card, bool peeking)
     {
-        if (layout == null) return;
-        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
-        if (layout != null) layout.enabled = false;
+        if (peeking) _peek.Show(card.GetData());
+        else _peek.Clear();
+    }
+
+    /// <summary>유닛 전투 루프 정지 + 대기 모션 유지 (얼어붙은 자세 방지).</summary>
+    private void PauseField()
+    {
+        foreach (var cell in _gridManager.GetOccupiedCells())
+        {
+            var unit = cell.OccupyingUnit;
+            if (unit == null) continue;
+            unit.PauseLoops();
+            unit.SetPauseIdle(true);
+        }
+        SetDronesPauseIdle(true);
+    }
+
+    private void SetDronesPauseIdle(bool on)
+    {
+        if (_resolver == null || !_resolver.TryResolve<DroneManager>(out var drones) || drones == null) return;
+        foreach (var drone in drones.Drones)
+            if (drone != null) drone.SetPauseIdle(on);
+    }
+
+    /// <summary>레이아웃 확정 → 등장 연출 → 입력 허용 → 선택 타이머 순으로 진행한다.</summary>
+    private async UniTaskVoid OpenAsync(LayoutGroup layout, bool fromGauge)
+    {
+        StopSelectionTimer();
+        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        var token = _selectionCts.Token;
+        var cards = new List<LevelUpCardUI>(_spawnedCards);
+        SetCardsInteractable(cards, false);
+        if (selectionTimerText != null)
+            selectionTimerText.text = $"{Mathf.CeilToInt(selectionSeconds)}";
+
+        try
+        {
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+            if (layout != null) layout.enabled = false;
+
+            if (_reveal != null)
+                await _reveal.PlayAsync(cards, _panelGroup, fromGauge, token);
+
+            SetCardsInteractable(cards, true);
+            await RunSelectionTimerAsync(token);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static void SetCardsInteractable(List<LevelUpCardUI> cards, bool interactable)
+    {
+        foreach (var card in cards)
+        {
+            if (card == null) continue;
+            var group = card.GetComponent<CanvasGroup>();
+            if (group == null) group = card.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = interactable;
+        }
     }
 
     // ── 카드 클릭 ──────────────────────────────────────────────
@@ -102,7 +186,27 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         _selectedCard = clicked;
         _selectedCard.Select();
 
-        OnConfirmClicked();
+        if (_select != null) ConfirmAfterSelectAsync(clicked).Forget();
+        else OnConfirmClicked();
+    }
+
+    /// <summary>선택 연출(선택 카드 강조, 나머지 퇴장, 패널 페이드 아웃)을 보여준 뒤 확정한다.</summary>
+    private async UniTaskVoid ConfirmAfterSelectAsync(LevelUpCardUI selected)
+    {
+        StopSelectionTimer();
+        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        var token = _selectionCts.Token;
+        var cards = new List<LevelUpCardUI>(_spawnedCards);
+        SetCardsInteractable(cards, false);
+
+        // 리롤 카드는 곧바로 새 카드가 나오므로 패널을 닫지 않는다.
+        bool reroll = selected.GetData()?.specialEffect == LevelUpSpecialEffect.RerollChoices;
+        try
+        {
+            await _select.PlayAsync(selected, cards, reroll ? null : _panelGroup, !reroll, token);
+            OnConfirmClicked();
+        }
+        catch (OperationCanceledException) { }
     }
 
     // ── 확인 버튼 ──────────────────────────────────────────────
@@ -117,6 +221,7 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
         if (data != null && data.specialEffect == LevelUpSpecialEffect.RerollChoices)
         {
+            _isRerolling = true; // 리롤은 게이지 버스트 없이 카드만 다시 등장한다.
             Show();
             return;
         }
@@ -126,31 +231,23 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
 
     // ── 선택 타이머 ────────────────────────────────────────────
 
-    private async UniTaskVoid RunSelectionTimer()
+    private async UniTask RunSelectionTimerAsync(CancellationToken token)
     {
-        StopSelectionTimer();
-        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-        var token = _selectionCts.Token;
-
-        try
+        float remaining = selectionSeconds;
+        while (remaining > 0f)
         {
-            float remaining = selectionSeconds;
-            while (remaining > 0f)
-            {
-                if (selectionTimerText != null)
-                    selectionTimerText.text = $"{Mathf.CeilToInt(remaining)}";
+            if (selectionTimerText != null)
+                selectionTimerText.text = $"{Mathf.CeilToInt(remaining)}";
 
-                await UniTask.Delay(100, DelayType.Realtime, cancellationToken: token);
-                remaining -= 0.1f;
-            }
-
-            // 시간 초과 — 첫 번째 카드 자동 선택 및 확인
-            if (_spawnedCards.Count > 0)
-            {
-                OnCardClicked(_spawnedCards[0]);
-            }
+            await UniTask.Delay(100, DelayType.Realtime, cancellationToken: token);
+            remaining -= 0.1f;
         }
-        catch (OperationCanceledException) { }
+
+        // 시간 초과 — 첫 번째 카드 자동 선택 및 확인
+        if (_spawnedCards.Count > 0)
+        {
+            OnCardClicked(_spawnedCards[0]);
+        }
     }
 
     private void StopSelectionTimer()
@@ -160,10 +257,9 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         _selectionCts = null;
     }
 
-    protected override void OnDestroy()
+    private void OnDestroy()
     {
         StopSelectionTimer();
-        base.OnDestroy();
     }
 
     // ── 닫기 ───────────────────────────────────────────────────
@@ -171,10 +267,13 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
     private void Hide()
     {
         StopSelectionTimer();
+        if (_peek != null) _peek.Clear();
+        if (_panelGroup != null) { _panelGroup.DOKill(); _panelGroup.alpha = 1f; }
         ClearCards();
         obj.SetActive(false);
         gameObject.SetActive(false);
-        Time.timeScale = 1f;
+        if (_time != null) _time.SpeedUpTime(); // 정지 → 1배속으로 서서히 재개
+        else _timeScale.Release(this);
         _timerManager.ResumeTimer();
 
         // 연쇄 레벨업 여부를 먼저 확인 — FlushPendingLevelUp이 새 Show()를 열 수 있음
@@ -184,7 +283,13 @@ public class LevelUpUI : InGameSingleton<LevelUpUI>
         if (_gameManager.CurrentState != GameManager.GameState.LevelUp)
         {
             foreach (var cell in _gridManager.GetOccupiedCells())
-                cell.OccupyingUnit?.ResumeLoops();
+            {
+                var unit = cell.OccupyingUnit;
+                if (unit == null) continue;
+                unit.SetPauseIdle(false);
+                unit.ResumeLoops();
+            }
+            SetDronesPauseIdle(false);
         }
     }
 

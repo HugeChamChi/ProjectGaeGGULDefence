@@ -83,6 +83,14 @@ namespace HSD.UI.Upgrade
             }
         }
 
+        /// <summary>해당 카드에 강화 결과 연출을 재생한다.</summary>
+        public void PlayUpgradeResult(string target, bool success)
+        {
+            if (!_items.TryGetValue(target, out var item) || item == null) return;
+            if (success) item.PlayUpgradeSuccess();
+            else item.PlayUpgradeRejected();
+        }
+
         public void UpdateAllItems(List<UpgradeModel.UpgradeItemData> dataList)
         {
             foreach (var data in dataList)

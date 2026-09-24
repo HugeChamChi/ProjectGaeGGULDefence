@@ -1,23 +1,30 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 namespace GaeGGUL.UI.Totem
 {
     /// <summary>
-    /// 토템의 효과 범위를 시각적으로 보여주는 그리드 컴포넌트입니다.
-    /// 범례(Legend)를 슬롯 기반으로 관리합니다.
-    /// 그리드 크기는 SetRange/SetData에 전달된 범위의 바운딩 박스에 맞춰 매번 자동으로 재계산됩니다
-    /// (컨테이너의 픽셀 크기는 그대로 두고, 칸 크기는 UIGridLayout이 그리드 크기에 맞춰 자동 조절함).
+    /// 토템의 효과 범위를 보여주는 그리드 (명일방주식 공격 범위 표시).
+    /// - 토템 자신의 칸은 꽉 채운 단색, 적용 범위 칸만 그룹 색 테두리 + 반투명 채움으로 그린다. 범위 밖 칸은 그리지 않는다.
+    /// - 칸 크기는 TotemDisplaySettings.maxCellSize를 넘지 않는다. 범위가 박스를 넘칠 때만 줄어들고, 항상 박스 가운데 정렬.
+    /// - 그룹 색은 게임플레이와 같은 TotemData.EffectGroups 색을 쓰며, 어두운 색은 테두리에서만 밝기를 보정한다.
+    /// - 그리드 아래에 캡션("적용 범위")을 런타임에 만들어 표시한다. 범위가 없으면 박스 가운데에 "범위 없음"을 표시한다.
     /// </summary>
     public class UI_TotemRangeGrid : MonoBehaviour
     {
+        private enum CellKind { Totem, Range }
+
+        private struct Entry
+        {
+            public Vector2Int Offset;
+            public CellKind Kind;
+            public Color Color;
+        }
+
         [Header("Settings")]
         [SerializeField] private TotemDisplaySettings settings;
-        [Tooltip("데이터가 아직 설정되지 않았을 때(에디터 미리보기 등) 사용하는 기본 그리드 크기.")]
-        [SerializeField] private Vector2Int gridSize = new Vector2Int(6, 4);
-        [Tooltip("데이터가 아직 설정되지 않았을 때 사용하는 기본 토템 위치 (1-based, 좌상단 기준).")]
-        [SerializeField] private Vector2Int totemPosition = new Vector2Int(4, 2);
         [SerializeField] private UI_TotemRangeCell cellPrefab;
         [SerializeField] private UIGridLayout gridLayout;
 
@@ -25,10 +32,11 @@ namespace GaeGGUL.UI.Totem
         [SerializeField] private UI_TotemLegendSlot legendSlotPrefab;
         [SerializeField] private Transform tr_LegendParent;
 
-        private UI_TotemRangeCell[,] _cells;
-        private Vector2Int _center;
-        private Vector2Int _currentGridSize;
-        private bool _isInitialized = false;
+        private readonly List<UI_TotemRangeCell> _cells = new List<UI_TotemRangeCell>();
+        private readonly List<Entry> _entries = new List<Entry>();
+        private TextMeshProUGUI _caption;
+        private TextMeshProUGUI _noRangeLabel;
+        private bool _legendReady;
 
         private void OnEnable()
         {
@@ -47,21 +55,7 @@ namespace GaeGGUL.UI.Totem
             }
         }
 
-        #if UNITY_EDITOR
-        private void OnValidate()
-        {
-            // 에디터에서 값 변경 시 즉시 반영
-            if (_isInitialized)
-            {
-                UnityEditor.EditorApplication.delayCall += () => {
-                    if (this == null) return;
-                    RefreshLayoutPositions();
-                };
-            }
-        }
-        #endif
-
-        /// <summary>기본(고정) 크기로 그리드를 준비합니다. 실제 토템 데이터가 들어오기 전 미리보기용입니다.</summary>
+        /// <summary>데이터 없이 토템 칸만 보여주는 미리보기 상태로 준비합니다.</summary>
         public void Initialize()
         {
             if (settings == null)
@@ -69,29 +63,242 @@ namespace GaeGGUL.UI.Totem
                 Debug.LogError("[TotemUI] TotemDisplaySettings is missing.");
                 return;
             }
+            EnsureLegend();
+            _entries.Clear();
+            _entries.Add(new Entry { Offset = Vector2Int.zero, Kind = CellKind.Totem, Color = settings.totemCellColor });
+            Render();
+        }
 
-            if (gridSize.x <= 0 || gridSize.y <= 0)
+        /// <summary>효과/디버프 오프셋만으로 범위를 표시합니다 (그룹 색 없음).</summary>
+        public void SetRange(List<Vector2Int> effectRange, List<Vector2Int> debuffRange)
+        {
+            var map = new Dictionary<Vector2Int, Color>();
+            if (settings != null)
             {
-                Debug.LogError("[TotemUI] Invalid gridSize.");
+                AddOffsets(map, effectRange, settings.defaultRangeColor);
+                AddOffsets(map, debuffRange, settings.debuffRangeColor);
+            }
+            ShowRange(map);
+        }
+
+        /// <summary>Shows effect-specific colors from the same SO used by gameplay.</summary>
+        public void SetData(TotemData data)
+        {
+            if (data == null || settings == null) { ShowRange(null); return; }
+
+            var map = new Dictionary<Vector2Int, Color>();
+            if (data.HasEffectGroups)
+            {
+                foreach (var group in data.EffectGroups)
+                    if (group != null) AddOffsets(map, group.GetPreviewOffsets(), group.Color);
+            }
+            else
+            {
+                AddOffsets(map, data.GetEffectPreviewOffsets(), settings.defaultRangeColor);
+            }
+            ShowRange(map);
+            if (map.Count > 0) UpdateLegend(data);
+        }
+
+        /// <summary>그리드 컨테이너 크기가 바뀌었을 때 현재 범위를 다시 배치합니다.</summary>
+        public void RefreshLayoutPositions()
+        {
+            if (_entries.Count > 0) Layout();
+        }
+
+        // ── 표시 ─────────────────────────────────────────────────────
+
+        private static void AddOffsets(Dictionary<Vector2Int, Color> map, List<Vector2Int> offsets, Color color)
+        {
+            if (offsets == null) return;
+            foreach (var o in offsets)
+                if (o != Vector2Int.zero) map[o] = color; // 뒤 그룹이 겹치는 칸을 덮어쓴다 (월드 미리보기와 동일)
+        }
+
+        private void ShowRange(Dictionary<Vector2Int, Color> map)
+        {
+            bool hasRange = map != null && map.Count > 0;
+            if (settings == null)
+            {
+                if (gridLayout != null) gridLayout.gameObject.SetActive(hasRange);
+                Debug.LogError("[TotemUI] TotemDisplaySettings is missing.");
                 return;
             }
-
-            // 에디터 모드 대응: _cells가 날아갔을 경우 자식들을 확인하여 복구 시도
-            if (_cells == null || _cells.Length == 0)
+            if (!hasRange)
             {
-                TryRecoverCells();
+                ShowNoRange();
+                return;
             }
-
-            if (_isInitialized && _cells != null && _cells.Length > 0) return;
+            if (gridLayout != null) gridLayout.gameObject.SetActive(true);
+            SetLabelActive(_noRangeLabel, false);
 
             DisableConflictingLayoutGroup();
-            SetupLegend();
+            EnsureLegend();
 
-            var center = new Vector2Int(totemPosition.x - 1, gridSize.y - totemPosition.y);
-            BuildGrid(gridSize, center);
-
-            _isInitialized = true;
+            _entries.Clear();
+            _entries.Add(new Entry { Offset = Vector2Int.zero, Kind = CellKind.Totem, Color = settings.totemCellColor });
+            foreach (var pair in map)
+                _entries.Add(new Entry { Offset = pair.Key, Kind = CellKind.Range, Color = pair.Value });
+            Render();
         }
+
+        private void Render()
+        {
+            if (cellPrefab == null || gridLayout == null) return;
+
+            while (_cells.Count < _entries.Count)
+                _cells.Add(Instantiate(cellPrefab, gridLayout.transform));
+
+            for (int i = 0; i < _cells.Count; i++)
+            {
+                var cell = _cells[i];
+                if (cell == null) continue;
+                bool used = i < _entries.Count;
+                cell.gameObject.SetActive(used);
+                if (!used) continue;
+
+                var e = _entries[i];
+                if (e.Kind == CellKind.Totem)
+                {
+                    cell.SetTotem(e.Color);
+                }
+                else
+                {
+                    var fill = e.Color;
+                    fill.a = settings.rangeFillAlpha;
+                    cell.SetRange(fill, BrightenForOutline(e.Color), settings.rangeOutlineSprite,
+                        settings.outlineThicknessMultiplier);
+                }
+            }
+
+            UpdateCaption();
+            Layout();
+        }
+
+        /// <summary>범위 바운딩 박스를 박스 가운데에 배치. 칸은 maxCellSize를 넘지 않고, 넘칠 때만 줄어든다.</summary>
+        private void Layout()
+        {
+            if (gridLayout == null || settings == null || _entries.Count == 0) return;
+
+            int minX = 0, maxX = 0, minY = 0, maxY = 0;
+            foreach (var e in _entries)
+            {
+                minX = Mathf.Min(minX, e.Offset.x); maxX = Mathf.Max(maxX, e.Offset.x);
+                minY = Mathf.Min(minY, e.Offset.y); maxY = Mathf.Max(maxY, e.Offset.y);
+            }
+            int cols = maxX - minX + 1;
+            int rows = maxY - minY + 1;
+
+            Rect rect = gridLayout.Rect.rect;
+            float left = gridLayout.paddingLeft;
+            float bottom = gridLayout.paddingBottom + CaptionReserve();
+            float availW = Mathf.Max(1f, rect.width - gridLayout.paddingLeft - gridLayout.paddingRight);
+            float availH = Mathf.Max(1f, rect.height - gridLayout.paddingTop - bottom);
+
+            float ratio = settings.cellSpacingRatio;
+            float cell = Mathf.Min(settings.maxCellSize,
+                availW / (cols + (cols - 1) * ratio),
+                availH / (rows + (rows - 1) * ratio));
+            float step = cell * (1f + ratio);
+            float totalW = cols * cell + (cols - 1) * cell * ratio;
+            float totalH = rows * cell + (rows - 1) * cell * ratio;
+            float originX = left + (availW - totalW) * 0.5f;
+            float originY = bottom + (availH - totalH) * 0.5f;
+
+            for (int i = 0; i < _entries.Count && i < _cells.Count; i++)
+            {
+                if (_cells[i] == null) continue;
+                var o = _entries[i].Offset;
+                var pos = new Vector2(originX + (o.x - minX) * step, originY + (o.y - minY) * step);
+                gridLayout.ApplyLayoutToChild((RectTransform)_cells[i].transform, pos, new Vector2(cell, cell));
+            }
+        }
+
+        /// <summary>색상 계열은 유지하고 밝기(V)만 최소값 이상으로 올린다. 데이터 색은 바꾸지 않는다.</summary>
+        private Color BrightenForOutline(Color color)
+        {
+            Color.RGBToHSV(color, out float h, out float s, out float v);
+            var result = Color.HSVToRGB(h, s, Mathf.Max(v, settings.outlineMinBrightness));
+            result.a = 1f;
+            return result;
+        }
+
+        /// <summary>범위가 없는 토템: 박스는 남기고 칸·캡션을 숨긴 뒤 가운데에 "범위 없음"을 표시한다.</summary>
+        private void ShowNoRange()
+        {
+            _entries.Clear();
+            foreach (var cell in _cells)
+                if (cell != null) cell.gameObject.SetActive(false);
+            SetLabelActive(_caption, false);
+
+            // 문구가 비어 있으면 예전처럼 박스(Grid_List)째 숨긴다.
+            // 이 컴포넌트의 GameObject는 설명 텍스트(Stat_Area)도 품고 있어 켜져 있어야 하므로 gridLayout만 끈다.
+            bool show = !string.IsNullOrEmpty(settings.noRangeText);
+            if (gridLayout != null) gridLayout.gameObject.SetActive(show);
+            if (!show) return;
+
+            _noRangeLabel = EnsureLabel(_noRangeLabel, "Range_None");
+            _noRangeLabel.fontSize = settings.noRangeFontSize;
+            _noRangeLabel.color = settings.noRangeColor;
+            _noRangeLabel.text = settings.noRangeText;
+            var rt = _noRangeLabel.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.offsetMin = new Vector2(gridLayout.paddingLeft, gridLayout.paddingBottom);
+            rt.offsetMax = new Vector2(-gridLayout.paddingRight, -gridLayout.paddingTop);
+            _noRangeLabel.gameObject.SetActive(true);
+        }
+
+        private TextMeshProUGUI EnsureLabel(TextMeshProUGUI label, string name)
+        {
+            if (label == null)
+            {
+                var go = new GameObject(name, typeof(RectTransform));
+                go.transform.SetParent(gridLayout.transform, false);
+                label = go.AddComponent<TextMeshProUGUI>();
+                label.alignment = TextAlignmentOptions.Center;
+                label.raycastTarget = false;
+                label.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+            if (settings.captionFont != null) label.font = settings.captionFont;
+            return label;
+        }
+
+        private static void SetLabelActive(TextMeshProUGUI label, bool active)
+        {
+            if (label != null) label.gameObject.SetActive(active);
+        }
+
+        // ── 캡션 ─────────────────────────────────────────────────────
+
+        private float CaptionReserve() =>
+            settings != null && !string.IsNullOrEmpty(settings.captionText) ? settings.captionReserve : 0f;
+
+        private void UpdateCaption()
+        {
+            if (gridLayout == null || settings == null) return;
+            bool show = !string.IsNullOrEmpty(settings.captionText);
+            if (!show)
+            {
+                if (_caption != null) _caption.gameObject.SetActive(false);
+                return;
+            }
+            _caption = EnsureLabel(_caption, "Range_Caption");
+            _caption.fontSize = settings.captionFontSize;
+            _caption.color = settings.captionColor;
+            _caption.text = settings.captionText;
+            _caption.gameObject.SetActive(true);
+
+            var crt = _caption.rectTransform;
+            crt.anchorMin = new Vector2(0f, 0f);
+            crt.anchorMax = new Vector2(1f, 0f);
+            crt.pivot = new Vector2(0.5f, 0f);
+            crt.anchoredPosition = new Vector2(0f, gridLayout.paddingBottom);
+            crt.sizeDelta = new Vector2(-(gridLayout.paddingLeft + gridLayout.paddingRight), settings.captionReserve);
+        }
+
+        // ── 범례 (기존 동작 유지) ───────────────────────────────────
 
         private void DisableConflictingLayoutGroup()
         {
@@ -101,57 +308,17 @@ namespace GaeGGUL.UI.Totem
             if (glg != null && glg.enabled) glg.enabled = false;
         }
 
-        private void TryRecoverCells()
+        private void EnsureLegend()
         {
-            if (gridLayout == null) return;
-
-            var existingCells = gridLayout.GetComponentsInChildren<UI_TotemRangeCell>();
-            if (existingCells.Length == gridSize.x * gridSize.y)
-            {
-                _cells = new UI_TotemRangeCell[gridSize.x, gridSize.y];
-                int index = 0;
-                for (int y = 0; y < gridSize.y; y++)
-                {
-                    for (int x = 0; x < gridSize.x; x++)
-                    {
-                        _cells[x, y] = existingCells[index++];
-                    }
-                }
-                _currentGridSize = gridSize;
-                _center = new Vector2Int(totemPosition.x - 1, gridSize.y - totemPosition.y);
-                _isInitialized = true;
-            }
-        }
-
-        public void RefreshLayoutPositions()
-        {
-            if (gridLayout == null || _cells == null) return;
-            if (_cells.GetLength(0) != _currentGridSize.x || _cells.GetLength(1) != _currentGridSize.y) return;
-
-            for (int y = 0; y < _currentGridSize.y; y++)
-            {
-                for (int x = 0; x < _currentGridSize.x; x++)
-                {
-                    var cell = _cells[x, y];
-                    if (cell == null) continue;
-
-                    var cellRect = cell.transform as RectTransform;
-                    var (pos, size) = gridLayout.GetCellRect(_currentGridSize, new Vector2Int(x, y));
-                    gridLayout.ApplyLayoutToChild(cellRect, pos, size);
-                }
-            }
+            if (_legendReady) return;
+            SetupLegend();
+            _legendReady = true;
         }
 
         private void SetupLegend()
         {
-            if (legendSlotPrefab == null || tr_LegendParent == null) return;
-
-            // 기존 자식 오브젝트 정리
-            for (int i = tr_LegendParent.childCount - 1; i >= 0; i--)
-            {
-                if (Application.isPlaying) Destroy(tr_LegendParent.GetChild(i).gameObject);
-                else DestroyImmediate(tr_LegendParent.GetChild(i).gameObject);
-            }
+            if (legendSlotPrefab == null || tr_LegendParent == null || settings == null) return;
+            ClearLegend();
 
             var legendData = new (string label, Sprite sprite)[]
             {
@@ -167,150 +334,11 @@ namespace GaeGGUL.UI.Totem
             }
         }
 
-        /// <summary>지정한 크기·중심으로 그리드 셀을 새로 생성합니다. 기존 셀은 전부 정리됩니다.</summary>
-        private void BuildGrid(Vector2Int size, Vector2Int center)
+        private void UpdateLegend(TotemData data)
         {
-            if (cellPrefab == null || gridLayout == null) return;
-
-            // 기존 그리드 자식 정리
-            for (int i = gridLayout.transform.childCount - 1; i >= 0; i--)
-            {
-                var child = gridLayout.transform.GetChild(i).gameObject;
-                if (Application.isPlaying) Destroy(child);
-                else DestroyImmediate(child);
-            }
-
-            _cells = new UI_TotemRangeCell[size.x, size.y];
-            _currentGridSize = size;
-            _center = center;
-
-            for (int y = 0; y < size.y; y++)
-            {
-                for (int x = 0; x < size.x; x++)
-                {
-                    var cell = Instantiate(cellPrefab, gridLayout.transform);
-                    var cellRect = cell.transform as RectTransform;
-
-                    var (pos, cellSize) = gridLayout.GetCellRect(size, new Vector2Int(x, y));
-                    gridLayout.ApplyLayoutToChild(cellRect, pos, cellSize);
-
-                    _cells[x, y] = cell;
-                    _cells[x, y].SetSprite(settings.fieldSprite); // 초기화 시 필드 스프라이트
-                }
-            }
-        }
-
-        /// <summary>표시할 오프셋들(+ 토템 자신의 칸)을 전부 담는 최소 크기와, 그 안에서의 토템 중심 좌표를 계산합니다.</summary>
-        private (Vector2Int size, Vector2Int center) ComputeAutoBounds(List<Vector2Int> effectRange, List<Vector2Int> debuffRange)
-        {
-            int minX = 0, maxX = 0, minY = 0, maxY = 0; // 토템 자신의 칸(0,0)은 항상 포함
-
-            void Consider(List<Vector2Int> offsets)
-            {
-                if (offsets == null) return;
-                foreach (var o in offsets)
-                {
-                    if (o.x < minX) minX = o.x;
-                    if (o.x > maxX) maxX = o.x;
-                    if (o.y < minY) minY = o.y;
-                    if (o.y > maxY) maxY = o.y;
-                }
-            }
-            Consider(effectRange);
-            Consider(debuffRange);
-
-            var size = new Vector2Int(maxX - minX + 1, maxY - minY + 1);
-            var center = new Vector2Int(-minX, maxY);
-            return (size, center);
-        }
-
-        public void SetRange(List<Vector2Int> effectRange, List<Vector2Int> debuffRange)
-        {
-            bool hasRange = (effectRange != null && effectRange.Count > 0) || (debuffRange != null && debuffRange.Count > 0);
-            if (!hasRange)
-            {
-                // Only hide the actual grid cell container (gridLayout, e.g. Grid_List — a sibling
-                // of this component's own GameObject, not a child of it). This component's own
-                // GameObject (Totem_Grid_Stat_Area) also parents the unrelated stat/description text
-                // (Stat_Area/Stat_Text), so it must stay active or the description disappears too.
-                if (gridLayout != null) gridLayout.gameObject.SetActive(false);
-                return;
-            }
-            if (gridLayout != null) gridLayout.gameObject.SetActive(true);
-
-            if (settings == null)
-            {
-                Debug.LogError("[TotemUI] TotemDisplaySettings is missing.");
-                return;
-            }
-
-            DisableConflictingLayoutGroup();
-            if (!_isInitialized)
-            {
-                SetupLegend();
-                _isInitialized = true;
-            }
-
-            var (size, center) = ComputeAutoBounds(effectRange, debuffRange);
-            BuildGrid(size, center);
-
-            if (_cells == null) return;
-
-            // 효과 범위 표시
-            if (effectRange != null)
-            {
-                foreach (var offset in effectRange)
-                {
-                    Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
-                    if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
-                        _cells[pos.x, pos.y].SetSprite(settings.effectSprite);
-                }
-            }
-
-            // 디버프 범위 표시
-            if (debuffRange != null)
-            {
-                foreach (var offset in debuffRange)
-                {
-                    Vector2Int pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
-                    if (IsValidPos(pos) && _cells[pos.x, pos.y] != null)
-                        _cells[pos.x, pos.y].SetSprite(settings.debuffSprite);
-                }
-            }
-
-            // 토템 위치 표시 (중앙) — 바운딩 박스에 항상 포함되므로 유효함이 보장됨
-            if (IsValidPos(_center) && _cells[_center.x, _center.y] != null)
-            {
-                _cells[_center.x, _center.y].SetSprite(settings.totemSprite);
-            }
-        }
-
-        /// <summary>Shows effect-specific colors from the same SO used by gameplay.</summary>
-        public void SetData(TotemData data)
-        {
-            SetRange(data != null ? data.GetEffectPreviewOffsets() : null, null);
-            if (_cells == null) return;
-            if (data == null || !data.HasEffectGroups) { SetupLegend(); return; }
-            foreach (var group in data.EffectGroups)
-            {
-                if (group == null) continue;
-                foreach (var offset in group.GetPreviewOffsets())
-                {
-                    var pos = new Vector2Int(_center.x + offset.x, _center.y - offset.y);
-                    if (pos != _center && IsValidPos(pos) && _cells[pos.x, pos.y] != null)
-                    {
-                        _cells[pos.x, pos.y].SetSprite(settings.fieldSprite);
-                        _cells[pos.x, pos.y].SetColor(group.Color);
-                    }
-                }
-            }
+            if (!data.HasEffectGroups) { SetupLegend(); return; }
             if (legendSlotPrefab == null || tr_LegendParent == null) return;
-            for (int i = tr_LegendParent.childCount - 1; i >= 0; i--)
-            {
-                var child = tr_LegendParent.GetChild(i).gameObject;
-                child.SetActive(false);
-                if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
-            }
+            ClearLegend();
             foreach (var group in data.EffectGroups)
             {
                 if (group == null) continue;
@@ -320,9 +348,14 @@ namespace GaeGGUL.UI.Totem
             }
         }
 
-        private bool IsValidPos(Vector2Int pos)
+        private void ClearLegend()
         {
-            return pos.x >= 0 && pos.x < _currentGridSize.x && pos.y >= 0 && pos.y < _currentGridSize.y;
+            for (int i = tr_LegendParent.childCount - 1; i >= 0; i--)
+            {
+                var child = tr_LegendParent.GetChild(i).gameObject;
+                child.SetActive(false);
+                if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
+            }
         }
     }
 }

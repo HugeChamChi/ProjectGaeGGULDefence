@@ -20,3 +20,17 @@ MonoBehaviour:
   effectLabel: "\uD6A8\uACFC \uBC94\uC704"
   debuffSprite: {fileID: -1221604449, guid: 0972f7c627f9a07419b3253307e7c846, type: 3}
   debuffLabel: "\uB514\uBC84\uD504 \uC801\uC6A9"
+  maxCellSize: 40
+  cellSpacingRatio: 0.22
+  totemCellColor: {r: 0.97, g: 0.97, b: 0.98, a: 1}
+  defaultRangeColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  debuffRangeColor: {r: 0.75, g: 0.45, b: 1, a: 1}
+  rangeFillAlpha: 0.08
+  outlineMinBrightness: 0.8
+  rangeOutlineSprite: {fileID: 21300000, guid: d1ca19d25c8ec7c469d50eeb5cb47272, type: 3}
+  outlineThicknessMultiplier: 1.5
+  captionText: "\uC801\uC6A9 \uBC94\uC704"
+  captionFont: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  captionFontSize: 22
+  captionColor: {r: 0.95, g: 0.95, b: 0.95, a: 1}
+  captionReserve: 32

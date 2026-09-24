@@ -15,3 +15,8 @@ MonoBehaviour:
   _capacity: 5
   _moveHoldSeconds: 0.45
   _rotationDeadZonePixels: 24
+  _holdFeedbackDelaySeconds: 0.2
+  _holdSlowTimeScale: 0.2
+  _holdSlowRampSeconds: 0.12
+  _holdRingWorldSize: 2.2
+  _holdRingMaterial: {fileID: 2100000, guid: 072cad62eed2db24cad8aaefd774ad96, type: 2}

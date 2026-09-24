@@ -13,6 +13,9 @@ namespace HSD.UI.Setting
         [SerializeField] private Button btn_Restart;
         [SerializeField] private Button btn_GoToLobby;
 
+        // 게임 속도는 TimeScaleService가 단일 소유 — 다른 정지(레벨업 등)와 겹쳐도 서로 풀어버리지 않는다.
+        [VContainer.Inject] private TimeScaleService _timeScale;
+
         protected override void Awake()
         {
             base.Awake();
@@ -23,12 +26,13 @@ namespace HSD.UI.Setting
 
         private void OnEnable()
         {
-            Time.timeScale = 0;
+            if (_timeScale != null) _timeScale.Pause(this);
+            else Debug.LogWarning("[UI_SettingPanel_InGame] TimeScaleService 미주입 — 일시정지 불가", this);
         }
 
         private void OnDisable()
         {
-            Time.timeScale = 1;
+            _timeScale?.Release(this);
         }
     }
 }

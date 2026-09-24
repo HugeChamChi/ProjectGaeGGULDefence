@@ -15,6 +15,7 @@ public class UIManager : MonoBehaviour
     [VContainer.Inject] private GameManager _gameManager;
     [VContainer.Inject] private TimerController _timerController;
     [VContainer.Inject] private CurrencyManager _currencyManager;
+    [VContainer.Inject] private TimeScaleService _timeScale;
     private DroneManager _droneManager;
 
     [Header("Buttons")]
@@ -83,7 +84,6 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        Time.timeScale = 1f;
 
         _droneManager = Object.FindFirstObjectByType<DroneManager>();
 
@@ -359,7 +359,7 @@ public class UIManager : MonoBehaviour
     {
         if (resultPanel != null)
             resultPanel.SetActive(true);
-        Time.timeScale = 0f;
+        _timeScale.Pause(this);
     }
 
     public void HideStartButton()
@@ -370,13 +370,13 @@ public class UIManager : MonoBehaviour
 
     private void OnRetryButtonPressed()
     {
-        Time.timeScale = 1f;
+        _timeScale.ReleaseAll();
         Addressables.LoadSceneAsync(SceneManager.GetActiveScene().name);
     }
 
     private void OnHomeButtonPressed()
     {
-        Time.timeScale = 1f;
+        _timeScale.ReleaseAll();
         Addressables.LoadSceneAsync("LobbyScene");
     }
 }

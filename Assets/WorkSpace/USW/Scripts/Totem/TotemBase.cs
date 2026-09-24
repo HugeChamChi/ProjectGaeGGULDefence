@@ -167,6 +167,16 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     /// <summary>Restores the committed range after cancelling a gesture.</summary>
     public void RestoreRotationPreview() => _gridManager?.ShowTotemRangePreview(this);
 
+    /// <summary>배치된 토템을 옮기는 중 — 후보 칸에 있다고 가정한 범위만 칠한다. 실제 칸·버프는 바꾸지 않는다.</summary>
+    public void PreviewMoveTo(GridCell cell, GridManager grid)
+    {
+        if (!IsActive || cell == null || grid == null) return;
+        var oldCell = CurrentCell;
+        CurrentCell = cell;
+        try { grid.ShowTotemPlacementPreview(this); }
+        finally { CurrentCell = oldCell; }
+    }
+
     /// <summary>Evaluates a disabled preview clone at a candidate cell without placement or buffs.</summary>
     public void PreviewPlacement(TotemData data, GridCell cell, GridManager grid)
     {

@@ -49,6 +49,17 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     /// <summary>카드가 길게 눌렸을 때 사용할 레벨업 창의 필드 보기를 연결한다.</summary>
     public void ConfigurePeek(UI_Peekthrough peek) => _peek = peek;
 
+    /// <summary>이 카드로 필드보기가 시작(true)/종료(false)될 때 — 대상 유닛 강조 연출용.</summary>
+    public event Action<LevelUpCardUI, bool> OnPeekChanged;
+    private bool _peeking;
+
+    private void SetPeeking(bool peeking)
+    {
+        if (_peeking == peeking) return;
+        _peeking = peeking;
+        OnPeekChanged?.Invoke(this, peeking);
+    }
+
     /// <summary>짧은 선택과 긴 필드 보기를 구분하는 입력을 시작한다.</summary>
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -66,7 +77,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             Time.unscaledTime - _pressedAt >= _holdSeconds)
         {
             _suppressClick = true;
-            _peek.TryBeginPeek(this);
+            if (_peek.TryBeginPeek(this)) SetPeeking(true);
         }
     }
 
@@ -79,6 +90,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         _releasedPointerId = eventData.pointerId;
         _pointerId = null;
         _peek?.EndPeek(this);
+        SetPeeking(false);
     }
 
     /// <summary>카드 밖으로 이동하면 해당 누름을 취소한다.</summary>
@@ -93,6 +105,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         _releasedPointerId = null;
         _suppressClick = true;
         _peek?.EndPeek(this);
+        SetPeeking(false);
     }
 
     private void OnDisable() => CancelPress();
@@ -157,6 +170,12 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     }
 
     public LevelUpData GetData() => _data;
+
+    /// <summary>등장 연출의 빛 덮개가 카드 외곽 모양을 따르도록 쓰는 테두리 이미지.</summary>
+    public Image RevealShape => borderImage;
+
+    /// <summary>선택 후 획득 연출에 쓰는 선택지 아이콘 (애니메이션 프레임이 아닌 기본 아이콘).</summary>
+    public Sprite IconSprite => _data?.icon != null ? _data.icon : iconImage != null ? iconImage.sprite : null;
 
     // ── 내부 ───────────────────────────────────────────────────
 

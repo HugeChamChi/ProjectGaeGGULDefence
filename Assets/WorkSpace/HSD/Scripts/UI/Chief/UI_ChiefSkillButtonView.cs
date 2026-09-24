@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -11,6 +12,8 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     [SerializeField] private TMP_Text txt_Cooldown;
     [SerializeField] private Image img_Icon;
     [SerializeField] private ChiefSkillReadyBanner _readyBanner;
+    [Tooltip("지정하면 족장 스킬 아이콘 대신 이 이미지를 항상 표시한다 (임시 고정 이미지용). 비우면 스킬 아이콘 사용")]
+    [SerializeField] private Sprite iconOverride;
 
     /// <summary>실제 사용 가능 여부와 독립적인 충전 완료 위치 표시.</summary>
     public void SetChargedPresentation(bool charged, bool immediate = false) => _readyBanner?.SetCharged(charged, immediate);
@@ -44,21 +47,15 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
         }
     }
 
-    private void Start()
+    // 연결은 InGameInstaller.Start가 Construct로 수행한다. 이 컴포넌트의 Start가 먼저 돌 수 있으므로
+    // 검색(Find)으로 우회하지 않고, 한 프레임 뒤에도 연결이 없을 때만 실제 배선 누락으로 보고한다.
+    private void Start() => VerifyWiringAsync().Forget();
+
+    private async UniTaskVoid VerifyWiringAsync()
     {
+        if (await UniTask.Yield(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
         if (_presenter == null)
-        {
-            var spawner = FindFirstObjectByType<ChieftainSpawner>();
-            if (spawner != null)
-            {
-                Construct(spawner);
-                Debug.Log("[UI_ChiefSkillButtonView] VContainer 주입 누락 감지 - FindObjectOfType으로 ChieftainSpawner를 수동 할당하고 이벤트를 구독합니다.");
-            }
-            else
-            {
-                Debug.LogError("[UI_ChiefSkillButtonView] ChieftainSpawner를 찾을 수 없습니다!");
-            }
-        }
+            Debug.LogError("[UI_ChiefSkillButtonView] 연결되지 않음 — InGameInstaller의 _chiefSkillButtonView 참조를 확인하세요.", this);
     }
 
     private void OnActiveSkillChanged(IChiefActiveSkill skill)
@@ -116,8 +113,9 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     {
         if (img_Icon != null)
         {
-            img_Icon.sprite = icon;
-            img_Icon.enabled = icon != null;
+            var sprite = iconOverride != null ? iconOverride : icon;
+            img_Icon.sprite = sprite;
+            img_Icon.enabled = sprite != null;
         }
     }
 

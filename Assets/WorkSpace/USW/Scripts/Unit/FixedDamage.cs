@@ -11,12 +11,15 @@ public class FixedDamage : IReplayableEffect
     public IScaledFloat power = new ConstantFloat();
 
     public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
-        => target.TakeDamage(caster.ComputeDamageFrom(power.Get(caster.currentTier)), hitPosition);
+    {
+        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical);
+        target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal);
+    }
 
     /// <inheritdoc />
     public Action<BossBase, Vector3> Capture(UnitBase caster)
     {
-        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier));
-        return new RecordedDamage(damage).Apply;
+        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical);
+        return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal).Apply;
     }
 }

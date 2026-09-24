@@ -11,6 +11,7 @@ public class InGameLifetimeScope : LifetimeScope
     protected override void Configure(IContainerBuilder builder)
     {
         // 씬에 이미 배치되어 있는 매니저(MonoBehaviour)들을 찾아서 모두 등록합니다.
+        builder.Register<TimeScaleService>(Lifetime.Scoped); // 게임 속도 단일 소유자 — Time.timeScale 직접 쓰기 금지
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<WaveManager>();
         builder.RegisterComponentInHierarchy<TimerController>();
@@ -32,6 +33,8 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterInstance(totemInteractionSettings);
         builder.Register<TotemInventory>(Lifetime.Scoped);
         builder.RegisterComponentInHierarchy<TotemRotationUI>();
+        builder.RegisterEntryPoint<TotemHoldFeedback>(Lifetime.Scoped).AsSelf(); // 토템 홀드 게이지 + 슬로우
+        builder.Register<TotemDragRangePreview>(Lifetime.Scoped); // 토템 이동 중 범위 미리보기
         builder.RegisterComponentInHierarchy<TotemInventoryUI>();
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
         builder.RegisterComponentInHierarchy<BuffManager>();
@@ -39,6 +42,11 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<ChieftainSpawner>();
 
         builder.RegisterComponentInHierarchy<MergeManager>();
+        var mergeEffectSettings = Resources.Load<MergeEffectSettings>("MergeEffectSettings");
+        if (mergeEffectSettings == null) throw new System.InvalidOperationException("MergeEffectSettings is required.");
+        builder.RegisterInstance(mergeEffectSettings);
+        builder.Register<MergeEffectPlayer>(Lifetime.Scoped); // 합성 연출 (잔상 흡입 + 먼지구름)
+        builder.Register<DragSellService>(Lifetime.Scoped); // 드래그 판매 (판매 띠가 있는 씬에서만 동작)
         builder.RegisterComponentInHierarchy<LevelUpManager>();
 
         builder.RegisterComponentInHierarchy<UIManager>();

@@ -37,6 +37,7 @@ public class MergeManager : MonoBehaviour
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
+    [Inject] private MergeEffectPlayer _mergeEffect;
 
     public event Action<UnitBase, bool> OnUnitSelected;
     public event Action                 OnSelectionCleared;
@@ -92,6 +93,12 @@ public class MergeManager : MonoBehaviour
 
         ClearSelection();
 
+        // 합성 연출: 재료 잔상 흡입 → 먼지구름 → 소환 줄기가 솟았다 합성 칸에 내리꽂힘 (파괴 전에 잔상 복사)
+        Vector3 center = spawnCell.transform.position;
+        var materials = new List<UnitBase>(targets.Count);
+        foreach (var (unit, _) in targets) materials.Add(unit);
+        float lineDelay = _mergeEffect?.PlayMerge(materials, center) ?? 0f;
+
         foreach (var (unit, cell) in targets)
         {
             unit.OnRemoved();
@@ -99,8 +106,11 @@ public class MergeManager : MonoBehaviour
             UnityEngine.Object.Destroy(unit.gameObject);
         }
 
-        // Use PlaceUnitWithEffect with the spawnCell as origin (so the effect plays without a long line traversal)
-        _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, spawnCell.transform.position);
+        if (_mergeEffect != null)
+            _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, _mergeEffect.GetLineOrigin(center),
+                lineDelay, _mergeEffect.LineCurveHeight);
+        else
+            _spawnerManager.PlaceUnitWithEffect(newUnit, spawnCell, center);
 
         _spawnerManager.RequestMergeSupport();
 
