@@ -29,6 +29,11 @@ public class UnitSpawner : MonoBehaviour
     [SerializeField] private Vector3 spawnScale = new Vector3(0.5f, 0.5f, 0.5f);
 
     public float CurrentCost { get; private set; }
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
+    /// <summary>Successful paid summons, excluding bonus and merge spawns.</summary>
+    public int SuccessfulSpawnCount { get; private set; }
+    /// <summary>Most recent successfully purchased unit.</summary>
+    public UnitBase LastSpawnedUnit { get; private set; }
 
     /// <summary>이번 씬에서 당첨되었지만 아직 배치하지 못한 노말 유닛 보상 수.</summary>
     public int PendingSupportCount { get; private set; }
@@ -93,8 +98,8 @@ public class UnitSpawner : MonoBehaviour
         _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
 
         // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
-        CurrentCost = 20f;
-        if (_gameDataManager != null)
+        CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : 20f;
+        if (_tutorialSettings == null && _gameDataManager != null)
         {
             if (_gameDataManager.IsLoaded)
             {
@@ -111,12 +116,14 @@ public class UnitSpawner : MonoBehaviour
 
     private void SyncInitialCost()
     {
+        if (_tutorialSettings != null) return;
         CurrentCost = _gameDataManager.SummonInitialCost;
         OnCostChanged?.Invoke(CurrentCost);
     }
 
     private void SyncAllUnitData()
     {
+        if (_tutorialSettings != null) return;
         if (_unitFactory == null || _unitFactory.UnitDataList == null || _gameDataManager == null) return;
 
         foreach (var data in _unitFactory.UnitDataList)
@@ -164,7 +171,17 @@ public class UnitSpawner : MonoBehaviour
 
         // 소환 확률 시트 기반 랜덤 — 미로드 시 Normal 랜덤 폴백
         UnitBase unit;
-        if (_gameDataManager != null && _gameDataManager.IsLoaded)
+        bool fixedSummon = _tutorialSettings != null && SuccessfulSpawnCount < _tutorialSettings.SpawnUnits.Length;
+        var cell = fixedSummon ? _gridManager.GetCell(_tutorialSettings.SpawnCells[SuccessfulSpawnCount])
+            : empty[Random.Range(0, empty.Count)];
+        if (cell == null || !cell.IsAvailable)
+        {
+            _currencyManager.AddCurrency(effectiveCost);
+            return;
+        }
+        if (fixedSummon)
+            unit = _unitFactory.CreateUnitFromData(_tutorialSettings.SpawnUnits[SuccessfulSpawnCount]);
+        else if (_tutorialSettings == null && _gameDataManager != null && _gameDataManager.IsLoaded)
         {
             int charId = _gameDataManager.GetRandomSpawnCharacterId();
             unit = charId >= 0
@@ -183,12 +200,12 @@ public class UnitSpawner : MonoBehaviour
         }
 
         // 환급 처리(소환 실패 시)는 effectiveCost 기준
-        var cell = empty[Random.Range(0, empty.Count)];
-        
         PlaceUnitWithEffect(unit, cell);
+        LastSpawnedUnit = unit;
+        SuccessfulSpawnCount++;
 
         // 소환 성공 시 비용 증가 (시트 값 우선, 폴백 20)
-        float increment = _gameDataManager != null && _gameDataManager.IsLoaded
+        float increment = _tutorialSettings != null ? _tutorialSettings.CostIncrease : _gameDataManager != null && _gameDataManager.IsLoaded
             ? _gameDataManager.SummonCostIncrease
             : 20f;
         CurrentCost += increment;

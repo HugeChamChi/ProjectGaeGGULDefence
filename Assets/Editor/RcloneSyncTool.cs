@@ -76,7 +76,7 @@ public class RcloneSyncTool : EditorWindow
         EditorGUILayout.HelpBox("파일 변경 여부를 확인하기 위해 동시에 체크할 작업 수입니다. 파일이 많을 때 성능에 큰 영향을 줍니다. (기본: 64)", MessageType.None);
 
         GUILayout.Space(20);
-        EditorGUILayout.HelpBox("Size Only, Fast List 등 최적화 옵션이 기본적으로 적용되어 있습니다.", MessageType.Info);
+        EditorGUILayout.HelpBox("업로드/다운로드 모두 copy 방식이라 어느 쪽 파일도 삭제하지 않습니다.\n다운로드는 로컬에 없는 파일만 받습니다 (이미 있는 파일은 덮어쓰지 않음).", MessageType.Info);
 
         GUILayout.Space(20);
 
@@ -93,15 +93,15 @@ public class RcloneSyncTool : EditorWindow
     private void Upload()
     {
         if (!ValidateSettings()) return;
-        if (EditorUtility.DisplayDialog("업로드", "로컬의 변경사항을 구글 드라이브에 반영하시겠습니까?", "실행", "취소")) 
-            RunRclone("sync", localPath, remotePath);
+        if (EditorUtility.DisplayDialog("업로드", "로컬의 새 파일/변경된 파일을 구글 드라이브에 올리시겠습니까?\n(드라이브의 파일은 삭제하지 않습니다)", "실행", "취소"))
+            RunRclone("copy", localPath, remotePath, "");
     }
 
     private void Download()
     {
         if (!ValidateSettings()) return;
-        if (EditorUtility.DisplayDialog("다운로드", "구글 드라이브의 최신 데이터를 로컬로 받아오시겠습니까?", "실행", "취소")) 
-            RunRclone("sync", remotePath, localPath);
+        if (EditorUtility.DisplayDialog("다운로드", "로컬에 없는 파일만 구글 드라이브에서 받아오시겠습니까?\n(이미 있는 파일은 덮어쓰지 않고, 삭제도 하지 않습니다)", "실행", "취소"))
+            RunRclone("copy", remotePath, localPath, "--ignore-existing ");
     }
 
     private bool ValidateSettings()
@@ -114,17 +114,18 @@ public class RcloneSyncTool : EditorWindow
         return true;
     }
 
-    private void RunRclone(string command, string src, string dest)
+    private void RunRclone(string command, string src, string dest, string extraArgs)
     {
         string rcloneExec = rclonePath;
         if (!rcloneExec.Contains("\"") && rcloneExec.Contains(" ")) rcloneExec = $"\"{rcloneExec}\"";
 
         string rcloneArgs = $"{command} \"{src}\" \"{dest}\" " +
+                            extraArgs +
                             $"--transfers {transfers} " +
                             $"--checkers {checkers} " +
                             $"--drive-chunk-size {ChunkSize} " +
                             $"--buffer-size {BufferSize} " +
-                            $"--fast-list --size-only --progress";
+                            $"--fast-list --progress";
 
         ProcessStartInfo startInfo = new ProcessStartInfo
         {

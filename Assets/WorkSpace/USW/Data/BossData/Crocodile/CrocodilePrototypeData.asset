@@ -15,7 +15,7 @@ MonoBehaviour:
   _displayName: "\uC545\uC5B4 (\uC784\uC2DC \uC678\uD615)"
   _prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2, type: 3}
   _icon: {fileID: 0}
-  _maxHp: 3000
+  _maxHp: 80000
   _defense: 0
   _hpLineCount: 100
-  _expReward: 100
+  _expReward: 800

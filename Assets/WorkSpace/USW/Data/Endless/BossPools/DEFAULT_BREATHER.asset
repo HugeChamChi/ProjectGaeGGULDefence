@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca8283a477f875c428debea45403ac3b, type: 3}
+  m_Name: DEFAULT_BREATHER
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessBossPoolData
+  _key: DEFAULT_BREATHER
+  _role: 1
+  _entries:
+  - _bossKey: BossData_Round01
+    _boss: {fileID: 11400000, guid: 65ef7d25bec35284cb736d03e3c88dbc, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round02
+    _boss: {fileID: 11400000, guid: 70dc0a4d05f73214ea9cb079aea91255, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round03
+    _boss: {fileID: 11400000, guid: c4a4f78dec85088428c14d6a737c247b, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round04
+    _boss: {fileID: 11400000, guid: 4b31224d6fb52be428c777a381ce2562, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round05
+    _boss: {fileID: 11400000, guid: 69ad6518c143832428a244fb482e1155, type: 2}
+    _enabled: 1

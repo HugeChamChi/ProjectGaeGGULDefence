@@ -1,5 +1,6 @@
 using System.Threading;
 using VContainer;
+using DG.Tweening;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ public class DroneUnit : MonoBehaviour
     [Inject] private BossManager _bossManager;
     [Inject] private ProjectilePool _projectileManager;
     [Inject] private AudioManager _audioManager;
+    [Inject] private EndlessRunService _run;
 
     public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
@@ -49,6 +51,16 @@ public class DroneUnit : MonoBehaviour
     [Tooltip("액션 스프라이트를 유지하는 시간(초). 이후 자동으로 평소 스프라이트로 복귀.")]
     [SerializeField] private float  _actionSpriteHoldSeconds = 0.15f;
 
+    [Header("공격 프레임")]
+    [Tooltip("투사체를 쏘는 순간 잠깐 바뀌는 스프라이트 (날개 펼침). 비워두면 스프라이트 전환 없음.")]
+    [SerializeField] private Sprite _attackSprite;
+    [Tooltip("공격 스프라이트를 유지하는 시간(초).")]
+    [SerializeField, Min(0f)] private float _attackSpriteHoldSeconds = 0.18f;
+    [Tooltip("발사 순간 스케일 펀치 세기 (0이면 끔).")]
+    [SerializeField, Min(0f)] private float _attackPunchScale = 0.18f;
+    [Tooltip("스케일 펀치 시간(초).")]
+    [SerializeField, Min(0.01f)] private float _attackPunchDuration = 0.2f;
+
     [Header("정렬")]
     [Tooltip("오너 유닛의 DragHandler와 동일한 Y기반 정렬 공식을 따라가되, 항상 이 값만큼 앞에 그립니다.")]
     [SerializeField] private int _sortingOrderOffset = 1;
@@ -60,6 +72,8 @@ public class DroneUnit : MonoBehaviour
     private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
     private int _attackLifetime;
+    private Vector3 _baseScale = Vector3.one;
+    private Tween _punchTween;
 
     // ── 초기화 ──────────────────────────────────────────────────────
 
@@ -71,6 +85,7 @@ public class DroneUnit : MonoBehaviour
 
         _spriteRenderer = GetComponent<SpriteRenderer>();
         if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
+        _baseScale = transform.localScale;
     }
 
     private AnimatorUpdateMode _updateModeBeforePause;
@@ -210,26 +225,43 @@ public class DroneUnit : MonoBehaviour
     // ── 스킬 발동 액션 스프라이트 (DroneSpawnerBase.FlashOwnedDrones 에서 호출) ──
 
     /// <summary>오너의 스킬 발동 순간 잠깐 액션 스프라이트로 바뀌었다가 자동으로 복귀한다.</summary>
-    public void PlayActionFlash()
+    public void PlayActionFlash() => FlashSprite(_actionSprite, _actionSpriteHoldSeconds);
+
+    /// <summary>발사 순간 공격 프레임(날개 펼침)으로 바꾸고 스케일 펀치를 준다.</summary>
+    private void PlayAttackFrame()
     {
-        if (_spriteRenderer == null || _actionSprite == null) return;
+        FlashSprite(_attackSprite, _attackSpriteHoldSeconds);
+
+        if (_attackPunchScale <= 0f) return;
+        _punchTween?.Kill();
+        transform.localScale = _baseScale;
+        _punchTween = transform.DOPunchScale(_baseScale * _attackPunchScale, _attackPunchDuration, 1, 0.5f)
+            .SetLink(gameObject);
+    }
+
+    private void FlashSprite(Sprite sprite, float holdSeconds)
+    {
+        if (_spriteRenderer == null || sprite == null) return;
 
         _flashCts?.Cancel();
         _flashCts?.Dispose();
         _flashCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
-        FlashSpriteAsync(_flashCts.Token).Forget();
+        FlashSpriteAsync(sprite, holdSeconds, _flashCts.Token).Forget();
     }
 
-    private async UniTaskVoid FlashSpriteAsync(CancellationToken token)
+    private async UniTaskVoid FlashSpriteAsync(Sprite sprite, float holdSeconds, CancellationToken token)
     {
-        _spriteRenderer.sprite = _actionSprite;
+        _spriteRenderer.sprite = sprite;
 
-        if (await UniTask.Delay(Mathf.RoundToInt(_actionSpriteHoldSeconds * 1000f), cancellationToken: token).SuppressCancellationThrow())
+        if (await UniTask.Delay(Mathf.RoundToInt(holdSeconds * 1000f), cancellationToken: token).SuppressCancellationThrow())
             return;
 
         _spriteRenderer.sprite = _normalSprite;
     }
+
+    /// <summary>데미지 없이 연출만 발사한다 (테스트 씬 프리뷰용).</summary>
+    public void FireVisualShot(Vector3 targetPos) => ShootProjectile(targetPos);
 
     // ── 풀 반환 시 정리 ─────────────────────────────────────────────
 
@@ -252,6 +284,9 @@ public class DroneUnit : MonoBehaviour
         _flashCts?.Dispose();
         _flashCts = null;
         if (_spriteRenderer != null) _spriteRenderer.sprite = _normalSprite;
+        _punchTween?.Kill();
+        _punchTween = null;
+        transform.localScale = _baseScale;
         StopOrbit();
     }
 
@@ -261,7 +296,9 @@ public class DroneUnit : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
-            int delayMs = Mathf.RoundToInt(EffectiveAttackInterval * 1000f);
+            int delayMs;
+            try { delayMs = RunStatMath.ToDelayMilliseconds(EffectiveAttackInterval); }
+            catch (System.OverflowException error) { _run.Fail(error.Message); return; }
 
             if (await UniTask.Delay(delayMs, cancellationToken: token).SuppressCancellationThrow())
                 return;
@@ -319,6 +356,7 @@ public class DroneUnit : MonoBehaviour
     {
         Vector3 origin = recordedOrigin ?? transform.position;
         _audioManager?.PlaySFX("05.Drone_Attack");
+        PlayAttackFrame();
 
         if (_projectilePrefab != null)
         {

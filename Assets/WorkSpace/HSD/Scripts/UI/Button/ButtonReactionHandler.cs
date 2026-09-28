@@ -12,7 +12,8 @@ public class ButtonReactionHandler : MonoBehaviour, IPointerDownHandler, IPointe
     private void Awake()
     {
         _originScale = transform.localScale;
-        data = GlobalData.ButtonReactionData;
+        // 버튼별 데이터가 지정되지 않았을 때만 공용 데이터를 사용한다.
+        if (data == null) data = GlobalData.ButtonReactionData;
     }
 
     public void OnPointerDown(PointerEventData eventData)

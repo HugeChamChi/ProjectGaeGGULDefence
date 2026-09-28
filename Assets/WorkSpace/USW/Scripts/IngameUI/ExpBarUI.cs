@@ -31,6 +31,8 @@ public class ExpBarUI : MonoBehaviour
     [SerializeField] private float fullHeight = 0f;
     [Tooltip("LiquidWaveFill 셰이더가 적용된 Fill 이미지. 진행도를 _Fill 프로퍼티로 흘려준다.")]
     [SerializeField] private Image fillImage;
+    [Tooltip("진행도 0/1이 대응하는 셰이더 _Fill(텍스처 UV.y) 값. 스프라이트 위아래 투명 여백을 건너뛰어 실제 게이지 몸통만 0~100%로 채우도록 조정한다.")]
+    [SerializeField] private Vector2 fillUvRange = new Vector2(0f, 1f);
 
     [SerializeField] private float tweenDuration  = 0.35f;
     [SerializeField] private float animationSpeed = 1f;
@@ -59,7 +61,12 @@ public class ExpBarUI : MonoBehaviour
             maskRect.sizeDelta = size;
         }
 
-        _fillMaterial = fillImage != null ? fillImage.material : null;
+        // 공용 머티리얼 에셋을 직접 수정하면 플레이 후 _Fill 값이 에셋에 남아 에디터에 게이지 잔상이 보이므로 인스턴스를 쓴다.
+        if (fillImage != null && fillImage.material != null)
+        {
+            _fillMaterial = new Material(fillImage.material);
+            fillImage.material = _fillMaterial;
+        }
 
         SetProgressImmediate(0f);
 
@@ -76,6 +83,8 @@ public class ExpBarUI : MonoBehaviour
             _expManager.OnExpChanged -= OnExpChanged;
             _expManager.OnLevelUp   -= OnLevelUp;
         }
+
+        if (_fillMaterial != null) Destroy(_fillMaterial);
     }
 
     private void OnExpChanged(float _)
@@ -111,6 +120,7 @@ public class ExpBarUI : MonoBehaviour
             // 게이지가 꽉 차는 순간이 레벨업 등장 연출(LevelUpRevealSequence)과 맞물리게 한다.
             DOTween.To(() => _currentProgress, SetProgress, 1f, tweenDuration * 0.4f)
                    .SetTarget(maskRect)
+                   .SetLink(gameObject)
                    .SetEase(Ease.OutCubic)
                    .SetUpdate(true)
                    .OnComplete(() =>
@@ -118,6 +128,7 @@ public class ExpBarUI : MonoBehaviour
                        SetProgressImmediate(0f);
                        DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
                               .SetTarget(maskRect)
+                              .SetLink(gameObject)
                               .SetEase(Ease.OutCubic)
                               .SetUpdate(true);
                    });
@@ -126,6 +137,7 @@ public class ExpBarUI : MonoBehaviour
         {
             DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
                    .SetTarget(maskRect)
+                   .SetLink(gameObject)
                    .SetEase(Ease.OutCubic);
         }
     }
@@ -134,7 +146,7 @@ public class ExpBarUI : MonoBehaviour
     {
         _currentProgress = t;
         if (_fillMaterial == null) return;
-        _fillMaterial.SetFloat(FillId, Mathf.Clamp01(t));
+        _fillMaterial.SetFloat(FillId, Mathf.Lerp(fillUvRange.x, fillUvRange.y, Mathf.Clamp01(t)));
     }
 
     private void SetProgressImmediate(float t)
@@ -151,11 +163,13 @@ public class ExpBarUI : MonoBehaviour
         // 퉁 튀는 느낌을 위해 살짝 커졌다가 원래대로 돌아오는 시퀀스
         // duration 대신 speed를 사용하여 상태에 상관없이 일정한 속도로 움직이게 함
         transform.DOScale(1.04f, animationSpeed)
+                 .SetLink(gameObject)
                  .SetSpeedBased()
                  .SetEase(Ease.OutQuad)
                  .OnComplete(() =>
                  {
                      transform.DOScale(1f, animationSpeed)
+                              .SetLink(gameObject)
                               .SetSpeedBased()
                               .SetEase(Ease.OutBack);
                  });

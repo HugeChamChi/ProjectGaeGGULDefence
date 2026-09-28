@@ -27,18 +27,18 @@ public class UnitStatsModifier : MonoBehaviour
     private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
         / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
-    public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _);
+    public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true);
 
     /// <summary>GetAttackDamage와 같고, 이번 추첨이 치명타였는지도 알려준다 (데미지 표시용).</summary>
-    public int GetAttackDamage(out bool critical) => ComputeDamage(UpgradedAtk, 1f, true, out critical);
+    public int GetAttackDamage(out bool critical) => ComputeDamage(UpgradedAtk, 1f, true, out critical, true);
 
     /// <summary>현재 보정을 포함하되 치명타 추첨과 적 방어 계산을 하지 않는 표시용 공격력.</summary>
-    public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _);
+    public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;
 
-    /// <summary>임의의 기준값을 GetAttackDamage()와 동일한 보정 파이프라인(크리티컬/토템/부족/버스트 등)에 통과시킨다.</summary>
+    /// <summary>고정 기준 피해에 기존 보정(크리티컬/토템/부족/버스트)을 적용한다. 런 공격력 패널티는 제외한다.</summary>
     public int ComputeDamageFrom(float baseDamage) => ComputeDamage(baseDamage, 1f, true, out _);
 
     /// <summary>projAtkBonusMultiplier: "훈련의 성과" 류 투사체 크기 보너스 항목에만 추가로 곱해지는 배율(기본 1).</summary>
@@ -48,7 +48,11 @@ public class UnitStatsModifier : MonoBehaviour
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
         => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical);
 
-    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical)
+    /// <summary>Attack-coefficient path; run attack applies once and fixed damage bypasses it.</summary>
+    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true);
+
+    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false)
     {
         critical = false;
         if (_unit.unitData == null) return 0;
@@ -96,6 +100,15 @@ public class UnitStatsModifier : MonoBehaviour
             critical = true;
         }
 
+        if (attackBased && _deps?.RunStatModifiers != null)
+        {
+            try { damage = RunStatMath.ScaleAttack(damage, _deps.RunStatModifiers.AttackMultiplier); }
+            catch (System.OverflowException error)
+            {
+                _deps.ReportRunStatFailure?.Invoke(error.Message);
+                return 0;
+            }
+        }
         return Mathf.Max(rollCritical ? 1 : 0, DamageCalculator.ApplyRounding(damage));
     }
 
@@ -114,7 +127,13 @@ public class UnitStatsModifier : MonoBehaviour
                        * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
                        / tribeSpeedMult;
-        return Mathf.Max(interval, 0.05f);
+        float baseline = Mathf.Max(interval, 0.05f);
+        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d); }
+        catch (System.OverflowException error)
+        {
+            _deps?.ReportRunStatFailure?.Invoke(error.Message);
+            return float.PositiveInfinity; // Diagnostic sentinel; the progression owner stops/pauses the run.
+        }
     }
 
     public float GetCurrentSkillInterval()

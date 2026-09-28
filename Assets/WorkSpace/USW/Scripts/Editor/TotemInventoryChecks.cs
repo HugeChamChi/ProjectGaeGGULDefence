@@ -96,14 +96,15 @@ public static class TotemInventoryChecks
             check(totem.RotateOffset(Vector2Int.right) == Vector2Int.down, "Effect offsets follow committed direction");
             var drag = totem.GetComponent<DragHandler>();
             var oldPosition = totem.transform.position;
-            drag.BeginPress(); drag.OnBeginDrag(); drag.OnDrag(world(center + Vector2.left * 100));
-            check(totem.transform.position == oldPosition, "Short drag rotates without movement");
-            drag.CancelPointerDrag();
+            drag.BeginPress();
             typeof(DragHandler).GetField("_pressStartedAt", Private).SetValue(drag, Time.unscaledTime - 1f);
-            drag.OnBeginDrag();
+            drag.OnBeginDrag(); drag.OnDrag(world(center + Vector2.left * 100));
+            check(totem.transform.position == oldPosition, "Long hold then drag rotates without movement");
+            drag.CancelPointerDrag();
+            drag.BeginPress(); drag.OnBeginDrag();
             var target = grid.GetEmptyCells()[0];
             drag.OnDrag(target.transform.position); drag.OnEndDrag(target.transform.position);
-            check(target.OccupyingTotem == totem && inventory.Items.Count == 4, "Long hold moves on grid without returning to storage");
+            check(target.OccupyingTotem == totem && inventory.Items.Count == 4, "Immediate drag moves on grid without returning to storage");
             System.IO.File.WriteAllText("Temp/totem-inventory-checks.txt", "PASS " + checks.Count + "\n" + string.Join("\n", checks));
         }
         catch (Exception exception)

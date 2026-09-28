@@ -54,6 +54,9 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
 
     public bool IsLoaded => _loadedPrefab != null;
 
+    /// <summary>true면 숫자를 띄우지 않는다. 다른 표시 방식을 시험하는 테스트 씬(DamageStyleLab) 전용, 기본 false.</summary>
+    public bool SuppressOutput { get; set; }
+
     public async UniTask LoadAssetsAsync()
     {
         if (_loadedPrefab == null && !string.IsNullOrEmpty(damageTextAddress))
@@ -122,7 +125,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
 
     private void OnBossDamaged(decimal damage, Vector3? hitPos, BossDamageKind kind)
     {
-        if (_subscribedBoss == null) return;
+        if (_subscribedBoss == null || SuppressOutput) return;
         if (_useReceipt)
         {
             EnsureReceipt()?.Add(damage, kind);

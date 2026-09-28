@@ -33,6 +33,17 @@ public sealed class TotemInventoryUI : MonoBehaviour
     private int _pointerId;
     private bool _placing;
     private bool _closing;
+    /// <summary>Whether the inventory drawer is visible.</summary>
+    public bool IsOpen => _panel != null && _panel.activeSelf;
+    /// <summary>Whether the drawer is processing a drag or its asynchronous placement.</summary>
+    public bool IsDraggingOrPlacing => _dragIndex >= 0 || _placing;
+    /// <summary>Reopens an idle drawer after a rejected guided placement.</summary>
+    public void OpenForTutorialRetry()
+    {
+        if (!IsOpen && !IsDraggingOrPlacing && !_closing) OpenInventory();
+    }
+    /// <summary>Returns the visual for an inventory item, in inventory order.</summary>
+    public RectTransform GetSlotRect(int index) => index >= 0 && index < _slots.Length ? _slots[index].transform as RectTransform : null;
     private GameObject _previewHost;
     private TotemBase _placementPreview;
     private GridCell _hoverCell;

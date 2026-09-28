@@ -26,6 +26,7 @@ public class ChieftainSpawner : MonoBehaviour
 
     [Header("테스트 소환 (아웃게임 미구현 시)")]
     [SerializeField] private bool     _useTestSpawn  = true;
+    [SerializeField] private bool _useAuthoredSelection;
     [Tooltip("테스트로 소환할 족장 UnitData SO — 비워두면 chieftainDataList 첫 번째 사용")]
     [SerializeField] private UnitData _testUnitData;
 
@@ -73,7 +74,7 @@ public class ChieftainSpawner : MonoBehaviour
     /// <summary>소환과 동일한 우선순위로 시작 시 족장 풀을 해석한다. 누락 시 다른 족장 풀을 섞지 않는다.</summary>
     public LevelUpPoolData GetSelectedLevelUpPool()
     {
-        if (GlobalData.SelectedParty?.chieftainData != null)
+        if (!_useAuthoredSelection && GlobalData.SelectedParty?.chieftainData != null)
             return GlobalData.SelectedParty.chieftainData.LevelUpPool;
         if (_useTestSpawn && _testUnitData != null)
             return _testUnitData.LevelUpPool;
@@ -100,7 +101,7 @@ public class ChieftainSpawner : MonoBehaviour
     private void HandleGameStart()
     {
         // 1순위: 로비에서 선택한 파티 데이터에 족장 데이터가 있으면 스폰
-        if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.chieftainData != null)
+        if (!_useAuthoredSelection && GlobalData.SelectedParty != null && GlobalData.SelectedParty.chieftainData != null)
         {
             SpawnChieftainByUnitData(GlobalData.SelectedParty.chieftainData);
             return;

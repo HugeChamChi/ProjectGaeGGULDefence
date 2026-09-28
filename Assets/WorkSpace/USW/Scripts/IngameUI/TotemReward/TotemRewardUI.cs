@@ -41,6 +41,7 @@ public class TotemRewardUI : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private TotemInventory _inventory;
+    [Inject] private WaveManager _waveManager;
 
     [SerializeField] private TotemRewardSettings _settings;
     [Header("토템 풀 (랜덤 3개 대상)")]
@@ -56,6 +57,10 @@ public class TotemRewardUI : MonoBehaviour
     public bool UseTierColors { get; set; }
     /// <summary>보상 화면이 열려 있는지.</summary>
     public bool IsOpen => _isOpen;
+    /// <summary>True when the overview has finished its entrance.</summary>
+    public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeSelf;
+    /// <summary>Overview target for a non-interactive tutorial highlight.</summary>
+    public RectTransform ChoiceArea => _overview;
 
     private sealed class BandView
     {
@@ -96,6 +101,13 @@ public class TotemRewardUI : MonoBehaviour
     private bool _isOpen;
     private bool _busy;
     private int _detailIndex = -1;
+    private CancellationTokenSource _selectionCts;
+    private readonly object _tweenOwner = new object();
+
+    private void Start()
+    {
+        if (_waveManager != null) _waveManager.OnRunStopped += CancelPendingRewards;
+    }
 
     private void Awake()
     {
@@ -112,11 +124,12 @@ public class TotemRewardUI : MonoBehaviour
     /// <summary>보상 선택을 연다. 이미 열려 있으면 닫힌 뒤 이어서 연다. 선택이 끝나면 onChoiceMade를 부른다.</summary>
     public void Show(Action onChoiceMade)
     {
+        if (!isActiveAndEnabled) return;
         if (_isOpen) { _pending.Enqueue(onChoiceMade); return; }
-        ShowAsync(onChoiceMade, this.GetCancellationTokenOnDestroy()).Forget();
+        ShowAsync(onChoiceMade).Forget();
     }
 
-    private async UniTaskVoid ShowAsync(Action onChoiceMade, CancellationToken token)
+    private async UniTaskVoid ShowAsync(Action onChoiceMade)
     {
         if (_settings == null)
         {
@@ -133,6 +146,8 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
+        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        var token = _selectionCts.Token;
         _isOpen = true;
         _busy = true;
         _onChoiceMade = onChoiceMade;
@@ -142,7 +157,7 @@ public class TotemRewardUI : MonoBehaviour
         {
             var loads = new List<UniTask>();
             foreach (var data in choices) loads.Add(data.LoadAssetsAsync());
-            await UniTask.WhenAll(loads);
+            await UniTask.WhenAll(loads).AttachExternalCancellation(token);
             token.ThrowIfCancellationRequested();
 
             EnsureBuilt();
@@ -151,8 +166,13 @@ public class TotemRewardUI : MonoBehaviour
             PopulateOverview();
             await PlayEntranceAsync(token);
         }
-        catch (OperationCanceledException) { return; }
-        finally { _busy = false; }
+        catch (OperationCanceledException) { }
+        catch (Exception error)
+        {
+            if (OwnsSelection(token)) CancelPendingRewards();
+            Debug.LogException(error, this);
+        }
+        finally { if (OwnsSelection(token)) _busy = false; }
     }
 
     // ── 연출 ───────────────────────────────────────────────────
@@ -176,7 +196,7 @@ public class TotemRewardUI : MonoBehaviour
 
         var dimColor = Color.black; dimColor.a = 0f;
         _dim.color = dimColor;
-        await _dim.DOFade(_settings.DimAlpha, _settings.DimSeconds).SetUpdate(true).ToUniTask(cancellationToken: token);
+        await AwaitTween(_dim.DOFade(_settings.DimAlpha, _settings.DimSeconds).SetUpdate(true), token);
 
         var slides = new List<UniTask>();
         for (int i = 0; i < _choices.Count; i++)
@@ -186,10 +206,10 @@ public class TotemRewardUI : MonoBehaviour
 
     private async UniTask SlideBandInAsync(BandView band, float delay, CancellationToken token)
     {
-        await band.Root.DOAnchorPosX(0f, _settings.BandSlideSeconds).SetDelay(delay).SetEase(Ease.OutCubic)
-            .SetUpdate(true).ToUniTask(cancellationToken: token);
+        await AwaitTween(band.Root.DOAnchorPosX(0f, _settings.BandSlideSeconds).SetDelay(delay).SetEase(Ease.OutCubic)
+            .SetUpdate(true), token);
         band.Icon.transform.localScale = Vector3.one;
-        _ = band.Icon.transform.DOPunchScale(Vector3.one * 0.18f, 0.3f, 6, 0.6f).SetUpdate(true);
+        OwnTween(band.Icon.transform.DOPunchScale(Vector3.one * 0.18f, 0.3f, 6, 0.6f).SetUpdate(true));
     }
 
     /// <summary>위 · 아래 띠는 왼쪽에서, 가운데 띠는 오른쪽에서 들어온다 (아이콘 쪽과 같은 방향).</summary>
@@ -218,10 +238,10 @@ public class TotemRewardUI : MonoBehaviour
 
     private void OnBandClicked(int slot)
     {
-        if (_busy || !_isOpen || slot >= _choices.Count) return;
+        if (_busy || !_isOpen || slot < 0 || slot >= _choices.Count) return;
         _bands[slot].Root.DOKill(true);
         _bands[slot].Icon.transform.DOKill(true);
-        OpenDetailAsync(slot, this.GetCancellationTokenOnDestroy()).Forget();
+        OpenDetailAsync(slot, _selectionCts.Token).Forget();
     }
 
     // ── 상세 ───────────────────────────────────────────────────
@@ -244,11 +264,11 @@ public class TotemRewardUI : MonoBehaviour
             _detailContent.anchoredPosition = Vector2.zero;
             _detailContentGroup.alpha = 0f;
             _detailIcon.transform.localScale = Vector3.one * 0.6f;
-            _ = _detailIcon.transform.DOScale(1f, _settings.SwitchSeconds * 1.5f).SetEase(Ease.OutBack).SetUpdate(true);
-            await _detailContentGroup.DOFade(1f, _settings.SwitchSeconds).SetUpdate(true).ToUniTask(cancellationToken: token);
+            OwnTween(_detailIcon.transform.DOScale(1f, _settings.SwitchSeconds * 1.5f).SetEase(Ease.OutBack).SetUpdate(true));
+            await AwaitTween(_detailContentGroup.DOFade(1f, _settings.SwitchSeconds).SetUpdate(true), token);
         }
         catch (OperationCanceledException) { }
-        finally { _busy = false; }
+        finally { if (OwnsSelection(token)) _busy = false; }
     }
 
     private void ShowDetail(int slot)
@@ -271,9 +291,9 @@ public class TotemRewardUI : MonoBehaviour
 
     private void OnDetailSwipe(int direction)
     {
-        if (_busy || _detailIndex < 0 || _choices.Count < 2) return;
+        if (!_isOpen || _busy || _detailIndex < 0 || _choices.Count < 2) return;
         int next = (_detailIndex + direction + _choices.Count) % _choices.Count;
-        SwitchDetailAsync(next, direction, this.GetCancellationTokenOnDestroy()).Forget();
+        SwitchDetailAsync(next, direction, _selectionCts.Token).Forget();
     }
 
     private async UniTaskVoid SwitchDetailAsync(int next, int direction, CancellationToken token)
@@ -286,7 +306,7 @@ public class TotemRewardUI : MonoBehaviour
             var outSeq = DOTween.Sequence().SetUpdate(true)
                 .Join(_detailContent.DOAnchorPosX(-direction * shift, half).SetEase(Ease.InCubic))
                 .Join(_detailContentGroup.DOFade(0f, half));
-            await outSeq.ToUniTask(cancellationToken: token);
+            await AwaitTween(outSeq, token);
 
             ShowDetail(next);
             _detailContent.anchoredPosition = new Vector2(direction * shift, 0f);
@@ -294,16 +314,16 @@ public class TotemRewardUI : MonoBehaviour
                 .Join(_detailContent.DOAnchorPosX(0f, half).SetEase(Ease.OutCubic))
                 .Join(_detailContentGroup.DOFade(1f, half))
                 .Join(_detailBackground.DOColor(BandColor(next), _settings.SwitchSeconds));
-            await inSeq.ToUniTask(cancellationToken: token);
+            await AwaitTween(inSeq, token);
         }
         catch (OperationCanceledException) { }
-        finally { _busy = false; }
+        finally { if (OwnsSelection(token)) _busy = false; }
     }
 
     private void BackToOverview()
     {
-        if (_busy || !_detail.gameObject.activeSelf) return;
-        BackToOverviewAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        if (!_isOpen || _busy || _detail == null || !_detail.gameObject.activeSelf) return;
+        BackToOverviewAsync(_selectionCts.Token).Forget();
     }
 
     /// <summary>
@@ -318,10 +338,10 @@ public class TotemRewardUI : MonoBehaviour
             _overview.gameObject.SetActive(true);
             _overviewGroup.alpha = 1f;
             for (int i = 0; i < _choices.Count; i++) _bands[i].Root.anchoredPosition = Vector2.zero;
-            await _detailGroup.DOFade(0f, _settings.SwitchSeconds).SetUpdate(true).ToUniTask(cancellationToken: token);
+            await AwaitTween(_detailGroup.DOFade(0f, _settings.SwitchSeconds).SetUpdate(true), token);
         }
         catch (OperationCanceledException) { return; }
-        finally { _busy = false; }
+        finally { if (OwnsSelection(token)) _busy = false; }
 
         _detail.gameObject.SetActive(false);
         _detailGroup.alpha = 1f;
@@ -332,7 +352,9 @@ public class TotemRewardUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
-        if (_busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        _busy = true; // Inventory listeners can synchronously reenter selection or stop the run.
+        var token = _selectionCts.Token;
         var data = _choices[_detailIndex];
         _chosenTotems.Add(data.totemId);
         if (_inventory == null || !_inventory.TryAdd(data))
@@ -340,7 +362,7 @@ public class TotemRewardUI : MonoBehaviour
             Debug.Log($"[TotemRewardUI] 토템 인벤토리 가득 참 — 식량 {_fallbackFood} 지급");
             _currencyManager?.AddCurrency(_fallbackFood);
         }
-        CloseAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        if (OwnsSelection(token)) CloseAsync(token).Forget();
     }
 
     private async UniTaskVoid CloseAsync(CancellationToken token)
@@ -349,14 +371,15 @@ public class TotemRewardUI : MonoBehaviour
         try
         {
             _rootGroup.blocksRaycasts = false;
-            await _rootGroup.DOFade(0f, _settings.SwitchSeconds).SetUpdate(true).ToUniTask(cancellationToken: token);
+            await AwaitTween(_rootGroup.DOFade(0f, _settings.SwitchSeconds).SetUpdate(true), token);
         }
         catch (OperationCanceledException) { return; }
-        finally { _busy = false; }
+        finally { if (OwnsSelection(token)) _busy = false; }
 
         _container.gameObject.SetActive(false);
         _detailIndex = -1;
         _isOpen = false;
+        EndSelection();
         ResumeGame();
 
         var callback = _onChoiceMade;
@@ -384,9 +407,43 @@ public class TotemRewardUI : MonoBehaviour
             cell.OccupyingUnit?.ResumeLoops();
     }
 
+    /// <summary>Cancel pending choices without granting rewards, resuming combat, or completing old callbacks.</summary>
+    public void CancelPendingRewards()
+    {
+        _onChoiceMade = null;
+        _pending.Clear();
+        _isOpen = false;
+        _busy = false;
+        _detailIndex = -1;
+        EndSelection();
+        _choices.Clear();
+        if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
+        if (_container != null) _container.gameObject.SetActive(false);
+        _timeScale?.Release(this);
+    }
+
+    private bool OwnsSelection(CancellationToken token) => _selectionCts != null && _selectionCts.Token == token;
+
+    private Tween OwnTween(Tween tween) => tween.SetId(_tweenOwner).SetLink(gameObject);
+
+    private UniTask AwaitTween(Tween tween, CancellationToken token) => OwnTween(tween)
+        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, token);
+
+    private void EndSelection()
+    {
+        var cts = _selectionCts;
+        _selectionCts = null;
+        cts?.Cancel();
+        cts?.Dispose();
+        DOTween.Kill(_tweenOwner, false);
+    }
+
+    private void OnDisable() => CancelPendingRewards();
+
     private void OnDestroy()
     {
-        if (_isOpen) _timeScale?.Release(this);
+        if (_waveManager != null) _waveManager.OnRunStopped -= CancelPendingRewards;
+        CancelPendingRewards();
     }
 
     // ── 화면 구성 (최초 1회) ───────────────────────────────────

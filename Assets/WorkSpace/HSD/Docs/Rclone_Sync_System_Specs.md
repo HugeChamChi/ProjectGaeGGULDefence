@@ -1,8 +1,8 @@
-# 🚀 Rclone G-Drive Sync System 기술 명세서 (V1.0)
+# 🚀 Rclone G-Drive Sync System 기술 명세서 (V1.1)
 
-> **상태**: 🟢 배포 완료 (Production Ready)  
-> **담당**: 시니어 개발자 (Gemini CLI)  
-> **핵심 가치**: 전송 속도 극대화, 팀원 원클릭 셋업, 데이터 정합성 보장
+> **상태**: 🟢 사용 중  
+> **최종 수정**: 2026-09-29 — Upload/Download를 `sync` → `copy`(삭제 없음)로 변경, `--size-only` 제거, 전용 Client ID 설정 절차 정리  
+> **핵심 가치**: 팀원 에셋 받기, 데이터 삭제 사고 방지
 
 ---
 
@@ -10,55 +10,79 @@
 
 | 구분 | 명칭 | 경로 | 주요 역할 |
 | :--- | :--- | :--- | :--- |
-| **Tool** | `RcloneSyncTool` | `Assets/Editor/RcloneSyncTool.cs` | 유니티 에디터 내 동기화 제어 UI 및 실행 로직 |
-| **Setup** | `Setup_Rclone_GGD.bat` | `(Project Root)/Setup_Rclone_GGD.bat` | 팀원용 Rclone 리모트 생성 및 구글 인증 자동화 스크립트 |
-| **Engine** | `Rclone` | 시스템 환경변수 (PATH) | 실제 백엔드 전송 및 구글 드라이브 API 통신 엔진 |
+| **Tool** | `RcloneSyncTool` | `Assets/Editor/RcloneSyncTool.cs` | 유니티 에디터 내 업로드/다운로드 UI 및 실행 로직 |
+| **Engine** | `Rclone` | PATH 또는 툴의 "Rclone 경로" 칸 | 실제 전송 및 구글 드라이브 API 통신 |
+| **Remote** | `gdrive_ggd` | 각자 PC의 rclone 설정 | 공유 `Imports` 폴더를 `root_folder_id`로 가리키는 드라이브 리모트 |
+
+> ⚠️ 이전 버전 문서에 있던 `Setup_Rclone_GGD.bat`은 저장소에 **존재하지 않는다**. 리모트는 아래 §3 절차로 각자 직접 설정한다.
 
 ---
 
-## 🚀 2. 성능 최적화 리포트 (Optimization Report)
+## 🔄 2. 동작 방식 (Sync Logic)
 
-### 🟢 API: Dedicated Client ID & Secret
-*   **기존**: Rclone 기본 공용 ID 사용으로 인한 구글 측의 속도 제한(Throttling) 발생.
-*   **개선**: GGD 프로젝트 전용 Google Cloud Client ID와 Secret을 생성 및 주입.
-*   **효과**: API 호출 안정성 확보 및 전송 대역폭 제한 해제.
+| 버튼 | 실행 명령 | 동작 |
+| :--- | :--- | :--- |
+| 📥 **Download** | `rclone copy gdrive_ggd: <로컬> --ignore-existing` | **로컬에 없는 파일만** 받는다. 이미 있는 파일은 덮어쓰지 않고, 아무것도 삭제하지 않는다. |
+| 🚀 **Upload** | `rclone copy <로컬> gdrive_ggd:` | 새 파일/변경된 파일을 올린다. 드라이브의 파일은 삭제하지 않는다. |
 
-### 🟡 Check: Zero-Timestamp Comparison (Size Only)
-*   **기존**: 파일의 수정 시간(Timestamp)을 대조하여 변경 여부 판단. 로컬과 클라우드 간의 미세한 시간차로 불필요한 재전송 발생.
-*   **개선**: `--size-only` 플래그 강제 적용. 수만 개의 파일 비교 시 시간을 건너뛰고 오직 파일 크기만 대조.
-*   **효과**: **변경 사항 체크 속도 약 15배 향상** (수만 개 파일 기준 수 초 내 완료).
+공통 옵션: `--transfers`, `--checkers` (툴 슬라이더), `--drive-chunk-size 64M`, `--buffer-size 32M`, `--fast-list`, `--progress`
 
-### 🔵 List: Parallel Fast-Listing
-*   **최적화**: `--fast-list` 및 `--checkers 64` 설정을 통해 구글 드라이브의 폴더 구조를 병렬로 한 번에 로드.
-*   **효과**: 수만 개의 파일 목록을 가져오는 데 발생하는 API 쿼리 횟수를 획기적으로 절감.
+### 알아둘 점
+*   **Download는 수정된 파일을 받지 않는다.** 드라이브에서 내용이 바뀐 기존 파일은 로컬에 이미 같은 이름이 있으면 건너뛴다. 갱신이 필요하면 해당 파일을 로컬에서 지우고 다시 Download 하거나 수동으로 받는다.
+*   **파일 삭제는 전파되지 않는다.** 한쪽에서 지운 파일은 다른 쪽에 그대로 남는다. 드라이브 정리는 웹에서 직접 한다.
+*   **`--size-only`는 쓰지 않는다.** 크기가 같고 내용만 바뀐 파일(텍스처 미세 수정, 수치 변경 등)이 업로드에서 누락되기 때문이다. 대신 수정 시간 + 해시로 비교하므로 첫 업로드 비교는 조금 더 걸릴 수 있다.
+*   **Download 후 전송 0건은 정상일 수 있다.** 로컬이 이미 드라이브와 같으면 목록만 훑고 끝난다 (`Checks: N / N`, `Transferred: 0 B`).
+*   성공 시 cmd 창은 자동으로 닫히고, 실패 시에만 `pause`로 창이 유지된다.
 
 ---
 
-## 🛠️ 3. 팀원 배포 및 셋업 가이드 (Team Workflow)
+## 🛠️ 3. 팀원 셋업 가이드
 
-### **[Step 1] 자동 설정 스크립트 실행**
-1.  프로젝트 루트의 `Setup_Rclone_GGD.bat` 실행.
-2.  안내에 따라 브라우저에서 구글 로그인 및 권한 허용.
-3.  **중요**: 터미널에서 `Shared Drive?` 질문 시 반드시 `n` 입력 후 엔터.
+### [Step 1] 전용 Google Cloud Client ID 만들기 (필수)
+rclone 기본 공용 Client ID(프로젝트 번호 `202264815644`)는 전 세계 rclone 사용자가 할당량을 공유해서 **403 `rateLimitExceeded`** 오류가 자주 난다. 각자 전용 ID를 만든다.
 
-### **[Step 2] 유니티 에디터 동기화**
+1.  [Google Cloud Console](https://console.cloud.google.com)에서 새 프로젝트 생성 (상위 리소스: **조직 없음**).
+2.  **API 및 서비스 → 라이브러리** → `Google Drive API` → **사용**.
+3.  **OAuth 동의 화면(Google 인증 플랫폼)** → 앱 이름·지원 이메일 입력, 대상 **외부**.
+    *   로고/도메인/데이터 액세스(범위)는 **비워둔다**.
+    *   **게시하지 않고 "테스트" 상태로 둔다.** 프로덕션 게시에는 홈페이지·개인정보처리방침 URL이 필요하다.
+    *   **대상 → 테스트 사용자**에 rclone으로 연결할 본인 Gmail을 추가한다.
+4.  **클라이언트 → 클라이언트 만들기** → 유형 **데스크톱 앱** → Client ID / Secret 복사. (Secret은 저장소·채팅에 올리지 않는다.)
+
+### [Step 2] rclone 리모트 설정
+리모트가 없으면 `rclone config`로 `gdrive_ggd`(drive, scope=`drive`)를 만들고, **`root_folder_id`에 공유 `Imports` 폴더 ID**를 넣는다. 폴더 ID는 드라이브 폴더 URL의 `folders/` 뒤 문자열이다.
+
+이미 리모트가 있으면 Client ID만 교체한다:
+```
+rclone config update gdrive_ggd client_id "<ID>" client_secret "<SECRET>"
+rclone config reconnect gdrive_ggd:
+rclone about gdrive_ggd:        # 용량이 나오면 성공
+```
+
+### [Step 3] 유니티 에디터에서 사용
 1.  `Tools > Rclone Sync Manager` 메뉴 진입.
-2.  `Local Path`가 본인의 `Assets/Imports` 폴더인지 확인.
-3.  **Upload**: 내 작업물을 드라이브에 공유할 때 사용.
-4.  **Download**: 팀원이 올린 최신 에셋을 내려받을 때 사용.
+2.  **로컬 경로**: 본인의 `.../Assets/Imports`
+3.  **구글 드라이브 경로**: `gdrive_ggd:` — `root_folder_id`가 이미 `Imports` 폴더를 가리키므로 폴더 이름을 붙이지 않는다. (`gdrive_ggd:Imports`로 쓰면 그 안의 하위 `Imports`를 찾아 오류가 난다.)
+4.  **Download**: 팀원이 올린 새 에셋 받기 / **Upload**: 내 작업물 공유.
+
+### 드라이브 공유 권한
+*   폴더 일반 액세스는 **"제한됨"**으로 둬도 된다. rclone은 링크가 아니라 로그인한 계정 권한으로 접근한다.
+*   팀원 계정을 폴더에 직접 추가: Download만 → **뷰어**, Upload까지 → **편집자**.
 
 ---
 
-## 📝 4. 운영 및 유지보수 참고사항
+## 🧯 4. 트러블슈팅
 
-### **동기화 규칙 (Sync Logic)**
-*   본 시스템은 `sync` 명령어를 사용합니다. 
-*   **주의**: 원본(Source)에 없는 파일은 대상(Destination)에서도 삭제됩니다. 작업물 삭제 시 신중하게 진행하세요.
-
-### **트러블슈팅**
-*   **unauthorized_client**: Client ID가 변경되었거나 토큰이 만료된 경우입니다. 배치 파일을 다시 실행하거나 `rclone config reconnect gdrive_ggd:` 명령어를 입력하세요.
-*   **Syntax incorrect**: Rclone 실행 경로에 공백이 포함된 경우 발생할 수 있으나, 현재 따옴표 중첩 처리(`cmd /k`)로 해결된 상태입니다.
+| 증상 | 원인 | 해결 |
+| :--- | :--- | :--- |
+| `Error 403 ... rateLimitExceeded` (consumer `202264815644`) | 공용 Client ID 할당량 초과 | §3 Step 1로 전용 Client ID 설정. 급하면 체크/전송 슬라이더를 16/8 정도로 낮춤 |
+| `invalid_grant`, 토큰 만료 | OAuth 앱이 "테스트" 상태라 7일마다 토큰 만료 | `rclone config reconnect gdrive_ggd:` |
+| `unauthorized_client` | Client ID 변경 후 토큰 미갱신 | `rclone config reconnect gdrive_ggd:` |
+| `액세스 차단됨: 앱이 인증 절차를 완료하지 않음` | 테스트 사용자에 계정 미추가 | OAuth 동의 화면 → 대상 → 테스트 사용자에 추가 |
+| `directory not found` | 드라이브 경로에 폴더 이름을 중복 기입 | 경로를 `gdrive_ggd:`로 |
+| `Listed` 수가 실제 파일 수보다 비정상적으로 큼 (수십만), 끝나지 않음 | 폴더 안에 **자기 자신을 가리키는 바로가기**가 있어 무한 재귀 | 드라이브 웹에서 화살표(↗) 아이콘이 붙은 해당 바로가기만 삭제. 공유 폴더 안에 그 폴더의 바로가기를 만들지 말 것 |
+| Download 해도 받는 파일이 없음 | 로컬이 이미 최신 (정상) | `rclone check gdrive_ggd: <로컬> --one-way --size-only`로 누락 0건인지 확인 |
 
 ---
 
-> 📌 **Note**: 본 시스템은 수만 개의 작은 파일(Small Files) 처리에 최적화되어 있습니다. 파일당 크기가 수백 MB를 넘는 대용량 파일 위주로 작업 방식이 변경될 경우, `--drive-chunk-size` 값을 128M 이상으로 상향 조절하는 것을 권장합니다.
+> 📌 **Note**: 수만 개의 작은 파일 처리 기준 설정이다. 파일당 수백 MB 이상인 대용량 위주로 바뀌면 `--drive-chunk-size`를 128M 이상으로 올린다.

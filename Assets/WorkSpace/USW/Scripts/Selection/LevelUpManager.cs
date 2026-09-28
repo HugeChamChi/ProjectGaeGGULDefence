@@ -64,6 +64,14 @@ public class LevelUpManager : MonoBehaviour
     [Inject] private UpgradeManager _upgradeManager;
 
     [SerializeField, HideInInspector] private LevelUpData[] levelUpPool; // 이전 씬 이관용. 추첨에는 사용하지 않는다.
+    [Tooltip("기본 치명타 확률 등 전투 공통 값. 비우면 기본 치명타 0%")]
+    [SerializeField] private GameConfig _gameConfig;
+
+    private void Awake()
+    {
+        // 레벨업 효과는 이 기본값 위에 더하고 뺀다.
+        CritChance = _gameConfig != null ? Mathf.Clamp01(_gameConfig.baseCritChance) : 0f;
+    }
 
     public event System.Action<System.Action> OnTotemSelectionRequested;
     public event System.Action OnChieftainBuffChanged;

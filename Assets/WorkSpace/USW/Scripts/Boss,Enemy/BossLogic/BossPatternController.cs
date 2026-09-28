@@ -94,7 +94,7 @@ public class BossPatternController : MonoBehaviour
                     entry.Patterns.Add(new PatternState { Data = pattern, Remaining = pattern.triggerType == PatternTriggerType.Phase ? 0f : Mathf.Max(MinimumInterval, pattern.interval) });
         entry.HpHandler = (current, maximum) =>
         {
-            if (current <= 0) { ResetCast(entry); return; }
+            if (current <= 0) { CancelCast(entry); return; }
             foreach (var state in entry.Patterns)
             {
                 if (state.PhaseFired || state.Data.triggerType == PatternTriggerType.Timer) continue;
@@ -111,7 +111,7 @@ public class BossPatternController : MonoBehaviour
     {
         if (ReferenceEquals(boss, null) || !_entries.TryGetValue(boss, out var entry)) return;
         if (boss != null) boss.OnHpChanged -= entry.HpHandler;
-        ResetCast(entry);
+        CancelCast(entry);
         _entries.Remove(boss);
     }
 
@@ -144,7 +144,7 @@ public class BossPatternController : MonoBehaviour
             if (boss == null || boss.IsDead) { UnregisterBoss(boss); continue; }
             if (!_entries.TryGetValue(boss, out var entry)) continue;
             try { Tick(boss, entry, Time.deltaTime); }
-            catch (Exception error) { ResetCast(entry); Debug.LogException(error, boss); }
+            catch (Exception error) { CancelCast(entry); Debug.LogException(error, boss); }
         }
     }
 
@@ -214,6 +214,13 @@ public class BossPatternController : MonoBehaviour
             try { _shake?.Play(entry.ShakeDuration, entry.ShakeIntensity); }
             catch (Exception error) { Debug.LogException(error, this); }
         }
+    }
+    /// <summary>시전을 취소하고, 판정 전 예고 중이었으면 셀 텔레그래프도 끈다 (보스 사망/해제 시 잔상 방지).</summary>
+    private void CancelCast(BossPatternEntry entry)
+    {
+        bool wasTelegraphing = IsCounterable(entry);
+        ResetCast(entry);
+        if (wasTelegraphing) _gridManager?.SetBossTelegraphAll(false);
     }
     private static void ResetCast(BossPatternEntry entry)
     {

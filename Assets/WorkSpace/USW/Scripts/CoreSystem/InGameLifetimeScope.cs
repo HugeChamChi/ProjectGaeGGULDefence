@@ -12,6 +12,8 @@ public class InGameLifetimeScope : LifetimeScope
     {
         // 씬에 이미 배치되어 있는 매니저(MonoBehaviour)들을 찾아서 모두 등록합니다.
         builder.Register<TimeScaleService>(Lifetime.Scoped); // 게임 속도 단일 소유자 — Time.timeScale 직접 쓰기 금지
+        builder.Register<EndlessRandom>(Lifetime.Scoped).As<IEndlessRandom>();
+        builder.Register<EndlessRunService>(Lifetime.Scoped).AsSelf().As<IRunStatModifiers>();
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<WaveManager>();
         builder.RegisterComponentInHierarchy<TimerController>();
@@ -70,7 +72,7 @@ public class InGameLifetimeScope : LifetimeScope
         }
 
         builder.RegisterEntryPoint<AlphanActiveSkill>(Lifetime.Scoped).AsSelf();
-        builder.RegisterEntryPoint<GameInitializer>();
+        builder.RegisterEntryPoint<GameInitializer>().AsSelf();
 
         builder.RegisterBuildCallback(resolver =>
         {

@@ -36,6 +36,7 @@ public class LevelUpUI : MonoBehaviour
     [Header("Selection Timer")]
     [SerializeField] private TMP_Text selectionTimerText;
     [SerializeField] private float    selectionSeconds = 30f;
+    [SerializeField] private bool _disableSelectionTimer;
 
     private const int ChoiceCount = 3;
 
@@ -50,6 +51,10 @@ public class LevelUpUI : MonoBehaviour
     private LevelUpTimeDirector _time;
     private CanvasGroup _panelGroup;
     private bool _isRerolling;
+    /// <summary>True after the choice entrance animation permits selection.</summary>
+    public bool IsReadyForSelection { get; private set; }
+    /// <summary>Choice area used by scene-owned interaction guides.</summary>
+    public RectTransform ChoiceArea => cardContainer as RectTransform;
 
     private void Awake()
     {
@@ -68,6 +73,7 @@ public class LevelUpUI : MonoBehaviour
 
     public void Show()
     {
+        IsReadyForSelection = false;
         StopSelectionTimer();
         var layout = cardContainer.GetComponent<LayoutGroup>();
         if (layout != null) layout.enabled = true;
@@ -149,7 +155,7 @@ public class LevelUpUI : MonoBehaviour
         var cards = new List<LevelUpCardUI>(_spawnedCards);
         SetCardsInteractable(cards, false);
         if (selectionTimerText != null)
-            selectionTimerText.text = $"{Mathf.CeilToInt(selectionSeconds)}";
+            selectionTimerText.text = _disableSelectionTimer ? string.Empty : $"{Mathf.CeilToInt(selectionSeconds)}";
 
         try
         {
@@ -160,6 +166,7 @@ public class LevelUpUI : MonoBehaviour
                 await _reveal.PlayAsync(cards, _panelGroup, fromGauge, token);
 
             SetCardsInteractable(cards, true);
+            IsReadyForSelection = true;
             await RunSelectionTimerAsync(token);
         }
         catch (OperationCanceledException) { }
@@ -180,6 +187,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
+        IsReadyForSelection = false;
         if (!_spawnedCards.Contains(clicked)) return;
         if (_selectedCard == clicked) return;
         _selectedCard?.Deselect();
@@ -233,6 +241,11 @@ public class LevelUpUI : MonoBehaviour
 
     private async UniTask RunSelectionTimerAsync(CancellationToken token)
     {
+        if (_disableSelectionTimer)
+        {
+            if (selectionTimerText != null) selectionTimerText.text = string.Empty;
+            return;
+        }
         float remaining = selectionSeconds;
         while (remaining > 0f)
         {
@@ -266,6 +279,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void Hide()
     {
+        IsReadyForSelection = false;
         StopSelectionTimer();
         if (_peek != null) _peek.Clear();
         if (_panelGroup != null) { _panelGroup.DOKill(); _panelGroup.alpha = 1f; }

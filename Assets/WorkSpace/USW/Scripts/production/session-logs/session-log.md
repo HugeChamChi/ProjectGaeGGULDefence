@@ -171,3 +171,23 @@ Assets/WorkSpace/HSD/Shaders/UI/LiquidWaveFill.mat
 Assets/WorkSpace/production/session-logs/session-log.md
 ---
 
+## Session End: 20260926_000756
+### Uncommitted Changes
+Assets/HierarchyDecorator/Settings.asset
+Assets/WorkSpace/HSD/Scripts/Effects/DamageFloaterManager.cs
+Assets/WorkSpace/USW/Data/TotemData/TotemInventoryGuide.md
+Assets/WorkSpace/USW/Scripts/Editor/TotemInventoryChecks.cs
+Assets/WorkSpace/USW/Scripts/IngameEtc/DragHandler.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardSwipeArea.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemSelectTestPanel.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemSelectTestPanel.cs.meta
+Assets/WorkSpace/USW/Scripts/Totem/TotemHoldFeedback.cs
+Assets/WorkSpace/USW/Scripts/Totem/TotemInteractionSettings.cs
+Assets/WorkSpace/USW/TotemSelectTest.unity
+Assets/WorkSpace/USW/production/session-logs/session-log.md
+Assets/production/session-logs/session-log.md
+Data/Balance/Effect.xlsx
+ProjectSettings/AndroidResolverDependencies.xml
+ProjectSettings/ProjectSettings.asset
+---
+

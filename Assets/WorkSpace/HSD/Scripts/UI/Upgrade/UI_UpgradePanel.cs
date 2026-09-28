@@ -7,6 +7,8 @@ namespace HSD.UI.Upgrade
 {
     public class UI_UpgradePanel : UI_Base
     {
+        /// <summary>Matches UI_Base's Canvas-based visibility instead of GameObject activity.</summary>
+        public bool IsOpen => gameObject.activeInHierarchy && (_canvas == null || _canvas.enabled);
         [Header("Currency")]
         [SerializeField] private TextMeshProUGUI txt_Gold;
 

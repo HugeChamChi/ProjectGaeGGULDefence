@@ -122,5 +122,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7714c3bb41448c4298d84970e50e247, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _projectilePrefab: {fileID: 3319223371518631887, guid: 755faa335b50ff8488c4196447cbff09,
+  _dragFollowSharpness: 18
+  _projectilePrefab: {fileID: 8045561319927075433, guid: 31422b0d99ebdd948b22bc5c99040397,
     type: 3}
+  _actionSprite: {fileID: 0}
+  _actionSpriteHoldSeconds: 0.15
+  _attackSprite: {fileID: 21300000, guid: 557f35c19785c004384bbc80db3d22a5, type: 3}
+  _attackSpriteHoldSeconds: 0.18
+  _attackPunchScale: 0.18
+  _attackPunchDuration: 0.2
+  _sortingOrderOffset: 1

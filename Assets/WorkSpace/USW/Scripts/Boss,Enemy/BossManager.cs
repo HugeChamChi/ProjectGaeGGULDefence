@@ -46,34 +46,49 @@ public class BossManager : MonoBehaviour
     /// </summary>
     public void SpawnSingleBoss(BossEntry entry, Action onDefeated)
     {
-        ClearAllBosses();
-
-        if (entry?.Prefab == null)
+        if (!TrySpawnSingleBossCore(entry, null, onDefeated, out string error))
         {
-            Debug.LogError("[BossManager] BossEntry prefab 미연결");
-            onDefeated?.Invoke();
-            return;
+            Debug.LogError(error);
+            onDefeated?.Invoke(); // Preserve the finite-stage missing-entry behavior.
         }
+    }
+
+    /// <summary>Spawns validated grown stats without mutating BossData or entering the legacy sheet path.</summary>
+    public bool TrySpawnSingleBoss(RuntimeBossStats stats, Action onDefeated, out string error)
+    {
+        if (!RuntimeBossStatsCalculator.TryValidate(stats, out error)) return false;
+        return TrySpawnSingleBossCore(new BossEntry { Data = stats.Source }, stats, onDefeated, out error);
+    }
+
+    private bool TrySpawnSingleBossCore(BossEntry entry, RuntimeBossStats? runtime, Action onDefeated, out string error)
+    {
+        error = "";
+        if (entry?.Prefab == null || entry.Prefab.GetComponent<BossBase>() == null)
+        {
+            error = "[BossManager] Boss prefab/BossBase is missing.";
+            return false;
+        }
+        ClearAllBosses();
 
         var go   = Instantiate(entry.Prefab, bossSpawnPoint != null ? bossSpawnPoint.transform : transform);
         var boss = go.GetComponent<BossBase>();
 
         if (boss == null)
         {
-            Debug.LogError($"[BossManager] [{entry.Prefab.name}]에 BossBase 없음");
+            error = $"[BossManager] [{entry.Prefab.name}]에 BossBase 없음";
             Destroy(go);
-            onDefeated?.Invoke();
-            return;
+            return false;
         }
 
         // BossData가 지정되면 해당 SO가 수치의 원본. 기존 웨이브만 시트 우선 경로를 유지한다.
-        bool useSheet = entry.Data == null && _gameDataManager != null && _gameDataManager.IsLoaded && _waveManager != null;
-        decimal hp = useSheet ? _gameDataManager.GetBossMaxHp(100 + _waveManager.CurrentWave, entry.MaxHp) : entry.MaxHp;
-        double defense = useSheet ? _gameDataManager.GetBossDefense(100 + _waveManager.CurrentWave, entry.BaseDefense) : entry.BaseDefense;
+        bool useSheet = !runtime.HasValue && entry.Data == null && _gameDataManager != null && _gameDataManager.IsLoaded && _waveManager != null;
+        decimal hp = runtime?.MaxHp ?? (useSheet ? _gameDataManager.GetBossMaxHp(100 + _waveManager.CurrentWave, entry.MaxHp) : entry.MaxHp);
+        double defense = runtime?.Defense ?? (useSheet ? _gameDataManager.GetBossDefense(100 + _waveManager.CurrentWave, entry.BaseDefense) : entry.BaseDefense);
         float expMultiplier = useSheet ? _gameDataManager.GetExpMultiplierForRound(100 + _waveManager.CurrentWave) : entry.ExpMultiplier;
         boss.ConfigureDebuffs(_debuffCatalog, _debuffSettings, _gameManager, defense, _combatTimer);
         boss.Init(hp);
-        boss.ExpMultiplier = expMultiplier;
+        // MaxHp has now been quantized by CombatHealth. Total EXP is independent of HP growth.
+        boss.ExpMultiplier = runtime.HasValue ? runtime.Value.ExpReward / (float)boss.MaxHp : expMultiplier;
 
         _currentBosses.Add(boss);
 
@@ -82,8 +97,11 @@ public class BossManager : MonoBehaviour
             if (cur <= 0) _combatTimer?.StopTimer();
             _uiManager?.UpdateBossHp(cur, max);
         };
+        bool deathConsumed = false;
         boss.OnDeath     += () =>
         {
+            if (deathConsumed) return;
+            deathConsumed = true;
             _patternController?.UnregisterBoss(boss);
             _currentBosses.Remove(boss);
             Destroy(boss.gameObject);
@@ -93,11 +111,12 @@ public class BossManager : MonoBehaviour
         boss.gameObject.AddComponent<BossAreaTarget>();
 
         _patternController?.RegisterBoss(boss, boss.Patterns);
-        _uiManager?.BeginBossHp(boss.CurrentHp, boss.MaxHp, entry.HpLineCount);
+        _uiManager?.BeginBossHp(boss.CurrentHp, boss.MaxHp, runtime?.HpLineCount ?? entry.HpLineCount);
 
         OnBossEntryed?.Invoke(_prevBossEntry, entry);
         _prevBossEntry = entry;
         Debug.Log($"[BossManager] 보스 소환: {entry.Prefab.name} (HP: {boss.MaxHp}, 줄 수: {entry.HpLineCount})");
+        return true;
     }
 
     // ── 내부 ──────────────────────────────────────────────────────

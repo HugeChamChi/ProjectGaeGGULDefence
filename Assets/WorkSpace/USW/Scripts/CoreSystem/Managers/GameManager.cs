@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     }
 
     [Inject] private IObjectResolver _resolver;
+    [Inject] private EndlessRunService _run;
+    [Inject] private TimeScaleService _timeScale;
 
     private UIManager _uiManager;
     private WaveManager _waveManager;
@@ -32,12 +34,15 @@ public class GameManager : MonoBehaviour
         _currencyManager = _resolver.Resolve<CurrencyManager>();
         _expManager = _resolver.Resolve<ExpManager>();
         _gridManager = _resolver.Resolve<GridManager>();
+        _run.OnFailed += HandleRunFailed;
     }
 
     public event Action OnLevelUpStateEntered;
     public event Action OnGameStart;
 
-    public enum GameState { Idle, Playing, LevelUp, Win, Lose }
+    public enum GameState { Idle, Playing, LevelUp, Win, Lose, Faulted }
+    /// <summary>Configuration/numeric faults are separate from gameplay win/lose results.</summary>
+    public event Action<string> OnRunFailed;
     public GameState CurrentState { get; private set; } = GameState.Idle;
 
     [SerializeField] private GameConfig config;
@@ -48,13 +53,24 @@ public class GameManager : MonoBehaviour
 
     public void OnStartButtonPressed()
     {
+        StartGame(true);
+    }
+
+    /// <summary>Starts gameplay; tutorial scenes can reveal the first wave after the first summon.</summary>
+    public void StartGame(bool startWave)
+    {
         if (CurrentState != GameState.Idle) return;
         if (config == null) { Debug.LogError("GameManager: config 미연결"); return; }
+        if (!_waveManager.TryPrepareRun(out string error))
+        {
+            Debug.LogError($"[GameManager] Cannot start run: {error}");
+            OnRunFailed?.Invoke(error);
+            return;
+        }
 
         CurrentState = GameState.Playing;
 
         _uiManager.HideStartButton();
-        _waveManager.StartWave();
 
         _timerManager.OnTimeUp += HandleTimeUp;
         BossBase.OnAnyBossDied += HandleBossKilled;
@@ -62,6 +78,8 @@ public class GameManager : MonoBehaviour
         _currencyManager.AddCurrency(config.startingFood);
         _expManager.OnLevelUp += HandleLevelUp;
 
+        if (startWave) _waveManager.StartWave();
+        if (CurrentState == GameState.Faulted) return;
         OnGameStart?.Invoke();
     }
 
@@ -76,13 +94,14 @@ public class GameManager : MonoBehaviour
 
     public void OnLevelUpChoiceMade()
     {
+        if (CurrentState != GameState.LevelUp) return;
         CurrentState = GameState.Playing;
         _expManager.FlushPendingLevelUp();
     }
 
     public void OnAllWavesCleared()
     {
-        if (CurrentState != GameState.Playing) return;
+        if (CurrentState != GameState.Playing && CurrentState != GameState.LevelUp) return;
         CurrentState = GameState.Win;
         EndGame(true);
     }
@@ -100,14 +119,42 @@ public class GameManager : MonoBehaviour
 
     private void EndGame(bool isWin)
     {
-        BossBase.OnAnyBossDied -= HandleBossKilled;
+        _waveManager.StopRun();
+        UnsubscribeGameplay();
         _timerManager.StopTimer();
         StopAllUnits();
         _uiManager.ShowResult(isWin);
     }
 
+    private void HandleRunFailed(string error)
+    {
+        CurrentState = GameState.Faulted;
+        _waveManager.StopRun();
+        UnsubscribeGameplay();
+        _timerManager?.StopTimer();
+        StopAllUnits();
+        _timeScale.Pause(this);
+        Debug.LogError($"[GameManager] Run stopped: {error}");
+        OnRunFailed?.Invoke(error);
+    }
+
+    private void UnsubscribeGameplay()
+    {
+        BossBase.OnAnyBossDied -= HandleBossKilled;
+        if (_timerManager != null) _timerManager.OnTimeUp -= HandleTimeUp;
+        if (_expManager != null) _expManager.OnLevelUp -= HandleLevelUp;
+    }
+
+    private void OnDestroy()
+    {
+        if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
+        UnsubscribeGameplay();
+        _timeScale?.Release(this);
+    }
+
     private void StopAllUnits()
     {
+        if (_gridManager == null) return;
         foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.OnRemoved();
     }

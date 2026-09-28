@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
+  m_Name: 09_TotemChoice
+  m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
+  Kind: 0
+  Gameplay:
+    delayBeforeExecute: 0
+    useDim: 0
+    Stage: 9
+    Instruction: "\uBCF4\uC2A4\uB97C \uBB3C\uB9AC\uCCE4\uC5B4\uC694! \uB9C8\uC74C\uC5D0
+      \uB4DC\uB294 \uD1A0\uD15C\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."
+  Instruction: 
+  StartWhen: 0
+  TargetKey: 
+  StartSignal: 
+  CompletionSignal: 
+  DelaySeconds: 0
+  PauseGameplay: 1
+  Dim: 1
+  ShowHand: 1

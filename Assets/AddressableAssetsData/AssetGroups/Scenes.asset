@@ -13,16 +13,8 @@ MonoBehaviour:
   m_Name: Scenes
   m_EditorClassIdentifier: 
   m_GroupName: Scenes
-  m_Data:
-    m_SerializedData: []
   m_GUID: eb2e363ca1fa93f4aaeef0696baebee3
   m_SerializeEntries:
-  - m_GUID: 0f174ccdcc96a0a408941d067770903c
-    m_Address: IngameScene
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Scenes
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 128751b03828dc84d96048911fbaea1e
     m_Address: LobbyScene
     m_ReadOnly: 0

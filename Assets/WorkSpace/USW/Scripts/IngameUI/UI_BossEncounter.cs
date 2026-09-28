@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -33,6 +34,7 @@ public class UI_BossEncounter : UI_Base
     private Vector2 _originalAnchorMin, _originalAnchorMax, _originalPivot, _originalAnchoredPos;
     private Quaternion _originalRotation;
     private Transform _tongueTipOriginalParent;
+    private CancellationTokenSource _transitionCts;
 
     protected override void Awake()
     {
@@ -71,10 +73,22 @@ public class UI_BossEncounter : UI_Base
     protected override async UniTask CloseAnimationAsync()
     {
         // 패널 전체가 뿅 하고 작아지며 닫히는 연출
-        await transform.DOScaleY(0f, 0.3f).SetEase(Ease.InBack).ToUniTask();
+        await AwaitTween(transform.DOScaleY(0f, 0.3f).SetEase(Ease.InBack),
+            _transitionCts?.Token ?? this.GetCancellationTokenOnDestroy());
     }
 
+    /// <summary>Plays one transition; replacement and scene teardown cancel its delays and tweens.</summary>
     public async UniTask PlayBossTransitionSequence(Sprite currentBossIcon, Sprite nextBossIcon, int currentWave)
+    {
+        CancelTransition();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        _transitionCts = cts;
+        try { await PlayTransitionAsync(currentBossIcon, nextBossIcon, currentWave, cts.Token); }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
+        finally { if (ReferenceEquals(_transitionCts, cts)) _transitionCts = null; }
+    }
+
+    private async UniTask PlayTransitionAsync(Sprite currentBossIcon, Sprite nextBossIcon, int currentWave, CancellationToken token)
     {
         Open();
         gameObject.SetActive(true);
@@ -90,7 +104,7 @@ public class UI_BossEncounter : UI_Base
         {
             // 패널 자체도 뿅 하고 나타남
             transform.localScale = Vector3.zero;
-            transform.DOScaleY(1f, popDuration).SetEase(Ease.OutBack).ToUniTask().Forget();
+            AwaitTween(transform.DOScaleY(1f, popDuration).SetEase(Ease.OutBack), token).SuppressCancellationThrow().Forget();
 
             var tasks = new List<UniTask>();
 
@@ -104,14 +118,14 @@ public class UI_BossEncounter : UI_Base
                 waveText.text = $"WAVE {(currentWave - 1).ToString()}";
                 waveText.alpha = 1f;
                 waveText.rectTransform.localScale = Vector3.zero;
-                tasks.Add(waveText.rectTransform.DOScale(1f, popDuration).SetEase(Ease.OutBack).ToUniTask());
+                tasks.Add(AwaitTween(waveText.rectTransform.DOScale(1f, popDuration).SetEase(Ease.OutBack), token));
             }
 
             if (hasPrevBoss && currentBossTr != null)
             {
                 currentBossTr.gameObject.SetActive(true);
                 currentBossTr.localScale = Vector3.zero;
-                tasks.Add(currentBossTr.DOScale(1f, popDuration).SetEase(Ease.OutBack).ToUniTask());
+                tasks.Add(AwaitTween(currentBossTr.DOScale(1f, popDuration).SetEase(Ease.OutBack), token));
             }
 
             if (tasks.Count > 0) await UniTask.WhenAll(tasks);
@@ -119,7 +133,7 @@ public class UI_BossEncounter : UI_Base
 
         if (hasPrevBoss)
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(0.7f), delayTiming: PlayerLoopTiming.Update);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.7f), delayTiming: PlayerLoopTiming.Update, cancellationToken: token);
 
             // 2. 낚아서 채가기 (Sandwich Grab & Pull)
             if (tongueImage != null && currentBossTr != null)
@@ -136,8 +150,8 @@ public class UI_BossEncounter : UI_Base
                 tongueImage.rectTransform.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
                 
                 float targetDistance = direction.magnitude;
-                await tongueImage.rectTransform.DOSizeDelta(new Vector2(targetDistance, tongueDefaultSize.y), 0.15f)
-                    .SetEase(Ease.OutCubic).ToUniTask();
+                await AwaitTween(tongueImage.rectTransform.DOSizeDelta(new Vector2(targetDistance, tongueDefaultSize.y), 0.15f)
+                    .SetEase(Ease.OutCubic), token);
 
                 // [핵심] 낚아채는 '그 순간'에만 연출용 세팅으로 전환
                 currentBossTr.SetParent(tongueImage.rectTransform, true);
@@ -155,14 +169,14 @@ public class UI_BossEncounter : UI_Base
                 }
 
                 // 낚아채기 충격 (Squash)
-                currentBossTr.DOPunchScale(new Vector3(-0.2f, 0.2f, 0), 0.1f).ToUniTask().Forget();
+                AwaitTween(currentBossTr.DOPunchScale(new Vector3(-0.2f, 0.2f, 0), 0.1f), token).SuppressCancellationThrow().Forget();
 
                 // 혀 회수 (보스가 혀 끝에 완전히 고정되어 프레임 오차 없이 빨려 들어감)
                 Sequence pullSeq = DOTween.Sequence()
                 .Join(tongueImage.rectTransform.DOSizeDelta(new Vector2(0, tongueDefaultSize.y), snatchDuration).SetEase(Ease.InBack))
                 .Join(currentBossTr.DORotate(new Vector3(0, 0, 90f), snatchDuration).SetEase(Ease.InBack));
                 
-                await pullSeq.Play().ToUniTask();
+                await AwaitTween(pullSeq.Play(), token);
                 
                 currentBossTr.gameObject.SetActive(false);
                 tongueImage.gameObject.SetActive(false);
@@ -172,11 +186,11 @@ public class UI_BossEncounter : UI_Base
                 RestoreBossLayout();
             }
 
-            await UniTask.Delay(TimeSpan.FromSeconds(0.3f), delayTiming: PlayerLoopTiming.Update);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.3f), delayTiming: PlayerLoopTiming.Update, cancellationToken: token);
         }
         else
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(0.5f), delayTiming: PlayerLoopTiming.Update);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.5f), delayTiming: PlayerLoopTiming.Update, cancellationToken: token);
         }
 
         // 3. 다음 보스 등장 (왼쪽 -> 중앙) & WAVE 업데이트
@@ -206,13 +220,26 @@ public class UI_BossEncounter : UI_Base
                 }
             }
 
-            await transitionSeq.Play().ToUniTask();
+            await AwaitTween(transitionSeq.Play(), token);
         }
 
         // 4. 연출 종료 및 전체 패널 닫기
-        await UniTask.Delay(TimeSpan.FromSeconds(1.2f), delayTiming: PlayerLoopTiming.Update);
+        await UniTask.Delay(TimeSpan.FromSeconds(1.2f), delayTiming: PlayerLoopTiming.Update, cancellationToken: token);
         await CloseAsync(); 
     }
+
+    private UniTask AwaitTween(Tween tween, CancellationToken token) => tween.SetLink(gameObject)
+        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, token);
+
+    private void CancelTransition()
+    {
+        var cts = _transitionCts;
+        _transitionCts = null;
+        cts?.Cancel(); // The owning async method disposes its own source in finally.
+    }
+
+    private void OnDisable() => CancelTransition();
+    private void OnDestroy() => CancelTransition();
 
     private void ResetElements()
     {

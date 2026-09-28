@@ -1,11 +1,13 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>Run inventory capacity and touch interaction settings.</summary>
 [CreateAssetMenu(menuName = "Game/Totem Interaction Settings")]
 public sealed class TotemInteractionSettings : ScriptableObject
 {
     [SerializeField, Range(1, 5)] private int _capacity = 5;
-    [SerializeField, Min(0.1f)] private float _moveHoldSeconds = 0.45f;
+    [Tooltip("회전 가능 토템을 이 시간(실제 초)만큼 누른 뒤 끌면 회전한다. 그 전에 끌면 이동.")]
+    [SerializeField, Min(0.1f), FormerlySerializedAs("_moveHoldSeconds")] private float _rotateHoldSeconds = 0.45f;
     [SerializeField, Min(1f)] private float _rotationDeadZonePixels = 24f;
 
     [Header("Hold Feedback (누르고 있을 때 원형 게이지 + 슬로우)")]
@@ -22,13 +24,13 @@ public sealed class TotemInteractionSettings : ScriptableObject
 
     /// <summary>Maximum number of stored totems.</summary>
     public int Capacity => Mathf.Clamp(_capacity, 1, 5);
-    /// <summary>Hold duration before starting a positional drag.</summary>
-    public float MoveHoldSeconds => _moveHoldSeconds;
+    /// <summary>Hold duration before a drag rotates (instead of moves) a rotatable totem.</summary>
+    public float RotateHoldSeconds => _rotateHoldSeconds;
     /// <summary>Release inside this screen-space radius to cancel rotation.</summary>
     public float RotationDeadZonePixels => _rotationDeadZonePixels;
-    /// <summary>Unscaled seconds after press before the hold gauge and slow motion begin (kept below MoveHoldSeconds).</summary>
-    public float HoldFeedbackDelaySeconds => Mathf.Clamp(_holdFeedbackDelaySeconds, 0f, _moveHoldSeconds * 0.9f);
-    /// <summary>Game time scale requested while a totem is held.</summary>
+    /// <summary>Unscaled seconds after press before the hold gauge and slow motion begin (kept below RotateHoldSeconds).</summary>
+    public float HoldFeedbackDelaySeconds => Mathf.Clamp(_holdFeedbackDelaySeconds, 0f, _rotateHoldSeconds * 0.9f);
+    /// <summary>Game time scale requested while a rotatable totem is held or rotated.</summary>
     public float HoldSlowTimeScale => _holdSlowTimeScale;
     /// <summary>Unscaled seconds to blend between normal speed and the hold slow scale.</summary>
     public float HoldSlowRampSeconds => _holdSlowRampSeconds;

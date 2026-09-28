@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32feacd4c308664c9657c9df63728c6, type: 3}
+  m_Name: RUN_PENALTY
+  m_EditorClassIdentifier: Assembly-CSharp::RunPenaltyPoolData
+  _key: RUN_PENALTY
+  _entries:
+  - _penalty: {fileID: 11400000, guid: c95d3741a4f710346b508d70ddb202e9, type: 2}
+    _enabled: 1
+    _weight: 1
+    _weightConfirmed: 1
+  - _penalty: {fileID: 11400000, guid: 3defef026fb2ef143b20194ce6309de4, type: 2}
+    _enabled: 1
+    _weight: 1
+    _weightConfirmed: 1
+  - _penalty: {fileID: 11400000, guid: c061966d2a0e5904e96cee021fe64956, type: 2}
+    _enabled: 0
+    _weight: 0
+    _weightConfirmed: 0
+  - _penalty: {fileID: 11400000, guid: 30c49fccd181efc45b568d8e19fda96a, type: 2}
+    _enabled: 0
+    _weight: 0
+    _weightConfirmed: 0

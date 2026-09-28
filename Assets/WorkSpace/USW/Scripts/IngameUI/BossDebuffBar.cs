@@ -15,6 +15,9 @@ public sealed class BossDebuffBar : MonoBehaviour
         internal TMP_Text Detail;
     }
 
+    [Tooltip("디버프 슬롯 사이 가로 간격")]
+    [SerializeField] private float _spacing = 6f;
+
     private readonly List<Slot> _slots = new List<Slot>();
     private BossManager _manager;
     private DebuffSettings _settings;
@@ -73,7 +76,7 @@ public sealed class BossDebuffBar : MonoBehaviour
         rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
         rect.sizeDelta = _size;
-        rect.anchoredPosition = new Vector2(index * (_size.x + 6f), 0f);
+        rect.anchoredPosition = new Vector2(index * (_size.x + _spacing), 0f);
         var background = root.GetComponent<Image>();
         background.color = new Color(0.12f, 0.08f, 0.16f, 0.9f);
         background.raycastTarget = false;

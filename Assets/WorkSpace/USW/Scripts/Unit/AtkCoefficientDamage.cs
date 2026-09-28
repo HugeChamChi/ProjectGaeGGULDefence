@@ -29,6 +29,6 @@ public class AtkCoefficientDamage : IReplayableEffect
     private int CalculateDamage(UnitBase caster, out bool critical)
     {
         float baseDamage = caster.GetUpgradedAtk() * coefficient.Get(caster.currentTier);
-        return caster.ComputeDamageFrom(baseDamage, PassiveBonusMultiplier, out critical);
+        return caster.ComputeAttackDamageFrom(baseDamage, PassiveBonusMultiplier, out critical);
     }
 }

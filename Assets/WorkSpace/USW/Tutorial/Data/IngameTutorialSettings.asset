@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e3ba591a59170043a7d8a220f1f14c1, type: 3}
+  m_Name: IngameTutorialSettings
+  m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialSettings
+  SpawnUnits:
+  - {fileID: 11400000, guid: e9004d6b657e20b4dad7e9fa6f872c6d, type: 2}
+  - {fileID: 11400000, guid: e9004d6b657e20b4dad7e9fa6f872c6d, type: 2}
+  - {fileID: 11400000, guid: 924b238be9a0f5146b25248195066dae, type: 2}
+  - {fileID: 11400000, guid: ae06e06576fc8ed42b4d04cfd68cb5a6, type: 2}
+  SpawnCells:
+  - {x: 1, y: 1}
+  - {x: 2, y: 1}
+  - {x: 1, y: 2}
+  - {x: 2, y: 2}
+  InitialCost: 20
+  CostIncrease: 20
+  TrainingFoodPerSecond: 20
+  UpgradeFoodThreshold: 100
+  RevealSeconds: 0.35
+  ChiefDelaySeconds: 6
+  CameraZoomSeconds: 0.6
+  CameraZoomRatio: 0.7
+  CameraHoldSeconds: 0.5
+  GestureSeconds: 1.6
+  HoldGestureSeconds: 0.65
+  DimAlpha: 0.65
+  HighlightPaddingPixels: 12
+  OutlinePixels: 4

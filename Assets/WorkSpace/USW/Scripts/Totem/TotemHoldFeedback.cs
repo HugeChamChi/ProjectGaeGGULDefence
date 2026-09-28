@@ -3,11 +3,12 @@ using UnityEngine;
 using VContainer.Unity;
 
 /// <summary>
-/// 배치된 토템을 누르고 있을 때의 피드백 (씬 수명 엔트리포인트).
+/// 회전 가능한 토템을 누르고 있을 때의 피드백 (씬 수명 엔트리포인트). DragHandler가 회전 가능 토템에만 Begin을 부른다.
 /// - 누른 뒤 HoldFeedbackDelaySeconds(실제 시간)가 지나면 게임 속도를 HoldSlowTimeScale로 낮추고, 손을 떼면 되돌린다.
 ///   라운드 타이머·보스 패턴·유닛 전투가 모두 게임 시간 기준이라 같은 배율로 함께 느려진다.
-/// - 모든 토템에 원형 게이지(TotemHoldRingView)를 띄워 이동 가능(MoveHoldSeconds)까지 남은 시간을 보여준다.
-///   가득 차면 이동 모드 확정 표시(점 회전). 가득 차기 전에 끌면(회전 또는 무시) 게이지만 숨기고 슬로우는 유지한다.
+/// - 원형 게이지(TotemHoldRingView)로 회전 가능(RotateHoldSeconds)까지 남은 시간을 보여준다.
+///   가득 차면 회전 모드 확정 표시(점 회전). 가득 찬 뒤 끌면 회전 — 게이지만 숨기고 슬로우는 유지한다.
+///   가득 차기 전에 끌면 이동 — 유닛 이동과 같게 홀드를 끝내 게이지·슬로우를 모두 거둔다.
 /// 이동/회전 판정 자체는 DragHandler가 실제 시간으로 하며, 이 클래스는 홀드 상태·진행도·속도 요청만 담당한다.
 /// </summary>
 public sealed class TotemHoldFeedback : ILateTickable, IDisposable
@@ -49,11 +50,12 @@ public sealed class TotemHoldFeedback : ILateTickable, IDisposable
         _ring.ResetAppear();
     }
 
-    /// <summary>끌기가 시작된 순간. 이동이면 가득 찬 게이지가 토템을 따라가고, 회전·무시면 게이지를 숨긴다.</summary>
-    public void OnDragStarted(TotemBase totem, bool moving)
+    /// <summary>끌기가 시작된 순간. 회전이면 게이지만 숨기고, 이동이면 홀드를 끝낸다(슬로우 복구).</summary>
+    public void OnDragStarted(TotemBase totem, bool rotating)
     {
         if (totem != _totem) return;
-        if (!moving) _showRing = false;
+        _showRing = false;
+        if (!rotating) _holding = false;
     }
 
     /// <summary>손을 뗐거나 입력이 취소됐을 때. 속도는 램프로 복구된다.</summary>
@@ -79,7 +81,7 @@ public sealed class TotemHoldFeedback : ILateTickable, IDisposable
         UpdateSlowMotion(active, dt);
 
         // 손을 뗀 뒤 사라지는 동안에는 마지막 채움 상태를 유지한다.
-        float span = Mathf.Max(_settings.MoveHoldSeconds - delay, 0.01f);
+        float span = Mathf.Max(_settings.RotateHoldSeconds - delay, 0.01f);
         float progress = _holding ? Mathf.Clamp01((held - delay) / span) : _lastProgress;
         _lastProgress = progress;
         if (_holding && progress >= 1f && _armedAt < 0f) _armedAt = now;

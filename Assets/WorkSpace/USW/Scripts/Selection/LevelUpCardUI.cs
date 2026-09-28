@@ -63,7 +63,8 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     /// <summary>짧은 선택과 긴 필드 보기를 구분하는 입력을 시작한다.</summary>
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || _pointerId.HasValue ||
+        if (!isActiveAndEnabled || eventData.button != PointerEventData.InputButton.Left || _pointerId.HasValue ||
+            (_peek != null && _peek.BlocksSelection) ||
             button == null || !button.IsInteractable()) return;
         _pointerId = eventData.pointerId;
         _releasedPointerId = null;
@@ -73,6 +74,12 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     private void Update()
     {
+        if (_pointerId.HasValue && (button == null || !button.IsActive() ||
+            (!button.IsInteractable() && (_peek == null || !_peek.OwnsPeek(this)))))
+        {
+            CancelPress();
+            return;
+        }
         if (_pointerId.HasValue && !_suppressClick && _peek != null &&
             Time.unscaledTime - _pressedAt >= _holdSeconds)
         {
@@ -184,7 +191,8 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     {
         if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
         _releasedPointerId = null;
-        if (!_suppressClick && button != null && button.IsInteractable()) _onCardClicked?.Invoke(this);
+        if (isActiveAndEnabled && !_suppressClick && (_peek == null || !_peek.BlocksSelection) &&
+            button != null && button.IsInteractable()) _onCardClicked?.Invoke(this);
     }
 
     private void ApplyTierSprites(Tier tier)

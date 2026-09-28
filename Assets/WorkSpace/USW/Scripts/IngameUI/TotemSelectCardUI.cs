@@ -76,7 +76,8 @@ public class TotemSelectCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpH
     public void OnPointerDown(PointerEventData eventData)
     {
         if (!isActiveAndEnabled || eventData.button != PointerEventData.InputButton.Left ||
-            _pointerId.HasValue || button == null || !button.IsActive() || !button.IsInteractable()) return;
+            _pointerId.HasValue || (_peek != null && _peek.BlocksSelection) ||
+            button == null || !button.IsActive() || !button.IsInteractable()) return;
         _pointerId = eventData.pointerId;
         _releasedPointerId = null;
         _pressedAt = Time.unscaledTime;
@@ -86,7 +87,8 @@ public class TotemSelectCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpH
     private void Update()
     {
         if (!_pointerId.HasValue) return;
-        if (button == null || !button.IsActive() || !button.IsInteractable())
+        if (button == null || !button.IsActive() ||
+            (!button.IsInteractable() && (_peek == null || !_peek.OwnsPeek(this))))
         {
             CancelPress();
             return;
@@ -119,7 +121,8 @@ public class TotemSelectCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpH
     {
         if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
         _releasedPointerId = null;
-        if (isActiveAndEnabled && !_suppressClick && button != null && button.IsActive() && button.IsInteractable())
+        if (isActiveAndEnabled && !_suppressClick && (_peek == null || !_peek.BlocksSelection) &&
+            button != null && button.IsActive() && button.IsInteractable())
             _onClicked?.Invoke(this);
     }
 

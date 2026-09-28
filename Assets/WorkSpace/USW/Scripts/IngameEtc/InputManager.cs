@@ -12,6 +12,12 @@ public interface IDraggable
 
 public class InputManager : MonoBehaviour
 {
+    /// <summary>Optional scene-owned restriction for guided world interactions.</summary>
+    public Func<IDraggable, bool> CanBeginInteraction { get; set; }
+    /// <summary>Optional restriction evaluated before a world drag commits.</summary>
+    public Func<IDraggable, Vector2, bool> CanEndInteraction { get; set; }
+    /// <summary>Whether world clicks may open object information.</summary>
+    public bool AllowPointerClicks { get; set; } = true;
     private Camera _mainCamera;
     private IDraggable _currentDraggable;
     private bool _isDragging = false;
@@ -115,6 +121,12 @@ public class InputManager : MonoBehaviour
         Physics2D.SyncTransforms();
         RaycastHit2D[] hits = Physics2D.RaycastAll(_pointerDownPos, Vector2.zero);
         _currentDraggable = PickDraggable(hits, _pointerDownPos);
+        if (_currentDraggable != null && CanBeginInteraction != null && !CanBeginInteraction(_currentDraggable))
+        {
+            _currentDraggable = null;
+            _pointerDown = false;
+            return;
+        }
         if (_currentDraggable is DragHandler handler) handler.BeginPress();
     }
 
@@ -170,6 +182,11 @@ public class InputManager : MonoBehaviour
 
         if (_isDragging)
         {
+            if (_currentDraggable != null && CanEndInteraction != null && !CanEndInteraction(_currentDraggable, currentPos))
+            {
+                CancelPointer();
+                return;
+            }
             if (_currentDraggable != null)
             {
                 _currentDraggable.OnEndDrag(currentPos);
@@ -179,7 +196,7 @@ public class InputManager : MonoBehaviour
         {
             if (_currentDraggable != null)
             {
-                _currentDraggable.OnPointerClick();
+                if (AllowPointerClicks) _currentDraggable.OnPointerClick();
             }
         }
 

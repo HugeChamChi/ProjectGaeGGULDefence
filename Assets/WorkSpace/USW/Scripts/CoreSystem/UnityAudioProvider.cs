@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.Audio;
 using System.Collections.Generic;
 using System;
-using Unity.VisualScripting;
 
 /// <summary>
 /// 유니티 기본 AudioSource와 AudioMixer를 사용하는 구현체

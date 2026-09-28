@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a1afa70bc5afa24eb07980af5ade5d9, type: 3}
   m_Name: AlphanActiveSkillData
   m_EditorClassIdentifier: Assembly-CSharp::AlphanSkillData
-  CooldownSeconds: 14
+  CooldownSeconds: 120
   DamagePerDrone: 80
   Icon: {fileID: 21300000, guid: b8b20d5a65522d044bebe30dffaed771, type: 3}
   SoundAddress: 05.Leader_Skill_Effect

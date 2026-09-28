@@ -1,0 +1,137 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 614e66b1d02bd1a42a10adb9f1797eb3, type: 3}
+  m_Name: IngameTutorialSequence
+  m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.TutorialSequence
+  tutorialID: FirstBattle
+  steps:
+  - rid: 1992779535531114586
+  - rid: 1992779535531114587
+  - rid: 1992779535531114588
+  - rid: 1992779535531114589
+  - rid: 1992779535531114590
+  - rid: 1992779535531114591
+  - rid: 1992779535531114592
+  - rid: 1992779535531114593
+  - rid: 1992779535531114594
+  - rid: 1992779535531114595
+  - rid: 1992779535531114596
+  - rid: 1992779535531114597
+  - rid: 1992779535531114598
+  references:
+    version: 2
+    RefIds:
+    - rid: 1992779535531114586
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 1
+        Instruction: "\uCD9C\uACA9\uC744 \uB20C\uB7EC \uCCAB \uC720\uB2DB\uC744 \uC18C\uD658\uD574
+          \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114587
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 2
+        Instruction: "\uBCF4\uC2A4\uAC00 \uB098\uD0C0\uB0AC\uC5B4\uC694. \uC720\uB2DB\uB4E4\uC774
+          \uBCF4\uC2A4\uB97C \uACF5\uACA9\uD569\uB2C8\uB2E4!"
+    - rid: 1992779535531114588
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 3
+        Instruction: "\uC2DD\uB7C9\uC774 \uBAA8\uC774\uBA74 \uCD9C\uACA9\uC744 \uC138
+          \uBC88 \uB20C\uB7EC \uB3D9\uB8CC\uB97C \uBD88\uB7EC \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114589
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 4
+        Instruction: "\uAC19\uC740 \uC720\uB2DB\uC744 \uC11C\uB85C \uACB9\uCE58\uB3C4\uB85D
+          \uB04C\uC5B4 \uD569\uC131\uD574 \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114590
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 5
+        Instruction: "\uB808\uBCA8\uC774 \uC62C\uB790\uC5B4\uC694! \uC6D0\uD558\uB294
+          \uB2A5\uB825\uC744 \uD558\uB098 \uC120\uD0DD\uD560 \uC218 \uC788\uC5B4\uC694."
+    - rid: 1992779535531114591
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 6
+        Instruction: "\uC2DD\uB7C9\uC744 \uBAA8\uC558\uC5B4\uC694. \uAC15\uD654 \uBC84\uD2BC\uC744
+          \uB20C\uB7EC \uBCF4\uC138\uC694!"
+    - rid: 1992779535531114592
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 7
+        Instruction: "\uC774 \uC2AC\uB86F\uC5D0\uC11C \uC720\uB2DB\uC744 \uAC15\uD654\uD560
+          \uC218 \uC788\uC5B4\uC694!"
+    - rid: 1992779535531114593
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 8
+        Instruction: "\uC871\uC7A5 \uC2A4\uD0AC\uC774 \uC900\uBE44\uB418\uBA74 \uC774
+          \uBC84\uD2BC\uC73C\uB85C \uC0AC\uC6A9\uD560 \uC218 \uC788\uC5B4\uC694!"
+    - rid: 1992779535531114594
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 9
+        Instruction: "\uBCF4\uC2A4\uB97C \uBB3C\uB9AC\uCCE4\uC5B4\uC694! \uB9C8\uC74C\uC5D0
+          \uB4DC\uB294 \uD1A0\uD15C\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."
+    - rid: 1992779535531114595
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 10
+        Instruction: "\uD1A0\uD15C \uBC84\uD2BC\uC744 \uB20C\uB7EC \uD68D\uB4DD\uD55C
+          \uD1A0\uD15C\uC744 \uD655\uC778\uD574 \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114596
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 11
+        Instruction: "\uD1A0\uD15C\uC744 \uD45C\uC2DC\uB41C \uBE48\uCE78\uC73C\uB85C
+          \uB04C\uC5B4 \uBC30\uCE58\uD574 \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114597
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 12
+        Instruction: "\uBC30\uCE58\uD55C \uD1A0\uD15C\uC744 \uBC14\uB85C \uB04C\uC5B4
+          \uD45C\uC2DC\uB41C \uCE78\uC73C\uB85C \uC62E\uACA8 \uC8FC\uC138\uC694!"
+    - rid: 1992779535531114598
+      type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}
+      data:
+        delayBeforeExecute: 0
+        useDim: 0
+        Stage: 13
+        Instruction: "\uD1A0\uD15C\uC744 \uAFB9 \uB20C\uB7EC \uAC8C\uC774\uC9C0\uB97C
+          \uCC44\uC6B4 \uB4A4 \uC606\uC73C\uB85C \uB04C\uC5B4 \uD68C\uC804\uD574
+          \uC8FC\uC138\uC694!"

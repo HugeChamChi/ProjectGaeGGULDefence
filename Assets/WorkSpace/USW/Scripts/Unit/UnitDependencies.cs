@@ -14,4 +14,8 @@ public class UnitDependencies
     public AudioManager AudioManager { get; set; }
     public CurrencyManager CurrencyManager { get; set; }
     public BuffManager BuffManager { get; set; }
+    /// <summary>Scene run values shared by combat, new units and live information UI.</summary>
+    public IRunStatModifiers RunStatModifiers { get; set; }
+    /// <summary>Reports unrepresentable run stats to the progression owner.</summary>
+    public System.Action<string> ReportRunStatFailure { get; set; }
 }

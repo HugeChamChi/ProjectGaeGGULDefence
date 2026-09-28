@@ -76,3 +76,14 @@ Assets/WorkSpace/USW/Scripts/Unit/UnitCombatComponent.cs
 Assets/WorkSpace/USW/Scripts/Unit/UnitStatsModifier.cs
 ---
 
+## Session End: 20260925_173027
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/TotemData/TotemInventoryGuide.md
+Assets/WorkSpace/USW/Scripts/Editor/TotemInventoryChecks.cs
+Assets/WorkSpace/USW/Scripts/IngameEtc/DragHandler.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardSwipeArea.cs
+Assets/WorkSpace/USW/Scripts/Totem/TotemHoldFeedback.cs
+Assets/WorkSpace/USW/Scripts/Totem/TotemInteractionSettings.cs
+Data/Balance/Effect.xlsx
+---
+

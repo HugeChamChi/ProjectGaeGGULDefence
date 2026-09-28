@@ -48,6 +48,9 @@ public class ExpManager : MonoBehaviour
 
     private bool _pendingLevelUp;
 
+    /// <summary>Accumulates experience without interrupting a scene-owned guided interaction.</summary>
+    public bool DeferLevelUps { get; set; }
+
     /// <summary>보스 데미지로부터 획득할 EXP 양 계산. 배율은 현재 보스의 BossData(SO)가 정본이다.</summary>
     public float CalculateExpFromDamage(float damage)
     {
@@ -70,7 +73,7 @@ public class ExpManager : MonoBehaviour
         CurrentExp += amount;
         OnExpChanged?.Invoke(CurrentExp);
 
-        if (CurrentExp >= ExpToLevelUp)
+        if (!DeferLevelUps && CurrentExp >= ExpToLevelUp)
         {
             CurrentExp -= ExpToLevelUp;
             CurrentLevel++;

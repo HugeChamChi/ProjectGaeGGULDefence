@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameInitializer : IInitializable, IAsyncStartable
 {
+    /// <summary>True after scene initialization, preload and the entry fade have finished.</summary>
+    public bool IsReady { get; private set; }
     [Inject] private GlobalUIManager _globalUIManager;
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
@@ -88,5 +90,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
         {
             await _globalUIManager.FadeOutAsync();
         }
+        cancellation.ThrowIfCancellationRequested();
+        IsReady = true;
     }
 }

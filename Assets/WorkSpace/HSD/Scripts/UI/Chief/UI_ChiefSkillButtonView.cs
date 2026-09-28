@@ -12,16 +12,23 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     [SerializeField] private TMP_Text txt_Cooldown;
     [SerializeField] private Image img_Icon;
     [SerializeField] private ChiefSkillReadyBanner _readyBanner;
+    [Tooltip("충전 완료 시 틀 위로 솟아오르고 쿨타임 중 가라앉는 초상화 연출 (선택). 비우면 자식에서 찾음")]
+    [SerializeField] private ChiefSkillIconMotion _iconMotion;
     [Tooltip("지정하면 족장 스킬 아이콘 대신 이 이미지를 항상 표시한다 (임시 고정 이미지용). 비우면 스킬 아이콘 사용")]
     [SerializeField] private Sprite iconOverride;
 
     /// <summary>실제 사용 가능 여부와 독립적인 충전 완료 위치 표시.</summary>
-    public void SetChargedPresentation(bool charged, bool immediate = false) => _readyBanner?.SetCharged(charged, immediate);
+    public void SetChargedPresentation(bool charged, bool immediate = false)
+    {
+        _readyBanner?.SetCharged(charged, immediate);
+        _iconMotion?.SetCharged(charged, immediate);
+    }
 
     [Header("쿨타임 중 비활성화 연출")]
     [SerializeField] private Color disabledColor = new Color(0.5f, 0.5f, 0.5f, 1f);
     private Color _normalIconColor = Color.white;
     private Color _normalButtonColor = Color.white;
+    private Sprite _defaultIcon;
 
     private UI_ChiefSkillPresenter _presenter;
 
@@ -29,7 +36,12 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     private void Awake()
     {
-        if (img_Icon != null) _normalIconColor = img_Icon.color;
+        if (_iconMotion == null) _iconMotion = GetComponentInChildren<ChiefSkillIconMotion>(true);
+        if (img_Icon != null)
+        {
+            _normalIconColor = img_Icon.color;
+            _defaultIcon = img_Icon.sprite;
+        }
         if (btn_Skill != null && btn_Skill.targetGraphic != null) _normalButtonColor = btn_Skill.targetGraphic.color;
     }
 
@@ -113,7 +125,8 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     {
         if (img_Icon != null)
         {
-            var sprite = iconOverride != null ? iconOverride : icon;
+            // 족장이 정해지기 전(게임 시작 전 대기)에는 씬에 지정된 기본 이미지를 유지한다.
+            var sprite = iconOverride != null ? iconOverride : icon != null ? icon : _defaultIcon;
             img_Icon.sprite = sprite;
             img_Icon.enabled = sprite != null;
         }

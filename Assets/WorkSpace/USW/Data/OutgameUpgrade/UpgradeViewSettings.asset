@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f82abd6c1f5af3544b5153c8ddf52a4a, type: 3}
+  m_Name: UpgradeViewSettings
+  m_EditorClassIdentifier: Assembly-CSharp::ResearchViewSettings
+  FontBold: {fileID: 11400000, guid: 34571da45f3f3d8419493b418172203f, type: 2}
+  FontRegular: {fileID: 11400000, guid: 4e5648a79c753f44eb5571f3a22454ae, type: 2}
+  RoundedFill: {fileID: 21300000, guid: 5618123237d1d3f49a5a6025287065f7, type: 3}
+  RoundedOutline: {fileID: 21300000, guid: 6f26b2434055f404d8d9c0b82e4de90f, type: 3}
+  CircleFill: {fileID: 21300000, guid: d25e2ce15dd1c67438e4b70f404fb197, type: 3}
+  CircleOutline: {fileID: 21300000, guid: fcadf08db4ab4e745ad615820a87889b, type: 3}
+  Shadow: {fileID: 21300000, guid: 0755a77d5bd80d94eaba57a2d5d0f55e, type: 3}
+  UpgradeArrow: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
+  BlockedIcon: {fileID: 21300000, guid: 76abe28924c3a9345adaa9cc63c803d3, type: 3}
+  RoundedCornerScale: 4
+  Background: {r: 0.08235294, g: 0.09803922, b: 0.13725491, a: 1}
+  Surface: {r: 0.13333334, g: 0.15686275, b: 0.21176471, a: 1}
+  Ink: {r: 0.9137255, g: 0.9254902, b: 0.9490196, a: 1}
+  Muted: {r: 0.54901963, g: 0.5803922, b: 0.6509804, a: 1}
+  Faint: {r: 0.22745098, g: 0.25882354, b: 0.32941177, a: 1}
+  Soft: {r: 0.17254902, g: 0.2, b: 0.26666668, a: 1}
+  Active: {r: 0.17254902, g: 0.76862746, b: 0.7137255, a: 1}
+  Accent: {r: 0.9490196, g: 0.6627451, b: 0.23137255, a: 1}
+  OnColor: {r: 1, g: 1, b: 1, a: 1}
+  ShadowColor: {r: 0, g: 0, b: 0, a: 0.35}
+  NodeSize: 176
+  CircleNodeSize: 196
+  DiamondNodeSize: 146
+  SelectionPadding: 12
+  PulseSeconds: 1.4
+  PulseMinAlpha: 0.45
+  LineWidth: 8
+  TreeCenterX: -70
+  ColumnOffset: 190
+  SpecialColumnX: 350
+  RowSpacing: 255
+  ContentPadding: 200
+  PanelHeight: 430
+  ToastSeconds: 1.3
+  TitleFormat: "\uAC15\uD654 {0}"
+  UpgradeLabel: "\uAC15\uD654"
+  MaxLabel: MAX
+  LockedLabel: "\uC7A0\uAE40"
+  ChangeChoiceLabel: "\uC120\uD0DD \uBC14\uAFB8\uAE30"
+  RecommendLabel: "\uCD94\uCC9C"
+  ToastFormat: '{0} Lv.{1}   {2}'
+  GateLabelFormat: "{0}\uB2E8\uACC4 \xB7 \uC804\uCCB4 \uAC15\uD654 {1}/{2}"
+  GateOpenFormat: "{0}\uB2E8\uACC4 \uC5F4\uB9BC"
+  LayoutButtonFormat: "\uAD6C\uC131: {0}"
+  ResetLabel: "\uCD08\uAE30\uD654"
+  Stats:
+  - Stat: 0
+    DisplayName: "\uACF5\uACA9\uB825"
+    IsPercent: 1
+  - Stat: 1
+    DisplayName: "\uACF5\uACA9 \uC18D\uB3C4"
+    IsPercent: 1
+  - Stat: 2
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD655\uB960"
+    IsPercent: 1
+  - Stat: 3
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 4
+    DisplayName: "\uC2A4\uD0AC \uCFE8\uD0C0\uC784 \uAC10\uC18C"
+    IsPercent: 1
+  - Stat: 5
+    DisplayName: "\uC2DD\uB7C9 \uC0DD\uC0B0"
+    IsPercent: 1
+  - Stat: 6
+    DisplayName: "\uC2DC\uC791 \uC2DD\uB7C9"
+    IsPercent: 0
+  - Stat: 7
+    DisplayName: "\uBCF4\uC2A4 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 8
+    DisplayName: "\uD654\uC0C1 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 9
+    DisplayName: "\uD1A0\uD15C \uD6A8\uACFC"
+    IsPercent: 1

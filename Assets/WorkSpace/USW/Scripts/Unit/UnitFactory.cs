@@ -11,6 +11,7 @@ public class UnitFactory : MonoBehaviour
     [Inject] private IObjectResolver _resolver;
     [Inject] private AssetLifecycleManager _assetLifecycle;
     [SerializeField] private UnitData[] unitDataList;
+    [SerializeField] private bool _useAuthoredParty;
 
     public UnitData[] UnitDataList => unitDataList;
     private UnitDependencies _deps;
@@ -30,9 +31,11 @@ public class UnitFactory : MonoBehaviour
             ProjectileManager = _resolver.Resolve<ProjectilePool>(),
             AudioManager = _resolver.Resolve<AudioManager>(),
             CurrencyManager = _resolver.Resolve<CurrencyManager>(),
-            BuffManager = _resolver.Resolve<BuffManager>()
+            BuffManager = _resolver.Resolve<BuffManager>(),
+            RunStatModifiers = _resolver.Resolve<IRunStatModifiers>(),
+            ReportRunStatFailure = _resolver.Resolve<EndlessRunService>().Fail
         };
-        if (GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
+        if (!_useAuthoredParty && GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
         {
             unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
         }

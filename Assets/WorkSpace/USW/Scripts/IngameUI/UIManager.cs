@@ -254,6 +254,7 @@ public class UIManager : MonoBehaviour
 
         }, 1f, sliderTweenDuration)
         .SetEase(Ease.OutCubic)
+        .SetLink(gameObject)
         .SetTarget(bossHpText);
 
         _displayedHp = current;
@@ -275,7 +276,8 @@ public class UIManager : MonoBehaviour
         {
             _displayedCurrency = value;
             currencyText.text = value.ToString();
-        }, target, currencyTweenDuration).SetEase(Ease.OutCubic).SetTarget(currencyText);
+        }, target, currencyTweenDuration).SetEase(Ease.OutCubic).SetUpdate(true).SetTarget(currencyText)
+            .SetLink(currencyText.gameObject);
 
         if (_currencyTextRect == null) return;
 
@@ -285,11 +287,14 @@ public class UIManager : MonoBehaviour
 
         _currencyTextRect
             .DOPunchScale(Vector3.one * currencyPunchScale, currencyTweenDuration, 6, 0.6f)
-            .SetEase(Ease.OutCubic);
+            .SetLink(currencyText.gameObject)
+            .SetEase(Ease.OutCubic).SetUpdate(true);
 
         currencyText
             .DOColor(currencyFlashColor, currencyTweenDuration * 0.45f)
+            .SetLink(currencyText.gameObject)
             .SetLoops(2, LoopType.Yoyo)
+            .SetUpdate(true)
             .OnComplete(() => currencyText.color = _currencyTextBaseColor);
     }
 
@@ -318,7 +323,8 @@ public class UIManager : MonoBehaviour
                 
                 timerText.rectTransform.DOKill(true);
                 timerText.rectTransform.localScale = _timerTextBaseScale;
-                timerText.rectTransform.DOPunchScale(Vector3.one * 0.3f, 0.2f, 2, 0.5f).SetEase(Ease.OutCubic);
+                timerText.rectTransform.DOPunchScale(Vector3.one * 0.3f, 0.2f, 2, 0.5f).SetEase(Ease.OutCubic)
+                    .SetLink(timerText.gameObject);
             }
         }
         else
@@ -352,7 +358,8 @@ public class UIManager : MonoBehaviour
         target.DOKill(true);
 
         // UI 요소이므로 DOShakeAnchorPos 사용
-        target.DOShakeAnchorPos(0.2f, bossBarShakePower, bossBarShakeVibrato, 90, false, true);
+        target.DOShakeAnchorPos(0.2f, bossBarShakePower, bossBarShakeVibrato, 90, false, true)
+            .SetLink(target.gameObject);
     }
 
     public void ShowResult(bool isWin)

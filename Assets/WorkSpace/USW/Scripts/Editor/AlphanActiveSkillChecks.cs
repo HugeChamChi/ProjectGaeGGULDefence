@@ -72,7 +72,7 @@ public static class AlphanActiveSkillChecks
             using(var builderContainer=BuildContainer(spawner,null,manager,game))
                 Check(builderContainer.Resolve<AlphanActiveSkill>()!=null,"VContainer accepts non-drone scene without manager registration");
             var party=AssetDatabase.LoadAssetAtPath<PartyDataSO>("Assets/WorkSpace/HSD/Data/Party/Dron_Party.asset");
-            Check(party!=null && party.chieftainData.AlphanSkill!=null && party.chieftainData.AlphanSkill.CooldownSeconds==14,"Real drone party points to fourteen-second skill SO");
+            Check(party!=null && party.chieftainData.AlphanSkill!=null && party.chieftainData.AlphanSkill.CooldownSeconds==120,"Real drone party points to 120-second skill SO");
             GlobalData.SelectedParty=party;
             typeof(ChieftainSpawner).GetMethod("HandleGameStart",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(spawner,null);
             Check(spawner.ChieftainUnit==null && spawner.ActiveSkill==skill && skill.CooldownRemaining==14,"Real party start bypasses grid and starts charging");

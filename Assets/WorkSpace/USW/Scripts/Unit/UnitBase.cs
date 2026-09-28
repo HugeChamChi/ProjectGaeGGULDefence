@@ -305,6 +305,14 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual float GetDisplayAttackInterval() => GetCurrentAttackInterval();
     public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
+    /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>
+    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+    {
+        critical = false;
+        return _stats != null ? _stats.ComputeAttackDamageFrom(baseDamage, projAtkBonusMultiplier, out critical) : 0;
+    }
+    /// <summary>Attack-coefficient damage using the ordinary projectile bonus.</summary>
+    public int ComputeAttackDamageFrom(float baseDamage) => ComputeAttackDamageFrom(baseDamage, 1f, out _);
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;
     /// <summary>ComputeDamageFrom과 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)

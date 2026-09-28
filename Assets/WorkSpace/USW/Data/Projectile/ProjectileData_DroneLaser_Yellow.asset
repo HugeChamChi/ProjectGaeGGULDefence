@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
+  m_Name: ProjectileData_DroneLaser_Yellow
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  id: 0
+  projectilePrefab: {fileID: 0}
+  projectileAddress: 
+  movement:
+    rid: 1992779535531114610
+  fireEffect:
+    rid: -2
+  hitEffect:
+    rid: 1992779535531114611
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1992779535531114610
+      type: {class: StraightMovement, ns: , asm: Assembly-CSharp}
+      data:
+        duration: 0.2
+    - rid: 1992779535531114611
+      type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
+      data:
+        effectPrefab: {fileID: 8655751333147290257, guid: 76d37f1f76def2e4a8f2304583e4d1f8,
+          type: 3}
+        duration: 1
+        sfxName: 05.Drone_Attack_Hit

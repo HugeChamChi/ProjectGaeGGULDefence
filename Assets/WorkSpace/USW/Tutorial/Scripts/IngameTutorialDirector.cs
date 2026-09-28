@@ -1,0 +1,491 @@
+using System;
+using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using HSD.UI.Upgrade;
+using UnityEngine;
+using UnityEngine.UI;
+using VContainer;
+
+namespace GaeGGUL.Tutorial
+{
+    /// <summary>Scene-owned orchestration of the first battle using actual gameplay and UI systems.</summary>
+    public sealed class IngameTutorialDirector : MonoBehaviour
+    {
+        [SerializeField] private IngameTutorialPlan _plan;
+        [SerializeField] private TutorialTargetBinding[] _targets;
+        private readonly System.Collections.Generic.Dictionary<string, int> _signals = new System.Collections.Generic.Dictionary<string, int>();
+        private int _lessonIndex;
+        private int _lessonCount;
+        private IngameTutorialStep _currentRecipe;
+        private readonly object _customPauseOwner = new object();
+        [SerializeField] private IngameTutorialSettings _settings;
+        [SerializeField] private IngameTutorialOverlay _overlay;
+        [SerializeField] private IngameTutorialDialogue _dialogue;
+        [SerializeField] private Button _summonButton;
+        [SerializeField] private Button _upgradeButton;
+        [SerializeField] private Button _chiefButton;
+        [SerializeField] private Button _inventoryButton;
+        [SerializeField] private CanvasGroup[] _bossHud;
+        [SerializeField] private CanvasGroup _upgradeGroup;
+        [SerializeField] private CanvasGroup _chiefGroup;
+        [SerializeField] private CanvasGroup _inventoryGroup;
+        [SerializeField] private UI_UpgradePanel _upgradePanel;
+        [SerializeField] private RectTransform _upgradeSlots;
+        [SerializeField] private LevelUpUI _levelUpUI;
+        [SerializeField] private TotemRewardUI _rewardUI;
+        [SerializeField] private TotemInventoryUI _inventoryUI;
+        [Inject] private GameManager _game;
+        [Inject] private GameInitializer _initializer;
+        [Inject] private WaveManager _wave;
+        [Inject] private UnitSpawner _spawner;
+        [Inject] private GridManager _grid;
+        [Inject] private CurrencyManager _currency;
+        [Inject] private ExpManager _exp;
+        [Inject] private BossManager _boss;
+        [Inject] private TimeScaleService _time;
+        [Inject] private InputManager _input;
+        [Inject] private TotemInventory _inventory;
+        [Inject] private BossPatternController _patterns;
+        private BossBase _guidedBoss;
+        private CancellationTokenSource _cts;
+        private Camera _camera;
+        private bool _income;
+        private bool _running;
+        private bool _hasCameraPose;
+        private Vector3 _cameraPosition;
+        private float _cameraSize;
+        private UnitBase _firstUnit;
+        private TotemBase _placedTotem;
+        private GridCell _dropCell;
+
+        /// <summary>Current authored lesson, visible to diagnostics and playtest tools.</summary>
+        public IngameTutorialStage CurrentStage { get; private set; }
+        /// <summary>True only after all authored interactions have succeeded.</summary>
+        public bool IsComplete { get; private set; }
+
+        private void Start() => RunAsync().Forget();
+
+        private async UniTaskVoid RunAsync()
+        {
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            var token = _cts.Token;
+            try
+            {
+                ValidateConfiguration();
+                _camera = Camera.main;
+                _running = true;
+                _exp.DeferLevelUps = true;
+                _overlay.Show(_settings, false, false, false, false);
+                foreach (var group in _bossHud) SetVisible(group, false);
+                SetVisible(_upgradeGroup, false); SetVisible(_chiefGroup, false); SetVisible(_inventoryGroup, false);
+                _input.AllowPointerClicks = false;
+                _input.CanBeginInteraction = _ => false;
+                // Let gameplay Start methods wire their injected services before starting the battle.
+                await Until(() => _initializer.IsReady, token);
+                foreach (var data in _settings.SpawnUnits.Distinct())
+                    await data.LoadAssetsAsync().AttachExternalCancellation(token);
+                _game.StartGame(false);
+                var lessons = _plan.Lessons;
+                _lessonCount = lessons.Count;
+                foreach (var asset in lessons)
+                {
+                    _lessonIndex++;
+                    if (asset.Kind != IngameTutorialLesson.LessonKind.GameplayRecipe)
+                    {
+                        await ExecuteCustomAsync(asset, token);
+                        continue;
+                    }
+                    var lesson = asset.Gameplay;
+                    _currentRecipe = lesson;
+                    CurrentStage = lesson.Stage;
+                    _dialogue.Hide();
+                    Debug.Log($"[IngameTutorial] {(int)CurrentStage}: {CurrentStage}", this);
+                    if (lesson.delayBeforeExecute > 0) await Delay(lesson.delayBeforeExecute, token);
+                    try { await lesson.ExecuteAsync(this, token); }
+                    finally
+                    {
+                        _dialogue.Hide(); _overlay.Hide(); _time.Release(this);
+                        _input.CanBeginInteraction = _ => false;
+                        _input.CanEndInteraction = null;
+                    }
+                }
+                IsComplete = true;
+                Debug.Log("[IngameTutorial] Complete", this);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception e) { Debug.LogException(e, this); }
+            finally
+            {
+                Restore();
+                _cts?.Dispose(); _cts = null;
+            }
+        }
+
+        private void ValidateConfiguration()
+        {
+            if (_plan == null || _settings == null || _overlay == null || _dialogue == null || _game == null)
+                throw new InvalidOperationException("Tutorial scene configuration or DI is missing.");
+            if (_settings.SpawnUnits == null || _settings.SpawnUnits.Length != 4 ||
+                _settings.SpawnCells == null || _settings.SpawnCells.Length != 4 ||
+                _settings.SpawnUnits.Any(d => d == null) || _settings.SpawnUnits[0] != _settings.SpawnUnits[1])
+                throw new InvalidOperationException("Tutorial requires four authored summons and a matching first pair.");
+            if (_plan != null)
+            {
+                if (_targets != null && _targets.Where(t => t != null).GroupBy(t => t.Key).Any(g => string.IsNullOrWhiteSpace(g.Key) || g.Count() > 1))
+                    throw new InvalidOperationException("Tutorial target keys must be non-empty and unique.");
+                var planError = _plan.Validate();
+                if (planError != null) throw new InvalidOperationException(planError);
+                if (_plan.Lessons.Count == 0) throw new InvalidOperationException("Tutorial sequence is empty.");
+                foreach (var lesson in _plan.Lessons)
+                {
+                    if (lesson == null) throw new InvalidOperationException("Tutorial sequence contains an empty lesson slot.");
+                    var error = lesson.Validate();
+                    if (error != null) throw new InvalidOperationException(lesson.name + ": " + error);
+                    if (lesson.Kind == IngameTutorialLesson.LessonKind.GameplayRecipe) continue;
+                    var target = ResolveTarget(lesson.TargetKey);
+                    if (!string.IsNullOrEmpty(lesson.TargetKey) && (target == null || target.Highlight == null))
+                        throw new InvalidOperationException(lesson.name + ": target binding is missing: " + lesson.TargetKey);
+                    if (lesson.Kind == IngameTutorialLesson.LessonKind.ForceButton && target.Button == null)
+                        throw new InvalidOperationException(lesson.name + ": target Button is missing.");
+                }
+            }
+        }
+
+        /// <summary>UnityEvent-compatible completion/start signal; signals are observed only after the relevant wait begins.</summary>
+        public void Signal(string key)
+        {
+            if (!string.IsNullOrWhiteSpace(key)) _signals[key] = SignalCount(key) + 1;
+        }
+
+        private int SignalCount(string key) => !string.IsNullOrEmpty(key) && _signals.TryGetValue(key, out var count) ? count : 0;
+        private TutorialTargetBinding ResolveTarget(string key) => _targets?.SingleOrDefault(t => t != null && t.Key == key);
+        private void ShowRecipeDialogue() => _dialogue.Show(_currentRecipe, _lessonCount, _lessonIndex);
+
+        private async UniTask ExecuteCustomAsync(IngameTutorialLesson lesson, CancellationToken token)
+        {
+            _dialogue.Hide(); _overlay.Hide();
+            var previousBegin = _input.CanBeginInteraction;
+            var previousEnd = _input.CanEndInteraction;
+            bool previousClicks = _input.AllowPointerClicks;
+            // A signal can come from actual world input while this lesson waits for its trigger/result.
+            if (lesson.AllowWorldInput)
+            {
+                _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true;
+            }
+            try { await ExecuteCustomBodyAsync(lesson, token); }
+            finally
+            {
+                _input.CanBeginInteraction = previousBegin; _input.CanEndInteraction = previousEnd; _input.AllowPointerClicks = previousClicks;
+            }
+        }
+
+        private async UniTask ExecuteCustomBodyAsync(IngameTutorialLesson lesson, CancellationToken token)
+        {
+            var target = ResolveTarget(lesson.TargetKey);
+            if (lesson.StartWhen == IngameTutorialLesson.StartCondition.TargetVisible)
+                await Until(() => target.IsVisible, token);
+            if (lesson.StartWhen == IngameTutorialLesson.StartCondition.Signal)
+            {
+                int before = SignalCount(lesson.StartSignal);
+                await Until(() => SignalCount(lesson.StartSignal) > before, token);
+            }
+            await Delay(lesson.DelaySeconds, token);
+            bool awareness = lesson.Kind == IngameTutorialLesson.LessonKind.Awareness;
+            bool button = lesson.Kind == IngameTutorialLesson.LessonKind.ForceButton;
+            if (lesson.PauseGameplay) _time.Pause(_customPauseOwner);
+            _dialogue.ShowText(lesson.Instruction, _lessonIndex, _lessonCount, awareness);
+            var areas = target == null ? Array.Empty<Func<Rect>>() : new[] { Ui(target.Highlight) };
+            _overlay.Show(_settings, button, lesson.Dim, lesson.ShowHand && button, false, areas);
+            try
+            {
+                if (awareness)
+                {
+                    int before = _overlay.TapCount;
+                    await Until(() => _overlay.TapCount > before, token);
+                }
+                else if (button)
+                {
+                    bool clicked = false;
+                    void Click() => clicked = true;
+                    target.Button.onClick.AddListener(Click);
+                    try { await Until(() => clicked, token); }
+                    finally { if (target.Button != null) target.Button.onClick.RemoveListener(Click); }
+                }
+                else
+                {
+                    int before = SignalCount(lesson.CompletionSignal);
+                    _overlay.Hide();
+                    await Until(() => SignalCount(lesson.CompletionSignal) > before, token);
+                }
+            }
+            finally { _dialogue.Hide(); _overlay.Hide(); if (lesson.PauseGameplay) _time.Release(_customPauseOwner); }
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+        }
+
+        private void Update()
+        {
+            if (_income && _running && _game.CurrentState == GameManager.GameState.Playing)
+                _currency.AddCurrency(_settings.TrainingFoodPerSecond * Time.deltaTime);
+        }
+
+        /// <summary>Executes a lesson against actual scene state, with cancellation owned by this scene.</summary>
+        public async UniTask ExecuteStageAsync(IngameTutorialStage stage, CancellationToken token)
+        {
+            switch (stage)
+            {
+                case IngameTutorialStage.FirstSummon:
+                    ShowRecipeDialogue();
+                    await SummonAsync(token);
+                    _firstUnit = _spawner.LastSpawnedUnit;
+                    break;
+                case IngameTutorialStage.BossEntrance:
+                    ShowRecipeDialogue();
+                    await BossEntranceAsync(token);
+                    _income = true;
+                    break;
+                case IngameTutorialStage.ThreeSummons:
+                    Block();
+                    float total = _spawner.CurrentCost * 3 + _settings.CostIncrease * 3;
+                    await Until(() => _currency.Currency >= total, token);
+                    ShowRecipeDialogue();
+                    for (int i = 0; i < 3; i++) await SummonAsync(token);
+                    break;
+                case IngameTutorialStage.Merge:
+                    ShowRecipeDialogue();
+                    await MergeAsync(token);
+                    break;
+                case IngameTutorialStage.LevelUp:
+                    Block();
+                    _boss.CurrentBoss.Invincible = false;
+                    _exp.DeferLevelUps = false;
+                    _exp.AddExp(0);
+                    await Until(() => _levelUpUI.IsReadyForSelection, token);
+                    ShowRecipeDialogue();
+                    if (_boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = true;
+                    await AwarenessAsync(Ui(_levelUpUI.ChoiceArea), token);
+                    _overlay.Hide(); _time.Release(this);
+                    await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token);
+                    _exp.DeferLevelUps = true;
+                    break;
+                case IngameTutorialStage.OpenUpgrade:
+                    Block();
+                    await Until(() => _currency.Currency >= _settings.UpgradeFoodThreshold, token);
+                    await RevealAsync(_upgradeGroup, token);
+                    ShowRecipeDialogue();
+                    _time.Pause(this);
+                    _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_upgradeButton.transform));
+                    await Until(() => _upgradePanel.IsOpen, token);
+                    break;
+                case IngameTutorialStage.UpgradeSlots:
+                    Block();
+                    await Delay(_settings.RevealSeconds, token);
+                    ShowRecipeDialogue();
+                    await AwarenessAsync(Ui(_upgradeSlots), token);
+                    _overlay.Hide();
+                    _time.Release(this);
+                    await Until(() => !_upgradePanel.IsOpen, token);
+                    _income = false;
+                    break;
+                case IngameTutorialStage.ChiefSkill:
+                    Block();
+                    await Delay(_settings.ChiefDelaySeconds, token);
+                    await RevealAsync(_chiefGroup, token);
+                    ShowRecipeDialogue();
+                    await AwarenessAsync(Ui((RectTransform)_chiefButton.transform), token);
+                    _overlay.Hide(); _time.Release(this);
+                    if (_boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
+                    break;
+                case IngameTutorialStage.TotemChoice:
+                    await Until(() => _rewardUI.IsOpen, token);
+                    Block();
+                    await Until(() => _rewardUI.IsReadyForSelection, token);
+                    ShowRecipeDialogue();
+                    await AwarenessAsync(Ui(_rewardUI.ChoiceArea), token);
+                    _overlay.Hide(); _time.Release(this);
+                    await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+                    break;
+                case IngameTutorialStage.OpenInventory:
+                    _input.CanBeginInteraction = _ => false; _input.AllowPointerClicks = false;
+                    _time.Pause(this);
+                    Block();
+                    await RevealAsync(_inventoryGroup, token);
+                    ShowRecipeDialogue();
+                    _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_inventoryButton.transform));
+                    await Until(() => _inventoryUI.IsOpen, token);
+                    break;
+                case IngameTutorialStage.PlaceTotem:
+                    _time.Pause(this); ShowRecipeDialogue();
+                    await PlaceTotemAsync(token);
+                    break;
+                case IngameTutorialStage.MoveTotem:
+                    _time.Pause(this); ShowRecipeDialogue();
+                    await MoveTotemAsync(token);
+                    break;
+                case IngameTutorialStage.RotateTotem:
+                    _time.Pause(this); ShowRecipeDialogue();
+                    await RotateTotemAsync(token);
+                    break;
+            }
+        }
+
+        private async UniTask SummonAsync(CancellationToken token)
+        {
+            int count = _spawner.SuccessfulSpawnCount;
+            _time.Pause(this);
+            _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_summonButton.transform));
+            await Until(() => _spawner.SuccessfulSpawnCount > count, token);
+            Block(); _time.Release(this);
+            await Until(() => _spawner.LastSpawnedUnit != null && _spawner.LastSpawnedUnit.gameObject.activeInHierarchy, token);
+        }
+
+        private async UniTask BossEntranceAsync(CancellationToken token)
+        {
+            Block();
+            _wave.StartWave();
+            await Until(() => _boss.CurrentBoss != null, token);
+            _boss.CurrentBoss.Invincible = true;
+            _guidedBoss = _boss.CurrentBoss;
+            _patterns.UnregisterBoss(_guidedBoss);
+            _time.Pause(this);
+            if (_camera != null && _camera.orthographic)
+            {
+                _cameraPosition = _camera.transform.position; _cameraSize = _camera.orthographicSize; _hasCameraPose = true;
+                var target = _boss.CurrentBoss.transform.position; target.z = _cameraPosition.z;
+                var zoom = DOTween.Sequence().SetUpdate(true)
+                    .Append(_camera.transform.DOMove(target, _settings.CameraZoomSeconds))
+                    .Join(_camera.DOOrthoSize(_cameraSize * _settings.CameraZoomRatio, _settings.CameraZoomSeconds))
+                    .AppendInterval(_settings.CameraHoldSeconds)
+                    .Append(_camera.transform.DOMove(_cameraPosition, _settings.CameraZoomSeconds))
+                    .Join(_camera.DOOrthoSize(_cameraSize, _settings.CameraZoomSeconds));
+                await zoom.ToUniTask(cancellationToken: token);
+                _hasCameraPose = false;
+            }
+            foreach (var group in _bossHud) await RevealAsync(group, token);
+            _time.Release(this);
+        }
+
+        private async UniTask MergeAsync(CancellationToken token)
+        {
+            var other = _grid.GetCell(_settings.SpawnCells[1]).OccupyingUnit;
+            if (_firstUnit == null || other == null || !UnitMergeRules.CanPair(_firstUnit, other))
+                throw new InvalidOperationException("Authored tutorial merge pair is unavailable.");
+            var source = _firstUnit.currentCell; var target = other.currentCell;
+            var a = _firstUnit.GetComponent<DragHandler>(); var b = other.GetComponent<DragHandler>();
+            _time.Pause(this);
+            _input.CanBeginInteraction = d => ReferenceEquals(d, a) || ReferenceEquals(d, b);
+            _input.CanEndInteraction = (d, p) => IsCellAt(p, ReferenceEquals(d, a) ? target : source);
+            _overlay.Show(_settings, true, true, true, false, World(source), World(target));
+            await Until(() => _firstUnit == null && other == null &&
+                (source.OccupyingUnit != null || target.OccupyingUnit != null), token);
+            _input.CanBeginInteraction = _ => false; _input.CanEndInteraction = null;
+            Block(); _time.Release(this);
+            await Until(() => _grid.GetOccupiedCells().All(c => c.OccupyingUnit == null || c.OccupyingUnit.gameObject.activeInHierarchy), token);
+        }
+
+        private async UniTask PlaceTotemAsync(CancellationToken token)
+        {
+            if (!_inventory.Items[0].isRotatable) throw new InvalidOperationException("Tutorial reward must be rotatable.");
+            _dropCell = _grid.GetEmptyCells().OrderBy(c => c.GridPosition.y).ThenBy(c => c.GridPosition.x).First();
+            await Delay(_settings.RevealSeconds, token);
+            _overlay.Show(_settings, true, true, true, false, Ui(_inventoryUI.GetSlotRect(0)), World(_dropCell));
+            var previousPlacement = _inventory.CanPlace;
+            _inventory.CanPlace = (index, cell) => index == 0 && cell == _dropCell;
+            try
+            {
+                while (_dropCell.OccupyingTotem == null)
+                {
+                    // An invalid/cancelled drag closes the normal drawer. Reopen for another attempt.
+                    if (!_inventoryUI.IsOpen && !_inventoryUI.IsDraggingOrPlacing && _inventory.Items.Count > 0)
+                        _inventoryUI.OpenForTutorialRetry();
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                }
+            }
+            finally { _inventory.CanPlace = previousPlacement; }
+            _placedTotem = _dropCell.OccupyingTotem;
+            await Until(() => !_inventoryUI.IsDraggingOrPlacing, token);
+        }
+
+        private async UniTask MoveTotemAsync(CancellationToken token)
+        {
+            var source = _placedTotem.CurrentCell;
+            _dropCell = _grid.GetEmptyCells().OrderBy(c => (c.GridPosition - source.GridPosition).sqrMagnitude).First();
+            var drag = _placedTotem.GetComponent<DragHandler>();
+            _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
+            _input.CanEndInteraction = (d, p) => !drag.IsRotating && IsCellAt(p, _dropCell);
+            _overlay.Show(_settings, true, true, true, false, World(source), World(_dropCell));
+            await Until(() => _placedTotem.CurrentCell == _dropCell, token);
+        }
+
+        private async UniTask RotateTotemAsync(CancellationToken token)
+        {
+            int rotation = _placedTotem.RotationStep;
+            var drag = _placedTotem.GetComponent<DragHandler>();
+            _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
+            _input.CanEndInteraction = (d, p) => drag.IsRotating;
+            _overlay.Show(_settings, true, true, true, true, World(_placedTotem.CurrentCell));
+            await Until(() => _placedTotem.RotationStep != rotation, token);
+        }
+
+        private async UniTask AwarenessAsync(Func<Rect> target, CancellationToken token)
+        {
+            _time.Pause(this);
+            int count = _overlay.TapCount;
+            _overlay.Show(_settings, false, true, false, false, target);
+            await Until(() => _overlay.TapCount > count, token);
+            _dialogue.Hide();
+            Block();
+            // Do not let the dismissing touch become a world press on the same frame.
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+        }
+
+        private Func<Rect> Ui(RectTransform target) => () => _overlay.ScreenRect(target);
+        private Func<Rect> World(GridCell cell) => () =>
+        {
+            if (cell == null || _camera == null) return Rect.zero;
+            if (!cell.TryGetVisualBounds(out var bounds)) bounds = new Bounds(cell.transform.position, Vector3.one);
+            // Include the occupant above the tile so the pointing hand reaches its collider.
+            var lo = _camera.WorldToScreenPoint(bounds.min);
+            var hi = _camera.WorldToScreenPoint(bounds.max + Vector3.up * bounds.size.y);
+            return Rect.MinMaxRect(Mathf.Min(lo.x,hi.x), Mathf.Min(lo.y,hi.y), Mathf.Max(lo.x,hi.x), Mathf.Max(lo.y,hi.y));
+        };
+        private static bool IsCellAt(Vector2 p, GridCell cell)
+        {
+            foreach (var hit in Physics2D.RaycastAll(p, Vector2.zero))
+                if (hit.collider.GetComponent<GridCell>() == cell) return true;
+            return false;
+        }
+        private void Block() => _overlay.Show(_settings, false, false, false, false);
+        private static UniTask Until(Func<bool> predicate, CancellationToken token) => UniTask.WaitUntil(predicate, cancellationToken: token);
+        private static UniTask Delay(float seconds, CancellationToken token) => UniTask.Delay(TimeSpan.FromSeconds(seconds), ignoreTimeScale: true, cancellationToken: token);
+        private static void SetVisible(CanvasGroup group, bool visible)
+        {
+            if (group == null) return;
+            group.alpha = visible ? 1 : 0; group.blocksRaycasts = visible; group.interactable = visible;
+        }
+        private async UniTask RevealAsync(CanvasGroup group, CancellationToken token)
+        {
+            if (group == null) return;
+            await group.DOFade(1, _settings.RevealSeconds).SetUpdate(true).ToUniTask(cancellationToken: token);
+            group.blocksRaycasts = true; group.interactable = true;
+        }
+        private void Restore()
+        {
+            _income = false;
+            if (!_running) return;
+            _running = false;
+            _overlay?.Hide(); _time?.Release(this);
+            _time?.Release(_customPauseOwner);
+            _dialogue?.Hide();
+            if (_exp != null) _exp.DeferLevelUps = false;
+            if (_input != null) { _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true; }
+            if (_boss != null && _boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
+            if (_guidedBoss != null && !_guidedBoss.IsDead) _patterns?.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
+            foreach (var group in _bossHud) SetVisible(group, true);
+            SetVisible(_upgradeGroup,true); SetVisible(_chiefGroup,true); SetVisible(_inventoryGroup,true);
+            if (_hasCameraPose && _camera != null) { _camera.transform.position = _cameraPosition; _camera.orthographicSize = _cameraSize; }
+        }
+        private void OnDisable() { _cts?.Cancel(); Restore(); }
+    }
+}

@@ -30,6 +30,8 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     /// <summary>현재 이 오브젝트를 손가락으로 끌고 있는지. 소속 드론 추적 등에 쓴다.</summary>
     public bool IsDragging => _isDragging;
+    /// <summary>Whether the current hold-and-drag is rotating a totem.</summary>
+    public bool IsRotating => _rotating;
 
     /// <summary>Records hold time without changing unit drag behavior.</summary>
     public void BeginPress()
@@ -38,18 +40,24 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_totem != null)
         {
             _gridManager?.ShowTotemRangePreview(_totem);
-            _holdFeedback?.Begin(_totem);
+            // 게이지·슬로우는 회전 준비 표시라 회전 가능한 토템에만 띄운다.
+            if (CanRotateTotem) _holdFeedback?.Begin(_totem);
         }
     }
 
-    // 게이지가 차기 전에 끌었을 때 회전으로 처리할 수 있는 토템인지.
+    // 게이지가 가득 찬 뒤 끌었을 때 회전으로 처리할 수 있는 토템인지.
     private bool CanRotateTotem => _totem != null && _totem.Data != null && _totem.Data.isRotatable &&
         _rotationUI != null && _totemInteractionSettings != null;
+
+    // 누른 뒤 회전 가능 시간(RotateHoldSeconds, 실제 시간)이 지났는지.
+    private bool IsHoldComplete => _totemInteractionSettings == null ||
+        Time.unscaledTime - _pressStartedAt >= _totemInteractionSettings.RotateHoldSeconds;
 
     /// <summary>손을 뗐거나 입력이 취소되면 토템 범위를 숨긴다.</summary>
     public void EndPress()
     {
         _isDragging = false;
+        _mergeDimmer.RestoreAll(); // 합성 연출이 재료 색을 복사하기 전에 복원
         _sellService?.EndMove(this);
         SetDropPreview(null);
         if (_totem != null)
@@ -89,6 +97,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     private readonly List<RaycastHit2D> _dropHits = new List<RaycastHit2D>();
     private readonly Dictionary<Collider2D, GridCell> _dropCellCache = new Dictionary<Collider2D, GridCell>();
     private ContactFilter2D _dropFilter = new ContactFilter2D().NoFilter();
+    private readonly UnitDimmer _mergeDimmer = new UnitDimmer();
 
     private void OnDisable() => EndPress();
 
@@ -99,6 +108,19 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(false);
         _dropPreviewCell = cell;
         if (_dropPreviewCell != null) _dropPreviewCell.Model?.SetUnitDropPreview(true, IsMergeTarget(_dropPreviewCell));
+    }
+
+    // 유닛 드래그 중 합성 짝(UnitMergeRules.CanPair)이 아닌 유닛을 어둡게 한다. EndPress에서 복원.
+    private void DimNonMergeCandidates()
+    {
+        _mergeDimmer.RestoreAll();
+        if (_gridManager == null) return;
+        foreach (var cell in _gridManager.GetOccupiedCells())
+        {
+            var other = cell.OccupyingUnit;
+            if (other == null || other == _unit || UnitMergeRules.CanPair(_unit, other)) continue;
+            _mergeDimmer.Dim(other, UnitDimmer.DefaultDimColor);
+        }
     }
 
     // 놓으면 드래그 합성이 일어나는 칸인지 — TrySwap의 합성 분기와 같은 조건.
@@ -176,16 +198,11 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         if (_unit != null && _unit.IsStunned) return;
         OnDragStartedEvent?.Invoke();
-        // 모든 토템은 홀드 게이지가 가득 찬 뒤(MoveHoldSeconds)에만 이동한다.
-        // 그 전에 끌면 회전 가능 토템은 회전, 회전 불가 토템은 아무 동작도 하지 않는다.
-        bool holdComplete = _totemInteractionSettings == null ||
-            Time.unscaledTime - _pressStartedAt >= _totemInteractionSettings.MoveHoldSeconds;
-        _rotating = _totem != null && !holdComplete && CanRotateTotem;
-        bool ignoreEarlyDrag = _totem != null && !holdComplete && !_rotating;
-        if (_totem != null) _holdFeedback?.OnDragStarted(_totem, !_rotating && !ignoreEarlyDrag);
+        // 토템도 유닛처럼 바로 끌면 이동한다.
+        // 회전 가능 토템을 홀드 게이지가 가득 찰 때까지(RotateHoldSeconds) 누른 뒤 끌면 회전한다.
+        _rotating = _totem != null && CanRotateTotem && IsHoldComplete;
+        if (_totem != null) _holdFeedback?.OnDragStarted(_totem, _rotating);
         if (_rotating) { _rotationUI?.Begin(_totem); return; }
-        // 드래그 시작 이벤트가 범위를 지우므로, 이동하지 않는 경우에도 누르는 동안은 다시 보여준다.
-        if (ignoreEarlyDrag) { _gridManager?.ShowTotemRangePreview(_totem); return; }
 
         if (_originCell == null)
         {
@@ -196,8 +213,9 @@ public class DragHandler : MonoBehaviour, IDraggable
 
         _originPos = transform.position;
         _isDragging = true;
-        _sellService?.BeginMove(this); // 이동 드래그만 (회전·이른 드래그 무시는 위에서 이미 반환)
+        _sellService?.BeginMove(this); // 이동 드래그만 (회전은 위에서 이미 반환)
         if (_unit != null || _totem != null) SetDropPreview(_originCell);
+        if (_unit != null) DimNonMergeCandidates();
         if (_totem != null) _dragRangePreview?.Begin(_totem, _originCell);
         
         if (_spriteRenderer != null)

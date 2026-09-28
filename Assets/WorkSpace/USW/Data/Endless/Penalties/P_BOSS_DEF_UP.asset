@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f1b21dee9d54954f9d4c9f3b64c7582, type: 3}
+  m_Name: P_BOSS_DEF_UP
+  m_EditorClassIdentifier: Assembly-CSharp::RunPenaltyData
+  _key: P_BOSS_DEF_UP
+  _displayName: "\uBCF4\uC2A4 \uBC29\uC5B4 \uC99D\uAC00"
+  _target: 4
+  _unit: 0
+  _delta: 0
+  _isConfigured: 0

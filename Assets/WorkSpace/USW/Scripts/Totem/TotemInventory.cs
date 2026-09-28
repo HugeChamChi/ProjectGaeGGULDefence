@@ -11,6 +11,8 @@ public sealed class TotemInventory
     private readonly TotemSpawner _spawner;
     private readonly TotemInteractionSettings _settings;
     private bool _placing;
+    /// <summary>Optional scene-owned placement restriction; unset during normal play.</summary>
+    public Func<int, GridCell, bool> CanPlace { get; set; }
     /// <summary>Fires when storage contents change.</summary>
     public event Action OnChanged;
     /// <summary>Oldest entry first; view places it at the right edge.</summary>
@@ -32,6 +34,7 @@ public sealed class TotemInventory
     public async UniTask<bool> TryPlaceAsync(int index, GridCell cell, CancellationToken token)
     {
         if (_placing || index < 0 || index >= _items.Count || cell == null || !cell.IsAvailable) return false;
+        if (CanPlace != null && !CanPlace(index, cell)) return false;
         _placing = true;
         try
         {

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca8283a477f875c428debea45403ac3b, type: 3}
+  m_Name: DEFAULT_HARD
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessBossPoolData
+  _key: DEFAULT_HARD
+  _role: 2
+  _entries:
+  - _bossKey: CrocodilePrototypeData
+    _boss: {fileID: 11400000, guid: 18634ca64d018ba47909d8bb1dbe8482, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round06
+    _boss: {fileID: 11400000, guid: 711eba722abcc454f85d62412fd82925, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round07
+    _boss: {fileID: 11400000, guid: 71b2f5af64ecd3c48ba081ba709a7050, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round08
+    _boss: {fileID: 11400000, guid: 19ed0ecb742ff5542b9cb9db2c7676f0, type: 2}
+    _enabled: 1

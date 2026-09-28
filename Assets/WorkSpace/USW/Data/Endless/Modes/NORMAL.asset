@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a334aa51f4b43fd4bb005eb1c94d1e25, type: 3}
+  m_Name: NORMAL
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessModeData
+  _key: NORMAL
+  _enabled: 1
+  _cycleLength: 10
+  _penaltyInterval: 10
+  _penaltyFirstApplyRound: 11
+  _penaltyDrawCount: 1
+  _slots:
+  - _position: 1
+    _role: 1
+    _bossKey: BossData_Round01
+    _boss: {fileID: 11400000, guid: 65ef7d25bec35284cb736d03e3c88dbc, type: 2}
+  - _position: 2
+    _role: 1
+    _bossKey: BossData_Round02
+    _boss: {fileID: 11400000, guid: 70dc0a4d05f73214ea9cb079aea91255, type: 2}
+  - _position: 3
+    _role: 2
+    _bossKey: CrocodilePrototypeData
+    _boss: {fileID: 11400000, guid: 18634ca64d018ba47909d8bb1dbe8482, type: 2}
+  - _position: 4
+    _role: 1
+    _bossKey: BossData_Round03
+    _boss: {fileID: 11400000, guid: c4a4f78dec85088428c14d6a737c247b, type: 2}
+  - _position: 5
+    _role: 1
+    _bossKey: BossData_Round04
+    _boss: {fileID: 11400000, guid: 4b31224d6fb52be428c777a381ce2562, type: 2}
+  - _position: 6
+    _role: 2
+    _bossKey: BossData_Round07
+    _boss: {fileID: 11400000, guid: 71b2f5af64ecd3c48ba081ba709a7050, type: 2}
+  - _position: 7
+    _role: 1
+    _bossKey: BossData_Round05
+    _boss: {fileID: 11400000, guid: 69ad6518c143832428a244fb482e1155, type: 2}
+  - _position: 8
+    _role: 1
+    _bossKey: BossData_Round01
+    _boss: {fileID: 11400000, guid: 65ef7d25bec35284cb736d03e3c88dbc, type: 2}
+  - _position: 9
+    _role: 1
+    _bossKey: BossData_Round02
+    _boss: {fileID: 11400000, guid: 70dc0a4d05f73214ea9cb079aea91255, type: 2}
+  - _position: 10
+    _role: 2
+    _bossKey: BossData_Round08
+    _boss: {fileID: 11400000, guid: 19ed0ecb742ff5542b9cb9db2c7676f0, type: 2}
+  _growth:
+    _isConfigured: 1
+    _firstGrowthRound: 11
+    _intervalRounds: 1
+    _hpPercentPerStep: 10
+    _defenseAddedPerStep: 0
+    _expPercentPerStep: 0
+  _penaltyPool: {fileID: 11400000, guid: a183bee2c19efc94d883c08f605b016f, type: 2}
+  _bossSelection: 1
+  _breatherBossPool: {fileID: 11400000, guid: c458fd73aef909045ab50d61747d5f69, type: 2}
+  _hardBossPool: {fileID: 11400000, guid: 98a6b1033865eae43a68a47082845923, type: 2}

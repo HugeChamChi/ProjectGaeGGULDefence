@@ -1,0 +1,399 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd3d790ed60c8b748a23cae250705090, type: 3}
+  m_Name: UpgradeTree_Lanes
+  m_EditorClassIdentifier: Assembly-CSharp::ResearchTreeData
+  TreeKey: LANES
+  LegacySaveName: UpgradeTree_Lanes
+  DisplayName: "3\uC904\uAE30 + \uAD00\uBB38"
+  ShowLanes: 1
+  ColumnSpacing: 300
+  LaneNames:
+  - "\uACF5\uACA9"
+  - "\uCE58\uBA85"
+  - "\uACBD\uC81C"
+  Nodes:
+  - Id: 1-L1
+    Stat: 0
+    Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.02
+    Row: 0
+    Column: -1
+    Parents: []
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 1
+  - Id: 1-M1
+    Stat: 2
+    Icon: {fileID: 21300000, guid: e0d9939b4e24549aebfe1441f4104b8b, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.01
+    Row: 0
+    Column: 0
+    Parents: []
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 2
+  - Id: 1-R1
+    Stat: 5
+    Icon: {fileID: 21300000, guid: 447cb81759d8742888a02fa6be150fd0, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.03
+    Row: 0
+    Column: 1
+    Parents: []
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 3
+  - Id: 1-L2
+    Stat: 1
+    Icon: {fileID: 21300000, guid: 9851fb8e6f12a40d09379e3d9a144449, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.02
+    Row: 1
+    Column: -1
+    Parents:
+    - 1-L1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 4
+  - Id: 1-M2
+    Stat: 3
+    Icon: {fileID: 21300000, guid: 9df0f4d8c02014347ad2d7de427e0ced, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.01
+    Row: 1
+    Column: 0
+    Parents:
+    - 1-M1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 5
+  - Id: 1-R2
+    Stat: 6
+    Icon: {fileID: 21300000, guid: e7f5d551fd1925040bd01a8ec66c0ae0, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 30
+    Row: 1
+    Column: 1
+    Parents:
+    - 1-R1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 6
+  - Id: 1-L3
+    Stat: 7
+    Icon: {fileID: 21300000, guid: f5d3c19ee35f34a7dae4a36e5ec57472, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.02
+    Row: 2
+    Column: -1
+    Parents:
+    - 1-L2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 7
+  - Id: 1-M3
+    Stat: 8
+    Icon: {fileID: 21300000, guid: a5edbb1acb3234a5db0f0daa141eb77b, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.01
+    Row: 2
+    Column: 0
+    Parents:
+    - 1-M2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 8
+  - Id: 1-R3
+    Stat: 4
+    Icon: {fileID: 21300000, guid: 1e41e49e206bc2947b8943351eed53d3, type: 3}
+    Shape: 0
+    MaxLevel: 3
+    ValuePerLevel: 0.03
+    Row: 2
+    Column: 1
+    Parents:
+    - 1-R2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 9
+  - Id: G1
+    Stat: 0
+    Icon: {fileID: 21300000, guid: 038ccab8cd184d04cb1bfa1d79704320, type: 3}
+    Shape: 1
+    MaxLevel: 1
+    ValuePerLevel: 0.05
+    Row: 3
+    Column: 0
+    Parents: []
+    RequireAnyParent: 0
+    RequiredTotalLevel: 12
+    ExclusiveGroup: 
+    RecommendOrder: 11
+  - Id: 2-L1
+    Stat: 0
+    Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.02
+    Row: 4
+    Column: -1
+    Parents:
+    - G1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 13
+  - Id: 2-M1
+    Stat: 2
+    Icon: {fileID: 21300000, guid: e0d9939b4e24549aebfe1441f4104b8b, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.01
+    Row: 4
+    Column: 0
+    Parents:
+    - G1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 14
+  - Id: 2-R1
+    Stat: 5
+    Icon: {fileID: 21300000, guid: 447cb81759d8742888a02fa6be150fd0, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.03
+    Row: 4
+    Column: 1
+    Parents:
+    - G1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 15
+  - Id: 2-L2
+    Stat: 1
+    Icon: {fileID: 21300000, guid: 9851fb8e6f12a40d09379e3d9a144449, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.02
+    Row: 5
+    Column: -1
+    Parents:
+    - 2-L1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 16
+  - Id: 2-M2
+    Stat: 3
+    Icon: {fileID: 21300000, guid: 9df0f4d8c02014347ad2d7de427e0ced, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.01
+    Row: 5
+    Column: 0
+    Parents:
+    - 2-M1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 17
+  - Id: 2-R2
+    Stat: 6
+    Icon: {fileID: 21300000, guid: e7f5d551fd1925040bd01a8ec66c0ae0, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 30
+    Row: 5
+    Column: 1
+    Parents:
+    - 2-R1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 18
+  - Id: 2-L3
+    Stat: 7
+    Icon: {fileID: 21300000, guid: f5d3c19ee35f34a7dae4a36e5ec57472, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.02
+    Row: 6
+    Column: -1
+    Parents:
+    - 2-L2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 19
+  - Id: 2-M3
+    Stat: 8
+    Icon: {fileID: 21300000, guid: a5edbb1acb3234a5db0f0daa141eb77b, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.01
+    Row: 6
+    Column: 0
+    Parents:
+    - 2-M2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 20
+  - Id: 2-R3
+    Stat: 4
+    Icon: {fileID: 21300000, guid: 1e41e49e206bc2947b8943351eed53d3, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.03
+    Row: 6
+    Column: 1
+    Parents:
+    - 2-R2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 21
+  - Id: G2
+    Stat: 0
+    Icon: {fileID: 21300000, guid: 038ccab8cd184d04cb1bfa1d79704320, type: 3}
+    Shape: 1
+    MaxLevel: 1
+    ValuePerLevel: 0.05
+    Row: 7
+    Column: 0
+    Parents: []
+    RequireAnyParent: 0
+    RequiredTotalLevel: 40
+    ExclusiveGroup: 
+    RecommendOrder: 23
+  - Id: 3-L1
+    Stat: 0
+    Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.02
+    Row: 8
+    Column: -1
+    Parents:
+    - G2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 25
+  - Id: 3-M1
+    Stat: 2
+    Icon: {fileID: 21300000, guid: e0d9939b4e24549aebfe1441f4104b8b, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.01
+    Row: 8
+    Column: 0
+    Parents:
+    - G2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 26
+  - Id: 3-R1
+    Stat: 5
+    Icon: {fileID: 21300000, guid: 447cb81759d8742888a02fa6be150fd0, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.03
+    Row: 8
+    Column: 1
+    Parents:
+    - G2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 27
+  - Id: 3-L2
+    Stat: 1
+    Icon: {fileID: 21300000, guid: 9851fb8e6f12a40d09379e3d9a144449, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.02
+    Row: 9
+    Column: -1
+    Parents:
+    - 3-L1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 28
+  - Id: 3-M2
+    Stat: 3
+    Icon: {fileID: 21300000, guid: 9df0f4d8c02014347ad2d7de427e0ced, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 0.01
+    Row: 9
+    Column: 0
+    Parents:
+    - 3-M1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 29
+  - Id: 3-R2
+    Stat: 6
+    Icon: {fileID: 21300000, guid: e7f5d551fd1925040bd01a8ec66c0ae0, type: 3}
+    Shape: 0
+    MaxLevel: 5
+    ValuePerLevel: 30
+    Row: 9
+    Column: 1
+    Parents:
+    - 3-R1
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 30
+  - Id: S-1
+    Stat: 9
+    Icon: {fileID: 21300000, guid: 65a1928224b8541439b433a52ea9c3d9, type: 3}
+    Shape: 2
+    MaxLevel: 3
+    ValuePerLevel: 0.1
+    Row: 10
+    Column: 0
+    Parents:
+    - 3-L2
+    - 3-M2
+    - 3-R2
+    RequireAnyParent: 0
+    RequiredTotalLevel: 0
+    ExclusiveGroup: 
+    RecommendOrder: 32

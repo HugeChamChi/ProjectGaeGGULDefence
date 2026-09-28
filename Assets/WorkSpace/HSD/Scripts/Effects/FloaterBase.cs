@@ -12,6 +12,7 @@ public abstract class FloaterBase : MonoBehaviour
     [SerializeField] protected TextMeshProUGUI _tmp;
     
     protected float _fadeDelay = 0.2f; // 페이드 아웃 시작 지연 시간
+    private Sequence _animation;
 
     protected virtual void Awake()
     {
@@ -48,6 +49,7 @@ public abstract class FloaterBase : MonoBehaviour
         if (style == null) return;
 
         // 이전 트윈 제거
+        StopAnimation();
         transform.DOKill();
         _tmp?.DOKill();
 
@@ -62,7 +64,7 @@ public abstract class FloaterBase : MonoBehaviour
         }
 
         // 시퀀스 구성
-        Sequence seq = DOTween.Sequence();
+        Sequence seq = _animation = DOTween.Sequence();
 
         // [등장]
         seq.Append(transform.DOScale(1.2f, 0.1f).SetEase(Ease.OutBack));
@@ -90,6 +92,7 @@ public abstract class FloaterBase : MonoBehaviour
 
         seq.OnComplete(() =>
         {
+            _animation = null;
             RM.Destroy(gameObject);
         });
     }
@@ -101,7 +104,15 @@ public abstract class FloaterBase : MonoBehaviour
 
     protected virtual void OnDisable()
     {
+        StopAnimation();
         transform.DOKill();
         _tmp?.DOKill();
+    }
+
+    private void StopAnimation()
+    {
+        // Child target DOKill does not stop a tween nested inside a Sequence.
+        _animation?.Kill(false);
+        _animation = null;
     }
 }
