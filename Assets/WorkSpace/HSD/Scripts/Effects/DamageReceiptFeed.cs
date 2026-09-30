@@ -58,7 +58,7 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     private RectTransform _container;
     private Canvas _canvas;
     private Transform _anchorTarget;
-    private SpriteRenderer _anchorRenderer;
+    private Renderer _anchorRenderer;       // 스프라이트 보스는 SpriteRenderer, Spine 보스는 MeshRenderer
     private float _lineHeight;             // 컨테이너 로컬 단위의 글자 높이
     private readonly decimal[] _pending = new decimal[3];
     private float _nextFlushAt;
@@ -105,7 +105,12 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     public void SetAnchor(Transform target)
     {
         _anchorTarget = target;
-        _anchorRenderer = target != null ? target.GetComponentInChildren<SpriteRenderer>() : null;
+        _anchorRenderer = null;
+        if (target != null)
+        {
+            _anchorRenderer = target.GetComponentInChildren<SpriteRenderer>();
+            if (_anchorRenderer == null) _anchorRenderer = target.GetComponentInChildren<MeshRenderer>();
+        }
         for (int i = 0; i < _pending.Length; i++) _pending[i] = 0;
         if (_popups != null) foreach (var p in _popups) Deactivate(p);
     }

@@ -5,8 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "LevelUpPoolData", menuName = "Game/LevelUpPoolData")]
 public class LevelUpPoolData : ScriptableObject
 {
-    /// <summary>표준 등급 추첨 비율.</summary>
-    public const float DefaultNormalWeight = 60f, DefaultRareWeight = 30f, DefaultEpicWeight = 10f;
+    /// <summary>표준 등급 추첨 비율. 레벨업 카드 등급은 레어/에픽/레전더리 3단계 (일반 없음, 2026-09-29).</summary>
+    public const float DefaultRareWeight = 60f, DefaultEpicWeight = 30f, DefaultLegendWeight = 10f;
     /// <summary>이름이나 배열 순서와 독립적인 풀 식별자.</summary>
     public int PoolId;
 
@@ -14,7 +14,7 @@ public class LevelUpPoolData : ScriptableObject
     public LevelUpData[] Cards = Array.Empty<LevelUpData>();
 
     /// <summary>선택 화면의 등급 확률. 카드 수와 개별 등장 가중치와 독립적이다.</summary>
-    [Min(0)] public float NormalWeight = DefaultNormalWeight;
     [Min(0)] public float RareWeight = DefaultRareWeight;
     [Min(0)] public float EpicWeight = DefaultEpicWeight;
+    [Min(0)] public float LegendWeight = DefaultLegendWeight;
 }

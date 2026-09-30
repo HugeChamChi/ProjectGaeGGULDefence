@@ -51,11 +51,9 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
             _presenter.SetUnitData(unit);
             bool showActions = !unit.IsWildcardMergeUnit;
-            if (mergeButton != null)
-            {
-                mergeButton.gameObject.SetActive(showActions);
-                mergeButton.SetState(showActions && canMerge);
-            }
+            // 합성 버튼 제거 (사용자 결정 2026-09-30) — 합성은 드래그로만 한다.
+            // 씬·프리팹의 버튼 오브젝트는 정리 전까지 남아 있으므로 항상 숨긴다.
+            if (mergeButton != null) mergeButton.gameObject.SetActive(false);
             if (sellButton != null)
             {
                 sellButton.gameObject.SetActive(showActions);

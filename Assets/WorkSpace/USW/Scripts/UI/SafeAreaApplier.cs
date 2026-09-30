@@ -42,6 +42,9 @@ public class SafeAreaApplier : MonoBehaviour
 
     private void Apply()
     {
+        // 에디터 delayCall로 예약된 뒤 컴포넌트가 제거(씬 전환·오브젝트 삭제)됐으면 건너뛴다
+        if (this == null) return;
+
         if (_rect == null)
             _rect = GetComponent<RectTransform>();
 

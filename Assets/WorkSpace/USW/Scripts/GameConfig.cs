@@ -17,6 +17,12 @@ public class GameConfig : ScriptableObject
     [Tooltip("모든 유닛·드론 공통 기본 치명타 확률 (0~1). 레벨업·토템 보너스는 이 위에 더한다.\n" +
              "엑셀 GameBalance.xlsx CombatCommon!baseCritChancePct → Tools/USW/Balance/CombatCommon Excel Import")]
     [Range(0f, 1f)] public float baseCritChance = 0f;
+    [Tooltip("실제 타격 피해 편차 (0.1 = 0.9~1.1배 고르게, 평균 1이라 기대 피해·밸런스 불변). 같은 유닛이 매번 똑같은 숫자를 내지 않게 한다.\n" +
+             "엑셀 GameBalance.xlsx CombatCommon!damageVariancePct → Tools/USW/Balance/CombatCommon Excel Import")]
+    [Range(0f, 0.5f)] public float damageVariance = 0f;
+    [Tooltip("치명타 배율 편차 (0.1 = 치명 배율 × 0.9~1.1, 평균 유지). 치명타 숫자끼리도 매번 달라진다.\n" +
+             "엑셀 GameBalance.xlsx CombatCommon!critDamageVariancePct → Tools/USW/Balance/CombatCommon Excel Import")]
+    [Range(0f, 0.5f)] public float critDamageVariance = 0f;
 
     [Header("Visuals")]
     public UnitTierPalette tierPalette; // 등급별 비주얼 설정

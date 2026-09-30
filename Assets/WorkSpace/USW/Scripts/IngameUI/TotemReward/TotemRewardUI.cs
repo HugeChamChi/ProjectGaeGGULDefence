@@ -39,6 +39,7 @@ public class TotemRewardUI : MonoBehaviour
     [Inject] private TimerController _timerManager;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private GridManager _gridManager;
+    [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private TotemInventory _inventory;
     [Inject] private WaveManager _waveManager;
@@ -151,7 +152,7 @@ public class TotemRewardUI : MonoBehaviour
         _isOpen = true;
         _busy = true;
         _onChoiceMade = onChoiceMade;
-        PauseGame();
+        PauseGame(token);
 
         try
         {
@@ -389,19 +390,31 @@ public class TotemRewardUI : MonoBehaviour
         if (!_isOpen && _pending.Count > 0) Show(_pending.Dequeue());
     }
 
-    private void PauseGame()
+    // 새 공격(유닛·드론·보스 패턴)과 타이머는 즉시 멈추고, 이미 날아가던 투사체가 도착할 유예 뒤에 게임을 정지한다.
+    private void PauseGame(CancellationToken token)
     {
-        _timeScale?.Pause(this);
         _timerManager?.StopTimer();
-        if (_gridManager == null) return;
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.PauseLoops();
+        if (_gridManager != null)
+            foreach (var cell in _gridManager.GetOccupiedCells())
+                cell.OccupyingUnit?.PauseLoops();
+        _fieldPause?.HoldAttacks(this);
+        FreezeAfterGraceAsync(token).Forget();
+    }
+
+    private async UniTaskVoid FreezeAfterGraceAsync(CancellationToken token)
+    {
+        float grace = _settings != null ? _settings.ProjectileGraceSeconds : 0f;
+        if (grace > 0f && await UniTask.Delay(TimeSpan.FromSeconds(grace), DelayType.UnscaledDeltaTime, cancellationToken: token)
+                .SuppressCancellationThrow()) return;
+        _timeScale?.Pause(this);
+        _fieldPause?.Enter(this); // 전투는 멈추고 화면(대기 모션·보스 대기·이펙트)은 살아 있게
     }
 
     private void ResumeGame()
     {
         _timeScale?.Release(this);
         _timerManager?.ResumeTimer();
+        _fieldPause?.Exit(this);
         if (_gridManager == null) return;
         foreach (var cell in _gridManager.GetOccupiedCells())
             cell.OccupyingUnit?.ResumeLoops();
@@ -420,6 +433,7 @@ public class TotemRewardUI : MonoBehaviour
         if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
         if (_container != null) _container.gameObject.SetActive(false);
         _timeScale?.Release(this);
+        _fieldPause?.Exit(this);
     }
 
     private bool OwnsSelection(CancellationToken token) => _selectionCts != null && _selectionCts.Token == token;

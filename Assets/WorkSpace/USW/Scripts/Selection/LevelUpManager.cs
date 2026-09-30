@@ -71,7 +71,17 @@ public class LevelUpManager : MonoBehaviour
     {
         // 레벨업 효과는 이 기본값 위에 더하고 뺀다.
         CritChance = _gameConfig != null ? Mathf.Clamp01(_gameConfig.baseCritChance) : 0f;
+        DamageVariance = _gameConfig != null ? Mathf.Clamp(_gameConfig.damageVariance, 0f, MaxDamageVariance) : 0f;
+        CritDamageVariance = _gameConfig != null ? Mathf.Clamp(_gameConfig.critDamageVariance, 0f, MaxDamageVariance) : 0f;
     }
+
+    private const float MaxDamageVariance = 0.5f;
+
+    /// <summary>실제 타격 피해 편차 (평균 1 균등 분포의 반폭). GameConfig 미연결 씬은 0 = 편차 없음.</summary>
+    public float DamageVariance { get; private set; }
+
+    /// <summary>치명타 배율 편차 (평균 1 균등 분포의 반폭). GameConfig 미연결 씬은 0.</summary>
+    public float CritDamageVariance { get; private set; }
 
     public event System.Action<System.Action> OnTotemSelectionRequested;
     public event System.Action OnChieftainBuffChanged;
@@ -84,7 +94,7 @@ public class LevelUpManager : MonoBehaviour
     private ILevelUpCatalog _catalog;
     private bool _poolInitialized;
     private LevelUpPoolData _selectedPool;
-    private bool _guaranteeNextEpic;
+    private bool _guaranteeNextLegend;
     private LevelUpData[] _effectivePool = System.Array.Empty<LevelUpData>();
     // ── 기본 스탯 ──────────────────────────────────────────────
     public float CritChance           { get; private set; } = 0f;
@@ -154,8 +164,8 @@ public class LevelUpManager : MonoBehaviour
     {
         if (count <= 0) return new List<LevelUpData>();
         if (!_poolInitialized) Init();
-        bool forceEpic = _guaranteeNextEpic;
-        _guaranteeNextEpic = false;
+        bool forceLegend = _guaranteeNextLegend;
+        _guaranteeNextLegend = false;
 
         if (_effectivePool == null || _effectivePool.Length == 0)
         {
@@ -169,8 +179,8 @@ public class LevelUpManager : MonoBehaviour
         foreach (var data in _effectivePool)
         {
             if (data != null && data.spawnRate > 0f && !float.IsInfinity(data.spawnRate)
-                && (data.tier == Tier.Normal || data.tier == Tier.Rare || data.tier == Tier.Epic)
-                && (!forceEpic || data.tier == Tier.Epic)
+                && (data.tier == Tier.Rare || data.tier == Tier.Epic || data.tier == Tier.Legend)
+                && (!forceLegend || data.tier == Tier.Legend)
                 && !_chosenIds.Contains(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
         }
@@ -186,7 +196,7 @@ public class LevelUpManager : MonoBehaviour
                 tierWeights[d.tier] = 0f;
             }
             tierGroups[d.tier].Add(d);
-            tierWeights[d.tier] = forceEpic ? 1f : GetTierWeight(d.tier);
+            tierWeights[d.tier] = forceLegend ? 1f : GetTierWeight(d.tier);
         }
 
         if (tierGroups.Count == 0) return new List<LevelUpData>();
@@ -198,7 +208,7 @@ public class LevelUpManager : MonoBehaviour
         if (totalWeight <= 0f) return new List<LevelUpData>();
         float roll = Random.Range(0f, totalWeight);
         float cumul = 0f;
-        Tier selectedTier = Tier.Normal;
+        Tier selectedTier = Tier.Rare;
 
         foreach (var kvp in tierWeights)
         {
@@ -241,9 +251,9 @@ public class LevelUpManager : MonoBehaviour
         // SO 미연결 검사용 기본값 역시 실제 풀 SO의 기본 비율과 같다.
         float weight = tier switch
         {
-            Tier.Normal => _selectedPool != null ? _selectedPool.NormalWeight : LevelUpPoolData.DefaultNormalWeight,
             Tier.Rare => _selectedPool != null ? _selectedPool.RareWeight : LevelUpPoolData.DefaultRareWeight,
             Tier.Epic => _selectedPool != null ? _selectedPool.EpicWeight : LevelUpPoolData.DefaultEpicWeight,
+            Tier.Legend => _selectedPool != null ? _selectedPool.LegendWeight : LevelUpPoolData.DefaultLegendWeight,
             _ => 0f
         };
         return float.IsNaN(weight) || float.IsInfinity(weight) ? 0f : Mathf.Max(0f, weight);
@@ -365,8 +375,8 @@ public class LevelUpManager : MonoBehaviour
         {
             case LevelUpSpecialEffect.None: break;
 
-            case LevelUpSpecialEffect.GuaranteeNextEpic:
-                _guaranteeNextEpic = false;
+            case LevelUpSpecialEffect.GuaranteeNextLegend:
+                _guaranteeNextLegend = false;
                 break;
 
             case LevelUpSpecialEffect.UpgradeDiscountAndRefund:
@@ -513,8 +523,8 @@ public class LevelUpManager : MonoBehaviour
         {
             case LevelUpSpecialEffect.None: break;
 
-            case LevelUpSpecialEffect.GuaranteeNextEpic:
-                _guaranteeNextEpic = true;
+            case LevelUpSpecialEffect.GuaranteeNextLegend:
+                _guaranteeNextLegend = true;
                 break;
 
             case LevelUpSpecialEffect.UpgradeDiscountAndRefund:

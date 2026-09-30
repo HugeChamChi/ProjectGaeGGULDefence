@@ -33,9 +33,9 @@ public static class SelectionExpansionChecks
                 SelectionExpansionPresets.Configure(cards[i], i);
             }
             var manager = Component<LevelUpManager>();
-            Check(cards[0].tier == Tier.Normal && cards[1].tier == Tier.Normal && cards[2].tier == Tier.Epic
-                && cards[3].tier == Tier.Epic && cards[4].tier == Tier.Rare && cards[5].tier == Tier.Normal
-                && cards[6].tier == Tier.Rare, "Seven preset tiers");
+            Check(cards[0].tier == Tier.Rare && cards[1].tier == Tier.Rare && cards[2].tier == Tier.Legend
+                && cards[3].tier == Tier.Legend && cards[4].tier == Tier.Epic && cards[5].tier == Tier.Rare
+                && cards[6].tier == Tier.Epic, "Seven preset tiers");
             CheckRarity(manager, cards[4]);
             CheckRefund(manager, cards[5]);
             CheckDrones(manager, cards);
@@ -56,27 +56,27 @@ public static class SelectionExpansionChecks
     {
         var pool = Asset<LevelUpPoolData>();
         var candidates = new List<LevelUpData>();
-        foreach (var tier in new[] { Tier.Normal, Tier.Rare, Tier.Epic })
-            for (int i = 0; i < (tier == Tier.Epic ? 12 : 3); i++)
+        foreach (var tier in new[] { Tier.Rare, Tier.Epic, Tier.Legend })
+            for (int i = 0; i < (tier == Tier.Legend ? 12 : 3); i++)
             {
                 var card = Asset<LevelUpData>(); card.chooseId = 10000 + candidates.Count;
-                card.tier = tier; card.spawnRate = tier == Tier.Epic ? 100f : 1f;
+                card.tier = tier; card.spawnRate = tier == Tier.Legend ? 100f : 1f;
                 candidates.Add(card);
             }
         Set(manager, "_poolInitialized", true); Set(manager, "_effectivePool", candidates.ToArray());
         Set(manager, "_selectedPool", pool);
         manager.ApplyEffect(guarantee);
         var choices = manager.GetRandomChoices();
-        Check(choices.Count == 3 && choices.TrueForAll(c => c.tier == Tier.Epic), "Next draw is all epic");
-        pool.NormalWeight = 1; pool.RareWeight = pool.EpicWeight = 0;
-        Check(manager.GetRandomChoices().TrueForAll(c => c.tier == Tier.Normal), "Guarantee consumed after one draw");
-        pool.NormalWeight = 60; pool.RareWeight = 30; pool.EpicWeight = 10;
+        Check(choices.Count == 3 && choices.TrueForAll(c => c.tier == Tier.Legend), "Next draw is all legend");
+        pool.RareWeight = 1; pool.EpicWeight = pool.LegendWeight = 0;
+        Check(manager.GetRandomChoices().TrueForAll(c => c.tier == Tier.Rare), "Guarantee consumed after one draw");
+        pool.RareWeight = 60; pool.EpicWeight = 30; pool.LegendWeight = 10;
         UnityEngine.Random.InitState(1739);
         var counts = new int[3];
         bool unique = true;
         for (int i = 0; i < 10000; i++)
         {
-            choices = manager.GetRandomChoices(); counts[(int)choices[0].tier]++;
+            choices = manager.GetRandomChoices(); counts[(int)choices[0].tier - (int)Tier.Rare]++;
             unique &= new HashSet<LevelUpData>(choices).Count == 3;
         }
         Check(unique, "No duplicate cards per draw");
@@ -84,10 +84,10 @@ public static class SelectionExpansionChecks
             && Math.Abs(counts[2] - 1000) < 150, "60/30/10 independent of card count and spawn weight");
         manager.RemoveEffect(guarantee); manager.ApplyEffect(guarantee);
         Set(manager, "_effectivePool", new[] { candidates[6] });
-        Check(manager.GetRandomChoices().Count == 1, "Epic shortage never inserts lower tiers");
+        Check(manager.GetRandomChoices().Count == 1, "Legend shortage never inserts lower tiers");
         manager.RemoveEffect(guarantee); manager.ApplyEffect(guarantee);
         Set(manager, "_effectivePool", new[] { candidates[0] });
-        Check(manager.GetRandomChoices().Count == 0, "No eligible epic yields empty draw");
+        Check(manager.GetRandomChoices().Count == 0, "No eligible legend yields empty draw");
         Check(manager.GetRandomChoices().Count == 1, "Empty forced draw does not retain guarantee");
         manager.RemoveEffect(guarantee);
     }
@@ -160,19 +160,19 @@ public static class SelectionExpansionChecks
     private static void CheckReroll(LevelUpData contract)
     {
         var manager = Component<LevelUpManager>(); var pool = Asset<LevelUpPoolData>();
-        pool.NormalWeight = pool.EpicWeight = 0; pool.RareWeight = 1;
+        pool.RareWeight = pool.LegendWeight = 0; pool.EpicWeight = 1;
         var candidates = new LevelUpData[4]; candidates[0] = contract;
         for (int i = 1; i < 4; i++)
         {
             candidates[i] = Asset<LevelUpData>(); candidates[i].chooseId = 12000 + i;
-            candidates[i].spawnRate = 1; candidates[i].tier = Tier.Rare;
+            candidates[i].spawnRate = 1; candidates[i].tier = Tier.Epic;
         }
         Set(manager, "_poolInitialized", true); Set(manager, "_effectivePool", candidates); Set(manager, "_selectedPool", pool);
         var ui = Component<LevelUpUI>(); var prefab = Component<LevelUpCardUI>();
         var timer = Component<TimerController>(); var grid = Component<GridManager>();
         Set(grid, "_grid", new GridCell[0, 0]);
         var game = Component<GameManager>(); Set(game, "<CurrentState>k__BackingField", GameManager.GameState.LevelUp);
-        Set(ui, "_levelUpManager", manager); Set(ui, "_timerManager", timer); Set(ui, "_gridManager", grid); Set(ui, "_gameManager", game);
+        Set(ui, "_levelUpManager", manager); Set(ui, "_timerManager", timer); Set(ui, "_gridManager", grid); Set(ui, "_gameManager", game); Set(ui, "_timeScale", new TimeScaleService());
         Set(ui, "obj", ui.gameObject); Set(ui, "cardContainer", Component<Transform>().transform); Set(ui, "cardPrefab", prefab);
         var label = Component<TMPro.TextMeshProUGUI>(); Set(ui, "selectionTimerText", label); Set(ui, "selectionSeconds", 30f);
         var selected = Component<LevelUpCardUI>(); selected.Setup(contract, null); Set(ui, "_selectedCard", selected);

@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9faba047f05c56f48aeb1166c3d7b338, type: 3}
+  m_Name: DamageFloaterLabProposal
+  m_EditorClassIdentifier: Assembly-CSharp::DamageStyleLabSettings
+  Fonts:
+  - DisplayName: Lilita One
+    Font: {fileID: 11400000, guid: aaa65b78c16511f488c948aa019d2c6e, type: 2}
+    Material: {fileID: 2100000, guid: 1ed1176a96616b045870b85d2ccad108, type: 2}
+  NormalColor:
+    Top: {r: 1, g: 0.84, b: 0.62, a: 1}
+    Bottom: {r: 1, g: 0.62, b: 0.38, a: 1}
+  CriticalColor:
+    Top: {r: 0.9490196, g: 0.25882354, b: 0.101960786, a: 1}
+    Bottom: {r: 1, g: 0.61960787, b: 0.23921569, a: 1}
+  BurnColor:
+    Top: {r: 1, g: 0.36, b: 0.3, a: 1}
+    Bottom: {r: 0.84, g: 0.06, b: 0.1, a: 1}
+  SortingOrder: 20
+  TopHudRatio: 0.16
+  MobiFlushInterval: 0.25
+  MobiFontSize: 76
+  MobiCriticalScale: 1.5
+  MobiBurnScale: 1.5
+  MobiLifetime: 0.85
+  MobiFadeStart: 0.8
+  MobiLineSpacing: 0.51
+  MobiMaxLines: 4
+  MobiFollowSpeed: 40
+  MobiPopSeconds: 0.1
+  MobiPopOvershoot: 0.5
+  MobiCriticalShake: 0
+  MobiShakeSeconds: 0.18
+  MobiEntry: 1
+  MobiSlamSeconds: 0.1
+  MobiSlamStartScale: 1.7
+  MobiSlamStretch: {x: 1.25, y: 0.8}
+  MobiSlamFrom: {x: -60, y: -40}
+  MobiSlamUndershoot: 0.06
+  MobiFadeRise: 12
+  MobiRelativeSizePower: 0.6
+  MobiRelativeSizeRange: {x: 0.8, y: 1.35}
+  MobiRelativeSizeWindow: 20
+  MobiOffset: {x: 239.3, y: 153.8}
+  CookieFlushInterval: 0.15
+  CookieFontSize: 80
+  CookieCriticalScale: 1.5
+  CookieBurnScale: 1.5
+  CookieAlpha: 0.85
+  CookieLifetime: 0.6
+  CookieRise: 36
+  CookiePopSeconds: 0.08
+  CookiePopOvershoot: 0.3
+  CookieScatter: {x: 0.7, y: 0.55}
+  CookieMaxPopups: 14
+  SampleSeconds: 3
+  SampleLoopInEditor: 0
+  SampleHitInterval: 0.07
+  SampleNormalDamage: 1200
+  SampleCriticalMultiplier: 2.5
+  SampleBurnDamage: 300
+  SampleCriticalChance: 0.2
+  SampleBurnChance: 0.12
+  SampleDamageSpread: 0.3

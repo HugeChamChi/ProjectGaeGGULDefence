@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BossData_Round09
   m_EditorClassIdentifier: Assembly-CSharp::BossData
   _displayName: Boss_Snake
-  _prefab: {fileID: 5097534829583230306, guid: e243159e266ef9a42b049445c8e3a3f3, type: 3}
+  _prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2, type: 3}
   _icon: {fileID: 0}
   _maxHp: 2600000
   _defense: 0

@@ -13,6 +13,9 @@ public class LevelUpTimeDirector : MonoBehaviour
 {
     [Inject] private TimeScaleService _timeScale;
 
+    [Tooltip("느려지기 전에 1배속을 유지하는 시간 — 이미 날아가던 투사체가 보스에 닿을 시간 (투사체 비행 0.2~0.35초). "
+             + "이 동안 새 공격·보스 패턴은 FieldPauseVisuals.HoldAttacks로 막혀 있다. 0이면 바로 느려진다.")]
+    [SerializeField, Min(0f)] private float _projectileGrace = 0.4f;
     [Tooltip("레벨업 순간 1배속 → 정지까지 서서히 느려지는 시간 (슬로우모션). 0이면 즉시 정지.")]
     [SerializeField, Min(0f)] private float _slowDownDuration = 0.35f;
     [SerializeField] private Ease _slowDownEase = Ease.OutQuad;
@@ -33,8 +36,9 @@ public class LevelUpTimeDirector : MonoBehaviour
             onStopped?.Invoke();
             return;
         }
-        _ramp = DOTween.To(() => _requested, SetRequest, 0f, _slowDownDuration)
-            .SetEase(_slowDownEase).SetUpdate(true).SetLink(gameObject, LinkBehaviour.KillOnDestroy)
+        var slow = DOTween.To(() => _requested, SetRequest, 0f, _slowDownDuration).SetEase(_slowDownEase);
+        _ramp = DOTween.Sequence().AppendInterval(_projectileGrace).Append(slow)
+            .SetUpdate(true).SetLink(gameObject, LinkBehaviour.KillOnDestroy)
             .OnComplete(() => { _ramp = null; SetRequest(0f); onStopped?.Invoke(); });
     }
 

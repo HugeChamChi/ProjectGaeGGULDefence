@@ -18,6 +18,9 @@ public class DamageStyleLabSettings : ScriptableObject
         public Material Material;
     }
 
+    /// <summary>모비노기형 숫자 등장 방식.</summary>
+    public enum MobiEntryStyle { Pop, Slam }
+
     /// <summary>위→아래 그라데이션 두 색.</summary>
     [Serializable]
     public struct Gradient2
@@ -70,6 +73,26 @@ public class DamageStyleLabSettings : ScriptableObject
     [Tooltip("치명타 등장 흔들림 (캔버스 단위)")]
     public float MobiCriticalShake = 8f;
     public float MobiShakeSeconds = 0.18f;
+    [Tooltip("등장 방식. Pop = 0에서 커졌다 줄어듦(기존), Slam = 크게 찍힌 뒤 줄어들며 자리 잡음(모비노기 GIF 분석, FxLab_DamageFloater)")]
+    public MobiEntryStyle MobiEntry = MobiEntryStyle.Pop;
+    [Tooltip("Slam: 크게 찍힌 상태에서 제자리 크기로 줄어드는 시간")]
+    public float MobiSlamSeconds = 0.1f;
+    [Tooltip("Slam: 등장 첫 프레임 크기 배율")]
+    public float MobiSlamStartScale = 1.7f;
+    [Tooltip("Slam: 등장 첫 프레임 가로·세로 추가 배율 (가로로 늘고 세로로 눌린 모양 → 1,1로 복귀)")]
+    public Vector2 MobiSlamStretch = new Vector2(1.25f, 0.8f);
+    [Tooltip("Slam: 등장 첫 프레임 위치 = 자리 + 이 값 (캔버스 단위). 레퍼런스는 왼쪽 아래에서 튀어 들어온다")]
+    public Vector2 MobiSlamFrom = new Vector2(-60f, -40f);
+    [Tooltip("Slam: 자리 잡을 때 살짝 작아졌다 돌아오는 정도 (0.06 = 94%까지). 쫀득한 반동")]
+    [Range(0f, 0.3f)] public float MobiSlamUndershoot = 0.06f;
+    [Tooltip("사라지는 동안 위로 뜨는 거리 (캔버스 단위, 0 = 제자리에서 사라짐)")]
+    public float MobiFadeRise;
+    [Tooltip("피해량 비례 크기: (이번 피해 / 같은 종류 최근 평균)^이 값. 큰 타격은 크게, 작은 타격은 작게. 0 = 끔(모두 같은 크기)")]
+    [Range(0f, 2f)] public float MobiRelativeSizePower;
+    [Tooltip("피해량 비례 크기의 최소·최대 배율")]
+    public Vector2 MobiRelativeSizeRange = new Vector2(0.8f, 1.35f);
+    [Tooltip("최근 평균에 쓰는 타격 수 (클수록 평균이 천천히 바뀜)")]
+    [Min(1)] public int MobiRelativeSizeWindow = 20;
     [Tooltip("숫자 묶음 위치 = 보스 중심 + 이 값 (캔버스 단위, 1080 기준). X+ 오른쪽, Y+ 위. "
              + "가장 아래(새) 줄 위치이고 이전 줄은 위로 쌓인다. 플레이 중에 바꾸면 바로 반영된다. "
              + "쌓인 줄이 상단 HUD(TopHudRatio)에 닿으면 흐려진다.")]

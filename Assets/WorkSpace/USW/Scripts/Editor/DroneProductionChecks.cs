@@ -28,8 +28,8 @@ public static class DroneProductionChecks
             DroneSelectionPresets.Configure(support, DroneSelectionKind.MergeSupport);
             var production = Asset<LevelUpData>(); production.chooseId = 9120;
             DroneSelectionPresets.Configure(production, DroneSelectionKind.ExtraCombatDrone);
-            Check(support.tier == Tier.Rare && support.droneEffect.Value == 0.1f, "Support preset");
-            Check(production.tier == Tier.Epic && production.droneEffect.Count == 1, "Production preset");
+            Check(support.tier == Tier.Epic && support.droneEffect.Value == 0.1f, "Support preset");
+            Check(production.tier == Tier.Legend && production.droneEffect.Count == 1, "Production preset");
 
             var spawn = Component<SupportSpawnCheckProbe>(); Set(spawn, "_levelUpManager", manager);
             spawn.RequestMergeSupport(); Check(spawn.PendingSupportCount == 0, "No card no reward");

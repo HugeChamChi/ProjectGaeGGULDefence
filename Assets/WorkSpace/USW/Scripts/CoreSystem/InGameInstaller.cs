@@ -118,7 +118,6 @@ public class InGameInstaller : MonoBehaviour
     private void WireUnitActionPopup()
     {
         if (_unitInfoPanel == null) { Debug.LogError("[InGameInstaller] _unitInfoPanel 미연결"); return; }
-        if (_unitInfoPanel.MergeButton == null) Debug.LogError("[InGameInstaller] mergeButton 미연결");
         // 판매 버튼은 선택 사항 — 드래그 판매만 쓰는 씬(IngameTest)은 판매 버튼이 없다.
         if (_mergeManager == null) { Debug.LogError("[InGameInstaller] _mergeManager null — MergeManager 씬에 없음"); return; }
 
@@ -126,7 +125,6 @@ public class InGameInstaller : MonoBehaviour
         _mergeManager.OnSelectionCleared += _unitInfoPanel.Close;
         _mergeManager.OnSelectionCleared += _totemInfoPanel.Close;
 
-        _unitInfoPanel.MergeButton.OnMergeRequested += _mergeManager.ExecuteMerge;
         if (_unitInfoPanel.SellButton != null) _unitInfoPanel.SellButton.OnSellRequested += OnSellUnitRequested;
         _unitInfoPanel.OnDismissRequested += _mergeManager.ClearSelection;
     }
@@ -191,7 +189,6 @@ public class InGameInstaller : MonoBehaviour
         {
             merge.OnUnitSelected -= _unitInfoPanel.SetData;
             merge.OnSelectionCleared -= _unitInfoPanel.Close;
-            _unitInfoPanel.MergeButton.OnMergeRequested -= merge.ExecuteMerge;
             _unitInfoPanel.OnDismissRequested -= merge.ClearSelection;
         }
 

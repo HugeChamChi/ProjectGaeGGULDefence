@@ -91,6 +91,11 @@ public class DroneUnit : MonoBehaviour
     private AnimatorUpdateMode _updateModeBeforePause;
     private bool _inPauseIdle;
 
+    private bool _attackHeld;
+
+    /// <summary>선택 화면이 열린 동안 새 공격을 보류한다 (이미 날아가는 투사체는 그대로). 풀리면 기다리던 사격부터 한다.</summary>
+    public void SetAttackHold(bool on) => _attackHeld = on;
+
     /// <summary>레벨업 등 일시정지 중 부유/애니메이션을 unscaled로 유지한다 (시각 전용).</summary>
     public void SetPauseIdle(bool on)
     {
@@ -302,6 +307,8 @@ public class DroneUnit : MonoBehaviour
 
             if (await UniTask.Delay(delayMs, cancellationToken: token).SuppressCancellationThrow())
                 return;
+            while (_attackHeld)
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
 
             var boss = _bossManager?.CurrentBoss;
             if (boss == null || boss.IsDead) continue;

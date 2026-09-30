@@ -13,6 +13,7 @@ public class BossPatternController : MonoBehaviour
     private const float MinimumInterval = 0.01f;
     [Inject] private GridManager _gridManager;
     [Inject] private GameManager _gameManager;
+    [Inject] private FieldPauseVisuals _fieldPause;
     private BattleCameraShake _shake;
 
     private sealed class PatternState
@@ -137,6 +138,7 @@ public class BossPatternController : MonoBehaviour
         if (_gameManager != null && (_gameManager.CurrentState == GameManager.GameState.Win || _gameManager.CurrentState == GameManager.GameState.Lose))
         { if (_entries.Count > 0) UnregisterAll(); return; }
         if (Time.deltaTime <= 0f || (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing)) return;
+        if (_fieldPause != null && _fieldPause.AttacksHeld) return; // 선택 화면 유예 중 — 패턴 진행 정지
         _iteration.Clear();
         _iteration.AddRange(_entries.Keys);
         foreach (var boss in _iteration)

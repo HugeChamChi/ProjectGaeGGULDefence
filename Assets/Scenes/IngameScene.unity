@@ -4701,7 +4701,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3d0a477e49f9e774c8f336dd14bae708, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7e309d80e63ca2b4fa8418e689f9c919, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9641,7 +9641,7 @@ MonoBehaviour:
     type: 3}
   selectionTimerText: {fileID: 8605381313565728019}
   selectionSeconds: 30
-  _disableSelectionTimer: 0
+  _disableSelectionTimer: 1
 --- !u!114 &886132647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14641,7 +14641,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 64d084f5f00dde04c9544f4dd3ce1581, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c0a6c7d03cbe1574681e4ec6f9411079, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

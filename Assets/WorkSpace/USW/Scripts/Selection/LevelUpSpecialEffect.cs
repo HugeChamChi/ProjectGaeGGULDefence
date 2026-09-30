@@ -34,7 +34,7 @@ public enum LevelUpSpecialEffect
 
     // ── 파티 전용 선택지 ─────────────────────────────────────
     GrantCourageBuff = 31,           // 9001~9004: "용기" 버프 specialValue스택 전체 유닛에게 부여 (1스택=투사체 크기 10%)
-    GuaranteeNextEpic = 32,
+    GuaranteeNextLegend = 32,        // 다음 선택지 한 번은 레전더리 등급 확정 (구 GuaranteeNextEpic, 값 유지)
     UpgradeDiscountAndRefund = 33,
     RerollChoices = 34,
 }

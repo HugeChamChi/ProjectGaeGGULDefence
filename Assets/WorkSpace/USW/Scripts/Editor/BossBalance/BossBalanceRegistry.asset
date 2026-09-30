@@ -38,7 +38,7 @@ MonoBehaviour:
     Prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2,
       type: 3}
   - Key: Crocus
-    Prefab: {fileID: 5097534829583230306, guid: e243159e266ef9a42b049445c8e3a3f3,
+    Prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2,
       type: 3}
   - Key: DummyBoss01
     Prefab: {fileID: 5097534829583230306, guid: 88dc89b788beecd4bbbd08b6b65c87ae,

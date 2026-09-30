@@ -1,7 +1,6 @@
 using UnityEngine;
 using VContainer;
 using System;
-using DG.Tweening;
 using Cysharp.Threading.Tasks;
 
 /// <summary>
@@ -86,7 +85,6 @@ public abstract class BossBase : MonoBehaviour
     public BossPatternData[] Patterns => _patterns;
     /// <summary>패턴 시작 알림. 최종 아트가 없을 때도 연출을 독립적으로 연결할 수 있다.</summary>
     public event Action<BossPatternData> OnPatternStarted;
-    private bool _isCastingPattern;
     /// <summary>유효한 트리거만 발동한다. Impact 판정은 애니메이션 이벤트에 의존하지 않는다.</summary>
     public void PlayPatternAnimation(BossPatternData pattern)
     {
@@ -96,18 +94,16 @@ public abstract class BossBase : MonoBehaviour
             if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == pattern.AnimationTrigger)
             {
                 _animator.SetTrigger(parameter.nameHash);
-                SuppressHitFeedbackDuring(pattern.SkillDuration);
                 break;
             }
     }
 
     /// <summary>
-    /// 패턴이 카운터로 취소됐을 때: 아직 소비되지 않은 패턴 트리거를 지우고 피격 연출 억제를 해제한다.
+    /// 패턴이 카운터로 취소됐을 때: 아직 소비되지 않은 패턴 트리거를 지운다.
     /// 이미 재생 중인 패턴 애니메이션은 컨트롤러 전이에 맡긴다.
     /// </summary>
     public void InterruptPatternAnimation(BossPatternData pattern)
     {
-        _isCastingPattern = false;
         if (_animator == null || pattern == null || string.IsNullOrEmpty(pattern.AnimationTrigger)) return;
         foreach (var parameter in _animator.parameters)
             if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == pattern.AnimationTrigger)
@@ -115,20 +111,6 @@ public abstract class BossBase : MonoBehaviour
                 _animator.ResetTrigger(parameter.nameHash);
                 break;
             }
-    }
-
-    /// <summary>스킬 연출(스프라이트 프레임 교체) 도중엔 피격 스케일 펀치가 겹쳐 튀어 보이지 않도록 잠시 끈다.</summary>
-    private void SuppressHitFeedbackDuring(float seconds)
-    {
-        _isCastingPattern = true;
-        SuppressHitFeedbackAsync(seconds).Forget();
-    }
-
-    private async UniTaskVoid SuppressHitFeedbackAsync(float seconds)
-    {
-        await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, seconds)), cancellationToken: this.GetCancellationTokenOnDestroy())
-            .SuppressCancellationThrow();
-        _isCastingPattern = false;
     }
 
     // ── 이벤트 ─────────────────────────────────────────────────────
@@ -163,10 +145,6 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>데미지 1당 지급할 경험치 배율. BossManager.SpawnSingleBoss가 BossEntry 기준으로 설정한다.</summary>
     public float ExpMultiplier { get; set; } = 0.01f;
 
-    // ── 트윈 관련 ──────────────────────────────────────────────────
-    private Vector3 _originalScale;
-    private Tween _hitTween;
-
     // ── 초기화 ──────────────────────────────────────────────────────
     /// <summary>BossManager.SpawnBosses() 내부에서 WaveData의 hp 주입</summary>
     public void Init(decimal hp)
@@ -175,11 +153,6 @@ public abstract class BossBase : MonoBehaviour
         Debuffs?.Clear();
         Debuffs = new DebuffController(units => ApplyFinalDamage(units, null, BossDamageKind.Burn), () => !IsDead);
         _debuffTime = 0; _combatTimeOrigin = _combatTimer != null ? _combatTimer.ElapsedCombatTime : 0; _deathStarted = false;
-
-        if (_originalScale == Vector3.zero)
-        {
-            _originalScale = transform.localScale;
-        }
 
         if (_animator != null)
         {
@@ -227,11 +200,6 @@ public abstract class BossBase : MonoBehaviour
         bool died = IsDead;
         if (died) { Debuffs?.Clear(); _deathStarted = true; }
 
-        if (!IsDead)
-        {
-            PlayHitAnimation();
-        }
-
         OnHpChanged?.Invoke(CurrentHp, MaxHp);
         decimal dealt = (decimal)actual / CombatHealth.Scale;
         OnDamaged?.Invoke(dealt, hitPos);
@@ -243,7 +211,7 @@ public abstract class BossBase : MonoBehaviour
         }
     }
 
-    /// <summary>애니메이터에 해당 이름의 Trigger 파라미터가 실제로 있을 때만 true. 전용 Hit/Death 아트가 없는 보스가 SetTrigger 콘솔 에러를 내지 않도록 한다.</summary>
+    /// <summary>애니메이터에 해당 이름의 Trigger 파라미터가 실제로 있을 때만 true. 전용 Death 아트가 없는 보스가 SetTrigger 콘솔 에러를 내지 않도록 한다.</summary>
     private static bool HasTrigger(Animator animator, string name)
     {
         if (animator == null) return false;
@@ -258,7 +226,6 @@ public abstract class BossBase : MonoBehaviour
         if (HasTrigger(_animator, "Death"))
         {
             Debug.Log($"[BossBase] Triggering 'Death' animation on {_animator.name}");
-            if (HasTrigger(_animator, "Hit")) _animator.ResetTrigger("Hit"); // 찌꺼기 트리거 초기화
             _animator.SetTrigger("Death");
 
             // 애니메이션 재생을 위해 1초 대기 후 파괴 이벤트 호출
@@ -271,20 +238,6 @@ public abstract class BossBase : MonoBehaviour
         Debug.Log($"[BossBase] Invoking OnDeath and OnAnyBossDied for {gameObject.name}");
         OnDeath?.Invoke();
         OnAnyBossDied?.Invoke();
-    }
-
-    private void PlayHitAnimation()
-    {
-        if (HasTrigger(_animator, "Hit"))
-        {
-            _animator.SetTrigger("Hit");
-        }
-        else if (!_isCastingPattern) // 스킬 스프라이트 연출 중엔 스케일 펀치를 겹치지 않게 생략
-        {
-            _hitTween?.Kill();
-            transform.localScale = _originalScale;
-            _hitTween = transform.DOPunchScale(_originalScale * 0.2f, 0.15f, 0, 0f).SetLink(gameObject);
-        }
     }
 
     // ── 패턴 실행 (자식 구현) ───────────────────────────────────────

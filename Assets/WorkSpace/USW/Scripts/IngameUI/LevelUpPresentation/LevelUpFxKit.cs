@@ -37,19 +37,20 @@ public sealed class LevelUpFxKit
     /// <summary>링 임시 스프라이트.</summary>
     public static Sprite Ring { get { EnsureSprites(); return _ring; } }
 
-    /// <summary>슬롯 프리팹 또는 임시 버스트를 worldPos에 재생한다.</summary>
-    public void Spawn(GameObject prefab, RectTransform root, Vector3 worldPos, float placeholderSize)
+    /// <summary>슬롯 프리팹 또는 임시 버스트를 worldPos에 재생한다. 슬롯 프리팹이면 생성한 인스턴스를 반환한다 (임시 이펙트/실패 시 null).</summary>
+    public GameObject Spawn(GameObject prefab, RectTransform root, Vector3 worldPos, float placeholderSize)
     {
-        if (root == null) return;
+        if (root == null) return null;
         if (prefab != null)
         {
             var fx = Object.Instantiate(prefab, root);
             fx.transform.position = worldPos;
             fx.transform.SetAsLastSibling();
             TrackAndExpire(fx, _prefabLifetime);
-            return;
+            return fx;
         }
         SpawnPlaceholderBurst(root, worldPos, placeholderSize);
+        return null;
     }
 
     /// <summary>외부에서 만든 연출 오브젝트를 추적 목록에 등록한다 (DestroyAll 대상).</summary>

@@ -28,7 +28,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Button   button;
 
-    [Header("Tier Border Sprites (0=Normal 1=Rare 2=Epic 3=Legend)")]
+    [Header("Tier Border Sprites (0=Rare 1=Epic 2=Legend) — 레벨업 카드 등급은 레어부터")]
     [SerializeField] private Sprite[] borderSprites;
 
     [Header("Scale Animation")]
@@ -145,7 +145,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         if (nameText != null)
             nameText.text = data.chooseName;
 
-        ApplyTierSprites(data?.tier ?? Tier.Normal);
+        ApplyTierSprites(data?.tier ?? Tier.Rare);
     }
 
     // ── 선택/해제 ──────────────────────────────────────────────
@@ -197,7 +197,8 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     private void ApplyTierSprites(Tier tier)
     {
-        int idx = (int)tier;
+        int idx = (int)tier - (int)Tier.Rare;
+        if (idx < 0) idx = 0;
 
         if (borderImage != null && borderSprites != null && idx < borderSprites.Length)
             borderImage.sprite = borderSprites[idx];

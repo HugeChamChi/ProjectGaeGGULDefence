@@ -36,6 +36,8 @@ public static class CombatCommonImporter
     private static readonly Binding[] Bindings =
     {
         new() { Key = "baseCritChancePct", Label = "기본 치명타 확률", Property = nameof(GameConfig.baseCritChance), ExcelToSo = 0.01f, Min = 0f, Max = 100f },
+        new() { Key = "damageVariancePct", Label = "피해 편차 (±%)", Property = nameof(GameConfig.damageVariance), ExcelToSo = 0.01f, Min = 0f, Max = 50f },
+        new() { Key = "critDamageVariancePct", Label = "치명 배율 편차 (±%)", Property = nameof(GameConfig.critDamageVariance), ExcelToSo = 0.01f, Min = 0f, Max = 50f },
     };
 
     /// <summary>검증 결과와 적용할 값.</summary>

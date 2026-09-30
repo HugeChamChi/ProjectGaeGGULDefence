@@ -11,6 +11,7 @@ using VContainer;
 ///   1. 게이지 풀 — 패널을 숨긴 채 소환 버튼 펀치 + [이펙트 슬롯 A: 게이지 버스트] → 잠시 뒤 패널 페이드 인
 ///   2. 카드 1→2→3 — 소환 버튼 위치에서 빛덩어리(노랑→흰색 덮개)로 튀어나와 제자리로 비행
 ///   3. 도착 — 덮개가 걷히며 내용 공개 + [이펙트 슬롯 B: 카드 공개 버스트]
+///   (선택) 등급 연출 — 패널이 나타날 때 카드 뒤 TierRevealFx를 카드 최고 등급으로 재생하고, 끝날 때까지 카드 등장을 늦춘다.
 /// 선택 후 연출은 LevelUpSelectSequence, 획득 연출은 LevelUpCollectEffect가 담당한다.
 /// 레벨업 중 Time.timeScale = 0 이므로 모든 트윈은 unscaled로 돈다.
 /// </summary>
@@ -29,6 +30,8 @@ public class LevelUpRevealSequence : MonoBehaviour
     [SerializeField] private GameObject _gaugeBurstPrefab;
     [Tooltip("B: 카드 내용이 공개될 때 카드 중심에서 터지는 이펙트.")]
     [SerializeField] private GameObject _cardRevealPrefab;
+    [Tooltip("등급 연출: 패널 안 카드 뒤에 둔 TierRevealFx. 카드 중 가장 높은 등급으로 재생하고, 끝날 때까지 카드 등장을 늦춘다. 비우면 없음.")]
+    [SerializeField] private TierRevealFx _tierReveal;
     [Tooltip("슬롯 프리팹 인스턴스를 자동 제거할 시간(초, unscaled).")]
     [SerializeField, Min(0.1f)] private float _effectLifetime = 1.5f;
 
@@ -63,6 +66,7 @@ public class LevelUpRevealSequence : MonoBehaviour
 
     private LevelUpFxKit _fx;
     private readonly List<Image> _slabs = new List<Image>();
+    private readonly List<Tween> _running = new List<Tween>();
 
     private LevelUpFxKit Fx => _fx ??= new LevelUpFxKit(_effectLifetime, _placeholderColor);
 
@@ -82,6 +86,8 @@ public class LevelUpRevealSequence : MonoBehaviour
     public async UniTask PlayAsync(IReadOnlyList<LevelUpCardUI> cards, CanvasGroup panel, bool fromGauge, CancellationToken token)
     {
         var root = ResolveEffectRoot(cards);
+        float tierStart = 0f;
+        float cardsAt = 0f;
         try
         {
             // 1. 게이지 풀 — 패널이 숨겨진 상태라 필드 위 소환 버튼에서 섬광이 보인다.
@@ -97,11 +103,23 @@ public class LevelUpRevealSequence : MonoBehaviour
                     Fx.Spawn(_gaugeBurstPrefab, originRoot, LevelUpUiSpace.WorldPointIn(originRoot, _origin), _gaugeBurstSize);
                 }
                 await UniTask.Delay(LevelUpUiSpace.Ms(_panelDelay), DelayType.Realtime, cancellationToken: token);
+                tierStart = Time.realtimeSinceStartup;
+                cardsAt = PlayTierReveal(cards);
                 if (panel != null)
                     await panel.DOFade(1f, _panelFadeInDuration).SetUpdate(true).SetLink(panel.gameObject)
-                               .ToUniTask(cancellationToken: token);
+                               .ToUniTask(TweenCancelBehaviour.CancelAwait, token); // 취소 시 트윈은 finally에서 정리
                 await UniTask.Delay(LevelUpUiSpace.Ms(_afterPanelDelay), DelayType.Realtime, cancellationToken: token);
             }
+            else
+            {
+                tierStart = Time.realtimeSinceStartup;
+                cardsAt = PlayTierReveal(cards);
+            }
+
+            // 등급 연출이 카드 등장 시각을 늦추면 그만큼 더 기다린다 (패널 페이드 등으로 이미 흐른 시간은 뺀다)
+            float remain = cardsAt - (Time.realtimeSinceStartup - tierStart);
+            if (remain > 0f)
+                await UniTask.Delay(LevelUpUiSpace.Ms(remain), DelayType.Realtime, cancellationToken: token);
 
             // 2~3. 카드 순차 등장
             var tasks = new List<UniTask>(cards.Count);
@@ -115,6 +133,10 @@ public class LevelUpRevealSequence : MonoBehaviour
         finally
         {
             // 취소/완료 어느 쪽이든 카드가 정상 상태로 남도록 정리한다.
+            // 카드 비행/공개 시퀀스는 취소 시 대기만 끝내고(CancelAwait) 여기서 한꺼번에 종료한다 —
+            // 트윈 Kill 콜백 안에서 다른 트윈을 Kill하면 DOTween 내부 목록이 꼬여 IndexOutOfRange가 난다.
+            foreach (var seq in _running) if (seq.IsActive()) seq.Kill();
+            _running.Clear();
             foreach (var card in cards)
                 if (card != null) { card.transform.DOKill(); card.transform.localScale = Vector3.one; }
             ClearSlabs();
@@ -136,17 +158,33 @@ public class LevelUpRevealSequence : MonoBehaviour
             .Join(rt.DOMove(target, _cardFlyDuration).SetEase(_cardFlyEase))
             .Join(rt.DOScale(_cardOvershootScale, _cardFlyDuration).SetEase(_cardFlyEase))
             .Join(slab.DOColor(Color.white, _cardFlyDuration).SetEase(Ease.InQuad));
-        await fly.ToUniTask(cancellationToken: token);
+        _running.Add(fly);
+        await fly.ToUniTask(TweenCancelBehaviour.CancelAwait, token);
 
         // 도착 순간: 흰 섬광 → 덮개가 걷히며 내용 공개 + 버스트
         slab.color = Color.white;
         await UniTask.Delay(LevelUpUiSpace.Ms(_flashToWhiteDuration), DelayType.Realtime, cancellationToken: token);
-        Fx.Spawn(_cardRevealPrefab, root, LevelUpUiSpace.WorldPointIn(root, rt), _cardBurstSize);
+        var fx = Fx.Spawn(_cardRevealPrefab, root, LevelUpUiSpace.WorldPointIn(root, rt), _cardBurstSize);
+        if (fx != null && fx.TryGetComponent<CardRevealFx>(out var cardFx)) cardFx.PlayOnCard(card);
 
         var reveal = DOTween.Sequence().SetUpdate(true).SetLink(card.gameObject)
             .Join(slab.DOFade(0f, _revealFadeDuration).SetEase(Ease.OutQuad))
             .Join(rt.DOScale(1f, _settleDuration).SetEase(Ease.OutBack));
-        await reveal.ToUniTask(cancellationToken: token);
+        _running.Add(reveal);
+        await reveal.ToUniTask(TweenCancelBehaviour.CancelAwait, token);
+    }
+
+    /// <summary>카드 최고 등급으로 등급 연출을 재생하고, 카드가 날아오기 시작할 시각(초)을 반환한다. 슬롯이 비면 0.</summary>
+    private float PlayTierReveal(IReadOnlyList<LevelUpCardUI> cards)
+    {
+        if (_tierReveal == null) return 0f;
+        var top = Tier.Rare;
+        foreach (var card in cards)
+        {
+            var data = card != null ? card.GetData() : null;
+            if (data != null && data.tier > top) top = data.tier;
+        }
+        return _tierReveal.Play(top);
     }
 
     // ── 덮개(빛덩어리) ─────────────────────────────────────────

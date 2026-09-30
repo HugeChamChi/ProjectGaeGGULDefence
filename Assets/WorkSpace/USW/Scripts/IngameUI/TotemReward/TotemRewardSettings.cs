@@ -9,6 +9,11 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "TotemRewardSettings", menuName = "USW/Totem Reward Settings")]
 public class TotemRewardSettings : ScriptableObject
 {
+    [Header("정지")]
+    [Tooltip("화면이 열린 뒤 게임을 멈추기 전 1배속 유예 — 이미 날아가던 투사체가 보스에 닿을 시간 (투사체 비행 0.2~0.35초). "
+             + "새 공격·보스 패턴·타이머는 열리는 즉시 멈춘다. 0이면 즉시 정지.")]
+    [SerializeField, Min(0f)] private float _projectileGraceSeconds = 0.4f;
+
     [Header("표시 방식 (테스트 씬 토글의 시작값)")]
     [Tooltip("개요(사선 띠)에 토템 설명을 함께 보여준다.")]
     [SerializeField] private bool _showDescriptionOnOverview = true;
@@ -95,6 +100,8 @@ public class TotemRewardSettings : ScriptableObject
     public float BandSlideSeconds => _bandSlideSeconds;
     public float BandStaggerSeconds => _bandStaggerSeconds;
     public float SwitchSeconds => _switchSeconds;
+    /// <summary>게임 정지 전 투사체 도착 유예 (실제 초).</summary>
+    public float ProjectileGraceSeconds => _projectileGraceSeconds;
     public float SwipeThreshold => _swipeThreshold;
 
     /// <summary>띠 색. 등급 색 모드면 팔레트의 등급 글자색, 아니면 자리 고정 색.</summary>

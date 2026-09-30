@@ -31,8 +31,8 @@ MonoBehaviour:
   MobiFontSize: 76
   MobiCriticalScale: 1.5
   MobiBurnScale: 1.5
-  MobiLifetime: 1.1
-  MobiFadeStart: 0.6
+  MobiLifetime: 0.85
+  MobiFadeStart: 0.8
   MobiLineSpacing: 0.51
   MobiMaxLines: 7
   MobiFollowSpeed: 18
@@ -40,6 +40,9 @@ MonoBehaviour:
   MobiPopOvershoot: 0.5
   MobiCriticalShake: 8
   MobiShakeSeconds: 0.18
+  MobiRelativeSizePower: 0.6
+  MobiRelativeSizeRange: {x: 0.8, y: 1.35}
+  MobiRelativeSizeWindow: 20
   MobiOffset: {x: 239.3, y: 153.8}
   CookieFlushInterval: 0.15
   CookieFontSize: 80

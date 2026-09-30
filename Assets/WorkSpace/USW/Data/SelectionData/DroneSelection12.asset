@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
   chooseId: 9112
   chooseName: "\uB0C9\uB3D9 \uBCF4\uAD00"
-  tier: 0
+  tier: 1
   spawnRate: 1
   description: "\uC824\uD0D5\uC758 \uC790\uCCB4 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9 10%
     \uB298\uC5B4\uB0A9\uB2C8\uB2E4."

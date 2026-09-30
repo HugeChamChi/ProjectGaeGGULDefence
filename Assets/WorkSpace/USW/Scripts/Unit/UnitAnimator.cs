@@ -10,7 +10,7 @@ using System;
 /// UniTask를 통해 애니메이션 재생 완료를 비동기적으로 대기할 수 있는 기능을 제공합니다.
 /// </summary>
 [RequireComponent(typeof(Animator))]
-public class UnitAnimator : MonoBehaviour
+public class UnitAnimator : MonoBehaviour, IPauseIdleVisual
 {
     private Animator _animator;
     private Anim_Base _breathingAnim;
@@ -72,11 +72,14 @@ public class UnitAnimator : MonoBehaviour
     }
 
     private bool _inPauseIdle;
+    private bool _idleAfterAttack;
     private AnimatorUpdateMode _updateModeBeforePause;
 
     /// <summary>
-    /// 일시정지(timeScale=0) 중 대기 모션 유지. 켜면 Idle로 전환하고 Animator/숨쉬기를 unscaled로 돌려
-    /// 공격 도중 자세로 얼어붙지 않게 한다. 끄면 원래 업데이트 모드로 복구한다. 전투 로직은 건드리지 않는다.
+    /// 일시정지(timeScale=0) 중 대기 모션 유지 (IPauseIdleVisual). 켜면 Animator를 unscaled로 돌려 얼어붙지 않게 한다.
+    /// 숨쉬기 트윈(Anim_Base)은 자체 IPauseIdleVisual로 따로 처리된다.
+    /// 공격·스킬 모션 도중이면 끝까지 재생한 뒤 Idle로, 아니면 바로 Idle (사용자 결정 2026-09-30).
+    /// 끄면 원래 업데이트 모드로 복구한다. 전투 로직은 건드리지 않는다.
     /// </summary>
     public void SetPauseIdle(bool on)
     {
@@ -87,12 +90,32 @@ public class UnitAnimator : MonoBehaviour
             if (on)
             {
                 _updateModeBeforePause = _animator.updateMode;
-                PlayIdle();
+                _idleAfterAttack = IsPlayingAction();
+                if (!_idleAfterAttack) PlayIdle();
                 _animator.updateMode = AnimatorUpdateMode.UnscaledTime;
             }
-            else _animator.updateMode = _updateModeBeforePause;
+            else
+            {
+                _idleAfterAttack = false;
+                _animator.updateMode = _updateModeBeforePause;
+            }
         }
-        if (_breathingAnim != null) _breathingAnim.SetForceUnscaled(on);
+    }
+
+    private void Update()
+    {
+        // 일시정지 중 공격 모션이 끝나면 대기로 넘긴다 (그 외에는 아무 일도 하지 않음).
+        if (!_idleAfterAttack) return;
+        if (_animator != null && IsPlayingAction()) return;
+        _idleAfterAttack = false;
+        PlayIdle();
+    }
+
+    private bool IsPlayingAction()
+    {
+        if (_animator == null || !_animator.isActiveAndEnabled) return false;
+        var info = _animator.GetCurrentAnimatorStateInfo(0);
+        return (info.IsName("Attack") || info.IsName("Skill")) && info.normalizedTime < 1f;
     }
 
     /// <summary>

@@ -18,18 +18,18 @@ public static class SelectionExpansionPresets
         card.droneEffect = null;
         card.spawnRate = 1f;
         card.specialValue = 0f;
-        card.tier = Tier.Rare;
+        card.tier = Tier.Epic;
         switch (index)
         {
             case 4:
                 card.chooseName = "오류코드 0x00";
-                card.description = "다음 선택지 한 번은 확정적으로 에픽 등급이 나옵니다.";
-                card.specialEffect = LevelUpSpecialEffect.GuaranteeNextEpic;
+                card.description = "다음 선택지 한 번은 확정적으로 레전더리 등급이 나옵니다.";
+                card.specialEffect = LevelUpSpecialEffect.GuaranteeNextLegend;
                 break;
             case 5:
                 card.chooseName = "새 상품, 뜯지 않음.";
                 card.description = "강화 비용이 10% 감소하고, 이번 런에서 지금까지 강화에 실제로 쓴 식량의 10%를 환급받습니다.";
-                card.tier = Tier.Normal;
+                card.tier = Tier.Rare;
                 card.specialEffect = LevelUpSpecialEffect.UpgradeDiscountAndRefund;
                 card.specialValue = 10f;
                 break;

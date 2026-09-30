@@ -18,7 +18,7 @@ public class LevelUpData : ScriptableObject
     public int              chooseId;
     public string           chooseName;
     [FormerlySerializedAs("grade")]
-    public Tier             tier;
+    public Tier             tier = Tier.Rare;   // 레벨업 카드 등급: 레어/에픽/레전더리 (일반 없음)
     public float            spawnRate;
     [TextArea] public string description;
 

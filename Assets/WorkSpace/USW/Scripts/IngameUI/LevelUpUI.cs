@@ -27,7 +27,7 @@ public class LevelUpUI : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private GameManager _gameManager;
     [Inject] private TimeScaleService _timeScale;
-    [Inject] private IObjectResolver _resolver; // DroneManager는 드론 씬에서만 등록되므로 선택적으로 조회
+    [Inject] private FieldPauseVisuals _fieldPause;
 
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
@@ -105,8 +105,12 @@ public class LevelUpUI : MonoBehaviour
         gameObject.SetActive(true);
 
         _timerManager.StopTimer();
+        // 새 공격(유닛·드론·보스 패턴)은 지금 막고, 이미 날아가던 투사체는 시간 연출의 1배속 유예 동안 도착하게 둔다.
+        foreach (var cell in _gridManager.GetOccupiedCells())
+            cell.OccupyingUnit?.PauseLoops();
+        _fieldPause?.HoldAttacks(this);
 
-        // 게이지 레벨업이면 슬로우모션으로 서서히 멈춘 뒤 유닛을 정지(대기 모션 유지)시킨다.
+        // 게이지 레벨업이면 유예 → 슬로우모션으로 서서히 멈춘 뒤 화면만 살린다(대기 모션·이펙트).
         if (_time != null && fromGauge)
             _time.SlowDownTime(PauseField);
         else
@@ -126,25 +130,8 @@ public class LevelUpUI : MonoBehaviour
         else _peek.Clear();
     }
 
-    /// <summary>유닛 전투 루프 정지 + 대기 모션 유지 (얼어붙은 자세 방지).</summary>
-    private void PauseField()
-    {
-        foreach (var cell in _gridManager.GetOccupiedCells())
-        {
-            var unit = cell.OccupyingUnit;
-            if (unit == null) continue;
-            unit.PauseLoops();
-            unit.SetPauseIdle(true);
-        }
-        SetDronesPauseIdle(true);
-    }
-
-    private void SetDronesPauseIdle(bool on)
-    {
-        if (_resolver == null || !_resolver.TryResolve<DroneManager>(out var drones) || drones == null) return;
-        foreach (var drone in drones.Drones)
-            if (drone != null) drone.SetPauseIdle(on);
-    }
+    /// <summary>완전히 멈춘 뒤: 화면(대기 모션·드론·보스 대기·이펙트)은 실제 시간으로 유지.</summary>
+    private void PauseField() => _fieldPause?.Enter(this);
 
     /// <summary>레이아웃 확정 → 등장 연출 → 입력 허용 → 선택 타이머 순으로 진행한다.</summary>
     private async UniTaskVoid OpenAsync(LayoutGroup layout, bool fromGauge)
@@ -296,14 +283,9 @@ public class LevelUpUI : MonoBehaviour
         // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
         if (_gameManager.CurrentState != GameManager.GameState.LevelUp)
         {
+            _fieldPause?.Exit(this);
             foreach (var cell in _gridManager.GetOccupiedCells())
-            {
-                var unit = cell.OccupyingUnit;
-                if (unit == null) continue;
-                unit.SetPauseIdle(false);
-                unit.ResumeLoops();
-            }
-            SetDronesPauseIdle(false);
+                cell.OccupyingUnit?.ResumeLoops();
         }
     }
 

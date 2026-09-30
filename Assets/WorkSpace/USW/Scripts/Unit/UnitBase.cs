@@ -252,17 +252,19 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void PauseLoops() => _combat.PauseLoops();
     public void ResumeLoops() => _combat.ResumeLoops();
 
-    /// <summary>레벨업 등 일시정지 중 대기 모션 유지 (시각 전용). 기절한 유닛은 기절 연출을 유지한다.</summary>
+    /// <summary>
+    /// 레벨업 등 일시정지 중 대기 모션 유지 (시각 전용). 기절한 유닛은 기절 연출을 유지한다.
+    /// 외형 방식과 무관하게 하위의 IPauseIdleVisual(UnitAnimator / Anim_Base 숨쉬기 / SpinePauseIdleVisual …)을 모두 켜고 끈다.
+    /// </summary>
     public void SetPauseIdle(bool on)
     {
         if (on && IsStunned) return;
-        if (animator != null) { animator.SetPauseIdle(on); return; }
-        // UnitAnimator가 없는 유닛(드론 유닛 등)은 숨쉬기 트윈만 unscaled로 전환한다.
-        if (_idleAnim == null) _idleAnim = GetComponentInChildren<GaeGGUL.Animation.Anim_Base>();
-        if (_idleAnim != null) _idleAnim.SetForceUnscaled(on);
+        GetComponentsInChildren(true, _pauseIdleVisuals);
+        foreach (var visual in _pauseIdleVisuals) visual.SetPauseIdle(on);
+        _pauseIdleVisuals.Clear();
     }
 
-    private GaeGGUL.Animation.Anim_Base _idleAnim;
+    private readonly System.Collections.Generic.List<IPauseIdleVisual> _pauseIdleVisuals = new();
     protected virtual void SyncStatsWithSheet() { }
 
     public void SetState(UnitState state) => CurrentState = state;
