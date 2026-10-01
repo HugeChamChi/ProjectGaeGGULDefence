@@ -8,21 +8,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Title.unity
     guid: e2e79a0692eb4b848bca29692cdb76af
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LobbyScene.unity
     guid: 128751b03828dc84d96048911fbaea1e
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/IngameScene.unity
     guid: 293da426adba53d4d9f2e0e2f152d05e
   - enabled: 0
-    path: Assets/WorkSpace/HSD/Scenes/Test_IAPScene.unity
-    guid: 2f3897e28e55fe046a6229d9f4ca59be
+    path: Assets/WorkSpace/USW/Tutorial/Scenes/TutorialScene.unity
+    guid: ef03b98e3b2db344fa5d6cd598eccd01
   - enabled: 0
-    path: Assets/WorkSpace/HSD/Scenes/ShaderTestScene.unity
-    guid: 699389b05d090cc49b35311db9404788
-  - enabled: 0
-    path: Assets/WorkSpace/USW/TotemSelectTest.unity
-    guid: 0ea6dbe820be3d9459b7f08cb0adb777
+    path: Assets/WorkSpace/USW/Data/OutgameUpgrade.unity
+    guid: ce1fefb5473de9c4081c911c9d84a448
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 96fcee4011df941419f30131796a40ec,
       type: 2}

@@ -29,6 +29,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private UIManager _uIManager;
     [Inject] private DamageFloaterManager _damageFloaterManager;
     [Inject] private CurrencyFloaterManager _currencyFloaterManager;
+    [Inject] private ResearchRunBonuses _research;
 
     public void Initialize()
     {
@@ -56,6 +57,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
 
     public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
+        await _research.LoadAsync(cancellation);
         // 1. 필요한 사운드 식별 및 프리로드
         var sfxToLoad = new System.Collections.Generic.HashSet<string>();
         

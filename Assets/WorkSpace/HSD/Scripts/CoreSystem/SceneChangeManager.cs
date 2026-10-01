@@ -23,6 +23,8 @@ public class SceneChangeManager
     {
         // 1. 화면 가리기 (Fade In)
         await _globalUIManager.FadeInAsync();
+        try
+        {
 
         // 2. 씬 로드 전 추가 작업 (데이터 저장 등)
         if (beforeLoad != null)
@@ -42,8 +44,12 @@ public class SceneChangeManager
             await afterLoad();
         }
 
-        // 6. 화면 밝히기 (Fade Out)
-        await _globalUIManager.FadeOutAsync();
+        }
+        finally
+        {
+            // 로그인/저장/씬 로드가 실패해도 가림막을 해제해 재시도할 수 있다.
+            await _globalUIManager.FadeOutAsync();
+        }
     }
 
     /// <summary>

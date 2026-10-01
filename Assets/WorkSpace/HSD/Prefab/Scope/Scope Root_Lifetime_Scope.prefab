@@ -155,6 +155,9 @@ MonoBehaviour:
   fadeScreenPrefab: {fileID: 1077133573436768632, guid: bbd3c16e777f8944b8cebd97886bf39e,
     type: 3}
   audioManager: {fileID: 4628953675001813478}
+  _researchTree: {fileID: 11400000, guid: bb904a80c853fa44e9350607dcb7b5ff, type: 2}
+  _tutorialManagerPrefab: {fileID: 8997745325541888837, guid: 2d2e001978a230a408396e9386b6fdcf,
+    type: 3}
 --- !u!1 &9032296359985562722
 GameObject:
   m_ObjectHideFlags: 0

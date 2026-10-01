@@ -1,7 +1,7 @@
-# 🚀 Rclone G-Drive Sync System 기술 명세서 (V1.1)
+# 🚀 Rclone G-Drive Sync System 기술 명세서 (V1.2)
 
 > **상태**: 🟢 사용 중  
-> **최종 수정**: 2026-09-29 — Upload/Download를 `sync` → `copy`(삭제 없음)로 변경, `--size-only` 제거, 전용 Client ID 설정 절차 정리  
+> **최종 수정**: 2026-10-01 — Imports meta는 Git으로 관리, 양방향 전송에서 meta 제외 및 PC 전환 순서 추가  
 > **핵심 가치**: 팀원 에셋 받기, 데이터 삭제 사고 방지
 
 ---
@@ -22,8 +22,8 @@
 
 | 버튼 | 실행 명령 | 동작 |
 | :--- | :--- | :--- |
-| 📥 **Download** | `rclone copy gdrive_ggd: <로컬> --ignore-existing` | **로컬에 없는 파일만** 받는다. 이미 있는 파일은 덮어쓰지 않고, 아무것도 삭제하지 않는다. |
-| 🚀 **Upload** | `rclone copy <로컬> gdrive_ggd:` | 새 파일/변경된 파일을 올린다. 드라이브의 파일은 삭제하지 않는다. |
+| 📥 **Download** | `rclone copy gdrive_ggd: <로컬> --ignore-existing --exclude "*.meta"` | **로컬에 없는 원본 파일만** 받는다. 이미 있는 파일은 덮어쓰지 않고, 아무것도 삭제하지 않는다. |
+| 🚀 **Upload** | `rclone copy <로컬> gdrive_ggd: --exclude "*.meta"` | 새 원본/변경된 원본을 올린다. 드라이브의 파일은 삭제하지 않는다. |
 
 공통 옵션: `--transfers`, `--checkers` (툴 슬라이더), `--drive-chunk-size 64M`, `--buffer-size 32M`, `--fast-list`, `--progress`
 
@@ -71,7 +71,34 @@ rclone about gdrive_ggd:        # 용량이 나오면 성공
 
 ---
 
-## 🧯 4. 트러블슈팅
+## 4. Imports meta 운영 순서
+
+`Assets/Imports`의 `.meta`와 루트 폴더 `Assets/Imports.meta`는 Git으로 관리하고, 원본 파일은 Rclone으로 공유한다. 루트 Develop PC의 meta/GUID가 정답이다. 공개 저장소에 유료 에셋과 GGD_ArtWork 원본을 추가하지 않는다. Drive의 기존 meta는 삭제하지 않으며 전송에서 제외한다.
+
+### 받을 때
+
+Unity를 닫은 상태에서 **git pull → Rclone Download → Unity 열기** 순서로 진행한다. 원본 없이 Unity를 열면 짝 없는 meta가 삭제될 수 있다. 이 삭제를 커밋하면 다른 PC의 참조도 끊긴다. 실수로 삭제됐다면 Unity를 닫고 `git checkout -- Assets/Imports`로 meta를 복구한 뒤 원본을 Download하고 Unity를 연다.
+
+### 새 에셋을 넣을 때
+
+Unity 임포트 → 생성된 `.meta`는 Git 커밋 → 원본은 Rclone Upload. meta와 원본 중 하나라도 전달되지 않으면 다른 PC의 참조가 끊긴다. 원본은 동일한 상대 경로에 유지한다. 현재 전환 작업에서는 git add까지만 하며 커밋·푸시는 사용자 지시 후 수행한다.
+
+### 다른 PC 최초 전환 (사용자 직접)
+
+1. 그 PC에서만 만든 미커밋 씬·프리팹이 있으면 사용자에게 먼저 알리고 보존 방법을 결정한다.
+2. Unity를 닫는다.
+3. 그 PC의 `Assets/Imports/**/*.meta`만 삭제한다. 원본 파일과 폴더는 유지한다.
+4. `git pull`로 정답 meta를 받는다. 기존 untracked meta를 남기면 `untracked working tree files would be overwritten` 충돌로 멈출 수 있다.
+5. Rclone Download로 누락 원본을 받는다.
+6. Unity를 열고 보스 HP바 Fill/Background, 설정 아이콘, `InGame_Setting_Panel`/`Vol_Setting`/`Boss_Encounter`/`TotemSelectCardPrefab_*`의 Missing 참조를 확인한다.
+
+### 실험실 워크트리
+
+`outputs/workspaces/unity-ui`는 루트 Imports를 복사해 만들어 GUID가 같다. 병합 때 untracked meta 충돌이 날 수 있으므로 Unity 닫기 → 기존 Imports meta만 삭제 → 병합 → Rclone Download → Unity 열기 순서로 처리한다. 미커밋 씬·프리팹이 있으면 먼저 보존 방법을 결정한다. Codex는 이번 작업에서 실험실 워크트리를 수정하지 않는다.
+
+---
+
+## 🧯 5. 트러블슈팅
 
 | 증상 | 원인 | 해결 |
 | :--- | :--- | :--- |

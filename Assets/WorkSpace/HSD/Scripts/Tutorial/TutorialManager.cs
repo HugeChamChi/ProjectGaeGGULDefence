@@ -2,29 +2,26 @@ using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace GaeGGUL.Tutorial
 {
     public class TutorialManager : MonoBehaviour
     {
-        private static TutorialManager _instance;
-        public static TutorialManager Instance
+        private readonly System.Collections.Generic.List<SceneComponentCollection> _scenes = new();
+
+        /// <summary>씬 DI 초기화에서 대상 제공자를 등록한다.</summary>
+        public void RegisterScene(SceneComponentCollection components)
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = FindFirstObjectByType<TutorialManager>();
-                    if (_instance == null)
-                    {
-                        var go = new GameObject("TutorialManager");
-                        _instance = go.AddComponent<TutorialManager>();
-                    }
-                }
-                return _instance;
-            }
+            if (!_scenes.Contains(components)) _scenes.Add(components);
+            RefreshRegistry();
+        }
+
+        /// <summary>씬 종료 때 해당 씬의 대상 참조를 해제한다.</summary>
+        public void UnregisterScene(SceneComponentCollection components)
+        {
+            _scenes.Remove(components);
+            RefreshRegistry();
         }
 
         [Header("Background Control")]
@@ -47,62 +44,23 @@ namespace GaeGGUL.Tutorial
         [SerializeField] private RectTransform _guideArrow;
         [SerializeField] private Vector3 _guideArrowOffset = Vector3.zero;
 
-        private void Awake()
-        {
-            if (_instance != null && _instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            // 씬 전환 이벤트 구독
-            SceneManager.sceneLoaded += OnSceneLoaded;
-
-            RefreshRegistry();
-        }
-
+        /// <summary>앱 서비스가 종료되면 씬 대상 캐시를 정리한다.</summary>
         private void OnDestroy()
         {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
+            _scenes.Clear();
+            TutorialRegistry.Clear();
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            Debug.Log($"[TutorialManager] Scene Loaded: {scene.name}. Refreshing UI and Registry.");
-
-            // 1. 새로운 씬의 타겟들 자동 등록
-            RefreshRegistry();
-
-            // 2. 만약 현재 UI 레퍼런스들이 사라졌다면(씬 로컬 UI 사용 시), 새로 검색하여 할당
-            TryFindSceneLocalUI();
-        }
-
-        /// <summary>
-        /// 씬에 배치된 튜토리얼용 UI 요소들을 자동으로 찾아 연결합니다.
-        /// </summary>
-        private void TryFindSceneLocalUI()
-        {
-            if (_highlighter == null) _highlighter = FindFirstObjectByType<UI_TutorialHighlighter>(FindObjectsInactive.Include);
-            if (_raycastFilter == null) _raycastFilter = FindFirstObjectByType<UI_TutorialRaycastFilter>(FindObjectsInactive.Include);
-            if (_dimCanvasGroup == null)
-            {
-                // 특정 태그나 이름을 가진 객체를 찾도록 규칙을 정할 수 있습니다.
-                var dimObj = GameObject.Find("Tutorial_DimBackground");
-                if (dimObj != null) _dimCanvasGroup = dimObj.GetComponent<CanvasGroup>();
-            }
-        }
-
+        /// <summary>등록된 씬의 비활성 대상까지 갱신한다. 전역 객체 검색은 사용하지 않는다.</summary>
         [Button]
         public void RefreshRegistry()
         {
             TutorialRegistry.Clear();
-            var uiTargets = FindObjectsByType<UI_TutorialTarget>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var target in uiTargets) TutorialRegistry.RegisterUI(target.UITargetID, target);
-            var actors = FindObjectsByType<TutorialActor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var actor in actors) TutorialRegistry.RegisterActor(actor.ActorID, actor);
-            Debug.Log($"[TutorialManager] Registry Refreshed: {uiTargets.Length} UI Targets, {actors.Length} Actors found in current scene.");
+            foreach (var scene in _scenes)
+            {
+                foreach (var target in scene.Enumerate<UI_TutorialTarget>()) TutorialRegistry.RegisterUI(target.UITargetID, target);
+                foreach (var actor in scene.Enumerate<TutorialActor>()) TutorialRegistry.RegisterActor(actor.ActorID, actor);
+            }
         }
 
         public void SetBlockInteraction(bool active)

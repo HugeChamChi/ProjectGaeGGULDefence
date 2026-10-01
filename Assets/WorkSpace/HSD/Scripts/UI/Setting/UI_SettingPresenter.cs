@@ -10,6 +10,7 @@ namespace HSD.UI.Setting
     public class UI_SettingPresenter
     {
         private AudioManager _audioManager;
+        private GamePresentationSettings _settings;
 
         private readonly UI_SettingPanel_Base _view;
 
@@ -19,17 +20,25 @@ namespace HSD.UI.Setting
             _audioManager = audioManager;
         }
 
+        /// <summary>Awake에서 바인딩한 Presenter에 DI로 받은 서비스를 연결한다.</summary>
+        public void Configure(AudioManager audioManager, GamePresentationSettings settings)
+        {
+            _audioManager = audioManager;
+            _settings = settings;
+        }
+
         public void RefreshUI()
         {
             // AudioManager에서 현재 값 가져오기
             foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
             {
+                if (_audioManager == null) break;
                 int vol = _audioManager.GetVolume(group);
                 bool mute = _audioManager.IsMuted(group);
                 _view.UpdateSoundSlot(group, vol, mute);
             }
             
-            // TODO: 저장된 세팅 값(언어, 진동 등) 로드하여 View 업데이트
+            _view.UpdatePresentationToggles(_settings?.ShowDamageNumbers ?? true, _settings?.VibrationEnabled ?? true);
         }
 
         public void OnVolumeChanged(AudioGroup group, int value)
@@ -50,14 +59,14 @@ namespace HSD.UI.Setting
 
         public void OnDamageFloaterChanged(bool isOn)
         {
-            // TODO: 데미지 플로터 On/Off 로직 구현
-            Debug.Log($"[TODO] Damage Floater Changed: {isOn}");
+            _settings?.SetDamageNumbers(isOn);
+            RefreshUI();
         }
 
         public void OnVibrationChanged(bool isOn)
         {
-            // TODO: 진동 On/Off 로직 구현
-            Debug.Log($"[TODO] Vibration Changed: {isOn}");
+            _settings?.SetVibration(isOn);
+            RefreshUI();
         }
 
         public void OnRestartClicked()

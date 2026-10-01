@@ -10,6 +10,11 @@ public class InGameLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
+        builder.RegisterInstance(new SceneComponentCollection(gameObject.scene));
+        builder.Register<ResearchRunBonuses>(Lifetime.Scoped);
+        builder.RegisterEntryPoint<GaeGGUL.Tutorial.TutorialSceneBinding>();
+        SceneComponentRegistration.RegisterOptional<GaeGGUL.Tutorial.TutorialActor>(builder, gameObject.scene);
+        builder.Register<GaeGGUL.Extension.GridCellExtension>(Lifetime.Scoped);
         // 씬에 이미 배치되어 있는 매니저(MonoBehaviour)들을 찾아서 모두 등록합니다.
         builder.Register<TimeScaleService>(Lifetime.Scoped); // 게임 속도 단일 소유자 — Time.timeScale 직접 쓰기 금지
         builder.Register<DefeatPresentation>(Lifetime.Scoped);
@@ -55,10 +60,16 @@ public class InGameLifetimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<UIManager>();
         builder.RegisterComponentInHierarchy<DamageFloaterManager>();
+        SceneComponentRegistration.RegisterOptional<BossDamageNumbers>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<HSD.UI.Effect.UI_ChiefSkillEffect>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_IngameDebugPanel>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_OpenDebugButton>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<HSD.UI.Upgrade.UI_UpgradePanel>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<EnchantButtonOpener>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<CurrencyFloaterManager>();
 
         builder.RegisterComponentInHierarchy<ProjectilePool>();
-        builder.RegisterComponentInHierarchy<AudioManager>();
+        // 앱 오디오는 부모 RootLifetimeScope의 등록을 사용한다.
         var upgradeKeyOverrides = Resources.Load<UpgradeKeyOverrides>("UpgradeKeyOverrides");
         if (upgradeKeyOverrides == null) throw new System.InvalidOperationException("UpgradeKeyOverrides is required.");
         builder.RegisterInstance(upgradeKeyOverrides);

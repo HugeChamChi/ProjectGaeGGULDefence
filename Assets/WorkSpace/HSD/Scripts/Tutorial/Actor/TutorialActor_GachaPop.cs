@@ -10,6 +10,7 @@ namespace GaeGGUL.Tutorial
     /// </summary>
     public class TutorialActor_GachaPop : TutorialActor
     {
+        [VContainer.Inject] private TutorialManager _tutorialManager;
         [Header("References")]
         [SerializeField] private RectTransform _itemUI;      // 뿅 나타날 아이템 UI
         [SerializeField] private RectTransform _targetPos;   // 최종 목적지 위치 (UI)
@@ -36,7 +37,7 @@ namespace GaeGGUL.Tutorial
             _itemUI.gameObject.SetActive(true);
 
             // 배경 켜기
-            if (_useBackground) await TutorialManager.Instance.SetDimAsync(true);
+            if (_useBackground && _tutorialManager != null) await _tutorialManager.SetDimAsync(true);
 
             // 2. [Step 1] 뿅! 하고 나타남
             await _itemUI.DOScale(1f, _popDuration)
@@ -61,7 +62,7 @@ namespace GaeGGUL.Tutorial
                 .ToUniTask();
 
             // 배경 끄기
-            if (_useBackground) await TutorialManager.Instance.SetDimAsync(false);
+            if (_useBackground && _tutorialManager != null) await _tutorialManager.SetDimAsync(false);
 
             _itemUI.gameObject.SetActive(false);
 

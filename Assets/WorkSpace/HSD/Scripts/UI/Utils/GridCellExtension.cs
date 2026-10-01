@@ -2,56 +2,44 @@ using UnityEngine;
 
 namespace GaeGGUL.Extension
 {
-    public static class GridCellExtension
+    public sealed class GridCellExtension
     {
-        private static TotemBuffManager _totemBuffManager;
-        private static TotemBuffManager TotemManager
+        private readonly TotemBuffManager _totemManager;
+        private readonly LevelUpManager _levelUpManager;
+
+        /// <summary>씬의 버프 및 레벨업 서비스를 주입받는다. 기존 계산식은 유지한다.</summary>
+        public GridCellExtension(TotemBuffManager totemManager, LevelUpManager levelUpManager)
         {
-            get
-            {
-                if (_totemBuffManager == null)
-                    _totemBuffManager = UnityEngine.Object.FindFirstObjectByType<TotemBuffManager>();
-                return _totemBuffManager;
-            }
+            _totemManager = totemManager;
+            _levelUpManager = levelUpManager;
         }
 
-        private static LevelUpManager _levelUpManager;
-        private static LevelUpManager LevelUpManager
-        {
-            get
-            {
-                if (_levelUpManager == null)
-                    _levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>();
-                return _levelUpManager;
-            }
-        }
-
-        private static float GetAttackMultiplier(this GridCell cell)
+        private float GetAttackMultiplier(GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
             var model = cell.Model;
-            float globalMult = TotemManager != null ? TotemManager.AttackMultiplier : 1f;
+            float globalMult = _totemManager != null ? _totemManager.AttackMultiplier : 1f;
             float cellBonus = model.GetTotemCellBonus(StatKind.AttackPercent);
             return (model.NullifyDamageDebuff ? 1f : model.DamageModifier) * model.TotemAttackModifier * (globalMult + cellBonus);
         }
 
-        private static float GetSpeedMultiplier(this GridCell cell)
+        private float GetSpeedMultiplier(GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
             var model = cell.Model;
-            float globalMult = TotemManager != null ? TotemManager.SpeedMultiplier : 1f;
+            float globalMult = _totemManager != null ? _totemManager.SpeedMultiplier : 1f;
             float cellBonusMult = Mathf.Max(0.1f, 1f - model.GetTotemCellBonus(StatKind.Speed));
             return model.SpeedModifier * model.TotemSpeedModifier * globalMult * cellBonusMult;
         }
 
-        private static float GetSkillCooldownMultiplier(this GridCell cell)
+        private float GetSkillCooldownMultiplier(GridCell cell)
         {
             if (cell == null || cell.Model == null) return 1f;
             
             int row = cell.GridPosition.y;
-            float rowSpeedMult = Mathf.Max(LevelUpManager != null ? LevelUpManager.GetRowSpeedMultiplier(row) : 1f, 0.01f);
+            float rowSpeedMult = Mathf.Max(_levelUpManager != null ? _levelUpManager.GetRowSpeedMultiplier(row) : 1f, 0.01f);
             
-            float gaugeSpeedMult = TotemManager != null ? TotemManager.GaugeSpeedMultiplier : 1f;
+            float gaugeSpeedMult = _totemManager != null ? _totemManager.GaugeSpeedMultiplier : 1f;
             float cellSpeedModifier = cell.Model.SpeedModifier;
             
             return (gaugeSpeedMult * cellSpeedModifier) / rowSpeedMult;
@@ -59,16 +47,16 @@ namespace GaeGGUL.Extension
 
         // ── 최종 수치 계산 (Presenter에서 사용) ──────────────────
 
-        public static int GetFinalAttack(this GridCell cell, float baseAtk)
+        public int GetFinalAttack(GridCell cell, float baseAtk)
         {
             if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetAttackDamage();
-            return Mathf.RoundToInt(baseAtk * cell.GetAttackMultiplier());
+            return Mathf.RoundToInt(baseAtk * GetAttackMultiplier(cell));
         }
 
-        public static float GetFinalCooldown(this GridCell cell, float baseCooldown)
+        public float GetFinalCooldown(GridCell cell, float baseCooldown)
         {
             if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetCurrentSkillInterval();
-            return baseCooldown * cell.GetSkillCooldownMultiplier();
+            return baseCooldown * GetSkillCooldownMultiplier(cell);
         }
 
         // ── 보너스 텍스트 생성 (Presenter에서 사용) ────────────────
@@ -76,7 +64,7 @@ namespace GaeGGUL.Extension
         /// <summary>
         /// 공격력 관련 보너스 수치 계산 (+10, -5 등)
         /// </summary>
-        public static string GetAttackBonusText(this GridCell cell, float baseValue)
+        public string GetAttackBonusText(GridCell cell, float baseValue)
         {
             int diff;
             if (cell != null && cell.OccupyingUnit != null)
@@ -85,7 +73,7 @@ namespace GaeGGUL.Extension
             }
             else
             {
-                float mult = cell.GetAttackMultiplier();
+                float mult = GetAttackMultiplier(cell);
                 if (Mathf.Approximately(mult, 1f)) return "";
                 diff = Mathf.RoundToInt(baseValue * (mult - 1f));
             }
@@ -98,7 +86,7 @@ namespace GaeGGUL.Extension
         /// <summary>
         /// 스킬 쿨타임 관련 보너스 시간 계산 (+0.5s, -0.2s 등)
         /// </summary>
-        public static string GetCooldownBonusText(this GridCell cell, float baseCooldown)
+        public string GetCooldownBonusText(GridCell cell, float baseCooldown)
         {
             float diff;
             if (cell != null && cell.OccupyingUnit != null)
@@ -107,7 +95,7 @@ namespace GaeGGUL.Extension
             }
             else
             {
-                float mult = cell.GetSkillCooldownMultiplier();
+                float mult = GetSkillCooldownMultiplier(cell);
                 if (Mathf.Approximately(mult, 1f)) return "";
                 diff = baseCooldown * (mult - 1f);
             }
@@ -117,13 +105,13 @@ namespace GaeGGUL.Extension
             return $"<color={color}>{(diff > 0 ? $"+{diff:F1}s" : $"{diff:F1}s")}</color>";
         }
 
-        public static float GetFinalAttackSpeed(this GridCell cell, float baseSpeed)
+        public float GetFinalAttackSpeed(GridCell cell, float baseSpeed)
         {
             if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetCurrentAttackInterval();
-            return baseSpeed * cell.GetSpeedMultiplier();
+            return baseSpeed * GetSpeedMultiplier(cell);
         }
 
-        public static string GetAttackSpeedBonusText(this GridCell cell, float baseSpeed)
+        public string GetAttackSpeedBonusText(GridCell cell, float baseSpeed)
         {
             float diff;
             if (cell != null && cell.OccupyingUnit != null)
@@ -132,7 +120,7 @@ namespace GaeGGUL.Extension
             }
             else
             {
-                float mult = cell.GetSpeedMultiplier();
+                float mult = GetSpeedMultiplier(cell);
                 if (Mathf.Approximately(mult, 1f)) return "";
                 diff = baseSpeed * (mult - 1f);
             }
@@ -145,7 +133,7 @@ namespace GaeGGUL.Extension
         /// <summary>
         /// 식량 생산량 관련 보너스 정보 반환
         /// </summary>
-        public static string GetFoodBonusText(this GridCell cell)
+        public string GetFoodBonusText(GridCell cell)
         {
             if (cell != null && cell.Model != null && cell.Model.HasFoodBuff)
             {

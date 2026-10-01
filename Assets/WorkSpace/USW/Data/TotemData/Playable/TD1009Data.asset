@@ -39,7 +39,7 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "TD1013(\uBBF8\uC815)"
+  totemName: "TD1009(\uBBF8\uC815)"
   iconAddress: TD_1009
   prefabAddress: TD1009
   rotationSpriteAddresses:

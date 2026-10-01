@@ -71,13 +71,13 @@ namespace GaeGGUL.Animation
 
         public abstract UniTask Play();
 
+        /// <summary>선택 화면 일시정지 중 대기 트윈 유지 (IPauseIdleVisual).</summary>
+        public void SetPauseIdle(bool on) => SetForceUnscaled(on);
+
         /// <summary>
         /// 재생 중인 트윈을 일시적으로 unscaled 시간으로 돌린다 (timeScale=0 일시정지 중에도 대기 모션 유지).
         /// false면 인스펙터의 ignoreTimeScale 설정으로 되돌린다.
         /// </summary>
-        /// <summary>선택 화면 일시정지 중 대기 트윈 유지 (IPauseIdleVisual).</summary>
-        public void SetPauseIdle(bool on) => SetForceUnscaled(on);
-
         public void SetForceUnscaled(bool unscaled)
         {
             if (_currentSeq != null && _currentSeq.IsActive())

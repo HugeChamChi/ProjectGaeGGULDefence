@@ -23,6 +23,7 @@ using Cysharp.Threading.Tasks;
 public abstract class BossBase : MonoBehaviour
 {
     private DebuffCatalog _debuffCatalog;
+    private ResearchRunBonuses _research;
     private GameManager _gameManager;
     private FieldPauseVisuals _fieldPause;
     private int _projectileImpactDepth;
@@ -38,13 +39,14 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>대상 소유 디버프 상태. 드론 매니저와 독립이다.</summary>
     public DebuffController Debuffs { get; private set; }
     /// <summary>명시적 보스 스폰 경로에서 루트 정의/씬 전투 상태를 전달한다.</summary>
-    public void ConfigureDebuffs(DebuffCatalog catalog, DebuffSettings settings, GameManager gameManager, double defense, TimerController timer, FieldPauseVisuals fieldPause = null)
+    public void ConfigureDebuffs(DebuffCatalog catalog, DebuffSettings settings, GameManager gameManager, double defense, TimerController timer, FieldPauseVisuals fieldPause = null, ResearchRunBonuses research = null)
     {
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced -= OnCombatTimeAdvanced;
         _combatTimer = timer;
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced += OnCombatTimeAdvanced;
         _debuffCatalog = catalog; _gameManager = gameManager;
         _fieldPause = fieldPause;
+        _research = research;
         _spineAnimator = GetComponent<BossSpineAnimator>();
         _defenseScale = settings.DefenseScale; _defense = defense;
         _ = DamageCalculator.Calculate(0, defense, _defenseScale, 1, 1, 0);
@@ -182,7 +184,7 @@ public abstract class BossBase : MonoBehaviour
     {
         _health.Reset(hp);
         Debuffs?.Clear();
-        Debuffs = new DebuffController(units => ApplyFinalDamage(units, null, BossDamageKind.Burn), () => !IsDead);
+        Debuffs = new DebuffController(units => ApplyFinalDamage(ScaleBurnDamage(units), null, BossDamageKind.Burn), () => !IsDead);
         _debuffTime = 0; _combatTimeOrigin = _combatTimer != null ? _combatTimer.ElapsedCombatTime : 0; _deathStarted = false;
 
         if (_animator != null)
@@ -202,6 +204,7 @@ public abstract class BossBase : MonoBehaviour
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
+        amount *= 1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f);
         long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
         ApplyFinalDamage(units, hitPos, kind);
@@ -213,6 +216,7 @@ public abstract class BossBase : MonoBehaviour
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
+        amount *= 1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f);
         return DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, long.MaxValue);
     }
@@ -222,6 +226,13 @@ public abstract class BossBase : MonoBehaviour
     {
         AdvanceDebuffs();
         ApplyFinalDamage(units, hitPos, kind);
+    }
+
+    private long ScaleBurnDamage(long units)
+    {
+        decimal scaled = units * (1m + (decimal)(_research?.Get(ResearchStat.BurnDamage) ?? 0f))
+            * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f));
+        return scaled >= long.MaxValue ? long.MaxValue : (long)decimal.Round(scaled, 0, MidpointRounding.AwayFromZero);
     }
 
     private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind)

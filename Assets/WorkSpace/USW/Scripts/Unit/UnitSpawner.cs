@@ -104,12 +104,10 @@ public class UnitSpawner : MonoBehaviour
             if (_gameDataManager.IsLoaded)
             {
                 SyncInitialCost();
-                SyncAllUnitData();
             }
             else
             {
                 _gameDataManager.OnLoaded += SyncInitialCost;
-                _gameDataManager.OnLoaded += SyncAllUnitData;
             }
         }
     }
@@ -119,26 +117,6 @@ public class UnitSpawner : MonoBehaviour
         if (_tutorialSettings != null) return;
         CurrentCost = _gameDataManager.SummonInitialCost;
         OnCostChanged?.Invoke(CurrentCost);
-    }
-
-    private void SyncAllUnitData()
-    {
-        if (_tutorialSettings != null) return;
-        if (_unitFactory == null || _unitFactory.UnitDataList == null || _gameDataManager == null) return;
-
-        foreach (var data in _unitFactory.UnitDataList)
-        {
-            if (data == null) continue;
-            foreach (var tier in TierUtil.All)
-            {
-                var row = _gameDataManager.GetCharacterRow(data.characterId.Get(tier));
-                if (row != null)
-                {
-                    data.ApplySheetData(tier, row);
-                }
-            }
-        }
-        Debug.Log($"[UnitSpawner] 모든 UnitData SO에 시트 스탯 동기화 완료 ({_unitFactory.UnitDataList.Length}종)");
     }
 
     public void OnSpawnButtonPressed()

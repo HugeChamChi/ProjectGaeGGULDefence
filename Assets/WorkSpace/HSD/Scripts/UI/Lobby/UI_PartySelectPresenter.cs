@@ -7,13 +7,20 @@ public class UI_PartySelectPresenter
 {
     private UI_PartySelectView _view;
     private readonly SceneChangeManager _sceneChangeManager;
+    private readonly StaminaInsufficientPopup _staminaPopup;
+    private readonly GaeGGUL.Tutorial.IngameTutorialProgress _tutorial;
     
     private PartyDataSO _selectedParty;
 
     [Inject]
-    public UI_PartySelectPresenter(SceneChangeManager sceneChangeManager)
+    public UI_PartySelectPresenter(SceneChangeManager sceneChangeManager,
+        System.Collections.Generic.IEnumerable<StaminaInsufficientPopup> staminaPopups = null,
+        GaeGGUL.Tutorial.IngameTutorialProgress tutorial = null)
     {
         _sceneChangeManager = sceneChangeManager;
+        _tutorial = tutorial;
+        if (staminaPopups != null)
+            foreach (var popup in staminaPopups) { _staminaPopup = popup; break; }
     }
 
     // View가 자신이 켜질 때(Awake/Start) 이 Presenter를 직접 호출하여 통제합니다.
@@ -40,13 +47,20 @@ public class UI_PartySelectPresenter
 
         if (_selectedParty != null)
         {
+            if (_tutorial != null && !_tutorial.IsCompleted)
+            {
+                _isProcessing = true;
+                GlobalData.SelectedParty = _selectedParty;
+                OpenFirstTutorialAsync().Forget();
+                return;
+            }
             var staminaConfig = RM.Load<StaminaConfig>("Data/StaminaConfig");
             int cost = staminaConfig != null ? staminaConfig.stageEntryCost : 5;
 
             if (!Player.PlayerData.UseStamina(cost))
             {
                 Debug.LogWarning($"UI_PartySelectPresenter: 스태미나가 부족합니다. 현재: {Player.PlayerData.Data.Stamina} / 필요: {cost}");
-                StaminaInsufficientPopup.Instance?.Show(Player.PlayerData.Data.Stamina, cost);
+                _staminaPopup?.Show(Player.PlayerData.Data.Stamina, cost);
                 return;
             }
 
@@ -79,6 +93,13 @@ public class UI_PartySelectPresenter
         {
             Debug.LogWarning("UI_PartySelectPresenter: 파티가 선택되지 않았습니다.");
         }
+    }
+
+    private async UniTask OpenFirstTutorialAsync()
+    {
+        try { await _sceneChangeManager.TransitionToSceneAsync("TutorialScene"); }
+        catch (System.Exception error) { Debug.LogWarning("튜토리얼을 열지 못했습니다: " + error.Message); }
+        finally { _isProcessing = false; }
     }
 
     private async UniTaskVoid ManualFadeAndLoad()

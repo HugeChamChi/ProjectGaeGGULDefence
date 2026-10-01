@@ -41,17 +41,8 @@ namespace HSD.InGameDebug
 
         private IDebugInfoPopup[] _infoPopups;
 
-        public static UI_IngameDebugPanel Instance { get; private set; }
-
         protected override void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             base.Awake();
             _presenter = new UI_IngameDebugPresenter(this);
             _infoPopups = GetComponentsInChildren<IDebugInfoPopup>(true);

@@ -5,18 +5,10 @@ using Cysharp.Threading.Tasks;
 
 public class BackendManager : MonoBehaviour
 {
-    public static BackendManager Instance { get; private set; }
+    [VContainer.Inject] private BackendGameData _backendData;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-
 #if UNITY_EDITOR
         AutoLoginForEditorTesting();
 #endif
@@ -49,7 +41,7 @@ public class BackendManager : MonoBehaviour
 
         // 로그인만으로는 Player.PlayerData가 비어있어 스태미나 등 UI가 갱신되지 않는다.
         // 타이틀 씬의 TitlePresenter가 하는 것과 동일하게 데이터 주입 + 초기화까지 진행한다.
-        Player.Inject(new BackendGameData());
+        Player.Inject(_backendData ?? new BackendGameData());
         Player.InitializeAsync().Forget(e => Debug.LogException(e));
     }
 #endif

@@ -18,20 +18,28 @@ MonoBehaviour:
   - m_GUID: 128751b03828dc84d96048911fbaea1e
     m_Address: LobbyScene
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Scenes
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 293da426adba53d4d9f2e0e2f152d05e
     m_Address: IngameScene
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Scenes
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce1fefb5473de9c4081c911c9d84a448
+    m_Address: OutgameUpgrade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2e79a0692eb4b848bca29692cdb76af
     m_Address: Title
     m_ReadOnly: 0
     m_SerializedLabels:
     - Scenes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef03b98e3b2db344fa5d6cd598eccd01
+    m_Address: TutorialScene
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 62ecb7143346cd947a725445b3886c08, type: 2}

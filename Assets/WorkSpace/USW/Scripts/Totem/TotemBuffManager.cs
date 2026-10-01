@@ -9,6 +9,7 @@ using System.Collections.Generic;
 public class TotemBuffManager : MonoBehaviour
 {
     [Inject] private IObjectResolver _resolver;
+    [Inject] private ResearchRunBonuses _research;
  
     public void Init()
     {
@@ -34,17 +35,17 @@ public class TotemBuffManager : MonoBehaviour
 
     // ── 토템 효율 보너스 ──────────────────────────────────────────
     private float _totemEfficiencyBonus = 0f;
-    public float TotemEfficiencyBonus => _totemEfficiencyBonus;
+    public float TotemEfficiencyBonus => _totemEfficiencyBonus + (_research?.Get(ResearchStat.TotemEffect) ?? 0f);
 
     // ── 공격력 ───────────────────────────────────────────────────
     private float _totemAttackBonus   = 0f;
     private float _levelUpAttackBonus = 0f;
-    public float AttackMultiplier => Mathf.Max(0.01f, 1f + (_totemAttackBonus * (1f + _totemEfficiencyBonus)) + _levelUpAttackBonus);
+    public float AttackMultiplier => Mathf.Max(0.01f, 1f + (_totemAttackBonus * (1f + TotemEfficiencyBonus)) + _levelUpAttackBonus);
 
     // ── 속도 (값이 클수록 초당 공격 횟수 증가, 즉 간격은 반비례) ────────────────
     private float _totemSpeedBonus   = 0f;
     private float _levelUpSpeedBonus = 0f;
-    public float SpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemSpeedBonus * (1f + _totemEfficiencyBonus)) + _levelUpSpeedBonus);
+    public float SpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemSpeedBonus * (1f + TotemEfficiencyBonus)) + _levelUpSpeedBonus);
 
     // ── 식량 생산 속도 (낮을수록 빠름) ────────────────────────────
     private float _totemFoodSpeedBonus = 0f;
@@ -53,15 +54,15 @@ public class TotemBuffManager : MonoBehaviour
     // ── 식량 생산량 (고블린 마법사가 낮춤, 토템이 높임) ───────────
     private float _totemFoodAmountBonus = 0f;
     private float _debuffFoodAmount = 0f;
-    public float FoodAmountMultiplier => Mathf.Max(0.1f, 1f + (_totemFoodAmountBonus * (1f + _totemEfficiencyBonus)) - _debuffFoodAmount);
+    public float FoodAmountMultiplier => Mathf.Max(0.1f, 1f + (_totemFoodAmountBonus * (1f + TotemEfficiencyBonus)) - _debuffFoodAmount);
 
     // ── 치명타 확률 ───────────────────────────────────────────────
     private float _totemCritChanceBonus = 0f;
-    public float CritChanceBonus => _totemCritChanceBonus * (1f + _totemEfficiencyBonus);
+    public float CritChanceBonus => _totemCritChanceBonus * (1f + TotemEfficiencyBonus);
 
     // ── 치명타 데미지 ─────────────────────────────────────────────
     private float _totemCritDamageBonus = 0f;
-    public float CritDamageBonus => _totemCritDamageBonus * (1f + _totemEfficiencyBonus);
+    public float CritDamageBonus => _totemCritDamageBonus * (1f + TotemEfficiencyBonus);
 
     // ── 게이지 회복 속도 (낮을수록 빠름) ──────────────────────────
     private float _totemGaugeSpeedBonus = 0f;
@@ -76,12 +77,12 @@ public class TotemBuffManager : MonoBehaviour
     {
         switch (kind)
         {
-            case StatKind.AttackPercent: return _totemAttackBonus * (1f + _totemEfficiencyBonus) + _levelUpAttackBonus;
-            case StatKind.Speed: return _totemSpeedBonus * (1f + _totemEfficiencyBonus) + _levelUpSpeedBonus;
+            case StatKind.AttackPercent: return _totemAttackBonus * (1f + TotemEfficiencyBonus) + _levelUpAttackBonus;
+            case StatKind.Speed: return _totemSpeedBonus * (1f + TotemEfficiencyBonus) + _levelUpSpeedBonus;
             case StatKind.FoodSpeed: return _totemFoodSpeedBonus;
-            case StatKind.FoodAmount: return _totemFoodAmountBonus * (1f + _totemEfficiencyBonus) - _debuffFoodAmount;
-            case StatKind.CritChance: return _totemCritChanceBonus * (1f + _totemEfficiencyBonus);
-            case StatKind.CritDamage: return _totemCritDamageBonus * (1f + _totemEfficiencyBonus);
+            case StatKind.FoodAmount: return _totemFoodAmountBonus * (1f + TotemEfficiencyBonus) - _debuffFoodAmount;
+            case StatKind.CritChance: return _totemCritChanceBonus * (1f + TotemEfficiencyBonus);
+            case StatKind.CritDamage: return _totemCritDamageBonus * (1f + TotemEfficiencyBonus);
             case StatKind.GaugeSpeed: return _totemGaugeSpeedBonus;
             case StatKind.ProjectileSize: return _totemProjectileSizeBonus;
             default: return 0f;

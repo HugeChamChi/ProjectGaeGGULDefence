@@ -20,14 +20,16 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     private bool _disposed;
     private CancellationTokenSource _castCts;
     private HSD.UI.Effect.UI_ChiefSkillEffect _cutscene;
-    private bool _cutsceneSearched;
 
     /// <summary>씬 서비스 주입. 드론 매니저가 없는 씬에서도 등록 가능하나 사용은 비활성이다.</summary>
     public AlphanActiveSkill(ChieftainSpawner selector, IEnumerable<DroneManager> drones,
-        LevelUpManager levelUps, GameManager game, AudioManager audio)
+        LevelUpManager levelUps, GameManager game, AudioManager audio,
+        IEnumerable<HSD.UI.Effect.UI_ChiefSkillEffect> cutscenes = null)
     {
         _selector=selector; _levelUps=levelUps; _game=game; _audio=audio;
         foreach(var manager in drones) { _drones=manager; break; }
+        if (cutscenes != null)
+            foreach (var cutscene in cutscenes) { _cutscene = cutscene; break; }
     }
     /// <inheritdoc />
     public Sprite Icon => _data != null && _data.Icon != null ? _data.Icon : _fallbackIcon;
@@ -84,11 +86,6 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
         {
             _drones.ApplyEmergencyBuffs();
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
-            if (!_cutsceneSearched)
-            {
-                _cutsceneSearched=true;
-                _cutscene=UnityEngine.Object.FindFirstObjectByType<HSD.UI.Effect.UI_ChiefSkillEffect>(FindObjectsInactive.Include);
-            }
             var cutscene = _cutscene != null ? _cutscene.PlayEffectAsync(Icon,cts.Token) : UniTask.CompletedTask;
             var rally = _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
                 _levelUps?.DroneSelections.Get(DroneSelectionKind.AlphanDoubleShot));

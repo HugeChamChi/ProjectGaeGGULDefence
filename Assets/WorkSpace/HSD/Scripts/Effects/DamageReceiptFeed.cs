@@ -111,6 +111,12 @@ public sealed class DamageReceiptFeed : MonoBehaviour
             _anchorRenderer = target.GetComponentInChildren<SpriteRenderer>();
             if (_anchorRenderer == null) _anchorRenderer = target.GetComponentInChildren<MeshRenderer>();
         }
+        Clear();
+    }
+
+    /// <summary>대기 중인 피해 합산과 표시된 숫자를 지운다. 보스 기준 위치는 유지한다.</summary>
+    public void Clear()
+    {
         for (int i = 0; i < _pending.Length; i++) _pending[i] = 0;
         if (_popups != null) foreach (var p in _popups) Deactivate(p);
     }

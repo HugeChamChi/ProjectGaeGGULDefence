@@ -416,7 +416,7 @@ MonoBehaviour:
   _saveKeyPrefix: OutgameUpgrade.
   _followKey: OutgameUpgrade.FollowRecommend
   _modeKey: OutgameUpgrade.RecommendMode
-  _showTestButtons: 1
+  _showTestButtons: 0
 --- !u!114 &1408538524
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 
 public class Test_TutorialSystem : MonoBehaviour
 {
+    [VContainer.Inject] private TutorialManager _tutorialManager;
     [Header("Sequence Data (Option)")]
     [SerializeField] private TutorialSequence _testSequence;
 
@@ -17,7 +18,7 @@ public class Test_TutorialSystem : MonoBehaviour
     [Button]
     public void SetupAndRunGachaTest()
     {
-        TutorialManager.Instance.PlaySequenceAsync(_testSequence).Forget();
+        if (_tutorialManager != null) _tutorialManager.PlaySequenceAsync(_testSequence).Forget();
     }
 
     [Button]
@@ -28,8 +29,8 @@ public class Test_TutorialSystem : MonoBehaviour
     }
 
     [Button]
-    public void TestDimOn() => TutorialManager.Instance.SetDimAsync(true).Forget();
+    public void TestDimOn() { if (_tutorialManager != null) _tutorialManager.SetDimAsync(true).Forget(); }
 
     [Button]
-    public void TestDimOff() => TutorialManager.Instance.SetDimAsync(false).Forget();
+    public void TestDimOff() { if (_tutorialManager != null) _tutorialManager.SetDimAsync(false).Forget(); }
 }

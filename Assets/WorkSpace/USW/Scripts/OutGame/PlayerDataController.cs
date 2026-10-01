@@ -13,6 +13,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public Action<PlayerData> OnUpdateUI;
     public Action<int> OnStaminaRecoveryTimer;
 
+    /// <summary>표시 설정 로드, 변경 및 계정 해제를 알린다.</summary>
+    public event Action OnPresentationSettingsChanged;
+
     private CancellationTokenSource _staminaLoopCts;
     private bool _disposed = false;
     private BackendGameData _backendData;
@@ -48,6 +51,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     {
         _data = null;
         StopStaminaTimer();
+        OnPresentationSettingsChanged?.Invoke();
     }
 
     // -------------------------
@@ -76,6 +80,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
         OnUpdateUI?.Invoke(data);
         OnPlayerProfilePopupUpdated?.Invoke(data);
         UpdateStaminaTimer();
+        OnPresentationSettingsChanged?.Invoke();
     }
 
     // -------------------------
@@ -229,6 +234,24 @@ public class PlayerDataController : IDisposable, Global.IClearable
     // -------------------------
     // 공통
     // -------------------------
+    /// <summary>피해 숫자 설정을 변경하고 기존 Player 저장을 요청한다.</summary>
+    public void SetDamageNumbers(bool enabled)
+    {
+        if (_data == null || _data.ShowDamageNumbers == enabled) return;
+        _data.ShowDamageNumbers = enabled;
+        SaveAndRefresh();
+        if (_backendData != null) Player.RequestDebouncedSave();
+    }
+
+    /// <summary>진동 설정을 변경하고 기존 Player 저장을 요청한다.</summary>
+    public void SetVibration(bool enabled)
+    {
+        if (_data == null || _data.VibrationEnabled == enabled) return;
+        _data.VibrationEnabled = enabled;
+        SaveAndRefresh();
+        if (_backendData != null) Player.RequestDebouncedSave();
+    }
+
     private void SaveAndRefresh()
     {
         IsDirty = true;

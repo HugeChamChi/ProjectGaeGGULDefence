@@ -45,15 +45,4 @@ public class LevelUpData : ScriptableObject
     public Sprite[] animationFrames;
     public float    frameRate = 12f;
 
-    public void ApplySheetData(GameDataManager.LevelUpSheetRow row)
-    {
-        spawnRate = row.SpawnRate;
-        description = row.Description;
-        primaryEffect = row.PrimaryEffect;
-        primaryValue = row.PrimaryValue;
-        secondaryEffect = row.SecondaryEffect;
-        secondaryValue = row.SecondaryValue;
-        specialEffect = row.SpecialEffect;
-        specialValue = row.SpecialValue;
-    }
 }

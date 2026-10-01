@@ -9,6 +9,14 @@ namespace HSD.InGameDebug
     [RequireComponent(typeof(Button))]
     public class UI_OpenDebugButton : MonoBehaviour
     {
+        private UI_IngameDebugPanel _panel;
+
+        /// <summary>해당 씬의 디버그 패널을 주입받는다.</summary>
+        [VContainer.Inject]
+        public void Construct(System.Collections.Generic.IEnumerable<UI_IngameDebugPanel> panels)
+        {
+            foreach (var panel in panels) { _panel = panel; break; }
+        }
         private void Start()
         {
             var btn = GetComponent<Button>();
@@ -17,22 +25,13 @@ namespace HSD.InGameDebug
 
         private void OpenDebugPanel()
         {
-            if (UI_IngameDebugPanel.Instance != null)
+            if (_panel != null)
             {
-                UI_IngameDebugPanel.Instance.Open();
+                _panel.Open();
             }
             else
             {
-                // 인스턴스가 없는 경우 씬에서 직접 찾기 시도 (비활성화 된 경우 포함)
-                var panel = Object.FindAnyObjectByType<UI_IngameDebugPanel>(FindObjectsInactive.Include);
-                if (panel != null)
-                {
-                    panel.Open();
-                }
-                else
-                {
-                    Debug.LogWarning("[UI_OpenDebugButton] UI_IngameDebugPanel을 씬에서 찾을 수 없습니다.");
-                }
+                Debug.LogWarning("[UI_OpenDebugButton] 해당 씬의 UI_IngameDebugPanel이 등록되지 않았습니다.");
             }
         }
     }

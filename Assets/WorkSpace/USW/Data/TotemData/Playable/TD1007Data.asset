@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: TD1007Data
   m_EditorClassIdentifier: Assembly-CSharp::TotemData
   EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
@@ -38,7 +39,7 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "TD1013(\uBBF8\uC815)"
+  totemName: "TD1007(\uBBF8\uC815)"
   iconAddress: TD_1007
   prefabAddress: TD1007
   rotationSpriteAddresses:

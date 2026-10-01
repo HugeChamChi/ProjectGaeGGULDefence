@@ -11,6 +11,22 @@ public sealed class BossDamageNumbers : MonoBehaviour
 {
     [Inject] private BossManager _bossManager;
     [Inject] private DamageFloaterManager _floaterManager;
+    private GamePresentationSettings _presentationSettings;
+
+    /// <summary>두 피해 숫자 출력기에서 동일한 Player 설정을 사용한다.</summary>
+    [Inject]
+    public void ConfigurePresentation(GamePresentationSettings settings)
+    {
+        if (_presentationSettings != null) _presentationSettings.OnChanged -= OnPresentationChanged;
+        _presentationSettings = settings;
+        _presentationSettings.OnChanged += OnPresentationChanged;
+        OnPresentationChanged();
+    }
+
+    private void OnPresentationChanged()
+    {
+        if (_presentationSettings?.ShowDamageNumbers == false) _view?.Clear();
+    }
 
     [SerializeField] private DamageStyleLabSettings _settings;
     [Tooltip("Settings.Fonts 중 사용할 폰트 번호.")]
@@ -58,7 +74,11 @@ public sealed class BossDamageNumbers : MonoBehaviour
 
     private void OnDisable() => Release();
 
-    private void OnDestroy() => Release();
+    private void OnDestroy()
+    {
+        Release();
+        if (_presentationSettings != null) _presentationSettings.OnChanged -= OnPresentationChanged;
+    }
 
     private void Release()
     {
@@ -92,5 +112,9 @@ public sealed class BossDamageNumbers : MonoBehaviour
         _boss = null;
     }
 
-    private void OnBossDamaged(decimal damage, Vector3? hitPos, BossDamageKind kind) => _view?.Add(damage, kind);
+    private void OnBossDamaged(decimal damage, Vector3? hitPos, BossDamageKind kind)
+    {
+        if (_presentationSettings?.ShowDamageNumbers == false) return;
+        _view?.Add(damage, kind);
+    }
 }

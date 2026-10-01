@@ -60,11 +60,14 @@ public sealed class ResearchScreen : MonoBehaviour
     private TextMeshProUGUI _status;
     private Button _retry;
     private int _request;
+    private SceneChangeManager _scenes;
+    private bool _returning;
+    private Button _back;
 
     /// <summary>루트에 등록된 저장 서비스와 계정 경계를 주입한다.</summary>
     [Inject]
-    public void Construct(ResearchSaveService saveService, ResearchAccountContext account)
-    { _saveService = saveService; _account = account; }
+    public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes)
+    { _saveService = saveService; _account = account; _scenes = scenes; }
 
     /// <summary>지금 보이는 구성의 진행 상황 (검증·연동용).</summary>
     public ResearchProgress Progress => _progresses?[_current];
@@ -88,6 +91,11 @@ public sealed class ResearchScreen : MonoBehaviour
         ResearchUi.Place((RectTransform)_retry.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(180f, 60f));
         _retry.onClick.AddListener(Retry);
         _account.OnAccountChanged += Reload;
+        _back = ResearchUi.NewButton(transform, "BackToLobby", _settings.RoundedFill, _settings.Soft, "로비로",
+            TopButtonFont, _settings.FontBold, out _, out _);
+        ResearchUi.Place((RectTransform)_back.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+            new Vector2(Margin, -Margin), new Vector2(180f, TopButtonHeight));
+        _back.onClick.AddListener(ReturnToLobby);
         Reload();
     }
 
@@ -174,6 +182,27 @@ public sealed class ResearchScreen : MonoBehaviour
 
     private void ProgressChanged(ResearchNodeData node) => RefreshAll();
 
+    /// <summary>저장을 확인한 뒤 로비로 돌아간다. 실패하면 원본 화면에서 재시도한다.</summary>
+    public void ReturnToLobby() => ReturnToLobbyAsync().Forget();
+
+    private async UniTask ReturnToLobbyAsync()
+    {
+        if (_returning) return;
+        _returning = true;
+        try
+        {
+            if (_sessions != null) foreach (var session in _sessions)
+            {
+                await session.FlushAsync(this.GetCancellationTokenOnDestroy());
+                if (session.IsDirty || session.SaveError != null) { UpdateSaveStatus(); return; }
+            }
+            await _scenes.TransitionToSceneAsync("LobbyScene");
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error) { Debug.LogWarning("[ResearchScreen] 로비 복귀 실패: " + error.Message); }
+        finally { _returning = false; }
+    }
+
     private void BuildScreen()
     {
         if (_trees == null || _trees.Length == 0 || _settings == null) { Debug.LogError("[ResearchScreen] 트리 데이터 또는 화면 설정 미연결", this); return; }
@@ -181,6 +210,7 @@ public sealed class ResearchScreen : MonoBehaviour
         var s = _settings;
         var root = _content = ResearchUi.Stretch(ResearchUi.NewRect(transform, "Content"));
         _status.transform.parent.SetAsLastSibling();
+        _back.transform.SetAsLastSibling();
         var bg = ResearchUi.NewImage(root, "Background", null, Vector2.zero, Vector2.zero);
         ResearchUi.Stretch(bg.rectTransform);
         bg.color = s.Background;

@@ -5,9 +5,6 @@ using DG.Tweening;
 
 public class StaminaInsufficientPopup : MonoBehaviour
 {
-    // PopupManager와 동일한 정적 싱글턴 패턴 - DI 없이도 어디서든 StaminaInsufficientPopup.Instance로 접근 가능
-    public static StaminaInsufficientPopup Instance { get; private set; }
-
     [Header("UI")]
     [SerializeField] private GameObject _popupPanel;
     [SerializeField] private RectTransform _panelTransform;
@@ -19,12 +16,6 @@ public class StaminaInsufficientPopup : MonoBehaviour
     [SerializeField] private Button _refillButton;
     [SerializeField] private TextMeshProUGUI _refillButtonText;
     [SerializeField] private StaminaConfig _staminaConfig;
-
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-    }
 
     private void Start()
     {

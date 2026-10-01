@@ -17,6 +17,7 @@ public class UIManager : MonoBehaviour
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private TimeScaleService _timeScale;
     private DroneManager _droneManager;
+    [VContainer.Inject] private VContainer.IObjectResolver _resolver;
 
     [Header("Buttons")]
     [SerializeField] private Button summonButton;
@@ -88,8 +89,8 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-
-        _droneManager = Object.FindFirstObjectByType<DroneManager>();
+        // DroneManager → BossManager → UIManager 순환을 피하도록 기존 Start 시점에만 조회한다.
+        VContainer.IObjectResolverExtensions.TryResolve(_resolver, out _droneManager);
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);

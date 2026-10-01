@@ -3,6 +3,7 @@ using BackEnd;
 
 public class CouponManager
 {
+    [VContainer.Inject] private BackendSession _session;
     /// <summary>
     /// 쿠폰 코드 사용. 성공 시 우편함 자동 갱신.
     /// </summary>
@@ -14,7 +15,7 @@ public class CouponManager
             return;
         }
 
-        if (!BackendManager.Instance.IsLoggedIn()) return;
+        if (_session == null || !_session.IsLoggedIn()) return;
 
         var bro = Backend.Coupon.UseCoupon(couponCode);
 

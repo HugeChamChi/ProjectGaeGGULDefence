@@ -37,9 +37,10 @@ namespace HSD.UI.Setting
         private AudioManager _settingsAudioManager;
 
         [VContainer.Inject]
-        public void Construct(AudioManager audioManager)
+        public void Construct(AudioManager audioManager, GamePresentationSettings settings)
         {
             _settingsAudioManager = audioManager;
+            _presenter.Configure(audioManager, settings);
         }
 
         protected override void Awake()
@@ -89,6 +90,13 @@ namespace HSD.UI.Setting
             {
                 slot.SetState(volume, isMuted);
             }
+        }
+
+        /// <summary>콜백을 다시 실행하지 않고 저장된 토글 상태를 표시한다.</summary>
+        public void UpdatePresentationToggles(bool damageNumbers, bool vibration)
+        {
+            toggle_DamageFloater?.SetState(damageNumbers, true);
+            toggle_Vibration?.SetState(vibration, true);
         }
     }
 }

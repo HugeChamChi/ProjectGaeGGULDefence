@@ -10,6 +10,33 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
 {
     [VContainer.Inject] private BossManager _bossManager;
     [VContainer.Inject] private AssetLifecycleManager _assetLifecycle;
+    private GamePresentationSettings _presentationSettings;
+    private readonly System.Collections.Generic.List<GameObject> _activeFloaters = new();
+
+    /// <summary>피해 숫자 표시 설정을 공유하고 변경 시 이미 표시된 숫자를 정리한다.</summary>
+    [VContainer.Inject]
+    public void ConfigurePresentation(GamePresentationSettings settings)
+    {
+        if (_presentationSettings != null) _presentationSettings.OnChanged -= OnPresentationChanged;
+        _presentationSettings = settings;
+        _presentationSettings.OnChanged += OnPresentationChanged;
+        OnPresentationChanged();
+    }
+
+    private bool ShowDamageNumbers => _presentationSettings?.ShowDamageNumbers ?? true;
+
+    private void OnPresentationChanged()
+    {
+        if (ShowDamageNumbers) return;
+        _receipt?.Clear();
+        foreach (var floater in _activeFloaters)
+        {
+            if (floater == null || !floater.activeSelf) continue;
+            floater.SetActive(false);
+            RM.Destroy(floater);
+        }
+        _activeFloaters.Clear();
+    }
 
     [Header("프리팹 어드레서블 주소")]
     public string damageTextAddress = "DamageTextPrefab";
@@ -93,6 +120,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
 
     private void OnDestroy()
     {
+        if (_presentationSettings != null) _presentationSettings.OnChanged -= OnPresentationChanged;
         _assetLifecycle?.Unload(this);
 
         if (_bossManager != null)
@@ -125,7 +153,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
 
     private void OnBossDamaged(decimal damage, Vector3? hitPos, BossDamageKind kind)
     {
-        if (_subscribedBoss == null || SuppressOutput) return;
+        if (_subscribedBoss == null || SuppressOutput || !ShowDamageNumbers) return;
         if (_useReceipt)
         {
             EnsureReceipt()?.Add(damage, kind);
@@ -175,6 +203,7 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
     /// </summary>
     public void SpawnDamageText(Vector3 worldPosition, decimal damage, bool isCritical = false)
     {
+        if (!ShowDamageNumbers) return;
         if (_loadedPrefab == null)
         {
             if (!string.IsNullOrEmpty(damageTextAddress))
@@ -188,6 +217,8 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
         var floaterObj = RM.Instantiate(_loadedPrefab, Vector3.zero, Quaternion.identity, damageTextContainer, true);
         if (floaterObj != null)
         {
+            _activeFloaters.RemoveAll(item => item == null || !item.activeSelf);
+            _activeFloaters.Add(floaterObj);
             var floater = floaterObj.GetComponent<DamageFloater>();
             if (floater != null)
             {

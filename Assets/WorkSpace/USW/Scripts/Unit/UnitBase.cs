@@ -188,11 +188,6 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
             if (animator == null) animator = GetComponent<UnitAnimator>();
         }
 
-        if (unitData != null && _deps?.GameDataManager != null && _deps.GameDataManager.IsLoaded)
-        {
-            SyncStatsWithSheet();
-        }
-
         if (_visual != null && unitData != null)
         {
             _visual.UpdateVisual(currentTier);
@@ -265,7 +260,6 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     private readonly System.Collections.Generic.List<IPauseIdleVisual> _pauseIdleVisuals = new();
-    protected virtual void SyncStatsWithSheet() { }
 
     public void SetState(UnitState state) => CurrentState = state;
     public void InvokeOnAttack() => onAttack?.Invoke();

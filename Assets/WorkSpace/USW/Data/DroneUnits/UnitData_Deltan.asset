@@ -51,9 +51,9 @@ MonoBehaviour:
     \uC99D\uAC00 \uB514\uBC84\uD504\uB97C \uBD80\uC5EC\uD569\uB2C8\uB2E4. "
   atk:
     normal: 80
-    rare: 140
-    epic: 160
-    legend: 170
+    rare: 80
+    epic: 80
+    legend: 80
   attackSpeed:
     normal: 1.5
     rare: 1.5
@@ -64,8 +64,9 @@ MonoBehaviour:
     rare: 22
     epic: 19
     legend: 16
-  basicAttackData: {fileID: 11400000, guid: 2dca9bda6e90dc343b2255e2df90aa74, type: 2}
+  basicAttackData: {fileID: 0}
   skillData: {fileID: 0}
+  SkillGaugeMode: 0
   foodProduction:
     normal: 1.5
     rare: 3

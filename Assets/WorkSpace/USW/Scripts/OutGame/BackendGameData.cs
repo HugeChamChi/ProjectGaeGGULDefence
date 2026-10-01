@@ -17,6 +17,8 @@ public class BackendGameData
     private const string COLUMN_PLAYER_EXP = "PlayerExp";
     private const string COLUMN_MAX_EXP = "MaxExp";
     private const string COLUMN_LAST_RESET_DATE = "LastResetDate";
+    private const string COLUMN_SHOW_DAMAGE_NUMBERS = "ShowDamageNumbers";
+    private const string COLUMN_VIBRATION_ENABLED = "VibrationEnabled";
     private string _inDate;
 
     // 기획 데이터(회복 주기/기본 최대치)는 Resources/StaminaConfig에서 읽어와 코드 수정 없이 조절 가능하게 한다.
@@ -37,38 +39,6 @@ public class BackendGameData
 
     private static int RecoveryIntervalSeconds => StaminaConfig != null ? StaminaConfig.recoveryIntervalSeconds : 600;
     private static int DefaultMaxStamina => StaminaConfig != null ? StaminaConfig.defaultMaxStamina : 30;
-
-    public BackendGameData()
-    {
-#if UNITY_EDITOR
-        EditorInitBackend();
-#endif
-    }
-
-#if UNITY_EDITOR
-    private static bool _editorInitialized = false;
-
-    private void EditorInitBackend()
-    {
-        if (_editorInitialized) return;
-        _editorInitialized = true;
-
-        var initBro = Backend.Initialize();
-        if (!initBro.IsSuccess())
-        {
-            Debug.LogError("[Editor] Backend 초기화 실패: " + initBro);
-            return;
-        }
-
-        var loginBro = Backend.BMember.CustomLogin("testuser", "testpass");
-        if (!loginBro.IsSuccess())
-        {
-            loginBro = Backend.BMember.CustomSignUp("testuser", "testpass");
-            if (!loginBro.IsSuccess())
-                Debug.LogError("[Editor] Backend 로그인 실패: " + loginBro);
-        }
-    }
-#endif
 
     // -------------------------
     // 데이터 불러오기
@@ -180,7 +150,9 @@ public class BackendGameData
             PlayerLevel = data.GetInt(COLUMN_PLAYER_LEVEL, 1),
             PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),
             MaxExp      = data.GetInt(COLUMN_MAX_EXP, 500),
-            LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty)
+            LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty),
+            ShowDamageNumbers = data.GetInt(COLUMN_SHOW_DAMAGE_NUMBERS, 1) != 0,
+            VibrationEnabled = data.GetInt(COLUMN_VIBRATION_ENABLED, 1) != 0
         };
     }
 
@@ -197,6 +169,8 @@ public class BackendGameData
         param.Add(COLUMN_PLAYER_EXP, data.PlayerExp);
         param.Add(COLUMN_MAX_EXP, data.MaxExp);
         param.Add(COLUMN_LAST_RESET_DATE, data.LastResetDate);
+        param.Add(COLUMN_SHOW_DAMAGE_NUMBERS, data.ShowDamageNumbers ? 1 : 0);
+        param.Add(COLUMN_VIBRATION_ENABLED, data.VibrationEnabled ? 1 : 0);
         return param;
     }
 

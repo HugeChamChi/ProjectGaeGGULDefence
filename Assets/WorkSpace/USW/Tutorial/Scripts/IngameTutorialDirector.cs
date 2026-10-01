@@ -48,6 +48,10 @@ namespace GaeGGUL.Tutorial
         [Inject] private InputManager _input;
         [Inject] private TotemInventory _inventory;
         [Inject] private BossPatternController _patterns;
+        [Inject] private IngameTutorialProgress _progress;
+        [Inject] private SceneChangeManager _scenes;
+        [SerializeField] private Button _completeButton;
+        private bool _returning;
         private BossBase _guidedBoss;
         private CancellationTokenSource _cts;
         private Camera _camera;
@@ -65,7 +69,15 @@ namespace GaeGGUL.Tutorial
         /// <summary>True only after all authored interactions have succeeded.</summary>
         public bool IsComplete { get; private set; }
 
-        private void Start() => RunAsync().Forget();
+        private void Start()
+        {
+            if (_completeButton != null)
+            {
+                _completeButton.gameObject.SetActive(false);
+                _completeButton.onClick.AddListener(ReturnToLobby);
+            }
+            RunAsync().Forget();
+        }
 
         private async UniTaskVoid RunAsync()
         {
@@ -121,6 +133,23 @@ namespace GaeGGUL.Tutorial
                 Restore();
                 _cts?.Dispose(); _cts = null;
             }
+            if (IsComplete)
+            {
+                _progress.Complete();
+                if (_completeButton != null) _completeButton.gameObject.SetActive(true);
+            }
+        }
+
+        /// <summary>완료 안내 버튼에서 로비로 복귀한다. 다시 배우기는 로비에서 선택한다.</summary>
+        public void ReturnToLobby() => ReturnToLobbyAsync().Forget();
+
+        private async UniTask ReturnToLobbyAsync()
+        {
+            if (!IsComplete || _returning) return;
+            _returning = true;
+            try { await _scenes.TransitionToSceneAsync("LobbyScene"); }
+            catch (Exception error) { Debug.LogWarning("튜토리얼 로비 복귀 실패: " + error.Message); }
+            finally { _returning = false; }
         }
 
         private void ValidateConfiguration()

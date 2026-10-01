@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 
 public class MailManager : Global.IClearable
 {
+    [VContainer.Inject] private BackendSession _session;
     private List<Post> _postList = new List<Post>();
     public bool IsDirty { get; set; }
 
@@ -31,7 +32,7 @@ public class MailManager : Global.IClearable
     /// </summary>
     public void GetPostList(PostType postType, System.Action onComplete = null)
     {
-        if (!BackendManager.Instance.IsLoggedIn()) return;
+        if (_session == null || !_session.IsLoggedIn()) return;
 
         _postList.Clear();
 

@@ -20,6 +20,7 @@ public class UnitFactory : MonoBehaviour
     {
         _deps = new UnitDependencies
         {
+            Research = _resolver.Resolve<ResearchRunBonuses>(),
             GameManager = _resolver.Resolve<GameManager>(),
             GameDataManager = _resolver.Resolve<GameDataManager>(),
             GridManager = _resolver.Resolve<GridManager>(),

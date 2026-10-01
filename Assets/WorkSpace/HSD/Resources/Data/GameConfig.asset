@@ -17,9 +17,8 @@ MonoBehaviour:
   countdownSeconds: 90
   bossSpawnDelaySeconds: 3
   cellSize: 1.5
-  startingFood: 250
+  startingFood: 100
   placeCost: 10
-  maxPopulation: 21
   baseCritChance: 0.1
   damageVariance: 0.1
   critDamageVariance: 0.1

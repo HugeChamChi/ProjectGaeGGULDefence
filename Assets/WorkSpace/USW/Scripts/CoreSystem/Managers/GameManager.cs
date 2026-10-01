@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     [Inject] private EndlessRunService _run;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private DefeatPresentation _defeat;
+    [Inject] private ResearchRunBonuses _research;
     private CancellationTokenSource _endingCts;
     private ResultScreenData _resultSnapshot;
     private float _survivalSeconds;
@@ -71,6 +72,7 @@ public class GameManager : MonoBehaviour
     public void StartGame(bool startWave)
     {
         if (CurrentState != GameState.Idle) return;
+        if (_research?.IsReady != true) return;
         if (config == null) { Debug.LogError("GameManager: config 미연결"); return; }
         if (!_waveManager.TryPrepareRun(out string error))
         {
@@ -85,7 +87,7 @@ public class GameManager : MonoBehaviour
 
         _timerManager.OnTimeUp += HandleTimeUp;
 
-        _currencyManager.AddCurrency(config.startingFood);
+        _currencyManager.AddCurrency(config.startingFood + _research.Get(ResearchStat.StartFood));
         _expManager.OnLevelUp += HandleLevelUp;
 
         if (startWave) _waveManager.StartWave();

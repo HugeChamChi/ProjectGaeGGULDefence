@@ -10,9 +10,18 @@ public class RootLifetimeScope : LifetimeScope
 
     [Header("Managers")]
     [SerializeField] private AudioManager audioManager;
+    [SerializeField] private ResearchTreeData _researchTree;
+
+    [Header("Tutorial")]
+    [UnityEngine.Serialization.FormerlySerializedAs("tutorialManagerPrefab")]
+    [SerializeField] private GaeGGUL.Tutorial.TutorialManager _tutorialManagerPrefab;
 
     protected override void Configure(IContainerBuilder builder)
     {
+        if (_tutorialManagerPrefab != null)
+            builder.RegisterComponentInNewPrefab(_tutorialManagerPrefab, Lifetime.Singleton).UnderTransform(transform);
+        else
+            builder.RegisterComponentOnNewGameObject<GaeGGUL.Tutorial.TutorialManager>(Lifetime.Singleton, "TutorialManager").UnderTransform(transform);
         if (fadeScreenPrefab != null)
         {
             builder.RegisterComponentInNewPrefab(fadeScreenPrefab, Lifetime.Singleton).As<IFadeScreen>();
@@ -28,6 +37,13 @@ public class RootLifetimeScope : LifetimeScope
         }
 
         builder.Register<BackendGameData>(Lifetime.Singleton).AsSelf();
+        builder.Register<BackendSession>(Lifetime.Singleton);
+        builder.Register<AppInitialization>(Lifetime.Singleton);
+        builder.Register<GaeGGUL.Tutorial.IngameTutorialProgress>(Lifetime.Singleton);
+        if (_researchTree == null) throw new System.InvalidOperationException("Root research tree is required.");
+        builder.RegisterInstance(_researchTree);
+        builder.RegisterInstance(Player.PlayerData);
+        builder.Register<GamePresentationSettings>(Lifetime.Singleton);
         builder.Register<PlayerPrefsResearchSaveStore>(Lifetime.Singleton).As<IResearchSaveStore>();
         builder.Register<ResearchAccountContext>(Lifetime.Singleton);
         builder.Register<ResearchSaveService>(Lifetime.Singleton);
@@ -47,6 +63,9 @@ public class RootLifetimeScope : LifetimeScope
         {
             var audio = resolver.Resolve<AudioManager>();
             UI_Base.Inject(audio);
+            resolver.Inject(Player.Mail);
+            resolver.Inject(Table.Coupon);
+            Player.Inject(resolver.Resolve<BackendGameData>());
         });
     }
 }

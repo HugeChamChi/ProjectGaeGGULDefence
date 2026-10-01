@@ -12,16 +12,21 @@ public class LobbyLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
-        // 팝업이 꺼져있을(Inactive) 경우 RegisterComponentInHierarchy가 찾지 못하므로 명시적 할당 우선
+        builder.RegisterInstance(new SceneComponentCollection(gameObject.scene));
+        builder.RegisterEntryPoint<GaeGGUL.Tutorial.TutorialSceneBinding>();
+        SceneComponentRegistration.RegisterOptional<Test_TutorialSystem>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<GaeGGUL.Tutorial.TutorialActor>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<StaminaInsufficientPopup>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<BackendManager>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<LobbyFeatureNavigation>(builder, gameObject.scene);
+        // 명시적 할당을 우선하고, 없으면 이 씬의 비활성 View까지 등록한다.
         if (partySelectView != null) 
         {
             builder.RegisterComponent(partySelectView);
         }
         else 
         {
-            // 인스펙터 슬롯이 비어있다면, 강제로 꺼진(Inactive) 오브젝트까지 뒤져서 등록합니다.
-            var view = FindFirstObjectByType<UI_PartySelectView>(FindObjectsInactive.Include);
-            if (view != null) builder.RegisterComponent(view);
+            SceneComponentRegistration.RegisterOptional<UI_PartySelectView>(builder, gameObject.scene);
         }
             
         if (lobbyData != null) 

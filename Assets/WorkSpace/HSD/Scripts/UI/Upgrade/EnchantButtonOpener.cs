@@ -4,12 +4,19 @@ using HSD.UI.Upgrade;
 
 /// <summary>
 /// Enchant 버튼 클릭 시 강화 패널(UI_UpgradePanel)을 연다. 패널이 평소 비활성 상태라
-/// GameObject.Find로는 못 찾으므로, 비활성 오브젝트도 포함해서 씬에서 찾아 연결한다
-/// (인스펙터 참조 연결 불필요).
+/// 해당 씬의 LifetimeScope가 비활성 패널을 등록하여 주입한다.
 /// </summary>
 [RequireComponent(typeof(Button))]
 public class EnchantButtonOpener : MonoBehaviour
 {
+    private UI_UpgradePanel _panel;
+
+    /// <summary>씬에 등록된 강화 패널을 주입받는다.</summary>
+    [VContainer.Inject]
+    public void Construct(System.Collections.Generic.IEnumerable<UI_UpgradePanel> panels)
+    {
+        foreach (var panel in panels) { _panel = panel; break; }
+    }
     private void Awake()
     {
         GetComponent<Button>().onClick.AddListener(OpenUpgradePanel);
@@ -17,7 +24,7 @@ public class EnchantButtonOpener : MonoBehaviour
 
     private void OpenUpgradePanel()
     {
-        var panel = FindPanel();
+        var panel = _panel;
         if (panel == null)
         {
             Debug.LogWarning("[EnchantButtonOpener] UI_UpgradePanel을 씬에서 찾을 수 없습니다.");
@@ -27,9 +34,4 @@ public class EnchantButtonOpener : MonoBehaviour
         panel.Open();
     }
 
-    private static UI_UpgradePanel FindPanel()
-    {
-        var panels = Object.FindObjectsByType<UI_UpgradePanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        return panels.Length > 0 ? panels[0] : null;
-    }
 }

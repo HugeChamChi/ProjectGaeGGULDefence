@@ -17,6 +17,7 @@ using Object = UnityEngine.Object;
 public sealed class FieldPauseVisuals : IDisposable
 {
     private readonly IObjectResolver _resolver;
+    private readonly SceneComponentCollection _sceneComponents;
 
     private readonly HashSet<object> _owners = new();
     private readonly HashSet<object> _holdOwners = new();
@@ -71,21 +72,25 @@ public sealed class FieldPauseVisuals : IDisposable
     /// 씬 매니저들은 쓸 때 resolver로 조회한다 — 생성자에서 받으면 BossPatternController(이 서비스를 주입받음) ↔ BossManager 사이에
     /// 순환 의존이 생겨 씬 초기화가 깨진다. DroneManager는 드론 씬에서만 등록된다.
     /// </summary>
-    public FieldPauseVisuals(IObjectResolver resolver) => _resolver = resolver;
+    public FieldPauseVisuals(IObjectResolver resolver, SceneComponentCollection sceneComponents)
+    {
+        _resolver = resolver;
+        _sceneComponents = sceneComponents;
+    }
 
-    private T Find<T>() where T : class => _resolver != null && _resolver.TryResolve<T>(out var value) ? value : null;
+    private T ResolveOptional<T>() where T : class => _resolver != null && _resolver.TryResolve<T>(out var value) ? value : null;
 
     /// <summary>owner의 선택 화면이 열렸다 — 정지 전 유예부터 새 공격(드론 사격·보스 패턴)을 막는다.</summary>
     public void HoldAttacks(object owner)
     {
         if (owner == null || !_holdOwners.Add(owner) || _holdOwners.Count > 1) return;
-        Find<TimerController>()?.StopTimer();
-        var grid = Find<GridManager>();
+        ResolveOptional<TimerController>()?.StopTimer();
+        var grid = ResolveOptional<GridManager>();
         if (grid != null)
             foreach (var cell in grid.GetOccupiedCells()) RegisterUnit(cell.OccupyingUnit);
-        _heldBoss = Find<BossManager>()?.CurrentBoss;
+        _heldBoss = ResolveOptional<BossManager>()?.CurrentBoss;
         _heldBoss?.SetPatternHold(true);
-        var drones = Find<DroneManager>();
+        var drones = ResolveOptional<DroneManager>();
         if (drones != null)
             foreach (var drone in drones.Drones)
             {
@@ -113,8 +118,8 @@ public sealed class FieldPauseVisuals : IDisposable
             _heldBoss = null;
             if (resumeCombat)
             {
-                var boss = Find<BossManager>()?.CurrentBoss;
-                if (boss != null && !boss.IsDead) Find<TimerController>()?.ResumeTimer();
+                var boss = ResolveOptional<BossManager>()?.CurrentBoss;
+                if (boss != null && !boss.IsDead) ResolveOptional<TimerController>()?.ResumeTimer();
                 foreach (var unit in _heldUnits) if (unit != null && unit.currentCell != null) unit.ResumeLoops();
             }
             _heldUnits.Clear();
@@ -136,7 +141,7 @@ public sealed class FieldPauseVisuals : IDisposable
 
     private void Apply()
     {
-        var grid = Find<GridManager>();
+        var grid = ResolveOptional<GridManager>();
         if (grid != null)
             foreach (var cell in grid.GetOccupiedCells())
             {
@@ -146,7 +151,7 @@ public sealed class FieldPauseVisuals : IDisposable
                 _units.Add(unit);
             }
 
-        var drones = Find<DroneManager>();
+        var drones = ResolveOptional<DroneManager>();
         if (drones != null)
             foreach (var drone in drones.Drones)
             {
@@ -155,7 +160,7 @@ public sealed class FieldPauseVisuals : IDisposable
                 _drones.Add(drone);
             }
 
-        var bossManager = Find<BossManager>();
+        var bossManager = ResolveOptional<BossManager>();
         var boss = bossManager != null ? bossManager.CurrentBoss : null;
         if (boss != null)
         {
@@ -164,7 +169,7 @@ public sealed class FieldPauseVisuals : IDisposable
         }
 
         // 화면에 떠 있는 이펙트만 (열릴 때 한 번 조회 — 매 프레임 검색 아님). 원래 unscaled인 UI 파티클은 건드리지 않는다.
-        foreach (var ps in Object.FindObjectsByType<ParticleSystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        foreach (var ps in _sceneComponents.Enumerate<ParticleSystem>(false))
         {
             var main = ps.main;
             if (main.useUnscaledTime) continue;

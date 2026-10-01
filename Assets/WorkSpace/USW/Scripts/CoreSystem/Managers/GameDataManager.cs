@@ -9,16 +9,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 /// <summary>
-/// 구글 시트 7개를 병렬 fetch하여 인게임 핵심 수치를 런타임에 제공합니다.
+/// 잔존 시트 3개를 병렬 로드합니다. 캐릭터·게임 설정은 에디터에서 시트값을 반영한 SO를 사용합니다.
 /// _gameDataManager 로 접근합니다.
 ///
 /// 담당 시트:
-///   - 소환 비용        (gid=1607115777)
 ///   - 소환 등장 확률    (gid=1984586417)
-///   - 판매 가격        (gid=284585537)
-///   - 재화 생산량       (gid=1326045266)
 ///   - 보스 HP/경험치    (gid=1622284954)
-///   - 레벨업 경험치     (gid=499762901)
 ///   - 토템 데이터       (gid=660087267)
 ///
 /// ─ 토템 시트 컬럼 규칙 ──────────────────────────────────────────────
@@ -55,12 +51,7 @@ public class GameDataManager
 
     private const string GidSpawnRate = "1984586417";
     private const string GidBoss = "1622284954";
-    private const string GidExpTable = "499762901";
     private const string GidTotem = "660087267";
-    private const string GidCharacter = "1454519483";
-    private const string GidConfig = "2094930366";
-    private const string GidLevelUp = "2005855251";
-    private const string GidUpgrade = "842065624";
 
     public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -77,51 +68,8 @@ public class GameDataManager
     private readonly Dictionary<int, BossSheetRow> _bossByRoundId = new();
     private int _currentBossRoundId = -1;
 
-    // ── 레벨업 경험치 ─────────────────────────────────────
-    private float[] _expTable;
-
     // ── 토템 데이터 ───────────────────────────────────────
     private readonly Dictionary<int, TotemSheetRow> _totemRows = new();
-
-    // ── 캐릭터 데이터 (성장) ───────────────────────────────
-    private readonly Dictionary<int, CharacterSheetRow> _characterData = new();
-
-    // ── 업그레이드 데이터 ──────────────────────────────────
-    private readonly Dictionary<int, UpgradeSheetRow> _upgradeRows = new();
-    public class UpgradeSheetRow
-    {
-        public int Level;
-        public float AtkIncreaseRate;
-        public float AtkSpeedIncreaseRate;
-        public int UpgradeCost;
-    }
-
-    public UpgradeSheetRow GetUpgradeRow(int level)
-    {
-        if (_upgradeRows.TryGetValue(level, out var row)) return row;
-        return null;
-    }
-
-    // ── 레벨업 선택지 데이터 ───────────────────────────────
-    private readonly Dictionary<int, LevelUpSheetRow> _levelUpRows = new();
-    public class LevelUpSheetRow
-    {
-        public int ChooseId;
-        public float SpawnRate;
-        public string Description;
-        public LevelUpEffectType PrimaryEffect;
-        public float PrimaryValue;
-        public LevelUpEffectType SecondaryEffect;
-        public float SecondaryValue;
-        public LevelUpSpecialEffect SpecialEffect;
-        public float SpecialValue;
-    }
-
-    public LevelUpSheetRow GetLevelUpRow(int chooseId)
-    {
-        if (_levelUpRows.TryGetValue(chooseId, out var row)) return row;
-        return null;
-    }
 
     public async UniTask LoadAllAsync(CancellationToken token = default)
     {
@@ -130,26 +78,20 @@ public class GameDataManager
         {
             try
             {
-                var (csv0, csv1, csv2, csv3, csv4, csv5, csv6, csv7) = await UniTask.WhenAll(
+                var (spawnCsv, bossCsv, totemCsv) = await UniTask.WhenAll(
                     FetchCsvAsync(GidSpawnRate, token),
                     FetchCsvAsync(GidBoss, token),
-                    FetchCsvAsync(GidExpTable, token),
-                    FetchCsvAsync(GidTotem, token),
-                    FetchCsvAsync(GidCharacter, token),
-                    FetchCsvAsync(GidConfig, token),
-                    FetchCsvAsync(GidLevelUp, token),
-                    FetchCsvAsync(GidUpgrade, token)
+                    FetchCsvAsync(GidTotem, token)
                 );
 
-                if (csv0 == null || csv1 == null || csv2 == null || csv3 == null || 
-                    csv4 == null || csv5 == null || csv6 == null || csv7 == null)
+                if (spawnCsv == null || bossCsv == null || totemCsv == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
                     await UniTask.Delay(3000, cancellationToken: token);
                     continue;
                 }
 
-                ParseSpawnRates(csv0);
+                ParseSpawnRates(spawnCsv);
                 List<DebuffDefinition> pendingDebuffs = null;
                 if (!string.IsNullOrWhiteSpace(_debuffSettings.SheetGid))
                 {
@@ -157,13 +99,8 @@ public class GameDataManager
                     if (string.IsNullOrWhiteSpace(debuffCsv)) throw new FormatException("Debuff CSV could not be loaded.");
                     pendingDebuffs = DebuffSheetParser.Parse(SplitCsvRows(debuffCsv));
                 }
-                ParseBossData(csv1);
-                ParseExpTable(csv2);
-                ParseTotemData(csv3);
-                ParseCharacterData(csv4);
-                await ParseWaveTimeAsync(csv5);
-                ParseLevelUpData(csv6);
-                ParseUpgradeData(csv7);
+                ParseBossData(bossCsv);
+                ParseTotemData(totemCsv);
                 ValidateDebuffBindings(pendingDebuffs);
                 if (pendingDebuffs != null) _debuffCatalog.Replace(pendingDebuffs);
 
@@ -197,7 +134,6 @@ public class GameDataManager
             if (binding.Trigger == DebuffTrigger.AffectedUnitBasicAttackAttempt && definition.Kind != DebuffKind.ArmorBreak)
                 throw new FormatException($"{source}: attack-attempt binding must be ArmorBreak.");
         }
-        foreach (var row in _characterData.Values) Validate(row.DebuffBinding, $"Character {row.CharacterId}");
         foreach (var row in _totemRows.Values) Validate(row.DebuffBinding, $"Totem {row.TotemId}");
     }
 
@@ -239,31 +175,6 @@ public class GameDataManager
     }
 
 
-    private async UniTask ParseWaveTimeAsync(string csv)
-    {
-        var lines = csv.Split('\n');
-
-        if (lines.Length >= 2)
-        {
-            var cols = lines[1].Trim().Split(',');
-
-            if (cols.Length >= 2)
-            {
-                var data = await RM.LoadAsync<GameConfig>("Data/GameConfig");
-
-                if (float.TryParse(cols[0].Trim(), out var waveTime))
-                {
-                    data.countdownSeconds = waveTime;
-                }
-
-                if (int.TryParse(cols[1].Trim(), out var startFood))
-                {
-                    data.startingFood = startFood;
-                }
-            }
-        }
-    }
-
     private void ParseBossData(string csv)
     {
         _bossByRoundId.Clear();
@@ -299,20 +210,6 @@ public class GameDataManager
                 DropExpAmount = expAmt,
             };
         }
-    }
-
-    private void ParseExpTable(string csv)
-    {
-        var table = new List<float>();
-        var lines = csv.Split('\n');
-        for (int i = 2; i < lines.Length; i++)
-        {
-            var cols = lines[i].Trim().Split(',');
-            if (cols.Length < 3 || string.IsNullOrWhiteSpace(cols[0])) continue;
-            if (!float.TryParse(cols[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var exp)) continue;
-            table.Add(exp);
-        }
-        _expTable = table.ToArray();
     }
 
     // ── 토템 시트 파싱 ────────────────────────────────────
@@ -586,12 +483,6 @@ public class GameDataManager
         return 0; // 시트 삭제됨
     }
 
-    public float GetCurrencyPerSecond(int characterId)
-    {
-        var row = GetCharacterRow(characterId);
-        return row != null ? row.FoodProduction : 0f;
-    }
-
     public decimal GetBossMaxHp(int roundId, decimal fallback = 1000)
         => _bossByRoundId.TryGetValue(roundId, out var row) ? row.MaxHealth : fallback;
 
@@ -614,84 +505,9 @@ public class GameDataManager
     public float GetCurrentExpMultiplier()
         => _currentBossRoundId >= 0 ? GetExpMultiplierForRound(_currentBossRoundId) : 0.01f;
 
-    public float GetExpRequired(int level)
-    {
-        if (_expTable == null || _expTable.Length == 0) return 100f;
-        int idx = Mathf.Clamp(level - 1, 0, _expTable.Length - 1);
-        return _expTable[idx];
-    }
-
     /// <summary>totemId 기준 시트 데이터 반환. 시트 미로드 또는 미등록은 null.</summary>
     public TotemSheetRow GetTotemRow(int totemId)
         => _totemRows.TryGetValue(totemId, out var row) ? row : null;
-
-    /// <summary>캐릭터ID 기준 시트 데이터 반환</summary>
-    public CharacterSheetRow GetCharacterRow(int charId)
-        => _characterData.TryGetValue(charId, out var row) ? row : null;
-
-    // ── 캐릭터 데이터 파싱 ──────────────────────────────────
-    public List<string> UpgradeTypes { get; private set; } = new();
-
-    private void ParseCharacterData(string csv)
-    {
-        if (string.IsNullOrWhiteSpace(csv)) return;
-
-        UpgradeTypes.Clear();
-        _characterData.Clear();
-        var rows = SplitCsvRows(csv);
-        if (rows.Count == 0) throw new FormatException("Character sheet is empty.");
-        var characterHeaders = rows[0];
-        
-        for (int i = 2; i < rows.Count; i++)
-        {
-            var cols = rows[i];
-            if (cols.Length < 10 || string.IsNullOrWhiteSpace(cols[0])) continue;
-
-            if (!int.TryParse(cols[0], out int id)) continue;
-
-            var row = new CharacterSheetRow
-            {
-                CharacterId = id,
-                Name = cols[1],
-                LocalKey = cols[2],
-                CharacterType = cols[3],
-                Grade = cols[4],
-                Level = GradeToLevel(cols[4]),
-                Atk = ParseFloat(cols[5]),
-                AttackSpeed = ParseFloat(cols[6]),
-                CriticalDamage = ParseFloat(cols[7]),
-                CriticalChance = ParseFloat(cols[8]),
-                FoodProduction = ParseFloat(cols[9])
-            };
-            row.Level = GradeToLevel(row.Grade);
-            row.DebuffBinding = DebuffSheetParser.ParseBinding(characterHeaders, cols, true, $"Character row {i + 1} id={id}");
-
-            Debug.Log($"[GameDataManager] Parsed Character {id} - Name: {row.Name}, FoodProduction: {row.FoodProduction}");
-
-            if (!string.IsNullOrEmpty(row.CharacterType) && !UpgradeTypes.Contains(row.CharacterType))
-            {
-                UpgradeTypes.Add(row.CharacterType);
-            }
-
-            _characterData[row.CharacterId] = row;
-        }
-        Debug.Log($"[GameDataManager] 캐릭터 데이터 {_characterData.Count}행 로드 완료");
-    }
-
-    private static int GradeToLevel(string grade)
-    {
-        return grade.Trim().ToLowerInvariant() switch
-        {
-            "normal" or "노말" or "0" or "common" => 1,
-            "rare" or "레어" or "1" => 2,
-            "epic" or "에픽" or "2" => 3,
-            "legend" or "전설" or "3" or "special" => 4,
-            _ => 1
-        };
-    }
-
-    private static float ParseFloat(string v)
-        => float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f) ? f : 0f;
 
     // ── 내부 데이터 클래스 ────────────────────────────────
 
@@ -703,23 +519,6 @@ public class GameDataManager
         public double? Defense;
         public float DropExpPerHealth;
         public float DropExpAmount;
-    }
-
-    public class CharacterSheetRow
-    {
-        public DebuffBinding? DebuffBinding;
-        public int CharacterId;
-        public string Name;
-        public string LocalKey;
-        public string CharacterType;
-        public string Grade;
-        public int Level;
-        public float Atk;
-        public float AttackSpeed;
-        public float CriticalDamage;
-        public float CriticalChance;
-        public int SkillId;
-        public float FoodProduction;
     }
 
     /// <summary>
@@ -756,181 +555,4 @@ public class GameDataManager
         public float ExpGainRate;
     }
 
-    // ── 레벨업 시트 파싱 ────────────────────────────────────
-    private void ParseLevelUpData(string csv)
-    {
-        var rows = SplitCsvRows(csv);
-        if (rows.Count < 2) return;
-
-        string[] headers = null;
-        int headerIndex = -1;
-
-        for (int i = 0; i < rows.Count; i++)
-        {
-            if (rows[i].Length > 0 && rows[i][0].Trim() == "choose_id")
-            {
-                headers = rows[i];
-                headerIndex = i;
-                break;
-            }
-        }
-
-        if (headers == null)
-        {
-            Debug.LogWarning("[GameDataManager] 레벨업 시트: choose_id 헤더 행을 찾을 수 없습니다.");
-            return;
-        }
-        
-        int iId = FindCol(headers, "choose_id");
-        int iSpawn = FindCol(headers, "spawn_rate");
-        int iDesc = FindCol(headers, "effect");
-        int iAtk = FindCol(headers, "atk_increase");
-        int iAtkSpd = FindCol(headers, "atk_speed_increase");
-        int iCritDmg = FindCol(headers, "critical_damege_increase");
-        int iCritChc = FindCol(headers, "critical_chance_increase");
-        int iCool = FindCol(headers, "cooltime_decrease");
-        int iFood = FindCol(headers, "food_production_rate");
-        int iExp = FindCol(headers, "exp_gain_rate");
-        int iAtkDec = FindCol(headers, "atk_decrease");
-        int iAtkSpdDec = FindCol(headers, "atk_speed_decrease");
-
-        if (iId < 0)
-        {
-            Debug.LogWarning("[GameDataManager] 레벨업 시트: choose_id 컬럼 인덱스 오류.");
-            return;
-        }
-
-        for (int i = headerIndex + 1; i < rows.Count; i++)
-        {
-            var cols = rows[i];
-            if (cols.Length <= iId || !int.TryParse(cols[iId], out int id)) continue;
-
-            float spawn = iSpawn >= 0 && cols.Length > iSpawn ? ParseFloat(cols[iSpawn]) : 0f;
-            string desc = iDesc >= 0 && cols.Length > iDesc ? cols[iDesc].Replace("\"", "").Replace("{", "").Replace("}", "") : "";
-            Debug.Log($"[LevelUp Parsing] ID: {id}, Desc: {desc}");
-            float atkInc = iAtk >= 0 && cols.Length > iAtk ? ParseFloat(cols[iAtk]) : 0f;
-            float atkSpdInc = iAtkSpd >= 0 && cols.Length > iAtkSpd ? ParseFloat(cols[iAtkSpd]) : 0f;
-            float critDmgInc = iCritDmg >= 0 && cols.Length > iCritDmg ? ParseFloat(cols[iCritDmg]) : 0f;
-            float critChcInc = iCritChc >= 0 && cols.Length > iCritChc ? ParseFloat(cols[iCritChc]) : 0f;
-            float coolInc = iCool >= 0 && cols.Length > iCool ? ParseFloat(cols[iCool]) : 0f;
-            float foodInc = iFood >= 0 && cols.Length > iFood ? ParseFloat(cols[iFood]) : 0f;
-            float expInc = iExp >= 0 && cols.Length > iExp ? ParseFloat(cols[iExp]) : 0f;
-            float atkDec = iAtkDec >= 0 && cols.Length > iAtkDec ? ParseFloat(cols[iAtkDec]) : 0f;
-            float atkSpdDec = iAtkSpdDec >= 0 && cols.Length > iAtkSpdDec ? ParseFloat(cols[iAtkSpdDec]) : 0f;
-
-            float finalAtk = atkInc - atkDec;
-            float finalAtkSpd = atkSpdInc - atkSpdDec;
-
-            LevelUpEffectType pe = LevelUpEffectType.None; float pv = 0;
-            LevelUpEffectType se = LevelUpEffectType.None; float sv = 0;
-            LevelUpSpecialEffect sp = LevelUpSpecialEffect.None; float spv = 0;
-
-            Action<LevelUpEffectType, float> AddEffect = (type, val) => {
-                if (pe == LevelUpEffectType.None) { pe = type; pv = val; }
-                else if (se == LevelUpEffectType.None) { se = type; sv = val; }
-            };
-
-            if (finalAtk != 0) AddEffect(LevelUpEffectType.AttackPercent, finalAtk);
-            if (finalAtkSpd != 0) AddEffect(LevelUpEffectType.AttackSpeedPercent, finalAtkSpd);
-            if (critDmgInc != 0) AddEffect(LevelUpEffectType.CritDamagePercent, critDmgInc);
-            if (critChcInc != 0) AddEffect(LevelUpEffectType.CritChancePercent, critChcInc);
-            if (coolInc != 0) AddEffect(LevelUpEffectType.GaugeSpeedPercent, coolInc);
-            if (foodInc != 0) AddEffect(LevelUpEffectType.FoodProductionPercent, foodInc);
-            if (expInc != 0) AddEffect(LevelUpEffectType.ExpGainPercent, expInc);
-
-            // Hardcoded special values
-            switch(id)
-            {
-                case 3009: sp = LevelUpSpecialEffect.AttackEveryNHits; spv = 10f; break;
-                case 3010: pe = LevelUpEffectType.TotemEfficiencyPercent; pv = 20f; break;
-                case 3011: sp = LevelUpSpecialEffect.MergeKeepsTribe; break;
-                case 3012: sp = LevelUpSpecialEffect.SummonFixedDiscount; spv = 10f; break;
-                case 3013: sp = LevelUpSpecialEffect.SellBonusFood; spv = 20f; break;
-                
-                case 3106: pe = LevelUpEffectType.TotemEfficiencyPercent; pv = 30f; break;
-                case 3107: sp = LevelUpSpecialEffect.TriggerTotemSelection; break;
-                case 3108: sp = LevelUpSpecialEffect.AttackEveryNHits; spv = 5f; break;
-                case 3109: sp = LevelUpSpecialEffect.SummonDealsDamage; spv = 500f; break;
-                case 3110: sp = LevelUpSpecialEffect.SellDealsDamage; spv = 800f; break;
-                
-                case 3203: pe = LevelUpEffectType.ChieftainAttackPercent; pv = 50f; break;
-                case 3204: pe = LevelUpEffectType.ChieftainFoodProductionPercent; pv = 300f; break;
-                case 3205: sp = LevelUpSpecialEffect.RandomBonusAttack; spv = 30f; break;
-                case 3206: sp = LevelUpSpecialEffect.SellGivesRandomUnit; spv = 30f; break;
-                case 3207: pe = LevelUpEffectType.TotemEfficiencyPercent; pv = 50f; break;
-                case 3208: sp = LevelUpSpecialEffect.SellDealsDamage; spv = 1500f; break;
-                
-                case 3304: sp = LevelUpSpecialEffect.ExtraAttackEveryAttack; break;
-                case 3306: sp = LevelUpSpecialEffect.SellDealsDamage; spv = 4000f; break;
-            }
-
-            _levelUpRows[id] = new LevelUpSheetRow
-            {
-                ChooseId = id,
-                SpawnRate = spawn,
-                Description = desc,
-                PrimaryEffect = pe,
-                PrimaryValue = pv,
-                SecondaryEffect = se,
-                SecondaryValue = sv,
-                SpecialEffect = sp,
-                SpecialValue = spv
-            };
-        }
-        
-        Debug.Log($"[GameDataManager] 레벨업 시트 {_levelUpRows.Count}행 로드 완료");
-    }
-
-    // ── 업그레이드 시트 파싱 ─────────────────────────────────
-    private void ParseUpgradeData(string csv)
-    {
-        var rows = SplitCsvRows(csv);
-        if (rows.Count < 2) return;
-
-        string[] headers = null;
-        int headerIndex = -1;
-
-        for (int i = 0; i < rows.Count; i++)
-        {
-            if (rows[i].Length > 0 && rows[i][0].Trim() == "level")
-            {
-                headers = rows[i];
-                headerIndex = i;
-                break;
-            }
-        }
-
-        if (headers == null)
-        {
-            Debug.LogWarning("[GameDataManager] 업그레이드 시트: level 헤더 행을 찾을 수 없습니다.");
-            return;
-        }
-
-        int iLevel = FindCol(headers, "level");
-        int iAtk = FindCol(headers, "atk");
-        int iAtkSpd = FindCol(headers, "atk_speed");
-        int iCost = FindCol(headers, "UpgradeCost");
-
-        for (int i = headerIndex + 2; i < rows.Count; i++) // Skip type row
-        {
-            var cols = rows[i];
-            if (cols.Length <= iLevel || !int.TryParse(cols[iLevel], out int level)) continue;
-
-            string atkStr = iAtk >= 0 && cols.Length > iAtk ? cols[iAtk].Replace("%", "").Trim() : "0";
-            string spdStr = iAtkSpd >= 0 && cols.Length > iAtkSpd ? cols[iAtkSpd].Replace("%", "").Trim() : "0";
-            
-            float atkInc = float.TryParse(atkStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float a) ? a : 0f;
-            float spdInc = float.TryParse(spdStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float s) ? s : 0f;
-            int cost = iCost >= 0 && cols.Length > iCost && int.TryParse(cols[iCost].Trim(), out int c) ? c : 0;
-
-            _upgradeRows[level] = new UpgradeSheetRow
-            {
-                Level = level,
-                AtkIncreaseRate = atkInc,
-                AtkSpeedIncreaseRate = spdInc,
-                UpgradeCost = cost
-            };
-        }
-        Debug.Log($"[GameDataManager] 업그레이드 데이터 {_upgradeRows.Count}행 로드 완료");
-    }
 }

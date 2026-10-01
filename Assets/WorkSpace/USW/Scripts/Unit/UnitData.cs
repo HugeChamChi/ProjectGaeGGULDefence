@@ -56,21 +56,6 @@ public class UnitData : ScriptableObject, ILoadableAsset
 
 
 
-    /// <summary>
-    /// 구글 시트에서 가져온 캐릭터 성장 데이터를 SO 인스턴스에 적용합니다.
-    /// (주의: 런타임에 에셋 자체를 수정하지 않도록 인스턴스화된 객체에 사용하는 것이 좋습니다)
-    /// </summary>
-    public void ApplySheetData(Tier tier, GameDataManager.CharacterSheetRow row)
-    {
-        if (row == null) return;
-
-        unitName = row.Name;
-        atk.Set(tier, row.Atk);
-        attackSpeed.Set(tier, row.AttackSpeed);
-        foodProduction.Set(tier, row.FoodProduction);
-        if (row.DebuffBinding.HasValue) DebuffBindings.Set(tier, row.DebuffBinding.Value);
-    }
-
     /// <summary>description의 {0}~{4} 자리표시자에 현재 등급 수치를 채워 반환한다.
     /// {0}=공격력 {1}=공격속도 {2}=스킬쿨타임 {3}=식량생산량 {4}=최대드론수.
     /// 자리표시자가 없으면(또는 잘못 쓰였으면) description을 그대로 반환한다.</summary>

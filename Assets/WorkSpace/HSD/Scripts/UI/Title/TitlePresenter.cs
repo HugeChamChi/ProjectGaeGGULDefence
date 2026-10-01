@@ -4,27 +4,24 @@ using VContainer.Unity;
 using Cysharp.Threading.Tasks;
 using BackEnd;
 
-public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
+public class TitlePresenter : IInitializable, ITickable, IAsyncStartable, System.IDisposable
 {
     private readonly GlobalUIManager _uiManager;
     private readonly SceneChangeManager _sceneChangeManager;
-    private readonly GameDataManager _gameDataManager;
-    private readonly BackendGameData _backendData;
+    private readonly AppInitialization _initialization;
+    private System.Threading.CancellationToken _cancellation;
     private readonly TitleView _view;
 
     private bool _isProcessing = false;
 
     [Inject]
-    public TitlePresenter(GlobalUIManager uiManager, SceneChangeManager sceneChangeManager, GameDataManager gameDataManager, BackendGameData backendData, TitleView view = null)
+    public TitlePresenter(GlobalUIManager uiManager, SceneChangeManager sceneChangeManager, AppInitialization initialization, TitleView view = null)
     {
         _uiManager = uiManager;
         _sceneChangeManager = sceneChangeManager;
-        _gameDataManager = gameDataManager;
-        _backendData = backendData;
+        _initialization = initialization;
         _view = view;
 
-        // Player 및 하위 컨트롤러에 의존성 주입 전달
-        Player.Inject(_backendData);
     }
 
     public void Initialize()
@@ -44,6 +41,7 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
 
     public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
+        _cancellation = cancellation;
         if (_uiManager != null)
         {
             await _uiManager.FadeOutAsync();
@@ -66,53 +64,25 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable
 
     private async UniTask ProcessInitializationAsync()
     {
-        if (_sceneChangeManager != null)
+        try
         {
-            // SceneChangeManager의 완벽한 흐름(FadeIn -> beforeLoad -> Load -> afterLoad -> FadeOut)에 올라탑니다.
-            await _sceneChangeManager.TransitionToSceneAsync("LobbyScene", 
-                beforeLoad: async () =>
-                {
-                    // 1. 씬이 넘어가기 전 (FadeIn으로 화면이 가려진 상태)에서 백엔드 및 각종 데이터 초기화
-                    var initBro = Backend.Initialize();
-                    if (initBro.IsSuccess())
-                    {
-                        Debug.Log("Backend Init Success");
-                        
-                        // 구글 해시 키 출력 (로그캣 확인용)
-                        string googleHash = Backend.Utils.GetGoogleHash();
-                        Debug.Log($"[Backend] 현재 빌드의 구글 해시 키(Google Hash): {googleHash}");
-
-                        var loginBro = Backend.BMember.CustomLogin("test", "test");
-                        if (!loginBro.IsSuccess())
-                        {
-                            var signUpBro = Backend.BMember.CustomSignUp("test", "test");
-                            if (signUpBro.IsSuccess())
-                            {
-                                Backend.BMember.CustomLogin("test", "test");
-                            }
-                            else
-                            {
-                                Debug.LogError($"Backend Sign Up Failed: {signUpBro}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Backend SDK Init Failed or Not Present. Mock continuing.");
-                    }
-
-                    // 2. Table Initialize, Data Parsing
-                    await Table.InitializeAsync();
-
-                    if (_gameDataManager != null)
-                    {
-                        await _gameDataManager.LoadAllAsync();
-                    }
-
-                    // 3. Player Initialize
-                    await Player.InitializeAsync();
-                }
-            );
+            _view?.SetStatus("로그인 중…");
+            await _sceneChangeManager.TransitionToSceneAsync("LobbyScene",
+                beforeLoad: () => _initialization.InitializeAsync(_cancellation));
         }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("[Title] 초기화 실패: " + error.Message);
+            if (_view != null) _view.SetStatus("연결에 실패했습니다. 화면을 눌러 다시 시도해 주세요.");
+        }
+        finally { _isProcessing = false; }
+    }
+
+    /// <summary>타이틀 씬이 닫힐 때 버튼 구독을 해제한다.</summary>
+    public void Dispose()
+    {
+        if (_view != null && _view.startButton != null)
+            _view.startButton.onClick.RemoveListener(OnStartButtonClicked);
     }
 }

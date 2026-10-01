@@ -99,15 +99,16 @@ public class UnitStatsModifier : MonoBehaviour
         if (rollCritical) damage *= Spread(lu?.DamageVariance ?? 0f);
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
-        float critChance = (lu?.CritChance ?? 0f) + cellCritChance;
+        float critChance = (lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f);
         if (rollCritical && UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
-            damage *= (critMultiplier + cellCritDamage) * Spread(lu?.CritDamageVariance ?? 0f);
+            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * Spread(lu?.CritDamageVariance ?? 0f);
             critical = true;
         }
 
+        if (attackBased) damage *= 1f + (_deps?.Research?.Get(ResearchStat.AttackPercent) ?? 0f);
         if (attackBased && _deps?.RunStatModifiers != null)
         {
             try { damage = RunStatMath.ScaleAttack(damage, _deps.RunStatModifiers.AttackMultiplier); }
@@ -135,6 +136,7 @@ public class UnitStatsModifier : MonoBehaviour
                        * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult
                        / tribeSpeedMult;
+        interval /= 1f + (_deps?.Research?.Get(ResearchStat.AttackSpeedPercent) ?? 0f);
         float baseline = Mathf.Max(interval, 0.05f);
         try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d); }
         catch (System.OverflowException error)
@@ -154,6 +156,7 @@ public class UnitStatsModifier : MonoBehaviour
                        * cellGaugeSpeedMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
                        / rowSpeedMult;
+        interval *= Mathf.Max(0f, 1f - (_deps?.Research?.Get(ResearchStat.SkillCooldownReduction) ?? 0f));
         return Mathf.Max(interval, 0.05f);
     }
 }

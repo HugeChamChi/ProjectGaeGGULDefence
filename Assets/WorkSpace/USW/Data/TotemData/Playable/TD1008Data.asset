@@ -27,6 +27,7 @@ MonoBehaviour:
     - rid: 1992779463445184616
     Ranges:
     - rid: 1992779463445184617
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
   ShadowAttack:
     DelaySeconds: 0.2
     VisualSeconds: 0.35
@@ -52,7 +53,7 @@ MonoBehaviour:
   _debuffProjectile: {fileID: 0}
   totemType: 0
   tier: 0
-  totemName: "TD1021(\uBBF8\uC815)"
+  totemName: "TD1008(\uBBF8\uC815)"
   iconAddress: TD_1008
   prefabAddress: TD1008
   rotationSpriteAddresses:

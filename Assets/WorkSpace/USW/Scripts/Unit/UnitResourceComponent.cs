@@ -40,6 +40,7 @@ public class UnitResourceComponent : MonoBehaviour
         float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
         float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
         float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
+        amountMultiplier *= 1f + (_deps.Research?.Get(ResearchStat.FoodProduction) ?? 0f);
         if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
         float amountPerTick = baseAmount * amountMultiplier * payoutInterval;
@@ -65,6 +66,7 @@ public class UnitResourceComponent : MonoBehaviour
             float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
             float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
             float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
+            amountMultiplier *= 1f + (_deps?.Research?.Get(ResearchStat.FoodProduction) ?? 0f);
             if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
             float amountPerTick = baseAmount * amountMultiplier;

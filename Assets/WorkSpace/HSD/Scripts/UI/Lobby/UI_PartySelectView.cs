@@ -35,49 +35,17 @@ public class UI_PartySelectView : UI_Base
         {
             // VContainer에 등록되어 있지 않으면 인스펙터 할당값 사용
         }
+        _presenter.Initialize(this);
     }
 
-    protected override void Awake()
-    {
-        base.Awake();
-        
-        // VContainer를 통해 주입받지 못한 경우(예: 런타임 동적 생성 또는 두 번째 인스턴스) 직접 Resolve 시도
-        if (_presenter == null)
-        {
-            var scope = FindFirstObjectByType<VContainer.Unity.LifetimeScope>();
-            if (scope != null && scope.Container != null)
-            {
-                try
-                {
-                    _presenter = scope.Container.Resolve<UI_PartySelectPresenter>();
-                    Debug.Log("[UI_PartySelectView] Dynamically resolved UI_PartySelectPresenter from LifetimeScope.");
-                }
-                catch (System.Exception) 
-                {
-                    // LobbyLifetimeScope가 없거나 등록이 안 되어 있으면 수동 생성 (테스트용/독립 실행용)
-                    try
-                    {
-                        var sceneManager = scope.Container.Resolve<SceneChangeManager>();
-                        _presenter = new UI_PartySelectPresenter(sceneManager);
-                        Debug.Log("[UI_PartySelectView] Manually created UI_PartySelectPresenter (Fallback).");
-                    }
-                    catch (System.Exception) { }
-                }
-            }
-            
-            // Scope조차 없다면 완전 깡통으로라도 생성해 줍니다 (에러 방지 최후의 수단)
-            if (_presenter == null)
-            {
-                _presenter = new UI_PartySelectPresenter(null);
-                Debug.Log("[UI_PartySelectView] Manually created UI_PartySelectPresenter with null SceneManager.");
-            }
-        }
+    protected override void Awake() => base.Awake();
 
-        // View가 Awake될 때 (즉, 켜질 때) 스스로 Presenter를 통제하여 초기화시킵니다!
-        if (_presenter != null)
-        {
-            _presenter.Initialize(this);
-        }
+    private void Start()
+    {
+        // 독립 테스트 씬의 기존 수동 전환 경로만 유지한다.
+        if (_presenter != null) return;
+        _presenter = new UI_PartySelectPresenter(null);
+        _presenter.Initialize(this);
     }
 
     public void Init(Action<PartyDataSO> onPartySelected, Action onStartGameClicked)

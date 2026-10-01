@@ -13,6 +13,14 @@ using UnityEngine;
 public class Drone_Alphan : ChiefUnit
 {
     [Inject] private DroneManager _droneManager;
+    private HSD.UI.Effect.UI_ChiefSkillEffect _skillEffectUI;
+
+    /// <summary>런타임 유닛 생성 경로에서 씬의 컷신 UI를 주입받는다.</summary>
+    [Inject]
+    public void ConfigureCutscene(System.Collections.Generic.IEnumerable<HSD.UI.Effect.UI_ChiefSkillEffect> effects)
+    {
+        foreach (var effect in effects) { _skillEffectUI = effect; break; }
+    }
 
     [Header("Chieftain Settings")]
     [SerializeField] private float damagePerDrone = 50f;
@@ -32,11 +40,10 @@ public class Drone_Alphan : ChiefUnit
         _audioManager?.PlaySFX("05.Leader_Skill_Effect");
 
         // 2. UI 컷신 연출 발동 (비활성화 상태인 컷신 UI를 찾아 실행)
-        var skillEffectUI = FindFirstObjectByType<HSD.UI.Effect.UI_ChiefSkillEffect>(FindObjectsInactive.Include);
-        if (skillEffectUI != null)
+        if (_skillEffectUI != null)
         {
             Sprite chieftainSprite = unitData != null ? unitData.icon : null;
-            skillEffectUI.PlayEffectAsync(chieftainSprite, this.GetCancellationTokenOnDestroy()).Forget();
+            _skillEffectUI.PlayEffectAsync(chieftainSprite, this.GetCancellationTokenOnDestroy()).Forget();
         }
 
         // 3. 드론 집결 및 일제 사격 로직 실행
