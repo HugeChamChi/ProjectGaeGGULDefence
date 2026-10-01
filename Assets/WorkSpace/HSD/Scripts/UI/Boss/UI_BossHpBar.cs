@@ -10,7 +10,7 @@ public class UI_BossHpBar : MonoBehaviour
 {
     [Header("Debuffs")]
     [SerializeField] private Vector2 _debuffOffset = new Vector2(0f, -10f);
-    [SerializeField] private Vector2 _debuffSlotSize = new Vector2(58f, 58f);
+    [SerializeField] private Vector2 _debuffSlotSize = new Vector2(80f, 80f);
     [Tooltip("디버프 표시 영역. 자식 BossDebuffs의 RectTransform으로 위치를 조절합니다.")]
     [SerializeField] private BossDebuffBar _debuffBar;
 

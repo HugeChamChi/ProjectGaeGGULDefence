@@ -14,6 +14,7 @@ public class ExpManager : MonoBehaviour
     [Inject] private BossManager _bossManager;
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private GameManager _gameManager;
+    [Inject] private FieldPauseVisuals _fieldPause;
 
     [Tooltip("레벨업 필요 경험치 테이블의 정본. 비워두면 아래 폴백값을 사용한다(구글 시트는 더 이상 조회하지 않음).")]
     [SerializeField] private ExpLevelData expLevelData;
@@ -68,7 +69,7 @@ public class ExpManager : MonoBehaviour
     /// <summary>EXP 직접 추가. 초과분은 다음 레벨로 이월.</summary>
     public void AddExp(float amount)
     {
-        if (IsMaxLevel) return;
+        if (_gameManager?.IsFinished == true || IsMaxLevel) return;
 
         CurrentExp += amount;
         OnExpChanged?.Invoke(CurrentExp);
@@ -87,9 +88,10 @@ public class ExpManager : MonoBehaviour
 
     public void TryFireLevelUp()
     {
+        if (_gameManager?.IsFinished == true) { _pendingLevelUp = false; return; }
         var state = _gameManager.CurrentState;
 
-        if (state == GameManager.GameState.Playing)
+        if (state == GameManager.GameState.Playing && _fieldPause?.AttacksHeld != true)
         {
             _pendingLevelUp = false;
             OnLevelUp?.Invoke();
@@ -103,6 +105,7 @@ public class ExpManager : MonoBehaviour
 
     public void FlushPendingLevelUp()
     {
+        if (_gameManager?.IsFinished == true) { _pendingLevelUp = false; return; }
         if (!_pendingLevelUp) return;
         _pendingLevelUp = false;
         Debug.Log("[ExpManager] 보류된 레벨업 발동");

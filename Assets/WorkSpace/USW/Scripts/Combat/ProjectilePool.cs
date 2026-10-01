@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 투사체 오브젝트 풀 — 씬 컴포넌트 (InGameLifetimeScope에 등록, 주입으로 사용).
@@ -9,6 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class ProjectilePool : MonoBehaviour
 {
+    [VContainer.Inject] private FieldPauseVisuals _fieldPause;
     [Header("투사체 설정")]
     [Tooltip("null이면 원형 Image를 코드로 자동 생성")]
     [SerializeField] private Projectile _prefab;
@@ -49,6 +51,11 @@ public class ProjectilePool : MonoBehaviour
     /// sizeMultiplier: 이 발사 1회에만 적용되는 추가 크기 배율(예: 스킬 데이터의 투사체 크기 증가치). 기본 1(변화 없음).</summary>
     public void Launch(Vector3 from, Vector3 to, ProjectileData data, System.Action onHitCallback = null, UnitBase sourceUnit = null, float sizeMultiplier = 1f)
     {
+        if (_fieldPause?.AttacksHeld == true)
+        {
+            LaunchAfterHoldAsync(from, to, data, onHitCallback, sourceUnit, sizeMultiplier).Forget();
+            return;
+        }
         // ProjectileData가 자체 프리팹/주소를 지정한 경우, 공용 풀 대신 그때그때 생성/파괴한다.
         // 스킬 전용 투사체처럼 드물게 쓰이는 비주얼까지 별도 풀을 만들 필요는 없다.
         Projectile custom = data?.projectilePrefab != null
@@ -77,6 +84,12 @@ public class ProjectilePool : MonoBehaviour
     }
 
     // ── 내부 ──────────────────────────────────────────────────────
+
+    private async UniTaskVoid LaunchAfterHoldAsync(Vector3 from, Vector3 to, ProjectileData data, System.Action callback, UnitBase source, float size)
+    {
+        if (await _fieldPause.WaitForAttacksAsync(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
+        Launch(from, to, data, callback, source, size);
+    }
 
     private void ReturnToPool(Projectile p)
     {

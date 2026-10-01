@@ -57,20 +57,9 @@ public class MergeManager : MonoBehaviour
         OnUnitSelected?.Invoke(unit, CanMerge(unit));
     }
 
-    /// <summary>MergeButtonUI.OnMergeRequested → InGameInstaller → 이 메서드</summary>
-    public void ExecuteMerge()
-    {
-        if (_selectedUnit == null) return;
-        if (!CanMerge(_selectedUnit)) { ClearSelection(); return; }
-
-        var targets   = GetMergeTargets(_selectedUnit);
-        var nextTier  = (Tier)((int)_selectedUnit.OriginalTier + 1);
-        MergeTargets(targets, targets[0].cell, nextTier);
-    }
-
     /// <summary>
     /// 드래그 합성. 합성 가능한 두 유닛(동일 유닛·동일 등급, 또는 노말 + 와일드카드)을
-    /// 드래그로 겹치면 다음 등급 랜덤 유닛 1기를 드롭한 셀에 배치한다. 합성 버튼 경로와 병행된다.
+    /// 드래그로 겹치면 다음 등급 랜덤 유닛 1기를 드롭한 셀에 배치한다.
     /// </summary>
     public bool TryMergeByDrag(UnitBase dragged, UnitBase target)
     {

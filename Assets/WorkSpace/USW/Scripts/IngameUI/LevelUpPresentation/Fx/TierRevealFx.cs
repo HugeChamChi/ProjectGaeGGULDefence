@@ -52,7 +52,7 @@ public class TierRevealFx : MonoBehaviour, IFxLabPlayable
     [SerializeField] private Image _core;
     [Tooltip("글로우가 꺼진 뒤 선택 내내 은은하게 반짝이며 떠오르는 등급색 빛 알갱이 (비우면 생략)")]
     [SerializeField] private UiFxParticleEmitter _motes;
-    [Tooltip("재생하는 동안 끌 패널 원래 배경 (Backdrop이 대신한다). 패널 페이드 중 두 배경이 반투명하게 섞여 비치는 것을 막는다. 비활성화 시 되돌린다.")]
+    [Tooltip("재생 중 원래 배경의 색만 투명하게 한다 (Backdrop이 대신한다). 필드 보기 터치 영역은 유지하고 비활성화 시 색을 복원한다.")]
     [SerializeField] private Graphic _replacedBackground;
 
     [Header("등급")]
@@ -91,6 +91,8 @@ public class TierRevealFx : MonoBehaviour, IFxLabPlayable
 
     private Sequence _sequence;
     private Vector2[] _bokehBase;
+    private Graphic _hiddenBackground;
+    private Color _backgroundColor;
 
     /// <summary>timeScale 무시 여부. 다음 Play부터 반영.</summary>
     public bool UseUnscaledTime { get => _useUnscaledTime; set => _useUnscaledTime = value; }
@@ -120,7 +122,25 @@ public class TierRevealFx : MonoBehaviour, IFxLabPlayable
         _sequence = null;
         if (_gather != null) _gather.Stop(clear: true);
         if (_motes != null) { _motes.DOKill(); _motes.Stop(clear: true); }
-        if (_replacedBackground != null) _replacedBackground.enabled = true;
+        RestoreBackground();
+    }
+
+    // The background also receives hold-to-peek input. Disabling its Graphic removes
+    // the raycast surface, so replace only its appearance, not its input component.
+    private void HideBackground()
+    {
+        if (_hiddenBackground == _replacedBackground) return;
+        RestoreBackground();
+        if (_replacedBackground == null) return;
+        _hiddenBackground = _replacedBackground;
+        _backgroundColor = _hiddenBackground.color;
+        _hiddenBackground.color = WithAlpha(_backgroundColor, 0f);
+    }
+
+    private void RestoreBackground()
+    {
+        if (_hiddenBackground != null) _hiddenBackground.color = _backgroundColor;
+        _hiddenBackground = null;
     }
 
     /// <summary>실험실용: _labTier로 재생.</summary>
@@ -150,7 +170,7 @@ public class TierRevealFx : MonoBehaviour, IFxLabPlayable
         {
             _backdrop.gameObject.SetActive(true);
             _backdrop.color = WithAlpha(first.Backdrop, first.BackdropAlpha);
-            if (_replacedBackground != null) _replacedBackground.enabled = false;
+            HideBackground();
         }
 
         // 모임: 후광이 서서히 차오르고 빛줄기가 중심으로 빨려 든다

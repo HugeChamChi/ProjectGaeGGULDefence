@@ -15,6 +15,7 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private TotemSpawner _totemManager;
     [Inject] private ChieftainSpawner _chieftainSpawner;
+    [Inject] private DebuffInfoPresenter _effectInfo;
     [Header("Chief Active Skill")]
     [SerializeField] private UI_ChiefSkillButtonView _chiefSkillButtonView;
 
@@ -42,6 +43,9 @@ public class InGameInstaller : MonoBehaviour
 
     private void Start()
     {
+        _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
+        _totemInfoPanel?.ConfigureEffectInfo(_effectInfo);
+        if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && _totemInfoPanel.IsEffectInfoOpen;
         _chiefSkillButtonView?.Construct(_chieftainSpawner);
         WireUnitActionPopup();
         WireTotemActionPopup();
@@ -66,6 +70,7 @@ public class InGameInstaller : MonoBehaviour
         if (_levelUpUI == null) return;
         if (_gameManager == null) return;
         _gameManager.OnLevelUpStateEntered += _levelUpUI.Show;
+        if (_waveManager != null) _waveManager.OnRunStopped += _levelUpUI.CancelPendingSelection;
     }
 
     private void WireTotemSelectUI()
@@ -177,6 +182,7 @@ public class InGameInstaller : MonoBehaviour
         if (_waveManager != null)
         {
             _waveManager.OnWaveChanged -= OnWaveChanged;
+            if (!ReferenceEquals(_levelUpUI, null)) _waveManager.OnRunStopped -= _levelUpUI.CancelPendingSelection;
         }
 
         if (_bossManager != null)

@@ -62,6 +62,10 @@ public class LevelUpManager : MonoBehaviour
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private ChieftainSpawner _chieftainSpawner;
     [Inject] private UpgradeManager _upgradeManager;
+    [Inject] private GameManager _gameManager;
+    private readonly List<ResultBuildChoice> _resultChoices = new();
+    /// <summary>Confirmed choices in selection order, with descriptions captured at selection time.</summary>
+    public ResultBuildChoice[] GetResultChoices() => _resultChoices.ToArray();
 
     [SerializeField, HideInInspector] private LevelUpData[] levelUpPool; // 이전 씬 이관용. 추첨에는 사용하지 않는다.
     [Tooltip("기본 치명타 확률 등 전투 공통 값. 비우면 기본 치명타 0%")]
@@ -285,7 +289,8 @@ public class LevelUpManager : MonoBehaviour
 
     public void ApplyEffect(LevelUpData data)
     {
-        if (data == null || !_chosenIds.Add(data.chooseId)) return;
+        if (_gameManager?.IsFinished == true || data == null || !_chosenIds.Add(data.chooseId)) return;
+        _resultChoices.Add(new ResultBuildChoice { Icon = data.icon, Name = data.chooseName, Description = GetChoiceDescription(data) });
         DroneSelections.Add(data);
         ApplyStatEffect(data.primaryEffect,   data.primaryValue);
         ApplyStatEffect(data.secondaryEffect, data.secondaryValue);

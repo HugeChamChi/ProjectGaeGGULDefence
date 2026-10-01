@@ -12,6 +12,7 @@ public class SelfDestructDrone : MonoBehaviour
 {
     [Inject] private BossManager _bossManager;
     [Inject] private DroneManager _droneManager;
+    [Inject] private FieldPauseVisuals _fieldPause;
 
     [Header("분노 차징")]
     [Tooltip("생성 후 돌진 전까지 달아오르는 시간(초).")]
@@ -110,6 +111,7 @@ public class SelfDestructDrone : MonoBehaviour
         }
 
         SetTrailEmitting(true);
+        if (_fieldPause != null && await _fieldPause.WaitForAttacksAsync(token).SuppressCancellationThrow()) return;
         if (await DashAsync(target, token)) return;
 
         Explode(damage, target);
@@ -216,7 +218,7 @@ public class SelfDestructDrone : MonoBehaviour
     {
         var boss = _previewTarget.HasValue ? null : _bossManager?.CurrentBoss;
         if (boss != null && !boss.IsDead)
-            boss.TakeDamage(Mathf.RoundToInt(damage), target);
+            boss.ApplyProjectileImpact(() => boss.TakeDamage(Mathf.RoundToInt(damage), target));
 
         var explosionPrefab = _previewExplosion != null ? _previewExplosion : _explosionPrefab;
         if (explosionPrefab != null)

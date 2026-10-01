@@ -15,6 +15,12 @@ MonoBehaviour:
   _id: 1001
   _icon: {fileID: 21300000, guid: 36e7b6560243b47b98fc57530c762a2f, type: 3}
   _displayName: "\uD654\uC0C1"
+  _shortName: 화상
+  _displayOrder: 10
+  _termAliases:
+  - 화상
+  _description: "적중 시점의 보스 현재 HP를 기준으로 지속 피해를 줍니다. 당시 HP의 {SnapshotPercent}%를 {Duration}초에 걸쳐 나누어 주며, {TickInterval}초마다 발생하는 한 번의 피해는 최소 {MinTickDamage}입니다."
+  _rules: "지속: {Duration}초\n중첩: 최대 {MaxStacks}\n다시 부여하면 남은 시간과 HP 기준이 새 부여로 교체되며, 다음 피해 시점은 유지됩니다.\n방어 효과와 아머브레이크의 영향을 받지 않습니다."
   _key: DBF_BURN_001
   _kind: 1
   _stackGroup: BURN

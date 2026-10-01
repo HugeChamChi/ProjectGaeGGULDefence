@@ -15,6 +15,7 @@ public class UnitResourceComponent : MonoBehaviour
 
     public void TickFoodProduction(float deltaTime)
     {
+        if (_deps?.GameManager?.IsFinished == true) return;
         if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.unitData == null || deltaTime <= 0f) return;
 
         float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);

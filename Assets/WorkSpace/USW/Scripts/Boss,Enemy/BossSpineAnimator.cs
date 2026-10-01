@@ -26,6 +26,27 @@ public class BossSpineAnimator : MonoBehaviour, IPauseIdleVisual
     private BossBase _boss;
     private bool _pauseIdle;
     private bool _unscaledBeforePause;
+    private bool _patternHeld;
+    private float _speedBeforeHold;
+
+    /// <summary>대기 이외의 패턴 트랙은 공격 보류 시점부터 진행하지 않는다.</summary>
+    public void SetPatternHold(bool on)
+    {
+        if (_skeleton == null || _patternHeld == on) return;
+        if (on)
+        {
+            var current = _skeleton.AnimationState?.GetTrack(0);
+            if (current?.Animation == null || current.Animation.Name == _idleAnimation) return;
+            _patternHeld = true;
+            _speedBeforeHold = _skeleton.timeScale;
+            _skeleton.timeScale = 0f;
+        }
+        else
+        {
+            _patternHeld = false;
+            _skeleton.timeScale = _speedBeforeHold;
+        }
+    }
 
     private void Awake()
     {
@@ -37,6 +58,8 @@ public class BossSpineAnimator : MonoBehaviour, IPauseIdleVisual
 
     private void OnDestroy()
     {
+        SetPauseIdle(false);
+        SetPatternHold(false);
         if (_boss != null) _boss.OnPatternStarted -= OnPatternStarted;
     }
 

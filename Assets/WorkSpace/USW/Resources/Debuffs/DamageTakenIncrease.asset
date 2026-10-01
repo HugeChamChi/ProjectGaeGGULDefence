@@ -15,6 +15,13 @@ MonoBehaviour:
   _id: 1003
   _icon: {fileID: 21300000, guid: f274178d747514da1a30a88d62739ea2, type: 3}
   _displayName: "\uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00"
+  _shortName: 받피증
+  _displayOrder: 30
+  _termAliases:
+  - 받는 피해 증가
+  - 받피증
+  _description: "보스가 받는 일반 피해를 기본 {DamageIncreasePercent}% 증가시킵니다. 부여자의 강화 효과에 따라 추가 증가량이나 방어력 감소가 함께 적용될 수 있습니다."
+  _rules: "지속: {Duration}초\n중첩: 최대 {MaxStacks}\n다시 부여하면 효과와 남은 시간이 새 부여로 교체됩니다.\n화상 피해에는 적용되지 않습니다."
   _key: DBF_DAMAGE_TAKEN_UP_001
   _kind: 3
   _stackGroup: DAMAGE_TAKEN_UP

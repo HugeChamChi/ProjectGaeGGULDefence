@@ -24,6 +24,7 @@ using GaeGGUL.UI.Totem;
 /// </summary>
 public class TotemRewardUI : MonoBehaviour
 {
+    [VContainer.Inject] private ExpManager _expManager;
     private const int ChoiceCount = 3;
     private const float TextBlockWidth = 0.55f;
     private const float DetailBlockWidth = 0.84f;
@@ -393,11 +394,14 @@ public class TotemRewardUI : MonoBehaviour
     // 새 공격(유닛·드론·보스 패턴)과 타이머는 즉시 멈추고, 이미 날아가던 투사체가 도착할 유예 뒤에 게임을 정지한다.
     private void PauseGame(CancellationToken token)
     {
-        _timerManager?.StopTimer();
-        if (_gridManager != null)
-            foreach (var cell in _gridManager.GetOccupiedCells())
-                cell.OccupyingUnit?.PauseLoops();
+        bool freezeImmediately = _fieldPause?.MustFreezeImmediately == true;
         _fieldPause?.HoldAttacks(this);
+        if (freezeImmediately)
+        {
+            _timeScale?.Pause(this);
+            _fieldPause?.Enter(this);
+            return;
+        }
         FreezeAfterGraceAsync(token).Forget();
     }
 
@@ -412,12 +416,10 @@ public class TotemRewardUI : MonoBehaviour
 
     private void ResumeGame()
     {
+        // 토템 선택은 GameState.Playing을 유지한다. EXP 보류를 다음 선택으로 넘긴 뒤 기존 owner를 닫는다.
+        _expManager?.FlushPendingLevelUp();
         _timeScale?.Release(this);
-        _timerManager?.ResumeTimer();
         _fieldPause?.Exit(this);
-        if (_gridManager == null) return;
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.ResumeLoops();
     }
 
     /// <summary>Cancel pending choices without granting rewards, resuming combat, or completing old callbacks.</summary>
@@ -433,7 +435,7 @@ public class TotemRewardUI : MonoBehaviour
         if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
         if (_container != null) _container.gameObject.SetActive(false);
         _timeScale?.Release(this);
-        _fieldPause?.Exit(this);
+        _fieldPause?.Exit(this, resumeCombat: false);
     }
 
     private bool OwnsSelection(CancellationToken token) => _selectionCts != null && _selectionCts.Token == token;

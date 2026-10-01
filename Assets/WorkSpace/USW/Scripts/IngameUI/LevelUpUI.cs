@@ -51,6 +51,8 @@ public class LevelUpUI : MonoBehaviour
     private LevelUpTimeDirector _time;
     private CanvasGroup _panelGroup;
     private bool _isRerolling;
+    private bool _ownsPause;
+    private bool _closingNormally;
     /// <summary>True after the choice entrance animation permits selection.</summary>
     public bool IsReadyForSelection { get; private set; }
     /// <summary>Choice area used by scene-owned interaction guides.</summary>
@@ -73,6 +75,7 @@ public class LevelUpUI : MonoBehaviour
 
     public void Show()
     {
+        if (_gameManager?.IsFinished == true) return;
         IsReadyForSelection = false;
         StopSelectionTimer();
         var layout = cardContainer.GetComponent<LayoutGroup>();
@@ -104,14 +107,12 @@ public class LevelUpUI : MonoBehaviour
         obj.SetActive(true);
         gameObject.SetActive(true);
 
-        _timerManager.StopTimer();
-        // 새 공격(유닛·드론·보스 패턴)은 지금 막고, 이미 날아가던 투사체는 시간 연출의 1배속 유예 동안 도착하게 둔다.
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.PauseLoops();
+        bool freezeImmediately = _ownsPause || _fieldPause?.MustFreezeImmediately == true;
+        _ownsPause = true;
         _fieldPause?.HoldAttacks(this);
 
         // 게이지 레벨업이면 유예 → 슬로우모션으로 서서히 멈춘 뒤 화면만 살린다(대기 모션·이펙트).
-        if (_time != null && fromGauge)
+        if (_time != null && fromGauge && !freezeImmediately)
             _time.SlowDownTime(PauseField);
         else
         {
@@ -257,9 +258,37 @@ public class LevelUpUI : MonoBehaviour
         _selectionCts = null;
     }
 
-    private void OnDestroy()
+    private void OnDisable()
+    {
+        if (_closingNormally) return;
+        ReleaseForcedPause();
+    }
+
+    private void OnDestroy() => ReleaseForcedPause();
+
+    /// <summary>Run-end cleanup invalidates entrance, selection and timers without applying a card.</summary>
+    public void CancelPendingSelection()
+    {
+        // StopRun can be raised by WaveManager.OnDestroy after this UI has been destroyed.
+        if (this == null) return;
+        ReleaseForcedPause();
+        _peek?.Clear();
+        ClearCards();
+        if (obj != null) obj.SetActive(false);
+        gameObject.SetActive(false);
+    }
+
+    private void ReleaseForcedPause()
     {
         StopSelectionTimer();
+        IsReadyForSelection = false;
+        if (!_ownsPause) return;
+        _ownsPause = false;
+        _time?.CancelAndRelease();
+        _timeScale?.Release(this);
+        _fieldPause?.Exit(this, _gameManager?.IsFinished != true);
+        if (_gameManager != null && _gameManager.CurrentState == GameManager.GameState.LevelUp)
+            _gameManager.OnLevelUpChoiceMade();
     }
 
     // ── 닫기 ───────────────────────────────────────────────────
@@ -271,11 +300,9 @@ public class LevelUpUI : MonoBehaviour
         if (_peek != null) _peek.Clear();
         if (_panelGroup != null) { _panelGroup.DOKill(); _panelGroup.alpha = 1f; }
         ClearCards();
-        obj.SetActive(false);
-        gameObject.SetActive(false);
-        if (_time != null) _time.SpeedUpTime(); // 정지 → 1배속으로 서서히 재개
-        else _timeScale.Release(this);
-        _timerManager.ResumeTimer();
+        _closingNormally = true;
+        try { obj.SetActive(false); gameObject.SetActive(false); }
+        finally { _closingNormally = false; }
 
         // 연쇄 레벨업 여부를 먼저 확인 — FlushPendingLevelUp이 새 Show()를 열 수 있음
         _gameManager.OnLevelUpChoiceMade();
@@ -283,9 +310,10 @@ public class LevelUpUI : MonoBehaviour
         // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
         if (_gameManager.CurrentState != GameManager.GameState.LevelUp)
         {
+            _ownsPause = false;
             _fieldPause?.Exit(this);
-            foreach (var cell in _gridManager.GetOccupiedCells())
-                cell.OccupyingUnit?.ResumeLoops();
+            if (_time != null) _time.SpeedUpTime();
+            else _timeScale.Release(this);
         }
     }
 

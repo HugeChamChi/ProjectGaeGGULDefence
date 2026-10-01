@@ -95,7 +95,7 @@ public class UnitStatsModifier : MonoBehaviour
                      * chieftainAtk;
 
         // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
-        // 평균 1인 균등 분포라 기대 피해는 그대로다 (방어 계산도 곱셈이라 평균 보존).
+        // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.
         if (rollCritical) damage *= Spread(lu?.DamageVariance ?? 0f);
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);

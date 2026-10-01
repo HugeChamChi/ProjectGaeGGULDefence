@@ -65,6 +65,13 @@ public class LevelUpTimeDirector : MonoBehaviour
         _timeScale?.Request(this, value);
     }
 
+    /// <summary>강제 비활성/제거 때 유예·속도 트윈과 이 owner의 요청을 함께 정리한다.</summary>
+    public void CancelAndRelease()
+    {
+        KillRamp();
+        ReleaseRequest();
+    }
+
     private void ReleaseRequest()
     {
         _requested = 1f;

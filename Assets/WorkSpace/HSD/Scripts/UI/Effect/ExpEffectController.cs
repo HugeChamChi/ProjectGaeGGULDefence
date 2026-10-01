@@ -13,6 +13,7 @@ public class ExpEffectController : MonoBehaviour
     private const string TargetName = "ExpRouteFollower";
     [Inject] private BossManager _bossManager;
     [Inject] private ExpManager _expManager;
+    [Inject] private FieldPauseVisuals _fieldPause;
     [SerializeField] private ParticleImage particleImage;
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform attractorTarget;
@@ -33,6 +34,7 @@ public class ExpEffectController : MonoBehaviour
     private float _accumulatedExp;
     private float _lastEffectTime;
     private bool _started;
+    private bool _pendingImmediateEffect;
 
     /// <summary>경로를 배치하는 Canvas 영역.</summary>
     public RectTransform RouteCanvas => _routeCanvas;
@@ -105,11 +107,24 @@ public class ExpEffectController : MonoBehaviour
     {
         if (_expManager == null) return;
         float amount = _expManager.CalculateExpFromDamage((float)damage);
+        if (amount > 0f && _fieldPause?.AttacksHeld == true)
+        {
+            // 선택 유예 중 이미 발사된 공격의 EXP는 착탄 즉시 지급한다. 연출에는 보상을 넣지 않는다.
+            _expManager.AddExp(amount);
+            _pendingImmediateEffect = true;
+            return;
+        }
         if (amount > 0f) _accumulatedExp += amount;
     }
 
     private void Update()
     {
+        if (_pendingImmediateEffect && Time.unscaledTime - _lastEffectTime >= _effectCooldown)
+        {
+            _pendingImmediateEffect = false;
+            _lastEffectTime = Time.unscaledTime;
+            SpawnParticleAndApplyExp(0f);
+        }
         if (_accumulatedExp > 0f && Time.unscaledTime - _lastEffectTime >= _effectCooldown)
         {
             float amount = _accumulatedExp;

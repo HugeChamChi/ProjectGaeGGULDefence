@@ -16,6 +16,7 @@ public class DroneUnit : MonoBehaviour
     [Inject] private ProjectilePool _projectileManager;
     [Inject] private AudioManager _audioManager;
     [Inject] private EndlessRunService _run;
+    [Inject] private GameManager _gameManager;
 
     public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
@@ -178,6 +179,7 @@ public class DroneUnit : MonoBehaviour
         if (_hoverAnim == null) return;
         _hoverAnim.enabled = false;
         _hoverAnim.enabled = true; // OnEnable → basePos 현재 위치로 리셋
+        if (_inPauseIdle) _hoverAnim.SetForceUnscaled(true);
     }
 
     public void StopOrbit()
@@ -222,6 +224,7 @@ public class DroneUnit : MonoBehaviour
 
     public void FireRallyShot()
     {
+        if (_attackHeld) return;
         var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
         if (bossArea == null) return;
         ShootProjectile(bossArea.GetRandomWorldPosition());
@@ -280,6 +283,8 @@ public class DroneUnit : MonoBehaviour
 
     private void StopAll()
     {
+        SetAttackHold(false);
+        SetPauseIdle(false);
         _attackLifetime++;
         _attackCts?.Cancel();
         _attackCts?.Dispose();
@@ -301,6 +306,11 @@ public class DroneUnit : MonoBehaviour
     {
         while (!token.IsCancellationRequested)
         {
+            if (_gameManager?.IsFinished == true)
+            {
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+                continue;
+            }
             int delayMs;
             try { delayMs = RunStatMath.ToDelayMilliseconds(EffectiveAttackInterval); }
             catch (System.OverflowException error) { _run.Fail(error.Message); return; }
@@ -321,6 +331,7 @@ public class DroneUnit : MonoBehaviour
 
     private void LaunchProjectile(int damage, bool critical = false)
     {
+        if (_attackHeld || _gameManager?.IsFinished == true) return;
         var kind = critical ? BossDamageKind.Critical : BossDamageKind.Normal;
         var boss = _bossManager?.CurrentBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
@@ -341,8 +352,11 @@ public class DroneUnit : MonoBehaviour
         {
             if (boss != null && !boss.IsDead)
             {
-                if (recorded != null) recorded.Apply(boss, targetPos);
-                else boss.TakeDamage(damage, targetPos, kind);
+                boss.ApplyProjectileImpact(() =>
+                {
+                    if (recorded != null) recorded.Apply(boss, targetPos);
+                    else boss.TakeDamage(damage, targetPos, kind);
+                });
             }
         };
         ShootProjectile(targetPos, () =>
@@ -359,8 +373,20 @@ public class DroneUnit : MonoBehaviour
         owner.InvokeOnAttack();
     }
 
+    private async UniTaskVoid ShootAfterHoldAsync(Vector3 target, System.Action callback, Vector3? origin, int lifetime)
+    {
+        if (await UniTask.WaitUntil(() => !_attackHeld, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
+        if (_attackLifetime != lifetime || !isActiveAndEnabled) return;
+        ShootProjectile(target, callback, origin);
+    }
+
     private void ShootProjectile(Vector3 targetPos, System.Action onHitCallback = null, Vector3? recordedOrigin = null)
     {
+        if (_attackHeld)
+        {
+            ShootAfterHoldAsync(targetPos, onHitCallback, recordedOrigin, _attackLifetime).Forget();
+            return;
+        }
         Vector3 origin = recordedOrigin ?? transform.position;
         _audioManager?.PlaySFX("05.Drone_Attack");
         PlayAttackFrame();

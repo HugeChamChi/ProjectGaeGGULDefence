@@ -37,6 +37,8 @@ public class WaveManager : MonoBehaviour
 
     /// <summary>One-based round notification shared by finite and endless HUD.</summary>
     public event Action<int> OnWaveChanged;
+    /// <summary>Emitted once after a live encounter's defeat is accepted, before final-result snapshotting.</summary>
+    public event Action OnBossDefeated;
     /// <summary>Reward request. The captured completion is safe against duplicate/stale invocations.</summary>
     public event Action<Action> OnTotemSelectionRequested;
     /// <summary>Invalidates scene UI selections whenever this run stops, including faults.</summary>
@@ -181,6 +183,7 @@ public class WaveManager : MonoBehaviour
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _phase = EncounterPhase.RewardDelay;
+        OnBossDefeated?.Invoke();
         if (_run.IsEndless) _log.BossDefeated(round, CurrentLevel, _run.AttackMultiplier, _run.AttackFrequencyMultiplier);
         // Reserve at combat completion, activate after the reward when entering the next round.
         if (bossIndex == _pendingBosses.Count - 1 && !_run.TryCompleteRound(runId, round)) return;

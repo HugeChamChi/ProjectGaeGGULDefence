@@ -25,16 +25,24 @@ namespace GaeGGUL.UI.Unit
         [SerializeField] private UI_StatSlot statSlot_AtkSpeed;
 
         [Header("Actions")]
-        [SerializeField] private MergeButtonUI mergeButton;
         [SerializeField] private SellButtonUI sellButton;
 
-        public MergeButtonUI MergeButton => mergeButton;
         public SellButtonUI SellButton => sellButton;
 
         /// <summary>바깥 클릭으로 닫힘 요청 시 발행 (InGameInstaller가 구독)</summary>
         public event Action OnDismissRequested;
 
         private UI_UnitInfoPresenter _presenter;
+        private DebuffInfoLink _effectLink;
+
+        /// <summary>Supplies the shared explanation presenter explicitly from scene wiring.</summary>
+        [VContainer.Inject]
+        public void ConfigureEffectInfo(DebuffInfoPresenter presenter)
+        {
+            if (txt_SkillDescription == null) return;
+            _effectLink = txt_SkillDescription.GetComponent<DebuffInfoLink>() ?? txt_SkillDescription.gameObject.AddComponent<DebuffInfoLink>();
+            _effectLink.Configure(this, presenter);
+        }
 
         private bool _isShowing;
         private bool _justShown;
@@ -48,12 +56,10 @@ namespace GaeGGUL.UI.Unit
         public void SetData(UnitBase unit, bool canMerge = true)
         {
             if (unit == null) return;
+            _effectLink?.Clear();
             EnsurePresenter();
             _presenter.SetUnitData(unit);
             bool showActions = !unit.IsWildcardMergeUnit;
-            // 합성 버튼 제거 (사용자 결정 2026-09-30) — 합성은 드래그로만 한다.
-            // 씬·프리팹의 버튼 오브젝트는 정리 전까지 남아 있으므로 항상 숨긴다.
-            if (mergeButton != null) mergeButton.gameObject.SetActive(false);
             if (sellButton != null)
             {
                 sellButton.gameObject.SetActive(showActions);
@@ -66,6 +72,7 @@ namespace GaeGGUL.UI.Unit
 
         public void SetData(UnitData data)
         {
+            _effectLink?.Clear();
             EnsurePresenter();
             _presenter.SetUnitData(data);
             Open();
@@ -75,6 +82,7 @@ namespace GaeGGUL.UI.Unit
 
         public override void Close()
         {
+            _effectLink?.Clear();
             _isShowing = false;
             _presenter?.Clear();
             base.Close();
@@ -83,6 +91,7 @@ namespace GaeGGUL.UI.Unit
         /// <summary>닫기 버튼의 직접 비동기 호출도 현재 유닛 추적을 정리한다.</summary>
         public override async UniTask CloseAsync()
         {
+            _effectLink?.Clear();
             _isShowing = false;
             _presenter?.Clear();
             await base.CloseAsync();
@@ -90,6 +99,7 @@ namespace GaeGGUL.UI.Unit
 
         private void OnDisable()
         {
+            _effectLink?.Clear();
             _isShowing = false;
             _presenter?.Clear();
         }
@@ -103,6 +113,7 @@ namespace GaeGGUL.UI.Unit
                 return;
             }
             if (_justShown) { _justShown = false; return; }
+            if (_effectLink?.BlocksOwnerInput == true) return;
             if (!_isShowing || !Input.GetMouseButtonDown(0)) return;
             if (EventSystem.current == null) return;
 
@@ -133,10 +144,10 @@ namespace GaeGGUL.UI.Unit
             if (iconSlot != null)     iconSlot.SetData(icon, tier);
         }
 
-        public void UpdateSkillInfo(string skillName, string skillDescription, string cooldownText)
+        public void UpdateSkillInfo(string skillName, string skillDescription, string cooldownText, DebuffBinding binding = default)
         {
             if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
-            if (txt_SkillDescription != null) txt_SkillDescription.text = skillDescription;
+            if (txt_SkillDescription != null) txt_SkillDescription.text = _effectLink != null ? _effectLink.SetDescription(skillDescription, binding) : skillDescription;
             if (txt_SkillCooldown != null) txt_SkillCooldown.text = cooldownText;
         }
 

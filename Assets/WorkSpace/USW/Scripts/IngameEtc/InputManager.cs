@@ -12,6 +12,7 @@ public interface IDraggable
 
 public class InputManager : MonoBehaviour
 {
+    [Inject] private GameManager _gameManager;
     /// <summary>Optional scene-owned restriction for guided world interactions.</summary>
     public Func<IDraggable, bool> CanBeginInteraction { get; set; }
     /// <summary>Optional restriction evaluated before a world drag commits.</summary>
@@ -46,6 +47,7 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
+        if (_gameManager?.IsFinished == true) { if (_pointerDown) CancelPointer(); return; }
         if (_mainCamera == null)
         {
             _mainCamera = Camera.main;

@@ -24,6 +24,8 @@ public class TotemActionPopupUI : MonoBehaviour
 
     public event Action              OnDismissRequested;
     public event Action<TotemBase>   OnSellTotemRequested;
+    /// <summary>The owned information detail consumes background gestures before this popup can dismiss.</summary>
+    public Func<bool> SuppressDismiss { get; set; }
 
     private bool          _isShowing;
     private bool          _justShown;
@@ -66,6 +68,7 @@ public class TotemActionPopupUI : MonoBehaviour
     private void LateUpdate()
     {
         if (_justShown) { _justShown = false; return; }
+        if (SuppressDismiss?.Invoke() == true) return;
         if (!_isShowing || !Input.GetMouseButtonDown(0)) return;
 
         var pointer = new PointerEventData(EventSystem.current) { position = Input.mousePosition };

@@ -16,6 +16,7 @@ public class DroneManager : MonoBehaviour
     [VContainer.Inject] private GridManager _gridManager;
     [VContainer.Inject] private LevelUpManager _levelUpManager;
     [VContainer.Inject] private GameManager _gameManager;
+    [VContainer.Inject] private FieldPauseVisuals _fieldPause;
     private float _betanNormalTimer, _betanEpicTimer;
     private DroneSelectionEffect _normalEffect, _epicEffect;
     private readonly List<Drone_Betan> _betans = new();
@@ -30,6 +31,7 @@ public class DroneManager : MonoBehaviour
     /// <summary>전투 시간에 따라 베탕 추가 소환을 실행한다. 에픽은 필드 합계 상한이다.</summary>
     public void TickSelections(float deltaTime)
     {
+        if (_fieldPause?.AttacksHeld == true) return;
         var state = _levelUpManager?.DroneSelections;
         var normal = state?.Get(DroneSelectionKind.BetanPeriodicBomb);
         var epic = state?.Get(DroneSelectionKind.BetanFleetBomb);
@@ -210,6 +212,7 @@ public class DroneManager : MonoBehaviour
 
     public void RegisterDrone(DroneUnit drone)
     {
+        _fieldPause?.RegisterDrone(drone);
         if (!_drones.Contains(drone))
         {
             _drones.Add(drone);
@@ -339,6 +342,7 @@ public class DroneManager : MonoBehaviour
                 return;
 
             // ③ 중앙 드론 사격 + 피해
+            if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
             var boss = _bossManager?.CurrentBoss;
             if (boss != null && !boss.IsDead)
             {
@@ -362,6 +366,7 @@ public class DroneManager : MonoBehaviour
                     for (int shot = 1; shot < doubleShot.Count; shot++)
                     {
                         if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
+                        if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
                         if (boss == null || boss.IsDead) break;
                         if (snapshot[centerIndex] != null) snapshot[centerIndex].FireRallyShot();
                         SpawnLaserBeamAsync(rallyCenter, boss.transform.position, transform).Forget();

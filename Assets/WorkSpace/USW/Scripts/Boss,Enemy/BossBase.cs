@@ -24,6 +24,11 @@ public abstract class BossBase : MonoBehaviour
 {
     private DebuffCatalog _debuffCatalog;
     private GameManager _gameManager;
+    private FieldPauseVisuals _fieldPause;
+    private int _projectileImpactDepth;
+    private bool _patternHeld;
+    private float _animatorSpeedBeforeHold;
+    private BossSpineAnimator _spineAnimator;
     private TimerController _combatTimer;
     private double _combatTimeOrigin;
     private double _defenseScale;
@@ -33,23 +38,49 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>대상 소유 디버프 상태. 드론 매니저와 독립이다.</summary>
     public DebuffController Debuffs { get; private set; }
     /// <summary>명시적 보스 스폰 경로에서 루트 정의/씬 전투 상태를 전달한다.</summary>
-    public void ConfigureDebuffs(DebuffCatalog catalog, DebuffSettings settings, GameManager gameManager, double defense, TimerController timer)
+    public void ConfigureDebuffs(DebuffCatalog catalog, DebuffSettings settings, GameManager gameManager, double defense, TimerController timer, FieldPauseVisuals fieldPause = null)
     {
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced -= OnCombatTimeAdvanced;
         _combatTimer = timer;
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced += OnCombatTimeAdvanced;
         _debuffCatalog = catalog; _gameManager = gameManager;
+        _fieldPause = fieldPause;
+        _spineAnimator = GetComponent<BossSpineAnimator>();
         _defenseScale = settings.DefenseScale; _defense = defense;
         _ = DamageCalculator.Calculate(0, defense, _defenseScale, 1, 1, 0);
     }
-    private bool CombatAllowsDamage => _gameManager == null || _gameManager.CurrentState == GameManager.GameState.Playing;
+    private bool CombatIsPlaying => _gameManager == null || _gameManager.CurrentState == GameManager.GameState.Playing;
+    private bool CombatAllowsDamage => (CombatIsPlaying && _fieldPause?.AttacksHeld != true)
+        || (_projectileImpactDepth > 0 && Time.timeScale > 0f
+            && (CombatIsPlaying || _gameManager.CurrentState == GameManager.GameState.LevelUp));
+
+    /// <summary>실제 발사된 투사체의 착탄 콜백 안에서만 선택 유예 중 피해/디버프를 허용한다.</summary>
+    public void ApplyProjectileImpact(Action applyHit)
+    {
+        _projectileImpactDepth++;
+        try { applyHit?.Invoke(); }
+        finally { _projectileImpactDepth--; }
+    }
+
+    /// <summary>보류 시점부터 보스 패턴 외형을 멈추고, 해제 때 기존 속도를 복원한다.</summary>
+    public void SetPatternHold(bool on)
+    {
+        if (_patternHeld == on) return;
+        _patternHeld = on;
+        if (_animator != null)
+        {
+            if (on) { _animatorSpeedBeforeHold = _animator.speed; _animator.speed = 0f; }
+            else _animator.speed = _animatorSpeedBeforeHold;
+        }
+        _spineAnimator?.SetPatternHold(on);
+    }
     private void OnCombatTimeAdvanced(double elapsed) => AdvanceDebuffs();
     private void Update() => AdvanceDebuffs();
     private void AdvanceDebuffs()
     {
-        if (_gameManager != null && (_gameManager.CurrentState == GameManager.GameState.Win || _gameManager.CurrentState == GameManager.GameState.Lose))
+        if (_gameManager?.IsFinished == true)
         { Debuffs?.Clear(); return; }
-        if (IsDead || !CombatAllowsDamage) return;
+        if (IsDead || !CombatIsPlaying || _fieldPause?.AttacksHeld == true) return;
         if (_combatTimer != null) _debuffTime = Math.Max(_debuffTime, _combatTimer.ElapsedCombatTime - _combatTimeOrigin);
         Debuffs?.Advance(_debuffTime);
     }

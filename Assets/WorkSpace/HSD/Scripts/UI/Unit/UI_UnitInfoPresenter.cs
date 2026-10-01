@@ -59,7 +59,7 @@ namespace GaeGGUL.UI.Unit
             if (identityChanged || !_hasStats || _cooldown != cooldown)
                 _view.UpdateSkillInfo(data.skillData != null ? data.skillData.skillName : string.Empty,
                     data.skillData != null ? data.skillData.description : data.GetFormattedDescription(tier),
-                    cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
+                    cooldown > 0f ? $"{cooldown:F1}초" : string.Empty, data.DebuffBindings.Get(tier));
             if (!_hasStats || _attack != attack || _interval != interval)
                 _view.UpdateStats(attack.ToString("0.##"), $"{interval:F2}초");
             _displayedData = data; _displayedTier = tier;

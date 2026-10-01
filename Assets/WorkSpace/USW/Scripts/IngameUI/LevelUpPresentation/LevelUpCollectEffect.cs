@@ -116,10 +116,10 @@ public class LevelUpCollectEffect : MonoBehaviour
             // 1) 아이콘 팝업
             Fx.Spawn(_iconAppearPrefab, root, iconRt.position, _iconAppearBurstSize);
             var iconToken = icon.GetCancellationTokenOnDestroy();
-            await DOTween.Sequence().SetUpdate(true).SetLink(icon.gameObject)
+            var pop = DOTween.Sequence().SetUpdate(true).SetLink(icon.gameObject)
                 .Append(iconRt.DOScale(_iconPopOvershoot, _iconPopDuration * 0.6f).SetEase(Ease.OutQuad))
-                .Append(iconRt.DOScale(1f, _iconPopDuration * 0.4f).SetEase(Ease.InOutSine))
-                .ToUniTask(cancellationToken: iconToken);
+                .Append(iconRt.DOScale(1f, _iconPopDuration * 0.4f).SetEase(Ease.InOutSine));
+            await AwaitAndKillAsync(pop, iconToken);
             await UniTask.Delay(LevelUpUiSpace.Ms(_iconHold), DelayType.Realtime, cancellationToken: iconToken);
 
             // 2) 아이콘이 빛 구슬로 바뀜 — 아이콘은 빠르게 수축/소멸, 구슬은 같은 자리에서 커진다.
@@ -130,8 +130,8 @@ public class LevelUpCollectEffect : MonoBehaviour
                 .Join(iconRt.DOScale(0.3f, _iconVanishDuration).SetEase(Ease.InQuad))
                 .Join(icon.DOFade(0f, _iconVanishDuration).SetEase(Ease.InQuad));
             var orbToken = orb.GetCancellationTokenOnDestroy();
-            await orbRt.DOScale(1f, _orbAppearDuration).SetEase(Ease.OutBack).SetUpdate(true).SetLink(orb)
-                       .ToUniTask(cancellationToken: orbToken);
+            var appear = orbRt.DOScale(1f, _orbAppearDuration).SetEase(Ease.OutBack).SetUpdate(true).SetLink(orb);
+            await AwaitAndKillAsync(appear, orbToken);
             Fx.Release(icon.gameObject);
 
             // 3) 갈래 빛은 대상에게, 메인 빛은 수집 지점(메인 루트)으로
@@ -222,7 +222,15 @@ public class LevelUpCollectEffect : MonoBehaviour
             .Join(orbRt.DOScale(endScale >= 0f ? endScale : _orbEndScale, _orbFlyDuration).SetEase(Ease.InQuad));
         if (_orbPrefab == null && _orbTrailInterval > 0f)
             SpawnTrailAsync(root, orbRt, _orbFlyDuration, token).Forget();
-        return fly.ToUniTask(cancellationToken: token);
+        return AwaitAndKillAsync(fly, token);
+    }
+
+    // 취소 콜백에서는 대기만 취소한다. 트윈 정리는 소유한 호출에서 진행해
+    // DOTween의 Kill 콜백 안에서 다른 트윈 정리가 연쇄되는 것을 피한다.
+    private static async UniTask AwaitAndKillAsync(Tween tween, CancellationToken token)
+    {
+        try { await tween.ToUniTask(TweenCancelBehaviour.CancelAwait, token); }
+        finally { if (tween.IsActive()) tween.Kill(); }
     }
 
     /// <summary>빛 구슬 — 슬롯 E 프리팹이 있으면 그것을, 없으면 임시(바깥 글로우 + 흰 코어)를 만든다.</summary>

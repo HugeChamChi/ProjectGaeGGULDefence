@@ -53,6 +53,7 @@ public class MultiShotSkillAction : ISkillAction
         for (int i = 0; i < shots; i++)
         {
             if (token.IsCancellationRequested) return;
+            await combat.WaitForAttacksAsync(token);
             combat.LaunchProjectile(hitEffects, additionalEffects, size, projectileData, replay);
 
             if (i < shots - 1)

@@ -199,9 +199,14 @@ public class ResultScreenView : MonoBehaviour
                 t += _rewardStagger;
             }
         }
-        _adSlot.transform.SetAsLastSibling();
-        s.Insert(t, _adSlot.DOFade(_adSlotAlpha, 0.2f));
-        s.Insert(t, _adSlot.transform.DOScale(1f, 0.28f).SetEase(Ease.OutBack));
+        bool canAdvertise = AdRewardRequested != null && data.Rewards != null && data.Rewards.Length > 0;
+        _adSlot.gameObject.SetActive(canAdvertise);
+        if (canAdvertise)
+        {
+            _adSlot.transform.SetAsLastSibling();
+            s.Insert(t, _adSlot.DOFade(_adSlotAlpha, 0.2f));
+            s.Insert(t, _adSlot.transform.DOScale(1f, 0.28f).SetEase(Ease.OutBack));
+        }
         t += 0.25f;
 
         // ⑦ 버튼
@@ -210,7 +215,7 @@ public class ResultScreenView : MonoBehaviour
         {
             _buttons.interactable = _buttons.blocksRaycasts = true;
             _buildBlock.interactable = true;
-            _adSlot.interactable = _adSlot.blocksRaycasts = true;
+            _adSlot.interactable = _adSlot.blocksRaycasts = canAdvertise;
         });
         _sequence = s;
     }
@@ -337,6 +342,7 @@ public class ResultScreenView : MonoBehaviour
         _buildBlock.interactable = false;
         _buildBlock.gameObject.SetActive(showBuild);
         _rewardBlock.alpha = 0f;
+        _rewardBlock.gameObject.SetActive(data.Rewards != null && data.Rewards.Length > 0);
         _adSlot.alpha = 0f;
         _adSlot.transform.localScale = Vector3.one * 0.9f;
         _adSlot.interactable = _adSlot.blocksRaycasts = false;

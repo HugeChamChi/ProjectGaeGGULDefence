@@ -7,6 +7,7 @@ using System;
 [DefaultExecutionOrder(-100)]
 public class TimerController : MonoBehaviour
 { 
+    [VContainer.Inject] private FieldPauseVisuals _fieldPause;
     public void Init()
     {
         
@@ -34,6 +35,7 @@ public class TimerController : MonoBehaviour
 
     private void Update()
     {
+        if (_fieldPause?.AttacksHeld == true) return;
         _countdown.Advance(Time.deltaTime);
     }
 
@@ -46,6 +48,7 @@ public class TimerController : MonoBehaviour
     public void StopTimer()   => _countdown.Stop();
     public void ResumeTimer() 
     {
+        if (_fieldPause?.AttacksHeld == true) return;
         _countdown.Resume();
     }
 

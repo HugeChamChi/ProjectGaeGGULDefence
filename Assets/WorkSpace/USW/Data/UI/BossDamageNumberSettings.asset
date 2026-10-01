@@ -31,8 +31,8 @@ MonoBehaviour:
   MobiFontSize: 76
   MobiCriticalScale: 1.5
   MobiBurnScale: 1.5
-  MobiLifetime: 0.85
-  MobiFadeStart: 0.8
+  MobiLifetime: 0.95
+  MobiFadeStart: 0.68
   MobiLineSpacing: 0.51
   MobiMaxLines: 7
   MobiFollowSpeed: 18
@@ -40,6 +40,13 @@ MonoBehaviour:
   MobiPopOvershoot: 0.5
   MobiCriticalShake: 8
   MobiShakeSeconds: 0.18
+  MobiEntry: 1
+  MobiSlamSeconds: 0.16
+  MobiSlamStartScale: 1.6
+  MobiSlamStretch: {x: 1.2, y: 0.82}
+  MobiSlamFrom: {x: -44, y: -26}
+  MobiSlamUndershoot: 0.12
+  MobiFadeRise: 18
   MobiRelativeSizePower: 0.6
   MobiRelativeSizeRange: {x: 0.8, y: 1.35}
   MobiRelativeSizeWindow: 20

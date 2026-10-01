@@ -1,196 +1,410 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using GaeGGUL.Animation;
+using Spine.Unity;
 using UnityEditor;
 using UnityEngine;
+using VContainer;
+using Object = UnityEngine.Object;
 
-/// <summary>
-/// 선택 화면 정지 확인 (IngameScene Play 중 메뉴 실행): 시작 → 보스 등장 대기 → 유닛 소환 → 토템 보상 열기/취소 → 레벨업 열기.
-/// 검사: 열리자마자 새 공격 보류 + 시간은 흐름(투사체 도착 유예) → 유예 뒤 timeScale 0 + 화면 살리기 + 날아가는 투사체 0개,
-///       정지 중 유닛 대기 모션이 움직임, 보스 Spine 대기 모션 실제 시간, 닫으면 전부 복구.
-/// 결과는 콘솔과 Temp/FieldPauseCheck/result.txt.
-/// </summary>
+/// <summary>Fresh IngameScene Play checks for selection ownership, impacts, bursts and boss clocks.</summary>
 public static class FieldPauseVisualsCheck
 {
-    private const string OutDir = "Temp/FieldPauseCheck";
-    private const float BossWaitSeconds = 45f;
-    private const int SpawnCount = 6;
-    private const double FreezeWait = 1.2; // 토템 유예 0.4 / 레벨업 유예 0.4 + 슬로모션 0.35 보다 넉넉히
-
+    private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
+    private const string Report = "Temp/FieldPauseCheck/result.txt";
     private static readonly StringBuilder Log = new();
-    private static int _pass, _fail, _step;
-    private static double _t0;
-    private static float _poseA;
+    private static int _pass, _fail;
+    private static bool _running;
 
+    /// <summary>Runs controlled cases through live gameplay and UI; all temporary state ends with Play.</summary>
     [MenuItem("Tools/USW/Checks/Field Pause Visuals (Play)")]
     public static void Run()
     {
-        if (!EditorApplication.isPlaying) { Debug.LogError("[FieldPauseCheck] IngameScene Play 중에 실행"); return; }
-        System.IO.Directory.CreateDirectory(OutDir);
-        Log.Clear(); _pass = _fail = 0; _step = 0; _t0 = EditorApplication.timeSinceStartup;
-        EditorApplication.update -= Tick;
-        EditorApplication.update += Tick;
-        Object.FindFirstObjectByType<GameManager>()?.OnStartButtonPressed();
-        Note("시작 버튼 호출, 보스 대기");
+        if (_running) return;
+        if (!EditorApplication.isPlaying) throw new InvalidOperationException("Enter a fresh IngameScene Play session.");
+        _running = true;
+        RunAsync().Forget();
     }
 
-    [MenuItem("Tools/USW/Checks/Field Pause Visuals - Dump Units")]
-    public static void DumpUnits()
+    private static void Check(bool condition, string label)
     {
-        foreach (var unit in Units())
+        if (condition) _pass++; else _fail++;
+        Note((condition ? "PASS " : "FAIL ") + label);
+    }
+
+    private static void Note(string text)
+    {
+        Log.AppendLine(text);
+        Directory.CreateDirectory(Path.GetDirectoryName(Report));
+        File.WriteAllText(Report, Log.ToString());
+        Debug.Log("[FieldPauseCheck] " + text);
+    }
+
+    private static T Get<T>(object value, string field) => (T)FindField(value.GetType(), field).GetValue(value);
+    private static void Set(object value, string field, object next) => FindField(value.GetType(), field).SetValue(value, next);
+    private static FieldInfo FindField(Type type, string name)
+    {
+        while (type != null)
         {
-            var visuals = unit.GetComponentsInChildren<IPauseIdleVisual>(true);
-            Debug.Log($"[FieldPauseCheck] {unit.name}: 기절={unit.IsStunned}, 외형 {visuals.Length}개 ({string.Join(", ", visuals.Select(v => v.GetType().Name))})");
+            var field = type.GetField(name, Private | BindingFlags.Public);
+            if (field != null) return field;
+            type = type.BaseType;
+        }
+        throw new MissingFieldException(name);
+    }
+    private static object Call(object value, string method, params object[] args) =>
+        value.GetType().GetMethod(method, Private).Invoke(value, args);
+    private static UniTask Real(float seconds, CancellationToken token) =>
+        UniTask.Delay(TimeSpan.FromSeconds(seconds), DelayType.Realtime, cancellationToken: token);
+    private static void OpenLevel(GameManager game) => Call(game, "HandleLevelUp");
+    private static void CloseLevel(LevelUpUI ui) => Call(ui, "Hide");
+    private static void CloseReward(TotemRewardUI ui) => Call(ui, "CloseAsync", Get<CancellationTokenSource>(ui, "_selectionCts").Token);
+    private static List<UnitBase> Units(GridManager grid) => grid.GetOccupiedCells().Select(c => c.OccupyingUnit).Where(u => u != null).ToList();
+    private static void StopAutomaticAttacks(GridManager grid)
+    {
+        foreach (var unit in Units(grid)) { unit.Combat.StopLoops(); Set(unit.Combat, "_attackTimer", 0f); Set(unit.Combat, "_skillTimer", 0f); }
+        foreach (var drone in Object.FindObjectsByType<DroneUnit>(FindObjectsSortMode.None))
+        {
+            var attack = Get<CancellationTokenSource>(drone, "_attackCts");
+            attack?.Cancel(); attack?.Dispose(); Set(drone, "_attackCts", null);
         }
     }
 
-    private static double Elapsed => EditorApplication.timeSinceStartup - _t0;
-
-    private static void Next() { _step++; _t0 = EditorApplication.timeSinceStartup; }
-
-    private static void Tick()
+    private static async UniTaskVoid RunAsync()
     {
-        if (!EditorApplication.isPlaying) { Finish("Play 종료로 중단"); return; }
-        try { Step(); }
-        catch (System.Exception error) { Finish("예외로 중단: " + error.Message); Debug.LogException(error); }
-    }
-
-    private static void Step()
-    {
-        var service = InGameLifetimeScope.GlobalResolver?.Resolve(typeof(FieldPauseVisuals)) as FieldPauseVisuals;
+        Log.Clear(); _pass = _fail = 0;
+        var game = Object.FindFirstObjectByType<GameManager>();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(game.GetCancellationTokenOnDestroy());
+        using var timeout = cts.CancelAfterSlim(TimeSpan.FromMinutes(4), DelayType.Realtime);
+        var token = cts.Token;
+        var scope = Object.FindFirstObjectByType<InGameLifetimeScope>();
+        var resolver = scope.Container;
+        var pause = resolver.Resolve<FieldPauseVisuals>();
+        var grid = resolver.Resolve<GridManager>();
+        var timer = resolver.Resolve<TimerController>();
+        var bosses = resolver.Resolve<BossManager>();
+        var pool = resolver.Resolve<ProjectilePool>();
+        var exp = resolver.Resolve<ExpManager>();
+        var patterns = resolver.Resolve<BossPatternController>();
+        var level = Object.FindFirstObjectByType<LevelUpUI>(FindObjectsInactive.Include);
         var reward = Object.FindFirstObjectByType<TotemRewardUI>(FindObjectsInactive.Include);
-        switch (_step)
+        var allocated = new List<Object>();
+        try
         {
-            case 0: // 보스 등장 → 유닛 소환
-                if (Object.FindFirstObjectByType<BossBase>() == null && Elapsed < BossWaitSeconds) return;
-                var spawner = Object.FindFirstObjectByType<UnitSpawner>();
-                for (int i = 0; i < SpawnCount && spawner != null; i++) spawner.OnSpawnButtonPressed();
-                Next();
-                break;
-            case 1: // 유닛이 공격을 시작할 시간 → 토템 보상 열기
-                if (Elapsed < 3.0) return;
-                Note($"보스 {(Object.FindFirstObjectByType<BossBase>() != null ? "있음" : "없음")}, 유닛 {Units().Count}, 날아가는 투사체 {InFlight()}개");
-                if (reward == null) { Finish("TotemRewardUI 없음"); return; }
-                reward.Show(() => Note("토템 보상 콜백"));
-                Next();
-                break;
-            case 2: // 유예 중
-                if (Elapsed < 0.05) return;
-                Check(Time.timeScale > 0f, $"토템 보상 유예: 시간은 흐름 (timeScale {Time.timeScale:0.##}, 투사체 {InFlight()}개 비행 중)");
-                Check(service != null && service.AttacksHeld, "토템 보상 유예: 새 공격·보스 패턴 보류");
-                Next();
-                break;
-            case 3: // 정지 후
-                if (Elapsed < FreezeWait) return;
-                CheckFrozen("토템 보상", service);
-                _poseA = UnitPose();
-                Next();
-                break;
-            case 4:
-                if (Elapsed < 0.6) return;
-                CheckPoseMoved("토템 보상");
-                reward.CancelPendingRewards();
-                Next();
-                break;
-            case 5: // 닫힘 → 복구
-                if (Elapsed < 0.3) return;
-                Check(service != null && !service.IsActive && !service.AttacksHeld, "토템 보상 닫힘: 보류·화면 살리기 해제");
-                CheckBoss(false);
-                Check(Time.timeScale > 0f, "토템 보상 닫힘: 시간 재개");
-                if (Object.FindFirstObjectByType<LevelUpRevealSequence>(FindObjectsInactive.Include) == null) { Finish("LevelUpRevealSequence 없음"); return; }
-                foreach (var u in Units()) u.ResumeLoops(); // CancelPendingRewards는 전투를 재개하지 않으므로 레벨업 전 공격 재개
-                Next();
-                break;
-            case 6: // 다시 싸우게 둔 뒤 레벨업
-                if (Elapsed < 2.0) return;
-                Note($"레벨업 직전 날아가는 투사체 {InFlight()}개");
-                Object.FindFirstObjectByType<LevelUpRevealSequence>(FindObjectsInactive.Include).DebugTriggerLevelUp();
-                Next();
-                break;
-            case 7:
-                if (Elapsed < 0.05) return;
-                Check(service != null && service.AttacksHeld, $"레벨업 유예: 새 공격 보류 (timeScale {Time.timeScale:0.##})");
-                Next();
-                break;
-            case 8:
-                if (Elapsed < FreezeWait) return;
-                CheckFrozen("레벨업", service);
-                _poseA = UnitPose();
-                Next();
-                break;
-            case 9:
-                if (Elapsed < 0.6) return;
-                CheckPoseMoved("레벨업");
-                Finish("완료 (레벨업 화면은 열어 둠)");
-                break;
+            Check(game.CurrentState == GameManager.GameState.Idle, "fresh session starts Idle");
+            exp.DeferLevelUps = true;
+            game.OnStartButtonPressed();
+            await UniTask.WaitUntil(() => bosses.CurrentBoss != null, cancellationToken: token);
+            var boss = bosses.CurrentBoss;
+            patterns.enabled = false;
+            var factory = resolver.Resolve<UnitFactory>();
+            for (int i = 0; i < 4; i++)
+            {
+                var unit = factory.CreateRandomNormalUnit();
+                var cell = grid.GetEmptyCells().First();
+                cell.TryPlaceUnit(unit);
+                unit.transform.position = cell.transform.position;
+                unit.gameObject.SetActive(true);
+                unit.OnPlaced(resolver.Resolve<CurrencyManager>(), boss, cell);
+            }
+            await Real(.25f, token);
+            StopAutomaticAttacks(grid);
+            Check(Units(grid).Count >= 4, "four real authored units placed");
+            var caster = Units(grid).First();
+            // Already launched impact versus an unrelated direct request during LevelUp.
+            var flight = ScriptableObject.CreateInstance<ProjectileData>(); allocated.Add(flight);
+            flight.movement = new StraightMovement { duration = .15f };
+            int landed = 0;
+            decimal hpBefore = boss.CurrentHp;
+            float expBefore = exp.CurrentExp;
+            pool.Launch(caster.transform.position, boss.transform.position, flight,
+                () => { landed++; boss.ApplyProjectileImpact(() => boss.TakeDamage(100)); }, caster);
+            OpenLevel(game);
+            boss.TakeDamage(1000);
+            Check(boss.CurrentHp == hpBefore, "R1 unrelated direct damage rejected during selection grace");
+            Check(pause.AttacksHeld && Time.timeScale > 0f, "single level selection grants existing-projectile grace");
+            await Real(.3f, token);
+            Check(landed == 1 && boss.CurrentHp < hpBefore, "R1 actually launched projectile arrives and reduces HP in LevelUp grace");
+            Check(exp.CurrentExp > expBefore, "R1 impact EXP applied immediately");
+            await Real(.8f, token);
+            Check(Time.timeScale == 0f && pause.IsActive, "single level freezes after unchanged grace");
+            await CheckMotionAsync(Units(grid), token);
+            var skeleton = boss.GetComponentInChildren<SkeletonAnimation>();
+            Check(skeleton != null, "authored boss Spine is available");
+            float idleTime = skeleton.AnimationState.GetTrack(0).TrackTime;
+            await Real(.25f, token);
+            Check(skeleton.AnimationState.GetTrack(0).TrackTime > idleTime, "boss idle advances in real time at global pause");
+            // Overlap: new reward inherits freeze, then closing level cannot resume combat.
+            reward.Show(null);
+            Check(Time.timeScale == 0f, "R2 new reward inherits existing freeze immediately");
+            await Real(1.5f, token);
+            Check(Get<bool>(reward, "_isOpen"), "actual reward selection opened");
+            CloseLevel(level);
+            float timerBefore = timer.RemainingTime;
+            await Real(.7f, token);
+            Check(pause.AttacksHeld && pause.IsActive && Time.timeScale == 0f, "R2 level close retains reward owner and time pause");
+            Check(timer.RemainingTime == timerBefore && Units(grid).All(u => u.Combat.AttacksHeld), "R2 no timer or unit-loop leak between selections");
+            CloseReward(reward);
+            await Real(.8f, token);
+            Check(!pause.AttacksHeld && !pause.IsActive && Time.timeScale > 0f, "R2 last normal reward close releases combat");
+            Check(Units(grid).All(u => !u.Combat.AttacksHeld), "last owner resumes every unit");
+            Check(!skeleton.UnscaledTime, "boss idle restores original scaled clock");
+            StopAutomaticAttacks(grid);
+            await Real(.5f, token);
+            reward.Show(null);
+            Check(pause.AttacksHeld && Time.timeScale > 0f, "single reward grants grace while holding combat");
+            await Real(.9f, token);
+            Check(pause.IsActive && Time.timeScale == 0f, "single reward freezes after unchanged grace");
+            // Reward selections keep GameState.Playing, so EXP must explicitly defer through the owner.
+            exp.TryFireLevelUp();
+            Check(Get<bool>(exp, "_pendingLevelUp") && game.CurrentState == GameManager.GameState.Playing
+                && !level.gameObject.activeInHierarchy, "EXP level is deferred during a reward-only selection");
+            CloseReward(reward);
+            await Real(.6f, token);
+            Check(game.CurrentState == GameManager.GameState.LevelUp && pause.AttacksHeld && Time.timeScale == 0f,
+                "reward close hands pending level the existing freeze without a grace gap");
+            CloseLevel(level); StopAutomaticAttacks(grid);
+            await Real(.5f, token);
+            // Reverse overlap closes reward first while level owner remains.
+            reward.Show(null);
+            await Real(.9f, token);
+            OpenLevel(game);
+            Check(Time.timeScale == 0f, "level opened over a paused reward inherits freeze immediately");
+            CloseReward(reward);
+            await Real(.6f, token);
+            Check(pause.AttacksHeld && pause.IsActive && Time.timeScale == 0f && Units(grid).All(u => u.Combat.AttacksHeld),
+                "reverse overlap retains level owner when reward closes first");
+            CloseLevel(level); StopAutomaticAttacks(grid);
+            await Real(.5f, token);
+            var externalOwner = new object();
+            resolver.Resolve<TimeScaleService>().Pause(externalOwner);
+            OpenLevel(game); CloseLevel(level);
+            await Real(.5f, token);
+            Check(!pause.AttacksHeld && Time.timeScale == 0f, "selection close respects an external TimeScaleService pause owner");
+            resolver.Resolve<TimeScaleService>().Release(externalOwner);
+            StopAutomaticAttacks(grid);
+            // Force disable: cleanup cancels delayed Enter as well as the owner/time request.
+            OpenLevel(game);
+            await Real(.1f, token);
+            level.gameObject.SetActive(false);
+            await Real(1f, token);
+            Check(!pause.AttacksHeld && !pause.IsActive && Time.timeScale > 0f, "forced LevelUp disable releases owner and cancels delayed freeze");
+            Check(game.CurrentState == GameManager.GameState.Playing, "forced LevelUp disable leaves Playing state");
+            StopAutomaticAttacks(grid);
+            // Three-shot action: hold starts after the first launch, two remaining shots survive.
+            var hitProbe = new FieldPauseHitProbe();
+            var burst = new MultiShotSkillAction { shotCount = new ConstantInt { value = 3 }, shotInterval = .2f };
+            var effects = new List<IEffect> { hitProbe };
+            burst.Execute(caster, caster.Combat, effects, null);
+            await Real(.04f, token);
+            OpenLevel(game);
+            await Real(1.1f, token);
+            Check(hitProbe.Hits == 1, "D2 burst only first in-flight shot lands while selection is open: " + hitProbe.Hits);
+            Check(hitProbe.DamageUnits > 0, "D2 real unit burst impact applies damage in LevelUp grace");
+            CloseLevel(level);
+            StopAutomaticAttacks(grid);
+            await Real(1.1f, token);
+            Check(hitProbe.Hits == 3, "D2 two remaining burst shots resume exactly once: " + hitProbe.Hits);
+            // Boss pattern uses the real controller and authored Spine mapping.
+            var pattern = Object.Instantiate(boss.Patterns.First(p => p.patternType == BossPatternType.Earthquake));
+            allocated.Add(pattern); pattern.interval = .01f; pattern.ImpactTimeSec = 3f; pattern.SkillDuration = 4f;
+            patterns.RegisterBoss(boss, new[] { pattern }); patterns.enabled = true;
+            await UniTask.WaitUntil(() => skeleton.AnimationState.GetTrack(0).Animation.Name != "idle_0", cancellationToken: token);
+            var entries = Get<IDictionary>(patterns, "_entries");
+            var entry = entries[boss];
+            float patternElapsed = Get<float>(entry, "Elapsed");
+            float trackTime = skeleton.AnimationState.GetTrack(0).TrackTime;
+            OpenLevel(game);
+            await Real(.25f, token);
+            Check(Get<float>(entry, "Elapsed") == patternElapsed, "R4 boss pattern logic freezes from hold, including grace");
+            Check(skeleton.AnimationState.GetTrack(0).TrackTime == trackTime && skeleton.timeScale == 0f,
+                "R4 boss pattern motion freezes at same hold frame");
+            await Real(.9f, token);
+            Check(skeleton.AnimationState.GetTrack(0).TrackTime == trackTime, "R4 queued idle cannot advance during held pattern");
+            CloseLevel(level);
+            StopAutomaticAttacks(grid);
+            await Real(.5f, token);
+            Check(skeleton.timeScale == 1f && skeleton.AnimationState.GetTrack(0).TrackTime > trackTime,
+                "R4 pattern restores original speed and continues");
+            patterns.enabled = false;
+            patterns.RegisterBoss(boss, boss.Patterns);
+            await CheckDroneAsync(resolver, pause, game, level, grid, boss, token);
+            await CheckEmitterAsync(resolver, pause, game, level, grid, boss, token);
+            StopAutomaticAttacks(grid);
+            // D3: lethal in-flight hit, deferred EXP level, then one scaled reward delay.
+            exp.DeferLevelUps = false;
+            Set(exp, "<CurrentExp>k__BackingField", 0f);
+            Set(exp, "_pendingLevelUp", false);
+            boss.ExpMultiplier = (exp.ExpToLevelUp + 1f) / (float)boss.CurrentHp;
+            int levelBefore = exp.CurrentLevel;
+            int deathCount = 0, rewardCount = 0;
+            float rewardTime = -1;
+            var wave = resolver.Resolve<WaveManager>();
+            boss.OnDeath += () => deathCount++;
+            wave.OnTotemSelectionRequested += _ => { rewardCount++; rewardTime = Time.time; };
+            pool.Launch(caster.transform.position, boss.transform.position, flight,
+                () => boss.ApplyProjectileImpact(() => boss.TakeDamage(boss.MaxHp * 10)), caster);
+            OpenLevel(game);
+            await Real(.3f, token);
+            Check(deathCount == 1 && bosses.CurrentBoss == null, "D3 lethal in-flight impact consumes boss death immediately once");
+            Check(exp.CurrentLevel == levelBefore + 1 && Get<bool>(exp, "_pendingLevelUp"), "D3 kill EXP queues next level immediately");
+            await Real(1.2f, token);
+            Check(rewardCount == 0 && Time.timeScale == 0f, "D3 reward scaled delay stays pending while first choice open");
+            CloseLevel(level);
+            Check(game.CurrentState == GameManager.GameState.LevelUp && pause.AttacksHeld && Time.timeScale == 0f,
+                "D3 pending EXP opens chained level without releasing pause");
+            await Real(.5f, token);
+            Check(rewardCount == 0, "D3 chained level still precedes reward");
+            float closeTime = Time.time;
+            CloseLevel(level);
+            await UniTask.WaitUntil(() => rewardCount > 0, cancellationToken: token);
+            Check(rewardCount == 1 && rewardTime > closeTime, "D3 exactly one reward opens after final level closes");
+            Check(game.CurrentState == GameManager.GameState.Playing && !level.gameObject.activeInHierarchy,
+                "D3 reward and level selection do not overlap");
+            await Real(1.4f, token);
+            Check(rewardCount == 1 && Get<bool>(reward, "_isOpen"), "D3 reward is neither duplicated nor lost");
+            reward.CancelPendingRewards();
+            exp.DeferLevelUps = true;
+            OpenLevel(game);
+            await Real(.2f, token);
+            Object.Destroy(level.gameObject);
+            await Real(.9f, token);
+            Check(!pause.AttacksHeld && !pause.IsActive && Time.timeScale > 0f, "destroyed LevelUp releases owner and time request");
+        }
+        catch (Exception error) { Check(false, "unexpected exception " + error); }
+        finally
+        {
+            foreach (var asset in allocated) if (asset != null) Object.Destroy(asset);
+            _running = false;
+            Note($"RESULT PASS {_pass} / FAIL {_fail}");
         }
     }
 
-    private static void CheckFrozen(string label, FieldPauseVisuals service)
+    private static async UniTask CheckMotionAsync(List<UnitBase> units, CancellationToken token)
     {
-        Check(Time.timeScale == 0f, $"{label}: 유예 뒤 timeScale 0");
-        Check(service != null && service.IsActive, $"{label}: 화면 살리기 켜짐");
-        int inFlight = InFlight();
-        Check(inFlight == 0, $"{label}: 멈췄을 때 날아가는 투사체 {inFlight}개 (0이어야 함)");
-        CheckBoss(true);
-        foreach (var unit in Units())
+        Check(units.Any(u => !u.IsStunned), "at least one non-stunned unit participates in idle-motion checks");
+        foreach (var unit in units)
         {
-            var visuals = unit.GetComponentsInChildren<IPauseIdleVisual>(true);
-            Note($"{label}: {unit.name} 기절={unit.IsStunned}, 외형 {string.Join(", ", visuals.Select(v => v.GetType().Name))}");
+            if (unit.IsStunned) { Note("EXCLUDED stunned unit " + unit.name); continue; }
+            var transforms = unit.GetComponentsInChildren<Transform>(true);
+            var scales = transforms.Select(t => t.localScale).ToArray();
+            var positions = transforms.Select(t => t.localPosition).ToArray();
+            float delta = 0;
+            for (int sample = 0; sample < 6; sample++)
+            {
+                await Real(.07f, token);
+                for (int i = 0; i < transforms.Length; i++)
+                    delta = Mathf.Max(delta, (transforms[i].localScale - scales[i]).magnitude, (transforms[i].localPosition - positions[i]).magnitude);
+            }
+            Check(delta > .0001f && Time.timeScale == 0f, "per-unit per-axis idle moves: " + unit.name + " delta=" + delta);
+            foreach (var visual in unit.GetComponentsInChildren<Anim_Base>(true))
+            {
+                var tween = Get<Sequence>(visual, "_currentSeq");
+                Check(tween != null && tween.IsActive() && tween.IsPlaying(), "idle tween playing: " + unit.name);
+            }
         }
-        Note($"{label}: 실제 시간으로 돈 파티클 {Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None).Count(p => p.main.useUnscaledTime)}개");
     }
 
-    private static void CheckPoseMoved(string label)
+    private static async UniTask CheckDroneAsync(IObjectResolver resolver, FieldPauseVisuals pause, GameManager game,
+        LevelUpUI level, GridManager grid, BossBase boss, CancellationToken token)
     {
-        float delta = Mathf.Abs(UnitPose() - _poseA);
-        Check(Time.timeScale == 0f && delta > 1e-4f, $"{label}: 정지 중 유닛 대기 모션이 움직임 (자세 변화 {delta:0.#####})");
+        var manager = resolver.Resolve<DroneManager>();
+        StopAutomaticAttacks(grid);
+        var owner = Units(grid).First();
+        OpenLevel(game);
+        var go = new GameObject("PauseCheckDrone");
+        var drone = go.AddComponent<DroneUnit>(); resolver.Inject(drone);
+        drone.Initialize(owner, Vector2.zero);
+        Check(Get<bool>(drone, "_attackHeld"), "R3 drone created during grace inherits hold");
+        var authoredDrone = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/WorkSpace/USW/Prefab/Unit/DronUnit/Drone_Normal_Prefab.prefab").GetComponent<DroneUnit>();
+        Set(drone, "_projectilePrefab", Get<Projectile>(authoredDrone, "_projectilePrefab"));
+        int deferredImpacts = 0;
+        Call(drone, "ShootProjectile", boss.transform.position, (Action)(() => deferredImpacts++), null);
+        await Real(.9f, token);
+        Check(deferredImpacts == 0, "R3 direct prefab projectile route defers launch during selection");
+        go.SetActive(false); go.SetActive(true); drone.Initialize(owner, Vector2.zero);
+        Check(Get<bool>(drone, "_attackHeld"), "R3 pooled drone reuse re-inherits active hold");
+        Check(Get<bool>(drone, "_inPauseIdle"), "pooled drone inherits idle visual clock");
+        CloseLevel(level); StopAutomaticAttacks(grid);
+        await Real(.6f, token);
+        Check(deferredImpacts == 0, "pooled reuse discards a deferred shot from the prior drone lifetime");
+        OpenLevel(game);
+        Call(drone, "ShootProjectile", boss.transform.position, (Action)(() => deferredImpacts++), null);
+        await Real(.9f, token);
+        Check(deferredImpacts == 0, "R3 prefab route keeps current-lifetime shot pending while held");
+        CloseLevel(level); StopAutomaticAttacks(grid);
+        await Real(.8f, token);
+        Check(deferredImpacts == 1, "R3 prefab route resumes current-lifetime shot exactly once");
+        int hits = 0;
+        Action<decimal, Vector3?> counter = (_, __) => { hits++; if (hits == 1) OpenLevel(game); };
+        boss.OnDamaged += counter;
+        var rally = manager.ExecuteRallyAsync(10f, token,
+            new DroneSelectionEffect { Count = 2, Value = .5f, Interval = .15f });
+        await UniTask.WaitUntil(() => hits > 0, cancellationToken: token);
+        await Real(1.1f, token);
+        Check(hits == 1, "D2 rally double-shot holds second damage and shot: " + hits);
+        boss.OnDamaged -= counter;
+        Action<decimal, Vector3?> remaining = (_, __) => hits++;
+        boss.OnDamaged += remaining;
+        CloseLevel(level); StopAutomaticAttacks(grid);
+        await rally;
+        Check(hits == 2, "D2 rally remaining shot resumes exactly once: " + hits);
+        boss.OnDamaged -= remaining;
+        go.SetActive(false);
+        Check(!Get<bool>(drone, "_attackHeld") && !Get<bool>(drone, "_inPauseIdle"), "pool return clears transient drone pause state");
+        Object.Destroy(go);
     }
 
-    private static int InFlight() => Object.FindObjectsByType<Projectile>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
-
-    private static List<UnitBase> Units()
+    private static async UniTask CheckEmitterAsync(IObjectResolver resolver, FieldPauseVisuals pause, GameManager game,
+        LevelUpUI level, GridManager grid, BossBase boss, CancellationToken token)
     {
-        var grid = Object.FindFirstObjectByType<GridManager>();
-        return grid == null ? new List<UnitBase>() : grid.GetOccupiedCells().Select(c => c.OccupyingUnit).Where(u => u != null).ToList();
-    }
-
-    // 유닛들 하위 트랜스폼 크기·위치 합 — 숨쉬기/대기 모션이 돌면 시간에 따라 바뀐다.
-    private static float UnitPose()
-    {
-        float sum = 0f;
-        foreach (var unit in Units())
-            foreach (var t in unit.GetComponentsInChildren<Transform>())
-                sum += t.localScale.x + t.localScale.y + t.localPosition.x + t.localPosition.y;
-        return sum;
-    }
-
-    private static void CheckBoss(bool paused)
-    {
-        var boss = Object.FindFirstObjectByType<BossBase>();
-        var spine = boss != null ? boss.GetComponentInChildren<Spine.Unity.SkeletonAnimation>() : null;
-        if (spine == null) { Note("보스 Spine 없음 — 보스 검사 생략"); return; }
-        string anim = spine.AnimationState?.GetTrack(0)?.Animation?.Name ?? "-";
-        Note($"보스 Spine 현재 '{anim}', UnscaledTime={spine.UnscaledTime}");
-        if (!paused) Check(!spine.UnscaledTime, "보스 Spine 원래 시간 복구");
-    }
-
-    private static void Check(bool ok, string label)
-    {
-        if (ok) _pass++; else _fail++;
-        Note((ok ? "PASS " : "FAIL ") + label);
-    }
-
-    private static void Note(string line)
-    {
-        Log.AppendLine(line);
-        Debug.Log("[FieldPauseCheck] " + line);
-    }
-
-    private static void Finish(string reason)
-    {
-        EditorApplication.update -= Tick;
-        Note($"{reason} — PASS {_pass} / FAIL {_fail}");
-        System.IO.File.WriteAllText($"{OutDir}/result.txt", Log.ToString());
+        StopAutomaticAttacks(grid);
+        await Real(.5f, token);
+        var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1003Data.asset");
+        var cell = grid.GetEmptyCells().First();
+        bool placed = await resolver.Resolve<TotemSpawner>().PlaceTotemAtCellAsync(data, cell, token);
+        Check(placed, "authored TD1003 placed through real spawner");
+        var source = cell.OccupyingTotem;
+        var emitter = source.GetComponent<TotemDebuffEmitter>();
+        Set(emitter, "_elapsed", source.Data.DebuffFireInterval);
+        decimal hpBefore = boss.CurrentHp;
+        Call(emitter, "Update");
+        Set(emitter, "_elapsed", 1.25);
+        OpenLevel(game);
+        Call(emitter, "Update");
+        Check(Get<double>(emitter, "_elapsed") == 1.25, "R3 separate emitter retains periodic timer while attacks held");
+        await Real(.35f, token);
+        Check(boss.CurrentHp < hpBefore && boss.Debuffs.Active.Count > 0, "R1 real TD1003 projectile applies damage and debuff in grace");
+        await Real(.8f, token);
+        Check(Get<double>(emitter, "_elapsed") == 1.25 && Time.timeScale == 0f, "R3 real TD1003 emitter stays held throughout choice");
+        var manager = resolver.Resolve<DroneManager>();
+        var card = ScriptableObject.CreateInstance<LevelUpData>();
+        card.chooseId = 990022;
+        card.droneEffect = new DroneSelectionEffect { Kind = DroneSelectionKind.BetanPeriodicBomb, Interval = .1f, Count = 1 };
+        var selections = resolver.Resolve<LevelUpManager>().DroneSelections;
+        selections.Add(card);
+        int bombsBefore = Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None).Length;
+        Set(manager, "_betanNormalTimer", .05f);
+        manager.TickSelections(10f);
+        Check(Get<float>(manager, "_betanNormalTimer") == .05f
+            && Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None).Length == bombsBefore,
+            "R3 configured periodic Betan summons retain timer and spawn nothing while held");
+        CloseLevel(level); StopAutomaticAttacks(grid);
+        manager.TickSelections(.2f);
+        Check(Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None).Length > bombsBefore,
+            "R3 configured periodic Betan summons restart after release");
+        selections.Remove(card.chooseId); Object.Destroy(card);
+        foreach (var bomb in Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None)) Object.Destroy(bomb.gameObject);
+        source.OnRemoved(); cell.RemoveTotem(); Object.Destroy(source.gameObject);
+        boss.Debuffs.Clear();
+        await Real(.4f, token);
     }
 }

@@ -70,6 +70,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject resultPanel;
     [SerializeField] private Button     retryButton;
     [SerializeField] private Button     homeButton;
+    [SerializeField] private ResultScreenView _resultScreen;
+    private GameObject _endInputShield;
+    private bool _resultShown;
+    private bool _navigationStarted;
 
     protected void Awake()
     {
@@ -146,6 +150,12 @@ public class UIManager : MonoBehaviour
 
         if (resultPanel != null)
             resultPanel.SetActive(false);
+        if (_resultScreen != null)
+        {
+            _resultScreen.gameObject.SetActive(false);
+            _resultScreen.RetryRequested += OnRetryButtonPressed;
+            _resultScreen.HomeRequested += OnHomeButtonPressed;
+        }
     }
 
     /// <summary>새 보스의 체력과 줄 수를 설정하고 이전 보스의 연출을 초기화한다.
@@ -362,11 +372,35 @@ public class UIManager : MonoBehaviour
             .SetLink(target.gameObject);
     }
 
-    public void ShowResult(bool isWin)
+    /// <summary>Consumes input during the committed end transition while remaining visuals run.</summary>
+    public void BlockGameplayInput()
     {
-        if (resultPanel != null)
-            resultPanel.SetActive(true);
+        if (_endInputShield != null) return;
+        _endInputShield = new GameObject("GameEndInputShield", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+        var canvas = _endInputShield.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 2000;
+        var graphic = new GameObject("Shield", typeof(RectTransform), typeof(Image));
+        graphic.transform.SetParent(_endInputShield.transform, false);
+        var rect = (RectTransform)graphic.transform;
+        rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        graphic.GetComponent<Image>().color = Color.clear;
+    }
+
+    /// <summary>Shows the imported result once with the committed run snapshot and a full gameplay pause.</summary>
+    public void ShowResult(bool isWin, ResultScreenData data = null)
+    {
+        if (_resultShown) return;
+        _resultShown = true;
         _timeScale.Pause(this);
+        if (_endInputShield != null) _endInputShield.SetActive(false);
+        if (_resultScreen != null && data != null)
+        {
+            _resultScreen.UseUnscaledTime = true;
+            _resultScreen.Show(data, ResultScreenTone.Plain, true);
+        }
+        else if (resultPanel != null) resultPanel.SetActive(true);
     }
 
     public void HideStartButton()
@@ -377,13 +411,30 @@ public class UIManager : MonoBehaviour
 
     private void OnRetryButtonPressed()
     {
+        if (_navigationStarted) return;
+        _navigationStarted = true;
+        _gameManager.CancelEndPresentation();
         _timeScale.ReleaseAll();
         Addressables.LoadSceneAsync(SceneManager.GetActiveScene().name);
     }
 
     private void OnHomeButtonPressed()
     {
+        if (_navigationStarted) return;
+        _navigationStarted = true;
+        _gameManager.CancelEndPresentation();
         _timeScale.ReleaseAll();
         Addressables.LoadSceneAsync("LobbyScene");
+    }
+
+    private void OnDestroy()
+    {
+        if (_resultScreen != null)
+        {
+            _resultScreen.RetryRequested -= OnRetryButtonPressed;
+            _resultScreen.HomeRequested -= OnHomeButtonPressed;
+        }
+        if (_endInputShield != null) Destroy(_endInputShield);
+        _timeScale?.Release(this);
     }
 }

@@ -26,4 +26,12 @@ public class GameConfig : ScriptableObject
 
     [Header("Visuals")]
     public UnitTierPalette tierPalette; // 등급별 비주얼 설정
+    [Header("Defeat Presentation")]
+    [Tooltip("패배 판정 이후 결과창까지의 실제 시간. 연출 초깃값이며 SO에서 조정합니다.")]
+    [SerializeField, Min(0f)] private float _defeatDuration = 0.8f;
+    [SerializeField, Range(0.01f, 1f)] private float _defeatTimeScale = 0.2f;
+    /// <summary>Unscaled seconds before the fully paused result screen.</summary>
+    public float DefeatDuration => Mathf.Max(0f, _defeatDuration);
+    /// <summary>Speed of remaining battle visuals after defeat is committed.</summary>
+    public float DefeatTimeScale => Mathf.Clamp(_defeatTimeScale, 0.01f, 1f);
 }

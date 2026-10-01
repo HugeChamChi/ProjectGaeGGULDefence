@@ -12,6 +12,7 @@ public class InGameLifetimeScope : LifetimeScope
     {
         // 씬에 이미 배치되어 있는 매니저(MonoBehaviour)들을 찾아서 모두 등록합니다.
         builder.Register<TimeScaleService>(Lifetime.Scoped); // 게임 속도 단일 소유자 — Time.timeScale 직접 쓰기 금지
+        builder.Register<DefeatPresentation>(Lifetime.Scoped);
         builder.Register<FieldPauseVisuals>(Lifetime.Scoped); // 선택 화면 정지 중 대기 모션·이펙트만 실제 시간으로
         builder.Register<EndlessRandom>(Lifetime.Scoped).As<IEndlessRandom>();
         builder.Register<EndlessRunService>(Lifetime.Scoped).AsSelf().As<IRunStatModifiers>();

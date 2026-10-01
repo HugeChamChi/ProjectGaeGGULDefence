@@ -13,12 +13,19 @@ public sealed class BossDebuffBar : MonoBehaviour
         internal Image Icon;
         internal TMP_Text Label;
         internal TMP_Text Detail;
+        internal TMP_Text Stacks;
+        internal int Id = -1, Count = -1;
+        internal double Seconds = double.NaN;
     }
 
     [Tooltip("디버프 슬롯 사이 가로 간격")]
     [SerializeField] private float _spacing = 6f;
+    [SerializeField] private float _labelFontSize = 20f;
+    [SerializeField] private float _stackFontSize = 22f;
 
     private readonly List<Slot> _slots = new List<Slot>();
+    private readonly List<DebuffInstance> _ordered = new List<DebuffInstance>();
+    private Comparison<DebuffInstance> _compare;
     private BossManager _manager;
     private DebuffSettings _settings;
     private Vector2 _size;
@@ -31,6 +38,7 @@ public sealed class BossDebuffBar : MonoBehaviour
         _settings = settings;
         _size = size;
         _font = font;
+        _compare = CompareEffects;
         Refresh(null);
     }
 
@@ -46,26 +54,51 @@ public sealed class BossDebuffBar : MonoBehaviour
     public void Refresh(DebuffController controller)
     {
         int count = controller?.Active.Count ?? 0;
+        _ordered.Clear();
+        if (controller != null) foreach (var effect in controller.Active) _ordered.Add(effect);
+        if (_compare != null) _ordered.Sort(_compare);
         for (int i = 0; i < count; i++)
         {
             if (i == _slots.Count) _slots.Add(CreateSlot(i));
             var slot = _slots[i];
-            var effect = controller.Active[i];
+            var effect = _ordered[i];
             var data = _settings != null ? _settings.FindPresentation(effect.Definition.Id) : null;
-            slot.Root.SetActive(true);
-            slot.Icon.sprite = data != null ? data.Icon : null;
-            slot.Icon.enabled = slot.Icon.sprite != null;
-            slot.Label.enabled = !slot.Icon.enabled;
+            if (!slot.Root.activeSelf) slot.Root.SetActive(true);
+            if (slot.Id != effect.Definition.Id)
+            {
+                slot.Id = effect.Definition.Id;
+                slot.Count = -1; slot.Seconds = double.NaN;
+                slot.Icon.sprite = data != null ? data.Icon : null;
+                slot.Icon.enabled = slot.Icon.sprite != null;
+                slot.Label.enabled = !slot.Icon.enabled;
+            }
             string label = data != null && !string.IsNullOrEmpty(data.DisplayName)
-                ? data.DisplayName : effect.Definition.Kind.ToString();
+                ? data.ShortName : effect.Definition.Kind.ToString();
             if (slot.Label.text != label) slot.Label.text = label;
-            string remaining = double.IsPositiveInfinity(effect.ExpiresAt) ? "" :
-                Math.Ceiling(Math.Max(0d, effect.ExpiresAt - controller.CurrentTime)).ToString("0") + "s";
-            string detail = effect.Stacks > 1 ? "x" + effect.Stacks + (remaining.Length > 0 ? " " + remaining : "") : remaining;
-            if (slot.Detail.text != detail) slot.Detail.text = detail;
+            double seconds = double.IsPositiveInfinity(effect.ExpiresAt) ? double.PositiveInfinity :
+                Math.Ceiling(Math.Max(0d, effect.ExpiresAt - controller.CurrentTime));
+            if (slot.Seconds != seconds)
+            {
+                slot.Seconds = seconds;
+                slot.Detail.text = double.IsPositiveInfinity(seconds) ? string.Empty : seconds.ToString("0") + "s";
+            }
+            int stacks = effect.Definition.Kind == DebuffKind.ArmorBreak || effect.Stacks > 1 ? effect.Stacks : 0;
+            if (slot.Count != stacks)
+            {
+                slot.Count = stacks;
+                slot.Stacks.transform.parent.gameObject.SetActive(stacks > 0);
+                slot.Stacks.text = stacks > 0 ? stacks.ToString() : string.Empty;
+            }
         }
         for (int i = count; i < _slots.Count; i++)
             if (_slots[i].Root.activeSelf) _slots[i].Root.SetActive(false);
+    }
+
+    private int CompareEffects(DebuffInstance a, DebuffInstance b)
+    {
+        int order = (_settings?.FindPresentation(a.Definition.Id)?.DisplayOrder ?? a.Definition.Id)
+            .CompareTo(_settings?.FindPresentation(b.Definition.Id)?.DisplayOrder ?? b.Definition.Id);
+        return order != 0 ? order : a.Definition.Id.CompareTo(b.Definition.Id);
     }
 
     private Slot CreateSlot(int index)
@@ -86,12 +119,22 @@ public sealed class BossDebuffBar : MonoBehaviour
         var icon = iconObject.GetComponent<Image>();
         icon.preserveAspect = true;
         icon.raycastTarget = false;
-        return new Slot
+        var badge = new GameObject("StackBadge", typeof(RectTransform), typeof(Image));
+        badge.transform.SetParent(root.transform, false);
+        Stretch((RectTransform)badge.transform, new Vector2(0.54f, 0.27f), new Vector2(1f, 0.65f));
+        badge.GetComponent<Image>().color = new Color(0.08f, 0.06f, 0.12f, 0.95f);
+        badge.GetComponent<Image>().raycastTarget = false;
+        var slot = new Slot
         {
             Root = root, Icon = icon,
             Label = CreateText(root.transform, "Label", new Vector2(0f, 0.3f), Vector2.one),
-            Detail = CreateText(root.transform, "DurationStacks", Vector2.zero, new Vector2(1f, 0.3f))
+            Detail = CreateText(root.transform, "Duration", Vector2.zero, new Vector2(1f, 0.27f)),
+            Stacks = CreateText(badge.transform, "Stacks", Vector2.zero, Vector2.one)
         };
+        badge.transform.SetAsLastSibling();
+        slot.Stacks.fontSize = _stackFontSize;
+        slot.Stacks.fontStyle = FontStyles.Bold;
+        return slot;
     }
 
     private TMP_Text CreateText(Transform parent, string name, Vector2 min, Vector2 max)
@@ -101,10 +144,8 @@ public sealed class BossDebuffBar : MonoBehaviour
         Stretch((RectTransform)obj.transform, min, max);
         var text = obj.GetComponent<TextMeshProUGUI>();
         if (_font != null) text.font = _font;
-        text.fontSize = 16f;
-        text.enableAutoSizing = true;
-        text.fontSizeMin = 8f;
-        text.fontSizeMax = 16f;
+        text.fontSize = _labelFontSize;
+        text.enableAutoSizing = false;
         text.alignment = TextAlignmentOptions.Center;
         text.raycastTarget = false;
         return text;

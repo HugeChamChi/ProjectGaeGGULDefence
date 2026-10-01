@@ -21,6 +21,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Scenes
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 293da426adba53d4d9f2e0e2f152d05e
+    m_Address: IngameScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Scenes
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2e79a0692eb4b848bca29692cdb76af
     m_Address: Title
     m_ReadOnly: 0

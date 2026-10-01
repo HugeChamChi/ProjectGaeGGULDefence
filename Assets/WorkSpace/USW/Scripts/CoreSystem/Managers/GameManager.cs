@@ -2,6 +2,7 @@ using UnityEngine;
 using VContainer;
 using System;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 // ════════════════════════════════════════════════════════
 // GameManager — InGameSingleton 교체
@@ -18,6 +19,15 @@ public class GameManager : MonoBehaviour
     [Inject] private IObjectResolver _resolver;
     [Inject] private EndlessRunService _run;
     [Inject] private TimeScaleService _timeScale;
+    [Inject] private DefeatPresentation _defeat;
+    private CancellationTokenSource _endingCts;
+    private ResultScreenData _resultSnapshot;
+    private float _survivalSeconds;
+    private int _bossKills;
+    /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
+    public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
+    /// <summary>Snapshot captured before StopRun resets progression values.</summary>
+    public ResultScreenData ResultSnapshot => _resultSnapshot;
 
     private UIManager _uiManager;
     private WaveManager _waveManager;
@@ -35,6 +45,7 @@ public class GameManager : MonoBehaviour
         _expManager = _resolver.Resolve<ExpManager>();
         _gridManager = _resolver.Resolve<GridManager>();
         _run.OnFailed += HandleRunFailed;
+        _waveManager.OnBossDefeated += HandleBossKilled;
     }
 
     public event Action OnLevelUpStateEntered;
@@ -73,7 +84,6 @@ public class GameManager : MonoBehaviour
         _uiManager.HideStartButton();
 
         _timerManager.OnTimeUp += HandleTimeUp;
-        BossBase.OnAnyBossDied += HandleBossKilled;
 
         _currencyManager.AddCurrency(config.startingFood);
         _expManager.OnLevelUp += HandleLevelUp;
@@ -108,26 +118,71 @@ public class GameManager : MonoBehaviour
 
     private void HandleBossKilled()
     {
-        // 타이머 시작/리셋은 WaveManager가 SpawnNextBossAsync에서 수행합니다.
+        if (!IsFinished) _bossKills++;
     }
     private void HandleTimeUp()
     {
-        if (CurrentState != GameState.Playing) return;
+        if (CurrentState != GameState.Playing && CurrentState != GameState.LevelUp) return;
         CurrentState = GameState.Lose;
         EndGame(false);
     }
 
     private void EndGame(bool isWin)
     {
+        _resultSnapshot = CaptureResult();
+        _uiManager?.BlockGameplayInput();
         _waveManager.StopRun();
         UnsubscribeGameplay();
         _timerManager.StopTimer();
+        if (isWin || _defeat == null || config == null) { FinishResult(isWin); return; }
+        _endingCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        PresentDefeatAsync(_endingCts).Forget();
+    }
+
+    private async UniTaskVoid PresentDefeatAsync(CancellationTokenSource cts)
+    {
+        try { await _defeat.PlayAsync(config, () => FinishResult(false), cts.Token); }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            if (_endingCts == cts) _endingCts = null;
+            cts.Dispose();
+        }
+    }
+
+    private void FinishResult(bool isWin)
+    {
+        // Pause first, then clean up owners/units. No normal-speed frame during the handoff.
+        _uiManager.ShowResult(isWin, _resultSnapshot);
         StopAllUnits();
-        _uiManager.ShowResult(isWin);
+    }
+
+    private ResultScreenData CaptureResult()
+    {
+        _resolver.TryResolve<BossManager>(out var bosses);
+        _resolver.TryResolve<LevelUpManager>(out var choices);
+        var boss = bosses?.CurrentBoss;
+        int round = Mathf.Max(1, _waveManager.CurrentWave + 1);
+        return new ResultScreenData
+        {
+            Round = round, BestRound = round, BossKills = _bossKills, SurvivalSeconds = _survivalSeconds,
+            LastBossDamageRatio = boss != null && boss.MaxHp > 0 ? (float)(1m - boss.CurrentHp / boss.MaxHp) : -1f,
+            BuildChoices = choices?.GetResultChoices(), Rewards = Array.Empty<ResultReward>(),
+            BossProgressStyle = ResultBossProgressStyle.HpSettlement
+        };
+    }
+
+    /// <summary>Scene navigation cancels the pending result before releasing time owners.</summary>
+    public void CancelEndPresentation() => _endingCts?.Cancel();
+    private void OnDisable() => CancelEndPresentation();
+    private void Update()
+    {
+        if (CurrentState == GameState.Playing || CurrentState == GameState.LevelUp) _survivalSeconds += Time.deltaTime;
     }
 
     private void HandleRunFailed(string error)
     {
+        if (IsFinished) return;
         CurrentState = GameState.Faulted;
         _waveManager.StopRun();
         UnsubscribeGameplay();
@@ -140,7 +195,6 @@ public class GameManager : MonoBehaviour
 
     private void UnsubscribeGameplay()
     {
-        BossBase.OnAnyBossDied -= HandleBossKilled;
         if (_timerManager != null) _timerManager.OnTimeUp -= HandleTimeUp;
         if (_expManager != null) _expManager.OnLevelUp -= HandleLevelUp;
     }
@@ -148,6 +202,8 @@ public class GameManager : MonoBehaviour
     private void OnDestroy()
     {
         if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
+        if (_waveManager != null) _waveManager.OnBossDefeated -= HandleBossKilled;
+        CancelEndPresentation();
         UnsubscribeGameplay();
         _timeScale?.Release(this);
     }

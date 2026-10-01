@@ -20,6 +20,7 @@ public class UnitFactory : MonoBehaviour
     {
         _deps = new UnitDependencies
         {
+            GameManager = _resolver.Resolve<GameManager>(),
             GameDataManager = _resolver.Resolve<GameDataManager>(),
             GridManager = _resolver.Resolve<GridManager>(),
             UpgradeManager = _resolver.Resolve<UpgradeManager>(),
@@ -32,6 +33,7 @@ public class UnitFactory : MonoBehaviour
             AudioManager = _resolver.Resolve<AudioManager>(),
             CurrencyManager = _resolver.Resolve<CurrencyManager>(),
             BuffManager = _resolver.Resolve<BuffManager>(),
+            FieldPause = _resolver.Resolve<FieldPauseVisuals>(),
             RunStatModifiers = _resolver.Resolve<IRunStatModifiers>(),
             ReportRunStatFailure = _resolver.Resolve<EndlessRunService>().Fail
         };

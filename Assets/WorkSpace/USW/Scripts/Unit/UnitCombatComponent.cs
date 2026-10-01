@@ -14,6 +14,13 @@ public class UnitCombatComponent : MonoBehaviour
     private CancellationTokenSource _loopCts;
     private bool _paused = false;
 
+    /// <summary>실제 발사와 연발 대기가 공유하는 보류 상태.</summary>
+    public bool AttacksHeld => _paused || _deps?.FieldPause?.AttacksHeld == true || _deps?.GameManager?.IsFinished == true;
+
+    /// <summary>보류된 연발의 남은 발을 재개 때 이어 쏜다.</summary>
+    public UniTask WaitForAttacksAsync(CancellationToken token) =>
+        UniTask.WaitUntil(() => !AttacksHeld, cancellationToken: token);
+
     private float _attackTimer;
     private float _skillTimer;
     private int _hitCount;
@@ -26,7 +33,7 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>소환 드론의 일반 공격을 본체 셀의 디버프/그림자 구독에 전달한다. 본체 공격이나 스킬은 실행하지 않는다.</summary>
     public BasicAttackReplay BeginDroneBasicAttack(BossBase target, Transform visualSource, Func<bool> isSourceValid)
     {
-        if (_unit == null || _unit.IsStunned || target == null || target.IsDead) return null;
+        if (AttacksHeld || _unit == null || _unit.IsStunned || target == null || target.IsDead) return null;
         _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, target);
         if (OnBasicAttackStarted == null) return null;
         var replay = new BasicAttackReplay(_unit, target, visualSource, isSourceValid);
@@ -57,7 +64,7 @@ public class UnitCombatComponent : MonoBehaviour
     // 게이지가 멈춰 보였다가 한 번에 점프하는 문제(예: 족장 스킬 쿨타임 UI)가 생깁니다.
     private void Update()
     {
-        if (_unit == null || _paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
+        if (_unit == null || AttacksHeld || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
 
         if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
         if (_unit.CanUseSkill) _skillTimer += Time.deltaTime;
@@ -76,6 +83,7 @@ public class UnitCombatComponent : MonoBehaviour
 
         StopLoops();
         _paused = false;
+        _deps?.FieldPause?.RegisterUnit(_unit);
         _loopCts = new CancellationTokenSource();
         UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
@@ -108,11 +116,17 @@ public class UnitCombatComponent : MonoBehaviour
 
         while (!token.IsCancellationRequested)
         {
-            if (_paused || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed))
+            // Keep the current animation during defeat slow motion; do not start another attack or force Idle.
+            if (_deps?.GameManager?.IsFinished == true)
+            {
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+                continue;
+            }
+            if (AttacksHeld || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed))
             {
                 if (_unit.CurrentState != UnitBase.UnitState.Idle && _unit.CurrentState != UnitBase.UnitState.Sealed)
                 {
-                    _unit.SetState(_paused ? UnitBase.UnitState.Idle : UnitBase.UnitState.Sealed);
+                    _unit.SetState(AttacksHeld ? UnitBase.UnitState.Idle : UnitBase.UnitState.Sealed);
                     _unit.animator?.PlayIdle();
                 }
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
@@ -183,7 +197,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteAttack()
     {
-        if (_unit == null || _unit.IsStunned || !_unit.CanBasicAttack || _unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
+        if (AttacksHeld || _unit == null || _unit.IsStunned || !_unit.CanBasicAttack || _unit.unitData == null || _unit.unitData.atk.Get(_unit.currentTier) <= 0) return;
 
         bool attackDisabled = _unit.currentCell != null &&
             (_unit.currentCell.Model.IsAttackDisabled || _unit.currentCell.Model.TotemAttackDisabled);
@@ -218,7 +232,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void ExecuteSkill()
     {
-        if (_unit == null || _unit.IsStunned || !_unit.CanUseSkill) return;
+        if (AttacksHeld || _unit == null || _unit.IsStunned || !_unit.CanUseSkill) return;
         _unit.InvokeOnSkillFull();
 
         bool attackDisabled = _unit.currentCell != null &&
@@ -326,7 +340,7 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = replay?.IsEnabled == true ? replay.Target : LiveBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
 
-        if (gameObject == null) return;
+        if (gameObject == null || AttacksHeld) return;
 
         if (boss != null && !boss.IsDead && _deps?.ProjectileManager != null)
         {
@@ -340,7 +354,7 @@ public class UnitCombatComponent : MonoBehaviour
             {
                 if (boss != null && !boss.IsDead)
                 {
-                    onHitApply(boss, targetPos);
+                    boss.ApplyProjectileImpact(() => onHitApply(boss, targetPos));
                 }
             };
             Action onHit = () =>
