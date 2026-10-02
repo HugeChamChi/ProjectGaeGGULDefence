@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e21373020da47b46bf0e2ce84c9f922, type: 3}
+  m_Name: BossClearNoticeSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BossClearNoticeSettings
+  Title: "\uBCF4\uC2A4 \uCC98\uCE58!"
+  SubFormat: "\uB0A8\uC740 \uC2DC\uAC04 +{0}\uCD08"
+  DelayAfterKill: 0.12
+  VisibleSeconds: 0.85
+  ExitSpeedScale: 1
+  NoticeY: 0
+  Scale: 1
+  DarkBand: {r: 0.02, g: 0.04, b: 0.05, a: 0.68}
+  Gold: {r: 1, g: 0.773, b: 0.227, a: 1}
+  OrangeBand: {r: 1, g: 0.62, b: 0.1, a: 1}
+  LightBand: {r: 1, g: 0.86, b: 0.32, a: 1}
+  Ink: {r: 0.24, g: 0.13, b: 0, a: 1}
+  PillColor: {r: 0.09, g: 0.12, b: 0.18, a: 0.94}
+  Cyan: {r: 0.384, g: 0.894, b: 1, a: 1}
+  Hot: {r: 1, g: 0.353, b: 0.47, a: 1}
+  StrikeImpact: 0.8

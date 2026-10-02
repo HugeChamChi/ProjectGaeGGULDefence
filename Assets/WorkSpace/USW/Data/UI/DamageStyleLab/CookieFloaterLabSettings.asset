@@ -1,0 +1,146 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be2bfcd1410baec49aa0dcb17c483679, type: 3}
+  m_Name: CookieFloaterLabSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CookieFloaterLabSettings
+  Variants:
+  - Name: "A \uAE30\uC874 \uD769\uBFCC\uB9AC\uAE30"
+    Motion: 0
+    DiagonalAngle: 35
+    Lifetime: 0.6
+    Rise: 36
+    RiseEasePower: 2
+    FadeStart: 0.5
+    PopSeconds: 0.08
+    PopOvershoot: 0.3
+    FontSize: 41
+    CriticalScale: 1.5
+    BurnScale: 1.5
+    Alpha: 0.85
+    FlushInterval: 0.15
+    MaxPopups: 14
+    Scatter: {x: 1, y: 0.8}
+    UseCenterZone: 0
+    CenterZone: {x: 0.45, y: 0.45}
+    CenterShare: 0.4
+    CenterAlpha: 0.3
+    CenterScale: 0.8
+    OuterScale: 1.05
+    StrongAlwaysOuter: 1
+  - Name: "B \uC911\uC559 \uC605\uAC8C\xB7\uBC14\uAE65 \uC9C4\uD558\uAC8C"
+    Motion: 0
+    DiagonalAngle: 35
+    Lifetime: 0.6
+    Rise: 36
+    RiseEasePower: 2
+    FadeStart: 0.5
+    PopSeconds: 0.08
+    PopOvershoot: 0.3
+    FontSize: 41
+    CriticalScale: 1.5
+    BurnScale: 1.5
+    Alpha: 1
+    FlushInterval: 0.15
+    MaxPopups: 14
+    Scatter: {x: 1, y: 0.8}
+    UseCenterZone: 1
+    CenterZone: {x: 0.45, y: 0.45}
+    CenterShare: 0.4
+    CenterAlpha: 0.3
+    CenterScale: 0.8
+    OuterScale: 1.05
+    StrongAlwaysOuter: 1
+  - Name: "C \uBE60\uB974\uAC8C \uC704\uB85C \uC18C\uBA78"
+    Motion: 0
+    DiagonalAngle: 35
+    Lifetime: 0.35
+    Rise: 150
+    RiseEasePower: 3
+    FadeStart: 0.25
+    PopSeconds: 0.05
+    PopOvershoot: 0.2
+    FontSize: 41
+    CriticalScale: 1.5
+    BurnScale: 1.5
+    Alpha: 0.95
+    FlushInterval: 0.1
+    MaxPopups: 18
+    Scatter: {x: 1, y: 0.8}
+    UseCenterZone: 0
+    CenterZone: {x: 0.45, y: 0.45}
+    CenterShare: 0.4
+    CenterAlpha: 0.3
+    CenterScale: 0.8
+    OuterScale: 1.05
+    StrongAlwaysOuter: 1
+  - Name: "D \uBE60\uB974\uAC8C \uB300\uAC01\uC120"
+    Motion: 1
+    DiagonalAngle: 35
+    Lifetime: 0.35
+    Rise: 150
+    RiseEasePower: 3
+    FadeStart: 0.25
+    PopSeconds: 0.05
+    PopOvershoot: 0.2
+    FontSize: 41
+    CriticalScale: 1.5
+    BurnScale: 1.5
+    Alpha: 0.95
+    FlushInterval: 0.1
+    MaxPopups: 18
+    Scatter: {x: 1, y: 0.8}
+    UseCenterZone: 0
+    CenterZone: {x: 0.45, y: 0.45}
+    CenterShare: 0.4
+    CenterAlpha: 0.3
+    CenterScale: 0.8
+    OuterScale: 1.05
+    StrongAlwaysOuter: 1
+  - Name: "E \uC911\uC559 \uC605\uAC8C + \uBE60\uB974\uAC8C \uC704\uB85C"
+    Motion: 0
+    DiagonalAngle: 35
+    Lifetime: 0.35
+    Rise: 150
+    RiseEasePower: 3
+    FadeStart: 0.25
+    PopSeconds: 0.05
+    PopOvershoot: 0.2
+    FontSize: 41
+    CriticalScale: 1.5
+    BurnScale: 1.5
+    Alpha: 1
+    FlushInterval: 0.1
+    MaxPopups: 18
+    Scatter: {x: 1, y: 0.8}
+    UseCenterZone: 1
+    CenterZone: {x: 0.45, y: 0.45}
+    CenterShare: 0.4
+    CenterAlpha: 0.3
+    CenterScale: 0.8
+    OuterScale: 1.05
+    StrongAlwaysOuter: 1
+  FullScreenWidth: 1
+  ScreenEdgePadding: 12
+  Font: {fileID: 11400000, guid: aaa65b78c16511f488c948aa019d2c6e, type: 2}
+  FontMaterial: {fileID: 2100000, guid: 1ed1176a96616b045870b85d2ccad108, type: 2}
+  NormalColor:
+    Top: {r: 1, g: 0.84, b: 0.62, a: 1}
+    Bottom: {r: 1, g: 0.62, b: 0.38, a: 1}
+  CriticalColor:
+    Top: {r: 0.9490196, g: 0.25882354, b: 0.101960786, a: 1}
+    Bottom: {r: 1, g: 0.61960787, b: 0.23921569, a: 1}
+  BurnColor:
+    Top: {r: 1, g: 0.36, b: 0.3, a: 1}
+    Bottom: {r: 0.84, g: 0.06, b: 0.1, a: 1}
+  ScatterGuideColor: {r: 1, g: 1, b: 1, a: 0.35}
+  CenterGuideColor: {r: 0.4, g: 0.9, b: 1, a: 0.6}
+  GuideThickness: 3
