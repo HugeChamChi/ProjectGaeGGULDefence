@@ -1,0 +1,601 @@
+using System.Collections.Generic;
+using System.Globalization;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using static TimerBonusEase;
+
+/// <summary>
+/// 보스 처치 시간 보너스 연출 실험실(FxLab_TimerBonus) 드라이버 (사용자 요청 2026-10-02).
+/// HTML 시안 4종(합체·슬롯 릴·질주·스탬프)을 같은 시계로 반복 재생한다:
+/// 처치 전 긴장(드론 레이저·빨간 박동·미세 떨림, 보스 피격 반응 없음) → 처치 순간 히트스톱·플래시·줌 → 시안별 보너스 연출 → 카운트다운.
+/// 히트스톱은 실험실 시계만 멈춘다. 인게임에 붙일 때는 Time.timeScale 대신 TimeScaleService.Request/Release.
+/// 게임 코드와 무관한 실험실 전용. FxLabCapture 캡처 대상 (Play() = 현재 시안 1배속 처음부터).
+/// </summary>
+public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
+{
+    private const int KeyKill = 1;
+    private const int KeyBossBurst = 2;
+    private const int KeyBeatBase = 2000;
+    private const float MaxStep = 1f / 20f;
+    private const float FrameRef = 60f;               // HTML 시안의 '프레임당 감쇠'를 초 단위로 바꾸는 기준
+    private const float BossPopSeconds = 0.11f;
+    private const float BossShrinkSeconds = 0.15f;
+    private const float BossRespawnSeconds = 0.38f;
+    private const float HpBarFraction = 0.3f;         // 처치 직전 남은 체력 표시
+    private const float PreShakeStart = 0.65f;
+    private const float PreShakeRamp = 0.35f;
+    private const float PulseDecay = 0.86f;
+    private const float FlashDecay = 0.8f;
+    private const float ZoomDecay = 0.86f;
+    private const float DangerHoldDecay = 0.9f;
+    private const float DangerFadeDecay = 0.82f;
+    private const float GlowGoldAlpha = 0.55f;
+    private const float GlowFlashAlpha = 0.3f;
+    private const float FlashWhiten = 0.7f;
+    private static readonly Color ButtonIdle = new Color(1f, 1f, 1f, 0.15f);
+    private static readonly Color ButtonSelected = new Color(0.35f, 0.8f, 0.45f, 0.85f);
+    private static readonly Color Pink = new Color(1f, 0.84f, 0.87f);
+
+    [SerializeField] private TimerBonusLabSettings _settings;
+    [SerializeField] private TMP_FontAsset _font;
+    [SerializeField] private Sprite _bossSprite;
+    [Tooltip("연출 영역 (가운데 기준 좌표)")]
+    [SerializeField] private RectTransform _stage;
+    [Tooltip("화면 전체 플래시 (버튼보다 아래 형제)")]
+    [SerializeField] private RectTransform _overlay;
+    [SerializeField] private TextMeshProUGUI _status;
+    [Tooltip("시안 선택 버튼 (A~D 순서)")]
+    [SerializeField] private Image[] _conceptButtons;
+    [SerializeField] private Vector2 _timerPosition = new Vector2(0f, 560f);
+    [Tooltip("보스 발밑 위치")]
+    [SerializeField] private Vector2 _bossPosition = new Vector2(0f, -330f);
+    [SerializeField] private float _bossSize = 460f;
+    [SerializeField] private float[] _speeds = { 1f, 0.5f, 0.25f };
+    [Header("처치 전 드론 공격 (실제 유닛 프리팹·레이저, 피격 이펙트 없음)")]
+    [Tooltip("드론 프리팹·레이저 연결 (빌더가 채움). 자리·크기·간격은 설정 에셋에서 조정")]
+    [SerializeField] private TimerBonusDroneSquad.Entry[] _droneSquad;
+    [SerializeField] private int _concept;
+    [SerializeField] private bool _loop = true;
+
+    private ITimerBonusConcept[] _concepts;
+    private TimerBonusSprites _sprites;
+    private TimerBonusParticles _particles;
+    private TimerBonusDroneSquad _drones;
+    private TimerBonusDigits _main;
+    private TimerBonusDigits _ghostCyan;
+    private TimerBonusDigits _ghostHot;
+    private RectTransform _shakeRoot;
+    private RectTransform _timerRoot;
+    private RectTransform _bossRoot;
+    private RectTransform _hpFill;
+    private RectTransform _fx;
+    private Image _bossImage;
+    private Image _bossGlow;
+    private Image _hpBack;
+    private Image _hpFillImage;
+    private Image _timerGlow;
+    private Image _flash;
+    private readonly HashSet<int> _fired = new HashSet<int>();
+
+    private float _t;
+    private bool _running = true;
+    private bool _ready;
+    private bool _useUnscaledTime = true;
+    private int _speedIndex;
+    private int _bonusIndex;
+    private string _bonusText;
+    private string _bonusShortText;
+    // 화면 공통 상태 (감쇠)
+    private float _hold;
+    private float _pulse;
+    private float _zoom;
+    private float _whiteFlash;
+    private float _danger;
+    // 이번 프레임에 시안이 정하는 값 (매 프레임 초기화)
+    private Vector2 _shake;
+    private Vector2 _timerOffset;
+    private Vector2 _timerScale = Vector2.one;
+    private float _timerSkew;
+    private float _gold;
+    private float _timerFlash;
+    private float _ghostOffset;
+    private float _ghostAlpha;
+
+    /// <inheritdoc />
+    public bool UseUnscaledTime { get => _useUnscaledTime; set => _useUnscaledTime = value; }
+
+    // ── 시안이 쓰는 문맥 ─────────────────────────────────────
+
+    internal TimerBonusLabSettings Settings => _settings;
+    internal float Px => _settings.PxScale;
+    internal float Bonus => _settings.Bonuses.Length > 0 ? _settings.Bonuses[_bonusIndex] : 0f;
+    /// <summary>"+15.00"</summary>
+    internal string BonusText => _bonusText;
+    /// <summary>"+15"</summary>
+    internal string BonusShortText => _bonusShortText;
+    /// <summary>지금 남은 시간 (보너스 제외).</summary>
+    internal double Now => _settings.BaseRemaining - _t;
+    internal Vector2 TimerPosition => _timerPosition;
+    internal Vector2 TimerSize => _main.Size;
+    internal Vector2 BossCenter => _bossPosition + new Vector2(0f, _bossSize * 0.5f);
+    internal Vector2 StageSize => _stage.rect.size;
+    internal TimerBonusDigits MainDigits => _main;
+    internal RectTransform FxLayer => _fx;
+    internal float Pulse { get => _pulse; set => _pulse = value; }
+    internal float Zoom { get => _zoom; set => _zoom = value; }
+    /// <summary>처치 순간 기준 실험실 시계 (처치 전 음수). 히트스톱·슬로모션이 반영된다 — 공지 실험실이 같은 박자로 맞춘다.</summary>
+    internal float KillTime => _t - _settings.PreKillSeconds;
+    internal bool IsReady => _ready;
+
+    private float LoopSeconds => _settings.PreKillSeconds + _settings.AnimSeconds + _settings.PostSeconds;
+    private float Speed => _speeds.Length > 0 ? _speeds[Mathf.Clamp(_speedIndex, 0, _speeds.Length - 1)] : 1f;
+
+    /// <summary>처치 시점 기준 a초의 남은 시간 (보너스 제외).</summary>
+    internal double RemainingAt(float a) => _settings.BaseRemaining - (_settings.PreKillSeconds + a);
+
+    // ── 생명주기 ──────────────────────────────────────────────
+
+    private void Start()
+    {
+        if (_settings == null || _font == null || _stage == null || _overlay == null)
+        {
+            Debug.LogError("[TimerBonusLab] 설정/폰트/영역 미연결", this);
+            enabled = false;
+            return;
+        }
+        _bonusIndex = Mathf.Clamp(_settings.DefaultBonusIndex, 0, Mathf.Max(0, _settings.Bonuses.Length - 1));
+        UpdateBonusText();
+        BuildView();
+        _concepts = new ITimerBonusConcept[]
+        {
+            new TimerBonusFusion(),
+            new TimerBonusSlotReel(),
+            new TimerBonusDash(),
+            new TimerBonusStamp(),
+        };
+        foreach (var c in _concepts) c.Setup(this);
+        _concept = Mathf.Clamp(_concept, 0, _concepts.Length - 1);
+        for (int i = 0; i < _concepts.Length; i++) _concepts[i].SetVisible(i == _concept);
+        _ready = true;
+        Restart();
+        Refresh();
+    }
+
+    private void OnDestroy()
+    {
+        _drones?.Dispose();
+        _sprites?.Dispose();
+    }
+
+    private void LateUpdate()
+    {
+        if (!_ready) return;
+        float dt = Mathf.Min(_useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime, MaxStep) * Speed;
+        // 히트스톱: 시계·파티클이 같이 멈추고, 플래시·줌만 계속 줄어든다.
+        bool frozen = _running && _hold > 0f;
+        if (frozen) _hold -= dt;
+        if (_running && !frozen)
+        {
+            _t += dt;
+            if (_t >= LoopSeconds)
+            {
+                if (_loop) Restart();
+                else { _t = LoopSeconds; _running = false; }
+            }
+        }
+        float step = _running && !frozen ? dt : 0f;
+        float fadeStep = _running ? dt : 0f;
+        _pulse *= Decay(PulseDecay, step);
+
+        float a = _t - _settings.PreKillSeconds;
+        BeginFrame();
+        RenderTension(a, step);
+        RenderBoss(a);
+        _drones.Render(_t, a < 0f);
+        _concepts[_concept].Render(a, step);
+        _particles.Tick(step);
+
+        _whiteFlash *= Decay(FlashDecay, fadeStep);
+        _zoom *= Decay(ZoomDecay, fadeStep);
+        ApplyFrame();
+        if (Time.frameCount % 6 == 0) UpdateStatus();
+    }
+
+    // ── 버튼 ──────────────────────────────────────────────────
+
+    /// <summary>캡처용: 현재 시안을 1배속으로 처음부터.</summary>
+    public void Play()
+    {
+        _speedIndex = 0;
+        Restart();
+    }
+
+    /// <summary>처음부터 다시.</summary>
+    public void Replay() => Restart();
+
+    /// <summary>시안 선택 (0=A 합체, 1=B 슬롯 릴, 2=C 질주, 3=D 스탬프).</summary>
+    public void SelectConcept(int index)
+    {
+        if (!_ready) { _concept = index; return; }
+        _concepts[_concept].SetVisible(false);
+        _concept = Mathf.Clamp(index, 0, _concepts.Length - 1);
+        _concepts[_concept].SetVisible(true);
+        Restart();
+        Refresh();
+    }
+
+    /// <summary>1배 → 0.5배 → 0.25배 슬로모션 순환.</summary>
+    public void NextSpeed()
+    {
+        _speedIndex = (_speedIndex + 1) % Mathf.Max(1, _speeds.Length);
+        UpdateStatus();
+    }
+
+    /// <summary>보너스 초 순환 (+5 / +10 / +15 / +30).</summary>
+    public void NextBonus()
+    {
+        _bonusIndex = (_bonusIndex + 1) % Mathf.Max(1, _settings.Bonuses.Length);
+        UpdateBonusText();
+        Restart();
+        UpdateStatus();
+    }
+
+    /// <summary>반복 재생 켜기/끄기.</summary>
+    public void ToggleLoop()
+    {
+        _loop = !_loop;
+        if (_loop && !_running) Restart();
+        UpdateStatus();
+    }
+
+    // ── 시안이 부르는 도우미 ──────────────────────────────────
+
+    /// <summary>타이머 세 겹(본체·잔상 2장)에 같은 값을 쓴다.</summary>
+    internal void SetTimerValue(double seconds)
+    {
+        _main.SetValue(seconds);
+        _ghostCyan.SetValue(seconds);
+        _ghostHot.SetValue(seconds);
+    }
+
+    /// <summary>이번 프레임 타이머 변형. tx·ty는 px, skew는 도 (양수 = 윗부분 오른쪽).</summary>
+    internal void TimerTransform(float tx, float ty, float sx, float sy, float skew)
+    {
+        _timerOffset = new Vector2(tx, ty) * Px;
+        _timerScale = new Vector2(sx, sy);
+        _timerSkew = skew;
+    }
+
+    /// <summary>타이머 금색 정도 (0~1).</summary>
+    internal void SetGold(float g) => _gold = g;
+
+    /// <summary>타이머 하얗게 번쩍임 (0~1).</summary>
+    internal void SetFlash(float f) => _timerFlash = f;
+
+    /// <summary>RGB 잔상 — 좌우 간격(px)과 투명도.</summary>
+    internal void SetGhosts(float offsetPx, float alpha)
+    {
+        _ghostOffset = offsetPx * Px;
+        _ghostAlpha = alpha;
+    }
+
+    /// <summary>화면 흔들림 추가 (px).</summary>
+    internal void AddShake(float x, float y) => _shake += new Vector2(x, y) * Px;
+
+    /// <summary>충돌 순간 공통 타격감: 히트스톱 + 화면 플래시 + 줌 펀치.</summary>
+    internal void Impact(float strength)
+    {
+        _hold = Mathf.Max(_hold, _settings.ImpactHitStop * strength);
+        _whiteFlash = Mathf.Max(_whiteFlash, _settings.ImpactFlash * strength);
+        _zoom = Mathf.Max(_zoom, _settings.ImpactZoom * strength);
+    }
+
+    /// <summary>이번 반복에서 처음이면 true (한 번만 터지는 이벤트).</summary>
+    internal bool Once(int key) => _fired.Add(key);
+
+    internal static float Rnd(float min, float max) => Random.Range(min, max);
+
+    /// <summary>파티클 하나 (캔버스 단위 그대로).</summary>
+    internal void Emit(TimerBonusParticles.Particle p) => _particles.Emit(p);
+
+    /// <summary>
+    /// 한 점에서 퍼지는 파티클 묶음. 속도·중력·크기는 px (× Px), angle은 라디안 (위 = +π/2), NaN이면 사방.
+    /// </summary>
+    internal void Burst(Vector2 at, int count, float minSpeed, float maxSpeed, Color[] colors,
+        TimerBonusParticles.Kind kind = TimerBonusParticles.Kind.Spark, float gravity = 0f, float drag = 0.05f,
+        float size0 = 1.5f, float size1 = 3f, float life0 = 0.3f, float life1 = 0.6f,
+        float angle = float.NaN, float spread = 0f)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            float ang = float.IsNaN(angle) ? Rnd(0f, Mathf.PI * 2f) : angle + Rnd(-spread, spread);
+            float speed = Rnd(minSpeed, maxSpeed) * Px;
+            _particles.Emit(new TimerBonusParticles.Particle
+            {
+                Kind = kind,
+                Position = at,
+                Velocity = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * speed,
+                Gravity = gravity * Px,
+                Drag = drag,
+                Size = Rnd(size0, size1) * Px,
+                MaxLife = Rnd(life0, life1),
+                Color = colors[i % colors.Length],
+            });
+        }
+    }
+
+    /// <summary>충격파 링 (반지름 px).</summary>
+    internal void Ring(Vector2 at, float radiusFrom, float radiusTo, Color color, float life = 0.42f)
+    {
+        _particles.Emit(new TimerBonusParticles.Particle
+        {
+            Kind = TimerBonusParticles.Kind.Ring,
+            Position = at,
+            RadiusFrom = radiusFrom * Px,
+            RadiusTo = radiusTo * Px,
+            Color = color,
+            MaxLife = life,
+        });
+    }
+
+    /// <summary>연출 레이어에 글자 (크기 px).</summary>
+    internal TextMeshProUGUI CreateText(string name, float sizePx, Color color)
+    {
+        var text = NewText(name, _fx, _font, sizePx * Px, color);
+        Hide(text);
+        return text;
+    }
+
+    /// <summary>parent 아래에 Image.</summary>
+    internal static Image CreateImage(string name, RectTransform parent, Color color, Sprite sprite = null)
+    {
+        var img = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        img.rectTransform.SetParent(parent, false);
+        img.sprite = sprite;
+        img.color = color;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    /// <summary>위치·크기·회전(도, 반시계)·투명도를 한 번에.</summary>
+    internal static void Place(Graphic g, Vector2 pos, Vector2 scale, float alpha, float rotation = 0f)
+    {
+        var rt = g.rectTransform;
+        rt.anchoredPosition = pos;
+        rt.localScale = new Vector3(scale.x, scale.y, 1f);
+        rt.localRotation = Quaternion.Euler(0f, 0f, rotation);
+        g.canvasRenderer.SetAlpha(alpha);
+    }
+
+    internal static void Hide(Graphic g) => g.canvasRenderer.SetAlpha(0f);
+
+    internal static void SetText(TMP_Text t, string s)
+    {
+        if (t.text != s) t.text = s;
+    }
+
+    internal static RectTransform NewRect(string name, RectTransform parent, Vector2 size)
+    {
+        var rt = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
+        rt.SetParent(parent, false);
+        rt.sizeDelta = size;
+        return rt;
+    }
+
+    internal static TextMeshProUGUI NewText(string name, RectTransform parent, TMP_FontAsset font, float size, Color color)
+    {
+        var text = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+        text.rectTransform.SetParent(parent, false);
+        text.rectTransform.sizeDelta = new Vector2(size * 5f, size * 1.3f);
+        text.font = font;
+        text.fontSize = size;
+        text.color = color;
+        text.alignment = TextAlignmentOptions.Center;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
+        return text;
+    }
+
+    internal static void Stretch(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
+
+    // ── 내부 ──────────────────────────────────────────────────
+
+    private void BuildView()
+    {
+        _sprites = new TimerBonusSprites();
+        _shakeRoot = NewRect("ShakeRoot", _stage, Vector2.zero);
+        Stretch(_shakeRoot);
+
+        // 보스 대역 (발밑 기준)
+        _bossRoot = NewRect("Boss", _shakeRoot, new Vector2(_bossSize, _bossSize));
+        _bossRoot.pivot = new Vector2(0.5f, 0f);
+        _bossRoot.anchoredPosition = _bossPosition;
+        _bossImage = _bossRoot.gameObject.AddComponent<Image>();
+        _bossImage.sprite = _bossSprite;
+        _bossImage.preserveAspect = true;
+        _bossImage.raycastTarget = false;
+        _bossGlow = CreateImage("DeathFlash", _bossRoot, Color.clear, _sprites.Glow);
+        _bossGlow.rectTransform.sizeDelta = Vector2.one * (_bossSize * 1.1f);
+
+        _hpBack = CreateImage("HpBack", _shakeRoot, new Color(0f, 0f, 0f, 0.45f));
+        _hpBack.rectTransform.sizeDelta = new Vector2(_bossSize * 0.7f, 14f);
+        _hpBack.rectTransform.anchoredPosition = _bossPosition + new Vector2(0f, _bossSize + 24f);
+        _hpFillImage = CreateImage("HpFill", _hpBack.rectTransform, _settings.HotColor);
+        _hpFill = _hpFillImage.rectTransform;
+        Stretch(_hpFill);
+        _hpFill.pivot = new Vector2(0f, 0.5f);
+
+        // 타이머: 글로우 → 잔상 2장 → 본체 순으로 (뒤에서 앞)
+        _timerRoot = NewRect("Timer", _shakeRoot, Vector2.zero);
+        _timerRoot.anchoredPosition = _timerPosition;
+        _timerGlow = CreateImage("Glow", _timerRoot, Color.clear, _sprites.Glow);
+        float fs = _settings.TimerFontSize;
+        _ghostCyan = new TimerBonusDigits(_timerRoot, "GhostCyan", _font, fs);
+        _ghostHot = new TimerBonusDigits(_timerRoot, "GhostHot", _font, fs);
+        _main = new TimerBonusDigits(_timerRoot, "Main", _font, fs);
+        _timerGlow.rectTransform.sizeDelta = Vector2.Scale(_main.Size, new Vector2(1.4f, 1.6f));
+        _timerRoot.sizeDelta = _main.Size;
+
+        var label = NewText("TimeLabel", _shakeRoot, _font, 11f * Px, new Color(1f, 0.965f, 0.9f, 0.5f));
+        label.text = "TIME";
+        label.characterSpacing = 26f;
+        label.rectTransform.anchoredPosition = _timerPosition + new Vector2(0f, _main.Size.y * 0.5f + 8f * Px);
+
+        var droneSlots = NewRect("DroneSlots", _shakeRoot, Vector2.zero);
+        Stretch(droneSlots);
+        _drones = new TimerBonusDroneSquad(_droneSquad, droneSlots, BossCenter, _settings);
+
+        _fx = NewRect("Fx", _shakeRoot, Vector2.zero);
+        Stretch(_fx);
+        var particleLayer = NewRect("Particles", _shakeRoot, Vector2.zero);
+        Stretch(particleLayer);
+        _particles = new TimerBonusParticles(particleLayer, _sprites.SoftDot, _sprites.Ring);
+
+        _flash = CreateImage("Flash", _overlay, Color.clear);
+        Stretch(_flash.rectTransform);
+    }
+
+    private void Restart()
+    {
+        _t = 0f;
+        _fired.Clear();
+        _particles?.Clear();
+        _hold = _pulse = _zoom = _whiteFlash = _danger = 0f;
+        _running = true;
+    }
+
+    private void BeginFrame()
+    {
+        _shake = Vector2.zero;
+        _timerOffset = Vector2.zero;
+        _timerScale = Vector2.one;
+        _timerSkew = 0f;
+        _gold = 0f;
+        _timerFlash = 0f;
+        _ghostOffset = 0f;
+        _ghostAlpha = 0f;
+    }
+
+    // 처치 전: 박동이 점점 빨라지며 타이머가 빨갛게, 화면 가장자리가 붉게 → 처치 순간 히트스톱으로 터뜨린다.
+    private void RenderTension(float a, float step)
+    {
+        if (a < 0f)
+        {
+            var beats = _settings.HeartbeatTimes;
+            int n = beats.Length;
+            for (int i = 0; i < n; i++)
+            {
+                if (_t < beats[i] || !Once(KeyBeatBase + i)) continue;
+                float k = n > 1 ? 0.5f + 0.5f * i / (n - 1f) : 1f;
+                _pulse += 0.05f + 0.05f * k;
+                _danger = 1f;
+            }
+            _danger = Mathf.Max(_settings.DangerBase * (_t / _settings.PreKillSeconds), _danger * Decay(DangerHoldDecay, step));
+            float q = Mathf.Clamp01((_t - PreShakeStart) / PreShakeRamp);
+            if (q > 0f) AddShake(Mathf.Sin(_t * 1700f) * 1.6f * q, -Mathf.Cos(_t * 2300f) * 1.2f * q);
+            return;
+        }
+        if (Once(KeyKill))
+        {
+            _hold = _settings.KillHitStop;
+            _whiteFlash = _settings.KillFlash;
+            _zoom = _settings.KillZoom;
+        }
+        _danger *= Decay(DangerFadeDecay, step);
+    }
+
+    private void RenderBoss(float a)
+    {
+        float scale = 1f, alpha = 1f, flash = 0f, hp = 0f;
+        // 처치 전: 체력만 줄어들고 보스 자체 피격 반응은 없다 (이펙트는 드론 레이저 쪽에만).
+        if (a < 0f) hp = 1f - _t / _settings.PreKillSeconds;
+        else
+        {
+            if (a < BossPopSeconds) { scale = 1f + 0.22f * OutCubic(a / BossPopSeconds); flash = 1f; }
+            else if (a < BossPopSeconds + BossShrinkSeconds)
+            {
+                float q = (a - BossPopSeconds) / BossShrinkSeconds;
+                scale = 1.22f * (1f - InCubic(q));
+                flash = 1f - q;
+            }
+            else { scale = 0f; alpha = 0f; }
+
+            float respawn = _t - (LoopSeconds - BossRespawnSeconds);
+            if (respawn > 0f) { scale = OutBack(Mathf.Clamp01(respawn / BossRespawnSeconds)); alpha = 1f; flash = 0f; hp = 1f; }
+
+            if (Once(KeyBossBurst))
+            {
+                Burst(BossCenter, 22, 200f, 560f, new[] { _settings.HotColor, Pink, Color.white }, gravity: 500f, drag: 0.04f);
+                Ring(BossCenter, 20f, 95f, Pink, 0.38f);
+            }
+        }
+        _bossRoot.anchoredPosition = _bossPosition;
+        _bossRoot.localScale = Vector3.one * Mathf.Max(0f, scale);
+        _bossImage.canvasRenderer.SetAlpha(alpha);
+        _bossGlow.color = new Color(1f, 1f, 1f, flash * 0.85f * alpha);
+        _hpBack.canvasRenderer.SetAlpha(alpha);
+        _hpFillImage.canvasRenderer.SetAlpha(alpha);
+        _hpFill.localScale = new Vector3(Mathf.Clamp01(hp) * HpBarFraction, 1f, 1f);
+    }
+
+    private void ApplyFrame()
+    {
+        _shakeRoot.anchoredPosition = _shake;
+        _shakeRoot.localScale = Vector3.one * (1f + _zoom);
+
+        float p = 1f + _pulse;
+        _timerRoot.anchoredPosition = _timerPosition + _timerOffset;
+        _timerRoot.localScale = new Vector3(_timerScale.x * p, _timerScale.y * p, 1f);
+
+        var c = Color.Lerp(_settings.TimerColor, _settings.DangerColor, Mathf.Clamp01(_danger));
+        c = Color.Lerp(c, _settings.GoldColor, Mathf.Clamp01(_gold));
+        c = Color.Lerp(c, Color.white, Mathf.Clamp01(_timerFlash) * FlashWhiten);
+        _main.SetColor(c);
+        _ghostCyan.SetColor(WithAlpha(_settings.CyanColor, _ghostAlpha));
+        _ghostHot.SetColor(WithAlpha(_settings.HotColor, _ghostAlpha));
+        _ghostCyan.Root.anchoredPosition = new Vector2(-_ghostOffset, 0f);
+        _ghostHot.Root.anchoredPosition = new Vector2(_ghostOffset, 0f);
+        _timerGlow.color = WithAlpha(_settings.GoldColor, Mathf.Clamp01(_gold) * GlowGoldAlpha + Mathf.Clamp01(_timerFlash) * GlowFlashAlpha);
+        // 색·글자를 다 바꾼 뒤 마지막에 기울인다 (정점을 직접 미는 방식).
+        _main.SetSkew(_timerSkew);
+        _ghostCyan.SetSkew(_timerSkew);
+        _ghostHot.SetSkew(_timerSkew);
+
+        _flash.color = WithAlpha(Color.white, Mathf.Clamp01(_whiteFlash));
+    }
+
+    private void UpdateBonusText()
+    {
+        float b = Bonus;
+        _bonusText = "+" + b.ToString("0.00", CultureInfo.InvariantCulture);
+        _bonusShortText = "+" + b.ToString("0", CultureInfo.InvariantCulture);
+    }
+
+    private void Refresh()
+    {
+        if (_conceptButtons != null)
+            for (int i = 0; i < _conceptButtons.Length; i++)
+                if (_conceptButtons[i] != null) _conceptButtons[i].color = i == _concept ? ButtonSelected : ButtonIdle;
+        UpdateStatus();
+    }
+
+    private void UpdateStatus()
+    {
+        if (_status == null || !_ready) return;
+        float a = _t - _settings.PreKillSeconds;
+        string phase = a < 0f ? "긴장" : a < _settings.AnimSeconds ? "연출" : "카운트다운";
+        _status.text = $"{_concepts[_concept].Name}  /  보너스 {_bonusText}  /  {Speed:0.##}배속  /  반복 {(_loop ? "켬" : "끔")}\n"
+            + $"처치 기준 {a:+0.00;-0.00}s ({phase})";
+    }
+
+    private static Color WithAlpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
+
+    private static float Decay(float perFrame, float seconds) => Mathf.Pow(perFrame, seconds * FrameRef);
+}
