@@ -57,6 +57,14 @@ public class SceneChangeManager
     /// </summary>
     private async UniTask LoadSceneInternalAsync(string sceneName)
     {
+        // 시작 씬은 일반 Player 씬으로 포함한다. Addressables 씬과 중복 등록하지 않는다.
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string path = SceneUtility.GetScenePathByBuildIndex(i);
+            if (System.IO.Path.GetFileNameWithoutExtension(path) != sceneName) continue;
+            await SceneManager.LoadSceneAsync(i).ToUniTask();
+            return;
+        }
         try
         {
             await Addressables.LoadSceneAsync(sceneName).ToUniTask();

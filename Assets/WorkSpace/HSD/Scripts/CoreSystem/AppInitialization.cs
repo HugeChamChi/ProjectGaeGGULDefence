@@ -21,7 +21,8 @@ public sealed class AppInitialization : IDisposable
     public async UniTask InitializeAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (IsReady) return;
+        if (IsReady && Backend.IsLogin && Player.PlayerData.Data != null) return;
+        IsReady = false;
         var operation = _operation;
         if (operation == null)
         {
