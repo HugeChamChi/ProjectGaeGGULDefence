@@ -123,6 +123,43 @@ namespace GaeGGUL.UI.Totem
             if (map.Count > 0) UpdateLegend(data);
         }
 
+        /// <summary>Shows a placed totem's actual cells, including rotation, growth and board boundaries.</summary>
+        public void SetData(TotemBase totem, GridManager grid)
+        {
+            if (totem == null || !totem.IsActive || totem.CurrentCell == null ||
+                totem.Data == null || grid == null || settings == null)
+            {
+                ShowRange(null);
+                return;
+            }
+
+            var map = new Dictionary<Vector2Int, Color>();
+            var origin = totem.CurrentCell.GridPosition;
+            if (totem.Data.HasEffectGroups)
+            {
+                foreach (var group in totem.Data.EffectGroups)
+                    if (group != null) AddCells(map, group.GetCells(totem, grid), origin, group.Color);
+            }
+            else
+            {
+                AddCells(map, totem.GetAffectedCells(), origin, settings.defaultRangeColor);
+            }
+            ShowRange(map);
+            if (map.Count > 0) UpdateLegend(totem.Data);
+        }
+
+        private static void AddCells(Dictionary<Vector2Int, Color> map, List<GridCell> cells,
+            Vector2Int origin, Color color)
+        {
+            if (cells == null) return;
+            foreach (var cell in cells)
+            {
+                if (cell == null) continue;
+                var offset = cell.GridPosition - origin;
+                if (offset != Vector2Int.zero) map[offset] = color;
+            }
+        }
+
         /// <summary>그리드 컨테이너 크기가 바뀌었을 때 현재 범위를 다시 배치합니다.</summary>
         public void RefreshLayoutPositions()
         {

@@ -70,7 +70,8 @@ public class DefaultFadeScreen : IFadeScreen, IInitializable
         if (_fallbackFadeImage != null)
         {
             _fallbackFadeImage.raycastTarget = true;
-            await _fallbackFadeImage.DOFade(1f, duration).ToUniTask();
+            await _fallbackFadeImage.DOFade(1f, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: _fallbackFadeImage.GetCancellationTokenOnDestroy());
         }
     }
 
@@ -78,7 +79,8 @@ public class DefaultFadeScreen : IFadeScreen, IInitializable
     {
         if (_fallbackFadeImage != null)
         {
-            await _fallbackFadeImage.DOFade(0f, duration).ToUniTask();
+            await _fallbackFadeImage.DOFade(0f, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: _fallbackFadeImage.GetCancellationTokenOnDestroy());
             _fallbackFadeImage.raycastTarget = false;
         }
     }

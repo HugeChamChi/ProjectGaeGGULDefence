@@ -12,9 +12,13 @@ using Object = UnityEngine.Object;
 
 public class PoolManager : IDisposable
 {
-    private Dictionary<string, IObjectPool<GameObject>> _poolDic = new();
+    private Dictionary<string, ObjectPool<GameObject>> _poolDic = new();
     private Dictionary<string, Transform> _parentDic = new();
     private Dictionary<string, float> _lastUseTimeDic = new();
+    private Dictionary<string, int> _effectLimitDic = new();
+
+    private const int DefaultPoolCapacity = 10;
+    private const int CombatPoolCapacity = 128;
 
     private Transform _parent;
 
@@ -59,6 +63,7 @@ public class PoolManager : IDisposable
         _poolDic = new();
         _parentDic = new();
         _lastUseTimeDic = new();
+        _effectLimitDic = new();
 
         _parent = new GameObject("Pools").transform;
     }
@@ -104,11 +109,12 @@ public class PoolManager : IDisposable
                 }
 
                 _lastUseTimeDic.Remove(key);
+                _effectLimitDic.Remove(key);
             }
         }
     }
 
-    private IObjectPool<GameObject> GetOrCreatePool(string name, GameObject prefab)
+    private ObjectPool<GameObject> GetOrCreatePool(string name, GameObject prefab)
     {
         if (_poolDic.TryGetValue(name, out var pool))
             return pool;
@@ -120,6 +126,24 @@ public class PoolManager : IDisposable
         Transform root = rootGo.transform;
         root.parent = _parent;
         _parentDic[name] = root;
+
+        var budget = prefab.GetComponent<PooledEffectBudget>();
+        if (budget != null)
+        {
+            // Gameplay-bearing or unknown scripted prefabs must never drop a spawn.
+            foreach (var script in prefab.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (script == null || script is not PooledEffectBudget)
+                {
+                    budget = null;
+                    break;
+                }
+            }
+        }
+        int capacity = budget != null ? budget.MaxRetainedInstances
+            : prefab.TryGetComponent<Projectile>(out _) || prefab.TryGetComponent<SelfDestructDrone>(out _)
+                ? CombatPoolCapacity : DefaultPoolCapacity;
+        if (budget != null) _effectLimitDic[name] = budget.MaxActiveInstances;
 
         ObjectPool<GameObject> newPool = new ObjectPool<GameObject>
         (
@@ -157,7 +181,8 @@ public class PoolManager : IDisposable
                 if (go != null)
                     Object.Destroy(go);
             },
-            maxSize: 10
+            defaultCapacity: capacity,
+            maxSize: capacity
         );
 
         _poolDic[name] = newPool;
@@ -177,6 +202,9 @@ public class PoolManager : IDisposable
 
         string name = prefab.name;
         var pool = GetOrCreatePool(name, prefab);
+        // Only opt-in, gameplay-free particle prefabs may omit redundant visual instances.
+        if (_effectLimitDic.TryGetValue(name, out int effectLimit) && pool.CountActive >= effectLimit)
+            return null;
 
         GameObject go = pool.Get();
         if (go == null) return null;

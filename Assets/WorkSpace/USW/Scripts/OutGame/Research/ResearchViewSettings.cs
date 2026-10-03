@@ -3,8 +3,8 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 강화 화면 모양 설정 — 어두운 무채색 바탕(눈부심 방지)에 포인트 색 두 가지 (Modern UI Pack 스프라이트).
-/// 청록(Active) = 지금 올릴 수 있음·다음 수치·선택, 주황빛 금색(Accent) = 최대 레벨·끝낸 길·MAX.
+/// 강화 화면 모양 설정. UI3600 제작 아트를 우선 사용하며, 미연결 시 기존 도형으로 표시한다.
+/// Active는 다음 수치·추천 화살표, Accent는 선택·최대 레벨을 강조한다.
 /// 크기는 기준 해상도 1080x1920 캔버스 단위.
 /// </summary>
 [CreateAssetMenu(fileName = "UpgradeViewSettings", menuName = "USW/OutGame/Upgrade View Settings")]
@@ -40,6 +40,44 @@ public class ResearchViewSettings : ScriptableObject
     public Sprite BlockedIcon;
     [Tooltip("둥근 네모 모서리 크기 배율 (클수록 모서리가 작아진다)")]
     public float RoundedCornerScale = 4f;
+
+    [Header("UI3600 제작 아트 (미연결 시 기존 도형 사용)")]
+    /// <summary>전체 트리 배경.</summary>
+    public Sprite PanelBackground;
+    /// <summary>상단 타이틀 바.</summary>
+    public Sprite TopBarSprite;
+    /// <summary>잠금 노드 바탕.</summary>
+    public Sprite NodeLockedSprite;
+    /// <summary>강화 가능한 노드 바탕.</summary>
+    public Sprite NodeAvailableSprite;
+    /// <summary>추천 노드 바탕과 강조 테두리.</summary>
+    public Sprite NodeRecommendSprite;
+    /// <summary>최대 레벨 노드 안의 MAX 표시.</summary>
+    [Tooltip("노드 안의 MAX 글자 이미지")]
+    public Sprite NodeMaxSprite;
+    /// <summary>추천 배지 바탕.</summary>
+    public Sprite RecommendBadgeSprite;
+    /// <summary>다섯 단계의 강화 표시 도트.</summary>
+    public Sprite LevelDotsSprite;
+    /// <summary>최대 강화 노드의 아이콘 바탕.</summary>
+    [Tooltip("최대 강화 노드의 금색 아이콘 바탕")]
+    public Sprite NodeIconSlotSprite;
+    /// <summary>미해금 구간 연결선.</summary>
+    public Sprite LineLockedSprite;
+    /// <summary>해금 구간 연결선.</summary>
+    public Sprite LineActiveSprite;
+    /// <summary>하단 정보 카드 배경.</summary>
+    public Sprite CardBackground;
+    /// <summary>하단 카드의 큰 아이콘 프레임.</summary>
+    public Sprite IconFrameSprite;
+    /// <summary>강화 버튼 바탕.</summary>
+    public Sprite UpgradeButtonSprite;
+    /// <summary>하단 MAX와 추천 버튼의 금색 바탕.</summary>
+    [Tooltip("하단 MAX/추천 버튼의 금색 바탕. 글자는 폰트로 표시")]
+    public Sprite MaxLabelSprite;
+
+    /// <summary>상태별 제작 아트가 모두 연결되었는가.</summary>
+    public bool HasNodeArt => NodeLockedSprite != null && NodeAvailableSprite != null && NodeRecommendSprite != null && NodeIconSlotSprite != null;
 
     [Header("색")]
     public Color Background = new Color32(0x15, 0x19, 0x23, 0xFF);

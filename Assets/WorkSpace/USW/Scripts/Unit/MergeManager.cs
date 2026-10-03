@@ -32,7 +32,6 @@ public class MergeManager : MonoBehaviour
         DragHandler.OnDragStartedEvent -= HideButton;
     }
 
-    [Inject] private ChieftainSpawner _chieftainManager;
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
@@ -49,8 +48,6 @@ public class MergeManager : MonoBehaviour
     /// <summary>DragHandler.OnPointerClick에서 호출</summary>
     public void OnUnitClicked(UnitBase unit)
     {
-        if (unit == _chieftainManager?.ChieftainUnit) return;
-
         if (_selectedUnit == unit) { ClearSelection(); return; }
 
         _selectedUnit = unit;

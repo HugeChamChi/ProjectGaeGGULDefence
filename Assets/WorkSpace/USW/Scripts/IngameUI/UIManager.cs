@@ -310,10 +310,13 @@ public class UIManager : MonoBehaviour
     }
 
     private bool _wasWaitTime = false;
+    /// <summary>Owns timer text while the real added time is visually merged.</summary>
+    public bool TimerPresentationActive { get; set; }
 
     public void UpdateTimerUI(float remaining, bool isWaitTime = false)
     {
         if (timerText == null) return;
+        if (TimerPresentationActive && !isWaitTime) return;
         
         if (isWaitTime)
         {

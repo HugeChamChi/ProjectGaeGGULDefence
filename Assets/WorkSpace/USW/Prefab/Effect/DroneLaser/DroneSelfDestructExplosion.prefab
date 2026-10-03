@@ -53811,6 +53811,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 696346644015903163}
+  - component: {fileID: 226700811989432830}
   m_Layer: 0
   m_Name: DroneSelfDestructExplosion
   m_TagString: Untagged
@@ -53836,6 +53837,20 @@ Transform:
   - {fileID: 8140404979715917960}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &226700811989432830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7970326424997631453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51627d8fe1c234368fc0c95a6a5afcde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PooledEffectBudget
+  _maxActiveInstances: 8
+  _maxRetainedInstances: 16
 --- !u!1 &8069016857145074842
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,13 +2,15 @@ using UnityEngine;
 using VContainer;
 
 /// <summary>
-/// 인게임 보스 피해 숫자 — 모비노기형(보스 옆에 크고 기울어진 숫자를 세로로 쌓기).
+/// 인게임 보스 피해 숫자 — Cookie 설정이 있으면 피해 이벤트마다 독립된 풀 숫자를 띄운다.
 /// 화면 공간 캔버스 위에 MobinogiDamageView를 띄우고, 켜져 있는 동안 기존 DamageFloaterManager 출력은 끈다.
 /// 수치·색·폰트는 DamageStyleLabSettings 에셋(BossDamageNumberSettings)에서 읽는다.
 /// </summary>
 [RequireComponent(typeof(Canvas))]
 public sealed class BossDamageNumbers : MonoBehaviour
 {
+    private const int CookieRandomSeed = 11;
+    private const int CookieExistingVariantIndex = 0;
     [Inject] private BossManager _bossManager;
     [Inject] private DamageFloaterManager _floaterManager;
     private GamePresentationSettings _presentationSettings;
@@ -26,13 +28,17 @@ public sealed class BossDamageNumbers : MonoBehaviour
     private void OnPresentationChanged()
     {
         if (_presentationSettings?.ShowDamageNumbers == false) _view?.Clear();
+        if (_presentationSettings?.ShowDamageNumbers == false) _cookieView?.Clear();
     }
 
     [SerializeField] private DamageStyleLabSettings _settings;
+    [Tooltip("Assigned in production for Cookie A. Empty preserves the existing stack presentation.")]
+    [SerializeField] private CookieFloaterLabSettings _cookieSettings;
     [Tooltip("Settings.Fonts 중 사용할 폰트 번호.")]
     [SerializeField, Min(0)] private int _fontIndex;
 
     private MobinogiDamageView _view;
+    private CookieFloaterVariantView _cookieView;
     private BossBase _boss;
     private bool _subscribed;
     private bool _previousSuppressOutput;
@@ -43,6 +49,13 @@ public sealed class BossDamageNumbers : MonoBehaviour
 
         GetComponent<Canvas>().sortingOrder = _settings.SortingOrder;
         var root = DamageStyleLabUtil.CreateRoot((RectTransform)transform, "BossDamageNumbers");
+        if (_cookieSettings != null)
+        {
+            _cookieView = new CookieFloaterVariantView(_cookieSettings, root, "CookieA", CookieRandomSeed) { ShowGuides = false };
+            _cookieView.SetVariant(CookieExistingVariantIndex);
+            Subscribe();
+            return;
+        }
         _view = new MobinogiDamageView(_settings, root);
         if (_settings.Fonts != null && _settings.Fonts.Length > 0)
         {
@@ -58,7 +71,7 @@ public sealed class BossDamageNumbers : MonoBehaviour
     private void Subscribe()
     {
         // OnEnable runs before Start has built the view on the first activation.
-        if (_view == null || _subscribed || !isActiveAndEnabled) return;
+        if ((_view == null && _cookieView == null) || _subscribed || !isActiveAndEnabled) return;
         _subscribed = true;
         if (_floaterManager != null)
         {
@@ -91,11 +104,14 @@ public sealed class BossDamageNumbers : MonoBehaviour
         Unsubscribe();
         _view?.SetAnchor(null);
         _view?.Clear();
+        _cookieView?.SetBoss(null);
+        _cookieView?.Clear();
     }
 
     private void LateUpdate()
     {
         _view?.Tick(Time.unscaledTime, Time.unscaledDeltaTime);
+        _cookieView?.Tick(Time.unscaledTime);
     }
 
     private void OnBossEntered(BossEntry _, BossEntry _1)
@@ -104,6 +120,8 @@ public sealed class BossDamageNumbers : MonoBehaviour
         _boss = _bossManager != null ? _bossManager.CurrentBoss : null;
         if (_boss != null) _boss.OnDamageDealt += OnBossDamaged;
         _view?.SetAnchor(_boss != null ? _boss.transform : null);
+        _cookieView?.Clear();
+        _cookieView?.SetBoss(_boss != null ? _boss.transform : null);
     }
 
     private void Unsubscribe()
@@ -116,5 +134,6 @@ public sealed class BossDamageNumbers : MonoBehaviour
     {
         if (_presentationSettings?.ShowDamageNumbers == false) return;
         _view?.Add(damage, kind);
+        _cookieView?.AddHit(damage, kind, Time.unscaledTime, hitPos);
     }
 }

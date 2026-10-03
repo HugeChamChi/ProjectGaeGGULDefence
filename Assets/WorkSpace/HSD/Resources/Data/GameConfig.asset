@@ -15,6 +15,8 @@ MonoBehaviour:
   gridColumns: 6
   gridRows: 4
   countdownSeconds: 90
+  _bossKillBonusSeconds: 30
+  _bossClearNoticeDelaySeconds: 0.4
   bossSpawnDelaySeconds: 3
   cellSize: 1.5
   startingFood: 100

@@ -1,40 +1,31 @@
 using UnityEngine;
 
 /// <summary>
-/// 인게임 진입 시 선택된 족장을 그리드 중앙에 자동 배치
+/// 인게임 진입 시 선택된 족장의 독립 액티브 스킬을 설정한다.
 ///
 /// 데이터 흐름:
-///   GlobalData.SelectedParty.chieftainData (1순위) → 테스트 유닛(2순위) → 기존 레거시 ID(3순위)
+///   GlobalData.SelectedParty.chieftainData (1순위) → 테스트 선택 데이터(2순위) → 저장된 족장 ID(3순위)
 /// </summary>
 public class ChieftainSpawner : MonoBehaviour
 {
-    private GridManager _gridManager;
-    private UnitFactory _unitFactory;
-    private UnitSpawner _unitSpawner;
     private GameManager _gameManager;
 
+    /// <summary>게임 시작 이벤트를 제공하는 씬 매니저를 주입한다.</summary>
     [VContainer.Inject]
-    public void Construct(GridManager gridManager, UnitFactory unitFactory, UnitSpawner unitSpawner, GameManager gameManager)
+    public void Construct(GameManager gameManager)
     {
-        _gridManager = gridManager;
-        _unitFactory = unitFactory;
-        _unitSpawner = unitSpawner;
         _gameManager = gameManager;
     }
 
     [SerializeField] private ChieftainData[] chieftainDataList;
 
-    [Header("테스트 소환 (아웃게임 미구현 시)")]
+    [Header("테스트 족장 스킬 선택")]
     [SerializeField] private bool     _useTestSpawn  = true;
     [SerializeField] private bool _useAuthoredSelection;
-    [Tooltip("테스트로 소환할 족장 UnitData SO — 비워두면 chieftainDataList 첫 번째 사용")]
+    [Tooltip("테스트 족장 스킬을 지정한 UnitData SO — 비워두면 chieftainDataList 첫 번째 사용")]
     [SerializeField] private UnitData _testUnitData;
 
-    /// <summary>현재 배치된 족장 유닛 — 족장 전용 버프 적용에 사용</summary>
-    public UnitBase ChieftainUnit { get; private set; }
-
-    public event System.Action<ChiefUnit> OnChieftainSpawned;
-    /// <summary>현재 버튼이 표시할 액티브. 알팡은 ChieftainUnit 없이 존재한다.</summary>
+    /// <summary>현재 족장 스킬 버튼이 표시할 독립 액티브.</summary>
     public IChiefActiveSkill ActiveSkill { get; private set; }
     /// <summary>선택된 독립 알팡 스킬 설정.</summary>
     public AlphanSkillData SelectedAlphanSkill { get; private set; }
@@ -43,7 +34,7 @@ public class ChieftainSpawner : MonoBehaviour
     public event System.Action<IChiefActiveSkill> OnActiveSkillChanged;
     public event System.Action<AlphanSkillData, Sprite> OnAlphanSkillSelected;
 
-    /// <summary>스킬 런타임/유닛 어댑터가 UI에 현재 액티브를 알린다.</summary>
+    /// <summary>스킬 런타임이 UI에 현재 액티브를 알린다.</summary>
     public void SetActiveSkill(IChiefActiveSkill skill)
     {
         ActiveSkill=skill;
@@ -52,26 +43,18 @@ public class ChieftainSpawner : MonoBehaviour
     /// <summary>족장 선택을 독립 스킬로 전환한다. 그리드와 UnitFactory를 호출하지 않는다.</summary>
     public void SelectAlphanSkill(AlphanSkillData data, Sprite fallbackIcon = null)
     {
-        ClearCurrentChieftain();
+        ClearCurrentSkill();
         SelectedAlphanSkill=data;SelectedAlphanIcon=fallbackIcon;
         OnAlphanSkillSelected?.Invoke(data,fallbackIcon);
     }
-    private void ClearCurrentChieftain()
+    private void ClearCurrentSkill()
     {
         SelectedAlphanSkill=null;SelectedAlphanIcon=null;
         OnAlphanSkillSelected?.Invoke(null,null);
         SetActiveSkill(null);
-        if (ChieftainUnit != null)
-        {
-            var cell=ChieftainUnit.currentCell;
-            if (cell != null) cell.RemoveUnit();
-            Destroy(ChieftainUnit.gameObject);
-            ChieftainUnit=null;
-        }
-        OnChieftainSpawned?.Invoke(null);
     }
 
-    /// <summary>소환과 동일한 우선순위로 시작 시 족장 풀을 해석한다. 누락 시 다른 족장 풀을 섞지 않는다.</summary>
+    /// <summary>스킬 선택과 동일한 우선순위로 시작 시 족장 풀을 해석한다. 누락 시 다른 족장 풀을 섞지 않는다.</summary>
     public LevelUpPoolData GetSelectedLevelUpPool()
     {
         if (!_useAuthoredSelection && GlobalData.SelectedParty?.chieftainData != null)
@@ -100,21 +83,21 @@ public class ChieftainSpawner : MonoBehaviour
 
     private void HandleGameStart()
     {
-        // 1순위: 로비에서 선택한 파티 데이터에 족장 데이터가 있으면 스폰
+        // 1순위: 로비에서 선택한 파티의 족장 스킬
         if (!_useAuthoredSelection && GlobalData.SelectedParty != null && GlobalData.SelectedParty.chieftainData != null)
         {
-            SpawnChieftainByUnitData(GlobalData.SelectedParty.chieftainData);
+            SelectChieftainByUnitData(GlobalData.SelectedParty.chieftainData);
             return;
         }
 
-        // 2순위: 에디터 테스트용 할당 스폰
+        // 2순위: 에디터 테스트용 족장 스킬
         if (_useTestSpawn && _testUnitData != null)
         {
-            SpawnChieftainByUnitData(_testUnitData);
+            SelectChieftainByUnitData(_testUnitData);
             return;
         }
 
-        // 3순위: (레거시) Player.Chief.SelectedChiefId 기반 소환
+        // 3순위: 저장된 족장 ID로 스킬 선택
         int selectedId = Player.Chief.SelectedChiefId;
 
         if (selectedId == 0 && _useTestSpawn)
@@ -122,11 +105,12 @@ public class ChieftainSpawner : MonoBehaviour
 
         if (selectedId == 0)
         {
+            ClearCurrentSkill();
             Debug.Log("ChieftainSpawner: 선택된 족장 없음 (SelectedChiefId = 0)");
             return;
         }
 
-        SpawnChieftainById(selectedId);
+        SelectChieftainById(selectedId);
     }
 
     private void OnDestroy()
@@ -144,70 +128,40 @@ public class ChieftainSpawner : MonoBehaviour
         return 0;
     }
 
+    /// <summary>지정 ID의 족장 스킬로 선택을 변경한다.</summary>
     public void ChangeChieftain(int selectedId)
     {
-        ClearCurrentChieftain();
-        SpawnChieftainById(selectedId);
+        SelectChieftainById(selectedId);
     }
 
-    private void SpawnChieftainById(int selectedId)
+    private void SelectChieftainById(int selectedId)
     {
+        if (chieftainDataList == null)
+        {
+            SelectAlphanSkill(null);
+            Debug.LogWarning("ChieftainSpawner: 족장 선택 데이터 미연결");
+            return;
+        }
         var data = System.Array.Find(
             chieftainDataList,
             d => d != null && d.chieftainId == selectedId);
 
         if (data == null)
         {
+            SelectAlphanSkill(null);
             Debug.LogWarning($"ChieftainSpawner: chieftainId={selectedId} 에 맞는 ChieftainData 없음");
             return;
         }
 
-        PlaceChieftain(data);
+        SelectAlphanSkill(data.AlphanSkill);
+        if (data.AlphanSkill == null)
+            Debug.LogWarning($"ChieftainSpawner: [{data.chieftainName}] 족장 스킬 미연결");
     }
 
-    private void PlaceChieftain(ChieftainData data)
+    private void SelectChieftainByUnitData(UnitData unitData)
     {
-        if (data.AlphanSkill != null) { SelectAlphanSkill(data.AlphanSkill); return; }
-        SpawnToCenter(data.unitType);
-    }
-
-    private void SpawnChieftainByUnitData(UnitData unitData)
-    {
-        if (unitData.AlphanSkill != null) { SelectAlphanSkill(unitData.AlphanSkill,unitData.icon); return; }
-        ClearCurrentChieftain();
-        var cell = _gridManager.GetCenterCell();
-        if (cell == null || !cell.IsAvailable)
-        {
-            Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
-            return;
-        }
-
-        var unit = _unitFactory.CreateUnitFromData(unitData, Tier.Chieftain);
-        if (unit == null) return;
-
-        ChieftainUnit = unit;
-        _unitSpawner.PlaceUnitWithEffect(unit, cell);
-        OnChieftainSpawned?.Invoke(unit as ChiefUnit);
-        SetActiveSkill(unit is ChiefUnit chief ? new UnitChiefActiveSkill(chief) : null);
-    }
-
-    private void SpawnToCenter(int unitType)
-    {
-        ClearCurrentChieftain();
-        var cell = _gridManager.GetCenterCell();
-        if (cell == null || !cell.IsAvailable)
-        {
-            Debug.LogWarning("ChieftainSpawner: 중앙 셀 배치 불가");
-            return;
-        }
-
-        var unit = _unitFactory.CreateUnit(unitType);
-        if (unit == null) return;
-
-        unit.currentTier = Tier.Chieftain;
-        ChieftainUnit = unit;
-        _unitSpawner.PlaceUnitWithEffect(unit, cell);
-        OnChieftainSpawned?.Invoke(unit as ChiefUnit);
-        SetActiveSkill(unit is ChiefUnit chief ? new UnitChiefActiveSkill(chief) : null);
+        SelectAlphanSkill(unitData.AlphanSkill, unitData.icon);
+        if (unitData.AlphanSkill == null)
+            Debug.LogWarning($"ChieftainSpawner: [{unitData.unitName}] 족장 스킬 미연결");
     }
 }

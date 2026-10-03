@@ -4,6 +4,8 @@ using VContainer.Unity;
 
 public class RootLifetimeScope : LifetimeScope
 {
+    private const int TweenCapacity = 2048;
+    private const int SequenceCapacity = 512;
     [Header("UI Settings")]
     [Tooltip("IFadeScreen을 상속받은 페이드 화면 프리팹 (지정하지 않으면 런타임에 기본 검은 화면을 자동 생성합니다)")]
     [SerializeField] private FadeScreen fadeScreenPrefab;
@@ -18,6 +20,7 @@ public class RootLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
+        DG.Tweening.DOTween.SetTweensCapacity(TweenCapacity, SequenceCapacity);
         if (_tutorialManagerPrefab != null)
             builder.RegisterComponentInNewPrefab(_tutorialManagerPrefab, Lifetime.Singleton).UnderTransform(transform);
         else

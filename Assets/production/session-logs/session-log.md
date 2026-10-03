@@ -168,3 +168,18 @@ Assets/WorkSpace/production/session-logs/session-log.md
 Assets/production/session-logs/session-log.md
 ---
 
+## Session End: 20261002_221109
+### Commits
+60f71c35 Merge pull request #45 from HugeChamChi/work/unity-ui
+e8c71913 [Feat] FxLab 연출 구현
+0c412403 [Fix] 씬매니저 수정
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/OutgameUpgrade/UpgradeViewSettings.asset
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchInfoPanel.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchNodeView.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchScreen.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchTreeView.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchViewSettings.cs
+Assets/WorkSpace/USW/production/session-logs/session-log.md
+---
+

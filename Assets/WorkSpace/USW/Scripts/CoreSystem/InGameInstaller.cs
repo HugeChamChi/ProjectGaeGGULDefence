@@ -32,6 +32,9 @@ public class InGameInstaller : MonoBehaviour
 
     [Header("Wave Info")]
     [SerializeField] private UI_WaveText _waveTextUI;
+    [SerializeField] private BossClearPresentation _bossClearPresentation;
+    [Inject] private TimerController _timerController;
+    [Inject] private UIManager _uiManager;
 
 
     // 임시
@@ -43,6 +46,8 @@ public class InGameInstaller : MonoBehaviour
 
     private void Start()
     {
+        _bossClearPresentation?.Configure(_timerController, _waveManager, _bossManager, _uiManager, _gameManager.Config);
+        _waveManager.ConfigureBossClearPresentation(_bossClearPresentation);
         _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
         _totemInfoPanel?.ConfigureEffectInfo(_effectInfo);
         if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && _totemInfoPanel.IsEffectInfoOpen;
@@ -165,7 +170,7 @@ public class InGameInstaller : MonoBehaviour
     {
         if (totem == null) return;
         _totemActionPopup?.Show(totem);
-        _totemInfoPanel?.SetData(totem.Data);
+        _totemInfoPanel?.SetData(totem, _gridManager);
     }
 
     private void OnSellTotemRequested(TotemBase totem)

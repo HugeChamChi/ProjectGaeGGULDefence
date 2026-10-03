@@ -37,10 +37,10 @@ namespace HSD.UI.Setting
         private AudioManager _settingsAudioManager;
 
         [VContainer.Inject]
-        public void Construct(AudioManager audioManager, GamePresentationSettings settings)
+        public void Construct(AudioManager audioManager, GamePresentationSettings settings, SceneChangeManager scenes)
         {
             _settingsAudioManager = audioManager;
-            _presenter.Configure(audioManager, settings);
+            _presenter.Configure(audioManager, settings, scenes);
         }
 
         protected override void Awake()

@@ -114,6 +114,11 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (!hasFocus) OnDisable();
     }
 
+    private void OnApplicationPause(bool paused)
+    {
+        if (paused) OnDisable();
+    }
+
     private void KillTween()
     {
         if (_fadeTween != null && _fadeTween.IsActive())

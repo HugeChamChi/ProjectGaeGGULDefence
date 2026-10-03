@@ -268,10 +268,6 @@ namespace HSD.InGameDebug
                 var unit = cell.OccupyingUnit;
                 if (unit == null || unit.unitData == null) continue;
 
-                // 족장은 제외 (족장 탭에서 관리)
-                var chieftainSpawner = UnityEngine.Object.FindFirstObjectByType<ChieftainSpawner>(FindObjectsInactive.Include);
-                if (chieftainSpawner != null && chieftainSpawner.ChieftainUnit == unit) continue;
-
                 _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
             }
         }

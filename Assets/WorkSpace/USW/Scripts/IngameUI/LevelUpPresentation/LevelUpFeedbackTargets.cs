@@ -32,8 +32,6 @@ public static class LevelUpFeedbackTargets
         if (data.primaryEffect == LevelUpEffectType.ChieftainAttackPercent ||
             data.primaryEffect == LevelUpEffectType.ChieftainFoodProductionPercent)
         {
-            var unit = chieftain != null ? chieftain.ChieftainUnit : null;
-            if (unit != null) { result.Add(unit); return LevelUpFeedbackDestination.Units; }
             return LevelUpFeedbackDestination.ChiefSkill;
         }
 

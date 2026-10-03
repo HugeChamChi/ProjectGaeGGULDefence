@@ -8,11 +8,17 @@ using Cysharp.Threading.Tasks;
 /// <summary>Owns encounter/reward sequencing; EndlessRunService owns run identity and round transitions.</summary>
 public class WaveManager : MonoBehaviour
 {
-    private enum EncounterPhase { Idle, Spawning, Fighting, RewardDelay, AwaitingReward }
+    private enum EncounterPhase { Idle, Spawning, Fighting, RewardDelay, AwaitingReward, PresentingPenalty }
     private const int RewardDelayMilliseconds = 1000;
 
     [Inject] private IObjectResolver _resolver;
     [Inject] private EndlessRunService _run;
+    [Inject] private TimeScaleService _timeScale;
+    [Inject] private FieldPauseVisuals _fieldPause;
+    private BossClearPresentation _clearPresentation;
+
+    /// <summary>Uses the scene installer's existing presentation reference, preserving finite/tutorial fallback.</summary>
+    public void ConfigureBossClearPresentation(BossClearPresentation presentation) => _clearPresentation = presentation;
 
     private GameDataManager _gameDataManager;
     private BossManager _bossManager;
@@ -28,6 +34,9 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private GameConfig config;
     [Tooltip("Optional. Unassigned preserves finite/Tutorial play. Linked drafts fail validation.")]
     [SerializeField] private EndlessModeData _endlessMode;
+    [SerializeField] private PenaltyRevealFx _penaltyFx;
+    private RunPenaltyResult? _pendingPenalty;
+    private bool _timerStarted;
 
     private readonly List<BossEntry> _pendingBosses = new List<BossEntry>();
     private CancellationTokenSource _waveCts;
@@ -64,6 +73,7 @@ public class WaveManager : MonoBehaviour
         _uiManager = _resolver.Resolve<UIManager>();
         _resolver.TryResolve(out _expManager);
         _run.OnFailed += HandleRunFailed;
+        _run.OnPenaltyReserved += OnPenaltyReserved;
     }
 
     /// <summary>Entry-point selection of a NORMAL/HARD profile before starting; null selects finite play.</summary>
@@ -81,6 +91,7 @@ public class WaveManager : MonoBehaviour
         CancelFlow();
         _waveCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         _waveStarted = false;
+        _timerStarted = false;
         SyncWaveIndex();
         if (_run.IsEndless) _log.BeginRun(_run.RunId, _endlessMode.Key);
         return true;
@@ -147,7 +158,11 @@ public class WaveManager : MonoBehaviour
     {
         var gameConfig = config != null ? config : _gameManager.Config;
         if (gameConfig == null) { _run.Fail("WaveManager: GameConfig is missing."); return; }
-        _timerManager?.StartTimer(gameConfig.countdownSeconds);
+        if (!_timerStarted)
+        {
+            _timerManager?.StartTimer(gameConfig.countdownSeconds);
+            _timerStarted = true;
+        }
         _timerManager?.StopTimer();
         float remainingDelay = gameConfig.bossSpawnDelaySeconds;
         while (remainingDelay > 0f)
@@ -158,7 +173,9 @@ public class WaveManager : MonoBehaviour
         }
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Spawning)) return;
         _phase = EncounterPhase.Fighting;
-        Action defeated = () => OnSingleBossDefeated(runId, round, bossIndex);
+        BossBase encounterBoss = null;
+        Action defeated = () => OnSingleBossDefeated(runId, round, bossIndex,
+            encounterBoss != null ? (Vector3?)encounterBoss.transform.position : null);
         if (_run.IsEndless)
         {
             if (!_bossManager.TrySpawnSingleBoss(_run.BossStats, defeated, out string error))
@@ -170,6 +187,7 @@ public class WaveManager : MonoBehaviour
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _timerManager?.ResumeTimer();
         var mainBoss = _bossManager.CurrentBoss;
+        encounterBoss = mainBoss;
         foreach (var cell in _gridManager.GetOccupiedCells())
         {
             if (!_run.Matches(runId, round)) return;
@@ -179,20 +197,46 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    private void OnSingleBossDefeated(long runId, int round, int bossIndex)
+    private void OnSingleBossDefeated(long runId, int round, int bossIndex, Vector3? bossPosition)
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _phase = EncounterPhase.RewardDelay;
+        _timerManager?.StopTimer();
+        var gameConfig = config != null ? config : _gameManager.Config;
+
         OnBossDefeated?.Invoke();
         if (_run.IsEndless) _log.BossDefeated(round, CurrentLevel, _run.AttackMultiplier, _run.AttackFrequencyMultiplier);
         // Reserve at combat completion, activate after the reward when entering the next round.
         if (bossIndex == _pendingBosses.Count - 1 && !_run.TryCompleteRound(runId, round)) return;
-        WaitAndShowRewardAsync(runId, round, bossIndex, _waveCts.Token).Forget();
+        WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, _waveCts.Token).Forget();
     }
 
-    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, CancellationToken token)
+    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, CancellationToken token)
     {
+        try
+        {
+            // Finish an already open choice; don't cover it with the clear presentation.
+            while (_gameManager.CurrentState == GameManager.GameState.LevelUp || _fieldPause.AttacksHeld)
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
+            _fieldPause.HoldAttacks(this);
+            try
+            {
+                if (gameConfig != null && _clearPresentation != null && _clearPresentation.isActiveAndEnabled)
+                    await _clearPresentation.PlayBossClearAsync(gameConfig.BossKillBonusSeconds, bossPosition, gameConfig, token);
+                else if (gameConfig != null) _timerManager?.AddTime(gameConfig.BossKillBonusSeconds);
+            }
+            finally { _fieldPause.Exit(this, _run.IsActive && !_gameManager.IsFinished); }
+            if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
+            _expManager?.FlushPendingLevelUp();
+            while (_gameManager.CurrentState == GameManager.GameState.LevelUp || _fieldPause.AttacksHeld)
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+        }
+        catch (OperationCanceledException) { return; }
         if (await UniTask.Delay(RewardDelayMilliseconds, cancellationToken: token).SuppressCancellationThrow()) return;
+        if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
+        while (_gameManager.CurrentState == GameManager.GameState.LevelUp || _fieldPause.AttacksHeld)
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         _phase = EncounterPhase.AwaitingReward;
         if (OnTotemSelectionRequested == null)
@@ -203,10 +247,51 @@ public class WaveManager : MonoBehaviour
     private void OnRewardDone(long runId, int round, int bossIndex)
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.AwaitingReward)) return;
+        if (_pendingPenalty.HasValue && _penaltyFx != null)
+        {
+            _phase = EncounterPhase.PresentingPenalty;
+            PresentPenaltyAsync(runId, round, bossIndex, _waveCts.Token).Forget();
+            return;
+        }
+        ContinueAfterReward(runId, round);
+    }
+
+    private void ContinueAfterReward(long runId, int round)
+    {
         _phase = EncounterPhase.Idle;
         _bossIndex++;
         if (_bossIndex < _pendingBosses.Count) SpawnNextBoss();
         else FinishRound(runId, round);
+    }
+
+    private void OnPenaltyReserved(RunPenaltyResult result)
+    {
+        if (_run.IsActive && result.RunId == _run.RunId) _pendingPenalty = result;
+    }
+
+    private async UniTaskVoid PresentPenaltyAsync(long runId, int round, int bossIndex, CancellationToken token)
+    {
+        var result = _pendingPenalty.Value;
+        _pendingPenalty = null;
+        RunPenaltyData data = null;
+        if (_endlessMode?.PenaltyPool != null)
+            foreach (var entry in _endlessMode.PenaltyPool.Entries)
+                if (entry?.Penalty != null && entry.Penalty.Key == result.PenaltyKey) { data = entry.Penalty; break; }
+        if (data == null) { _run.Fail("Penalty presentation definition is missing: " + result.PenaltyKey); return; }
+        _timeScale.Pause(this);
+        bool cancelled;
+        try
+        {
+            _penaltyFx.gameObject.SetActive(true);
+            cancelled = await _penaltyFx.PlayAsync(data, result.StackCount, token).SuppressCancellationThrow();
+        }
+        finally
+        {
+            if (_penaltyFx != null) _penaltyFx.gameObject.SetActive(false);
+            _timeScale.Release(this);
+        }
+        if (cancelled || !OwnsEncounter(runId, round, bossIndex, EncounterPhase.PresentingPenalty)) return;
+        ContinueAfterReward(runId, round);
     }
 
     private void FinishRound(long runId, int round)
@@ -238,15 +323,19 @@ public class WaveManager : MonoBehaviour
 
     private void CancelFlow()
     {
+        _fieldPause?.Exit(this, false);
         var cts = _waveCts;
         _waveCts = null;
         if (cts != null) { cts.Cancel(); cts.Dispose(); }
         _phase = EncounterPhase.Idle;
+        _pendingPenalty = null;
+        _timeScale?.Release(this);
     }
 
     private void OnDestroy()
     {
         if (_run != null) _run.OnFailed -= HandleRunFailed;
+        if (_run != null) _run.OnPenaltyReserved -= OnPenaltyReserved;
         StopRun();
     }
 }

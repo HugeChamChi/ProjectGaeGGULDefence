@@ -81,6 +81,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void OnDisable() => CancelDrag();
     private void OnApplicationFocus(bool focused) { if (!focused) CancelDrag(); }
+    private void OnApplicationPause(bool paused) { if (paused) CancelDrag(); }
     private void Update()
     {
         if (_dragIndex < 0) return;

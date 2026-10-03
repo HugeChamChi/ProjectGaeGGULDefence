@@ -77,10 +77,6 @@ public class UnitStatsModifier : MonoBehaviour
             ? (1f + lu.BurstAttackBonus)
             : 1f;
 
-        float chieftainAtk = (_deps?.ChieftainManager?.ChieftainUnit == _unit && lu != null)
-            ? 1f + lu.ChieftainAttackBonus
-            : 1f;
-
         float cellAttackBonus = _unit.GetStatBonus(StatKind.AttackPercent, projAtkBonusMultiplier);
         float flatAttackBonus = _unit.GetStatBonus(StatKind.AttackFlat, projAtkBonusMultiplier);
 
@@ -91,8 +87,7 @@ public class UnitStatsModifier : MonoBehaviour
                      * rowModifier
                      * tribeAtk
                      * projAtk
-                     * burstAtk
-                     * chieftainAtk;
+                     * burstAtk;
 
         // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
         // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.

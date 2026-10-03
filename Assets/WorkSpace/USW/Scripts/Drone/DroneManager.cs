@@ -20,6 +20,7 @@ public class DroneManager : MonoBehaviour
     private float _betanNormalTimer, _betanEpicTimer;
     private DroneSelectionEffect _normalEffect, _epicEffect;
     private readonly List<Drone_Betan> _betans = new();
+    private readonly HashSet<Drone_Betan> _betanMembership = new();
 
     private void Update()
     {
@@ -39,13 +40,14 @@ public class DroneManager : MonoBehaviour
         if (_epicEffect != epic) { _epicEffect = epic; _betanEpicTimer = 0; }
         if (deltaTime <= 0 || (normal == null && epic == null)) return;
         _betans.Clear();
+        _betanMembership.Clear();
         int fleetCount = 0;
         foreach (var drone in _drones)
         {
             if (drone == null || !drone.isActiveAndEnabled || drone.Owner is not Drone_Betan betan
                 || !betan.isActiveAndEnabled || betan.currentCell == null) continue;
             fleetCount++;
-            if (!_betans.Contains(betan)) _betans.Add(betan);
+            if (_betanMembership.Add(betan)) _betans.Add(betan);
         }
         if (fleetCount == 0) { _betanNormalTimer = _betanEpicTimer = 0; return; }
         if (normal != null && normal.Interval > 0)
@@ -67,7 +69,7 @@ public class DroneManager : MonoBehaviour
                 foreach (var drone in _drones)
                 {
                     if (remaining == 0) break;
-                    if (drone != null && drone.isActiveAndEnabled && drone.Owner is Drone_Betan betan && _betans.Contains(betan))
+                    if (drone != null && drone.isActiveAndEnabled && drone.Owner is Drone_Betan betan && _betanMembership.Contains(betan))
                     { betan.SpawnSelfDestructDrones(1); remaining--; }
                 }
             }

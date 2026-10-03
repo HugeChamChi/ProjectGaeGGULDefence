@@ -6,9 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 강화 노드 하나의 화면. 코드로 만든다.
-/// 모양: 일반 = 둥근 네모(레벨 점 ●●○), 합류 = 원형(원형 진행 바), 특별 = 마름모(아래에 레벨 글자).
-/// 상태: 잠김 = 연회색, 올릴 수 있음 = 청록 테두리(은은히 깜빡임) + 청록 화살표 배지, 최대 = 주황빛 금색 바탕에 흰 아이콘(글자는 MAX).
+/// 강화 노드 하나의 화면. UI3600 아트로 잠금·강화 가능·추천·MAX 상태를 표시한다.
+/// 아트 미연결 시 기존 네모·원·마름모 도형을 사용한다.
 /// 하단 패널의 큰 아이콘도 같은 뷰를 터치 없이 쓴다.
 /// </summary>
 public sealed class ResearchNodeView : MonoBehaviour
@@ -40,6 +39,11 @@ public sealed class ResearchNodeView : MonoBehaviour
     private readonly List<Image> _pips = new List<Image>();
     private bool _pulse;
     private Color _pulseColor;
+    private Image _maxArt;
+    private Image _dotsBack;
+    private Image _dotsFill;
+    private bool _art;
+    private Sprite _frameOverride;
 
     /// <summary>이 뷰가 보여주는 노드.</summary>
     public ResearchNodeData Node { get; private set; }
@@ -59,6 +63,11 @@ public sealed class ResearchNodeView : MonoBehaviour
         Node = node;
         _s = s;
         var rect = (RectTransform)transform;
+        if (s.HasNodeArt)
+        {
+            BuildArt(rect, size, onClick);
+            return;
+        }
         bool circle = node.Shape == ResearchNodeShape.Circle;
         bool diamond = node.Shape == ResearchNodeShape.Special;
 
@@ -131,14 +140,64 @@ public sealed class ResearchNodeView : MonoBehaviour
         for (int i = 0; i < Node.MaxLevel; i++)
         {
             var image = ResearchUi.NewImage(rect, "Pip" + i, _s.CircleFill, new Vector2(pip, pip),
-                new Vector2(-width * 0.5f + pip * 0.5f + i * (pip + gap), -size * 0.5f + size * PipBottomRatio));
+                new Vector2(-width * 0.5f + pip * 0.5f + i * (pip + gap), -size * 0.5f + size * (_art ? 0.21f : PipBottomRatio)));
             _pips.Add(image);
         }
     }
 
-    /// <summary>레벨·상태를 다시 그린다.</summary>
-    public void Refresh(int level, ResearchNodeState state)
+    private void BuildArt(RectTransform rect, float size, Action<ResearchNodeView> onClick)
     {
+        _art = true;
+        _body = ResearchUi.NewImage(rect, "NodeBody", _s.NodeLockedSprite, Vector2.one * size, Vector2.zero);
+        _body.preserveAspect = true;
+        _selection = Shape(rect, "Selection", _s.RoundedOutline, size + 4f, true);
+        _selection.color = _s.Accent;
+        _selection.gameObject.SetActive(false);
+        _icon = ResearchUi.NewImage(rect, "NodeIconSlot", Node.Icon, Vector2.one * size * 0.5f, new Vector2(0f, size * 0.06f));
+        _icon.preserveAspect = true;
+        _maxArt = ResearchUi.NewImage(rect, "Node_Max", _s.NodeMaxSprite, new Vector2(size * 0.4f, size * 0.17f), new Vector2(0f, -size * 0.29f));
+        _maxArt.preserveAspect = true;
+        if (_s.NodeMaxSprite == null)
+        {
+            _levelText = ResearchUi.NewText(_maxArt.transform, "MaxText", _s.MaxLabel, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center);
+            _maxArt.enabled = false;
+        }
+        _maxArt.gameObject.SetActive(false);
+        if (Node.MaxLevel == 5 && _s.LevelDotsSprite != null)
+        {
+            var dotsSize = new Vector2(size * 0.42f, size * 0.068f);
+            var dotsPosition = new Vector2(0f, -size * 0.29f);
+            _dotsBack = ResearchUi.NewImage(rect, "LevelDots", _s.LevelDotsSprite, dotsSize, dotsPosition);
+            _dotsFill = ResearchUi.NewImage(rect, "LevelDotsFill", _s.LevelDotsSprite, dotsSize, dotsPosition);
+            _dotsFill.type = Image.Type.Filled;
+            _dotsFill.fillMethod = Image.FillMethod.Horizontal;
+            _dotsFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+        }
+        else if (Node.MaxLevel <= MaxPips) BuildPips(rect, size);
+        else
+        {
+            var levelRect = ResearchUi.NewRect(rect, "Level");
+            ResearchUi.Place(levelRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -size * 0.29f), new Vector2(size, size * 0.2f));
+            _levelText = ResearchUi.NewText(levelRect, "Text", string.Empty, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center);
+        }
+        _blocked = ResearchUi.NewImage(rect, "Blocked", _s.BlockedIcon, Vector2.one * size * 0.2f, new Vector2(size * 0.36f, size * 0.36f));
+        _blocked.preserveAspect = true;
+        if (onClick == null) return;
+        _body.raycastTarget = true;
+        var button = gameObject.AddComponent<Button>();
+        button.transition = Selectable.Transition.None;
+        button.targetGraphic = _body;
+        button.onClick.AddListener(() => onClick(this));
+    }
+
+    /// <summary>레벨·상태를 다시 그린다.</summary>
+    public void Refresh(int level, ResearchNodeState state, bool recommended = false)
+    {
+        if (_art)
+        {
+            RefreshArt(level, state, recommended);
+            return;
+        }
         bool maxed = state == ResearchNodeState.Maxed;
         bool available = state == ResearchNodeState.Available;
         bool blocked = state == ResearchNodeState.Blocked;
@@ -174,6 +233,37 @@ public sealed class ResearchNodeView : MonoBehaviour
         if (!_pulse && _ringBack == null) _ring.color = ring;
     }
 
+    private void RefreshArt(int level, ResearchNodeState state, bool recommended)
+    {
+        bool maxed = state == ResearchNodeState.Maxed;
+        bool available = state == ResearchNodeState.Available;
+        _body.sprite = _frameOverride != null ? _frameOverride : maxed ? _s.NodeIconSlotSprite : available ? (recommended ? _s.NodeRecommendSprite : _s.NodeAvailableSprite) : _s.NodeLockedSprite;
+        _body.color = Color.white;
+        _icon.color = available || maxed ? _s.OnColor : _s.Muted;
+        _blocked.gameObject.SetActive(state == ResearchNodeState.Blocked);
+        _maxArt.gameObject.SetActive(maxed);
+        if (_dotsBack != null)
+        {
+            _dotsBack.gameObject.SetActive(!maxed);
+            _dotsFill.gameObject.SetActive(!maxed);
+            _dotsBack.color = _s.Faint;
+            _dotsFill.color = _s.OnColor;
+            _dotsFill.fillAmount = (float)level / Node.MaxLevel;
+        }
+        for (int i = 0; i < _pips.Count; i++)
+        {
+            _pips[i].gameObject.SetActive(!maxed);
+            _pips[i].color = i < level ? _s.OnColor : _s.Faint;
+        }
+        if (_levelText != null)
+        {
+            _levelText.text = maxed ? _s.MaxLabel : $"{level}/{Node.MaxLevel}";
+            _levelText.color = _s.OnColor;
+            if (_levelText.transform.parent != _maxArt.transform) _levelText.gameObject.SetActive(!maxed);
+        }
+        _pulse = false;
+    }
+
     private void Update()
     {
         if (!_pulse || _s.PulseSeconds <= 0f) return;
@@ -186,6 +276,9 @@ public sealed class ResearchNodeView : MonoBehaviour
 
     /// <summary>선택 테두리를 켜고 끈다.</summary>
     public void SetSelected(bool selected) => _selection.gameObject.SetActive(selected);
+
+    /// <summary>하단 카드에서 사용하는 별도 아이콘 프레임을 지정한다.</summary>
+    public void SetFrameSprite(Sprite frame) => _frameOverride = frame;
 
     /// <summary>강화했을 때 톡 튀는 연출.</summary>
     public void Punch()

@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2bfcd1410baec49aa0dcb17c483679, type: 3}
   m_Name: CookieFloaterLabSettings
   m_EditorClassIdentifier: Assembly-CSharp::CookieFloaterLabSettings
+  PoolCapacity: 64
+  HitMaxPopups: 32
+  HitScatterRadius: {x: 320, y: 120}
+  HitSpacing: 8
   Variants:
   - Name: "A \uAE30\uC874 \uD769\uBFCC\uB9AC\uAE30"
     Motion: 0

@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 쿠키런 크럼블형 작은 데미지 숫자 실험실(FxLab_CookieFloater) 설정 — 후보 여러 개를 같은 타격 흐름에 띄워 비교한다.
 /// 플레이 중 인스펙터에서 바꾸면 바로 반영되고 에셋에 남는다. 크기는 1080 기준 캔버스 단위, 시간은 초.
-/// 실험실 전용 — 인게임 BossDamageNumbers와 무관.
+/// 인게임은 피해 이벤트마다 별도 숫자를 띄우며, 실험실의 합산 비교 모드는 유지한다.
 /// </summary>
 [CreateAssetMenu(fileName = "CookieFloaterLabSettings", menuName = "USW/UI/Cookie Floater Lab Settings")]
 public class CookieFloaterLabSettings : ScriptableObject
@@ -65,6 +65,12 @@ public class CookieFloaterLabSettings : ScriptableObject
         [Tooltip("치명타·화상은 항상 바깥에 (중앙 옅은 숫자에 묻히지 않게)")]
         public bool StrongAlwaysOuter = true;
     }
+
+    [Header("인게임 개별 피해 숫자 (캔버스 단위)")]
+    [Tooltip("미리 만드는 숫자 풀 크기. 런 시작 시 적용")][Min(1)] public int PoolCapacity = 64;
+    [Tooltip("동시 표시 상한. 넘치면 가장 오래된 숫자를 재사용하며 피해를 합산하지 않음")][Min(1)] public int HitMaxPopups = 32;
+    [Tooltip("피격 위치 주위 흩뿌림 반경 (가로/세로)")] public Vector2 HitScatterRadius = new Vector2(320f, 120f);
+    [Tooltip("숫자 경계 사이 목표 여백. 범위가 포화되면 가장 덜 겹치는 자리를 사용")][Min(0f)] public float HitSpacing = 8f;
 
     [Header("후보 (위·아래 버튼 순서)")]
     public Variant[] Variants = Array.Empty<Variant>();

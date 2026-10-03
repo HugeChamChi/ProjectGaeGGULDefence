@@ -7,12 +7,12 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 세로 스크롤 강화 트리 하나. 노드 칸 좌표(Row/Column)로 배치하고, 부모→자식을 ㄱ자 연결선으로 잇는다.
-/// 트리는 아래(Row 0)에서 위로 자란다. 연결선은 부모가 최대 레벨이면 주황빛 금색, 아니면 연회색.
+/// 트리는 아래(Row 0)에서 위로 자란다. 연결선은 부모가 최대 레벨이면 활성 아트를 사용한다.
 /// 옆가지(Column 2) 노드는 부모 높이에서 가로로 나간 뒤 세로로 잇는다.
 /// 줄기 이름이 있으면 맨 아래에, 관문 노드(RequiredTotalLevel)에는 가는 가로선과 진행 글자를 그린다.
-/// 추천 노드 위에는 청록 "추천" 표시가 떠 있다.
+/// 실제 추천 노드에만 추천 프레임과 배지를 표시한다.
 /// </summary>
-public sealed class ResearchTreeView
+public sealed class ResearchTreeView : IDisposable
 {
     private const float LaneNameFont = 34f;
     private const float GateLabelFont = 30f;
@@ -23,6 +23,7 @@ public sealed class ResearchTreeView
     private const float BadgeGap = 4f; // 노드 윗변에 걸치도록 (배지 가운데가 윗변 바로 위)
     private const float BadgeBob = 10f;
     private const float BadgeBobSeconds = 0.5f;
+    private const float LineSampleSize = 2f;
 
     private readonly struct Segment
     {
@@ -42,6 +43,8 @@ public sealed class ResearchTreeView
     private readonly List<(Image Image, ResearchNodeData Parent)> _lines = new List<(Image, ResearchNodeData)>();
     private readonly List<(TextMeshProUGUI Label, ResearchNodeData Gate, int Stage)> _gates = new List<(TextMeshProUGUI, ResearchNodeData, int)>();
     private ResearchNodeView _selected;
+    private readonly Sprite _lineLockedArt;
+    private readonly Sprite _lineActiveArt;
 
     /// <summary>노드를 눌렀을 때.</summary>
     public event Action<ResearchNodeData> OnNodeClicked;
@@ -54,6 +57,8 @@ public sealed class ResearchTreeView
         _tree = tree;
         _s = settings;
         _progress = progress;
+        _lineLockedArt = CreateLineSample(settings.LineLockedSprite);
+        _lineActiveArt = CreateLineSample(settings.LineActiveSprite);
 
         var scrollRect = ResearchUi.Stretch(ResearchUi.NewRect(parent, "Tree_" + tree.name));
         _scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
@@ -102,14 +107,17 @@ public sealed class ResearchTreeView
     /// <summary>모든 노드 상태, 연결선 색, 관문 글자, 추천 표시를 다시 그린다.</summary>
     public void Refresh()
     {
+        var recommended = _progress.GetRecommended();
         foreach (var view in _views.Values)
-            view.Refresh(_progress.GetLevel(view.Node), _progress.GetState(view.Node));
+            view.Refresh(_progress.GetLevel(view.Node), _progress.GetState(view.Node), view.Node == recommended);
 
         // 끝낸 길(금색)이 아직인 길(연회색) 위에 오도록 순서를 맞춘다 (겹치는 공용 구간).
         foreach (var (image, parent) in _lines)
         {
             bool lit = _progress.GetState(parent) == ResearchNodeState.Maxed;
-            image.color = lit ? _s.Accent : _s.Faint;
+            Sprite art = lit ? _lineActiveArt : _lineLockedArt;
+            image.sprite = art;
+            image.color = art != null ? Color.white : lit ? _s.Accent : _s.Faint;
             if (lit) image.transform.SetAsLastSibling();
         }
 
@@ -122,7 +130,6 @@ public sealed class ResearchTreeView
             label.color = open ? _s.Ink : _s.Muted;
         }
 
-        var recommended = _progress.GetRecommended();
         _badge.gameObject.SetActive(recommended != null);
         if (recommended != null)
             _badge.anchoredPosition = PositionOf(recommended) + new Vector2(0f, VisualHalf(recommended) + BadgeGap);
@@ -208,6 +215,19 @@ public sealed class ResearchTreeView
     {
         var root = ResearchUi.NewRect(layer, "RecommendBadge");
         root.anchorMin = root.anchorMax = new Vector2(0.5f, 0f);
+        if (_s.RecommendBadgeSprite != null)
+        {
+            float width = _s.NodeSize * 0.72f;
+            float height = width * _s.RecommendBadgeSprite.rect.height / _s.RecommendBadgeSprite.rect.width;
+            root.sizeDelta = new Vector2(width, height);
+            var art = ResearchUi.NewImage(root, "Badge", _s.RecommendBadgeSprite, root.sizeDelta, new Vector2(-_s.NodeSize * 0.13f, 0f));
+            var label = ResearchUi.NewText(art.transform, "Text", _s.RecommendLabel, BadgeFont, _s.FontBold, TextAlignmentOptions.Center);
+            label.color = _s.OnColor;
+            var arrow = ResearchUi.NewImage(root, "Arrow", _s.UpgradeArrow, Vector2.one * height * 0.8f, new Vector2(_s.NodeSize * 0.4f, 0f));
+            arrow.color = _s.Active;
+            arrow.preserveAspect = true;
+            return root;
+        }
         root.sizeDelta = new Vector2(BadgeWidth, BadgeHeight);
         var pill = ResearchUi.NewImage(root, "Pill", _s.RoundedFill, new Vector2(BadgeWidth, BadgeHeight), Vector2.zero);
         pill.type = Image.Type.Sliced;
@@ -252,8 +272,32 @@ public sealed class ResearchTreeView
             var rect = image.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
             rect.anchoredPosition = (seg.A + seg.B) * 0.5f;
-            rect.sizeDelta = new Vector2(Mathf.Abs(seg.A.x - seg.B.x) + _s.LineWidth, Mathf.Abs(seg.A.y - seg.B.y) + _s.LineWidth);
+            if (_s.LineLockedSprite != null && _s.LineActiveSprite != null)
+            {
+                image.type = Image.Type.Simple;
+                rect.sizeDelta = new Vector2(_s.LineWidth, Vector2.Distance(seg.A, seg.B) + _s.LineWidth);
+                if (Mathf.Abs(seg.A.x - seg.B.x) > Mathf.Abs(seg.A.y - seg.B.y)) rect.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            }
+            else rect.sizeDelta = new Vector2(Mathf.Abs(seg.A.x - seg.B.x) + _s.LineWidth, Mathf.Abs(seg.A.y - seg.B.y) + _s.LineWidth);
             _lines.Add((image, seg.Parent));
         }
+    }
+
+    // 원본 선의 중앙 색만 사용해 투명 여백·끝 테두리가 ㄱ자 합류점에서 끊겨 보이지 않게 한다.
+    private static Sprite CreateLineSample(Sprite source)
+    {
+        if (source == null) return null;
+        var center = source.rect.center;
+        var rect = new Rect(center.x - LineSampleSize * 0.5f, center.y - LineSampleSize * 0.5f, LineSampleSize, LineSampleSize);
+        var sprite = Sprite.Create(source.texture, rect, new Vector2(0.5f, 0.5f), source.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+        sprite.name = source.name + "_Segment";
+        return sprite;
+    }
+
+    /// <summary>트리가 만든 연결선 샘플의 수명을 화면과 함께 끝낸다.</summary>
+    public void Dispose()
+    {
+        if (_lineLockedArt != null) UnityEngine.Object.Destroy(_lineLockedArt);
+        if (_lineActiveArt != null) UnityEngine.Object.Destroy(_lineActiveArt);
     }
 }

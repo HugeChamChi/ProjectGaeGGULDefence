@@ -134,7 +134,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>이 유닛에 걸린 버프("용기")를 보관/집계하는 컴포넌트.</summary>
     public BuffController Buffs => _buff;
 
-    /// <summary>kind 스탯의 토템 전역/셀/버프/자기 패시브/리더 패시브 보너스 합을 반환한다.</summary>
+    /// <summary>kind 스탯의 토템 전역/셀/버프/자기 패시브 보너스 합을 반환한다.</summary>
     public float GetStatBonus(StatKind kind, float leaderPassiveBonusScale = 1f)
     {
         float globalBonus = _deps?.TotemBuffManager?.GetGlobalStatBonus(kind) ?? 0f;
@@ -145,12 +145,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
             ? unitData.passive.GetSelfBonus(kind, this, _deps, leaderPassiveBonusScale)
             : 0f;
 
-        var leaderPassive = _deps?.ChieftainManager?.ChieftainUnit?.unitData?.passive;
-        float leaderPassiveBonus = leaderPassive != null
-            ? leaderPassive.GetPartyBonus(kind, this, _deps, leaderPassiveBonusScale)
-            : 0f;
-
-        return globalBonus + cellBonus + buffBonus + selfPassiveBonus + leaderPassiveBonus;
+        return globalBonus + cellBonus + buffBonus + selfPassiveBonus;
     }
 
     protected virtual void Awake()
