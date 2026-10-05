@@ -1,104 +1,23 @@
-# 인게임 레벨업 선택지 시스템
+# 레벨업 선택지·필드 보기·정지
 
-> 출처: [레벨업 선택지 시트](https://docs.google.com/spreadsheets/d/1f8RdzwKxB25ydOxOatfc9AdYX0vlOYmT-LYEC4Rm5cc/edit?gid=743942560)
-> 담당 스크립트:
-> - `LevelUp/LevelUpEffectType.cs` — 효과 타입 enum
-> - `LevelUp/LevelUpManager.cs` — 선택지 뽑기 + 효과 적용
-> - `LevelUp/LevelUpData.cs` — 카드 1장 ScriptableObject
-> - `Totem/TotemBuffManager.cs` — 수치 보관
+원본: [LevelUpManager](../../Assets/WorkSpace/USW/Scripts/Selection/LevelUpManager.cs), [LevelUpPoolData](../../Assets/WorkSpace/USW/Scripts/Selection/LevelUpPoolData.cs), [LevelUpData](../../Assets/WorkSpace/USW/Scripts/Selection/LevelUpData.cs), [LevelUpUI](../../Assets/WorkSpace/USW/Scripts/IngameUI/LevelUpUI.cs).
 
----
+## 풀과 효과
 
-## 개요
+LevelUpManager.Init이 ChieftainSelection.GetSelectedLevelUpPool로 **이번 런의 풀을 고정**한다. LevelUpCatalog는 PoolId/chooseId 참조를 검증한다. 다른 족장 풀이나 공용 배열을 자동 합산하지 않는다. 같은 카드 SO는 여러 풀에서 공유할 수 있으며 중복 등록으로 후보 가중치를 늘리지 않는다.
 
-레벨업 시 `LevelUpManager.GetRandomChoices(3)`으로 카드 3장을 랜덤 뽑아 플레이어에게 제시.
-선택 시 `ApplyEffect(data)`로 즉시 버프 적용. 선택지는 ScriptableObject(`LevelUpData`) 배열로 관리.
+GetRandomChoices는 획득 카드, 조건에 맞지 않는 카드, 유효하지 않은 가중치를 제외하고 풀의 등급 가중치로 등급을 한 번 추첨한 뒤, 그 등급 안에서 균등하게 중복 없이 뽑는다. 부족하면 나머지 등급 후보에서 균등하게 보충한다. 카드 spawnRate는 유한한 양수인지 확인하는 후보 조건이며 카드별 추첨 가중치가 아니다. PoolData에는 현재 등급 가중치도 있다. 후보가 1~2장이면 남은 카드만 표시하고 0장이면 선택을 건너뛴다. 누락/잘못된 풀은 오류를 보고하며 다른 풀로 대체하지 않는다.
 
----
+ApplyEffect/RemoveEffect는 chooseId별 획득 상태와 주/부/특수 효과를 처리한다. 드론 카드의 추첨 결과/설명은 DroneSelectionState와 GetChoiceDescription을 사용한다. 공유 SO에 이번 런의 획득/무작위 결과를 저장하지 않는다. 카드 수치와 효과 종류는 저작 SO 및 LevelUpEffectType/DroneSelectionKind가 근거다. 옛 G07 표를 새 카드 원본으로 사용하지 않는다.
 
-## 카드 등록 방법
+## 연출과 정지
 
-1. Unity Editor 우클릭 → **Create → Game → LevelUpData** 로 `.asset` 생성
-2. `effectType`, `value`(%), `description`, `icon`, `animationFrames` 설정
-3. 씬의 `LevelUpManager` 인스펙터 → `levelUpPool` 배열에 전체 에셋 할당
+[InGameInstaller](../../Assets/WorkSpace/USW/Scripts/CoreSystem/InGameInstaller.cs)가 이벤트와 UI를 연결한다. LevelUpPresentation 폴더의 Reveal/Select/Collect/Peek/TimeDirector가 공개·선택·흡수·필드 강조를 분담한다.
 
----
+[TimeScaleService](../../Assets/WorkSpace/USW/Scripts/CoreSystem/TimeScaleService.cs)는 소유자별 Pause/Request/Release 중 가장 느린 요청을 적용한다. [FieldPauseVisuals](../../Assets/WorkSpace/USW/Scripts/CoreSystem/FieldPauseVisuals.cs)는 새 공격을 먼저 보류하고, 이미 날아간 공격의 허용된 적중을 처리한 뒤 전투 정지와 대기 모션/이펙트의 실제 시간 재생을 구분한다. 한 UI를 닫았다고 다른 소유자의 정지를 해제하지 않는다.
 
-## 구현된 효과 타입 (LevelUpEffectType)
+[UI_Peekthrough](../../Assets/WorkSpace/HSD/Scripts/UI/Utils/UI_Peekthrough.cs)는 빈 곳/카드 홀드 시 필드를 보이게 하고 선택 입력을 잠근다. 복귀 페이드, 모든 터치 해제 및 해제 프레임이 지나야 새 선택을 받는다. 투명한 배경 Graphic의 raycast가 홀드 입력 경로이므로 등급 연출에서 오브젝트를 꺼 버리면 안 된다. 투명도만 바뀐 상태와 선택 가능 상태는 별개다.
 
-| enum | 설명 | 카드 예시 | 연결 경로 |
-|------|------|----------|----------|
-| `AttackPercent` | 전체 공격력 N% | 기초 근력(노말), 근력 강화(레어) | `TotemBuffManager.AttackMultiplier` |
-| `AttackSpeedPercent` | 전체 공격 속도 N% | 바람의 손길(노말), 질풍(레어) | `TotemBuffManager.SpeedMultiplier` |
-| `GaugeSpeedPercent` | 게이지 회복 속도 N% | 활력 충전(노말), 순환의 고리(레어) | `TotemBuffManager.GaugeSpeedMultiplier` |
-| `TotemEfficiencyPercent` | 토템 효율 N% | 공명하는 토템(노말), 토템 마스터리(레어) | `TotemBuffManager._totemEfficiencyBonus` |
-| `CritChancePercent` | 치명타 확률 N% | 관찰력(노말), 통찰력(레어) | `LevelUpManager.CritChance` |
-| `CritDamagePercent` | 치명타 데미지 N% | 치명적 타격(노말), 치명적 일격(레어) | `LevelUpManager.CritDamageMultiplier` |
-| `FoodSpeedPercent` | 식량 생산 속도 N% | 식량 비축(노말) | `TotemBuffManager.FoodSpeedMultiplier` |
-| `FrontRowAttackPercent` | 전방 2줄 공격력 N% | 전방 화력(노말) | `LevelUpManager._rowAttackMult[0,1]` |
-| `BackRowAttackPercent` | 후방 2줄 공격력 N% | 후방 지원(노말) | `LevelUpManager._rowAttackMult[last]` |
-| `FrontRowSpeedPercent` | 전방 2줄 공격 속도 N% | 전방 침투(노말) | `LevelUpManager._rowSpeedMult[0,1]` |
-| `BackRowSpeedPercent` | 후방 2줄 공격 속도 N% | 후방 가속(노말) | `LevelUpManager._rowSpeedMult[last]` |
-| `ProjectileSizePercent` | 투사체 크기 N% | 비대(노말), 거대화(레어) | `TotemBuffManager.ProjectileSizeMultiplier` → `Projectile.Launch()` |
+보스 처치 [TotemRewardUI](../../Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardUI.cs)는 독립 보상 화면이다. LevelUpUI/구 TotemSelectUI의 UI_Peekthrough와 동일한 기능이 있다고 가정하지 않는다. 세 화면의 실제 연결·상호작용을 구분한다. 보상 세션 취소는 큐·콜백·트윈을 함께 정리한다.
 
----
-
-## 수치 흐름 — UnitBase 게이지 계산식
-
-```
-interval = gaugeDuration
-         × gaugeMultiplier          // 유닛 개인 배율
-         × SpeedMultiplier          // 공격 속도 (낮을수록 빠름)
-         × GaugeSpeedMultiplier     // 게이지 회복 속도 (낮을수록 빠름)
-         × FoodSpeedMultiplier      // 식량 생산 속도 (낮을수록 빠름)
-         × cellSpeedModifier        // 셀 디버프
-         ÷ rowSpeedMult             // 줄별 속도 배율
-```
-
----
-
-## 연출 및 이펙트 (Visual Effects)
-
-### UI 파티클 시스템
-- **사용 에셋**: `ParticleImage` (UI 전용 파티클 시스템)
-- **적용 위치**:
-    - 레벨업 배너 등장 시 배경 버스트 효과
-    - 카드 선택 시 테두리 발광 및 강조 효과
-    - 선택된 카드 아이콘이 스탯 UI로 비행할 때의 꼬리 효과 (Trail)
-- **설정 주의사항**:
-    - `Canvas`의 `Render Mode`가 `Screen Space - Overlay`인 경우에도 정상적으로 출력되도록 `ParticleImage` 컴포넌트의 레이어 설정을 확인한다.
-    - 성능을 위해 동시 재생되는 파티클 개수를 최적화한다.
-
----
-
-## 미구현 항목
-
-| 카드 | 효과 | 이유 |
-|------|------|------|
-| 위엄(노말) | 족장 공격력 N% | "족장" 유닛 식별 로직 미정 — 추후 구현 |
-
----
-
-## 시트 기준 카드 목록 (스탯 강화, 노말/레어)
-
-| # | 한국어 | 영문 키 추천 | 희귀도 | effectType | value |
-|---|--------|------------|--------|-----------|-------|
-| 1 | 기초 근력 | `BasicStrength` | 노말 | AttackPercent | 10 |
-| 2 | 바람의 손길 | `WindTouch` | 노말 | AttackSpeedPercent | 10 |
-| 3 | 공명하는 토템 | `ResonatingTotem` | 노말 | TotemEfficiencyPercent | 20 |
-| 4 | 관찰력 | `SharpEye` | 노말 | CritChancePercent | 10 |
-| 5 | 치명적 타격 | `DeadlyStrike` | 노말 | CritDamagePercent | 10 |
-| 6 | 식량 비축 | `FoodStockpile` | 노말 | FoodSpeedPercent | 10 |
-| 7 | 비대 | `Hypertrophy` | 노말 | ProjectileSizePercent | 10 |
-| 8 | 활력 충전 | `VitalCharge` | 노말 | GaugeSpeedPercent | 10 |
-| 10 | 전방 화력 | `FrontFirepower` | 노말 | FrontRowAttackPercent | 15 |
-| 11 | 후방 지원 | `RearSupport` | 노말 | BackRowAttackPercent | 15 |
-| 12 | 전방 침투 | `FrontAssault` | 노말 | FrontRowSpeedPercent | 15 |
-| 13 | 후방 가속 | `RearAcceleration` | 노말 | BackRowSpeedPercent | 15 |
-| 33 | 근력 강화 | `PowerEnhancement` | 레어 | AttackPercent | 20 |
-| 34 | 질풍 | `Gale` | 레어 | AttackSpeedPercent | 20 |
-| 35 | 토템 마스터리 | `TotemMastery` | 레어 | TotemEfficiencyPercent | 30 |
-| 36 | 통찰력 | `Insight` | 레어 | CritChancePercent | 20 |
-| 37 | 치명적 일격 | `FatalBlow` | 레어 | CritDamagePercent | 20 |
-| 38 | 거대화 | `Gigantism` | 레어 | ProjectileSizePercent | 30 |
-| 39 | 순환의 고리 | `CycleLoop` | 레어 | GaugeSpeedPercent | 20 |
+게임/보상 순서는 [인게임 진행](../../design/gdd/ingame-system.md), 제작 중인 족장 참조는 [족장 문서](alphan-active-skill.md), 확장 기획은 [미채택 드론 카드 제안](drone-build-selection-design.md)에 있다.

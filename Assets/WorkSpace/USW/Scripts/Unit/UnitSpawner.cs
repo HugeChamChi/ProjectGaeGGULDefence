@@ -309,7 +309,6 @@ public class UnitSpawner : MonoBehaviour
     public void SellUnit(UnitBase unit)
     {
         if (unit == null) return;
-        if (unit.OriginalTier == Tier.Chieftain) return;
 
         var cell = FindCellByUnit(unit);
         if (cell == null) return;

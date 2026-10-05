@@ -138,7 +138,7 @@ public static class IngameTutorialSetup
             so.ApplyModifiedPropertiesWithoutUndo();
         }
         Set(One<UnitSpawner>(scene),"_tutorialSettings",settings);
-        var chiefSo=new SerializedObject(One<ChieftainSpawner>(scene));
+        var chiefSo=new SerializedObject(One<ChieftainSelection>(scene));
         chiefSo.FindProperty("_useAuthoredSelection").boolValue=true;
         chiefSo.ApplyModifiedPropertiesWithoutUndo();
         var levelUp = One<LevelUpUI>(scene);

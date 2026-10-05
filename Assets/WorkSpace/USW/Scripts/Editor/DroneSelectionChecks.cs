@@ -70,9 +70,12 @@ public static class DroneSelectionChecks
             var delta=Component<Drone_Deltan>();delta.unitData=Asset<UnitData>();delta.unitData.skillCooldown.normal=20;
             delta.Init(new UnitDependencies { LevelUpManager=manager });manager.ApplyEffect(cards[9]);
             Check(Mathf.Approximately(delta.GetCurrentSkillInterval(),18),"Deltan cooldown");
-            var alpha=Component<Drone_Alphan>();alpha.unitData=Asset<UnitData>();alpha.unitData.skillCooldown.normal=20;
-            alpha.Init(new UnitDependencies { LevelUpManager=manager });manager.ApplyEffect(cards[10]);
-            Check(Mathf.Approximately(alpha.GetCurrentSkillInterval(),16) && !alpha.CanAutoSkill,"Alphan manual cooldown");
+            var alphaData=Asset<AlphanSkillData>(); alphaData.CooldownSeconds=20;
+            using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager,null,null))
+            {
+                alpha.Configure(alphaData,null); manager.ApplyEffect(cards[10]);
+                Check(Mathf.Approximately(alpha.CooldownSeconds,16),"Independent Alphan cooldown");
+            }
 
             var gamma=Component<Drone_Gamman>();gamma.unitData=Asset<UnitData>();gamma.Init(new UnitDependencies {LevelUpManager=manager});
             Set(gamma,"_droneManager",drones);manager.ApplyEffect(cards[4]);

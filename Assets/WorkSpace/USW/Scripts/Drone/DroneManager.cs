@@ -533,8 +533,7 @@ public class DroneManager : MonoBehaviour
             _foodProgress[drone] = progress - ticks;
             if (ticks > 0)
             {
-                float food = ticks * BaseFoodPerDrone * ((_totemBuffManager?.FoodAmountMultiplier ?? 1f)
-                    + (_levelUpManager?.ChieftainFoodProductionBonus ?? 0f));
+                float food = ticks * BaseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
                 _currencyManager.AddCurrency(food);
             }
         }

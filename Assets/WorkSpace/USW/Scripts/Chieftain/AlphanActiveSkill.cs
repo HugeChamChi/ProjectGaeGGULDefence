@@ -8,7 +8,7 @@ using VContainer.Unity;
 /// <summary>씬 수명의 알팡 액티브. UnitBase/그리드/등급 없이 충전과 발동을 관리한다.</summary>
 public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITickable, IDisposable
 {
-    private readonly ChieftainSpawner _selector;
+    private readonly ChieftainSelection _selector;
     private readonly DroneManager _drones;
     private readonly LevelUpManager _levelUps;
     private readonly GameManager _game;
@@ -18,11 +18,12 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     private float _elapsed;
     private bool _casting;
     private bool _disposed;
+    private bool _initialized;
     private CancellationTokenSource _castCts;
     private HSD.UI.Effect.UI_ChiefSkillEffect _cutscene;
 
     /// <summary>씬 서비스 주입. 드론 매니저가 없는 씬에서도 등록 가능하나 사용은 비활성이다.</summary>
-    public AlphanActiveSkill(ChieftainSpawner selector, IEnumerable<DroneManager> drones,
+    public AlphanActiveSkill(ChieftainSelection selector, IEnumerable<DroneManager> drones,
         LevelUpManager levelUps, GameManager game, AudioManager audio,
         IEnumerable<HSD.UI.Effect.UI_ChiefSkillEffect> cutscenes = null)
     {
@@ -50,13 +51,15 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     /// <summary>초기화는 GameInitializer의 족장 선택보다 먼저 실행된다.</summary>
     public void Initialize()
     {
-        if (_selector == null) return;
+        if (_disposed || _initialized || _selector == null) return;
+        _initialized = true;
         _selector.OnAlphanSkillSelected += Configure;
         Configure(_selector.SelectedAlphanSkill, _selector.SelectedAlphanIcon);
     }
     /// <summary>선택된 알팡 설정으로 초기화한다. 처음에는 충전이 필요하다.</summary>
     public void Configure(AlphanSkillData data, Sprite fallbackIcon)
     {
+        if (_disposed) return;
         CancelCast();
         _data=data; _fallbackIcon=fallbackIcon; _elapsed=0;
         if (_selector != null) _selector.SetActiveSkill(IsAvailable ? this : null);
@@ -110,5 +113,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
         _disposed=true;
         if (_selector != null) _selector.OnAlphanSkillSelected-=Configure;
         CancelCast();_data=null;
+        if (_selector != null && ReferenceEquals(_selector.ActiveSkill, this))
+            _selector.SetActiveSkill(null);
     }
 }

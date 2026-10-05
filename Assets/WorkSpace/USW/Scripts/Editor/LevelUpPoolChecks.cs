@@ -70,18 +70,18 @@ public static class LevelUpPoolChecks
             invalid.Cards = new[] { collision, shared };
             Reject(() => new LevelUpCatalog(new[] { invalid }), "Conflicting card ID rejected");
 
-            var chief = Asset<UnitData>();
+            var chief = Asset<ChieftainData>();
             chief.LevelUpPool = a;
             var party = Asset<PartyDataSO>();
-            party.chieftainData = chief;
+            party.Chieftain = chief;
             party.exclusiveLevelUpChoices = new List<LevelUpData> { other };
             GlobalData.SelectedParty = party;
             var root = new GameObject("LevelUpPoolChecks");
             root.SetActive(false);
             SceneManager.MoveGameObjectToScene(root, scene);
-            var spawner = root.AddComponent<ChieftainSpawner>();
+            var spawner = root.AddComponent<ChieftainSelection>();
             var manager = root.AddComponent<LevelUpManager>();
-            Set(manager, "_chieftainSpawner", spawner);
+            Set(manager, "_chieftainSelection", spawner);
             Set(manager, "levelUpPool", new[] { other });
             Check(spawner.GetSelectedLevelUpPool() == a, "Lobby chief pool routing");
             manager.Init();
@@ -107,7 +107,7 @@ public static class LevelUpPoolChecks
             Check(shared.primaryValue == 20f && a.Cards.Length == 3, "Shared SO remains unchanged");
 
             var next = root.AddComponent<LevelUpManager>();
-            Set(next, "_chieftainSpawner", spawner);
+            Set(next, "_chieftainSelection", spawner);
             next.Init();
             Check(next.GetRandomChoices().Contains(other) && next.GetRandomChoices().Contains(shared), "New scene manager has fresh choices and next chief pool");
             shared.spawnRate = 0f;
@@ -118,7 +118,7 @@ public static class LevelUpPoolChecks
             shared.applicableTribes = new[] { default(UnitTribe) };
             Check(!next.GetRandomChoices().Contains(shared), "Existing tribe condition retained");
             GlobalData.SelectedParty = null;
-            Set(spawner, "_testUnitData", chief);
+            Set(spawner, "_testSelection", chief);
             Check(spawner.GetSelectedLevelUpPool() == b, "Test chief uses same pool selection path");
             Debug.Log($"[LevelUpPoolChecks] PASS {passed} assertions.");
         }

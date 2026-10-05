@@ -1,6 +1,6 @@
 # 토템 10종 사용/수정 가이드
 
-각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. IngameScene의 TotemSelectPanel 토템 풀에는 10종이 등록되어 있습니다. 기존 샘플 토템은 에셋을 보존하고 선택지 풀에서만 제외했습니다.
+각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템은 에셋을 보존하고 선택지 풀에서만 제외했습니다.
 
 ## 바로 테스트하기
 
@@ -8,7 +8,7 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 
 인벤토리는 아이콘을 드래그하기 시작하면 즉시 숨겨지고, 배치/취소 후에도 닫힌 상태를 유지합니다. 유효한 셀에 배치된 뒤에는 인벤토리로 돌아가는 동작이 없습니다. 배치 전 잘못된 위치에 놓은 경우에는 아이템을 소비하지 않습니다. 범위는 누르거나 드래그하는 동안 표시하며 손을 떼면 사라집니다.
 
-그림자 토템의 `Shadow Attack > Visual Seconds`는 분신 표시 시간(기본 0.35초), `Fade Seconds`는 등장/퇴장 시간(기본 0.08초)입니다. 페이드는 기존 분신의 알파만 보간하며 추가 분신/머티리얼을 만들지 않습니다. 0으로 설정하면 즉시 등장/퇴장합니다. 실제 게임 전체 FPS 개선을 검증한 설정은 아닙니다.
+그림자 토템은 범위 내 원본 외형을 상시 추적합니다. `Visual Seconds`는 숨겨진 호환 필드이며 표시 수명에 사용하지 않습니다. `Fade Seconds`는 범위 진입 시 페이드입니다. 동작과 검증 범위는 [상시 그림자 문서](../../../../../../docs/technical/persistent-shadow-totem.md)를 참조합니다.
 
 ## 어느 파일을 바꾸면 되나요?
 
@@ -48,7 +48,7 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 2. SO의 totemId를 고유한 값으로 바꾸고 이름·설명·등급·범위를 설정합니다.
 3. 복제 프리팹의 토템 컴포넌트에서 Totem Data를 새 SO로 지정합니다. TotemBase 계열 스크립트는 하나만 둡니다.
 4. 복제 프리팹을 Addressables에 새 주소로 등록하고 SO의 prefabAddress에 입력합니다.
-5. IngameScene의 TotemSelectPanel → Totem Pool에 새 SO를 추가합니다.
+5. IngameScene의 TotemRewardUI → Totem Pool에 새 SO를 추가합니다. 별도로 구형 TotemSelectUI를 쓰는 화면이 있으면 해당 풀도 확인합니다.
 6. SO를 선택한 뒤 Assets → Totems → Validate Selected SO를 실행합니다.
 
 게임에서 선택됐던 ID는 해당 런의 후보에서 제외됩니다. ID를 중복시키지 마세요. 검증 자동 실행은 새 Play Mode에서 `TotemContentChecks.Run()`을 사용하며 결과는 `Temp/totem-content-checks.txt`에 기록됩니다.

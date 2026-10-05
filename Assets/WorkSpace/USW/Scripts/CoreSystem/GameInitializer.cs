@@ -25,7 +25,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private UnitSpawner _unitSpawner;
     [Inject] private TotemSpawner _totemSpawner;
     [Inject] private BossManager _bossManager;
-    [Inject] private ChieftainSpawner _chieftainSpawner;
+    [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private UIManager _uIManager;
     [Inject] private DamageFloaterManager _damageFloaterManager;
     [Inject] private CurrencyFloaterManager _currencyFloaterManager;
@@ -51,7 +51,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
         if (_currencyFloaterManager != null) _currencyFloaterManager.Init();
         if (_unitFactory != null) _unitFactory.Init();
         if (_unitSpawner != null) _unitSpawner.Init();
-        if (_chieftainSpawner != null) _chieftainSpawner.Init();
+        if (_chieftainSelection != null) _chieftainSelection.Init();
         Debug.Log("=========================================\n[GameInitializer] 모든 VContainer 매니저(Init) 초기화 완벽 성공! 🎉\n=========================================");
     }
 

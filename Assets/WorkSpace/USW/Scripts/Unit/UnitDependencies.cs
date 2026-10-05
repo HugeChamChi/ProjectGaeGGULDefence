@@ -12,7 +12,6 @@ public class UnitDependencies
     public LevelUpManager LevelUpManager { get; set; }
     public TotemBuffManager TotemBuffManager { get; set; }
     public CurrencyFloaterManager CurrencyFloaterManager { get; set; }
-    public ChieftainSpawner ChieftainManager { get; set; }
     public BossManager BossManager { get; set; }
     public ProjectilePool ProjectileManager { get; set; }
     public AudioManager AudioManager { get; set; }

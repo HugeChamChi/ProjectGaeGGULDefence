@@ -1,7 +1,7 @@
 using System;
 
 /// <summary>
-/// 족장 액티브 스킬 발동 알림. 스킬 구현(알팡/유닛 족장)과 보스 패턴 카운터를 서로 모르게 연결한다.
+/// 족장 독립 액티브 스킬 발동 알림. 스킬 구현과 보스 패턴 카운터를 서로 모르게 연결한다.
 /// 구독자는 씬 수명 동안만 구독하고 파괴 시 해제한다.
 /// </summary>
 public static class ChiefActiveSkillSignals

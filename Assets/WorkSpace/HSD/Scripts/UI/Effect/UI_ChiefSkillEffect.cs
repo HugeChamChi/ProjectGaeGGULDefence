@@ -57,8 +57,10 @@ namespace HSD.UI.Effect
             await UniTask.CompletedTask;
         }
 
+        /// <summary>Plays the chief cutscene; cancellation and destruction release only this invocation's sequence.</summary>
         public async UniTask PlayEffectAsync(Sprite chiefSprite, CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
             // 0. 루트 오브젝트 및 부모 캔버스 활성화 확인
             if (!gameObject.activeSelf)
             {
@@ -66,95 +68,104 @@ namespace HSD.UI.Effect
                 // SetActive(true) 호출 시 Awake()가 동기적으로 실행됨
             }
 
-            // 1. 필요한 모든 요소 활성화 (레이아웃 계산을 위해 필수)
-            // 초기 상태는 투명하게 하여 레이아웃 계산 중 잔상이 보이지 않게 함
-            PrepareInitialVisibility();
-
-            // 2. 레이아웃이 잡힐 때까지 대기
-            // Inactive 상태였던 오브젝트는 활성화 직후 1~2프레임 정도 위치값이 (0,0,0)일 수 있음
-            Canvas.ForceUpdateCanvases();
-            
-            // 위치값이 제대로 잡힐 때까지 최대 3프레임 대기 (보통 1프레임이면 충분)
-            int timeout = 0;
-            while (timeout < 3)
+            using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(ct, this.GetCancellationTokenOnDestroy());
+            ct = lifetime.Token;
+            Sequence masterSeq = null;
+            try
             {
-                if (rect_Target != null && rect_Target.position != Vector3.zero) break;
-                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: ct);
-                timeout++;
-            }
+                // 1. 필요한 모든 요소 활성화 (레이아웃 계산을 위해 필수)
+                // 초기 상태는 투명하게 하여 레이아웃 계산 중 잔상이 보이지 않게 함
+                PrepareInitialVisibility();
 
-            if (img_ChiefIcon == null || rect_Line == null || img_Background == null || rect_Paching == null || img_Pachings == null || img_Pachings.Length == 0)
-            {
-                Debug.LogError("UI_ChiefSkillEffect: Missing UI references.");
-                return;
-            }
+                // 2. 레이아웃이 잡힐 때까지 대기
+                // Inactive 상태였던 오브젝트는 활성화 직후 1~2프레임 정도 위치값이 (0,0,0)일 수 있음
+                Canvas.ForceUpdateCanvases();
 
-            if (rect_Target == null)
-            {
-                Debug.LogError("UI_ChiefSkillEffect: rect_Target is not assigned in the Inspector.");
-                return;
-            }
-
-            // 3. 정확해진 목표 위치 획득 및 초기 위치 설정
-            Vector3 finalTargetPos = rect_Target.position;
-            
-
-            // 데이터 적용 및 초기 위치 강제 이동
-            img_ChiefIcon.sprite = chiefSprite;
-            img_ChiefIcon.transform.position = spawnPoint.position;
-            rect_Line.sizeDelta = new Vector2(rect_Line.sizeDelta.x, 0);
-            
-            rect_Paching.localRotation = Quaternion.identity;
-            rect_Paching.position = rect_PachingTarget != null ? rect_PachingTarget.position : finalTargetPos;
-
-            // 4. 애니메이션 시퀀스 생성 및 실행
-            var masterSeq = DOTween.Sequence();
-
-            _ = masterSeq.OnUpdate(() =>
-            {
-                if (rect_Paching != null && rect_Paching.gameObject.activeSelf)
+                // 위치값이 제대로 잡힐 때까지 최대 3프레임 대기 (보통 1프레임이면 충분)
+                int timeout = 0;
+                while (timeout < 3)
                 {
-                    rect_Paching.position = rect_PachingTarget != null ? rect_PachingTarget.position : finalTargetPos;
+                    if (rect_Target != null && rect_Target.position != Vector3.zero) break;
+                    await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken: ct);
+                    timeout++;
                 }
-            });
 
-            // 연출 단계 1: 라인 확장, 아이콘 이동, 배경 어두워짐
-            _ = masterSeq.Insert(0f, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, lineOpenHeight), lineOpenDuration).SetEase(lineOpenEase));
-            _ = masterSeq.Insert(0f, img_ChiefIcon.transform.DOMove(finalTargetPos, moveDuration).SetEase(moveEase));
-            _ = masterSeq.Insert(0f, img_Background.DOFade(bgDarkAlpha, lineOpenDuration));
+                if (img_ChiefIcon == null || rect_Line == null || img_Background == null || rect_Paching == null || img_Pachings == null || img_Pachings.Length == 0)
+                {
+                    Debug.LogError("UI_ChiefSkillEffect: Missing UI references.");
+                    return;
+                }
 
-            // 연출 단계 2: 파칭 연출 시작
-            float pachingStartTime = moveDuration * pachingStartRatio; 
-            _ = masterSeq.Insert(pachingStartTime, rect_Paching.DORotate(pachingRotateAngle, pachingRotateDuration, RotateMode.FastBeyond360).SetEase(pachingRotateEase));
-            
-            foreach (var pachingImg in img_Pachings)
-            {
-                if (pachingImg == null) continue;
-                _ = masterSeq.Insert(pachingStartTime, pachingImg.DOFade(pachingMaxAlpha, pachingFadeInDuration));
+                if (rect_Target == null)
+                {
+                    Debug.LogError("UI_ChiefSkillEffect: rect_Target is not assigned in the Inspector.");
+                    return;
+                }
+
+                // 3. 정확해진 목표 위치 획득 및 초기 위치 설정
+                Vector3 finalTargetPos = rect_Target.position;
+
+
+                // 데이터 적용 및 초기 위치 강제 이동
+                img_ChiefIcon.sprite = chiefSprite;
+                img_ChiefIcon.transform.position = spawnPoint.position;
+                rect_Line.sizeDelta = new Vector2(rect_Line.sizeDelta.x, 0);
+
+                rect_Paching.localRotation = Quaternion.identity;
+                rect_Paching.position = rect_PachingTarget != null ? rect_PachingTarget.position : finalTargetPos;
+
+                // 4. 애니메이션 시퀀스 생성 및 실행
+                masterSeq = DOTween.Sequence();
+
+                _ = masterSeq.OnUpdate(() =>
+                {
+                    if (rect_Paching != null && rect_Paching.gameObject.activeSelf)
+                    {
+                        rect_Paching.position = rect_PachingTarget != null ? rect_PachingTarget.position : finalTargetPos;
+                    }
+                });
+
+                // 연출 단계 1: 라인 확장, 아이콘 이동, 배경 어두워짐
+                _ = masterSeq.Insert(0f, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, lineOpenHeight), lineOpenDuration).SetEase(lineOpenEase));
+                _ = masterSeq.Insert(0f, img_ChiefIcon.transform.DOMove(finalTargetPos, moveDuration).SetEase(moveEase));
+                _ = masterSeq.Insert(0f, img_Background.DOFade(bgDarkAlpha, lineOpenDuration));
+
+                // 연출 단계 2: 파칭 연출 시작
+                float pachingStartTime = moveDuration * pachingStartRatio;
+                _ = masterSeq.Insert(pachingStartTime, rect_Paching.DORotate(pachingRotateAngle, pachingRotateDuration, RotateMode.FastBeyond360).SetEase(pachingRotateEase));
+
+                foreach (var pachingImg in img_Pachings)
+                {
+                    if (pachingImg == null) continue;
+                    _ = masterSeq.Insert(pachingStartTime, pachingImg.DOFade(pachingMaxAlpha, pachingFadeInDuration));
+                }
+
+                // 연출 단계 3: 마무리 (라인 닫힘, 배경 및 파칭 페이드 아웃)
+                float closeStartTime = pachingStartTime + (pachingRotateDuration * 0.8f);
+
+                _ = masterSeq.Insert(closeStartTime, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, 0), lineCloseDuration).SetEase(lineCloseEase));
+                _ = masterSeq.Insert(closeStartTime, img_Background.DOFade(0f, lineCloseDuration));
+                _ = masterSeq.Insert(closeStartTime, img_ChiefIcon.DOFade(0f, lineCloseDuration));
+
+                foreach (var pachingImg in img_Pachings)
+                {
+                    if (pachingImg == null) continue;
+                    _ = masterSeq.Insert(closeStartTime, pachingImg.DOFade(0f, pachingFadeOutDuration));
+                }
+
+                // 시퀀스 완료 대기
+                // Cancel only the await here; finally owns Kill to avoid reentrant DOTween despawn.
+                await masterSeq.ToUniTask(tweenCancelBehaviour: TweenCancelBehaviour.CancelAwait, cancellationToken: ct);
             }
-
-            // 연출 단계 3: 마무리 (라인 닫힘, 배경 및 파칭 페이드 아웃)
-            float closeStartTime = pachingStartTime + (pachingRotateDuration * 0.8f); 
-            
-            _ = masterSeq.Insert(closeStartTime, rect_Line.DOSizeDelta(new Vector2(rect_Line.sizeDelta.x, 0), lineCloseDuration).SetEase(lineCloseEase));
-            _ = masterSeq.Insert(closeStartTime, img_Background.DOFade(0f, lineCloseDuration));
-            _ = masterSeq.Insert(closeStartTime, img_ChiefIcon.DOFade(0f, lineCloseDuration));
-            
-            foreach (var pachingImg in img_Pachings)
+            finally
             {
-                if (pachingImg == null) continue;
-                _ = masterSeq.Insert(closeStartTime, pachingImg.DOFade(0f, pachingFadeOutDuration));
+                if (masterSeq != null && masterSeq.IsActive()) masterSeq.Kill();
+                if (img_ChiefIcon != null) img_ChiefIcon.gameObject.SetActive(false);
+                if (img_Background != null) img_Background.gameObject.SetActive(false);
+                if (rect_Paching != null) rect_Paching.gameObject.SetActive(false);
+                if (rect_Line != null) rect_Line.gameObject.SetActive(false);
+                if (this != null) gameObject.SetActive(false);
             }
-
-            // 시퀀스 완료 대기
-            await masterSeq.ToUniTask(cancellationToken: ct);
-            
-            // 5. Cleanup (자식 오브젝트들 비활성화)
-            img_ChiefIcon.gameObject.SetActive(false);
-            img_Background.gameObject.SetActive(false);
-            rect_Paching.gameObject.SetActive(false);
-            rect_Line.gameObject.SetActive(false);
-            gameObject.SetActive(false);
         }
 
         /// <summary>

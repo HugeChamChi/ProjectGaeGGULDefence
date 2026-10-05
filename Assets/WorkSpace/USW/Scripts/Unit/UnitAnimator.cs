@@ -132,6 +132,8 @@ public class UnitAnimator : MonoBehaviour, IPauseIdleVisual
     /// </summary>
     public async UniTask PlayAttackAsync(CancellationToken token, float targetDuration = 0f)
     {
+        token.ThrowIfCancellationRequested();
+        if (_animator == null) return;
         _animator.SetInteger(AnimStateHash, (int)VisualState.Attack);
         
         // Trigger 대신 Play를 사용하여 즉시 첫 프레임부터 재생 (삐걱거림 방지)
@@ -169,6 +171,8 @@ public class UnitAnimator : MonoBehaviour, IPauseIdleVisual
     /// </summary>
     public async UniTask PlaySkillAsync(CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+        if (_animator == null) return;
         _animator.SetInteger(AnimStateHash, (int)VisualState.Skill);
         _animator.Play("Skill", 0, 0f);
 
@@ -183,7 +187,7 @@ public class UnitAnimator : MonoBehaviour, IPauseIdleVisual
         const int MaxWaitFrames = 60;
         int waited = 0;
 
-        while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
+        while (_animator != null && !_animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
         {
             if (token.IsCancellationRequested || ++waited > MaxWaitFrames) return;
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
@@ -198,6 +202,8 @@ public class UnitAnimator : MonoBehaviour, IPauseIdleVisual
     {
         // 1. 해당 스테이트로 전환될 때까지 대기
         await WaitUntilStateActive(stateName, token);
+        token.ThrowIfCancellationRequested();
+        if (_animator == null) return;
 
         // 2. 애니메이션이 끝날 때까지 대기 (normalizedTime >= 1.0f)
         int waited = 0;

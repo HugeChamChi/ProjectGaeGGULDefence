@@ -18,7 +18,7 @@ public enum LevelUpFeedbackDestination
 public static class LevelUpFeedbackTargets
 {
     /// <summary>대상 유닛을 result에 채우고 목적지 종류를 반환한다.</summary>
-    public static LevelUpFeedbackDestination Resolve(LevelUpData data, GridManager grid, ChieftainSpawner chieftain,
+    public static LevelUpFeedbackDestination Resolve(LevelUpData data, GridManager grid,
                                                      List<UnitBase> result)
     {
         result.Clear();
@@ -27,13 +27,6 @@ public static class LevelUpFeedbackTargets
         var kind = data.droneEffect?.Kind ?? DroneSelectionKind.None;
         if (kind != DroneSelectionKind.None)
             return ResolveDrone(kind, grid, result);
-
-        // 족장 전용 스탯
-        if (data.primaryEffect == LevelUpEffectType.ChieftainAttackPercent ||
-            data.primaryEffect == LevelUpEffectType.ChieftainFoodProductionPercent)
-        {
-            return LevelUpFeedbackDestination.ChiefSkill;
-        }
 
         if (grid == null || !AffectsUnits(data)) return LevelUpFeedbackDestination.None;
 
@@ -90,7 +83,7 @@ public static class LevelUpFeedbackTargets
                 return unit is Drone_Deltan;
             case DroneSelectionKind.ExtraCombatDrone:
                 // 에픽 이상 드론 소환 유닛의 드론 수 +1
-                return unit is DroneSpawnerBase && unit.OriginalTier >= Tier.Epic && unit.OriginalTier < Tier.Chieftain;
+                return unit is DroneSpawnerBase && unit.OriginalTier >= Tier.Epic && unit.OriginalTier <= Tier.Legend;
             default:
                 return false;
         }

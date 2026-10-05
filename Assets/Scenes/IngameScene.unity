@@ -1002,7 +1002,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a404a5543a13f344da278b7c9d3c3a33, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PenaltyRevealFx
 --- !u!1 &52358940 stripped
 GameObject:
@@ -1020,7 +1020,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
   m_IgnoreReversedGraphics: 1
   m_BlockingObjects: 0
@@ -3388,7 +3388,6 @@ MonoBehaviour:
   unitDataList:
   - {fileID: 11400000, guid: 8ff5f3f4c238125409999a555e201aad, type: 2}
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
-  - {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
   _useAuthoredParty: 0
@@ -6971,7 +6970,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0}
@@ -7643,7 +7642,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c686e31d807f4cc4aa859819bdb2d3cc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossClearPresentation
   _fusion: {fileID: 585799967}
   _stage: {fileID: 1256272347}
@@ -7657,7 +7656,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e24d0cdfc1eeeb4a881fbbe81c4bb5a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossClearNoticeLab
   _timerLab: {fileID: 585799967}
   _settings: {fileID: 11400000, guid: d42cbe26c3c83e2478439dd2677f60e9, type: 2}
@@ -7676,7 +7675,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a7b43894fc4c43b4aa12ed680c00a778, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerBonusLab
   _settings: {fileID: 11400000, guid: d903b806d7ec7444e802986c6b07f590, type: 2}
   _font: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
@@ -9143,7 +9142,7 @@ GameObject:
   - component: {fileID: 810861387}
   - component: {fileID: 810861386}
   m_Layer: 0
-  m_Name: ChieftainSpawner
+  m_Name: ChieftainSelection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9163,9 +9162,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chieftainDataList:
   - {fileID: 0}
-  _useTestSpawn: 1
+  - {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
+  - {fileID: 11400000, guid: a05cc91a32f380242b021751e03a77a2, type: 2}
+  _useTestSelection: 1
   _useAuthoredSelection: 0
-  _testUnitData: {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
+  _testSelection: {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
 --- !u!4 &810861387
 Transform:
   m_ObjectHideFlags: 0
@@ -12542,7 +12543,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0}

@@ -48,7 +48,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
         builder.RegisterComponentInHierarchy<BuffManager>();
 
-        builder.RegisterComponentInHierarchy<ChieftainSpawner>();
+        builder.RegisterComponentInHierarchy<ChieftainSelection>();
 
         builder.RegisterComponentInHierarchy<MergeManager>();
         var mergeEffectSettings = Resources.Load<MergeEffectSettings>("MergeEffectSettings");
