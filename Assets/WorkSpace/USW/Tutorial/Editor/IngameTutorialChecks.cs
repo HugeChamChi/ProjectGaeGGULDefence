@@ -31,6 +31,9 @@ public static class IngameTutorialChecks
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(director.GetCancellationTokenOnDestroy());
         using var timeout = cts.CancelAfterSlim(TimeSpan.FromMinutes(5), DelayType.Realtime);
         var token = cts.Token;
+        const string completedKey = "IngameTutorial.Completed.v1";
+        bool hadProgress = PlayerPrefs.HasKey(completedKey);
+        int previousProgress = PlayerPrefs.GetInt(completedKey, 0);
         void Check(bool condition,string description)
         {
             if(!condition) throw new Exception(description);
@@ -42,6 +45,12 @@ public static class IngameTutorialChecks
             await UniTask.Delay(100,DelayType.Realtime,cancellationToken:token);
         }
         async UniTask Frames() { await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate,token); await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate,token); }
+        async UniTask FocusReady(IngameTutorialOverlay overlay) => await UniTask.WaitUntil(()=>!overlay.IsTransitioning,cancellationToken:token);
+        async UniTask Snapshot(string name)
+        {
+            ScreenCapture.CaptureScreenshot("outputs/tutorial-qa/"+name+".png");
+            await Frames();
+        }
         try
         {
             var overlay=Get<IngameTutorialOverlay>(director,"_overlay");
@@ -54,28 +63,78 @@ public static class IngameTutorialChecks
             var settings=Get<IngameTutorialSettings>(director,"_settings");
             var summon=Get<Button>(director,"_summonButton");
             var pointer=new PointerEventData(EventSystem.current){button=PointerEventData.InputButton.Left,pointerId=-1};
+            void ClickButton(Button button, Vector2? screenPoint = null)
+            {
+                pointer.position=screenPoint ?? overlay.ScreenRect((RectTransform)button.transform).center;
+                var hits=new System.Collections.Generic.List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointer,hits);
+                var target=hits.Count>0 ? ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject) : null;
+                Check(target==button.gameObject,"Actual UI raycast reaches "+button.name);
+                ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerDownHandler);
+                ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerUpHandler);
+                ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerClickHandler);
+            }
             await Stage(IngameTutorialStage.FirstSummon);
+            Check(Object.FindObjectsByType<IngameTutorialDirector>(FindObjectsSortMode.None).Length==1,"Exactly one gameplay tutorial director runs");
+            foreach(var legacy in Object.FindObjectsByType<TutorialManager>(FindObjectsSortMode.None))
+            {
+                var dim=Get<CanvasGroup>(legacy,"_dimCanvasGroup");
+                Check(dim==null || (!dim.blocksRaycasts && Mathf.Approximately(dim.alpha,0)),"Legacy tutorial does not dim or block the gameplay tutorial");
+            }
+            overlay.Show(settings,true,true,true,IngameTutorialOverlay.Gesture.Tap,()=>overlay.ScreenRect((RectTransform)summon.transform));
+            var openingHoles=Get<System.Collections.Generic.List<Rect>>(overlay,"_holes");
+            float openingWidth=openingHoles[0].width;
+            await FocusReady(overlay);await Frames();
+            Check(openingHoles[0].width<openingWidth,"Black mask contracts from screen edges to target");
+            Check(settings.DimAlpha>0f && settings.DimAlpha<1f,"Outside spotlight uses translucent black");
+            await Snapshot("01-summon-focus");
             Check(dialogue.gameObject.activeInHierarchy,"Dialogue visible with first forced action");
             Check(!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)summon.transform).center,null),"Summon target passes overlay");
             Check(overlay.IsRaycastLocationValid(Vector2.one,null),"Outside target is blocked");
             overlay.OnPointerClick(pointer);await Frames();
             Check(director.CurrentStage==IngameTutorialStage.FirstSummon,"Dialogue/background tap cannot skip forced action");
-            summon.onClick.Invoke();
+            var camera=Camera.main;
+            var cameraPosition=camera.transform.position;
+            float cameraSize=camera.orthographicSize, cameraFov=camera.fieldOfView;
+            ClickButton(summon);
+            await Stage(IngameTutorialStage.BossEntrance);
+            Check(boss.CurrentBoss==null,"Boss remains absent while camera zooms into spawn point");
+            await UniTask.WaitUntil(()=>boss.CurrentBoss!=null,cancellationToken:token);
+            Check(camera.orthographic ? camera.orthographicSize<cameraSize : camera.fieldOfView<cameraFov,"Boss appears after camera zoom completes");
+            var entryCameraPosition=camera.transform.position;
+            await UniTask.Delay(120,DelayType.Realtime,cancellationToken:token);
+            Check(Vector3.Distance(camera.transform.position,entryCameraPosition)>0.001f,"Boss entrance shakes the zoomed camera");
+            await Snapshot("02-boss-entrance");
             await Stage(IngameTutorialStage.ThreeSummons);
+            Check(Vector3.Distance(camera.transform.position,cameraPosition)<0.001f && Mathf.Abs(camera.fieldOfView-cameraFov)<0.001f,"Boss entrance restores original camera");
             Check(spawn.SuccessfulSpawnCount==1 && spawn.LastSpawnedUnit.OriginalData==settings.SpawnUnits[0],"First summon is authored attack unit");
             Check(boss.CurrentBoss!=null && boss.CurrentBoss.Invincible,"Boss appears after first unit and is protected during merge lesson");
             for(int i=0;i<3;i++)
             {
                 await UniTask.WaitUntil(()=>!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)summon.transform).center,null),cancellationToken:token);
-                int before=spawn.SuccessfulSpawnCount;summon.onClick.Invoke();
+                Check(dialogue.gameObject.activeInHierarchy,"Repeated summon dialogue remains visible before tap "+(i+1));
+                int before=spawn.SuccessfulSpawnCount;ClickButton(summon);
                 await UniTask.WaitUntil(()=>spawn.SuccessfulSpawnCount==before+1 && spawn.LastSpawnedUnit.gameObject.activeInHierarchy,cancellationToken:token);
                 await Frames();
+                if(i<2) Check(dialogue.gameObject.activeInHierarchy && Get<bool>(overlay,"_dim"),"Repeated summon keeps dialogue and mask between taps "+(i+1));
             }
             await Stage(IngameTutorialStage.Merge);
+            await FocusReady(overlay);await Frames();
             var first=grid.GetCell(settings.SpawnCells[0]).OccupyingUnit;
             var second=grid.GetCell(settings.SpawnCells[1]).OccupyingUnit;
             Check(UnitMergeRules.CanPair(first,second),"Fixed summon pair can merge");
             var origin=first.currentCell;var target=second.currentCell;
+            Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==2,"Merge spotlights exactly two units");
+            Check(grid.GetOccupiedCells().Where(c=>c.OccupyingUnit!=null && c.OccupyingUnit!=first && c.OccupyingUnit!=second)
+                .All(c=>overlay.IsRaycastLocationValid(camera.WorldToScreenPoint(c.OccupyingUnit.GetComponent<Collider2D>().bounds.center),null)),"Other units stay outside merge spotlight");
+            await Snapshot("03-merge-two-units");
+            var uiRaycasters=Object.FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None);
+            Check(uiRaycasters.All(r=>!r.isActiveAndEnabled || overlay.transform.IsChildOf(r.transform)),"Merge blocks other UI raycasters");
+            Check(!input.AllowPointerClicks && grid.GetOccupiedCells().Where(c=>c.OccupyingUnit!=null && c.OccupyingUnit!=first && c.OccupyingUnit!=second)
+                .All(c=>!input.CanBeginInteraction(c.OccupyingUnit.GetComponent<DragHandler>())),"Merge blocks object clicks and unrelated units");
+            var isOverUi=typeof(InputManager).GetMethod("IsOverUI",Private);
+            var firstScreen=(Vector2)Camera.main.WorldToScreenPoint(first.GetComponent<Collider2D>().bounds.center);
+            Check(!(bool)isOverUi.Invoke(input,new object[]{firstScreen,-1}),"Merge unit passes actual UI input filtering");
             Drag(input,first.GetComponent<Collider2D>().bounds.center,new Vector2(-100,-100));await Frames();
             Check(origin.OccupyingUnit==first,"Invalid merge drop is rejected without losing unit");
             Drag(input,first.GetComponent<Collider2D>().bounds.center,target.transform.position);
@@ -87,17 +146,33 @@ public static class IngameTutorialChecks
             Check(overlay.IsRaycastLocationValid(overlay.ScreenRect(level.ChoiceArea).center,null),"Awareness intercepts taps on choices");
             overlay.OnPointerClick(pointer);await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Dismissal does not auto-select a card");
-            var card=level.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>().First(c=>c.GetData().specialEffect!=LevelUpSpecialEffect.RerollChoices);
+            var cards=level.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
+            await UniTask.WaitUntil(()=>cards.All(c=>!c.AllowSelection),cancellationToken:token);
+            await FocusReady(overlay);
+            var previewTargets=new System.Collections.Generic.List<UnitBase>();
+            var card=cards.FirstOrDefault(c=>LevelUpFeedbackTargets.Resolve(c.GetData(),grid,null,previewTargets)==LevelUpFeedbackDestination.Units)
+                ?? cards.First(c=>c.GetData().specialEffect!=LevelUpSpecialEffect.RerollChoices);
+            card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);await Frames();
+            Check(game.CurrentState==GameManager.GameState.LevelUp && !card.AllowSelection,"Quick tap cannot skip required card hold preview");
+            card.OnPointerDown(pointer);
+            await UniTask.Delay(650,DelayType.Realtime,cancellationToken:token);
+            Check(Get<bool>(card,"_peeking") && !overlay.gameObject.activeSelf,"Hold reveals field without tutorial mask hiding units");
+            var highlighter=level.GetComponent<LevelUpPeekHighlighter>();
+            Check(Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Count>0,"Held choice highlights its affected field units");
+            await Snapshot("04-held-card-unit-highlight");
+            card.OnPointerUp(pointer);card.OnPointerClick(pointer);
+            await UniTask.WaitUntil(()=>card.AllowSelection && !Get<UI_Peekthrough>(card,"_peek").BlocksSelection,cancellationToken:token);
+            Check(game.CurrentState==GameManager.GameState.LevelUp,"Releasing preview does not select card");
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await Stage(IngameTutorialStage.OpenUpgrade);
             var upgrade=Get<Button>(director,"_upgradeButton");
             await UniTask.WaitUntil(()=>!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)upgrade.transform).center,null),cancellationToken:token);
-            upgrade.onClick.Invoke();await Stage(IngameTutorialStage.UpgradeSlots);
+            ClickButton(upgrade);await Stage(IngameTutorialStage.UpgradeSlots);
             await UniTask.Delay(700,DelayType.Realtime,cancellationToken:token);
             overlay.OnPointerClick(pointer);await Frames();
             var panel=Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel");
             var close=(Button)new SerializedObject(panel).FindProperty("btn_BackgroundClose").objectReferenceValue;
-            close.onClick.Invoke();await Stage(IngameTutorialStage.ChiefSkill);
+            ClickButton(close,new Vector2(10,Screen.height*0.7f));await Stage(IngameTutorialStage.ChiefSkill);
             await UniTask.Delay(TimeSpan.FromSeconds(settings.ChiefDelaySeconds+settings.RevealSeconds+0.2f),DelayType.Realtime,cancellationToken:token);
             overlay.OnPointerClick(pointer);await Stage(IngameTutorialStage.TotemChoice);
             // Advance only combat duration here; all tutorial input/completion uses real handlers.
@@ -106,17 +181,23 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>reward.IsReadyForSelection,cancellationToken:token);await Frames();
             Check(dialogue.gameObject.activeInHierarchy,"Reward dialogue starts only after reward reveal");
             overlay.OnPointerClick(pointer);await Frames();
-            var overview=reward.ChoiceArea.GetComponentsInChildren<Button>().First();overview.onClick.Invoke();
+            var overview=reward.ChoiceArea.GetComponentsInChildren<Button>().First();ClickButton(overview);
             await UniTask.Delay(1000,DelayType.Realtime,cancellationToken:token);
-            var confirm=reward.GetComponentsInChildren<Button>().First(b=>b.name.Contains("Confirm"));confirm.onClick.Invoke();
+            var confirm=reward.GetComponentsInChildren<Button>().First(b=>b.name.Contains("Confirm"));ClickButton(confirm);
             await Stage(IngameTutorialStage.OpenInventory);
             var invButton=Get<Button>(director,"_inventoryButton");
-            await UniTask.Delay(500,DelayType.Realtime,cancellationToken:token);invButton.onClick.Invoke();
+            await UniTask.Delay(500,DelayType.Realtime,cancellationToken:token);ClickButton(invButton);
             await Stage(IngameTutorialStage.PlaceTotem);await UniTask.Delay(500,DelayType.Realtime,cancellationToken:token);
             var invUi=Get<TotemInventoryUI>(director,"_inventoryUI");
             var slot=invUi.GetSlotRect(0).GetComponent<TotemInventorySlotUI>();
             var storage=Get<TotemInventory>(director,"_inventory");
             var expectedCell=Get<GridCell>(director,"_dropCell");
+            await FocusReady(overlay);
+            var drawerPanel=Get<GameObject>(invUi,"_panel");
+            var drawerPosition=drawerPanel.transform.localPosition;
+            Get<Button>(invUi,"_backgroundCloseButton").onClick.Invoke();await Frames();
+            Check(invUi.IsOpen && !Get<bool>(invUi,"_closing") && drawerPanel.transform.localPosition==drawerPosition,"Field tap keeps tutorial inventory stationary and open");
+            await Snapshot("05-totem-place");
             var wrongCell=grid.GetEmptyCells().First(c=>c!=expectedCell);
             Check(!await storage.TryPlaceAsync(0,wrongCell,token) && storage.Items.Count==1,"Wrong tutorial placement preserves stored totem");
             pointer.pressPosition=overlay.ScreenRect(invUi.GetSlotRect(0)).center;
@@ -128,13 +209,30 @@ public static class IngameTutorialChecks
             var drop=Get<GridCell>(director,"_dropCell");pointer.position=Camera.main.WorldToScreenPoint(drop.transform.position);
             slot.OnBeginDrag(pointer);slot.OnDrag(pointer);slot.OnEndDrag(pointer);
             await Stage(IngameTutorialStage.MoveTotem);
+            await FocusReady(overlay);await Frames();
             var totem=Get<TotemBase>(director,"_placedTotem");
             Check(totem.Data.isRotatable,"Chosen reward is rotatable");
+            Check(!overlay.IsRaycastLocationValid(camera.WorldToScreenPoint(totem.CurrentCell.transform.position),null),"Move spotlight includes the source cell");
+            Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==2,"Totem move spotlights only totem and destination");
+            await Snapshot("06-totem-move");
             drop=Get<GridCell>(director,"_dropCell");
+            var installedCell=totem.CurrentCell;
+            Check(drop!=installedCell && (drop.GridPosition-installedCell.GridPosition).sqrMagnitude>=4,"Move destination is separated from installation cell");
+            Check(!input.CanEndInteraction(totem.GetComponent<DragHandler>(),installedCell.transform.position),"Dropping on installation cell cannot complete the move lesson");
             Physics2D.SyncTransforms();
             Drag(input,totem.GetComponent<Collider2D>().bounds.center,drop.transform.position);
             await Stage(IngameTutorialStage.RotateTotem);
+            await FocusReady(overlay);await Frames();
             Check(totem.CurrentCell==drop,"Immediate drag moves the totem");
+            Check(installedCell.OccupyingTotem==null,"Rotation begins after the installation cell is vacated");
+            Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==1,"Rotation spotlights only the placed totem");
+            Check(!overlay.IsRaycastLocationValid(camera.WorldToScreenPoint(totem.CurrentCell.transform.position),null),"Rotation spotlight includes the placed cell");
+            var rotationDrag=totem.GetComponent<DragHandler>();
+            var originalPosition=totem.transform.position;
+            rotationDrag.BeginPress();rotationDrag.OnBeginDrag();rotationDrag.OnDrag((Vector2)originalPosition+Vector2.right);
+            Check(totem.transform.position==originalPosition && !rotationDrag.IsDragging,"Rotation lesson prevents immediate movement");
+            rotationDrag.EndPress();
+            await Snapshot("07-totem-rotate");
             Physics2D.SyncTransforms();
             var start=(Vector2)Camera.main.WorldToScreenPoint(totem.GetComponent<Collider2D>().bounds.center);
             Call(input,"ProcessPointerDown",start);
@@ -145,11 +243,17 @@ public static class IngameTutorialChecks
             Check(totem.RotationStep==1,"Hold then drag right rotates the totem");
             Check(input.CanBeginInteraction==null && input.CanEndInteraction==null && input.AllowPointerClicks,"Completion restores normal world input");
             Check(!dialogue.gameObject.activeInHierarchy && !overlay.gameObject.activeInHierarchy,"Dialogue and highlight close together");
+            Check(invUi.AllowClose,"Tutorial restores normal inventory closing");
             await CheckCompositionAsync(director,Check,token);
             log.AppendLine("COMPLETE — scripted handlers; Android touch and visual timing still require device review.");
         }
         catch(Exception e){log.AppendLine("FAIL "+e);Debug.LogException(e);}
-        finally{File.WriteAllText(Report,log.ToString());Debug.Log(log.ToString());}
+        finally
+        {
+            if(hadProgress) PlayerPrefs.SetInt(completedKey,previousProgress); else PlayerPrefs.DeleteKey(completedKey);
+            PlayerPrefs.Save();
+            File.WriteAllText(Report,log.ToString());Debug.Log(log.ToString());
+        }
     }
 
     private static async UniTask CheckCompositionAsync(IngameTutorialDirector director, Action<bool,string> check, CancellationToken token)

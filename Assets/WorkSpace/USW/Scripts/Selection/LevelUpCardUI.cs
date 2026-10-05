@@ -45,6 +45,8 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private int? _releasedPointerId;
     private float _pressedAt;
     private bool _suppressClick;
+    /// <summary>Scene guides may require a field preview before permitting selection.</summary>
+    public bool AllowSelection { get; set; } = true;
 
     /// <summary>카드가 길게 눌렸을 때 사용할 레벨업 창의 필드 보기를 연결한다.</summary>
     public void ConfigurePeek(UI_Peekthrough peek) => _peek = peek;
@@ -196,7 +198,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     {
         if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
         _releasedPointerId = null;
-        if (isActiveAndEnabled && !_suppressClick && (_peek == null || !_peek.BlocksSelection) &&
+        if (isActiveAndEnabled && AllowSelection && !_suppressClick && (_peek == null || !_peek.BlocksSelection) &&
             button != null && button.IsInteractable()) _onCardClicked?.Invoke(this);
     }
 

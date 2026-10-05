@@ -27,6 +27,7 @@ MonoBehaviour:
   TrainingFoodPerSecond: 20
   UpgradeFoodThreshold: 100
   RevealSeconds: 0.35
+  FocusSeconds: 0.65
   ChiefDelaySeconds: 6
   CameraZoomSeconds: 0.6
   CameraZoomRatio: 0.7
@@ -34,5 +35,4 @@ MonoBehaviour:
   GestureSeconds: 1.6
   HoldGestureSeconds: 0.65
   DimAlpha: 0.65
-  HighlightPaddingPixels: 12
-  OutlinePixels: 4
+  HighlightPaddingPixels: 0

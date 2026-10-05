@@ -32,6 +32,8 @@ public class DragHandler : MonoBehaviour, IDraggable
     public bool IsDragging => _isDragging;
     /// <summary>Whether the current hold-and-drag is rotating a totem.</summary>
     public bool IsRotating => _rotating;
+    /// <summary>Tutorial rotation step disables movement before the hold completes.</summary>
+    public bool RotationOnly { get; set; }
 
     /// <summary>Records hold time without changing unit drag behavior.</summary>
     public void BeginPress()
@@ -197,6 +199,7 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void OnBeginDrag()
     {
         if (_unit != null && _unit.IsStunned) return;
+        if (RotationOnly && !(CanRotateTotem && IsHoldComplete)) return;
         OnDragStartedEvent?.Invoke();
         // 토템도 유닛처럼 바로 끌면 이동한다.
         // 회전 가능 토템을 홀드 게이지가 가득 찰 때까지(RotateHoldSeconds) 누른 뒤 끌면 회전한다.

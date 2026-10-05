@@ -1,6 +1,7 @@
 using System;
 using VContainer;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -57,6 +58,8 @@ public class LevelUpUI : MonoBehaviour
     public bool IsReadyForSelection { get; private set; }
     /// <summary>Choice area used by scene-owned interaction guides.</summary>
     public RectTransform ChoiceArea => cardContainer as RectTransform;
+    /// <summary>Tutorials need one applicable unit card to teach hold-to-preview.</summary>
+    public bool RequireUnitPreview { get; set; }
 
     private void Awake()
     {
@@ -85,6 +88,17 @@ public class LevelUpUI : MonoBehaviour
         _selectedCard = null;
 
         var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
+        if (RequireUnitPreview && choices.Count > 0)
+        {
+            var targets = new List<UnitBase>();
+            bool HasUnits(LevelUpData data) => LevelUpFeedbackTargets.Resolve(data, _gridManager, null, targets) == LevelUpFeedbackDestination.Units;
+            if (!choices.Any(HasUnits))
+            {
+                var preview = _levelUpManager.LevelUpPool.FirstOrDefault(c => c != null && c.spawnRate > 0 &&
+                    !_levelUpManager.ChosenIds.Contains(c.chooseId) && HasUnits(c));
+                if (preview != null) choices[0] = preview;
+            }
+        }
         if (choices.Count == 0)
         {
             // 풀 소진/설정 누락 시 빈 패널에서 게임이 정지하지 않도록 선택 단계를 마친다.

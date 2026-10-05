@@ -37,6 +37,8 @@ public sealed class TotemInventoryUI : MonoBehaviour
     public bool IsOpen => _panel != null && _panel.activeSelf;
     /// <summary>Whether the drawer is processing a drag or its asynchronous placement.</summary>
     public bool IsDraggingOrPlacing => _dragIndex >= 0 || _placing;
+    /// <summary>Guided placement keeps the drawer open until an actual item drag.</summary>
+    public bool AllowClose { get; set; } = true;
     /// <summary>Reopens an idle drawer after a rejected guided placement.</summary>
     public void OpenForTutorialRetry()
     {
@@ -93,6 +95,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void Toggle()
     {
+        if (IsOpen && !AllowClose) return;
         if (_placing || _closing) return;
         if (_dragIndex >= 0) { CancelDrag(); return; }
         CancelDrag();
@@ -153,6 +156,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void CloseInventory()
     {
+        if (!AllowClose) return;
         if (_closing || !_panel.activeSelf) return;
         CloseAnimatedAsync().Forget();
     }
