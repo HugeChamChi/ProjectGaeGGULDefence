@@ -22,19 +22,19 @@ public static class AlphanActiveSkillChecks
         AlphanActiveSkill skill = null;
         try
         {
-            var selector = Component<ChieftainSpawner>();
+            var selector = Component<ChieftainSelection>();
             var drones = Component<DroneManager>();
             skill = new AlphanActiveSkill(selector, new[] { drones }, null, null, null);
             skill.Initialize();
-            var selected = Asset<UnitData>();
+            var selected = Asset<ChieftainData>();
             selected.AlphanSkill = Asset<AlphanSkillData>();
-            var select = typeof(ChieftainSpawner).GetMethod("SelectChieftainByUnitData", BindingFlags.Instance | BindingFlags.NonPublic);
+            var select = typeof(ChieftainSelection).GetMethod("Select", BindingFlags.Instance | BindingFlags.Public);
             select.Invoke(selector, new object[] { selected });
             Check(selector.ActiveSkill == skill && skill.IsAvailable, "Authored selection activates independent skill");
             selected.AlphanSkill = null;
             select.Invoke(selector, new object[] { selected });
             Check(selector.ActiveSkill == null && !skill.IsAvailable, "Missing skill clears selection without a grid or unit factory");
-            selector.ChangeChieftain(0);
+            selector.SelectById(0);
             Check(selector.ActiveSkill == null, "Missing ID selection does not spawn a grid unit");
             foreach (var root in _scene.GetRootGameObjects())
                 Check(root.GetComponentInChildren<UnitBase>(true) == null, "Selection creates no grid units");
@@ -60,15 +60,15 @@ public static class AlphanActiveSkillChecks
         AlphanActiveSkill skill=null;
         try
         {
-            var spawner=Component<ChieftainSpawner>();var manager=Component<LevelUpManager>();
+            var spawner=Component<ChieftainSelection>();var manager=Component<LevelUpManager>();
             var drones=Component<AlphanSkillCheckDroneManager>();var game=Component<GameManager>();
             Set(game,"<CurrentState>k__BackingField",GameManager.GameState.Playing);
             var data=Asset<AlphanSkillData>();data.CooldownSeconds=14;data.DamagePerDrone=80;data.SoundAddress="";
             skill=new AlphanActiveSkill(spawner,new DroneManager[]{drones},manager,game,null);
             skill.Initialize();
             Check(!skill.IsAvailable && spawner.ActiveSkill==null,"No selection stays unavailable");
-            var selected=Asset<UnitData>();selected.AlphanSkill=data;
-            typeof(ChieftainSpawner).GetMethod("SelectChieftainByUnitData",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(spawner,new object[]{selected});
+            var selected=Asset<ChieftainData>();selected.AlphanSkill=data;
+            typeof(ChieftainSelection).GetMethod("Select",BindingFlags.Instance|BindingFlags.Public).Invoke(spawner,new object[]{selected});
             Check(spawner.ActiveSkill==skill,$"Selected Alphan has no grid unit or factory dependency (available={skill.IsAvailable}, dronesMissing={drones==null}, active={spawner.ActiveSkill}, selected={spawner.SelectedAlphanSkill})");
             Check(skill.CooldownProgress==0 && skill.CooldownRemaining==14,"First use starts empty");
             skill.Advance(13);Check(!skill.CanActivate && skill.CooldownRemaining==1,"First thirteen seconds locked");
@@ -98,7 +98,7 @@ public static class AlphanActiveSkillChecks
             Check(!button.interactable && label.text=="" && !skill.TryActivate() && skill.CooldownRemaining==0,"Ready but no drones stays disabled without spending charge");
             drones.RegisterDrone(drone);drones.HoldCast=true;Check(skill.TryActivate(),"Long cast started");
             skill.Advance(14);Check(!skill.CanActivate,"Casting blocks reentry even after charging");
-            var castToken=drones.LastToken;spawner.SelectAlphanSkill(null);
+            var castToken=drones.LastToken;spawner.Select(null);
             Check(castToken.IsCancellationRequested && !skill.IsAvailable && spawner.ActiveSkill==null,"Changing selection cancels cast and unbinds");
             Check(spawner.GetComponentInChildren<UnitBase>()==null,"No hidden unit was created");
             using(var noDrones=new AlphanActiveSkill(null,Array.Empty<DroneManager>(),manager,game,null))
@@ -108,12 +108,12 @@ public static class AlphanActiveSkillChecks
             using(var builderContainer=BuildContainer(spawner,null,manager,game))
                 Check(builderContainer.Resolve<AlphanActiveSkill>()!=null,"VContainer accepts non-drone scene without manager registration");
             var party=AssetDatabase.LoadAssetAtPath<PartyDataSO>("Assets/WorkSpace/HSD/Data/Party/Dron_Party.asset");
-            Check(party!=null && party.chieftainData.AlphanSkill!=null && party.chieftainData.AlphanSkill.CooldownSeconds==120,"Real drone party points to 120-second skill SO");
+            Check(party!=null && party.Chieftain.AlphanSkill!=null && party.Chieftain.AlphanSkill.CooldownSeconds==120,"Real drone party points to 120-second skill SO");
             GlobalData.SelectedParty=party;
-            typeof(ChieftainSpawner).GetMethod("HandleGameStart",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(spawner,null);
-            Check(spawner.ActiveSkill==skill && skill.CooldownRemaining==14,"Real party start bypasses grid and starts charging");
+            typeof(ChieftainSelection).GetMethod("HandleGameStart",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(spawner,null);
+            Check(spawner.ActiveSkill==skill && skill.CooldownRemaining==120,"Real party start bypasses grid and starts charging");
             var factory=Component<UnitFactory>();
-            Check(factory.CreateUnitFromData(party.chieftainData)==null,"Direct factory path rejects active-skill selector");
+            Check(!typeof(UnitData).IsAssignableFrom(typeof(ChieftainData)),"Selection cannot be passed to the combat factory");
             skill.Dispose();Check(!skill.CanActivate,"Disposed scene skill unavailable");
             Debug.Log($"[AlphanActiveSkillChecks] PASS {_passed} assertions.");
         }
@@ -124,7 +124,7 @@ public static class AlphanActiveSkillChecks
             foreach(var asset in _assets)UnityEngine.Object.DestroyImmediate(asset);_assets.Clear();Time.timeScale=oldScale;
         }
     }
-    private static VContainer.IObjectResolver BuildContainer(ChieftainSpawner spawner,DroneManager drones,LevelUpManager manager,GameManager game)
+    private static VContainer.IObjectResolver BuildContainer(ChieftainSelection spawner,DroneManager drones,LevelUpManager manager,GameManager game)
     {
         var builder=new VContainer.ContainerBuilder();
         VContainer.ContainerBuilderExtensions.RegisterInstance(builder,spawner);

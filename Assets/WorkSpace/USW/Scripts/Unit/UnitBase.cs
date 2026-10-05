@@ -312,7 +312,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         return _stats != null ? _stats.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier, out critical) : 0;
     }
 
-    /// <summary>ChiefUnit의 수동 스킬 발동 등에서 UnitCombatComponent.ExecuteSkill()(skillData 우선, 없으면 legacy 폴백) 전체 파이프라인을 그대로 태운다.</summary>
+    /// <summary>테스트 등의 명시적 스킬 발동에서 UnitCombatComponent.ExecuteSkill()(skillData 우선, 없으면 legacy 폴백) 전체 파이프라인을 그대로 태운다.</summary>
     public void TriggerSkillManually() => _combat?.TriggerSkillManually();
 
     // ── Backward Compatibility Wrappers for Subclasses & UI ──

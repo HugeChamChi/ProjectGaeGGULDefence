@@ -137,7 +137,6 @@ public class MergeManager : MonoBehaviour
     {
         if (unit?.unitData == null) return false;
         if (unit.OriginalTier == Tier.Legend) return false;
-        if (unit.OriginalTier == Tier.Chieftain) return false;
         return GetMergeTargets(unit).Count >= 2;
     }
 

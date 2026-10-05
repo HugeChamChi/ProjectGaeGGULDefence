@@ -32,7 +32,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     private UI_ChiefSkillPresenter _presenter;
 
-    private ChieftainSpawner _spawner;
+    private ChieftainSelection _selection;
 
     private void Awake()
     {
@@ -46,17 +46,28 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     }
 
     [Inject]
-    public void Construct(ChieftainSpawner chieftainSpawner)
+    public void Construct(ChieftainSelection chieftainSelection)
     {
         if (_presenter != null) return;
-        _spawner = chieftainSpawner;
+        _selection = chieftainSelection;
         _presenter = new UI_ChiefSkillPresenter(this);
+        if (isActiveAndEnabled) Subscribe();
+    }
 
-        if (_spawner != null)
-        {
-            _spawner.OnActiveSkillChanged += OnActiveSkillChanged;
-            _presenter.SetActiveSkill(_spawner.ActiveSkill);
-        }
+    private void OnEnable() => Subscribe();
+
+    private void Subscribe()
+    {
+        if (_selection == null || _presenter == null) return;
+        _selection.OnActiveSkillChanged -= OnActiveSkillChanged;
+        _selection.OnActiveSkillChanged += OnActiveSkillChanged;
+        _presenter.SetActiveSkill(_selection.ActiveSkill);
+    }
+
+    private void OnDisable()
+    {
+        if (_selection != null) _selection.OnActiveSkillChanged -= OnActiveSkillChanged;
+        _presenter?.SetActiveSkill(null);
     }
 
     // 연결은 InGameInstaller.Start가 Construct로 수행한다. 이 컴포넌트의 Start가 먼저 돌 수 있으므로
@@ -77,10 +88,9 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_spawner != null)
-        {
-            _spawner.OnActiveSkillChanged -= OnActiveSkillChanged;
-        }
+        OnDisable();
+        if (btn_Skill != null && _presenter != null)
+            btn_Skill.onClick.RemoveListener(_presenter.ExecuteSkill);
     }
 
     public void BindSkillButton(UnityEngine.Events.UnityAction action)

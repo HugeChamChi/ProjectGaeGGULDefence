@@ -135,12 +135,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 46f2576957468964a97a70b6ca8eafe0
-    m_Address: Data/Chief_UnitData_Drone_Legend
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 49a131f9f78014048a9d8a896fa20859
     m_Address: PlayerFrame/FrameItemDataSO
     m_ReadOnly: 0

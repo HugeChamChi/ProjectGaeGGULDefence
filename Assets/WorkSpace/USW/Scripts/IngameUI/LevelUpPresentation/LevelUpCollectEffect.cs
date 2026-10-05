@@ -18,7 +18,6 @@ using VContainer;
 public class LevelUpCollectEffect : MonoBehaviour
 {
     [Inject] private GridManager _gridManager;
-    [Inject] private ChieftainSpawner _chieftainSpawner;
 
     [Header("참조")]
     [Tooltip("획득 연출을 그릴 HUD Canvas. 비우면 수집 지점/족장 버튼이 속한 최상위 Canvas.")]
@@ -135,7 +134,7 @@ public class LevelUpCollectEffect : MonoBehaviour
             Fx.Release(icon.gameObject);
 
             // 3) 갈래 빛은 대상에게, 메인 빛은 수집 지점(메인 루트)으로
-            var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _chieftainSpawner, _targetUnits);
+            var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _targetUnits);
             Vector3 from = orbRt.position;
             var flights = new List<UniTask>();
             if (destination == LevelUpFeedbackDestination.Units && _targetUnits.Count > 0)

@@ -28,7 +28,6 @@ public class UnitFactory : MonoBehaviour
             LevelUpManager = _resolver.Resolve<LevelUpManager>(),
             TotemBuffManager = _resolver.Resolve<TotemBuffManager>(),
             CurrencyFloaterManager = _resolver.Resolve<CurrencyFloaterManager>(),
-            ChieftainManager = _resolver.Resolve<ChieftainSpawner>(),
             BossManager = _resolver.Resolve<BossManager>(),
             ProjectileManager = _resolver.Resolve<ProjectilePool>(),
             AudioManager = _resolver.Resolve<AudioManager>(),
@@ -157,18 +156,14 @@ public class UnitFactory : MonoBehaviour
     /// <summary>UnitData SO를 직접 넘겨 생성 — unitDataList 등록 없이도 동작 (테스트 소환 등)</summary>
     public UnitBase CreateUnitFromData(UnitData data, Tier tier = Tier.Normal) => InstantiateFromData(data, tier);
 
-    /// <summary>랜덤 소환/합성 결과 후보로 쓸 수 있는지. 그리드 밖 액티브 스킬(족장)은 제외한다.</summary>
-    private static bool IsRandomEligible(UnitData data) => data != null && data.AlphanSkill == null;
+    /// <summary>랜덤 소환/합성 결과 후보로 쓸 수 있는지. 전투 유닛 데이터만 받는다.</summary>
+    private static bool IsRandomEligible(UnitData data) => data != null;
 
     // ── 공통 인스턴스화 ────────────────────────────────────────
 
     private UnitBase InstantiateFromData(UnitData data, Tier tier)
     {
-        if (data.AlphanSkill != null)
-        {
-            Debug.LogWarning($"UnitFactory: [{data.unitName}]는 그리드 밖 액티브 스킬이므로 유닛을 생성하지 않습니다.");
-            return null;
-        }
+        if (data == null || !System.Array.Exists(TierUtil.All, value => value == tier)) return null;
         if (data.prefab == null)
         {
             Debug.LogError($"UnitFactory: [{data.unitName}] prefab 미연결");

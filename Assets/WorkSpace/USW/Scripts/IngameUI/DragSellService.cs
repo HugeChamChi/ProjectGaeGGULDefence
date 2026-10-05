@@ -73,7 +73,6 @@ public sealed class DragSellService
         if (_zone == null || !_zone.ContainsWorldPoint(worldPosition)) return false;
         if (unit != null)
         {
-            if (unit.OriginalTier == Tier.Chieftain) return false;
             _unitSpawner?.SellUnit(unit);
             _mergeManager?.ClearSelection();
             return true;
