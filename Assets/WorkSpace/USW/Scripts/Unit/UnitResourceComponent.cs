@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class UnitResourceComponent : MonoBehaviour
 {
+    /// <summary>식량이 실제 지급됐을 때 발행된다. 연출은 지급량이나 주기를 변경하지 않는다.</summary>
+    public event System.Action OnFoodProduced;
+
     private UnitBase _unit;
     private UnitDependencies _deps;
     private float _foodTimer;
@@ -50,6 +53,7 @@ public class UnitResourceComponent : MonoBehaviour
             {
                 _deps.CurrencyManager.AddCurrency(amountPerTick);
                 _deps.CurrencyFloaterManager?.ReportFoodProduction(amountPerTick);
+                OnFoodProduced?.Invoke();
             }
         }
     }

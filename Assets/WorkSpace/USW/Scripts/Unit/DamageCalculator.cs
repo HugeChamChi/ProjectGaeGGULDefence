@@ -4,6 +4,14 @@ using UnityEngine;
 /// <summary>공격자 측 기존 정수 계산과 보스 측 최종 고정소수 피해 경계.</summary>
 public static class DamageCalculator
 {
+    /// <summary>Samples the authored uniform damage multiplier once; zero variance consumes no RNG.</summary>
+    public static float Spread(float variance)
+    {
+        if (float.IsNaN(variance) || float.IsInfinity(variance) || variance < 0f || variance > 0.5f)
+            throw new ArgumentOutOfRangeException(nameof(variance));
+        return variance > 0f ? UnityEngine.Random.Range(1f - variance, 1f + variance) : 1f;
+    }
+
     /// <summary>일반 피해에 로그 방어·아머·받피증을 한 번 적용하고 남은 HP로 제한한다.</summary>
     public static long Calculate(decimal baseDamage, double defense, double defenseScale,
         double armorFactor, decimal multiplier, long remainingUnits)

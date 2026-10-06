@@ -96,3 +96,39 @@ Assets/WorkSpace/production/session-logs/session-log.md
 Assets/production/session-logs/session-log.md
 ---
 
+## Session End: 20261006_010346
+### Commits
+c86cec2a [Refactor] 문서 최신화 및 족장 리팩토링
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection1.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection10.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection11.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection12.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection13.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection14.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection15.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection16.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection17.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection18.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection19.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection2.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection20.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection3.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection4.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection5.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection6.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection7.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection8.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection9.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1003Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1004Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1005Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1006Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1007Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1010Data.asset
+---
+

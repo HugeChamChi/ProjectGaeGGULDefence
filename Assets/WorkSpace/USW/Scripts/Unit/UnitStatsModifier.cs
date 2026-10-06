@@ -52,10 +52,6 @@ public class UnitStatsModifier : MonoBehaviour
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
         => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true);
 
-    /// <summary>평균 1인 균등 배율 [1 - variance, 1 + variance]. 0이면 난수를 쓰지 않는다.</summary>
-    private static float Spread(float variance) =>
-        variance > 0f ? UnityEngine.Random.Range(1f - variance, 1f + variance) : 1f;
-
     private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false)
     {
         critical = false;
@@ -91,7 +87,7 @@ public class UnitStatsModifier : MonoBehaviour
 
         // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
         // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.
-        if (rollCritical) damage *= Spread(lu?.DamageVariance ?? 0f);
+        if (rollCritical) damage *= DamageCalculator.Spread(lu?.DamageVariance ?? 0f);
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
         float critChance = (lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f);
@@ -99,7 +95,7 @@ public class UnitStatsModifier : MonoBehaviour
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
-            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * Spread(lu?.CritDamageVariance ?? 0f);
+            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * DamageCalculator.Spread(lu?.CritDamageVariance ?? 0f);
             critical = true;
         }
 

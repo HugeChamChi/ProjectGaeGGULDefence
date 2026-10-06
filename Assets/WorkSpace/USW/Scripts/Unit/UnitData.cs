@@ -33,6 +33,8 @@ public class UnitData : ScriptableObject, ILoadableAsset
 
     [Header("Skill")]
     public SkillData skillData;
+    /// <summary>Betan's bomb coefficient, applied to upgraded attack before flat attack bonuses.</summary>
+    [Min(0f)] public float SelfDestructAttackCoefficient;
     /// <summary>발밑 게이지 표시 정책. 패시브만 있는 유닛은 PassiveOnly로 지정할 수 있습니다.</summary>
     [Tooltip("Automatic: 사용 가능한 스킬과 양수 쿨다운이 있을 때 충전 표시. PassiveOnly: 회색 고정 바. 전투 동작은 변경하지 않음.")]
     public SkillGaugeMode SkillGaugeMode;

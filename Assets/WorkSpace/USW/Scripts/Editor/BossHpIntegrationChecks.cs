@@ -19,7 +19,6 @@ public static class BossHpIntegrationChecks
         var scene = EditorSceneManager.NewPreviewScene();
         var temporaryAssets = new List<UnityEngine.Object>();
         BossHpBarShake shake = null;
-        BossHpBreakFlipbook flip = null;
         int passed = 0;
         void Check(bool condition, string label)
         {
@@ -34,25 +33,23 @@ public static class BossHpIntegrationChecks
             var instance = UnityEngine.Object.Instantiate(prefab, root.transform);
             var bar = instance.GetComponent<UI_BossHpBar>();
             shake = instance.GetComponent<BossHpBarShake>();
-            flip = instance.GetComponentInChildren<BossHpBreakFlipbook>(true);
             Invoke(shake, "Awake"); Invoke(shake, "OnEnable");
-            Invoke(flip, "Awake"); Invoke(flip, "OnEnable");
             Check(instance.GetComponentInChildren<BossHpDamageTester>(true) == null, "Runtime prefab excludes tester");
-            Check(((Sprite[])Get(flip, "_frames")).Length == 13, "All sliced frames connected");
+            Check(instance.GetComponentInChildren<BossHpBreakFlipbook>(true) == null, "Runtime prefab excludes glass-break effect (user decision)");
             var ui = root.AddComponent<UIManager>();
             Set(ui, "_bossHpBar", bar);
             Invoke(ui, "Awake");
             Check(bar.IsRuntimeControlled, "UI reserves runtime ownership before tester Start");
             ui.BeginBossHp(1000, 1000, 100);
-            Check(bar.CurrentLine == 100 && !Playing(flip), "New boss starts full without damage effect");
+            Check(bar.CurrentLine == 100 && Get(shake, "_shakeTween") == null, "New boss starts full without damage effect");
             ui.UpdateBossHp(990, 1000);
-            Check(bar.CurrentLine == 99 && !Playing(flip) && Get(shake, "_shakeTween") == null, "One lost line does not trigger ten-line effect");
+            Check(bar.CurrentLine == 99 && Get(shake, "_shakeTween") == null, "One lost line does not trigger ten-line effect");
             ui.UpdateBossHp(900, 1000);
-            Check(bar.CurrentLine == 90 && Playing(flip) && Get(shake, "_shakeTween") != null, "Ten lost lines trigger both effects");
+            Check(bar.CurrentLine == 90 && Get(shake, "_shakeTween") != null, "Ten lost lines trigger shake effect");
             var mask = (RectTransform)Get(bar, "_hpFillMask");
             Check(Mathf.Abs(mask.anchorMax.x - .9f) < .00001f, "Fill remains total HP ratio");
             ui.BeginBossHp(5000, 5000, 7);
-            Check(bar.CurrentLine == 7 && !Playing(flip) && Get(shake, "_shakeTween") == null, "Boss swap clears effects and resets line count");
+            Check(bar.CurrentLine == 7 && Get(shake, "_shakeTween") == null, "Boss swap clears effects and resets line count");
             var tester = root.AddComponent<BossHpDamageTester>();
             Set(tester, "_hpBar", bar);
             tester.SetHpValues(1, 10000);
@@ -60,7 +57,7 @@ public static class BossHpIntegrationChecks
             bar.BeginBoss(100000000000000m, 100000000000000m, 100);
             bar.SetHpExact(90000000000000.0001m, 100000000000000m);
             Check(bar.CurrentLine == 91, "Decimal boundary above ninety percent remains line 91");
-            Check(((TMPro.TMP_Text)Get(bar, "_hpLineText")).text == "91줄", "Displayed line preserves decimal boundary");
+            Check(((TMPro.TMP_Text)Get(bar, "_hpLineText")).text == (string)Get(bar, "_linePrefix") + "91", "Displayed line preserves decimal boundary and authored prefix");
             bar.SetHpExact(.0001m, 100000000000000m);
             Check(bar.CurrentLine == 1, "Small positive HP keeps last line");
             bar.SetHpExact(0, 100000000000000m);
@@ -100,7 +97,6 @@ public static class BossHpIntegrationChecks
         finally
         {
             if (shake != null) Invoke(shake, "OnDisable");
-            if (flip != null) Invoke(flip, "OnDisable");
             EditorSceneManager.ClosePreviewScene(scene);
             foreach (var asset in temporaryAssets) UnityEngine.Object.DestroyImmediate(asset);
         }
@@ -109,5 +105,4 @@ public static class BossHpIntegrationChecks
     private static object Get(object target, string name) => target.GetType().GetField(name, Flags).GetValue(target);
     private static void Set(object target, string name, object value) => target.GetType().GetField(name, Flags).SetValue(target, value);
     private static void Invoke(object target, string name) => target.GetType().GetMethod(name, Flags).Invoke(target, null);
-    private static bool Playing(BossHpBreakFlipbook flip) => (bool)Get(flip, "_playing");
 }

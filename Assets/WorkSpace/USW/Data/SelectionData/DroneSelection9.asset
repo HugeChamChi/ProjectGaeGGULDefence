@@ -16,8 +16,7 @@ MonoBehaviour:
   chooseName: "\uB139..."
   tier: 1
   spawnRate: 1
-  description: "\uB378\uD0D5\uC758 \uB514\uBC84\uD504 \uC2A4\uD0AC \uCFE8\uD0C0\uC784
-    10% \uAC10\uC18C\uD569\uB2C8\uB2E4."
+  description: "\uB378\uD0D5\uC758 \uC2A4\uD0AC \uCFE8\uD0C0\uC784\uC774 10% \uAC10\uC18C\uD569\uB2C8\uB2E4"
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

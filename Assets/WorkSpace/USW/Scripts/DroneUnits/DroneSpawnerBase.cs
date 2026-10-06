@@ -4,12 +4,15 @@ using VContainer;
 
 /// <summary>
 /// 드론을 소환하는 유닛들의 공통 부모 클래스.
-/// 드론 소환, 위치 계산(V자 대형), 회수(풀링) 로직을 통합 관리합니다.
+/// 드론 소환, SO 슬롯 배치(미지정 시 V자 대형), 회수(풀링) 로직을 통합 관리합니다.
 /// </summary>
 public abstract class DroneSpawnerBase : UnitBase
 {
     [Header("드론 배치 설정")]
     [SerializeField] protected DroneUnit dronePrefab;
+
+    [Header("Combat Drone Formation")]
+    [SerializeField] private DroneFormationSettings _formation;
 
     [Inject] protected DroneManager _droneManager;
 
@@ -17,6 +20,9 @@ public abstract class DroneSpawnerBase : UnitBase
     {
         get
         {
+            if (_formation != null && _formation.SlotOffsets.Length > 0)
+                return _formation.SlotOffsets;
+
             float sxL = _droneManager?.droneSpreadXLower ?? 0.25f;
             float syL = _droneManager?.droneSpreadYLower ?? 0.2f;
             float sxU = _droneManager?.droneSpreadXUpper ?? 0.8f;

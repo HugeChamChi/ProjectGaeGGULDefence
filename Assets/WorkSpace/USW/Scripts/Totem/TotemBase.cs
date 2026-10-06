@@ -23,6 +23,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     [Inject] private ProjectilePool _debuffProjectilePool;
     [Inject] private GameManager _debuffGameManager;
     [Inject] private FieldPauseVisuals _fieldPause;
+    [Inject] private LevelUpManager _debuffLevelUpManager;
     private TotemDebuffEmitter _debuffEmitter;
 
     [SerializeField] protected TotemData     totemData;
@@ -71,7 +72,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         if (TryGetDebuffBinding(out var binding) && binding.Trigger == DebuffTrigger.ProjectileHit)
         {
             if (_debuffEmitter == null) _debuffEmitter = gameObject.AddComponent<TotemDebuffEmitter>();
-            _debuffEmitter.Initialize(this, _debuffBossManager, _debuffProjectilePool, _debuffGameManager, _fieldPause);
+            _debuffEmitter.Initialize(this, _debuffBossManager, _debuffProjectilePool, _debuffGameManager, _fieldPause, _debuffLevelUpManager);
         }
 
         UpdateSprite();

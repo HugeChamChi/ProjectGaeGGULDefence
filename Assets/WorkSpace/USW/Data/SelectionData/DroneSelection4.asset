@@ -16,8 +16,8 @@ MonoBehaviour:
   chooseName: "\uC8FC\uD30C\uC218 \uB3D9\uC870"
   tier: 2
   spawnRate: 1
-  description: "\uD544\uB4DC \uB4DC\uB860 \uC218 1\uAE30\uB2F9 \uAC10\uB9DD \uBC84\uD504
-    \uD6A8\uC728 +0.3% (\uCD5C\uB300 9\uD37C )"
+  description: "\uD544\uB4DC\uC5D0 \uC874\uC7AC\uD558\uB294 \uB4DC\uB860 1\uAE30\uB2F9\n\uBC84\uD504
+    \uD6A8\uC728\uC774 +0.3% \uC99D\uAC00\uD569\uB2C8\uB2E4. (\uCD5C\uB3009%)"
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

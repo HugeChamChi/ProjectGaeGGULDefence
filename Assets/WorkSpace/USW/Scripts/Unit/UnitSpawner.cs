@@ -82,6 +82,9 @@ public class UnitSpawner : MonoBehaviour
     // UIManager가 구독해서 비용 텍스트 갱신
     public event System.Action<float> OnCostChanged;
 
+    /// <summary>사용자 출격 요청이 거절되면 화면에 표시할 사유를 전달한다.</summary>
+    public event System.Action<string> OnSpawnRejected;
+
     /// <summary>유닛 판매(삭제) 시 전역 알림 — TotemSellStack에서 구독</summary>
     public static event System.Action OnAnyUnitSold;
 
@@ -124,6 +127,7 @@ public class UnitSpawner : MonoBehaviour
         if (_gameManager.CurrentState != GameManager.GameState.Playing)
         {
             Debug.Log("게임 시작 후 배치 가능합니다.");
+            OnSpawnRejected?.Invoke("게임 시작 후 배치 가능합니다.");
             return;
         }
 
@@ -136,6 +140,7 @@ public class UnitSpawner : MonoBehaviour
         if (!_currencyManager.Spend(effectiveCost))
         {
             Debug.Log("식량이 부족합니다.");
+            OnSpawnRejected?.Invoke("식량이 부족합니다.");
             return;
         }
 
@@ -144,6 +149,7 @@ public class UnitSpawner : MonoBehaviour
         {
             Debug.Log("빈 셀이 없습니다.");
             _currencyManager.AddCurrency(effectiveCost);
+            OnSpawnRejected?.Invoke("배치할 자리가 없습니다.");
             return;
         }
 
@@ -155,6 +161,7 @@ public class UnitSpawner : MonoBehaviour
         if (cell == null || !cell.IsAvailable)
         {
             _currencyManager.AddCurrency(effectiveCost);
+            OnSpawnRejected?.Invoke("배치할 자리가 없습니다.");
             return;
         }
         if (fixedSummon)
