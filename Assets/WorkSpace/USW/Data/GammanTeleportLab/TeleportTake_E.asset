@@ -1,0 +1,129 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d05dc90f1b052db48a99725ecfcbe776, type: 3}
+  m_Name: TeleportTake_E
+  m_EditorClassIdentifier: Assembly-CSharp::GammanTeleportTake
+  Label: E / AIR STRAFE
+  Description: Blink overhead, slide sideways while firing.
+  Beats:
+  - Label: READY
+    Duration: 0.75
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 1
+    Fire: 0
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: RADIO
+    Duration: 0.28
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 1
+    Fire: 0
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: VANISH
+    Duration: 0.06
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 0
+    Fire: 0
+    Snap: 1
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: GAP
+    Duration: 0.12
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 0
+    Fire: 0
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: AIR LOCK
+    Duration: 0.08
+    AtHome: 0
+    From: {x: -1.6, y: 2.2, z: -0.4}
+    To: {x: -1.6, y: 2.2, z: -0.4}
+    Body: 1
+    Fire: 0
+    Snap: 1
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: SLIDE + FIRE
+    Duration: 0.38
+    AtHome: 0
+    From: {x: -1.6, y: 2.2, z: -0.4}
+    To: {x: 1.6, y: 2.2, z: -0.4}
+    Body: 1
+    Fire: 1
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: BRAKE
+    Duration: 0.12
+    AtHome: 0
+    From: {x: 1.6, y: 2.2, z: -0.4}
+    To: {x: 1.75, y: 2.2, z: -0.4}
+    Body: 1
+    Fire: 0
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: RETURN BLINK
+    Duration: 0.07
+    AtHome: 0
+    From: {x: 1.75, y: 2.2, z: -0.4}
+    To: {x: 1.75, y: 2.2, z: -0.4}
+    Body: 0
+    Fire: 0
+    Snap: 1
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: HOME SNAP
+    Duration: 0.07
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 1
+    Fire: 0
+    Snap: 1
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  - Label: HOME
+    Duration: 0.8
+    AtHome: 1
+    From: {x: 0, y: 0, z: 0}
+    To: {x: 0, y: 0, z: 0}
+    Body: 1
+    Fire: 0
+    Snap: 0
+    HomeGhost: 0
+    Charge: 0
+    Squeeze: 0
+  BeamWidth: 0.24
+  Tint: {r: 1, g: 0.86, b: 0.2, a: 1}

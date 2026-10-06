@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8d20f4017e3d7042add973eb9b0d035, type: 3}
+  m_Name: BlinkStyle_C
+  m_EditorClassIdentifier: Assembly-CSharp::GammanBlinkStyle
+  Label: C / ECHO
+  Description: Golden afterimages / sharp side strike
+  Tint: {r: 1, g: 0.86, b: 0.2, a: 1}
+  AirOffset: {x: -1.1, y: 2.7, z: -0.4}
+  CommandTime: 0.3
+  BlinkTime: 0.24
+  TransitTime: 0.08
+  RingSize: 0.95
+  Portal: 0
+  Afterimages: 1
