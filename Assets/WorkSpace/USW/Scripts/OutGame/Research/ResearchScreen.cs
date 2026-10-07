@@ -15,7 +15,7 @@ using VContainer;
 /// 처음 해 보는 사람을 위해 화면을 열면 추천 노드로 이동하고 그 노드를 선택해 둔다.
 /// 하단 패널을 좌우로 밀어 추천 방식 두 가지를 비교한다: 0번 [추천 강화] 버튼, 1번 패널 오른쪽 위 [추천 따라가기] 토글(켜면 [강화]가 추천 노드를 올림).
 /// 두 방식 모두 지금 선택과 상관없이 추천 노드로 이동해 올린다 (6-1을 보고 있어도 추천이 7-2면 7-2).
-/// 진행 상황은 트리마다 IResearchSaveStore(지금은 PlayerPrefs)에 따로 저장한다. 비용은 아직 없다.
+/// 진행 상황은 트리마다 IResearchSaveStore(지금은 PlayerPrefs)에 따로 저장한다. 비용은 씬에서만 쓰는 임시 골드로 낸다.
 /// </summary>
 public sealed class ResearchScreen : MonoBehaviour
 {
@@ -63,6 +63,9 @@ public sealed class ResearchScreen : MonoBehaviour
     private SceneChangeManager _scenes;
     private bool _returning;
     private Button _back;
+    private const int StartingTestGold = 10000;
+    private int _testGold = StartingTestGold;
+    private TextMeshProUGUI _goldBalance;
 
     /// <summary>루트에 등록된 저장 서비스와 계정 경계를 주입한다.</summary>
     [Inject]
@@ -226,6 +229,18 @@ public sealed class ResearchScreen : MonoBehaviour
         var title = ResearchUi.NewText(topBar.transform, "Title", "영구 강화", TopButtonFont, s.FontBold, TextAlignmentOptions.Center);
         title.color = s.Ink;
 
+        var wallet = ResearchUi.NewImage(topBar.transform, "GoldBalance", s.RoundedFill, Vector2.zero, Vector2.zero);
+        wallet.type = Image.Type.Sliced;
+        wallet.color = new Color32(0x00, 0x50, 0x60, 0xFF);
+        ResearchUi.Place(wallet.rectTransform, Vector2.one, Vector2.one,
+            new Vector2(-Margin, -Margin), new Vector2(260f, 72f));
+        var goldIcon = ResearchUi.NewImage(wallet.transform, "Icon", s.GoldIcon, Vector2.zero, Vector2.zero);
+        ResearchUi.Place(goldIcon.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+            new Vector2(12f, 0f), new Vector2(48f, 48f));
+        goldIcon.preserveAspect = true;
+        _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", _testGold.ToString("N0"), 34f, s.FontBold, TextAlignmentOptions.Right);
+        ResearchUi.Stretch(_goldBalance.rectTransform, 68f, 0f, 16f, 0f);
+
         var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, s.PanelHeight, 0f, TopBarHeight);
 
         _progresses = new ResearchProgress[_trees.Length];
@@ -255,6 +270,7 @@ public sealed class ResearchScreen : MonoBehaviour
         dividerRect.pivot = new Vector2(0.5f, 1f);
         dividerRect.sizeDelta = new Vector2(0f, DividerHeight);
         _info = new ResearchInfoPanel(panelRect, s);
+        _info.SetGold(_testGold);
         _info.OnUpgradeClicked += Upgrade;
         _info.OnRecommendClicked += UpgradeRecommended;
         _info.OnFollowToggled += SetFollow;
@@ -280,7 +296,16 @@ public sealed class ResearchScreen : MonoBehaviour
     /// <summary>노드를 한 단계 올린다 ([강화] 버튼).</summary>
     public void Upgrade(ResearchNodeData node)
     {
-        if (Progress == null || !Progress.TryUpgrade(node)) return;
+        if (Progress == null || !Progress.CanUpgrade(node)) return;
+        int cost = Progress.GetUpgradeCost(node);
+        if (_testGold < cost) return;
+        _testGold -= cost;
+        if (!Progress.TryUpgrade(node))
+        {
+            _testGold += cost;
+            RefreshAll();
+            return;
+        }
         View.Punch(node);
         _info.Punch();
         ShowToast(node);
@@ -339,7 +364,9 @@ public sealed class ResearchScreen : MonoBehaviour
 
     private void RefreshAll()
     {
+        _goldBalance.text = _testGold.ToString("N0");
         View.Refresh();
+        _info.SetGold(_testGold);
         _info.Refresh();
     }
 
@@ -353,7 +380,7 @@ public sealed class ResearchScreen : MonoBehaviour
             layoutImage.pixelsPerUnitMultiplier = s.RoundedCornerScale;
             _layoutLabel.color = s.Ink;
             ResearchUi.Place((RectTransform)layout.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(Margin, -Margin), new Vector2(TopButtonWidth * 1.4f, TopButtonHeight));
+            new Vector2(Margin, -TopBarHeight - Margin), new Vector2(TopButtonWidth * 1.4f, TopButtonHeight));
             layout.onClick.AddListener(NextLayout);
         }
 
@@ -361,10 +388,11 @@ public sealed class ResearchScreen : MonoBehaviour
             TopButtonFont, s.FontBold, out var resetImage, out var resetText);
         resetImage.pixelsPerUnitMultiplier = s.RoundedCornerScale;
         resetText.color = s.Muted;
-        ResearchUi.Place((RectTransform)reset.transform, Vector2.one, Vector2.one, new Vector2(-Margin, -Margin),
+        ResearchUi.Place((RectTransform)reset.transform, Vector2.one, Vector2.one, new Vector2(-Margin, -TopBarHeight - Margin),
             new Vector2(TopButtonWidth * 0.6f, TopButtonHeight));
         reset.onClick.AddListener(() =>
         {
+            _testGold = StartingTestGold;
             Progress.ResetAll();
             ShowTree(_current);
         });

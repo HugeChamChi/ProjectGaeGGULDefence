@@ -150,7 +150,7 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>cards.All(c=>!c.AllowSelection),cancellationToken:token);
             await FocusReady(overlay);
             var previewTargets=new System.Collections.Generic.List<UnitBase>();
-            var card=cards.FirstOrDefault(c=>LevelUpFeedbackTargets.Resolve(c.GetData(),grid,null,previewTargets)==LevelUpFeedbackDestination.Units)
+            var card=cards.FirstOrDefault(c=>LevelUpFeedbackTargets.Resolve(c.GetData(),grid,previewTargets)==LevelUpFeedbackDestination.Units)
                 ?? cards.First(c=>c.GetData().specialEffect!=LevelUpSpecialEffect.RerollChoices);
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp && !card.AllowSelection,"Quick tap cannot skip required card hold preview");

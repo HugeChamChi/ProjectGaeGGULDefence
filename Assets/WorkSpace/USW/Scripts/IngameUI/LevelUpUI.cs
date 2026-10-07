@@ -91,7 +91,7 @@ public class LevelUpUI : MonoBehaviour
         if (RequireUnitPreview && choices.Count > 0)
         {
             var targets = new List<UnitBase>();
-            bool HasUnits(LevelUpData data) => LevelUpFeedbackTargets.Resolve(data, _gridManager, null, targets) == LevelUpFeedbackDestination.Units;
+            bool HasUnits(LevelUpData data) => LevelUpFeedbackTargets.Resolve(data, _gridManager, targets) == LevelUpFeedbackDestination.Units;
             if (!choices.Any(HasUnits))
             {
                 var preview = _levelUpManager.LevelUpPool.FirstOrDefault(c => c != null && c.spawnRate > 0 &&

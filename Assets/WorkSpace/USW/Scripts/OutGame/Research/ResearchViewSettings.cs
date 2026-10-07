@@ -36,6 +36,7 @@ public class ResearchViewSettings : ScriptableObject
     [Tooltip("노드 아래 부드러운 그림자")]
     public Sprite Shadow;
     public Sprite UpgradeArrow;
+    public Sprite GoldIcon;
     [Tooltip("택1에서 막힌 노드 표시")]
     public Sprite BlockedIcon;
     [Tooltip("둥근 네모 모서리 크기 배율 (클수록 모서리가 작아진다)")]

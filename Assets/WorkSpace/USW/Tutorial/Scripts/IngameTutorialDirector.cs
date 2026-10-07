@@ -518,7 +518,7 @@ namespace GaeGGUL.Tutorial
         {
             var cards = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
             var targets = new System.Collections.Generic.List<UnitBase>();
-            var card = cards.FirstOrDefault(c => LevelUpFeedbackTargets.Resolve(c.GetData(), _grid, null, targets) == LevelUpFeedbackDestination.Units)
+            var card = cards.FirstOrDefault(c => LevelUpFeedbackTargets.Resolve(c.GetData(), _grid, targets) == LevelUpFeedbackDestination.Units)
                 ?? cards.First(c => c.GetData().specialEffect != LevelUpSpecialEffect.RerollChoices);
             bool previewed = false;
             bool released = false;
