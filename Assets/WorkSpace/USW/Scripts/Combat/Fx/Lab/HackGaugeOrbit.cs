@@ -134,7 +134,7 @@ public sealed class HackGaugeOrbit : HackStackGauge
         if (amount <= 0) return;
         base.Consume(amount);
         _consumed = amount; _consumeAt = Time.time;
-        _echoRatio = Target / (float)Max;
+        _echoRatio = Mathf.Clamp01((Target + amount) / (float)Max);
         _state.text = "-" + amount;
     }
 

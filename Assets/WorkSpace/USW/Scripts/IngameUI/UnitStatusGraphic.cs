@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 /// <summary>성급 배지와 셰이더 게이지를 한 프리팹으로 표시합니다.</summary>
 [RequireComponent(typeof(CanvasRenderer))]
@@ -27,6 +28,11 @@ public sealed class UnitStatusGraphic : MaskableGraphic
     private bool _passive;
     private bool _bound;
     private DragHandler _dragHandler;
+    private const float ChargeEaseSeconds = .16f;
+    private const float DischargeEaseSeconds = .12f;
+    private Tweener _progressTween;
+    private float _targetProgress;
+    private bool _hasProgress;
 
     /// <summary>이 표시에 연결된 유닛입니다.</summary>
     public UnitBase Unit { get; private set; }
@@ -41,6 +47,9 @@ public sealed class UnitStatusGraphic : MaskableGraphic
     /// <summary>실제 유닛을 연결하고 프리팹의 크기와 스케일을 유지합니다.</summary>
     public void Bind(UnitBase unit)
     {
+        _progressTween?.Kill();
+        _progressTween = null;
+        _hasProgress = false;
         Unit = unit;
         _dragHandler = unit != null ? unit.GetComponent<DragHandler>() : null;
         _bound = true;
@@ -61,11 +70,40 @@ public sealed class UnitStatusGraphic : MaskableGraphic
         float progress = passive ? 0f : Unit.SkillGaugeProgress;
         if (float.IsNaN(progress) || float.IsInfinity(progress)) progress = 0f;
         progress = Mathf.Clamp01(progress);
-        if (_tier == Unit.currentTier && _passive == passive && Mathf.Approximately(_progress, progress)) return;
+        bool stateChanged = _tier != Unit.currentTier || _passive != passive;
         _tier = Unit.currentTier;
         _passive = passive;
-        _progress = progress;
-        SetVerticesDirty();
+        AnimateProgress(progress, passive);
+        if (stateChanged) SetVerticesDirty();
+    }
+
+    private void AnimateProgress(float progress, bool immediate)
+    {
+        if (_hasProgress && Mathf.Approximately(_progress, progress) && Mathf.Approximately(_targetProgress, progress)) return;
+        if (!_hasProgress || immediate)
+        {
+            _progressTween?.Pause();
+            _hasProgress = true;
+            _targetProgress = _progress = progress;
+            SetVerticesDirty();
+            return;
+        }
+        if (Mathf.Approximately(_targetProgress, progress)) return;
+        float duration = progress < _targetProgress ? DischargeEaseSeconds : ChargeEaseSeconds;
+        _targetProgress = progress;
+        if (_progressTween == null || !_progressTween.IsActive())
+            _progressTween = DOTween.To(() => _progress, value => { _progress = value; SetVerticesDirty(); }, progress, duration)
+                .SetEase(Ease.OutCubic).SetUpdate(true).SetAutoKill(false).SetLink(gameObject);
+        else
+            _progressTween.ChangeEndValue(progress, duration, true).Restart();
+    }
+
+    protected override void OnDisable()
+    {
+        _progressTween?.Kill();
+        _progressTween = null;
+        _hasProgress = false;
+        base.OnDisable();
     }
 
     private void PositionWithinCell()

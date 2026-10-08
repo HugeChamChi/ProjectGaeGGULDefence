@@ -1133,3 +1133,155 @@ ProjectSettings/ProjectSettings.asset
 ProjectSettings/UnityConnectSettings.asset
 ---
 
+## Session End: 20261009_000038
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+---
+
+## Session End: 20261009_002709
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_002943
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_003344
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_003554
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_003647
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_004105
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_004437
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20261009_004534
+### Commits
+15f84909 [Feat] Scene 빌드전
+47085e6b [Feat] Preserve approved sortie surface C bubble effect
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Zeltan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeOrbit.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UnitStatusGraphic.cs
+Assets/WorkSpace/USW/Scripts/production/session-logs/session-log.md
+---
+

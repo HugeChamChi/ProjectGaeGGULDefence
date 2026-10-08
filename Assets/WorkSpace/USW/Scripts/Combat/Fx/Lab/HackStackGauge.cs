@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 /// <summary>
 /// FxLab_HackBloom 해킹 스택 UI 시안 공용 기반 — 목표값을 향해 숫자가 굴러가고(기폭 때 빠르게 줄어듦),
@@ -32,6 +33,9 @@ public abstract class HackStackGauge
     private readonly Material _fontMaterial;
     private float _shown, _bumpAt = -9f, _igniteAt = -1f, _burstAt = -1f, _lastStep;
     private bool _hud, _placed;
+    private Tweener _valueTween;
+    private const float GainDuration = .28f;
+    private const float SpendDuration = .38f;
 
     /// <summary>목표 스택 수.</summary>
     protected int Target { get; private set; }
@@ -48,7 +52,14 @@ public abstract class HackStackGauge
     public bool UseHud { get; set; } = true;
 
     /// <summary>보이기/숨기기 (시안 전환).</summary>
-    public virtual bool Active { set => Root.gameObject.SetActive(value); }
+    public virtual bool Active
+    {
+        set
+        {
+            if (!value) { _valueTween?.Kill(); _valueTween = null; _shown = Target; }
+            Root.gameObject.SetActive(value);
+        }
+    }
 
     /// <summary>루트를 만든다. 크기·피벗은 시안이 정한다.</summary>
     protected HackStackGauge(RectTransform parent, TMP_FontAsset font, Material fontMaterial, Vector2 size, Vector2 pivot)
@@ -67,6 +78,7 @@ public abstract class HackStackGauge
     /// <summary>새 반복 시작: 값 즉시 설정(굴림 없음).</summary>
     public virtual void Reset(int value, int max)
     {
+        _valueTween?.Kill(); _valueTween = null;
         Max = Mathf.Max(1, max);
         Target = Mathf.Clamp(value, 0, Max);
         _shown = Target; _lastStep = Target;
@@ -78,8 +90,13 @@ public abstract class HackStackGauge
     public virtual void Set(int value)
     {
         value = Mathf.Clamp(value, 0, Max);
+        if (value == Target) return;
         if (value > Target) _bumpAt = Time.time;
+        float duration = value > Target ? GainDuration : SpendDuration;
         Target = value;
+        _valueTween?.Kill();
+        _valueTween = DOTween.To(() => _shown, shown => _shown = shown, Target, duration)
+            .SetEase(Ease.OutCubic).SetLink(Root.gameObject);
     }
 
     /// <summary>기폭 예고 — 하얗게 달아오른다.</summary>
@@ -95,14 +112,12 @@ public abstract class HackStackGauge
     protected virtual float PulseScale => .2f;
 
     /// <summary>개화 — 0으로 굴러 내려가며 크게 부풀고 사라진다.</summary>
-    public void Burst() { _burstAt = Time.time; Target = 0; }
+    public void Burst() { _burstAt = Time.time; Set(0); }
 
     /// <summary>매 프레임 갱신. bossLocal은 보스 옆 기준점(캔버스 좌표).</summary>
     public virtual void Tick(float now, Vector2 bossLocal)
     {
         // 기폭 때는 빠르게, 쌓일 때는 바로 따라간다.
-        float speed = Mathf.Max(Mathf.Abs(_shown - Target) * 10f, 40f);
-        _shown = Mathf.MoveTowards(_shown, Target, speed * Time.deltaTime);
         int shown = Mathf.RoundToInt(_shown);
         if (shown != Mathf.RoundToInt(_lastStep) && shown < _lastStep) _bumpAt = Mathf.Max(_bumpAt, now - BumpTime * .5f);
         _lastStep = shown;
@@ -125,7 +140,7 @@ public abstract class HackStackGauge
         Root.anchoredPosition = UseHud ? HudAnchor(HudBar) : Anchor(bossLocal);
         scale *= UseHud ? HudScale : 1f;
         Root.localScale = new Vector3(scale, scale, 1f);
-        Render(now, shown, Mathf.Clamp01(shown / (float)Max), bump, ignite);
+        Render(now, shown, Mathf.Clamp01(_shown / Max), bump, ignite);
     }
 
     /// <summary>보스 옆 위치.</summary>
