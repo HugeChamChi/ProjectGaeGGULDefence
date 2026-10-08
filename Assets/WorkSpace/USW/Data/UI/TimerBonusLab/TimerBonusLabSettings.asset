@@ -73,3 +73,42 @@ MonoBehaviour:
     ShardCount: 16
     ArriveTime: 0.78
     ShakeAmplitude: 11
+  Hack:
+    InfectSeconds: 0.05
+    HackSeconds: 0.28
+    LockStagger: 0.045
+    SettleSeconds: 0.18
+    TickSeconds: 0.04
+    SliceCount: 7
+    MaxSliceShift: 24
+    RgbOffset: 4
+    ScanlineCount: 9
+    NoiseBlockCount: 12
+    CyanTint: 0.7
+    AftershockTimes:
+    - 0.3
+    AftershockSeconds: 0.08
+    StackTriggerSets:
+    - Name: "\uBAB0\uC544\uC11C 3 + \uB2A6\uAC8C 1"
+      Times:
+      - 0
+      - 0.1
+      - 0.22
+      - 0.75
+    - Name: "\uB05D\uB0A0 \uB54C\uCBE4"
+      Times:
+      - 0
+      - 0.4
+      - 0.52
+    - Name: "\uC5F0\uD0C0 6"
+      Times:
+      - 0
+      - 0.15
+      - 0.3
+      - 0.45
+      - 0.6
+      - 0.75
+    MergeExtendSeconds: 0.08
+    ChainWindowSeconds: 0.6
+    ChainGapSeconds: 0.12
+    SignalSeconds: 0.18

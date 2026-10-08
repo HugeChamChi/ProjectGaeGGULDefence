@@ -7,7 +7,7 @@ using static TimerBonusEase;
 
 /// <summary>
 /// 보스 처치 시간 보너스 연출 실험실(FxLab_TimerBonus) 드라이버 (사용자 요청 2026-10-02).
-/// HTML 시안 4종(합체·슬롯 릴·질주·스탬프)을 같은 시계로 반복 재생한다:
+/// HTML 시안 4종(합체·슬롯 릴·질주·스탬프)과 E 해킹(글리치, 2026-10-09)을 같은 시계로 반복 재생한다:
 /// 처치 전 긴장(드론 레이저·빨간 박동·미세 떨림, 보스 피격 반응 없음) → 처치 순간 히트스톱·플래시·줌 → 시안별 보너스 연출 → 카운트다운.
 /// 히트스톱은 실험실 시계만 멈춘다. 인게임에 붙일 때는 Time.timeScale 대신 TimeScaleService.Request/Release.
 /// 게임 코드와 무관한 실험실 전용. FxLabCapture 캡처 대상 (Play() = 현재 시안 1배속 처음부터).
@@ -56,6 +56,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     [Tooltip("드론 프리팹·레이저 연결 (빌더가 채움). 자리·크기·간격은 설정 에셋에서 조정")]
     [SerializeField] private TimerBonusDroneSquad.Entry[] _droneSquad;
     [SerializeField] private int _concept;
+    [Tooltip("해킹 중첩 시안(G~J) 발동 시점 묶음 번호 — '발동 타이밍' 버튼이 순환")]
+    [SerializeField] private int _triggerSetIndex;
     [SerializeField] private bool _loop = true;
     [Header("Live game binding")]
     [SerializeField] private TMP_Text _runtimeTimer;
@@ -154,6 +156,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     private float _timerFlash;
     private float _ghostOffset;
     private float _ghostAlpha;
+    private float _timerAlpha = 1f;
+    private float _hack;
 
     /// <inheritdoc />
     public bool UseUnscaledTime { get => _useUnscaledTime; set => _useUnscaledTime = value; }
@@ -174,12 +178,26 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     internal Vector2 BossCenter => IsRuntime ? _liveBossCenter : _bossPosition + new Vector2(0f, _bossSize * 0.5f);
     internal Vector2 StageSize => _stage.rect.size;
     internal TimerBonusDigits MainDigits => _main;
+    /// <summary>타이머 묶음 루트 — 여기 붙인 자식은 타이머 이동·박동·크기를 같이 따른다 (본체보다 위에 그려짐).</summary>
+    internal RectTransform TimerRoot => _timerRoot;
+    internal TMP_FontAsset Font => _font;
     internal RectTransform FxLayer => _fx;
     internal float Pulse { get => _pulse; set => _pulse = value; }
     internal float Zoom { get => _zoom; set => _zoom = value; }
     /// <summary>처치 순간 기준 실험실 시계 (처치 전 음수). 히트스톱·슬로모션이 반영된다 — 공지 실험실이 같은 박자로 맞춘다.</summary>
     internal float KillTime => _t - _settings.PreKillSeconds;
     internal bool IsReady => _ready;
+
+    /// <summary>해킹 중첩 시안(G~J)의 현재 발동 시점 묶음 (처치 기준 초).</summary>
+    internal float[] StackTriggerTimes
+    {
+        get
+        {
+            var sets = _settings.Hack.StackTriggerSets;
+            if (sets == null || sets.Length == 0) return System.Array.Empty<float>();
+            return sets[Mathf.Clamp(_triggerSetIndex, 0, sets.Length - 1)].Times ?? System.Array.Empty<float>();
+        }
+    }
 
     private float LoopSeconds => _settings.PreKillSeconds + _settings.AnimSeconds + _settings.PostSeconds;
     private float Speed => _speeds.Length > 0 ? _speeds[Mathf.Clamp(_speedIndex, 0, _speeds.Length - 1)] : 1f;
@@ -201,12 +219,19 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _bonusIndex = Mathf.Clamp(_settings.DefaultBonusIndex, 0, Mathf.Max(0, _settings.Bonuses.Length - 1));
         UpdateBonusText();
         BuildView();
+        var stackHack = new TimerBonusHack();   // G~J가 같이 쓰는 해킹 렌더러 (실험실 전용)
         _concepts = IsRuntime ? new ITimerBonusConcept[] { new TimerBonusFusion() } : new ITimerBonusConcept[]
         {
             new TimerBonusFusion(),
             new TimerBonusSlotReel(),
             new TimerBonusDash(),
             new TimerBonusStamp(),
+            new TimerBonusHack(),
+            new TimerBonusHack(countUp: true),
+            new TimerBonusHackStack(stackHack, TimerBonusHackStack.Mode.Restart),
+            new TimerBonusHackStack(stackHack, TimerBonusHackStack.Mode.Queue),
+            new TimerBonusHackStack(stackHack, TimerBonusHackStack.Mode.Merge),
+            new TimerBonusHackStack(stackHack, TimerBonusHackStack.Mode.MergeMini),
         };
         foreach (var c in _concepts) c.Setup(this);
         _concept = Mathf.Clamp(_concept, 0, _concepts.Length - 1);
@@ -275,7 +300,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     /// <summary>처음부터 다시.</summary>
     public void Replay() => Restart();
 
-    /// <summary>시안 선택 (0=A 합체, 1=B 슬롯 릴, 2=C 질주, 3=D 스탬프).</summary>
+    /// <summary>시안 선택 (0=A 합체, 1=B 슬롯 릴, 2=C 질주, 3=D 스탬프, 4=E 해킹, 5=F 해킹 상승, 6~9=G~J 해킹 중첩 재시작·대기열·합산·합산+미니).</summary>
     public void SelectConcept(int index)
     {
         if (!_ready) { _concept = index; return; }
@@ -298,6 +323,15 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     {
         _bonusIndex = (_bonusIndex + 1) % Mathf.Max(1, _settings.Bonuses.Length);
         UpdateBonusText();
+        Restart();
+        UpdateStatus();
+    }
+
+    /// <summary>해킹 중첩 시안(G~J)의 발동 시점 묶음 순환 (몰아서 / 끝날 때쯤 / 연타 …).</summary>
+    public void NextTriggerSet()
+    {
+        var sets = _settings.Hack.StackTriggerSets;
+        _triggerSetIndex = (_triggerSetIndex + 1) % Mathf.Max(1, sets != null ? sets.Length : 1);
         Restart();
         UpdateStatus();
     }
@@ -328,6 +362,20 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _timerScale = new Vector2(sx, sy);
         _timerSkew = skew;
     }
+
+    /// <summary>자릿수 하나를 세 겹(본체·잔상 2장)에 같이 쓴다 (reel 0~3, digit 0~9).</summary>
+    internal void SetTimerDigit(int reel, int digit)
+    {
+        _main.SetDigit(reel, digit);
+        _ghostCyan.SetDigit(reel, digit);
+        _ghostHot.SetDigit(reel, digit);
+    }
+
+    /// <summary>타이머 본체 투명도 (0~1, 잔상은 SetGhosts로 따로). 시안이 본체를 직접 대신 그릴 때 0.</summary>
+    internal void SetTimerAlpha(float alpha) => _timerAlpha = alpha;
+
+    /// <summary>타이머 하늘색(해킹) 정도 (0~1).</summary>
+    internal void SetHack(float h) => _hack = h;
 
     /// <summary>타이머 금색 정도 (0~1).</summary>
     internal void SetGold(float g) => _gold = g;
@@ -560,6 +608,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _timerFlash = 0f;
         _ghostOffset = 0f;
         _ghostAlpha = 0f;
+        _timerAlpha = 1f;
+        _hack = 0f;
     }
 
     // 처치 전: 박동이 점점 빨라지며 타이머가 빨갛게, 화면 가장자리가 붉게 → 처치 순간 히트스톱으로 터뜨린다.
@@ -642,8 +692,10 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _timerRoot.localScale = new Vector3(_timerScale.x * p, _timerScale.y * p, 1f);
 
         var c = Color.Lerp(_settings.TimerColor, _settings.DangerColor, Mathf.Clamp01(_danger));
+        c = Color.Lerp(c, _settings.CyanColor, Mathf.Clamp01(_hack));
         c = Color.Lerp(c, _settings.GoldColor, Mathf.Clamp01(_gold));
         c = Color.Lerp(c, Color.white, Mathf.Clamp01(_timerFlash) * FlashWhiten);
+        c.a *= Mathf.Clamp01(_timerAlpha);
         _main.SetColor(c);
         _ghostCyan.SetColor(WithAlpha(_settings.CyanColor, _ghostAlpha));
         _ghostHot.SetColor(WithAlpha(_settings.HotColor, _ghostAlpha));
@@ -679,7 +731,17 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         float a = _t - _settings.PreKillSeconds;
         string phase = a < 0f ? "긴장" : a < _settings.AnimSeconds ? "연출" : "카운트다운";
         _status.text = $"{_concepts[_concept].Name}  /  보너스 {_bonusText}  /  {Speed:0.##}배속  /  반복 {(_loop ? "켬" : "끔")}\n"
-            + $"처치 기준 {a:+0.00;-0.00}s ({phase})";
+            + $"처치 기준 {a:+0.00;-0.00}s ({phase})" + TriggerSetStatus();
+    }
+
+    // 중첩 시안일 때만 발동 묶음 이름과 시점을 붙인다.
+    private string TriggerSetStatus()
+    {
+        var sets = _settings.Hack.StackTriggerSets;
+        if (!(_concepts[_concept] is TimerBonusHackStack) || sets == null || sets.Length == 0) return "";
+        var set = sets[Mathf.Clamp(_triggerSetIndex, 0, sets.Length - 1)];
+        var times = set.Times ?? System.Array.Empty<float>();
+        return $"   /   발동: {set.Name} ({string.Join(" / ", System.Array.ConvertAll(times, t => t.ToString("0.##", CultureInfo.InvariantCulture)))}s)";
     }
 
     private static Color WithAlpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
