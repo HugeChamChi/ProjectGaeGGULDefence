@@ -23,4 +23,6 @@ public sealed class RunPenaltyData : ScriptableObject
     public double Delta => _delta;
     /// <summary>효과 수치와 단위가 확정되었는지 여부.</summary>
     public bool IsConfigured => _isConfigured;
+    /// <summary>규칙형은 선택하여 적용한 뒤 다시 등장하지 않는다.</summary>
+    public bool OncePerRun => Target == RunPenaltyTarget.ChoiceReduction || Target == RunPenaltyTarget.PermanentCellSeal || Target == RunPenaltyTarget.ExperienceGain;
 }

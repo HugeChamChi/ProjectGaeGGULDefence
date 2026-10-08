@@ -65,17 +65,17 @@ public abstract class HackStackGauge
     }
 
     /// <summary>새 반복 시작: 값 즉시 설정(굴림 없음).</summary>
-    public void Reset(int value, int max)
+    public virtual void Reset(int value, int max)
     {
         Max = Mathf.Max(1, max);
         Target = Mathf.Clamp(value, 0, Max);
         _shown = Target; _lastStep = Target;
         _igniteAt = _burstAt = -1f; _bumpAt = -9f;
-        _group.alpha = Target > 0 ? 1f : 0f;
+        _group.alpha = ShowEmpty || Target > 0 ? 1f : 0f;
     }
 
     /// <summary>스택 값을 바꾼다. 늘어나면 톡 튀고, 줄어들면 숫자가 굴러 내려간다.</summary>
-    public void Set(int value)
+    public virtual void Set(int value)
     {
         value = Mathf.Clamp(value, 0, Max);
         if (value > Target) _bumpAt = Time.time;
@@ -85,11 +85,20 @@ public abstract class HackStackGauge
     /// <summary>기폭 예고 — 하얗게 달아오른다.</summary>
     public void Ignite() => _igniteAt = Time.time;
 
+    /// <summary>실제로 예약된 소모량으로 기폭 피드백을 시작한다.</summary>
+    public virtual void Consume(int amount) { if (amount > 0) Ignite(); }
+
+    /// <summary>고정 HUD는 빈 상태에서도 용량을 보여줄 수 있다.</summary>
+    protected virtual bool ShowEmpty => false;
+
+    /// <summary>획득 시 전체 위젯의 확대량.</summary>
+    protected virtual float PulseScale => .2f;
+
     /// <summary>개화 — 0으로 굴러 내려가며 크게 부풀고 사라진다.</summary>
     public void Burst() { _burstAt = Time.time; Target = 0; }
 
     /// <summary>매 프레임 갱신. bossLocal은 보스 옆 기준점(캔버스 좌표).</summary>
-    public void Tick(float now, Vector2 bossLocal)
+    public virtual void Tick(float now, Vector2 bossLocal)
     {
         // 기폭 때는 빠르게, 쌓일 때는 바로 따라간다.
         float speed = Mathf.Max(Mathf.Abs(_shown - Target) * 10f, 40f);
@@ -101,8 +110,8 @@ public abstract class HackStackGauge
         float bump = 1f - Mathf.Clamp01((now - _bumpAt) / BumpTime);
         // 기폭 예고 번쩍임은 잠깐만: 0.1초에 달아올랐다가 0.35초부터 식는다 (일부만 소모해도 흰색으로 남지 않게).
         float ignite = _igniteAt < 0f ? 0f : Mathf.Clamp01((now - _igniteAt) / .1f) * (1f - Mathf.Clamp01((now - _igniteAt - .35f) / .2f));
-        float scale = 1f + .2f * bump * bump;
-        float alpha = shown > 0 || Target > 0 ? 1f : 0f;
+        float scale = 1f + PulseScale * bump * bump;
+        float alpha = ShowEmpty || shown > 0 || Target > 0 ? 1f : 0f;
         if (_burstAt >= 0f)
         {
             float q = Mathf.Clamp01((now - _burstAt) / BurstTime);

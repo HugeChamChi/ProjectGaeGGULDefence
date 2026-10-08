@@ -26,7 +26,9 @@ MonoBehaviour:
     AttackCoefficient: 0.5
     Projectile: {fileID: 0}
   GrowthStages:
-  - RequiredKills: 0
+  - Name: "\uC0C8\uC2F9"
+    RequiredSeconds: 0
+    AttackBonus: 0.05
     Offsets:
     - {x: -1, y: -1}
     - {x: 0, y: -1}
@@ -37,7 +39,22 @@ MonoBehaviour:
     - {x: -1, y: 1}
     - {x: 0, y: 1}
     - {x: 1, y: 1}
-  - RequiredKills: 1
+  - Name: "\uBFCC\uB9AC"
+    RequiredSeconds: 60
+    AttackBonus: 0.1
+    Offsets:
+    - {x: -1, y: -1}
+    - {x: 0, y: -1}
+    - {x: 1, y: -1}
+    - {x: -1, y: 0}
+    - {x: 0, y: 0}
+    - {x: 1, y: 0}
+    - {x: -1, y: 1}
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+  - Name: "\uC904\uAE30"
+    RequiredSeconds: 120
+    AttackBonus: 0.1
     Offsets:
     - {x: -1, y: -1}
     - {x: 0, y: -1}
@@ -55,33 +72,28 @@ MonoBehaviour:
     - {x: 0, y: 2}
     - {x: 1, y: 2}
     - {x: 2, y: 2}
-  - RequiredKills: 2
+  - Name: "\uB9CC\uAC1C"
+    RequiredSeconds: 180
+    AttackBonus: 0.15
     Offsets:
-    - {x: -2, y: -2}
-    - {x: -1, y: -2}
-    - {x: 0, y: -2}
-    - {x: 1, y: -2}
-    - {x: 2, y: -2}
-    - {x: -2, y: -1}
     - {x: -1, y: -1}
     - {x: 0, y: -1}
     - {x: 1, y: -1}
     - {x: 2, y: -1}
-    - {x: -2, y: 0}
     - {x: -1, y: 0}
     - {x: 0, y: 0}
     - {x: 1, y: 0}
     - {x: 2, y: 0}
-    - {x: -2, y: 1}
     - {x: -1, y: 1}
     - {x: 0, y: 1}
     - {x: 1, y: 1}
     - {x: 2, y: 1}
-    - {x: -2, y: 2}
     - {x: -1, y: 2}
     - {x: 0, y: 2}
     - {x: 1, y: 2}
     - {x: 2, y: 2}
+  GrowthHarvestSeconds: 60
+  GrowthHarvestFood: 60
   WildcardSpawn:
     IntervalSeconds: 40
     Unit: {fileID: 0}
@@ -110,9 +122,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  description: "\uBC94\uC704 \uC548 \uC720\uB2DB\uC758 \uACF5\uACA9\uB825\uC774 5% \uC99D\uAC00\uD569\uB2C8\uB2E4,\n\uBCF4\uC2A4 \uCC98\uCE58 \uB9C8\uB2E4 \uBC94\uC704\uAC00 \uD655\uC7A5\uB429\uB2C8\uB2E4. [\uCD5C\uB300 5x5]"
-  functions:
-  - rid: 1992779463445184610
+  description: "\uC0B4\uC544 \uC788\uB294 \uBCF4\uC2A4\uC640 \uC804\uD22C \uC911
+    \uC790\uB77C\uB294 \uBFCC\uB9AC\uB0B4\uB9BC. \uC774\uB3D9\xB7\uD68C\uC218 \uC2DC
+    \uCD08\uAE30\uD654, \uD68C\uC804 \uC720\uC9C0. \uB2E8\uACC4\uBCC4 \uC218\uCE58\uB294
+    \uC131\uC7A5 \uC124\uC815\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
+  functions: []
   effectRanges:
   - rid: 1992779482763886693
   attackDisabledRanges:
@@ -122,11 +136,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1992779463445184610
-      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
-      data:
-        kind: 0
-        amount: 0.05
     - rid: 1992779482763886693
       type: {class: TotemSquareRingRange, ns: , asm: Assembly-CSharp}
       data:

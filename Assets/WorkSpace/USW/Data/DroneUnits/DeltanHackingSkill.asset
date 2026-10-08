@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
+  m_Name: DeltanHackingSkill
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillId: 0
+  skillName: "\uD574\uD0B9"
+  description: "\uC77C\uBC18\uACF5\uACA9\uC73C\uB85C \uCDA9\uC804\uD55C \uB9C8\uB098\uB97C
+    \uC18C\uBE44\uD574 \uBCF4\uC2A4\uC5D0\uAC8C \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uC313\uC2B5\uB2C8\uB2E4."
+  attackSoundAddress: 
+  action:
+    rid: 5888964643206987865
+  hitEffects: []
+  additionalEffects: []
+  castEffect:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 5888964643206987865
+      type: {class: DroneHackingSkillAction, ns: , asm: Assembly-CSharp}
+      data: 

@@ -27,7 +27,7 @@ public class Drone_Betan : DroneSpawnerBase
     /// <summary>기본 스킬 및 선택지 주기에서 요청한 자폭 드론을 생성한다.</summary>
     public virtual void SpawnSelfDestructDrones(int count)
     {
-        if (count <= 0 || !isActiveAndEnabled || currentCell == null || IsStunned || unitData == null || selfDestructPrefab == null)
+        if (count <= 0 || !isActiveAndEnabled || currentCell == null || IsStunned || IsCellSealed || unitData == null || selfDestructPrefab == null)
         {
             return;
         }
@@ -57,8 +57,17 @@ public class Drone_Betan : DroneSpawnerBase
                 if (bomb != null)
                 {
                     // Each accepted bomb owns one attack roll, including the run penalty and existing rounding.
-                    int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-                    bomb.Initialize(damage, critical, target);
+                    var hacking = DroneSelections?.Get(DroneSelectionKind.BetanHackingBomb);
+                    if (hacking != null && unitData.Hacking != null && _droneManager != null)
+                    {
+                        var runtime=_droneManager.Hacking;runtime.Configure(unitData.Hacking);
+                        bomb.InitializeHacking(target,runtime,hacking.Count);
+                    }
+                    else
+                    {
+                        int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
+                        bomb.Initialize(damage, critical, target);
+                    }
                 }
                 else RM.Destroy(bombObj);
             }

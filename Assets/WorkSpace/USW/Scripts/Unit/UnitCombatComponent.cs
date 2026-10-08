@@ -67,7 +67,7 @@ public class UnitCombatComponent : MonoBehaviour
         if (_unit == null || AttacksHeld || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
 
         if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
-        if (_unit.CanUseSkill) _skillTimer += Time.deltaTime;
+        if (_unit.CanUseSkill && _unit.UsesTimedSkillCharge) _skillTimer += Time.deltaTime;
         // 공격 애니메이션 대기 시간과 무관하게 생산을 진행한다. 스턴 시간은 누적하지 않는다.
         if (_loopCts != null && _unit.currentCell != null && !_unit.IsStunned)
             _resource?.TickFoodProduction(Time.deltaTime);
@@ -152,7 +152,7 @@ public class UnitCombatComponent : MonoBehaviour
             
             bool canAttack = _unit.currentCell != null && !_unit.currentCell.Model.IsAttackDisabled && !_unit.currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
-            if (_unit.CanUseSkill && _unit.CanAutoSkill && _skillTimer >= skillInterval && canAttack)
+            if (_unit.CanUseSkill && _unit.CanAutoSkill && _unit.IsSkillChargeReady(_skillTimer, skillInterval) && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Skilling);
                 _skillTimer = 0f;

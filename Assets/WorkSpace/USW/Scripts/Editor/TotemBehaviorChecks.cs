@@ -49,6 +49,24 @@ public static class TotemBehaviorChecks
         }
     }
 
+    /// <summary>뿌리내림 변경만 독립 검증한다. 다른 토템의 투사체 테스트 환경과 분리한다.</summary>
+    public static int RunGrowthChecks()
+    {
+        if(EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play first.");
+        _passed=0;_scene=EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var grid=CreateGrid();var manager=Component<TotemBuffManager>();Set(manager,"_gridManager",grid);
+            CheckGrowth(grid,manager);return _passed;
+        }
+        finally
+        {
+            foreach(var totem in _totems)if(totem!=null&&totem.CurrentCell!=null)totem.OnRemoved();_totems.Clear();
+            EditorSceneManager.ClosePreviewScene(_scene);
+            foreach(var asset in _assets)if(asset!=null)UnityEngine.Object.DestroyImmediate(asset);_assets.Clear();
+        }
+    }
+
     private static void CheckSheetIsolation()
     {
         var data = Asset<TotemData>();
@@ -122,36 +140,36 @@ public static class TotemBehaviorChecks
 
     private static void CheckGrowth(GridManager grid, TotemBuffManager manager)
     {
-        var data = Asset<TotemData>();
-        data.UseSheetData = false;
-        data.functions.Add(new SimpleBuffFunction { kind = StatKind.AttackPercent, amount = 0.05f });
-        for (int stage = 0; stage < 3; stage++)
+        var data=Asset<TotemData>();data.UseSheetData=false;data.isRotatable=true;
+        for(int i=0;i<4;i++)
         {
-            var preset = new TotemGrowthStage { RequiredKills = stage };
-            for (int y = -1; y < stage + 2; y++)
-            for (int x = -1; x < stage + 2; x++) preset.Offsets.Add(new Vector2Int(x, y));
-            data.GrowthStages.Add(preset);
+            var stage=new TotemGrowthStage {RequiredSeconds=i*60,AttackBonus=new[]{.05f,.1f,.1f,.15f}[i]};
+            int size=i<2?3:4;for(int y=-1;y<size-1;y++)for(int x=-1;x<size-1;x++)stage.Offsets.Add(new Vector2Int(x,y));data.GrowthStages.Add(stage);
         }
-        var totem = Place<TotemKillRangeGrowth>(grid, manager, data, new Vector2Int(2, 2));
-        Check(totem.GetAffectedCells().Count == 9 && totem.KillCount == 0, "new placement starts at 3x3");
-        Call(totem, "OnBossKilled");
-        Check(totem.GetAffectedCells().Count == 16, "first kill expands to 4x4");
-        Call(totem, "OnBossKilled");
-        Call(totem, "OnBossKilled");
-        Check(totem.GetAffectedCells().Count == 25 && totem.KillCount == 2, "second kill reaches capped 5x5");
-        Check(Mathf.Approximately(grid.GetCell(3, 3).Model.GetTotemCellBonus(StatKind.AttackPercent), 0.05f),
-            "growth does not accumulate attack strength");
-        var origin = totem.CurrentCell;
-        totem.OnRemoved();
-        origin.RemoveTotem();
-        totem.OnPlaced(origin);
-        origin.TryPlaceTotem(totem);
-        Check(totem.KillCount == 2, "moving same totem preserves growth");
-        totem.Rotate();
-        Check(totem.KillCount == 2, "rotation preserves growth");
-        totem.OnRemoved();
-        origin.RemoveTotem();
-        Check(grid.GetCell(3, 3).Model.GetTotemCellBonus(StatKind.AttackPercent) == 0f, "removal clears cell buff");
+        var game=Component<GameManager>();Set(game,"<CurrentState>k__BackingField",GameManager.GameState.Playing);
+        var bosses=Component<BossManager>();var boss=Component<BossNormal>();boss.Init(100);
+        ((List<BossBase>)bosses.CurrentBosses).Add(boss);
+        var currency=Component<CurrencyManager>();
+        var totem=Place<TotemKillRangeGrowth>(grid,manager,data,new Vector2Int(2,2));
+        Set(totem,"_game",game);Set(totem,"_bosses",bosses);Set(totem,"_currency",currency);
+        Check(totem.GetAffectedCells().Count==9 && totem.StageIndex==0,"initial3x3");
+        totem.TickCombat(59);Check(totem.StageIndex==0,"before60");totem.TickCombat(1);Check(totem.StageIndex==1 && totem.GetAffectedCells().Count==9,"root60");
+        Check(Mathf.Approximately(grid.GetCell(3,3).Model.GetTotemCellBonus(StatKind.AttackPercent),.1f),"stage attack replaces not stacks");
+        totem.TickCombat(60);Check(totem.StageIndex==2&&totem.GetAffectedCells().Count==16,"stem120");
+        totem.Rotate();Check(totem.CombatSeconds==120,"rotation keeps time");
+        totem.TickCombat(60);Check(totem.StageIndex==3&&currency.Currency==0,"bloom180 no early harvest");
+        totem.TickCombat(59);Check(currency.Currency==0,"harvest wait");totem.TickCombat(1);Check(currency.Currency==60,"harvest240");
+        var cell=totem.CurrentCell;cell.Model.SetPermanentSeal(true);totem.TickCombat(60);Check(currency.Currency==60&&!totem.IsActive,"sealed stops harvest");cell.Model.SetPermanentSeal(false);
+        Check(totem.StageIndex==3,"unseal keeps growth");
+        Set(game,"<CurrentState>k__BackingField",GameManager.GameState.LevelUp);totem.TickCombat(60);Check(currency.Currency==60,"reward state stops time");Set(game,"<CurrentState>k__BackingField",GameManager.GameState.Playing);
+        using(var scale=new TimeScaleService())
+        {
+            Set(totem,"_timeScale",scale);scale.Pause(totem);totem.TickCombat(60);
+            Check(currency.Currency==60,"TimeScaleService pause blocks nonzero supplied delta");scale.Release(totem);
+        }
+        ((List<BossBase>)bosses.CurrentBosses).Clear();totem.TickCombat(60);Check(currency.Currency==60,"no boss stops time");
+        totem.OnRemoved();cell.RemoveTotem();totem.OnPlaced(cell);cell.TryPlaceTotem(totem);Check(totem.CombatSeconds==0&&totem.HarvestSeconds==0&&totem.StageIndex==0,"moving resets all");
+        totem.OnRemoved();cell.RemoveTotem();Check(grid.GetCell(3,3).Model.GetTotemCellBonus(StatKind.AttackPercent)==0,"remove clears buff");
     }
 
     private static void CheckBonusTargets(GridManager grid, TotemBuffManager manager)

@@ -28,6 +28,9 @@ public class LevelUpManager : MonoBehaviour
     public string GetChoiceDescription(LevelUpData card)
     {
         if (card == null) return string.Empty;
+        if (card.droneEffect != null && card.droneEffect.Kind >= DroneSelectionKind.DeltanBackdoor)
+            return (card.description ?? string.Empty).Replace("{value}",(card.droneEffect.Value*100f).ToString("0.#"))
+                .Replace("{count}",card.droneEffect.Count.ToString());
         if (card.droneEffect?.Kind != DroneSelectionKind.DeltanDamageTaken) return card.description;
         string value = UnityEngine.Mathf.RoundToInt(DroneSelections.PreviewValue(card) * 100).ToString();
         return (card.description ?? string.Empty).Replace("{value}", value).Replace("[1~10%]", value + "%");
@@ -155,9 +158,12 @@ public class LevelUpManager : MonoBehaviour
     // 랜덤 선택지 3장 뽑기 (가중치 + 부족 필터)
     // ══════════════════════════════════════════════════════════
 
+    [VContainer.Inject] private EndlessRunService _runPenalties;
+
     public List<LevelUpData> GetRandomChoices(int count = 3)
     {
         if (count <= 0) return new List<LevelUpData>();
+        count = _runPenalties?.GetChoiceCount(count) ?? count;
         if (!_poolInitialized) Init();
         bool forceLegend = _guaranteeNextLegend;
         _guaranteeNextLegend = false;

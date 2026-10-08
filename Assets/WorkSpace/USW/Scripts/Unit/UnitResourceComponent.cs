@@ -19,7 +19,7 @@ public class UnitResourceComponent : MonoBehaviour
     public void TickFoodProduction(float deltaTime)
     {
         if (_deps?.GameManager?.IsFinished == true) return;
-        if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.unitData == null || deltaTime <= 0f) return;
+        if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.IsCellSealed || _unit.unitData == null || deltaTime <= 0f) return;
 
         float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
         float speedMultiplier = 1f / Mathf.Max(0.1f, 1f + cellFoodSpeedBonus);
@@ -62,7 +62,7 @@ public class UnitResourceComponent : MonoBehaviour
     {
         get
         {
-            if (_unit == null || _unit.unitData == null) return 0f;
+            if (_unit == null || _unit.unitData == null || _unit.IsCellSealed) return 0f;
             float baseAmount = _unit.GetBaseFoodPerSecond();
             if (baseAmount <= 0f) return 0f;
 

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14e0b4b988abbf34d859da51ed830315, type: 3}
+  m_Name: DroneHacking
+  m_EditorClassIdentifier: Assembly-CSharp::DroneHackingData
+  Capacity: 50
+  AttacksToCharge:
+    normal: 6
+    rare: 6
+    epic: 6
+    legend: 6
+  StacksProduced:
+    normal: 1
+    rare: 2
+    epic: 4
+    legend: 8
+  MaxStacksConsumed:
+    normal: 2
+    rare: 4
+    epic: 8
+    legend: 16
+  BaseCoefficient:
+    normal: 2
+    rare: 2
+    epic: 2
+    legend: 2
+  CoefficientPerStack:
+    normal: 1.5
+    rare: 1.95
+    epic: 2.55
+    legend: 4.2
+  HackFlightSeconds: 0.25
+  ContactSeconds: 0.35
+  RecoverySeconds: 0.35
+  TeleportOffset: {x: -1.4, y: 0.35, z: -0.2}
+  HackColor: {r: 0.38, g: 0.86, b: 1, a: 1}
+  LineMaterial: {fileID: 2100000, guid: 0f145a51257c53448aca6a300e4428d6, type: 2}

@@ -30,6 +30,22 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     public string LastError { get; private set; } = "";
     /// <inheritdoc />
     public double AttackMultiplier => _penalties.Attack;
+    /// <summary>획득 경험치 배율.</summary>
+    public double ExperienceMultiplier => _penalties.Experience;
+    /// <summary>기본 후보 수에서 활성 규칙형 감소량을 뺀다.</summary>
+    public int GetChoiceCount(int baseline) => Math.Max(1, baseline - _penalties.ChoiceReduction);
+    /// <summary>영구 봉인 규칙이 적용되었는지 여부.</summary>
+    public bool HasPermanentSeal => _penalties.PermanentSeal;
+    /// <summary>현재 제시된 서로 다른 두 후보.</summary>
+    public System.Collections.Generic.IReadOnlyList<RunPenaltyData> PenaltyChoices => _penalties.Offered;
+    /// <summary>유효한 선택이 오기 전 다음 라운드 진행을 막는다.</summary>
+    public bool AwaitingPenaltyChoice => _penalties.AwaitingChoice;
+    /// <summary>현재 런/라운드의 제시된 후보만 한 번 선택한다.</summary>
+    public bool TryChoosePenalty(long runId, int round, string key)
+    {
+        if (!Matches(runId, round) || !_roundCompleted || !_penalties.TryChoose(runId, round+1, key, out var result)) return false;
+        OnPenaltyReserved?.Invoke(result); return true;
+    }
     /// <inheritdoc />
     public double AttackFrequencyMultiplier => _penalties.Frequency;
     /// <inheritdoc />
@@ -71,20 +87,18 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     {
         if (!Matches(runId, round) || _roundCompleted) return false;
         if (IsEndless && round == int.MaxValue) { Fail("Round number exceeds Int32 range."); return false; }
-        RunPenaltyResult result = default;
         bool draw = IsEndless && round >= _mode.PenaltyFirstApplyRound - 1
             && (round - (_mode.PenaltyFirstApplyRound - 1)) % _mode.PenaltyInterval == 0;
-        if (draw && !_penalties.TryReserve(runId, round + 1, out result, out string error))
+        if (draw && !_penalties.TryOffer(out string error))
         { Fail(error); return false; }
         _roundCompleted = true;
-        if (draw) OnPenaltyReserved?.Invoke(result);
         return Matches(runId, round);
     }
 
     /// <summary>Consumes reward completion and activates the next round exactly once.</summary>
     public bool TryAdvanceRound(long runId, int completedRound)
     {
-        if (!Matches(runId, completedRound) || !_roundCompleted) return false;
+        if (!Matches(runId, completedRound) || !_roundCompleted || AwaitingPenaltyChoice) return false;
         if (completedRound == int.MaxValue) { Fail("Round number exceeds Int32 range."); return false; }
         RuntimeBossStats stats = default;
         if (IsEndless)

@@ -198,7 +198,7 @@ public static class EndlessBalanceImporter
                 string displayName = row.Get("이름");
                 if (string.IsNullOrWhiteSpace(displayName)) throw row.Error("이름", "이름이 필요합니다.");
                 Edit(data, s => { Set(s, "_key", key); Set(s, "_displayName", displayName); Set(s, "_target", (int)target); Set(s, "_unit", (int)unit); Set(s, "_delta", delta); Set(s, "_isConfigured", configured); });
-                if (configured && !EndlessConfigurationValidator.IsSupportedPenalty(data)) throw row.Error("증감값", "현재 런타임은 유닛 공격력/공격 빈도의 -100 초과 0 이하 %만 지원합니다.");
+                if (configured && !EndlessConfigurationValidator.IsSupportedPenalty(data)) throw row.Error("증감값", "지원 대상/단위/수치가 아닙니다. 숫자형 감소 또는 확정된 승천 규칙형을 사용하세요.");
                 penalties.Add(key, data);
             }
             var pools = new Dictionary<string, RunPenaltyPoolData>(StringComparer.Ordinal);
@@ -295,9 +295,9 @@ public static class EndlessBalanceImporter
             }
             if (penalties.Count == 0 || pools.Count == 0 || modes.Count == 0) throw new FormatException("효과/풀/난이도 입력이 비어 있습니다.");
             foreach (var slot in slots) if (slot.Get("난이도 키") != "ALL" && !modes.Contains(slot.Get("난이도 키"))) throw slot.Error("난이도 키", "미등록 난이도");
-            foreach (var rule in new[] { ("PenaltySelection", "무작위"), ("PenaltyStack", "항목별 곱누적"), ("PenaltyLifetime", "현재 런") })
+            foreach (var rule in new[] { ("PenaltySelection", "2개 중 1개 선택"), ("PenaltyStack", "숫자형 곱누적/규칙형 1회"), ("PenaltyLifetime", "현재 런") })
                 if (!rules.TryGetValue(rule.Item1, out string value) || value != rule.Item2) throw new FormatException("Stage_무한: 지원되지 않은 규칙 " + rule.Item1);
-            if (Rule("PenaltyCount") != 1) throw new FormatException("회당 1개 패널티 추첨만 지원합니다.");
+            if (Rule("PenaltyCount") != 2) throw new FormatException("승천 후보 2개 중 1개 선택만 지원합니다. 이전 단일 추첨 Excel은 갱신 후 가져오세요.");
             var fingerprint = new StringBuilder(Hash(bytes)).Append(EditorJsonUtility.ToJson(registry));
             var temporaryPaths = graph.Items.ToDictionary(x => (UnityEngine.Object)x.Desired, x => x.Path);
             foreach (var item in graph.Items)

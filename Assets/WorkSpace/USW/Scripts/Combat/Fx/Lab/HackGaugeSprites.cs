@@ -5,7 +5,29 @@ using UnityEngine;
 public static class HackGaugeSprites
 {
     private const int Size = 128;
-    private static Sprite _ring, _disc, _hex, _hexLine;
+    private const int Segments = 10;
+    private const float SegmentGap = .09f;
+    private static Sprite _ring, _disc, _hex, _hexLine, _thinRing, _segmentRing, _softDisc, _chargeRing;
+
+    /// <summary>독립 계기판의 굵은 10칸 충전 띠.</summary>
+    public static Sprite ChargeRing => _chargeRing != null ? _chargeRing : _chargeRing = MakeXY("HackChargeRing", (x, y) =>
+    {
+        float t = Mathf.Repeat(Mathf.Atan2(x, y) / (2f * Mathf.PI), 1f) * Segments;
+        float edge = Mathf.Min(t - Mathf.Floor(t), Mathf.Ceil(t) - t);
+        return Band(Mathf.Sqrt(x * x + y * y), .69f, .93f) * Mathf.Clamp01((edge - .035f) / .035f);
+    });
+
+    /// <summary>초상화에 딱 맞는 얇은 원형 띠 (안쪽 0.84 ~ 바깥 0.98).</summary>
+    public static Sprite ThinRing => _thinRing != null ? _thinRing : _thinRing = Make("HackThinRing", r => Band(r, .84f, .98f));
+    /// <summary>10칸으로 나뉜 얇은 원형 띠 — 12시 방향에서 칸 사이가 갈라진다.</summary>
+    public static Sprite SegmentRing => _segmentRing != null ? _segmentRing : _segmentRing = MakeXY("HackSegmentRing", (x, y) =>
+    {
+        float t = Mathf.Repeat(Mathf.Atan2(x, y) / (2f * Mathf.PI), 1f) * Segments;
+        float edge = Mathf.Min(t - Mathf.Floor(t), Mathf.Ceil(t) - t);
+        return Band(Mathf.Sqrt(x * x + y * y), .84f, .98f) * Mathf.Clamp01((edge - SegmentGap * .5f) / .04f);
+    });
+    /// <summary>가운데가 진하고 바깥으로 부드럽게 사라지는 빛.</summary>
+    public static Sprite SoftDisc => _softDisc != null ? _softDisc : _softDisc = Make("HackSoftDisc", r => Mathf.Pow(Mathf.Clamp01(1f - r), 1.6f));
 
     /// <summary>얇은 원형 띠 (원형 게이지 바탕·채움용, Filled Radial360에 쓴다).</summary>
     public static Sprite Ring => _ring != null ? _ring : _ring = Make("HackRing", r => Band(r, .64f, .92f));

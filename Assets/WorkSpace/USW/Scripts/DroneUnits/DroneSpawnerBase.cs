@@ -163,7 +163,8 @@ public abstract class DroneSpawnerBase : UnitBase
         _ownedDrones.Clear();
     }
 
-    private void OnDisable() => UnsubscribeSelections();
+    /// <summary>비활성화 시 선택지 구독을 해제한다.</summary>
+    protected virtual void OnDisable() => UnsubscribeSelections();
 
     private void UnsubscribeSelections()
     {

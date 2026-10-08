@@ -43,7 +43,12 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
             _isDataCloned = true;
         }
     }
-    public bool      IsActive    { get; private set; } = false;
+    private bool _isPlaced;
+    private bool _effectsApplied;
+    /// <summary>봉인 여부와 별개인 실제 배치 상태. 정보·회수 UI에 사용한다.</summary>
+    public bool IsPlaced => _isPlaced;
+    /// <summary>봉인 시 점유와 상호작용은 유지하고 효과만 중단한다.</summary>
+    public bool IsActive => _isPlaced && CurrentCell != null && !CurrentCell.Model.IsSealed;
     public int       RotationStep { get; private set; } = 0;
     private int? _previewRotationStep;
 
@@ -68,7 +73,9 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         SyncStatsWithSheet();
 
         CurrentCell = cell;
-        IsActive    = true;
+        _isPlaced = true;
+        OnPlacementStarted();
+        cell.Model.OnStateChanged += RefreshSealedEffects;
         if (TryGetDebuffBinding(out var binding) && binding.Trigger == DebuffTrigger.ProjectileHit)
         {
             if (_debuffEmitter == null) _debuffEmitter = gameObject.AddComponent<TotemDebuffEmitter>();
@@ -76,7 +83,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         }
 
         UpdateSprite();
-        ApplyBuff();
+        RefreshSealedEffects();
 
         // 토템 목록에 등록 (FindObjectsOfType 대체)
         if (_totemBuffManager != null)
@@ -94,16 +101,18 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
 
     public void OnRemoved()
     {
-        if (!IsActive) return;
+        if (!_isPlaced) return;
 
         if (_gridManager != null && _gridManager.IsPreviewingTotem(this))
             _gridManager.ClearTotemRangePreview();
 
-        IsActive    = false;
+        if (CurrentCell != null) CurrentCell.Model.OnStateChanged -= RefreshSealedEffects;
+        _isPlaced = false;
+        OnPlacementEnded();
         if (_debuffEmitter != null) _debuffEmitter.enabled = false;
         CurrentCell = null;
 
-        RemoveBuff();
+        if (_effectsApplied) { _effectsApplied = false; RemoveBuff(); }
 
         // 토템 목록에서 해제
         if (_totemBuffManager != null)
@@ -113,6 +122,16 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         }
 
         Debug.Log($"[토템] {totemData?.totemName} 제거");
+    }
+
+    private void RefreshSealedEffects()
+    {
+        bool active = IsActive;
+        if (active == _effectsApplied) return;
+        _effectsApplied = active;
+        if (active) ApplyBuff(); else RemoveBuff();
+        if (_debuffEmitter != null) _debuffEmitter.enabled = active;
+        _totemBuffManager?.RebuildCellBuffFlags();
     }
 
     // ── 회전 ───────────────────────────────────────────────────
@@ -191,6 +210,11 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         finally { totemData = oldData; CurrentCell = oldCell; _gridManager = oldGrid; }
     }
 
+    /// <summary>실제 배치 시작. 봉인 해제와 구분되는 생명주기 훅.</summary>
+    protected virtual void OnPlacementStarted() { }
+    /// <summary>이동/회수에 의한 실제 배치 종료.</summary>
+    protected virtual void OnPlacementEnded() { }
+
     // ── 자식 구현 ──────────────────────────────────────────────
     protected abstract void ApplyBuff();
     protected abstract void RemoveBuff();
@@ -218,7 +242,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
 
     private void OnDestroy()
     {
-        if (IsActive) OnRemoved();
+        if (_isPlaced) OnRemoved();
 
         // 런타임에 복제된 ScriptableObject 메모리 해제
         if (_isDataCloned && totemData != null)

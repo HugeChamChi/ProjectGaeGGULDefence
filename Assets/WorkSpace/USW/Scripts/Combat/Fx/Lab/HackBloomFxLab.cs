@@ -7,14 +7,16 @@ using UnityEngine.UI;
 /// FxLab_HackBloom 드라이버 — 델탕은 그리드에 가만히 있고 델탕 드론이 쉬지 않고 해킹 탄을 쏴 악어 보스에 빛점 표식(스택)을 쌓는다.
 /// 감망은 자기 주기마다 순간이동 신호를 보내 스택을 일정량(기본 20)만 소모한다: 50/50 → 30/50, 그 사이 드론이 다시 채운다.
 /// 소모분만큼의 표식이 하나씩 연쇄로 터지고(표식마다 숫자), 마지막에 큰 숫자 하나로 마무리한다.
-/// 확정(10-07): 기폭 A 연쇄 · 표식 빛점 · 최대 50스택 · 스택 비율 색상 단계. 남은 비교: 스택 UI 시안 · 위치(보스 옆/HUD) · 감망 동작.
+/// 확정(10-07): 기폭 A 연쇄 · 표식 빛점 · 최대 50스택 · 스택 비율 색상 단계 · 디버프 줄은 HP바 바로 아래 · 스택 UI는 해골 초상화 링.
+/// 남은 비교: 링 시안 4종 · 감망 동작.
 /// 보스 몸 표식은 최대 12개로 스택 비율만큼 보이고, 정확한 수는 숫자·게이지로 표현한다.
 /// 실험실 전용: 속도는 x1 고정, Time.timeScale은 히트스톱에만 쓰고 비활성화 시 1로 되돌린다. 전투 데이터는 건드리지 않는다.
 /// </summary>
 public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
 {
     private const int NumberSeed = 23;
-    private static readonly string[] GaugeLabels = { "없음", "A 박스", "B 링", "C 10칸", "D 디버프", "E 디지털", "F HP바줄" };
+    private const float DepletionPreviewPause = 2f;
+    private static readonly string[] GaugeLabels = { "없음", "분할 링", "스캔 링", "오픈 링" };
 
     [Header("참조")]
     [SerializeField] private HackStackMarks _marks;
@@ -29,20 +31,29 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
     [SerializeField] private Transform _boss;
     [Tooltip("인게임과 같은 자리에 둔 보스 HP바 (HUD 배치 기준)")]
     [SerializeField] private RectTransform _hpBar;
+    [Tooltip("IngameScene에서 복제한 보스 HP바 — 시작 때 BeginBoss로 인게임처럼 채운다")]
+    [SerializeField] private UI_BossHpBar _hpBarView;
+    [Tooltip("실험실 HP바 표시값 (현재 HP, 최대 HP, 줄 수) — 예시값")]
+    [SerializeField] private Vector3 _labBossHp = new Vector3(93100f, 100000f, 182f);
+    [Header("디버프 줄 대역 (design/hp,디버프예씨.png)")]
+    [SerializeField] private Sprite _debuffTile;
+    [Tooltip("예시 디버프 아이콘 (방어 약화 / 화상 / 받피증)")]
+    [SerializeField] private Sprite[] _debuffIcons;
+    [SerializeField] private string[] _debuffCounts = { "23", "", "" };
     [SerializeField] private Camera _camera;
     [SerializeField] private RectTransform _uiRoot;
+    [Tooltip("HUD보다 뒤에 그리는 레이어 (링 발광이 초상화를 덮지 않게)")]
+    [SerializeField] private RectTransform _uiBackRoot;
     [SerializeField] private Image _flash;
     [SerializeField] private CookieFloaterLabSettings _floaterSettings;
 
     [Header("구성")]
-    [Tooltip("스택 UI 시안 (0 없음, 1~6 = A 박스 / B 링 / C 10칸 / D 디버프 / E 디지털 / F HP바 줄)")]
-    [SerializeField, Range(0, 6)] private int _gaugeDesign = 2;
-    [Tooltip("true = 보스 HP바 기준 HUD 고정, false = 보스 옆")]
-    [SerializeField] private bool _useHud = true;
+    [Tooltip("독립 링 시안 (0 없음, 1 분할 / 2 스캔 / 3 오픈). HP바 우측 하단 배치.")]
+    [SerializeField, Range(0, 3)] private int _gaugeDesign = 2;
     [Tooltip("최대 스택")]
     [SerializeField, Min(1)] private int _maxStacks = 50;
     [Tooltip("다시 보기 때 처음 쌓여 있는 스택")]
-    [SerializeField, Min(0)] private int _startStacks = 44;
+    [SerializeField, Min(0)] private int _startStacks = 0;
     [Tooltip("감망 스킬 한 번에 소모하는 스택")]
     [SerializeField, Min(1)] private int _consumePerCast = 20;
     [Tooltip("감망 신호 주기 (초) — 신호가 닿는 순간 사이 간격")]
@@ -50,11 +61,9 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
     [SerializeField] private int _take;
     [Tooltip("드론 기준 해킹 탄이 나가는 위치")]
     [SerializeField] private Vector3 _droneMuzzle = new Vector3(0f, .2f, -.1f);
-    [Tooltip("보스 옆 배치일 때 보스 기준 스택 표시 위치 (월드)")]
-    [SerializeField] private Vector3 _badgeOffset = new Vector3(.75f, 2.55f, 0f);
 
     [Header("해킹 (초)")]
-    [SerializeField] private float _lead = .2f;
+    [SerializeField] private float _lead = .8f;
     [SerializeField] private float _shotInterval = .13f;
     [SerializeField] private float _boltFlight = .09f;
     [Tooltip("다시 보기 후 처음 최대치가 된 뒤 감망 신호가 닿기까지")]
@@ -96,6 +105,7 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
     private readonly List<Action> _due = new List<Action>();
     private readonly Vector3[] _corners = new Vector3[4];
     private HackStackGauge[] _gauges;
+    private HackDebuffRowMock _debuffRow;
     private CookieFloaterVariantView _numbers;
     private System.Random _rng;
     private Vector3 _cameraHome, _droneHome, _bossScale;
@@ -122,14 +132,22 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
         var font = _floaterSettings.Font; var material = _floaterSettings.FontMaterial;
         _gauges = new HackStackGauge[]
         {
-            new HackGaugeBox(_uiRoot, font, material), new HackGaugeRing(_uiRoot, font, material), new HackGaugeCells(_uiRoot, font, material),
-            new HackGaugeSlot(_uiRoot, font, material), new HackGaugeDigital(_uiRoot, font, material), new HackGaugeStrip(_uiRoot, font, material),
+            new HackGaugeOrbit(_uiRoot, font, material, HackGaugeOrbit.Look.Segmented),
+            new HackGaugeOrbit(_uiRoot, font, material, HackGaugeOrbit.Look.Smooth),
+            new HackGaugeOrbit(_uiRoot, font, material, HackGaugeOrbit.Look.OpenArc),
         };
         SelectGauge(_gaugeDesign);
+        if (_debuffIcons != null && _debuffIcons.Length > 0)
+            _debuffRow = new HackDebuffRowMock(_uiRoot, font, material, _debuffTile, _debuffIcons, _debuffCounts);
         _marks.BoltHit += OnBoltHit;
     }
 
-    private void Start() => Play();
+    private void Start()
+    {
+        // 프리팹 기본 상태(채움 91%)로 두면 HP바 오른쪽 끝이 튀어나와 보이므로 인게임처럼 보스 HP를 넣는다.
+        _hpBarView?.BeginBoss((decimal)_labBossHp.x, (decimal)_labBossHp.y, (int)_labBossHp.z);
+        Play();
+    }
 
     private void OnDisable()
     {
@@ -150,6 +168,19 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
     {
         _gaugeDesign = Mathf.Clamp(design, 0, _gauges.Length);
         for (int i = 0; i < _gauges.Length; i++) _gauges[i].Active = i == _gaugeDesign - 1;
+    }
+
+    /// <summary>실험실 전용: 전량 소진과 HUD 퇴장을 보여준 뒤 0스택부터 다시 재생한다.</summary>
+    public void PreviewDepletion()
+    {
+        _events.Clear(); _due.Clear();
+        _waitingContact = false; _wasFiring = false;
+        _gamman.Stop(); _marks.Clear();
+        int remaining = _stackCount + _pendingConsume;
+        _stackCount = _pendingConsume = _consumed = 0;
+        _phase = "소진 연출 → 재시작";
+        foreach (var gauge in _gauges) { gauge.Consume(remaining); gauge.Set(0); }
+        Schedule(_clock + DepletionPreviewPause, BeginLoop);
     }
 
     private void BeginLoop()
@@ -187,12 +218,17 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
     {
         float now = Time.time;
         _numbers.Tick(now);
-        if (_gaugeDesign > 0)
+        if (_hpBar != null)
         {
-            var gauge = _gauges[_gaugeDesign - 1];
-            gauge.UseHud = _useHud && _hpBar != null;
-            if (gauge.UseHud) gauge.HudBar = HpBarRect();
-            gauge.Tick(now, WorldToUi(_boss.position + _badgeOffset));
+            Rect bar = HpBarRect();
+            if (_gaugeDesign > 0)
+            {
+                var gauge = _gauges[_gaugeDesign - 1];
+                gauge.UseHud = true;
+                gauge.HudBar = bar;
+                gauge.Tick(now, Vector2.zero);
+            }
+            _debuffRow?.Tick(bar);
         }
         _shake *= Mathf.Exp(-Time.deltaTime * 3f / Mathf.Max(.01f, _shakeDecay));
         Vector2 offset = _shake > .001f ? UnityEngine.Random.insideUnitCircle * _shake : Vector2.zero;
@@ -262,7 +298,7 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
             int before = _stackCount;
             _stackCount -= _consumed;
             _pendingConsume = _consumed;
-            foreach (var gauge in _gauges) gauge.Ignite();
+            foreach (var gauge in _gauges) gauge.Consume(_consumed);
             // 소모 후 비율에 맞게 남길 표식 수를 정하고, 넘치는 표식만 연쇄로 터뜨린다.
             int pops = Mathf.Max(1, _marks.AttachedCount - MarksFor(_stackCount));
             float t = _clock + _igniteTime;
@@ -370,19 +406,17 @@ public sealed class HackBloomFxLab : MonoBehaviour, IFxLabPlayable
         var old = GUI.matrix;
         GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
         float w = Screen.width / s, h = Screen.height / s;
-        float top = h - 182f;
-        GUI.Box(new Rect(8, top, w - 16, 174), "DELTAN HACK -> GAMMAN");
-        GUI.Label(new Rect(18, top + 22, w - 36, 22), "연쇄 · 빛점 · 스택 " + _stackCount + "/" + _maxStacks + " · 감망 1회 -" + _consumePerCast + " · " + _phase);
+        float top = h - 148f;
+        GUI.Box(new Rect(8, top, w - 16, 140), "DELTAN HACK -> GAMMAN");
+        GUI.Label(new Rect(18, top + 22, w - 36, 22), "스택 " + _stackCount + "/" + _maxStacks + " · 감망 1회 -" + _consumePerCast + " · " + _phase);
         float gw = (w - 36 - 4 * (GaugeLabels.Length - 1)) / GaugeLabels.Length;
         for (int i = 0; i < GaugeLabels.Length; i++)
             if (Toggle(new Rect(18 + i * (gw + 4), top + 46, gw, 28), GaugeLabels[i], _gaugeDesign == i)) SelectGauge(i);
-        float hw = (w - 44) / 3f;
-        if (Toggle(new Rect(18, top + 80, hw, 28), "위치: HP바 HUD", _useHud)) _useHud = true;
-        if (Toggle(new Rect(18 + hw + 4, top + 80, hw, 28), "위치: 보스 옆", !_useHud)) _useHud = false;
-        if (GUI.Button(new Rect(18 + 2 * (hw + 4), top + 80, hw, 28), "다시 보기")) BeginLoop();
-        float tw = (w - 36 - 4 * (_takes.Length - 1)) / _takes.Length;
+        float tw = (w - 36 - 4 * _takes.Length) / (_takes.Length + 1);
         for (int i = 0; i < _takes.Length; i++)
-            if (Toggle(new Rect(18 + i * (tw + 4), top + 114, tw, 28), "감망 " + (char)('A' + i), _take == i)) { _take = i; BeginLoop(); }
+            if (Toggle(new Rect(18 + i * (tw + 4), top + 80, tw, 28), "감망 " + (char)('A' + i), _take == i)) { _take = i; BeginLoop(); }
+        if (GUI.Button(new Rect(18 + _takes.Length * (tw + 4), top + 80, tw, 28), "다시 보기")) BeginLoop();
+        if (GUI.Button(new Rect(18, top + 112, w - 36, 22), "소진 연출 보기")) PreviewDepletion();
         GUI.matrix = old;
     }
 
