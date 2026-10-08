@@ -6,6 +6,8 @@ using VContainer;
 /// <summary>TD1002 뿌리내림: 살아 있는 보스와 전투 중 성장하며 만개 뒤 주기적으로 수확한다.</summary>
 public sealed class TotemKillRangeGrowth : RangedBuffTotemBase
 {
+    private const double MinimumGaugeDurationSeconds = 0.1;
+
     [Inject] private GameManager _game;
     [Inject] private BossManager _bosses;
     [Inject] private CurrencyManager _currency;
@@ -40,10 +42,10 @@ public sealed class TotemKillRangeGrowth : RangedBuffTotemBase
         get
         {
             if(Data==null)return 0;
-            if(_seconds>=BloomSeconds)return Mathf.Clamp01((float)(_harvest/Math.Max(.1,Data.GrowthHarvestSeconds)));
+            if(_seconds>=BloomSeconds)return Mathf.Clamp01((float)(_harvest/Math.Max(MinimumGaugeDurationSeconds,Data.GrowthHarvestSeconds)));
             double start=CurrentStage?.RequiredSeconds??0,next=BloomSeconds;
             foreach(var stage in Data.GrowthStages)if(stage!=null&&stage.RequiredSeconds>_seconds)next=Math.Min(next,stage.RequiredSeconds);
-            return Mathf.Clamp01((float)((_seconds-start)/Math.Max(.1,next-start)));
+            return Mathf.Clamp01((float)((_seconds-start)/Math.Max(MinimumGaugeDurationSeconds,next-start)));
         }
     }
     /// <summary>게이지 변경. 수치는 SO/현재 상태에서 읽는다.</summary>

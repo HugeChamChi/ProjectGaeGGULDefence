@@ -35,9 +35,9 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
         _castCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         IsHacking = true;
         ExecuteHackingAsync(runtime, target, unitData.Hacking, produced, reservation, damage, critical, _castCts)
-            .Forget(error => { if (error is not OperationCanceledException) Debug.LogException(error); });
+            .Forget();
     }
-    private async UniTask ExecuteHackingAsync(DroneHackingRuntime runtime, BossBase target, DroneHackingData data,
+    private async UniTaskVoid ExecuteHackingAsync(DroneHackingRuntime runtime, BossBase target, DroneHackingData data,
         int produced, HackingStackLedger.Reservation reservation, int damage, bool critical, CancellationTokenSource source)
     {
         var token = source.Token;
@@ -78,6 +78,8 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
         }
+        catch (OperationCanceledException) { }
+        catch (Exception error) { Debug.LogException(error); }
         finally
         {
             if (!committed && reservation != null && runtime != null) runtime.Refund(target, reservation);
@@ -94,9 +96,10 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
     protected virtual void OnHackingProduced(int requested, int accepted) { }
     private void CancelHacking()
     {
-        _castCts?.Cancel();
-        _castCts?.Dispose();
+        var source = _castCts;
         _castCts = null;
+        // The running operation owns disposal in its finally block.
+        source?.Cancel();
         _castVisual?.Clear();
         IsHacking = false;
     }

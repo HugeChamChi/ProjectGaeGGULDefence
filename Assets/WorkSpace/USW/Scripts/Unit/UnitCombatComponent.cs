@@ -85,7 +85,7 @@ public class UnitCombatComponent : MonoBehaviour
         _paused = false;
         _deps?.FieldPause?.RegisterUnit(_unit);
         _loopCts = new CancellationTokenSource();
-        UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+        RunControlLoopAsync(_loopCts.Token).Forget();
     }
 
     public void StopLoops()
@@ -104,11 +104,18 @@ public class UnitCombatComponent : MonoBehaviour
         if (_loopCts == null)
         {
             _loopCts = new CancellationTokenSource();
-            UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+            RunControlLoopAsync(_loopCts.Token).Forget();
         }
     }
 
     private BossBase LiveBoss => _deps?.BossManager?.CurrentBoss ?? _unit.Boss;
+
+    private async UniTaskVoid RunControlLoopAsync(CancellationToken token)
+    {
+        try { await UnitControlLoopAsync(token); }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception error) { UnityEngine.Debug.LogException(error); }
+    }
 
     private async UniTask UnitControlLoopAsync(CancellationToken token)
     {

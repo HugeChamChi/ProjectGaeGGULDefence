@@ -179,7 +179,11 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _buff.Init(this, deps);
         deps.BuffManager?.ApplyActiveGlobalBuffsTo(this);
         deps.GridManager?.RegisterUnitStatus(this);
+        OnInitialized(deps);
     }
+
+    /// <summary>Connect unit-specific dependencies before placement can start the first attack.</summary>
+    protected virtual void OnInitialized(UnitDependencies dependencies) { }
 
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
     {

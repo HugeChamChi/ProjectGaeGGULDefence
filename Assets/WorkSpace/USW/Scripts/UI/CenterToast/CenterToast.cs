@@ -81,6 +81,9 @@ public sealed class CenterToast : MonoBehaviour
         }
         if (_motion.SingleSlot)
             foreach (var e in _entries) Kick(e);
+        else if (_settings.PushedLifetime > 0f)
+            foreach (var e in _entries)   // 밀려 올라간 줄은 그때부터 짧게만 남는다 (다시 밀려도 늘어나지 않음)
+                if (!e.Exiting) e.ExitAt = Mathf.Min(e.ExitAt, e.Age + _settings.PushedLifetime);
 
         var entry = Rent();
         entry.Message = message;
@@ -130,7 +133,21 @@ public sealed class CenterToast : MonoBehaviour
             }
             e.Slot = Mathf.Lerp(e.Slot, i, follow);
         }
-        for (int i = 0; i < _entries.Count; i++) _motion.Render(_entries[i], i, _settings);
+        for (int i = 0; i < _entries.Count; i++)
+        {
+            _motion.Render(_entries[i], i, _settings);
+            ApplyScale(_entries[i]);
+        }
+    }
+
+    // 방식이 배치한 결과를 AnchorY 기준으로 통째로 키운다 (간격·이동 거리도 같은 비율).
+    private void ApplyScale(CenterToastEntry e)
+    {
+        float s = _settings.Scale;
+        if (Mathf.Approximately(s, 1f)) return;
+        var p = e.Root.anchoredPosition;
+        e.Root.anchoredPosition = new Vector2(p.x * s, _settings.AnchorY + (p.y - _settings.AnchorY) * s);
+        e.Root.localScale *= s;
     }
 
     private static void Kick(CenterToastEntry e)
@@ -146,6 +163,9 @@ public sealed class CenterToast : MonoBehaviour
         CenterToastStyle.PunchText => new CenterToastPunchMotion(),
         CenterToastStyle.StackLines => new CenterToastStackLinesMotion(),
         CenterToastStyle.SlideLines => new CenterToastSlideLinesMotion(),
+        CenterToastStyle.SlideRise => new CenterToastSlideRiseMotion(),
+        CenterToastStyle.SlideCards => new CenterToastSlideCardsMotion(),
+        CenterToastStyle.SlideBand => new CenterToastSlideBandMotion(),
         _ => new CenterToastStackMotion(),
     };
 

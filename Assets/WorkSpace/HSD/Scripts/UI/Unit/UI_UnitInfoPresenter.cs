@@ -65,6 +65,18 @@ namespace GaeGGUL.UI.Unit
                     : data.skillData?.description ?? data.GetFormattedDescription(tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
             }
+            else if (data.Disigman != null)
+            {
+                int attacks = _unit is Disigman live ? live.RequiredAttacks
+                    : Mathf.Max(1, data.Disigman.AttacksToCharge.Get(tier));
+                float seconds = _unit is Disigman current ? current.SecondsRecovered
+                    : Mathf.Max(0f, data.Disigman.SecondsRecovered.Get(tier));
+                var damage = data.skillData?.hitEffects?.Find(effect => effect is AtkCoefficientDamage) as AtkCoefficientDamage;
+                float coefficient = damage?.coefficient?.Get(tier) ?? 0f;
+                _view.UpdateSkillInfo(data.skillData?.skillName ?? string.Empty,
+                    $"본체 일반공격 {attacks}회마다 공격력 ×{coefficient:0.##}의 한 발을 발사하고 즉시 남은 시간을 {seconds:0.##}초 회복합니다. 드론을 생성하지 않습니다.",
+                    $"공격 {attacks}회 충전");
+            }
             else if (data.Hacking != null)
             {
                 bool producer = _unit is Drone_Deltan || data.prefabAddress == "DroneUnit_Deltan";

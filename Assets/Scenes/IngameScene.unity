@@ -3390,7 +3390,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+  - {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
   _useAuthoredParty: 0
+  _useUniformSummonPool: 1
   defaultSpawnOffsetY: 0
   defaultSpawnScale: {x: 1, y: 1, z: 1}
 --- !u!4 &248640386
@@ -7693,6 +7695,7 @@ MonoBehaviour:
   - 0.25
   _droneSquad: []
   _concept: 0
+  _triggerSetIndex: 0
   _loop: 1
   _runtimeTimer: {fileID: 1028531843}
 --- !u!225 &585799968
@@ -15858,7 +15861,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+  - {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
   _useAuthoredParty: 0
+  _useUniformSummonPool: 1
   defaultSpawnOffsetY: -0.2
   defaultSpawnScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1424770774

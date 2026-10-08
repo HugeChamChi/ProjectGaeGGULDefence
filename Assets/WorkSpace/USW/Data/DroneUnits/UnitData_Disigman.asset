@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
+  m_Name: UnitData_Disigman
+  m_EditorClassIdentifier: Assembly-CSharp::UnitData
+  DebuffBindings:
+    _normal:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _rare:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _epic:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+    _legend:
+      _debuffId: 0
+      _trigger: 0
+      _stacksPerApply: 0
+  characterId:
+    normal: 1100
+    rare: 1101
+    epic: 1102
+    legend: 1103
+  unitType:
+    normal: 10
+    rare: 10
+    epic: 10
+    legend: 10
+  unitName: "\uB514\uC2DC\uADF8\uB9DD"
+  unitTribe: 5
+  iconAddress: Disigmang_1
+  prefabAddress: Disigman
+  icon: {fileID: 21300000, guid: f5fd4e4aa7e945c96982ebb910d62644, type: 3}
+  prefab: {fileID: 1999589956366409926, guid: 77d0141904d40fd4dbbc6c90f9014adf, type: 3}
+  description: "\uB4DC\uB860 \uC5C6\uC774 \uBCF8\uCCB4\uAC00 \uC9C1\uC811 \uC0AC\uACA9\uD558\uB294
+    \uC2DC\uAC04 \uD68C\uBCF5 \uB51C\uB7EC. \uC2A4\uD0AC \uC218\uCE58\uB294 \uC804\uC6A9
+    \uC124\uC815\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
+  atk:
+    normal: 291
+    rare: 945
+    epic: 2164
+    legend: 14545
+  attackSpeed:
+    normal: 0.33
+    rare: 0.33
+    epic: 0.33
+    legend: 0.33
+  skillCooldown:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  basicAttackData: {fileID: 11400000, guid: 4154c338344f0514688f23f8722dd70c, type: 2}
+  skillData: {fileID: 11400000, guid: 09fae0cc1010cd54f94f8516c594e3fa, type: 2}
+  Hacking: {fileID: 0}
+  Disigman: {fileID: 11400000, guid: 9971529ae82c8aa43b24453abd9f8d7a, type: 2}
+  SelfDestructAttackCoefficient: 0
+  SkillGaugeMode: 0
+  foodProduction:
+    normal: 1
+    rare: 2
+    epic: 3
+    legend: 4
+  maxDroneCount:
+    normal: 0
+    rare: 0
+    epic: 0
+    legend: 0
+  passive: {fileID: 0}
+  spawnOffsetY: -0.2

@@ -166,6 +166,8 @@ public class UnitSpawner : MonoBehaviour
         }
         if (fixedSummon)
             unit = _unitFactory.CreateUnitFromData(_tutorialSettings.SpawnUnits[SuccessfulSpawnCount]);
+        else if (_tutorialSettings == null && _unitFactory.UsesUniformSummonPool)
+            unit = _unitFactory.CreateRandomNormalUnit();
         else if (_tutorialSettings == null && _gameDataManager != null && _gameDataManager.IsLoaded)
         {
             int charId = _gameDataManager.GetRandomSpawnCharacterId();
