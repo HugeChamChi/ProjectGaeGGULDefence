@@ -102,6 +102,9 @@ public sealed class TimerBonusDigits
         for (int j = 0; j < DigitCount; j++) SetReel(j, s[CharIndex[j]] - '0', 0f);
     }
 
+    /// <summary>자릿수 하나를 숫자(0~9)로 맞춘다 (회전 없음).</summary>
+    public void SetDigit(int reel, int digit) => SetReel(reel, Mathf.Clamp(digit, 0, 9), 0f);
+
     /// <summary>
     /// 릴 위치. 정수 = 그 숫자가 칸 가운데, 소수부만큼 다음 숫자가 아래에서 올라온다.
     /// blur(0~1)는 회전 속도감 — 세로로 늘이고 살짝 흐리게.
