@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
+  m_Name: DisigmanBasicAttack
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillId: 0
+  skillName: "\uB2E8\uBC1C \uC0AC\uACA9"
+  description: 
+  attackSoundAddress: 
+  action:
+    rid: 5888964643206987867
+  hitEffects:
+  - rid: 5888964643206987868
+  additionalEffects: []
+  castEffect:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 5888964643206987867
+      type: {class: MultiShotSkillAction, ns: , asm: Assembly-CSharp}
+      data:
+        shotCount:
+          rid: 5888964643206987869
+        sizeMultiplier:
+          rid: 5888964643206987870
+        shotInterval: 0
+        projectileDataId: 0
+    - rid: 5888964643206987868
+      type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
+      data:
+        coefficient:
+          rid: 5888964643206987871
+    - rid: 5888964643206987869
+      type: {class: ConstantInt, ns: , asm: GGD.Core}
+      data:
+        value: 1
+    - rid: 5888964643206987870
+      type: {class: ConstantFloat, ns: , asm: GGD.Core}
+      data:
+        value: 1
+    - rid: 5888964643206987871
+      type: {class: ConstantFloat, ns: , asm: GGD.Core}
+      data:
+        value: 1

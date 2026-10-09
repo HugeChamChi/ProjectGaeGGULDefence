@@ -14,8 +14,10 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
     [Inject] private TotemSpawner _totemManager;
-    [Inject] private ChieftainSpawner _chieftainSpawner;
+    [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private DebuffInfoPresenter _effectInfo;
+    [Header("Center Toast")]
+    [SerializeField] private CenterToast _centerToast;
     [Header("Chief Active Skill")]
     [SerializeField] private UI_ChiefSkillButtonView _chiefSkillButtonView;
 
@@ -32,6 +34,9 @@ public class InGameInstaller : MonoBehaviour
 
     [Header("Wave Info")]
     [SerializeField] private UI_WaveText _waveTextUI;
+    [SerializeField] private BossClearPresentation _bossClearPresentation;
+    [Inject] private TimerController _timerController;
+    [Inject] private UIManager _uiManager;
 
 
     // 임시
@@ -43,10 +48,13 @@ public class InGameInstaller : MonoBehaviour
 
     private void Start()
     {
+        if (_spawnerManager != null) _spawnerManager.OnSpawnRejected += ShowSpawnWarning;
+        _bossClearPresentation?.Configure(_timerController, _waveManager, _bossManager, _uiManager, _gameManager.Config);
+        _waveManager.ConfigureBossClearPresentation(_bossClearPresentation);
         _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
         _totemInfoPanel?.ConfigureEffectInfo(_effectInfo);
         if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && _totemInfoPanel.IsEffectInfoOpen;
-        _chiefSkillButtonView?.Construct(_chieftainSpawner);
+        _chiefSkillButtonView?.Construct(_chieftainSelection);
         WireUnitActionPopup();
         WireTotemActionPopup();
         WireBossEncounter();
@@ -165,7 +173,7 @@ public class InGameInstaller : MonoBehaviour
     {
         if (totem == null) return;
         _totemActionPopup?.Show(totem);
-        _totemInfoPanel?.SetData(totem.Data);
+        _totemInfoPanel?.SetData(totem, _gridManager);
     }
 
     private void OnSellTotemRequested(TotemBase totem)
@@ -176,8 +184,11 @@ public class InGameInstaller : MonoBehaviour
 
     // ── 정리 ───────────────────────────────────────────────────
 
+    private void ShowSpawnWarning(string message) => _centerToast?.Show(message, CenterToastKind.Warning);
+
     private void OnDestroy()
     {
+        if (_spawnerManager != null) _spawnerManager.OnSpawnRejected -= ShowSpawnWarning;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         if (_waveManager != null)
         {

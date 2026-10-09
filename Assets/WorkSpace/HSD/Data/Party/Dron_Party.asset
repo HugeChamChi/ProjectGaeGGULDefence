@@ -19,4 +19,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
-  chieftainData: {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
+  - {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
+  UseUniformSummonPool: 1
+  Chieftain: {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
+  exclusiveLevelUpChoices: []

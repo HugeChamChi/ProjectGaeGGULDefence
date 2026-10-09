@@ -28,6 +28,9 @@ public class LevelUpManager : MonoBehaviour
     public string GetChoiceDescription(LevelUpData card)
     {
         if (card == null) return string.Empty;
+        if (card.droneEffect != null && card.droneEffect.Kind >= DroneSelectionKind.DeltanBackdoor)
+            return (card.description ?? string.Empty).Replace("{value}",(card.droneEffect.Value*100f).ToString("0.#"))
+                .Replace("{count}",card.droneEffect.Count.ToString());
         if (card.droneEffect?.Kind != DroneSelectionKind.DeltanDamageTaken) return card.description;
         string value = UnityEngine.Mathf.RoundToInt(DroneSelections.PreviewValue(card) * 100).ToString();
         return (card.description ?? string.Empty).Replace("{value}", value).Replace("[1~10%]", value + "%");
@@ -38,7 +41,7 @@ public class LevelUpManager : MonoBehaviour
     {
         if (_poolInitialized) return;
         _poolInitialized = true;
-        var pool = _chieftainSpawner?.GetSelectedLevelUpPool();
+        var pool = _chieftainSelection?.GetSelectedLevelUpPool();
         _selectedPool = pool;
         try
         {
@@ -60,7 +63,7 @@ public class LevelUpManager : MonoBehaviour
 
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
-    [Inject] private ChieftainSpawner _chieftainSpawner;
+    [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private UpgradeManager _upgradeManager;
     [Inject] private GameManager _gameManager;
     private readonly List<ResultBuildChoice> _resultChoices = new();
@@ -88,7 +91,6 @@ public class LevelUpManager : MonoBehaviour
     public float CritDamageVariance { get; private set; }
 
     public event System.Action<System.Action> OnTotemSelectionRequested;
-    public event System.Action OnChieftainBuffChanged;
 
     public IEnumerable<int> ChosenIds => _chosenIds;
     public LevelUpData[] LevelUpPool => (LevelUpData[])_effectivePool.Clone();
@@ -115,9 +117,6 @@ public class LevelUpManager : MonoBehaviour
     public float GetRowSpeedMultiplier(int row)
         => (row >= 0 && row < _rowSpeedMult.Length) ? _rowSpeedMult[row] : 1f;
 
-    // ── 족장 공격 보너스 ───────────────────────────────────────
-    public float ChieftainAttackBonus { get; private set; } = 0f;
-    public float ChieftainFoodProductionBonus { get; private set; } = 0f;
 
     // ── 부족별 특수 버프 (현재 사용하는 부족 중 개별 버프 대상 없음) ─
     public float GetTribeAtkBonus(UnitTribe tribe) => 0f;
@@ -150,11 +149,6 @@ public class LevelUpManager : MonoBehaviour
     public bool  HasSellGivesRandomUnit  { get; private set; }
     public float SellGivesUnitChance     { get; private set; } = 0f;
 
-    public void AddChieftainAttackBonus(float v)
-    {
-        ChieftainAttackBonus += v;
-        OnChieftainBuffChanged?.Invoke();
-    }
 
     // ── 합성 / 토템 플래그 ─────────────────────────────────────
     public bool HasMergeKeepsTribe  { get; private set; }
@@ -164,9 +158,12 @@ public class LevelUpManager : MonoBehaviour
     // 랜덤 선택지 3장 뽑기 (가중치 + 부족 필터)
     // ══════════════════════════════════════════════════════════
 
+    [VContainer.Inject] private EndlessRunService _runPenalties;
+
     public List<LevelUpData> GetRandomChoices(int count = 3)
     {
         if (count <= 0) return new List<LevelUpData>();
+        count = _runPenalties?.GetChoiceCount(count) ?? count;
         if (!_poolInitialized) Init();
         bool forceLegend = _guaranteeNextLegend;
         _guaranteeNextLegend = false;
@@ -364,13 +361,7 @@ public class LevelUpManager : MonoBehaviour
                 if (rows >= 2) _rowSpeedMult[rows - 1] /= (1f + v);
                 if (rows >= 3) _rowSpeedMult[rows - 2] /= (1f + v);
                 break;
-            case LevelUpEffectType.ChieftainAttackPercent:
-                ChieftainAttackBonus -= v;
-                break;
-            case LevelUpEffectType.ChieftainFoodProductionPercent:
-                ChieftainFoodProductionBonus -= v;
-                OnChieftainBuffChanged?.Invoke();
-                break;
+
         }
     }
 
@@ -511,14 +502,7 @@ public class LevelUpManager : MonoBehaviour
                 if (rows >= 3) _rowSpeedMult[rows - 2] *= (1f + v);
                 break;
 
-            case LevelUpEffectType.ChieftainAttackPercent:
-                ChieftainAttackBonus += v;
-                break;
 
-            case LevelUpEffectType.ChieftainFoodProductionPercent:
-                ChieftainFoodProductionBonus += v;
-                OnChieftainBuffChanged?.Invoke();
-                break;
         }
     }
 

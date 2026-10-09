@@ -6,6 +6,13 @@ public class GameConfig : ScriptableObject
     public int   gridColumns       = 6;
     public int   gridRows          = 4;
     public float countdownSeconds  = 30f;
+    [SerializeField, Min(0f)] private float _bossKillBonusSeconds = 30f;
+    /// <summary>Seconds added once for each accepted boss defeat; subsequent bosses keep the remaining time.</summary>
+    public float BossKillBonusSeconds => Mathf.Max(0f, _bossKillBonusSeconds);
+    [Tooltip("타이머 보너스 카운트업 완료 후 처치 공지까지의 실제 시간")]
+    [SerializeField, Min(0f)] private float _bossClearNoticeDelaySeconds = 0.4f;
+    /// <summary>Unscaled delay between the completed timer addition and the clear notice.</summary>
+    public float BossClearNoticeDelaySeconds => Mathf.Max(0f, _bossClearNoticeDelaySeconds);
     public float bossSpawnDelaySeconds = 5f;
     public float cellSize          = 1.5f;
 

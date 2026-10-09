@@ -72,6 +72,7 @@ public class DroneUnit : MonoBehaviour
     private CancellationTokenSource  _attackCts;
     private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
+    private SpineActorVisual        _spineVisual;
     private int _attackLifetime;
     private Vector3 _baseScale = Vector3.one;
     private Tween _punchTween;
@@ -81,6 +82,7 @@ public class DroneUnit : MonoBehaviour
     private void Awake()
     {
         _hoverAnim = GetComponent<DroneHoverAnimation>();
+        _spineVisual = GetComponent<SpineActorVisual>();
         _animator = GetComponent<Animator>();
         if (_animator == null) _animator = GetComponentInChildren<Animator>();
 
@@ -103,6 +105,7 @@ public class DroneUnit : MonoBehaviour
         if (on == _inPauseIdle) return;
         _inPauseIdle = on;
         if (_hoverAnim != null) _hoverAnim.SetForceUnscaled(on);
+        _spineVisual?.SetPauseIdle(on);
         if (_animator == null) return;
         if (on) { _updateModeBeforePause = _animator.updateMode; _animator.updateMode = AnimatorUpdateMode.UnscaledTime; }
         else _animator.updateMode = _updateModeBeforePause;
@@ -233,11 +236,16 @@ public class DroneUnit : MonoBehaviour
     // ── 스킬 발동 액션 스프라이트 (DroneSpawnerBase.FlashOwnedDrones 에서 호출) ──
 
     /// <summary>오너의 스킬 발동 순간 잠깐 액션 스프라이트로 바뀌었다가 자동으로 복귀한다.</summary>
-    public void PlayActionFlash() => FlashSprite(_actionSprite, _actionSpriteHoldSeconds);
+    public void PlayActionFlash()
+    {
+        if (_spineVisual != null) _spineVisual.PlayAttack();
+        else FlashSprite(_actionSprite, _actionSpriteHoldSeconds);
+    }
 
     /// <summary>발사 순간 공격 프레임(날개 펼침)으로 바꾸고 스케일 펀치를 준다.</summary>
     private void PlayAttackFrame()
     {
+        if (_spineVisual != null) { _spineVisual.PlayAttack(); return; }
         FlashSprite(_attackSprite, _attackSpriteHoldSeconds);
 
         if (_attackPunchScale <= 0f) return;
@@ -285,6 +293,7 @@ public class DroneUnit : MonoBehaviour
     {
         SetAttackHold(false);
         SetPauseIdle(false);
+        _spineVisual?.ResetAnimation();
         _attackLifetime++;
         _attackCts?.Cancel();
         _attackCts?.Dispose();

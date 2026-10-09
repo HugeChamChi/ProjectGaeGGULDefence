@@ -17,6 +17,12 @@ public class UI_TotemInfoPanel : UI_Base
 
     private TotemInfoPresenter _presenter;
     private DebuffInfoLink _effectLink;
+    private TotemBase _currentTotem;
+    private GridManager _grid;
+    private TotemKillRangeGrowth _growthTotem;
+    private GridCell _displayedCell;
+    private int _displayedRotation;
+    private int _displayedGrowthSecond;
     /// <summary>Includes the gesture-release shield of the nested detail window.</summary>
     public bool IsEffectInfoOpen => _effectLink?.BlocksOwnerInput == true;
 
@@ -35,13 +41,63 @@ public class UI_TotemInfoPanel : UI_Base
         EnsurePresenter();
     }
 
+    /// <summary>Shows the base SO diagram for an unplaced totem.</summary>
     public void SetData(TotemData data)
     {
+        ClearRuntimeRange();
         _effectLink?.Clear();
         EnsurePresenter();
         _presenter.SetData(data);
         gameObject.SetActive(true);
         if (_canvas != null) _canvas.enabled = true;
+    }
+
+    /// <summary>Shows a placed totem and refreshes its actual range while this panel is open.</summary>
+    public void SetData(TotemBase totem, GridManager grid)
+    {
+        if (totem == null || !totem.IsPlaced || totem.CurrentCell == null || grid == null)
+        {
+            Close();
+            return;
+        }
+        SetData(totem.Data);
+        _currentTotem = totem;
+        _grid = grid;
+        _growthTotem = totem as TotemKillRangeGrowth;
+        RefreshRuntimeRange();
+    }
+
+    private void LateUpdate()
+    {
+        if (_grid == null) return;
+        if (_currentTotem == null || !_currentTotem.IsPlaced || _currentTotem.CurrentCell == null)
+        {
+            Close();
+            return;
+        }
+        if (_canvas != null && !_canvas.enabled) return;
+        if (_displayedCell != _currentTotem.CurrentCell ||
+            _displayedRotation != _currentTotem.RotationStep ||
+            _displayedGrowthSecond != (_growthTotem != null ? (int)(_growthTotem.CombatSeconds + _growthTotem.HarvestSeconds) : 0))
+            RefreshRuntimeRange();
+    }
+
+    private void RefreshRuntimeRange()
+    {
+        if (_growthTotem != null && txt_Stats != null) txt_Stats.text = _growthTotem.Data.GetDisplayDescription()+"\n\n"+_growthTotem.ProgressDescription;
+        rangeGrid?.SetData(_currentTotem, _grid);
+        _displayedCell = _currentTotem.CurrentCell;
+        _displayedRotation = _currentTotem.RotationStep;
+        _displayedGrowthSecond = _growthTotem != null ? (int)(_growthTotem.CombatSeconds + _growthTotem.HarvestSeconds) : 0;
+    }
+
+    private void ClearRuntimeRange()
+    {
+        _currentTotem = null;
+        _grid = null;
+        _growthTotem = null;
+        _displayedCell = null;
+        _displayedGrowthSecond = 0;
     }
 
     private void EnsurePresenter()
@@ -66,8 +122,13 @@ public class UI_TotemInfoPanel : UI_Base
     /// <summary>Canvas-based closure also closes its detail popup.</summary>
     public override UniTask CloseAsync()
     {
+        ClearRuntimeRange();
         _effectLink?.Clear();
         return base.CloseAsync();
     }
-    private void OnDisable() => _effectLink?.Clear();
+    private void OnDisable()
+    {
+        ClearRuntimeRange();
+        _effectLink?.Clear();
+    }
 }

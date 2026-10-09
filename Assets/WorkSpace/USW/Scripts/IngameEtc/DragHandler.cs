@@ -306,6 +306,8 @@ public class DragHandler : MonoBehaviour, IDraggable
             return;
         }
 
+        // 교환은 상대를 출발 칸에 새로 배치하므로 봉인 칸에서 허용하지 않는다.
+        if (!_originCell.Model.IsAvailable) { ReturnToOrigin(); return; }
         DragHandler targetDrag = null;
         if (targetUnit  != null) targetDrag = targetUnit.GetComponent<DragHandler>();
         if (targetTotem != null) targetDrag = targetTotem.GetComponent<DragHandler>();

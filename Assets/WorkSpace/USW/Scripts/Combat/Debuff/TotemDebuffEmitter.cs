@@ -9,12 +9,14 @@ public sealed class TotemDebuffEmitter : MonoBehaviour
     private ProjectilePool _projectiles;
     private GameManager _game;
     private FieldPauseVisuals _fieldPause;
+    private LevelUpManager _levelUpManager;
     private double _elapsed;
     /// <summary>주입된 씬 의존성을 배치 시 전달한다. 재배치 시 발사 주기를 초기화한다.</summary>
-    public void Initialize(TotemBase source, BossManager bosses, ProjectilePool projectiles, GameManager game, FieldPauseVisuals fieldPause = null)
+    public void Initialize(TotemBase source, BossManager bosses, ProjectilePool projectiles, GameManager game, FieldPauseVisuals fieldPause = null, LevelUpManager levelUpManager = null)
     {
         _source = source; _bosses = bosses; _projectiles = projectiles; _game = game; _elapsed = 0;
         _fieldPause = fieldPause;
+        _levelUpManager = levelUpManager;
         if (source.Data.DebuffFireInterval <= 0 || source.Data.DebuffImpactDamage < 0)
             throw new InvalidOperationException("Projectile debuff source requires positive fire interval and nonnegative impact damage.");
         enabled = true;
@@ -30,7 +32,7 @@ public sealed class TotemDebuffEmitter : MonoBehaviour
         _elapsed %= _source.Data.DebuffFireInterval;
         if (!_source.TryGetDebuffBinding(out var binding) || binding.Trigger != DebuffTrigger.ProjectileHit) return;
         int sourceId = _source.GetInstanceID();
-        decimal impact = _source.Data.DebuffImpactDamage;
+        decimal impact = _source.Data.DebuffImpactDamage * (decimal)DamageCalculator.Spread(_levelUpManager?.DamageVariance ?? 0f);
         Vector3 hitPosition = target.transform.position;
         _projectiles.Launch(transform.position, hitPosition, _source.Data.DebuffProjectile, () =>
         {

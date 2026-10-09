@@ -346,10 +346,13 @@ public class PenaltyRevealFx : MonoBehaviour, IFxLabPlayable
     /// <summary>대상·단위·증감값으로 효과 설명을 만든다. 예: 유닛 공격력 10% 감소.</summary>
     public static string Describe(RunPenaltyData penalty)
     {
+        if (penalty.Target == RunPenaltyTarget.ChoiceReduction) return $"레벨업·토템 보상 후보 {System.Math.Abs(penalty.Delta):0}개 감소";
+        if (penalty.Target == RunPenaltyTarget.PermanentCellSeal) return $"무작위 {penalty.Delta:0}칸 영구 봉인 · 점유물 작동 중단";
         string target = penalty.Target switch
         {
             RunPenaltyTarget.UnitAttack => "유닛 공격력",
             RunPenaltyTarget.UnitAttackFrequency => "유닛 공격속도",
+            RunPenaltyTarget.ExperienceGain => "EXP 획득",
             RunPenaltyTarget.BossHp => "보스 HP",
             RunPenaltyTarget.BossDefense => "보스 방어력",
             _ => penalty.DisplayName,

@@ -15,8 +15,15 @@ MonoBehaviour:
   gridColumns: 6
   gridRows: 4
   countdownSeconds: 600
+  _bossKillBonusSeconds: 30
+  _bossClearNoticeDelaySeconds: 0.4
   bossSpawnDelaySeconds: 0
   cellSize: 1.5
   startingFood: 20
   placeCost: 10
+  baseCritChance: 0
+  damageVariance: 0
+  critDamageVariance: 0
   tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
+  _defeatDuration: 0.8
+  _defeatTimeScale: 0.2

@@ -20,7 +20,7 @@ public sealed class NoticeBandSlice : IBossClearNotice
     private const float TitleSlide = 0.12f;
     private const float SubStart = 0.2f;
     private const float SubFade = 0.1f;
-    private const float ExitSeconds = 0.14f;
+    internal const float ExitSeconds = 0.14f;
     private const float TitleFromX = 460f;
     private const float TitleOutX = -560f;
     private const float TitleY = 22f;
@@ -55,11 +55,11 @@ public sealed class NoticeBandSlice : IBossClearNotice
     /// <inheritdoc />
     public void SetVisible(bool visible)
     {
-        _band.gameObject.SetActive(visible);
-        _edgeTop.gameObject.SetActive(visible);
-        _edgeBottom.gameObject.SetActive(visible);
-        _title.gameObject.SetActive(visible);
-        _sub.gameObject.SetActive(visible);
+        if (_band != null) _band.gameObject.SetActive(visible);
+        if (_edgeTop != null) _edgeTop.gameObject.SetActive(visible);
+        if (_edgeBottom != null) _edgeBottom.gameObject.SetActive(visible);
+        if (_title != null) _title.gameObject.SetActive(visible);
+        if (_sub != null) _sub.gameObject.SetActive(visible);
     }
 
     /// <inheritdoc />

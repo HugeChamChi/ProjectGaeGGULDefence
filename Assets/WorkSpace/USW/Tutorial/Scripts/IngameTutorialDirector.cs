@@ -118,9 +118,14 @@ namespace GaeGGUL.Tutorial
                     try { await lesson.ExecuteAsync(this, token); }
                     finally
                     {
-                        _dialogue.Hide(); _overlay.Hide(); _time.Release(this);
-                        _input.CanBeginInteraction = _ => false;
-                        _input.CanEndInteraction = null;
+                        if (_dialogue != null) _dialogue.Hide();
+                        if (_overlay != null) _overlay.Hide();
+                        _time?.Release(this);
+                        if (_running && _input != null)
+                        {
+                            _input.CanBeginInteraction = _ => false;
+                            _input.CanEndInteraction = null;
+                        }
                     }
                 }
                 IsComplete = true;
@@ -206,7 +211,12 @@ namespace GaeGGUL.Tutorial
             try { await ExecuteCustomBodyAsync(lesson, token); }
             finally
             {
-                _input.CanBeginInteraction = previousBegin; _input.CanEndInteraction = previousEnd; _input.AllowPointerClicks = previousClicks;
+                if (_running && _input != null)
+                {
+                    _input.CanBeginInteraction = previousBegin;
+                    _input.CanEndInteraction = previousEnd;
+                    _input.AllowPointerClicks = previousClicks;
+                }
             }
         }
 
@@ -249,7 +259,12 @@ namespace GaeGGUL.Tutorial
                     await Until(() => SignalCount(lesson.CompletionSignal) > before, token);
                 }
             }
-            finally { _dialogue.Hide(); _overlay.Hide(); if (lesson.PauseGameplay) _time.Release(_customPauseOwner); }
+            finally
+            {
+                if (_dialogue != null) _dialogue.Hide();
+                if (_overlay != null) _overlay.Hide();
+                if (lesson.PauseGameplay) _time?.Release(_customPauseOwner);
+            }
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
         }
 
@@ -504,13 +519,14 @@ namespace GaeGGUL.Tutorial
             _income = false;
             if (!_running) return;
             _running = false;
-            _overlay?.Hide(); _time?.Release(this);
+            if (_overlay != null) _overlay.Hide();
+            _time?.Release(this);
             _time?.Release(_customPauseOwner);
-            _dialogue?.Hide();
+            if (_dialogue != null) _dialogue.Hide();
             if (_exp != null) _exp.DeferLevelUps = false;
             if (_input != null) { _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true; }
             if (_boss != null && _boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
-            if (_guidedBoss != null && !_guidedBoss.IsDead) _patterns?.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
+            if (_guidedBoss != null && !_guidedBoss.IsDead && _patterns != null) _patterns.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
             foreach (var group in _bossHud) SetVisible(group, true);
             SetVisible(_upgradeGroup,true); SetVisible(_chiefGroup,true); SetVisible(_inventoryGroup,true);
             if (_hasCameraPose && _camera != null) { _camera.transform.position = _cameraPosition; _camera.orthographicSize = _cameraSize; }

@@ -7,5 +7,6 @@ public enum DroneSelectionKind
     AlphanCooldown = 10, AlphanDoubleShot = 11,
     ZeltanColdStorage = 12, ZeltanMaintenance = 13,
     AlphanGoldenMonocle = 14, BetanRepairKit = 15,
-    MergeSupport = 16, ExtraCombatDrone = 17
+    MergeSupport = 16, ExtraCombatDrone = 17,
+    DeltanBackdoor = 18, BetanHackingBomb = 19, HackingCarryover = 20, DeltanZombiePc = 21
 }

@@ -5,5 +5,8 @@ public enum RunPenaltyTarget
     UnitAttack = 1,
     UnitAttackFrequency = 2,
     BossHp = 3,
-    BossDefense = 4
+    BossDefense = 4,
+    ChoiceReduction = 5,
+    PermanentCellSeal = 6,
+    ExperienceGain = 7
 }

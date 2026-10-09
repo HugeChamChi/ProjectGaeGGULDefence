@@ -163,6 +163,8 @@ public sealed class ResearchScreen : MonoBehaviour
 
     private void ReleaseViews()
     {
+        if (_views != null) foreach (var view in _views) view?.Dispose();
+        _views = null;
         if (_sessions != null) foreach (var session in _sessions) session.OnSaveStateChanged -= UpdateSaveStatus;
         if (_progresses != null) foreach (var progress in _progresses) progress.OnChanged -= ProgressChanged;
         _sessions = null;
@@ -211,9 +213,18 @@ public sealed class ResearchScreen : MonoBehaviour
         var root = _content = ResearchUi.Stretch(ResearchUi.NewRect(transform, "Content"));
         _status.transform.parent.SetAsLastSibling();
         _back.transform.SetAsLastSibling();
-        var bg = ResearchUi.NewImage(root, "Background", null, Vector2.zero, Vector2.zero);
+        var bg = ResearchUi.NewImage(root, "PanelBg", s.PanelBackground, Vector2.zero, Vector2.zero);
         ResearchUi.Stretch(bg.rectTransform);
-        bg.color = s.Background;
+        bg.color = s.PanelBackground != null ? Color.white : s.Background;
+
+        var topBar = ResearchUi.NewImage(root, "TopBar", s.TopBarSprite, Vector2.zero, Vector2.zero);
+        topBar.color = s.TopBarSprite != null ? Color.white : s.Surface;
+        topBar.rectTransform.anchorMin = new Vector2(0f, 1f);
+        topBar.rectTransform.anchorMax = Vector2.one;
+        topBar.rectTransform.pivot = new Vector2(0.5f, 1f);
+        topBar.rectTransform.sizeDelta = new Vector2(0f, TopBarHeight);
+        var title = ResearchUi.NewText(topBar.transform, "Title", "영구 강화", TopButtonFont, s.FontBold, TextAlignmentOptions.Center);
+        title.color = s.Ink;
 
         var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, s.PanelHeight, 0f, TopBarHeight);
 
@@ -227,8 +238,8 @@ public sealed class ResearchScreen : MonoBehaviour
             _views[i].OnNodeClicked += Select;
         }
 
-        var panel = ResearchUi.NewImage(root, "InfoPanel", null, Vector2.zero, Vector2.zero);
-        panel.color = s.Surface;
+        var panel = ResearchUi.NewImage(root, "InfoPanel", s.CardBackground, Vector2.zero, Vector2.zero);
+        panel.color = s.CardBackground != null ? Color.white : s.Surface;
         var panelRect = panel.rectTransform;
         panelRect.anchorMin = Vector2.zero;
         panelRect.anchorMax = new Vector2(1f, 0f);
@@ -237,7 +248,7 @@ public sealed class ResearchScreen : MonoBehaviour
         panelRect.sizeDelta = new Vector2(0f, s.PanelHeight);
         // 트리와 패널 사이 가는 구분선.
         var divider = ResearchUi.NewImage(panelRect, "Divider", null, Vector2.zero, Vector2.zero);
-        divider.color = s.Faint;
+        divider.color = s.CardBackground != null ? Color.clear : s.Faint;
         var dividerRect = divider.rectTransform;
         dividerRect.anchorMin = new Vector2(0f, 1f);
         dividerRect.anchorMax = new Vector2(1f, 1f);

@@ -14,6 +14,7 @@ using UnityEngine.UI;
 public class ResultScreenView : MonoBehaviour
 {
     // 연출 시작 시각(초). HP·빌드·보상 구간은 앞 구간 길이에 따라 이어 붙는다.
+    private const int BuildPopupSortingOffset = 20;
     private const float HeaderInTime = 0.1f;
     private const float ChiefInTime = 0.2f;
     private const float RoundInTime = 0.4f;
@@ -386,6 +387,18 @@ public class ResultScreenView : MonoBehaviour
     {
         if (_cached) return;
         _cached = true;
+        // Lab parent order is 0; production result order may be 2100 or higher.
+        // Keep the popup above its result instead of using the prefab's absolute lab order.
+        if (_buildPopup != null)
+        {
+            var popupCanvas = _buildPopup.GetComponent<Canvas>();
+            var parentCanvas = _buildPopup.transform.parent.GetComponentInParent<Canvas>(true);
+            if (popupCanvas != null && parentCanvas != null)
+            {
+                popupCanvas.overrideSorting = true;
+                popupCanvas.sortingOrder = parentCanvas.sortingOrder + BuildPopupSortingOffset;
+            }
+        }
         _headerBasePos = ((RectTransform)_header.transform).anchoredPosition;
         _rewardBasePos = ((RectTransform)_rewardBlock.transform).anchoredPosition;
         _buildIconTemplate.gameObject.SetActive(false);

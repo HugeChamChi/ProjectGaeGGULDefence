@@ -59,6 +59,59 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     [Tooltip("해킹 중첩 시안(G~J) 발동 시점 묶음 번호 — '발동 타이밍' 버튼이 순환")]
     [SerializeField] private int _triggerSetIndex;
     [SerializeField] private bool _loop = true;
+    [Header("Live game binding")]
+    [SerializeField] private TMP_Text _runtimeTimer;
+    private TimerController _liveClock;
+    private float _liveBonus;
+    private bool _liveBonusPending;
+    private Vector2 _liveBossCenter;
+    private Vector2 _timerBasePosition;
+    private Vector3 _timerBaseScale;
+    private Color _timerBaseColor;
+    private Vector2 _liveTimerSize;
+
+    /// <summary>True only while a real time addition is being presented.</summary>
+    public bool IsPresenting => _runtimeTimer != null && _running && _ready;
+    internal bool IsRuntime => _runtimeTimer != null;
+
+    /// <summary>Plays A against the authoritative timer. Does not add time or spawn lab actors.</summary>
+    public void Present(TimerController clock, float added, Vector2 bossCenter, bool bonusPending = false)
+    {
+        if (!_ready) Start();
+        _liveClock = clock;
+        _liveBonus = added;
+        _liveBonusPending = bonusPending;
+        _liveBossCenter = bossCenter;
+        UpdateBonusText();
+        Restart();
+        _t = _settings.PreKillSeconds;
+        _shakeRoot.gameObject.SetActive(true);
+        _flash.gameObject.SetActive(true);
+    }
+
+    /// <summary>True when the A chip has reached the timer, using the actual animation clock including hit stops.</summary>
+    public bool HasReachedImpact => _ready && KillTime >= _settings.Fusion.FlySeconds;
+    /// <summary>True when the A timer counter has finished rising.</summary>
+    public bool IsBonusCountComplete => _ready && KillTime >= _settings.Fusion.FlySeconds + _settings.Fusion.CountSeconds;
+    /// <summary>Called immediately after the authoritative countdown receives the pending bonus.</summary>
+    public void NotifyBonusApplied() => _liveBonusPending = false;
+
+    /// <summary>Releases timer appearance on completion, scene exit or a stopped run.</summary>
+    public void CancelPresentation()
+    {
+        if (!IsRuntime || !_ready) return;
+        _running = false;
+        _particles.Clear();
+        if (_shakeRoot != null) _shakeRoot.gameObject.SetActive(false);
+        if (_flash != null) _flash.gameObject.SetActive(false);
+        if (_runtimeTimer != null)
+        {
+            _runtimeTimer.rectTransform.anchoredPosition = _timerBasePosition;
+            _runtimeTimer.rectTransform.localScale = _timerBaseScale;
+            _runtimeTimer.color = _timerBaseColor;
+            if (_liveClock != null) _runtimeTimer.text = _liveClock.RemainingTime.ToString("F2", CultureInfo.InvariantCulture);
+        }
+    }
 
     private ITimerBonusConcept[] _concepts;
     private TimerBonusSprites _sprites;
@@ -113,16 +166,16 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 
     internal TimerBonusLabSettings Settings => _settings;
     internal float Px => _settings.PxScale;
-    internal float Bonus => _settings.Bonuses.Length > 0 ? _settings.Bonuses[_bonusIndex] : 0f;
+    internal float Bonus => IsRuntime ? _liveBonus : _settings.Bonuses.Length > 0 ? _settings.Bonuses[_bonusIndex] : 0f;
     /// <summary>"+15.00"</summary>
     internal string BonusText => _bonusText;
     /// <summary>"+15"</summary>
     internal string BonusShortText => _bonusShortText;
     /// <summary>지금 남은 시간 (보너스 제외).</summary>
-    internal double Now => _settings.BaseRemaining - _t;
-    internal Vector2 TimerPosition => _timerPosition;
-    internal Vector2 TimerSize => _main.Size;
-    internal Vector2 BossCenter => _bossPosition + new Vector2(0f, _bossSize * 0.5f);
+    internal double Now => IsRuntime ? (_liveClock != null ? _liveClock.RemainingTime - (_liveBonusPending ? 0f : _liveBonus) : 0f) : _settings.BaseRemaining - _t;
+    internal Vector2 TimerPosition => IsRuntime ? (Vector2)_stage.InverseTransformPoint(_runtimeTimer.transform.position) : _timerPosition;
+    internal Vector2 TimerSize => IsRuntime ? _liveTimerSize : _main.Size;
+    internal Vector2 BossCenter => IsRuntime ? _liveBossCenter : _bossPosition + new Vector2(0f, _bossSize * 0.5f);
     internal Vector2 StageSize => _stage.rect.size;
     internal TimerBonusDigits MainDigits => _main;
     /// <summary>타이머 묶음 루트 — 여기 붙인 자식은 타이머 이동·박동·크기를 같이 따른다 (본체보다 위에 그려짐).</summary>
@@ -156,6 +209,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 
     private void Start()
     {
+        if (_ready) return;
         if (_settings == null || _font == null || _stage == null || _overlay == null)
         {
             Debug.LogError("[TimerBonusLab] 설정/폰트/영역 미연결", this);
@@ -165,8 +219,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _bonusIndex = Mathf.Clamp(_settings.DefaultBonusIndex, 0, Mathf.Max(0, _settings.Bonuses.Length - 1));
         UpdateBonusText();
         BuildView();
-        var stackHack = new TimerBonusHack();   // G~J가 같이 쓰는 해킹 렌더러
-        _concepts = new ITimerBonusConcept[]
+        var stackHack = new TimerBonusHack();   // G~J가 같이 쓰는 해킹 렌더러 (실험실 전용)
+        _concepts = IsRuntime ? new ITimerBonusConcept[] { new TimerBonusFusion() } : new ITimerBonusConcept[]
         {
             new TimerBonusFusion(),
             new TimerBonusSlotReel(),
@@ -185,10 +239,12 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _ready = true;
         Restart();
         Refresh();
+        if (IsRuntime) CancelPresentation();
     }
 
     private void OnDestroy()
     {
+        CancelPresentation();
         _drones?.Dispose();
         _sprites?.Dispose();
     }
@@ -196,6 +252,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     private void LateUpdate()
     {
         if (!_ready) return;
+        if (IsRuntime && !_running) return;
         float dt = Mathf.Min(_useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime, MaxStep) * Speed;
         // 히트스톱: 시계·파티클이 같이 멈추고, 플래시·줌만 계속 줄어든다.
         bool frozen = _running && _hold > 0f;
@@ -215,15 +272,19 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 
         float a = _t - _settings.PreKillSeconds;
         BeginFrame();
-        RenderTension(a, step);
-        RenderBoss(a);
-        _drones.Render(_t, a < 0f);
+        if (!IsRuntime)
+        {
+            RenderTension(a, step);
+            RenderBoss(a);
+            _drones.Render(_t, a < 0f);
+        }
         _concepts[_concept].Render(a, step);
         _particles.Tick(step);
 
         _whiteFlash *= Decay(FlashDecay, fadeStep);
         _zoom *= Decay(ZoomDecay, fadeStep);
         ApplyFrame();
+        if (IsRuntime && a >= _settings.AnimSeconds) CancelPresentation();
         if (Time.frameCount % 6 == 0) UpdateStatus();
     }
 
@@ -288,6 +349,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     /// <summary>타이머 세 겹(본체·잔상 2장)에 같은 값을 쓴다.</summary>
     internal void SetTimerValue(double seconds)
     {
+        if (IsRuntime) { _runtimeTimer.text = System.Math.Max(0d, seconds).ToString("F2", CultureInfo.InvariantCulture); return; }
         _main.SetValue(seconds);
         _ghostCyan.SetValue(seconds);
         _ghostHot.SetValue(seconds);
@@ -461,6 +523,23 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _shakeRoot = NewRect("ShakeRoot", _stage, Vector2.zero);
         Stretch(_shakeRoot);
 
+        if (IsRuntime)
+        {
+            _loop = false;
+            _timerBasePosition = _runtimeTimer.rectTransform.anchoredPosition;
+            _timerBaseScale = _runtimeTimer.rectTransform.localScale;
+            _timerBaseColor = _runtimeTimer.color;
+            _liveTimerSize = _runtimeTimer.rectTransform.rect.size;
+            _fx = NewRect("Fx", _shakeRoot, Vector2.zero);
+            Stretch(_fx);
+            var liveParticles = NewRect("Particles", _shakeRoot, Vector2.zero);
+            Stretch(liveParticles);
+            _particles = new TimerBonusParticles(liveParticles, _sprites.SoftDot, _sprites.Ring);
+            _flash = CreateImage("Flash", _overlay, Color.clear);
+            Stretch(_flash.rectTransform);
+            return;
+        }
+
         // 보스 대역 (발밑 기준)
         _bossRoot = NewRect("Boss", _shakeRoot, new Vector2(_bossSize, _bossSize));
         _bossRoot.pivot = new Vector2(0.5f, 0f);
@@ -597,6 +676,14 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 
     private void ApplyFrame()
     {
+        if (IsRuntime)
+        {
+            _runtimeTimer.rectTransform.anchoredPosition = _timerBasePosition + _timerOffset;
+            _runtimeTimer.rectTransform.localScale = Vector3.Scale(_timerBaseScale, new Vector3(_timerScale.x, _timerScale.y, 1f));
+            _runtimeTimer.color = Color.Lerp(Color.Lerp(_timerBaseColor, _settings.GoldColor, Mathf.Clamp01(_gold)), Color.white, Mathf.Clamp01(_timerFlash));
+            _flash.color = WithAlpha(Color.white, Mathf.Clamp01(_whiteFlash));
+            return;
+        }
         _shakeRoot.anchoredPosition = _shake;
         _shakeRoot.localScale = Vector3.one * (1f + _zoom);
 

@@ -22,6 +22,9 @@ public class ProjectilePool : MonoBehaviour
     [SerializeField] private float   _projectileSize  = 22f;
     [SerializeField] private int     _initialPoolSize = 20;
 
+    private const int CircleTextureSize = 64;
+    private Sprite _circleSprite;
+    private Texture2D _circleTexture;
     private ObjectPool<Projectile> _pool;
     private Transform              _container;
 
@@ -33,7 +36,7 @@ public class ProjectilePool : MonoBehaviour
             createFunc:      CreateProjectile,
             actionOnGet:     p => p.gameObject.SetActive(true),
             actionOnRelease: p => p.gameObject.SetActive(false),
-            actionOnDestroy: p => Destroy(p.gameObject),
+            actionOnDestroy: p => { if (p != null) Destroy(p.gameObject); },
             collectionCheck: false,
             defaultCapacity: _initialPoolSize
         );
@@ -124,7 +127,8 @@ public class ProjectilePool : MonoBehaviour
         go.transform.SetParent(_container, false);
 
         var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateCircleSprite(64);
+        if (_circleSprite == null) _circleSprite = CreateCircleSprite(CircleTextureSize);
+        sr.sprite = _circleSprite;
         sr.color  = _projectileColor;
         sr.sortingOrder = 100; // 그리드나 유닛, 배경보다 상위에 확실히 노출
 
@@ -133,7 +137,7 @@ public class ProjectilePool : MonoBehaviour
         return go.AddComponent<Projectile>();
     }
 
-    private static Sprite CreateCircleSprite(int size)
+    private Sprite CreateCircleSprite(int size)
     {
         var tex    = new Texture2D(size, size, TextureFormat.RGBA32, false);
         var pixels = new Color32[size * size];
@@ -149,7 +153,17 @@ public class ProjectilePool : MonoBehaviour
         }
 
         tex.SetPixels32(pixels);
-        tex.Apply();
+        tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+        _circleTexture = tex;
         return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
+
+    private void OnDestroy()
+    {
+        _pool?.Clear();
+        if (_container != null) Destroy(_container.gameObject);
+        if (_circleSprite != null) Destroy(_circleSprite);
+        if (_circleTexture != null) Destroy(_circleTexture);
+    }
+
 }

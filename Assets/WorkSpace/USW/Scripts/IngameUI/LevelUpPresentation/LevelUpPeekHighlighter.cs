@@ -12,7 +12,6 @@ using VContainer;
 public class LevelUpPeekHighlighter : MonoBehaviour
 {
     [Inject] private GridManager _gridManager;
-    [Inject] private ChieftainSpawner _chieftainSpawner;
 
     [Header("참조")]
     [Tooltip("링을 그릴 HUD Canvas. 비우면 족장 스킬 버튼이 속한 최상위 Canvas.")]
@@ -45,7 +44,7 @@ public class LevelUpPeekHighlighter : MonoBehaviour
     public void Show(LevelUpData data)
     {
         Clear();
-        var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _chieftainSpawner, _targets);
+        var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _targets);
 
         if (destination == LevelUpFeedbackDestination.ChiefSkill && _chiefSkillTarget != null)
         {

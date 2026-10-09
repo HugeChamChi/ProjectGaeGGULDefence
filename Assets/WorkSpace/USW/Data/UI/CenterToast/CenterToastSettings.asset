@@ -12,11 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89e53179feadb0b448fa3fce28b813fb, type: 3}
   m_Name: CenterToastSettings
   m_EditorClassIdentifier: Assembly-CSharp::CenterToastSettings
-  Style: 4
+  Style: 6
   AnchorY: 240
-  Lifetime: 1.1
-  MaxVisible: 4
-  FontSize: 44
+  Scale: 1.1
+  Lifetime: 0.9
+  MaxVisible: 6
+  PushedLifetime: 0.35
+  FontSize: 48
+  ModernText: {r: 0.96, g: 0.97, b: 1, a: 1}
+  ModernGlass: {r: 0.07, g: 0.08, b: 0.11, a: 0.86}
+  ModernWarning: {r: 1, g: 0.33, b: 0.38, a: 1}
+  ModernInfo: {r: 0.36, g: 0.78, b: 1, a: 1}
+  StackGap: 10
   TextColor: {r: 1, g: 1, b: 1, a: 1}
   OutlineColor: {r: 0.08, g: 0.05, b: 0.1, a: 1}
   OutlineWidth: 0.22
@@ -25,4 +32,3 @@ MonoBehaviour:
   Height: 92
   WarningAccent: {r: 1, g: 0.36, b: 0.36, a: 1}
   InfoAccent: {r: 1, g: 0.77, b: 0.23, a: 1}
-  StackLineStep: 62

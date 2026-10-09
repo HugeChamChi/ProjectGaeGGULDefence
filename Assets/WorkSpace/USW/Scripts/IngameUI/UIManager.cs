@@ -91,6 +91,8 @@ public class UIManager : MonoBehaviour
     {
         // DroneManager → BossManager → UIManager 순환을 피하도록 기존 Start 시점에만 조회한다.
         VContainer.IObjectResolverExtensions.TryResolve(_resolver, out _droneManager);
+        if (_droneManager != null && _bossHpBar != null)
+            gameObject.AddComponent<HackingHud>().Initialize(_droneManager.Hacking, _bossHpBar);
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
@@ -310,10 +312,13 @@ public class UIManager : MonoBehaviour
     }
 
     private bool _wasWaitTime = false;
+    /// <summary>Owns timer text while the real added time is visually merged.</summary>
+    public bool TimerPresentationActive { get; set; }
 
     public void UpdateTimerUI(float remaining, bool isWaitTime = false)
     {
         if (timerText == null) return;
+        if (TimerPresentationActive && !isWaitTime) return;
         
         if (isWaitTime)
         {

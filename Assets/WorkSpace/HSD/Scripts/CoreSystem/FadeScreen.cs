@@ -56,12 +56,14 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
             if (fadeImage != null) fadeImage.raycastTarget = true;
             // 0부터 시작해서 0.5까지
             _fadeMaterial.SetFloat(materialPropertyName, 0f);
-            await _fadeMaterial.DOFloat(0.5f, materialPropertyName, duration).ToUniTask();
+            await _fadeMaterial.DOFloat(0.5f, materialPropertyName, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
         else if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true;
-            await canvasGroup.DOFade(1f, duration).ToUniTask();
+            await canvasGroup.DOFade(1f, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
     }
 
@@ -74,13 +76,15 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
             if (fadeImage != null) fadeImage.raycastTarget = true; // 페이드 아웃 중 터치 방지
             // 0.5부터 시작해서 1까지
             _fadeMaterial.SetFloat(materialPropertyName, 0.5f);
-            await _fadeMaterial.DOFloat(1f, materialPropertyName, duration).ToUniTask();
+            await _fadeMaterial.DOFloat(1f, materialPropertyName, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
             if (fadeImage != null) fadeImage.raycastTarget = false;
         }
         else if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true; // 페이드 아웃 중 터치 방지
-            await canvasGroup.DOFade(0f, duration).ToUniTask();
+            await canvasGroup.DOFade(0f, duration).SetUpdate(true)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
             canvasGroup.blocksRaycasts = false;
         }
     }

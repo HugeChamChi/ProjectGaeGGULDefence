@@ -48,7 +48,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
         builder.RegisterComponentInHierarchy<BuffManager>();
 
-        builder.RegisterComponentInHierarchy<ChieftainSpawner>();
+        builder.RegisterComponentInHierarchy<ChieftainSelection>();
 
         builder.RegisterComponentInHierarchy<MergeManager>();
         var mergeEffectSettings = Resources.Load<MergeEffectSettings>("MergeEffectSettings");
@@ -59,6 +59,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<LevelUpManager>();
 
         builder.RegisterComponentInHierarchy<UIManager>();
+        SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<DamageFloaterManager>();
         SceneComponentRegistration.RegisterOptional<BossDamageNumbers>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.UI.Effect.UI_ChiefSkillEffect>(builder, gameObject.scene);

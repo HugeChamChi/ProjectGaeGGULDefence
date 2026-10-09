@@ -3574,7 +3574,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -5141,6 +5141,7 @@ MonoBehaviour:
   stageData: {fileID: 11400000, guid: 7343e2b5df06e094085aaed0a6e3abd0, type: 2}
   config: {fileID: 11400000, guid: 691bc26a456e93d458cf58ce32431185, type: 2}
   _endlessMode: {fileID: 0}
+  _penaltyFx: {fileID: 0}
 --- !u!4 &397711250
 Transform:
   m_ObjectHideFlags: 0
@@ -6614,6 +6615,7 @@ GameObject:
   - component: {fileID: 530215298}
   - component: {fileID: 530215302}
   - component: {fileID: 530215303}
+  - component: {fileID: 530215304}
   m_Layer: 5
   m_Name: SummonButton
   m_TagString: Untagged
@@ -6684,7 +6686,7 @@ MonoBehaviour:
     m_SelectedTrigger: Highlighted
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 530215304}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -6737,6 +6739,36 @@ MonoBehaviour:
   Key: Summon
   Highlight: {fileID: 530215296}
   Button: {fileID: 530215298}
+--- !u!114 &530215304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 530215295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 50, y: 0, z: 45, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &539903544
 GameObject:
   m_ObjectHideFlags: 0
@@ -8442,7 +8474,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -9003,7 +9035,7 @@ GameObject:
   - component: {fileID: 810861387}
   - component: {fileID: 810861386}
   m_Layer: 0
-  m_Name: ChieftainSpawner
+  m_Name: ChieftainSelection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9023,9 +9055,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chieftainDataList:
   - {fileID: 0}
-  _useTestSpawn: 1
+  - {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
+  - {fileID: 11400000, guid: a05cc91a32f380242b021751e03a77a2, type: 2}
+  _useTestSelection: 1
   _useAuthoredSelection: 1
-  _testUnitData: {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
+  _testSelection: {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
 --- !u!4 &810861387
 Transform:
   m_ObjectHideFlags: 0
@@ -11898,7 +11932,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -19083,7 +19117,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -23497,7 +23531,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -23903,7 +23937,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -24857,6 +24891,7 @@ MonoBehaviour:
   _totemInfoPanel: {fileID: 1743982087}
   _bossEncounterUI: {fileID: 1382569198}
   _waveTextUI: {fileID: 1511414540}
+  _bossClearPresentation: {fileID: 0}
   _levelUpUI: {fileID: 886132646}
   _totemSelectUI: {fileID: 355851961}
   _totemRewardUI: {fileID: 973994088}

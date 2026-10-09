@@ -17,15 +17,19 @@ public sealed class MobinogiDamageView : IDamageStyleView
         public float BornAt;
         public float Y;
         public float BaseScale;
+        public Bounds GlyphBounds;
+        public float MeasuredFontSize;
     }
 
     private readonly DamageStyleLabSettings _s;
     private readonly RectTransform _root;
+    private readonly Canvas _canvas;
     private readonly Line[] _pool;
     private readonly List<Line> _active; // 0 = 가장 새 줄, 마지막 = 먼저 교체할 가장 오래된 줄
     private readonly float[] _avgLogByKind = new float[KindCount]; // 종류별 최근 피해량 평균 (로그)
     private readonly bool[] _hasAvgByKind = new bool[KindCount];
     private const int KindCount = 3; // BossDamageKind: Normal, Critical, Burn
+    private const float MinimumBoundsSize = 0.0001f;
     private Transform _anchor;
     private SpriteRenderer _anchorRenderer;
 
@@ -34,6 +38,8 @@ public sealed class MobinogiDamageView : IDamageStyleView
     {
         _s = settings;
         _root = DamageStyleLabUtil.CreateRoot(container, "MobinogiStyle");
+        var canvas = container.GetComponentInParent<Canvas>();
+        _canvas = canvas != null ? canvas.rootCanvas : null;
         _pool = new Line[Mathf.Max(1, _s.MobiMaxLines)];
         _active = new List<Line>(_pool.Length);
         for (int i = 0; i < _pool.Length; i++)
@@ -59,6 +65,7 @@ public sealed class MobinogiDamageView : IDamageStyleView
         {
             if (font != null) line.Text.font = font;
             if (material != null) line.Text.fontSharedMaterial = material;
+            line.MeasuredFontSize = 0f;
         }
     }
 
@@ -79,6 +86,12 @@ public sealed class MobinogiDamageView : IDamageStyleView
         Vector2 baseScreen = BaseScreen(scale);
         float baseScreenY = baseScreen.y;
         Vector2 basePos = DamageStyleLabUtil.ScreenToLocal(_root, baseScreen);
+        Camera uiCamera = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
+        Rect safeArea = Screen.safeArea;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, new Vector2(safeArea.xMin, safeArea.center.y), uiCamera, out Vector2 safeLeft);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, new Vector2(safeArea.xMax, safeArea.center.y), uiCamera, out Vector2 safeRight);
+        float safeMinX = Mathf.Min(safeLeft.x, safeRight.x);
+        float safeMaxX = Mathf.Max(safeLeft.x, safeRight.x);
         float hudTop = Screen.height * (1f - _s.TopHudRatio);
         float spacing = _s.MobiFontSize * _s.MobiLineSpacing;
         float follow = 1f - Mathf.Exp(-_s.MobiFollowSpeed * deltaTime);
@@ -101,12 +114,40 @@ public sealed class MobinogiDamageView : IDamageStyleView
 
             line.Text.fontSize = _s.MobiFontSize;
             line.Rect.localScale = new Vector3(line.BaseScale * entryScale.x, line.BaseScale * entryScale.y, 1f);
+            ConstrainHorizontalBounds(line, safeMinX, safeMaxX);
             float alpha = 1f - fade;
             // 위로 쌓이다 상단 HUD에 닿는 줄은 흐리게 한다 (위치는 그대로).
             float lineTopPx = (line.Y - basePos.y) * scale + baseScreenY + _s.MobiFontSize * scale * 0.5f;
             alpha *= Mathf.Clamp01((hudTop - lineTopPx) / Mathf.Max(1f, _s.MobiFontSize * scale) + 1f);
             line.Group.alpha = alpha;
         }
+    }
+
+    // Constrain the rendered mesh, including italic/material padding and entry/shake scale.
+    private static void ConstrainHorizontalBounds(Line line, float safeMinX, float safeMaxX)
+    {
+        if (line.MeasuredFontSize != line.Text.fontSize)
+        {
+            line.Text.ForceMeshUpdate();
+            line.GlyphBounds = line.Text.mesh.bounds;
+            line.MeasuredFontSize = line.Text.fontSize;
+        }
+        Vector3 scale = line.Rect.localScale;
+        float availableWidth = Mathf.Max(MinimumBoundsSize, safeMaxX - safeMinX);
+        float glyphWidth = line.GlyphBounds.size.x * scale.x;
+        if (glyphWidth > availableWidth)
+        {
+            // Fit only when the authored proportions are wider than the entire safe viewport.
+            float fit = availableWidth / glyphWidth;
+            scale.x *= fit;
+            scale.y *= fit;
+            line.Rect.localScale = scale;
+        }
+        float minAnchor = safeMinX - line.GlyphBounds.min.x * scale.x;
+        float maxAnchor = safeMaxX - line.GlyphBounds.max.x * scale.x;
+        Vector2 position = line.Rect.anchoredPosition;
+        position.x = Mathf.Clamp(position.x, minAnchor, Mathf.Max(minAnchor, maxAnchor));
+        line.Rect.anchoredPosition = position;
     }
 
     /// <inheritdoc />
@@ -143,6 +184,8 @@ public sealed class MobinogiDamageView : IDamageStyleView
         line.Rect.localScale = Vector3.zero;
         line.Group.alpha = 1f;
         line.Rect.gameObject.SetActive(true);
+        // Measure newest content once in Tick, even when this pooled line is reused several times in one frame.
+        line.MeasuredFontSize = 0f;
         line.Rect.SetAsLastSibling();
         _active.Insert(0, line);
     }

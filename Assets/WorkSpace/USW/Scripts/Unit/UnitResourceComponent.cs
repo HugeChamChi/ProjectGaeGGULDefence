@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class UnitResourceComponent : MonoBehaviour
 {
+    /// <summary>식량이 실제 지급됐을 때 발행된다. 연출은 지급량이나 주기를 변경하지 않는다.</summary>
+    public event System.Action OnFoodProduced;
+
     private UnitBase _unit;
     private UnitDependencies _deps;
     private float _foodTimer;
@@ -16,7 +19,7 @@ public class UnitResourceComponent : MonoBehaviour
     public void TickFoodProduction(float deltaTime)
     {
         if (_deps?.GameManager?.IsFinished == true) return;
-        if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.unitData == null || deltaTime <= 0f) return;
+        if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.IsCellSealed || _unit.unitData == null || deltaTime <= 0f) return;
 
         float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
         float speedMultiplier = 1f / Mathf.Max(0.1f, 1f + cellFoodSpeedBonus);
@@ -38,8 +41,7 @@ public class UnitResourceComponent : MonoBehaviour
         _foodTimer -= elapsedTicks * payoutInterval;
 
         float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
-        float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-        float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
+        float amountMultiplier = 1f + cellFoodAmountBonus;
         amountMultiplier *= 1f + (_deps.Research?.Get(ResearchStat.FoodProduction) ?? 0f);
         if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 
@@ -51,6 +53,7 @@ public class UnitResourceComponent : MonoBehaviour
             {
                 _deps.CurrencyManager.AddCurrency(amountPerTick);
                 _deps.CurrencyFloaterManager?.ReportFoodProduction(amountPerTick);
+                OnFoodProduced?.Invoke();
             }
         }
     }
@@ -59,13 +62,12 @@ public class UnitResourceComponent : MonoBehaviour
     {
         get
         {
-            if (_unit == null || _unit.unitData == null) return 0f;
+            if (_unit == null || _unit.unitData == null || _unit.IsCellSealed) return 0f;
             float baseAmount = _unit.GetBaseFoodPerSecond();
             if (baseAmount <= 0f) return 0f;
 
             float cellFoodAmountBonus = _unit.GetStatBonus(StatKind.FoodAmount);
-            float chieftainFoodBonus = (_deps?.ChieftainManager != null && _deps.ChieftainManager.ChieftainUnit == _unit) ? (_deps.LevelUpManager?.ChieftainFoodProductionBonus ?? 0f) : 0f;
-            float amountMultiplier = 1f + cellFoodAmountBonus + chieftainFoodBonus;
+            float amountMultiplier = 1f + cellFoodAmountBonus;
             amountMultiplier *= 1f + (_deps?.Research?.Get(ResearchStat.FoodProduction) ?? 0f);
             if (!_unit.IsFoodProductionBuffable) amountMultiplier = 1f;
 

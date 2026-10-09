@@ -22,29 +22,49 @@ MonoBehaviour:
   UpgradeArrow: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
   BlockedIcon: {fileID: 21300000, guid: 76abe28924c3a9345adaa9cc63c803d3, type: 3}
   RoundedCornerScale: 4
+  PanelBackground: {fileID: 21300000, guid: b96fce96b352f5d41ad588e52cc21e43, type: 3}
+  TopBarSprite: {fileID: 21300000, guid: 0d5d5f910e8d09141b68f7ecbd2ca410, type: 3}
+  NodeLockedSprite: {fileID: 21300000, guid: eedd67c9a78e6414a89629b8e1d03f22, type: 3}
+  NodeAvailableSprite: {fileID: 21300000, guid: ee126ed1eed81d149acd3d0fa698494f,
+    type: 3}
+  NodeRecommendSprite: {fileID: 21300000, guid: 99fceb23b8e06c845979ba71f2484959,
+    type: 3}
+  NodeMaxSprite: {fileID: 21300000, guid: a9687fc42df05954195adf3ecbd8c43d, type: 3}
+  RecommendBadgeSprite: {fileID: 21300000, guid: 0d3267b51ad2b7944808647ab6b36f16,
+    type: 3}
+  LevelDotsSprite: {fileID: 21300000, guid: 93ad0dad943750442838c2e351df9ece, type: 3}
+  NodeIconSlotSprite: {fileID: 21300000, guid: e12be4bf77b547549974edf72cc666c9, type: 3}
+  LineLockedSprite: {fileID: 21300000, guid: 884db2fe279b6fe408cbed5103b507de, type: 3}
+  LineActiveSprite: {fileID: 21300000, guid: 330e54d51ecaf0a4088b78cb6ea07a92, type: 3}
+  CardBackground: {fileID: 21300000, guid: c3347f9a835285246ab099004cd959cb, type: 3}
+  IconFrameSprite: {fileID: 21300000, guid: ce4d1f01c9fabdc41abfc4671ea1c212, type: 3}
+  UpgradeButtonSprite: {fileID: 21300000, guid: b763b9917428df74b8e7bd951d753f98,
+    type: 3}
+  MaxLabelSprite: {fileID: 21300000, guid: 96e3e7fa654b72b4591913a5915f65e7, type: 3}
   Background: {r: 0.08235294, g: 0.09803922, b: 0.13725491, a: 1}
   Surface: {r: 0.13333334, g: 0.15686275, b: 0.21176471, a: 1}
-  Ink: {r: 0.9137255, g: 0.9254902, b: 0.9490196, a: 1}
+  Ink: {r: 1, g: 1, b: 1, a: 1}
   Muted: {r: 0.54901963, g: 0.5803922, b: 0.6509804, a: 1}
   Faint: {r: 0.22745098, g: 0.25882354, b: 0.32941177, a: 1}
   Soft: {r: 0.17254902, g: 0.2, b: 0.26666668, a: 1}
-  Active: {r: 0.17254902, g: 0.76862746, b: 0.7137255, a: 1}
-  Accent: {r: 0.9490196, g: 0.6627451, b: 0.23137255, a: 1}
+  Active: {r: 0.43529412, g: 0.92156863, b: 0.14117648, a: 1}
+  Accent: {r: 1, g: 0.77254903, b: 0.078431375, a: 1}
   OnColor: {r: 1, g: 1, b: 1, a: 1}
   ShadowColor: {r: 0, g: 0, b: 0, a: 0.35}
-  NodeSize: 176
-  CircleNodeSize: 196
-  DiamondNodeSize: 146
+  NodeSize: 190
+  CircleNodeSize: 200
+  DiamondNodeSize: 190
   SelectionPadding: 12
   PulseSeconds: 1.4
   PulseMinAlpha: 0.45
-  LineWidth: 8
+  LineWidth: 14
   TreeCenterX: -70
   ColumnOffset: 190
   SpecialColumnX: 350
   RowSpacing: 255
   ContentPadding: 200
-  PanelHeight: 430
+  PanelHeight: 440
+  FollowByDefault: 1
   ToastSeconds: 1.3
   TitleFormat: "\uAC15\uD654 {0}"
   UpgradeLabel: "\uAC15\uD654"
@@ -52,6 +72,8 @@ MonoBehaviour:
   LockedLabel: "\uC7A0\uAE40"
   ChangeChoiceLabel: "\uC120\uD0DD \uBC14\uAFB8\uAE30"
   RecommendLabel: "\uCD94\uCC9C"
+  RecommendButtonLabel: "\uCD94\uCC9C \uAC15\uD654"
+  FollowLabel: "\uCD94\uCC9C \uB530\uB77C\uAC00\uAE30"
   ToastFormat: '{0} Lv.{1}   {2}'
   GateLabelFormat: "{0}\uB2E8\uACC4 \xB7 \uC804\uCCB4 \uAC15\uD654 {1}/{2}"
   GateOpenFormat: "{0}\uB2E8\uACC4 \uC5F4\uB9BC"

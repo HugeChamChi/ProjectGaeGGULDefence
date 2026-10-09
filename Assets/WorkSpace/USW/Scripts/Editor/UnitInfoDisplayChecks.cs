@@ -29,6 +29,8 @@ public static class UnitInfoDisplayChecks
             var panel = Component<UI_UnitInfoPanel>();
             var attack = Component<UI_StatSlot>(); var speed = Component<UI_StatSlot>();
             var atkText = Component<TextMeshProUGUI>(); var speedText = Component<TextMeshProUGUI>();
+            var skillText = Component<TextMeshProUGUI>(); Set(panel,"txt_SkillNameText",skillText);
+            var skillDescription = Component<TextMeshProUGUI>(); Set(panel,"txt_SkillDescription",skillDescription);
             var bonus = Component<TextMeshProUGUI>(); bonus.gameObject.SetActive(true);
             Set(attack, "txt_Value", atkText); Set(attack, "txt_BonusValue", bonus); Set(speed, "txt_Value", speedText);
             Set(panel, "statSlot_Atk", attack); Set(panel, "statSlot_AtkSpeed", speed);
@@ -67,6 +69,11 @@ public static class UnitInfoDisplayChecks
             manager.RemoveEffect(production); presenter.Refresh(); Check(atkText.text == "480", "Removed drone reduces display");
             beta.RemoveForCheck(); presenter.Refresh(); Check(atkText.text == "0", "No live drones means zero combined attack");
             Set(beta, "<currentCell>k__BackingField", null); Check(!presenter.Refresh(), "Removed unit invalidates current view");
+            var liveBetan=Component<Drone_Betan>();liveBetan.unitData=Asset<UnitData>();liveBetan.unitData.Hacking=Asset<DroneHackingData>();liveBetan.Init(new UnitDependencies{LevelUpManager=manager});
+            presenter.SetUnitData(liveBetan);Check(skillText.text!="해킹 기폭","Betan shared data never shows Gamman skill");
+            var conversion=Asset<LevelUpData>();conversion.chooseId=15103;DroneSelectionPresets.Configure(conversion,DroneSelectionKind.BetanHackingBomb);manager.ApplyEffect(conversion);
+            presenter.Refresh();Check(skillText.text=="해킹 자폭" && skillDescription.text.Contains("1개"),"open panel reflects hacking conversion");
+            manager.RemoveEffect(conversion);presenter.Refresh();Check(skillText.text!="해킹 자폭","removing conversion restores description");
             var zelta = Component<Drone_Zeltan>(); zelta.unitData = Asset<UnitData>();
             zelta.Init(new UnitDependencies()); presenter.SetUnitData(zelta);
             Check(atkText.text == "0", "Zero-attack Zeltan remains a visible numeric field");

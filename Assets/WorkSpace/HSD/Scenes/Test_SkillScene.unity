@@ -2288,6 +2288,7 @@ MonoBehaviour:
   txt_Cooldown: {fileID: 429261832}
   img_Icon: {fileID: 1863822033}
   _readyBanner: {fileID: 0}
+  _iconMotion: {fileID: 0}
   iconOverride: {fileID: 0}
   disabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!1 &93781508 stripped
@@ -9348,7 +9349,6 @@ MonoBehaviour:
   unitDataList:
   - {fileID: 11400000, guid: 8ff5f3f4c238125409999a555e201aad, type: 2}
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
-  - {fileID: 11400000, guid: 46f2576957468964a97a70b6ca8eafe0, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
   _useAuthoredParty: 0
@@ -11179,6 +11179,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageData: {fileID: 11400000, guid: cab47d596c71ea64dbc573f558c2bff4, type: 2}
   config: {fileID: 11400000, guid: 32ebb2889a9384547be049b5b780e1a9, type: 2}
+  _endlessMode: {fileID: 0}
+  _penaltyFx: {fileID: 0}
 --- !u!4 &397711250
 Transform:
   m_ObjectHideFlags: 0
@@ -12011,6 +12013,7 @@ MonoBehaviour:
   maskRect: {fileID: 0}
   fullHeight: 0
   fillImage: {fileID: 0}
+  fillUvRange: {x: 0, y: 1}
   tweenDuration: 0.35
   animationSpeed: 1
   scaleAnim: {fileID: 0}
@@ -26288,6 +26291,7 @@ MonoBehaviour:
   resultPanel: {fileID: 608419415}
   retryButton: {fileID: 1796127852}
   homeButton: {fileID: 1250832777}
+  _resultScreen: {fileID: 0}
 --- !u!4 &776270062
 Transform:
   m_ObjectHideFlags: 0
@@ -26314,7 +26318,7 @@ GameObject:
   - component: {fileID: 810861387}
   - component: {fileID: 810861386}
   m_Layer: 0
-  m_Name: ChieftainSpawner
+  m_Name: ChieftainSelection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26334,9 +26338,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chieftainDataList:
   - {fileID: 0}
-  _useTestSpawn: 1
+  - {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
+  - {fileID: 11400000, guid: a05cc91a32f380242b021751e03a77a2, type: 2}
+  _useTestSelection: 1
   _useAuthoredSelection: 0
-  _testUnitData: {fileID: 0}
+  _testSelection: {fileID: 0}
 --- !u!4 &810861387
 Transform:
   m_ObjectHideFlags: 0
@@ -55920,6 +55926,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 58164dfd7823a8944888607a82f95d1b, type: 2}
   - {fileID: 11400000, guid: 1ad7d48dc98e7c2488d6704a8b9eb1d9, type: 2}
   - {fileID: 11400000, guid: 32b89fdb3cced624598c2d6f15842ed3, type: 2}
+  _gameConfig: {fileID: 0}
 --- !u!4 &1714553164
 Transform:
   m_ObjectHideFlags: 0
@@ -64398,10 +64405,6 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2662696372176724012, guid: f412ef154dbbe6b4aab1ce22d65b1ec2,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2069150220}
     - targetCorrespondingSourceObject: {fileID: 3370919005469503270, guid: f412ef154dbbe6b4aab1ce22d65b1ec2,
         type: 3}
       insertIndex: -1
@@ -64413,45 +64416,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2069150215}
   m_PrefabAsset: {fileID: 0}
---- !u!224 &2069150218 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 1861517907406867167, guid: f412ef154dbbe6b4aab1ce22d65b1ec2,
-    type: 3}
-  m_PrefabInstance: {fileID: 2069150215}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2069150219 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2662696372176724012, guid: f412ef154dbbe6b4aab1ce22d65b1ec2,
-    type: 3}
-  m_PrefabInstance: {fileID: 2069150215}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &2069150220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2069150219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be5a998b79113704c81ac86b6d11a469, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animationTarget: {fileID: 2069150218}
-  triggerType: 1
-  ignoreTimeScale: 0
-  isLoop: 0
-  ease: 6
-  duration: 0.5
-  delay: 0
-  easeIn: 6
-  durationIn: 0.3
-  delayIn: 0
-  easeOut: 6
-  durationOut: 0.2
-  delayOut: 0
-  inOffset: {x: 200, y: 0, z: 0}
-  outOffset: {x: 200, y: 0, z: 0}
 --- !u!1 &2070028714
 GameObject:
   m_ObjectHideFlags: 0
@@ -66643,6 +66607,7 @@ MonoBehaviour:
   _totemInfoPanel: {fileID: 1743982087}
   _bossEncounterUI: {fileID: 1382569198}
   _waveTextUI: {fileID: 1511414540}
+  _bossClearPresentation: {fileID: 0}
   _levelUpUI: {fileID: 0}
   _totemSelectUI: {fileID: 355851961}
   _totemRewardUI: {fileID: 0}
@@ -69263,7 +69228,6 @@ MonoBehaviour:
   txt_SkillCooldown: {fileID: 101654065}
   statSlot_Atk: {fileID: 812538325}
   statSlot_AtkSpeed: {fileID: 41120427}
-  mergeButton: {fileID: 0}
   sellButton: {fileID: 0}
 --- !u!114 &9074754231419192903
 MonoBehaviour:

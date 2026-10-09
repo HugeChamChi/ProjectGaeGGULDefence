@@ -122,6 +122,11 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         if (!hasFocus) CancelPress();
     }
 
+    private void OnApplicationPause(bool paused)
+    {
+        if (paused) CancelPress();
+    }
+
     private void Awake()
     {
         if (button == null)

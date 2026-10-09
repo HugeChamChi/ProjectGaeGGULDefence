@@ -47,6 +47,7 @@ public sealed class ResearchInfoPanel
         public Image Image;
         public TextMeshProUGUI Text;
         public TextMeshProUGUI Max;
+        public GameObject MaxRoot;
     }
 
     private readonly ResearchViewSettings _s;
@@ -68,6 +69,7 @@ public sealed class ResearchInfoPanel
     private ResearchNodeView _icon;
     private ResearchNodeData _node;
     private bool _follow;
+    private readonly float _iconSize;
 
     /// <summary>선택한 노드를 올리라는 요청.</summary>
     public event Action<ResearchNodeData> OnUpgradeClicked;
@@ -86,6 +88,8 @@ public sealed class ResearchInfoPanel
     public ResearchInfoPanel(RectTransform panel, ResearchViewSettings settings)
     {
         _s = settings;
+        _iconSize = _s.CardBackground != null ? 220f : IconSize;
+        bool art = _s.CardBackground != null;
         var topLeft = new Vector2(0f, 1f);
 
         // 패널 어디를 밀어도 방식이 바뀌게 패널 바탕이 드래그를 받는다.
@@ -93,48 +97,62 @@ public sealed class ResearchInfoPanel
         panel.gameObject.AddComponent<ResearchSwipeArea>().OnSwipe += dir => SetMode(Mode + dir);
 
         _iconSlot = ResearchUi.Place(ResearchUi.NewRect(panel, "IconSlot"), topLeft, new Vector2(0.5f, 0.5f),
-            new Vector2(Inner + IconSize * 0.5f, -Inner - IconSize * 0.5f), new Vector2(IconSize, IconSize));
+            new Vector2(Inner + _iconSize * 0.5f, -Inner - _iconSize * 0.5f), new Vector2(_iconSize, _iconSize));
 
-        float textX = Inner * 2f + IconSize;
+        float textX = art ? 330f : Inner * 2f + IconSize;
         var titleRect = ResearchUi.NewRect(panel, "Title");
         titleRect.anchorMin = new Vector2(0f, 1f);
         titleRect.anchorMax = new Vector2(1f, 1f);
         titleRect.pivot = new Vector2(0.5f, 1f);
-        titleRect.offsetMin = new Vector2(textX, -Inner - IconSize * 0.45f);
-        titleRect.offsetMax = new Vector2(-Inner, -Inner);
+        titleRect.offsetMin = new Vector2(textX, art ? -170f : -Inner - IconSize * 0.45f);
+        titleRect.offsetMax = new Vector2(-Inner, art ? -90f : -Inner);
         _title = ResearchUi.NewText(titleRect, "Text", string.Empty, TitleFont, _s.FontBold, TextAlignmentOptions.BottomLeft);
         _title.color = _s.Ink;
 
         var strip = ResearchUi.NewImage(panel, "StatStrip", _s.RoundedFill, Vector2.zero, Vector2.zero);
         strip.type = Image.Type.Sliced;
         strip.pixelsPerUnitMultiplier = _s.RoundedCornerScale;
-        strip.color = _s.Soft;
+        strip.color = art ? Color.clear : _s.Soft;
         var stripRect = strip.rectTransform;
         stripRect.anchorMin = new Vector2(0f, 1f);
         stripRect.anchorMax = new Vector2(1f, 1f);
         stripRect.pivot = new Vector2(0.5f, 1f);
-        stripRect.offsetMin = new Vector2(textX, -Inner - IconSize * 0.55f - StripHeight);
-        stripRect.offsetMax = new Vector2(-Inner, -Inner - IconSize * 0.55f);
+        stripRect.offsetMin = new Vector2(textX, art ? -322f : -Inner - IconSize * 0.55f - StripHeight);
+        stripRect.offsetMax = new Vector2(-Inner, art ? -205f : -Inner - IconSize * 0.55f);
         var stripInner = ResearchUi.Stretch(ResearchUi.NewRect(stripRect, "Inner"), StripPadding, 0f, StripPadding, 0f);
         _statName = ResearchUi.NewText(stripInner, "Stat", string.Empty, StatFont, _s.FontBold, TextAlignmentOptions.Left);
         _statName.color = _s.Ink;
         _value = ResearchUi.NewText(stripInner, "Value", string.Empty, ValueFont, _s.FontBold, TextAlignmentOptions.Right);
+        _statName.rectTransform.anchorMax = new Vector2(0.58f, 1f);
+        _value.rectTransform.anchorMin = new Vector2(0.58f, 0f);
+        _statName.enableAutoSizing = _value.enableAutoSizing = true;
+        _statName.fontSizeMin = _value.fontSizeMin = 24f;
+        _statName.fontSizeMax = StatFont;
+        _value.fontSizeMax = ValueFont;
 
         // 0번 버튼형: 왼쪽 [추천 강화] | 오른쪽 [강화]/MAX.
-        var row0 = Row(panel, "ButtonRow_Recommend");
+        var row0 = Row(panel, "ButtonRow_Recommend", art);
         _rows[0] = row0.gameObject;
         _main[0] = BuildMain(Slot(row0, 1), "MainButton0", () => OnMainClicked(0));
-        _recommend = ResearchUi.NewButton(Slot(row0, 0), "RecommendButton", _s.RoundedFill, _s.Soft, _s.RecommendButtonLabel,
+        _recommend = ResearchUi.NewButton(Slot(row0, 0), "RecommendButton", _s.MaxLabelSprite != null ? _s.MaxLabelSprite : _s.RoundedFill, _s.Soft, _s.RecommendButtonLabel,
             ButtonFont, _s.FontBold, out _recommendImage, out _recommendText);
-        _recommendImage.pixelsPerUnitMultiplier = _s.RoundedCornerScale;
+        _recommendImage.pixelsPerUnitMultiplier = art ? 1f : _s.RoundedCornerScale;
         ResearchUi.Stretch((RectTransform)_recommend.transform);
         _recommend.onClick.AddListener(() => OnRecommendClicked?.Invoke());
+        if (art)
+        {
+            var arrow = ResearchUi.NewImage(_recommend.transform, "Arrow", _s.UpgradeArrow, new Vector2(44f, 52f), Vector2.zero);
+            ResearchUi.Place(arrow.rectTransform, new Vector2(0.12f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(44f, 52f));
+            arrow.color = _s.Active;
+            arrow.preserveAspect = true;
+            _recommendText.rectTransform.offsetMin = new Vector2(50f, 0f);
+        }
 
         // 1번 토글형: 가운데 [강화]/MAX 하나 + 제목 줄 오른쪽 토글.
-        var row1 = Row(panel, "ButtonRow_Follow");
+        var row1 = Row(panel, "ButtonRow_Follow", art);
         _rows[1] = row1.gameObject;
         var center = ResearchUi.Place(ResearchUi.NewRect(row1, "Center"), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            Vector2.zero, new Vector2(SingleButtonWidth, RowHeight));
+            Vector2.zero, new Vector2(SingleButtonWidth, art ? 82f : RowHeight));
         _main[1] = BuildMain(center, "MainButton1", () => OnMainClicked(1));
         _toggle = BuildToggle(panel, out _track, out _knob, out _toggleLabel);
 
@@ -143,7 +161,7 @@ public sealed class ResearchInfoPanel
         {
             _dots[i] = ResearchUi.NewImage(panel, "Dot" + i, _s.CircleFill, new Vector2(DotSize, DotSize), Vector2.zero);
             ResearchUi.Place(_dots[i].rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f),
-                new Vector2(-dotsWidth * 0.5f + DotSize * 0.5f + i * (DotSize + DotGap), DotBottom), new Vector2(DotSize, DotSize));
+                new Vector2(-dotsWidth * 0.5f + DotSize * 0.5f + i * (DotSize + DotGap), art ? 8f : DotBottom), new Vector2(DotSize, DotSize));
         }
         ApplyMode();
     }
@@ -156,7 +174,8 @@ public sealed class ResearchInfoPanel
     {
         _node = node;
         if (_icon != null) UnityEngine.Object.Destroy(_icon.gameObject);
-        _icon = node != null ? ResearchNodeView.Create(_iconSlot, node, _s, IconSize, null) : null;
+        _icon = node != null ? ResearchNodeView.Create(_iconSlot, node, _s, _iconSize, null) : null;
+        _icon?.SetFrameSprite(_s.IconFrameSprite);
         Refresh();
     }
 
@@ -189,7 +208,7 @@ public sealed class ResearchInfoPanel
         if (_node == null || _progress == null)
         {
             _title.text = _statName.text = _value.text = string.Empty;
-            foreach (var slot in _main) { slot.Button.gameObject.SetActive(false); slot.Max.gameObject.SetActive(false); }
+            foreach (var slot in _main) { slot.Button.gameObject.SetActive(false); slot.MaxRoot.SetActive(false); }
             return;
         }
 
@@ -212,7 +231,7 @@ public sealed class ResearchInfoPanel
         // 1번 토글형: 토글이 켜져 있으면 [강화]는 추천 노드를 올린다 (선택한 노드가 MAX여도 누를 수 있다).
         if (_follow)
         {
-            _main[1].Max.gameObject.SetActive(false);
+            _main[1].MaxRoot.SetActive(false);
             _main[1].Button.gameObject.SetActive(true);
             _main[1].Text.text = _s.UpgradeLabel;
             SetStyle(_main[1].Button, _main[1].Image, _main[1].Text, anyRecommended ? Style.Primary : Style.Disabled);
@@ -237,7 +256,7 @@ public sealed class ResearchInfoPanel
     private void ApplySelected(MainSlot slot, ResearchNodeState state)
     {
         bool maxed = state == ResearchNodeState.Maxed;
-        slot.Max.gameObject.SetActive(maxed);
+        slot.MaxRoot.SetActive(maxed);
         slot.Button.gameObject.SetActive(!maxed);
         if (maxed) return;
         bool available = state == ResearchNodeState.Available;
@@ -254,14 +273,14 @@ public sealed class ResearchInfoPanel
         else OnUpgradeClicked?.Invoke(_node);
     }
 
-    private static RectTransform Row(RectTransform panel, string name)
+    private static RectTransform Row(RectTransform panel, string name, bool art)
     {
         var row = ResearchUi.NewRect(panel, name);
         row.anchorMin = new Vector2(0f, 0f);
         row.anchorMax = new Vector2(1f, 0f);
         row.pivot = new Vector2(0.5f, 0f);
-        row.offsetMin = new Vector2(Inner, RowBottom);
-        row.offsetMax = new Vector2(-Inner, RowBottom + RowHeight);
+        row.offsetMin = new Vector2(Inner, art ? 28f : RowBottom);
+        row.offsetMax = new Vector2(-Inner, art ? 110f : RowBottom + RowHeight);
         return row;
     }
 
@@ -279,13 +298,21 @@ public sealed class ResearchInfoPanel
     private MainSlot BuildMain(RectTransform parent, string name, UnityEngine.Events.UnityAction onClick)
     {
         var slot = new MainSlot();
-        slot.Button = ResearchUi.NewButton(parent, name, _s.RoundedFill, _s.Active, _s.UpgradeLabel, ButtonFont, _s.FontBold,
+        slot.Button = ResearchUi.NewButton(parent, name, _s.UpgradeButtonSprite != null ? _s.UpgradeButtonSprite : _s.RoundedFill, _s.Active, _s.UpgradeLabel, ButtonFont, _s.FontBold,
             out slot.Image, out slot.Text);
-        slot.Image.pixelsPerUnitMultiplier = _s.RoundedCornerScale;
+        slot.Image.pixelsPerUnitMultiplier = _s.UpgradeButtonSprite != null ? 1f : _s.RoundedCornerScale;
         ResearchUi.Stretch((RectTransform)slot.Button.transform);
         slot.Button.onClick.AddListener(onClick);
-        slot.Max = ResearchUi.NewText(parent, "Max", _s.MaxLabel, MaxFont, _s.FontBold, TextAlignmentOptions.Center);
-        slot.Max.color = _s.Accent;
+        var maxRoot = ResearchUi.Stretch(ResearchUi.NewRect(parent, "MaxLabel"));
+        slot.MaxRoot = maxRoot.gameObject;
+        if (_s.MaxLabelSprite != null)
+        {
+            var background = ResearchUi.NewImage(maxRoot, "Background", _s.MaxLabelSprite, Vector2.zero, Vector2.zero);
+            ResearchUi.Stretch(background.rectTransform);
+            background.type = Image.Type.Sliced;
+        }
+        slot.Max = ResearchUi.NewText(maxRoot, "Max", _s.MaxLabel, MaxFont, _s.FontBold, TextAlignmentOptions.Center);
+        slot.Max.color = _s.MaxLabelSprite != null ? _s.OnColor : _s.Accent;
         slot.Max.fontStyle = FontStyles.Italic;
         return slot;
     }
@@ -294,7 +321,7 @@ public sealed class ResearchInfoPanel
     private GameObject BuildToggle(RectTransform panel, out Image track, out RectTransform knob, out TextMeshProUGUI label)
     {
         var root = ResearchUi.Place(ResearchUi.NewRect(panel, "FollowToggle"), Vector2.one, Vector2.one,
-            new Vector2(-Inner, -Inner - (IconSize * 0.45f - TrackHeight) * 0.5f),
+            new Vector2(-Inner, _s.CardBackground != null ? -130f : -Inner - (IconSize * 0.45f - TrackHeight) * 0.5f),
             new Vector2(ToggleLabelWidth + ToggleGap + TrackWidth, TrackHeight));
         var hit = root.gameObject.AddComponent<Image>();
         hit.color = Color.clear;
@@ -325,8 +352,9 @@ public sealed class ResearchInfoPanel
     private void SetStyle(Button button, Image image, TextMeshProUGUI text, Style style)
     {
         button.interactable = style != Style.Disabled;
-        image.color = style == Style.Primary ? _s.Active : _s.Soft;
-        text.color = style == Style.Primary ? _s.OnColor : style == Style.Secondary ? _s.Active : _s.Muted;
+        bool art = image.sprite == _s.UpgradeButtonSprite && _s.UpgradeButtonSprite != null || image.sprite == _s.MaxLabelSprite && _s.MaxLabelSprite != null;
+        image.color = art ? (style == Style.Disabled ? new Color(0.5f, 0.5f, 0.5f, 1f) : Color.white) : style == Style.Primary ? _s.Active : _s.Soft;
+        text.color = art ? (style == Style.Disabled ? _s.Muted : _s.OnColor) : style == Style.Primary ? _s.OnColor : style == Style.Secondary ? _s.Active : _s.Muted;
     }
 
     private static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);

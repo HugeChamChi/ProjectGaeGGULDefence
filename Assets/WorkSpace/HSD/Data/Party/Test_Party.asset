@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 054cf655cfdd39241a886de8c64d6d3f, type: 2}
   - {fileID: 11400000, guid: c1adfb35d73d9714db864be394eeabf4, type: 2}
   - {fileID: 11400000, guid: 55f2fe0b1aefd77448fc7e110327b990, type: 2}
-  chieftainData: {fileID: 11400000, guid: c5c2b6131e43e584aba669f17e1df816, type: 2}
+  Chieftain: {fileID: 11400000, guid: a05cc91a32f380242b021751e03a77a2, type: 2}
   exclusiveLevelUpChoices:
   - {fileID: 11400000, guid: bfe59e3060fc74fe8305c10b5665d7ea, type: 2}
   - {fileID: 11400000, guid: d5d10b654ef8d7934bc3725d2d6c839f, type: 2}

@@ -168,3 +168,187 @@ Assets/WorkSpace/production/session-logs/session-log.md
 Assets/production/session-logs/session-log.md
 ---
 
+## Session End: 20261002_221109
+### Commits
+60f71c35 Merge pull request #45 from HugeChamChi/work/unity-ui
+e8c71913 [Feat] FxLab 연출 구현
+0c412403 [Fix] 씬매니저 수정
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/OutgameUpgrade/UpgradeViewSettings.asset
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchInfoPanel.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchNodeView.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchScreen.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchTreeView.cs
+Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchViewSettings.cs
+Assets/WorkSpace/USW/production/session-logs/session-log.md
+---
+
+## Session End: 20261006_040644
+### Commits
+c86cec2a [Refactor] 문서 최신화 및 족장 리팩토링
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/UnitData_Betan.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection1.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection10.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection11.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection12.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection13.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection14.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection15.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection16.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection17.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection18.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection19.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection2.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection20.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection3.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection4.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection5.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection6.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection7.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection8.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection9.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1003Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1004Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1005Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1006Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1007Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1010Data.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Betan.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Debuff/TotemDebuffEmitter.cs
+Assets/WorkSpace/USW/Scripts/Drone/SelfDestructDrone.cs
+Assets/WorkSpace/USW/Scripts/Drone/SpineActorVisual.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Betan.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Zeltan.cs
+Assets/WorkSpace/USW/Scripts/Editor/BossHpIntegrationChecks.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/CombatDroneCheckProbe.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/CombatDroneCheckProbe.cs.meta
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/SupportSpawnCheckProbe.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/SupportSpawnCheckProbe.cs.meta
+Assets/WorkSpace/USW/Scripts/Editor/production/session-logs/session-log.md
+Assets/WorkSpace/USW/Scripts/Totem/TotemBase.cs
+Assets/WorkSpace/USW/Scripts/Unit/DamageCalculator.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitData.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitResourceComponent.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitStatsModifier.cs
+---
+
+## Session End: 20261006_041852
+### Commits
+c86cec2a [Refactor] 문서 최신화 및 족장 리팩토링
+### Uncommitted Changes
+Assets/WorkSpace/USW/Data/DroneUnits/UnitData_Betan.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection1.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection10.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection11.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection12.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection13.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection14.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection15.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection16.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection17.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection18.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection19.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection2.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection20.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection3.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection4.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection5.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection6.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection7.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection8.asset
+Assets/WorkSpace/USW/Data/SelectionData/DroneSelection9.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1003Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1004Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1005Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1006Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1007Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset
+Assets/WorkSpace/USW/Data/TotemData/Playable/TD1010Data.asset
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Betan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Deltan.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/DroneUnit_Gamman.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Debuff/TotemDebuffEmitter.cs
+Assets/WorkSpace/USW/Scripts/Drone/SelfDestructDrone.cs
+Assets/WorkSpace/USW/Scripts/Drone/SpineActorVisual.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Betan.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Zeltan.cs
+Assets/WorkSpace/USW/Scripts/Editor/BossHpIntegrationChecks.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/CombatDroneCheckProbe.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/CombatDroneCheckProbe.cs.meta
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/SupportSpawnCheckProbe.cs
+Assets/WorkSpace/USW/Scripts/Editor/VerificationHarnesses/SupportSpawnCheckProbe.cs.meta
+Assets/WorkSpace/USW/Scripts/Editor/production/session-logs/session-log.md
+Assets/WorkSpace/USW/Scripts/Totem/TotemBase.cs
+Assets/WorkSpace/USW/Scripts/Unit/DamageCalculator.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitData.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitResourceComponent.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitStatsModifier.cs
+Assets/production/session-logs/session-log.md
+---
+
+## Session End: 20261007_171335
+### Uncommitted Changes
+Assets/WorkSpace/USW/Scene/FxLab_HackBloom.unity
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackBloomFxLab.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeBox.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeBox.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeCells.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeCells.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeDigital.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeDigital.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeRing.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeRing.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSlot.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSlot.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSprites.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeStrip.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeStrip.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/Drone/DroneManager.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Deltan.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Gamman.cs
+Assets/WorkSpace/USW/Scripts/Editor/Fx/HackBloomLabBuilder.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitBase.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitCombatComponent.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitData.cs
+---
+
+## Session End: 20261007_171507
+### Uncommitted Changes
+Assets/WorkSpace/HSD/Scripts/UI/Unit/UI_UnitInfoPresenter.cs
+Assets/WorkSpace/USW/Scene/FxLab_HackBloom.unity
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackBloomFxLab.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeBox.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeBox.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeCells.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeCells.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeDigital.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeDigital.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeRing.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeRing.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSlot.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSlot.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeSprites.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeStrip.cs
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackGaugeStrip.cs.meta
+Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/HackStackGauge.cs
+Assets/WorkSpace/USW/Scripts/Drone/DroneManager.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Deltan.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Gamman.cs
+Assets/WorkSpace/USW/Scripts/Editor/DroneSelectionPresets.cs
+Assets/WorkSpace/USW/Scripts/Editor/Fx/HackBloomLabBuilder.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitBase.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitCombatComponent.cs
+Assets/WorkSpace/USW/Scripts/Unit/UnitData.cs
+Assets/production/session-logs/session-log.md
+---
+

@@ -30,3 +30,15 @@ MonoBehaviour:
     _enabled: 0
     _weight: 0
     _weightConfirmed: 0
+  - _penalty: {fileID: 11400000, guid: bf9b266d9dcf94544b747f2ce44746c8, type: 2}
+    _enabled: 1
+    _weight: 1
+    _weightConfirmed: 1
+  - _penalty: {fileID: 11400000, guid: a3404be1ad9370745b00bcb5439bb377, type: 2}
+    _enabled: 1
+    _weight: 1
+    _weightConfirmed: 1
+  - _penalty: {fileID: 11400000, guid: 88786fad7744e4e4ea971066e71718cf, type: 2}
+    _enabled: 1
+    _weight: 1
+    _weightConfirmed: 1

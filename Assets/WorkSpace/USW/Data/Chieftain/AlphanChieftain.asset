@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2f9e13749d9ae24997021c0e40ebb36, type: 3}
+  m_Name: AlphanChieftain
+  m_EditorClassIdentifier: Assembly-CSharp::ChieftainData
+  ChieftainId: 0
+  DisplayName: "\uC54C\uD321"
+  Icon: {fileID: 21300000, guid: 47610902b826b9c408aaf4c22db9c43a, type: 3}
+  LevelUpPool: {fileID: 11400000, guid: 2be6f4bf55d1614468f2b185145a989e, type: 2}
+  AlphanSkill: {fileID: 11400000, guid: 9b14e4c5d103a3d4fb44aa5f049606bd, type: 2}

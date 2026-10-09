@@ -142,6 +142,11 @@ public class TotemSelectCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpH
         if (!hasFocus) CancelPress();
     }
 
+    private void OnApplicationPause(bool paused)
+    {
+        if (paused) CancelPress();
+    }
+
     private void Awake()
     {
         if (button != null && button.gameObject != gameObject)

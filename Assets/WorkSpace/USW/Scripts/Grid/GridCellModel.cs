@@ -63,7 +63,14 @@ public class GridCellModel
     public bool  IsTotemDisabledRangePreviewed { get; private set; }
 
     // ── 보스 패턴 상태 (신규) ──────────────────────────────────
-    public bool  IsSealed         { get; private set; }  // 셀 봉인 — 배치 불가
+    private bool _bossSealed;
+    /// <summary>보스 봉인 해제로 제거되지 않는 런 영구 봉인.</summary>
+    public bool IsPermanentlySealed { get; private set; }
+    /// <summary>현재 배치와 작동을 금지하는 봉인.</summary>
+    public bool IsSealed => _bossSealed || IsPermanentlySealed;
+    /// <summary>런 시작/승천 경계에서 영구 봉인을 설정한다.</summary>
+    public void SetPermanentSeal(bool value) { IsPermanentlySealed=value; OnStateChanged?.Invoke(); }
+    //  // 셀 봉인 — 배치 불가
     public bool  IsAttackDisabled { get; private set; }  // 공격 불가
     public float DamageModifier   { get; private set; } = 1f;  // 1.0 = 정상, 0.7 = 30% 감소
     public float SpeedModifier    { get; private set; } = 1f;  // 1.0 = 정상, 1.3 = 30% 느려짐
@@ -151,7 +158,7 @@ public class GridCellModel
     /// <summary>셀 봉인 설정 — duration 0이면 영구</summary>
     public void SetSealed(bool value, float duration = 0f)
     {
-        IsSealed = value;
+        _bossSealed = value;
         OnStateChanged?.Invoke();
         // duration 기반 해제는 GridCell(MonoBehaviour)에서 코루틴으로 처리
     }
@@ -186,7 +193,7 @@ public class GridCellModel
     /// <summary>보스 패턴으로 인한 상태 전체 초기화</summary>
     public void ClearBossDebuffs()
     {
-        IsSealed         = false;
+        _bossSealed      = false;
         IsAttackDisabled = false;
         DamageModifier   = 1f;
         SpeedModifier    = 1f;

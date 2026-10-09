@@ -12,6 +12,14 @@ public class Drone_Zeltan : UnitBase
 
     [Header("Food Production Settings")]
     [SerializeField] private float foodPerDronePerSec = 1f;
+    private SpineActorVisual _spineVisual;
+    private UnitResourceComponent _foodResource;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        _spineVisual = GetComponent<SpineActorVisual>();
+    }
 
     public override bool IsFoodProductionBuffable => false;
     public override bool CanBasicAttack => false;
@@ -26,13 +34,27 @@ public class Drone_Zeltan : UnitBase
 
     protected override void OnUnitPlaced()
     {
+        _foodResource = GetComponent<UnitResourceComponent>();
+        if (_foodResource != null)
+        {
+            _foodResource.OnFoodProduced -= PlayFoodPayoutVisual;
+            _foodResource.OnFoodProduced += PlayFoodPayoutVisual;
+        }
         if (unitData != null)
             _droneManager?.RegisterFoodProducer(this);
     }
 
     protected override void OnUnitRemoved()
     {
+        if (_foodResource != null) _foodResource.OnFoodProduced -= PlayFoodPayoutVisual;
         _droneManager?.UnregisterFoodProducer(this);
+    }
+
+    private void PlayFoodPayoutVisual()
+    {
+        if (DroneSelections?.Get(DroneSelectionKind.ZeltanAirFryer) != null
+            && _spineVisual != null && _spineVisual.isActiveAndEnabled)
+            _spineVisual.PlaySkill();
     }
 
     /// <summary>배치된 젤탕이 제공하는 드론당 군단 식량. 정기 점검을 즉시 반영한다.</summary>

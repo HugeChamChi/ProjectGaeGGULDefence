@@ -1,6 +1,9 @@
 using UnityEngine;
 using VContainer;
 using System;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public interface IDraggable
 {
@@ -22,7 +25,12 @@ public class InputManager : MonoBehaviour
     private Camera _mainCamera;
     private IDraggable _currentDraggable;
     private bool _isDragging = false;
-    private float _dragThreshold = 20f;
+    private const float DragThresholdPixels = 20f;
+    private const int MousePointerId = -1;
+    private int? _activeFingerId;
+    private EventSystem _pointerEventSystem;
+    private PointerEventData _uiPointer;
+    private readonly List<RaycastResult> _uiHits = new List<RaycastResult>();
     private Vector2 _pointerDownPos;
     private Vector2 _pointerDownScreenPos;
     private bool _pointerDown = false;
@@ -51,41 +59,47 @@ public class InputManager : MonoBehaviour
         if (_mainCamera == null)
         {
             _mainCamera = Camera.main;
-            if (_mainCamera == null) return;
+            if (_mainCamera == null) { CancelPointer(); return; }
         }
 
-        // 1. 모바일 터치 입력 처리
+        // 소유 손가락은 배열 순서와 무관하게 종료/취소까지 같은 ID로 추적한다.
+        if (_activeFingerId.HasValue)
+        {
+            for (int i = 0; i < Input.touchCount; i++)
+            {
+                var touch = Input.GetTouch(i);
+                if (touch.fingerId != _activeFingerId.Value) continue;
+                switch (touch.phase)
+                {
+                    case TouchPhase.Moved:
+                    case TouchPhase.Stationary:
+                        ProcessPointerMove(touch.position);
+                        break;
+                    case TouchPhase.Ended:
+                        ProcessPointerUp(touch.position);
+                        break;
+                    case TouchPhase.Canceled:
+                        CancelPointer();
+                        break;
+                }
+                return;
+            }
+            // Ended가 전달되지 않고 손가락이 사라져도 다음 탭을 막지 않는다.
+            CancelPointer();
+            return;
+        }
+
         if (Input.touchCount > 0)
         {
-            Touch touch = Input.GetTouch(0);
-
-            if (touch.phase == TouchPhase.Began)
+            if (_pointerDown) CancelPointer(); // 마우스 폴백에서 터치로 전환.
+            for (int i = 0; i < Input.touchCount; i++)
             {
-                if (UnityEngine.EventSystems.EventSystem.current != null &&
-                    UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(touch.fingerId))
-                {
-                    return;
-                }
-
+                var touch = Input.GetTouch(i);
+                if (touch.phase != TouchPhase.Began || IsOverUI(touch.position, touch.fingerId)) continue;
                 ProcessPointerDown(touch.position);
-            }
-            else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
-            {
-                if (_pointerDown)
-                {
-                    ProcessPointerMove(touch.position);
-                }
-            }
-            else if (touch.phase == TouchPhase.Canceled)
-            {
-                CancelPointer();
-            }
-            else if (touch.phase == TouchPhase.Ended)
-            {
-                if (_pointerDown)
-                {
-                    ProcessPointerUp(touch.position);
-                }
+                if (!_pointerDown) continue;
+                _activeFingerId = touch.fingerId;
+                break; // 월드 드래그는 한 번에 하나만 소유한다.
             }
             return;
         }
@@ -93,8 +107,7 @@ public class InputManager : MonoBehaviour
         // 2. 에디터 / PC 마우스 입력 처리 (폴백)
         if (Input.GetMouseButtonDown(0))
         {
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (IsOverUI(Input.mousePosition, MousePointerId))
             {
                 return;
             }
@@ -111,6 +124,25 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    private bool IsOverUI(Vector2 screenPosition, int pointerId)
+    {
+        var eventSystem = EventSystem.current;
+        if (eventSystem == null) return false;
+        if (_pointerEventSystem != eventSystem)
+        {
+            _pointerEventSystem = eventSystem;
+            _uiPointer = new PointerEventData(eventSystem);
+        }
+        _uiPointer.Reset();
+        _uiPointer.position = screenPosition;
+        _uiPointer.pointerId = pointerId;
+        _uiHits.Clear();
+        eventSystem.RaycastAll(_uiPointer, _uiHits);
+        foreach (var hit in _uiHits)
+            if (hit.module is GraphicRaycaster) return true;
+        return false;
+    }
+
     private void ProcessPointerDown(Vector2 screenPos)
     {
         _pointerDownScreenPos = screenPos;
@@ -123,6 +155,11 @@ public class InputManager : MonoBehaviour
         Physics2D.SyncTransforms();
         RaycastHit2D[] hits = Physics2D.RaycastAll(_pointerDownPos, Vector2.zero);
         _currentDraggable = PickDraggable(hits, _pointerDownPos);
+        if (_currentDraggable == null)
+        {
+            _pointerDown = false;
+            return;
+        }
         if (_currentDraggable != null && CanBeginInteraction != null && !CanBeginInteraction(_currentDraggable))
         {
             _currentDraggable = null;
@@ -162,7 +199,7 @@ public class InputManager : MonoBehaviour
     {
         Vector2 currentPos = GetWorldPos(screenPos);
 
-        if (!_isDragging && Vector2.Distance(_pointerDownScreenPos, screenPos) > _dragThreshold)
+        if (!_isDragging && Vector2.Distance(_pointerDownScreenPos, screenPos) > DragThresholdPixels)
         {
             _isDragging = true;
             if (_currentDraggable != null)
@@ -206,14 +243,20 @@ public class InputManager : MonoBehaviour
         _pointerDown = false;
         _isDragging = false;
         _currentDraggable = null;
+        _activeFingerId = null;
     }
 
     private void OnDisable() => CancelPointer();
     private void OnApplicationFocus(bool focused) { if (!focused) CancelPointer(); }
+    private void OnApplicationPause(bool paused) { if (paused) CancelPointer(); }
     private void CancelPointer()
     {
-        if (_isDragging && _currentDraggable is DragHandler handler && handler != null) handler.CancelPointerDrag();
-        if (_currentDraggable is DragHandler pressed && pressed != null) pressed.EndPress();
+        var handler = _currentDraggable as DragHandler;
+        bool wasDragging = _isDragging;
         _pointerDown = false; _isDragging = false; _currentDraggable = null;
+        _activeFingerId = null;
+        if (handler == null) return;
+        if (wasDragging) handler.CancelPointerDrag();
+        else handler.EndPress();
     }
 }

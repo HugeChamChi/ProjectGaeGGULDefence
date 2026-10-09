@@ -32,7 +32,6 @@ public class MergeManager : MonoBehaviour
         DragHandler.OnDragStartedEvent -= HideButton;
     }
 
-    [Inject] private ChieftainSpawner _chieftainManager;
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
@@ -49,8 +48,6 @@ public class MergeManager : MonoBehaviour
     /// <summary>DragHandler.OnPointerClick에서 호출</summary>
     public void OnUnitClicked(UnitBase unit)
     {
-        if (unit == _chieftainManager?.ChieftainUnit) return;
-
         if (_selectedUnit == unit) { ClearSelection(); return; }
 
         _selectedUnit = unit;
@@ -69,7 +66,7 @@ public class MergeManager : MonoBehaviour
         var targetCell = target.currentCell;
         if (sourceCell == null || targetCell == null || sourceCell == targetCell ||
             sourceCell.OccupyingUnit != dragged || targetCell.OccupyingUnit != target ||
-            sourceCell.Model.IsSealed || targetCell.Model.IsSealed) return false;
+            targetCell.Model.IsSealed) return false;
         return MergeTargets(new List<(UnitBase unit, GridCell cell)>
             { (dragged, sourceCell), (target, targetCell) }, targetCell, (Tier)((int)dragged.OriginalTier + 1));
     }
@@ -140,7 +137,6 @@ public class MergeManager : MonoBehaviour
     {
         if (unit?.unitData == null) return false;
         if (unit.OriginalTier == Tier.Legend) return false;
-        if (unit.OriginalTier == Tier.Chieftain) return false;
         return GetMergeTargets(unit).Count >= 2;
     }
 

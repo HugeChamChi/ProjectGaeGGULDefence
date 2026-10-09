@@ -34,6 +34,31 @@ public sealed class BossClearNoticeLab : MonoBehaviour, IFxLabPlayable
     private float _lastBonus = float.NaN;
     private string _subText;
     private bool _ready;
+    private bool _runtimeNoticeActive;
+    private float _runtimeNoticeTime;
+
+    /// <summary>True while the production clear notice owns its unscaled presentation clock.</summary>
+    public bool IsPresenting => _runtimeNoticeActive;
+
+    /// <summary>Starts A only after the production timer addition and configured delay.</summary>
+    public void PresentRuntimeNotice()
+    {
+        if (!_ready) Start();
+        if (!_ready || !_timerLab.IsRuntime) return;
+        _runtimeNoticeTime = 0f;
+        _runtimeNoticeActive = true;
+        _variants[_variant].SetVisible(true);
+        UpdateSubText();
+    }
+
+    /// <summary>Stops the notice and clears all owned visual particles at run or scene boundaries.</summary>
+    public void CancelRuntimeNotice()
+    {
+        _runtimeNoticeActive = false;
+        if (!_ready) return;
+        _variants[_variant].SetVisible(false);
+        _particles.Clear();
+    }
 
     /// <inheritdoc />
     public bool UseUnscaledTime
@@ -62,7 +87,7 @@ public sealed class BossClearNoticeLab : MonoBehaviour, IFxLabPlayable
         }
         _sprites = new TimerBonusSprites();
         _layer = TimerBonusLab.NewRect("Notices", _root, Vector2.zero);
-        _variants = new IBossClearNotice[]
+        _variants = _timerLab.IsRuntime ? new IBossClearNotice[] { new NoticeBandSlice() } : new IBossClearNotice[]
         {
             new NoticeBandSlice(),
             new NoticeGoldBanner(),
@@ -78,11 +103,26 @@ public sealed class BossClearNoticeLab : MonoBehaviour, IFxLabPlayable
         Refresh();
     }
 
-    private void OnDestroy() => _sprites?.Dispose();
+    private void OnDisable() => CancelRuntimeNotice();
+    private void OnDestroy() { CancelRuntimeNotice(); _sprites?.Dispose(); }
 
     private void LateUpdate()
     {
         if (!_ready || !_timerLab.IsReady) return;
+        if (_timerLab.IsRuntime)
+        {
+            if (!_runtimeNoticeActive) { _variants[_variant].SetVisible(false); return; }
+            Step = Time.unscaledDeltaTime;
+            _runtimeNoticeTime += Step;
+            _root.anchoredPosition = new Vector2(0f, _settings.NoticeY);
+            _root.localScale = Vector3.one * _settings.Scale;
+            _variants[_variant].Render(_runtimeNoticeTime, _settings.VisibleSeconds, _settings.ExitSpeedScale);
+            _particles.Tick(Step);
+            if (_runtimeNoticeTime >= _settings.VisibleSeconds + NoticeBandSlice.ExitSeconds * _settings.ExitSpeedScale)
+                CancelRuntimeNotice();
+            return;
+        }
+        _variants[_variant].SetVisible(true);
         float kill = _timerLab.KillTime;
         if (kill < _lastKill) _particles.Clear();   // 반복 재시작
         Step = kill > _lastKill && !float.IsNegativeInfinity(_lastKill) ? kill - _lastKill : 0f;

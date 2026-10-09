@@ -86,15 +86,16 @@ public static class TotemDataValidator
     private static void ValidateGrowth(TotemData data)
     {
         bool hasInitial = false;
-        var thresholds = new HashSet<int>();
+        var thresholds = new HashSet<float>();
         foreach (var stage in data.GrowthStages)
         {
-            if (stage == null || stage.RequiredKills < 0 || stage.Offsets == null || stage.Offsets.Count == 0)
-                Fail(data, "각 성장 단계에 처치 수와 범위를 설정하세요.");
-            if (!thresholds.Add(stage.RequiredKills)) Fail(data, "성장 단계의 처치 수가 중복됩니다.");
-            hasInitial |= stage.RequiredKills == 0;
+            if (stage == null || !IsFinite(stage.RequiredSeconds) || stage.RequiredSeconds < 0 || !IsFinite(stage.AttackBonus) || stage.AttackBonus < 0 || stage.Offsets == null || stage.Offsets.Count == 0)
+                Fail(data, "각 성장 단계에 전투 시간와 범위를 설정하세요.");
+            if (!thresholds.Add(stage.RequiredSeconds)) Fail(data, "성장 단계의 전투 시간가 중복됩니다.");
+            hasInitial |= stage.RequiredSeconds == 0;
         }
-        if (!hasInitial) Fail(data, "처치 수 0의 초기 범위가 필요합니다.");
+        if (!hasInitial) Fail(data, "전투 시간 0의 초기 범위가 필요합니다.");
+        if (!IsFinite(data.GrowthHarvestSeconds) || data.GrowthHarvestSeconds<=0 || !IsFinite(data.GrowthHarvestFood) || data.GrowthHarvestFood<0) Fail(data,"수확 주기/식량이 올바르지 않습니다.");
     }
 
     private static void ValidateWildcard(TotemData data)
@@ -153,7 +154,7 @@ public static class TotemDataValidator
         return null;
     }
 
-    /// <summary>선택한 SO에 편집 가능한 3×3/4×4/5×5 범위 프리셋을 넣는다.</summary>
+    /// <summary>선택한 SO에 편집 가능한 3×3/3×3/4×4/4×4 범위 프리셋을 넣는다.</summary>
     [MenuItem("Assets/Totems/Set TD1002 Growth Ranges")]
     public static void SetGrowthRanges()
     {
@@ -162,11 +163,11 @@ public static class TotemDataValidator
             if (selected is not TotemData data) continue;
             Undo.RecordObject(data, "Set totem growth ranges");
             data.GrowthStages = new List<TotemGrowthStage>();
-            for (int kills = 0; kills <= 2; kills++)
+            for (int stageIndex = 0; stageIndex < 4; stageIndex++)
             {
-                int size = kills + 3;
+                int size = stageIndex < 2 ? 3 : 4;
                 int start = -(size - 1) / 2;
-                var stage = new TotemGrowthStage { RequiredKills = kills };
+                var stage = new TotemGrowthStage { Name = new[]{"새싹","뿌리","줄기","만개"}[stageIndex], RequiredSeconds = stageIndex*60, AttackBonus = new[]{.05f,.1f,.1f,.15f}[stageIndex] };
                 for (int y = start; y < start + size; y++)
                 for (int x = start; x < start + size; x++) stage.Offsets.Add(new Vector2Int(x, y));
                 data.GrowthStages.Add(stage);

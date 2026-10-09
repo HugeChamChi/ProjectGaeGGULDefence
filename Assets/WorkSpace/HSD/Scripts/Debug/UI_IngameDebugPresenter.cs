@@ -231,28 +231,22 @@ namespace HSD.InGameDebug
         // --- Chief Logic ---
         private void RefreshChiefList()
         {
-            if (Player.Chief == null) return;
-            
-            int currentChiefId = Player.Chief.SelectedChiefId;
-            var chiefs = Table.Character.Chief.Chiefs;
-
-            foreach (var chief in chiefs)
+            var selection = UnityEngine.Object.FindFirstObjectByType<ChieftainSelection>(FindObjectsInactive.Include);
+            if (selection == null) return;
+            foreach (var chief in selection.AvailableSelections)
             {
-                bool isCurrent = chief.Id == currentChiefId;
+                if (chief == null) continue;
+                bool isCurrent = chief == selection.SelectedChieftain;
                 string btnText = isCurrent ? "선택됨" : "교체";
-                
-                _view.AddListItem(chief, chief.Name, $"ID: {chief.Id}", chief.Icon, btnText, OnChangeChief);
+                _view.AddListItem(chief, chief.DisplayName, "액티브 스킬 선택", chief.Icon, btnText, OnChangeChief);
             }
         }
 
         private void OnChangeChief(object obj)
         {
-            if (obj is ChiefData data)
+            if (obj is ChieftainData data)
             {
-                if (Player.Chief != null && Player.Chief.SelectedChiefId == data.Id) return;
-
-                Player.Chief?.SetSelectedChief(data.Id);
-                UnityEngine.Object.FindFirstObjectByType<ChieftainSpawner>(FindObjectsInactive.Include)?.ChangeChieftain(data.Id);
+                UnityEngine.Object.FindFirstObjectByType<ChieftainSelection>(FindObjectsInactive.Include)?.Select(data);
                 RefreshList();
             }
         }
@@ -267,10 +261,6 @@ namespace HSD.InGameDebug
             {
                 var unit = cell.OccupyingUnit;
                 if (unit == null || unit.unitData == null) continue;
-
-                // 족장은 제외 (족장 탭에서 관리)
-                var chieftainSpawner = UnityEngine.Object.FindFirstObjectByType<ChieftainSpawner>(FindObjectsInactive.Include);
-                if (chieftainSpawner != null && chieftainSpawner.ChieftainUnit == unit) continue;
 
                 _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
             }

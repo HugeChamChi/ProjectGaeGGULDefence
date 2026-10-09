@@ -913,20 +913,6 @@ MonoBehaviour:
         isBuiltIn: 1
         script: {fileID: 0}
         hasToggle: 1
-      - displayName: CheatCodeController
-        name: EventBusExamples+CheatCodeController, Unity.VisualScripting.DocCodeExamples,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: CheatCodeController
-          m_Image: {fileID: 8779834242249542326, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: CheatCodeController
-          m_TextWithWhitespace: "CheatCodeController\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: CinemachineUniversalPixelPerfect
         name: UnityEngine.Rendering.Universal.CinemachineUniversalPixelPerfect, Unity.RenderPipelines.Universal.2D.Runtime,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -977,20 +963,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: ConstantForce
           m_TextWithWhitespace: "ConstantForce\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: CoroutineRunner
-        name: Unity.VisualScripting.CoroutineRunner, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: CoroutineRunner
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: CoroutineRunner
-          m_TextWithWhitespace: "CoroutineRunner\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -1605,19 +1577,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: GameViewEventCatcher
           m_TextWithWhitespace: "GameViewEventCatcher\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: GlobalMessageListener
-        name: Unity.VisualScripting.GlobalMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: GlobalMessageListener
-          m_Image: {fileID: 2800000, guid: c588f7acb736b6940bac7b559c8f59dd, type: 3}
-          m_Tooltip: GlobalMessageListener
-          m_TextWithWhitespace: "GlobalMessageListener\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -2343,20 +2302,6 @@ MonoBehaviour:
         isBuiltIn: 1
         script: {fileID: 0}
         hasToggle: 1
-      - displayName: PlayerController
-        name: VariableExamples+PlayerController, Unity.VisualScripting.DocCodeExamples,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: PlayerController
-          m_Image: {fileID: 8779834242249542326, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: PlayerController
-          m_TextWithWhitespace: "PlayerController\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: PlayerQuitHandler
         name: UnityEngine.TestTools.TestRunner.Callbacks.PlayerQuitHandler, UnityEngine.TestRunner,
           Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -2609,32 +2554,6 @@ MonoBehaviour:
         isBuiltIn: 1
         script: {fileID: 0}
         hasToggle: 1
-      - displayName: SceneVariables
-        name: Unity.VisualScripting.SceneVariables, Unity.VisualScripting.Core, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: SceneVariables
-          m_Image: {fileID: 2800000, guid: 1322acb2dac5e7f4cbae25e022caf9d2, type: 3}
-          m_Tooltip: SceneVariables
-          m_TextWithWhitespace: "SceneVariables\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: ScriptMachine
-        name: Unity.VisualScripting.ScriptMachine, Unity.VisualScripting.Flow, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: ScriptMachine
-          m_Image: {fileID: 2800000, guid: f723b77167d184d4a8ab528db8b55744, type: 3}
-          m_Tooltip: ScriptMachine
-          m_TextWithWhitespace: "ScriptMachine\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: SelfCleanup
         name: AddressableAssets.DocExampleCode.SelfCleanup, Unity.Addressables.DocExampleCode.Editor.Tests,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -2728,19 +2647,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: SpriteShapeGeometryCache
           m_TextWithWhitespace: "SpriteShapeGeometryCache\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: StateMachine
-        name: Unity.VisualScripting.StateMachine, Unity.VisualScripting.State, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: StateMachine
-          m_Image: {fileID: 2800000, guid: f144232ea2c6046438f6cda6c1bad1af, type: 3}
-          m_Tooltip: StateMachine
-          m_TextWithWhitespace: "StateMachine\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -2858,593 +2764,6 @@ MonoBehaviour:
         isBuiltIn: 1
         script: {fileID: 0}
         hasToggle: 1
-      - displayName: UnityMessageListener
-        name: Unity.VisualScripting.UnityMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityMessageListener
-          m_Image: {fileID: 2800000, guid: 9494e5b136d34c74f96fb0df4a7b9a77, type: 3}
-          m_Tooltip: UnityMessageListener
-          m_TextWithWhitespace: "UnityMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnBecameInvisibleMessageListener
-        name: Unity.VisualScripting.UnityOnBecameInvisibleMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnBecameInvisibleMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnBecameInvisibleMessageListener
-          m_TextWithWhitespace: "UnityOnBecameInvisibleMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnBecameVisibleMessageListener
-        name: Unity.VisualScripting.UnityOnBecameVisibleMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnBecameVisibleMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnBecameVisibleMessageListener
-          m_TextWithWhitespace: "UnityOnBecameVisibleMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnBeginDragMessageListener
-        name: Unity.VisualScripting.UnityOnBeginDragMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnBeginDragMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnBeginDragMessageListener
-          m_TextWithWhitespace: "UnityOnBeginDragMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnButtonClickMessageListener
-        name: Unity.VisualScripting.UnityOnButtonClickMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnButtonClickMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnButtonClickMessageListener
-          m_TextWithWhitespace: "UnityOnButtonClickMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCancelMessageListener
-        name: Unity.VisualScripting.UnityOnCancelMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCancelMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCancelMessageListener
-          m_TextWithWhitespace: "UnityOnCancelMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionEnterMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionEnterMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionEnterMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionEnterMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionEnterMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionExitMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionExitMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionExitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionExitMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionExitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionStayMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionStayMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionStayMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionStayMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionStayMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnDeselectMessageListener
-        name: Unity.VisualScripting.UnityOnDeselectMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnDeselectMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnDeselectMessageListener
-          m_TextWithWhitespace: "UnityOnDeselectMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnDragMessageListener
-        name: Unity.VisualScripting.UnityOnDragMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnDragMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnDragMessageListener
-          m_TextWithWhitespace: "UnityOnDragMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnDropdownValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnDropdownValueChangedMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnDropdownValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnDropdownValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnDropdownValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnDropMessageListener
-        name: Unity.VisualScripting.UnityOnDropMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnDropMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnDropMessageListener
-          m_TextWithWhitespace: "UnityOnDropMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnEndDragMessageListener
-        name: Unity.VisualScripting.UnityOnEndDragMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnEndDragMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnEndDragMessageListener
-          m_TextWithWhitespace: "UnityOnEndDragMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnInputFieldEndEditMessageListener
-        name: Unity.VisualScripting.UnityOnInputFieldEndEditMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnInputFieldEndEditMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnInputFieldEndEditMessageListener
-          m_TextWithWhitespace: "UnityOnInputFieldEndEditMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnInputFieldValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnInputFieldValueChangedMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnInputFieldValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnInputFieldValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnInputFieldValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseDownMessageListener
-        name: Unity.VisualScripting.UnityOnMouseDownMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseDownMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseDownMessageListener
-          m_TextWithWhitespace: "UnityOnMouseDownMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseDragMessageListener
-        name: Unity.VisualScripting.UnityOnMouseDragMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseDragMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseDragMessageListener
-          m_TextWithWhitespace: "UnityOnMouseDragMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseEnterMessageListener
-        name: Unity.VisualScripting.UnityOnMouseEnterMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseEnterMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseEnterMessageListener
-          m_TextWithWhitespace: "UnityOnMouseEnterMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseExitMessageListener
-        name: Unity.VisualScripting.UnityOnMouseExitMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseExitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseExitMessageListener
-          m_TextWithWhitespace: "UnityOnMouseExitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseOverMessageListener
-        name: Unity.VisualScripting.UnityOnMouseOverMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseOverMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseOverMessageListener
-          m_TextWithWhitespace: "UnityOnMouseOverMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseUpAsButtonMessageListener
-        name: Unity.VisualScripting.UnityOnMouseUpAsButtonMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseUpAsButtonMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseUpAsButtonMessageListener
-          m_TextWithWhitespace: "UnityOnMouseUpAsButtonMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMouseUpMessageListener
-        name: Unity.VisualScripting.UnityOnMouseUpMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMouseUpMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMouseUpMessageListener
-          m_TextWithWhitespace: "UnityOnMouseUpMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnMoveMessageListener
-        name: Unity.VisualScripting.UnityOnMoveMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnMoveMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnMoveMessageListener
-          m_TextWithWhitespace: "UnityOnMoveMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnParticleCollisionMessageListener
-        name: Unity.VisualScripting.UnityOnParticleCollisionMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnParticleCollisionMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnParticleCollisionMessageListener
-          m_TextWithWhitespace: "UnityOnParticleCollisionMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnPointerClickMessageListener
-        name: Unity.VisualScripting.UnityOnPointerClickMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnPointerClickMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnPointerClickMessageListener
-          m_TextWithWhitespace: "UnityOnPointerClickMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnPointerDownMessageListener
-        name: Unity.VisualScripting.UnityOnPointerDownMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnPointerDownMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnPointerDownMessageListener
-          m_TextWithWhitespace: "UnityOnPointerDownMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnPointerEnterMessageListener
-        name: Unity.VisualScripting.UnityOnPointerEnterMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnPointerEnterMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnPointerEnterMessageListener
-          m_TextWithWhitespace: "UnityOnPointerEnterMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnPointerExitMessageListener
-        name: Unity.VisualScripting.UnityOnPointerExitMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnPointerExitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnPointerExitMessageListener
-          m_TextWithWhitespace: "UnityOnPointerExitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnPointerUpMessageListener
-        name: Unity.VisualScripting.UnityOnPointerUpMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnPointerUpMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnPointerUpMessageListener
-          m_TextWithWhitespace: "UnityOnPointerUpMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnScrollbarValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnScrollbarValueChangedMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnScrollbarValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnScrollbarValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnScrollbarValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnScrollMessageListener
-        name: Unity.VisualScripting.UnityOnScrollMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnScrollMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnScrollMessageListener
-          m_TextWithWhitespace: "UnityOnScrollMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnScrollRectValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnScrollRectValueChangedMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnScrollRectValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnScrollRectValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnScrollRectValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnSelectMessageListener
-        name: Unity.VisualScripting.UnityOnSelectMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnSelectMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnSelectMessageListener
-          m_TextWithWhitespace: "UnityOnSelectMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnSliderValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnSliderValueChangedMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnSliderValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnSliderValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnSliderValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnSubmitMessageListener
-        name: Unity.VisualScripting.UnityOnSubmitMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnSubmitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnSubmitMessageListener
-          m_TextWithWhitespace: "UnityOnSubmitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnToggleValueChangedMessageListener
-        name: Unity.VisualScripting.UnityOnToggleValueChangedMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnToggleValueChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnToggleValueChangedMessageListener
-          m_TextWithWhitespace: "UnityOnToggleValueChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTransformChildrenChangedMessageListener
-        name: Unity.VisualScripting.UnityOnTransformChildrenChangedMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTransformChildrenChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTransformChildrenChangedMessageListener
-          m_TextWithWhitespace: "UnityOnTransformChildrenChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTransformParentChangedMessageListener
-        name: Unity.VisualScripting.UnityOnTransformParentChangedMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTransformParentChangedMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTransformParentChangedMessageListener
-          m_TextWithWhitespace: "UnityOnTransformParentChangedMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerEnterMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerEnterMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerEnterMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerEnterMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerEnterMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerExitMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerExitMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerExitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerExitMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerExitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerStayMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerStayMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerStayMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerStayMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerStayMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: UniversalAdditionalCameraData
         name: UnityEngine.Rendering.Universal.UniversalAdditionalCameraData, Unity.RenderPipelines.Universal.Runtime,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -3468,32 +2787,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: UniversalAdditionalLightData
           m_TextWithWhitespace: "UniversalAdditionalLightData\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: Variables
-        name: Unity.VisualScripting.Variables, Unity.VisualScripting.Core, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: Variables
-          m_Image: {fileID: 2800000, guid: ba736aa67df8cee43b1b679c961d74f4, type: 3}
-          m_Tooltip: Variables
-          m_TextWithWhitespace: "Variables\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: VariablesSaver
-        name: Unity.VisualScripting.VariablesSaver, Unity.VisualScripting.Core, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: VariablesSaver
-          m_Image: {fileID: 2800000, guid: 8ef7c0fbb1fbcd64e954e5eafe1652ad, type: 3}
-          m_Tooltip: VariablesSaver
-          m_TextWithWhitespace: "VariablesSaver\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -3607,19 +2900,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: Animator
           m_TextWithWhitespace: "Animator\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: AnimatorMessageListener
-        name: Unity.VisualScripting.AnimatorMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: AnimatorMessageListener
-          m_Image: {fileID: 2800000, guid: 9059e055aa673b3469a5c2896c0b8fb5, type: 3}
-          m_Tooltip: AnimatorMessageListener
-          m_TextWithWhitespace: "AnimatorMessageListener\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -4382,104 +3662,6 @@ MonoBehaviour:
             type: 0}
           m_Tooltip: TilemapCollider2D
           m_TextWithWhitespace: "TilemapCollider2D\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionEnter2DMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionEnter2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionEnter2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionEnter2DMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionEnter2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionExit2DMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionExit2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionExit2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionExit2DMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionExit2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnCollisionStay2DMessageListener
-        name: Unity.VisualScripting.UnityOnCollisionStay2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnCollisionStay2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnCollisionStay2DMessageListener
-          m_TextWithWhitespace: "UnityOnCollisionStay2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnJointBreak2DMessageListener
-        name: Unity.VisualScripting.UnityOnJointBreak2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnJointBreak2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnJointBreak2DMessageListener
-          m_TextWithWhitespace: "UnityOnJointBreak2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerEnter2DMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerEnter2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerEnter2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerEnter2DMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerEnter2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerExit2DMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerExit2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerExit2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerExit2DMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerExit2DMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnTriggerStay2DMessageListener
-        name: Unity.VisualScripting.UnityOnTriggerStay2DMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnTriggerStay2DMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnTriggerStay2DMessageListener
-          m_TextWithWhitespace: "UnityOnTriggerStay2DMessageListener\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 1
@@ -5762,34 +4944,6 @@ MonoBehaviour:
         isBuiltIn: 1
         script: {fileID: 0}
         hasToggle: 1
-      - displayName: UnityOnControllerColliderHitMessageListener
-        name: Unity.VisualScripting.UnityOnControllerColliderHitMessageListener,
-          Unity.VisualScripting.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnControllerColliderHitMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnControllerColliderHitMessageListener
-          m_TextWithWhitespace: "UnityOnControllerColliderHitMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
-      - displayName: UnityOnJointBreakMessageListener
-        name: Unity.VisualScripting.UnityOnJointBreakMessageListener, Unity.VisualScripting.Core,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: UnityOnJointBreakMessageListener
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: UnityOnJointBreakMessageListener
-          m_TextWithWhitespace: "UnityOnJointBreakMessageListener\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 1
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: WheelCollider
         name: UnityEngine.WheelCollider, UnityEngine.VehiclesModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
@@ -6050,7 +5204,7 @@ MonoBehaviour:
         shown: 0
         excluded: 0
         isBuiltIn: 0
-        script: {fileID: 11500000, guid: 34da2a043d013a14fb5531f804e5b4b3, type: 3}
+        script: {fileID: 0}
         hasToggle: 1
       - displayName: Drone_Betan
         name: Drone_Betan, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -6403,15 +5557,15 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 92133048a4d8f3f42a0310f93958d75f, type: 3}
         hasToggle: 1
-      - displayName: ChieftainSpawner
-        name: ChieftainSpawner, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      - displayName: ChieftainSelection
+        name: ChieftainSelection, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
           PublicKeyToken=null
         content:
-          m_Text: ChieftainSpawner
+          m_Text: ChieftainSelection
           m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
             type: 0}
-          m_Tooltip: ChieftainSpawner
-          m_TextWithWhitespace: "ChieftainSpawner\u200B"
+          m_Tooltip: ChieftainSelection
+          m_TextWithWhitespace: "ChieftainSelection\u200B"
         shown: 0
         excluded: 0
         isBuiltIn: 0
@@ -6459,5 +5613,19 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: d3a2d96b423e0994ca84360fe56f90d8, type: 3}
         hasToggle: 1
+      - displayName: ResearchLifetimeScope
+        name: ResearchLifetimeScope, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
+        content:
+          m_Text: ResearchLifetimeScope
+          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
+            type: 0}
+          m_Tooltip: ResearchLifetimeScope
+          m_TextWithWhitespace: "ResearchLifetimeScope\u200B"
+        shown: 0
+        excluded: 0
+        isBuiltIn: 0
+        script: {fileID: 11500000, guid: 08a3bb8d039c48c43a4003fa579d64c4, type: 3}
+        hasToggle: 1
     unityVersion: 6000.3.11f1
-    unityCount: 358
+    unityCount: 297
