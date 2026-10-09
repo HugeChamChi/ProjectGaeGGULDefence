@@ -10,6 +10,7 @@ using UnityEngine.UI;
 /// 중앙 알림 실험실 씬(FxLab_CenterToast)과 CenterToast 설정 에셋을 만든다 (사용자 요청 2026-10-02, 참고 design/중앙팝업1.gif).
 /// 전투판 대역(타일 6×4) 위에 재사용 컴포넌트 CenterToast를 얹고, 연출 방식 4종·문구·연타 버튼을 단다.
 /// 설정 에셋은 없을 때만 만든다 (인게임과 같은 에셋을 쓰므로 튜닝 값 보존). 씬은 매번 덮어쓴다.
+/// 겹쳐 올라가기 실험실(CenterToastRiseLabBuilder)도 BuildScene을 같이 쓴다.
 /// </summary>
 public static class CenterToastLabBuilder
 {
@@ -17,6 +18,7 @@ public static class CenterToastLabBuilder
     private const string SettingsFolderParent = "Assets/WorkSpace/USW/Data/UI";
     private const string SettingsFolderName = "CenterToast";
     private const string SettingsPath = SettingsFolderParent + "/" + SettingsFolderName + "/CenterToastSettings.asset";
+    private static readonly int[] AllStyles = { 0, 1, 2, 3, 4, 5 };
     private const string FontGuid = "8863727b6c787ba4a910762f78e8fd55"; // KCC-Ganpan SDF (게임 UI 폰트)
     private const string ModernFontGuid = "34571da45f3f3d8419493b418172203f"; // NotoSansKR-Bold SDF (모던 A·B·C)
     private static readonly Vector2 ReferenceResolution = new Vector2(1080f, 1920f);
@@ -35,7 +37,7 @@ public static class CenterToastLabBuilder
         if (EditorApplication.isPlaying) { Debug.LogError("[CenterToastLab] 플레이 중에는 실행하지 않는다"); return; }
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         EnsureSettings();
-        BuildScene();
+        BuildScene(ScenePath, SettingsPath, StyleButtons, AllStyles, "Temp/FxCapture/CenterToast");
         Debug.Log($"[CenterToastLab] 완료: {ScenePath} (설정 {SettingsPath})");
     }
 
@@ -48,11 +50,12 @@ public static class CenterToastLabBuilder
         AssetDatabase.SaveAssets();
     }
 
-    private static void BuildScene()
+    /// <summary>실험실 씬 하나를 새로 만들어 저장한다. labels[i] 버튼은 styles[i] 방식(CenterToastStyle 정수)을 띄운다.</summary>
+    public static void BuildScene(string scenePath, string settingsPath, string[] labels, int[] styles, string captureFolder)
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         // 새 씬을 연 뒤에 에셋을 불러온다 (먼저 불러 두면 저장 시 참조가 fileID 0으로 풀림 — PenaltyFxLabBuilder 참고)
-        var settings = AssetDatabase.LoadAssetAtPath<CenterToastSettings>(SettingsPath);
+        var settings = AssetDatabase.LoadAssetAtPath<CenterToastSettings>(settingsPath);
         var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(FontGuid));
         var modernFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(ModernFontGuid));
         if (modernFont == null) Debug.LogWarning("[CenterToastLab] NotoSansKR-Bold SDF 없음 — 모던 방식도 게임 글꼴로 대체");
@@ -101,11 +104,11 @@ public static class CenterToastLabBuilder
         var lab = new GameObject("CenterToastLab", typeof(CenterToastLab)).GetComponent<CenterToastLab>();
         float step = TimerBonusFxLabBuilder.RowStep;
         var rowStyles = TimerBonusFxLabBuilder.NewButtonRow(canvasRt, "Styles", -16f);
-        var styleImages = new Image[StyleButtons.Length];
-        for (int i = 0; i < StyleButtons.Length; i++)
+        var styleImages = new Image[labels.Length];
+        for (int i = 0; i < labels.Length; i++)
         {
-            var b = TimerBonusFxLabBuilder.NewButton(rowStyles, StyleButtons[i], font);
-            UnityEventTools.AddIntPersistentListener(b.onClick, lab.SelectStyle, i);
+            var b = TimerBonusFxLabBuilder.NewButton(rowStyles, labels[i], font);
+            UnityEventTools.AddIntPersistentListener(b.onClick, lab.SelectStyle, styles[i]);
             styleImages[i] = b.GetComponent<Image>();
         }
         var rowMessages = TimerBonusFxLabBuilder.NewButtonRow(canvasRt, "Messages", -16f - step);
@@ -127,10 +130,13 @@ public static class CenterToastLabBuilder
         var buttons = so.FindProperty("_styleButtons");
         buttons.arraySize = styleImages.Length;
         for (int i = 0; i < styleImages.Length; i++) buttons.GetArrayElementAtIndex(i).objectReferenceValue = styleImages[i];
+        var order = so.FindProperty("_styleOrder");
+        order.arraySize = styles.Length;
+        for (int i = 0; i < styles.Length; i++) order.GetArrayElementAtIndex(i).intValue = styles[i];
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        TimerBonusFxLabBuilder.AddCapture(cam, lab, CaptureDuration, "Temp/FxCapture/CenterToast");
-        EditorSceneManager.SaveScene(scene, ScenePath);
+        TimerBonusFxLabBuilder.AddCapture(cam, lab, CaptureDuration, captureFolder);
+        EditorSceneManager.SaveScene(scene, scenePath);
     }
 
     // 전투판 대역: 반투명 타일 4×6

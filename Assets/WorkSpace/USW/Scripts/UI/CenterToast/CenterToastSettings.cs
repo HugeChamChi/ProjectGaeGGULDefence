@@ -14,12 +14,16 @@ public class CenterToastSettings : ScriptableObject
     [Header("배치")]
     [Tooltip("화면 가운데 기준 세로 위치 (위 +)")]
     public float AnchorY = 240f;
+    [Tooltip("전체 크기 배율 — 글자·바탕·쌓이는 간격·움직임 거리를 AnchorY 기준으로 함께 키운다 (1 = 원래 크기)")]
+    [Range(0.5f, 2f)] public float Scale = 1f;
 
     [Header("시간 (초, timeScale 무시)")]
     [Tooltip("뜬 뒤 사라지기 시작할 때까지. 같은 문구를 다시 띄우면(합치는 방식) 이 시간이 다시 시작된다")]
     public float Lifetime = 1.1f;
     [Tooltip("동시에 보일 수 있는 최대 줄 수 (A 스택). 넘치면 가장 오래된 것부터 빠르게 사라진다")]
     [Range(1, 8)] public int MaxVisible = 4;
+    [Tooltip("쌓이는 방식에서 새 알림에 밀려 위로 올라간 뒤 남아 있는 시간 — 줄마다 따로 센다. 0이면 끔(처음 뜬 때부터 Lifetime까지 유지)")]
+    [Min(0f)] public float PushedLifetime;
 
     [Header("글자 크기")]
     public float FontSize = 44f;
