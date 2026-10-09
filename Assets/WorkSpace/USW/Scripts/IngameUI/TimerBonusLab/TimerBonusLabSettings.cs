@@ -124,6 +124,12 @@ public class TimerBonusLabSettings : ScriptableObject
         public float ChainGapSeconds = 0.12f;
         [Tooltip("발동한 드론에서 타이머까지 해킹 신호가 날아가는 시간")]
         public float SignalSeconds = 0.18f;
+
+        [Header("인게임 (디시그망 시간 회복)")]
+        [Tooltip("인게임 해킹 완료 순간 화면 전체 흰 플래시·줌. 꺼짐 = 타이머만 터지고 연출 시계 히트스톱만 (자주 발동해도 눈이 덜 피곤하게)")]
+        public bool RuntimeScreenFlash;
+        [Tooltip("인게임: TIME HACK 막대·결과 글자를 이만큼(px) 더 내린다 — 타이머 바로 아래 보스 HP바를 가리지 않게")]
+        public float RuntimeBarDropPx = 30f;
     }
 
     /// <summary>해킹 중첩 시안의 발동 시점 묶음 하나.</summary>
