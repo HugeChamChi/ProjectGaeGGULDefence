@@ -28,6 +28,10 @@ public sealed class DroneHackingData : ScriptableObject
     public Color HackColor = new Color(.38f, .86f, 1f);
     /// <summary>보스 표식과 신호선의 공유 머티리얼.</summary>
     public Material LineMaterial;
+    /// <summary>Teleport laboratory shader beam, shared by hacking casts.</summary>
+    public Material BeamMaterial;
+    /// <summary>World-space width of the skill beam.</summary>
+    [Min(.01f)] public float CastBeamWidth = .24f;
     /// <summary>FXLab과 같은 부드러운 해킹 후광 소재.</summary>
     public Material MarkGlowMaterial;
     /// <summary>표식 부착과 기폭 파동 소재.</summary>
