@@ -47,6 +47,7 @@ public class TotemSelectUI : MonoBehaviour
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] totemPool;
 
+    /// <summary>Authored candidates used by this selection screen.</summary>
     public TotemData[] TotemPool => totemPool;
 
     [Header("인벤토리 가득 찼을 때 대체 식량")]
@@ -58,6 +59,10 @@ public class TotemSelectUI : MonoBehaviour
     [SerializeField] private TMP_Text rerollCostText;
 
     private const int ChoiceCount = 3;
+    private const int TimerTickMilliseconds = 100;
+    private const float TimerTickSeconds = TimerTickMilliseconds / 1000f;
+    private bool _loading;
+    private bool _ownsPause;
 
     private readonly List<TotemSelectCardUI> _spawnedCards = new();
     private          TotemSelectCardUI       _selectedCard;
@@ -75,60 +80,84 @@ public class TotemSelectUI : MonoBehaviour
 
     // ── 열기 ───────────────────────────────────────────────────
 
-    public async void Show(Action onChoiceMade)
-    {
-        _onChoiceMade = onChoiceMade;
-        
-        var layout = cardContainer.GetComponent<LayoutGroup>();
-        if (layout != null) layout.enabled = true;
-        
-        if (rerollCostText != null)
-            rerollCostText.text = rerollCost.ToString();
+    /// <summary>Shows a fresh selection; pending work from an older request is cancelled.</summary>
+    public void Show(Action onChoiceMade) => ShowAsync(onChoiceMade).Forget();
 
-        _selectedCard = null;
+    private async UniTaskVoid ShowAsync(Action onChoiceMade)
+    {
+        var token = BeginSelection();
+        _onChoiceMade = onChoiceMade;
+        try
+        {
+            if (rerollCostText != null) rerollCostText.text = rerollCost.ToString();
+            if (!await LoadCardsAsync(token))
+            {
+                Hide();
+                return;
+            }
+            token.ThrowIfCancellationRequested();
+            gameObject.SetActive(true);
+            if (!_ownsPause)
+            {
+                _ownsPause = true;
+                _timeScale?.Pause(this);
+                _timerManager?.StopTimer();
+                if (_gridManager != null)
+                    foreach (var cell in _gridManager.GetOccupiedCells())
+                        cell.OccupyingUnit?.PauseLoops();
+            }
+            await FreezeLayoutAsync(token);
+            _loading = false;
+            RunSelectionTimer(token).Forget();
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error)
+        {
+            Debug.LogException(error);
+            if (OwnsSelection(token)) CancelSelection();
+        }
+    }
+
+    private CancellationToken BeginSelection()
+    {
+        StopSelectionTimer();
+        _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        _loading = true;
         ClearCards();
         SetConfirmInteractable(false);
+        return _selectionCts.Token;
+    }
 
+    private bool OwnsSelection(CancellationToken token) =>
+        _selectionCts != null && _selectionCts.Token == token;
+
+    private async UniTask<bool> LoadCardsAsync(CancellationToken token)
+    {
+        var layout = cardContainer.GetComponent<LayoutGroup>();
+        if (layout != null) layout.enabled = true;
         var choices = GetRandomChoices(ChoiceCount);
-        if (choices.Count == 0)
-        {
-            onChoiceMade?.Invoke();
-            return;
-        }
+        if (choices.Count == 0) return false;
 
-        var loadTasks = new List<UniTask>();
+        var loads = new List<UniTask>();
+        foreach (var data in choices)
+            if (data != null) loads.Add(data.LoadAssetsAsync());
+        // Shared asset loads may finish in the cache; a closed UI must not resume using them.
+        await UniTask.WhenAll(loads).AttachExternalCancellation(token);
+        token.ThrowIfCancellationRequested();
         foreach (var data in choices)
         {
-            if (data != null) loadTasks.Add(data.LoadAssetsAsync());
-        }
-        await UniTask.WhenAll(loadTasks);
-
-        foreach (var data in choices)
-        {
-            var prefab = cardPrefabs[(int)data.tier];
-            var card = Instantiate(prefab, cardContainer);
+            var card = Instantiate(cardPrefabs[(int)data.tier], cardContainer);
             card.Setup(data, OnCardClicked);
             card.ConfigurePeek(GetComponentInChildren<UI_Peekthrough>(true));
             _spawnedCards.Add(card);
         }
-
-        gameObject.SetActive(true);
-        
-        FreezeLayoutAsync(layout).Forget();
-
-        _timeScale.Pause(this);
-        _timerManager.StopTimer();
-
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.PauseLoops();
-
-        RunSelectionTimer().Forget();
+        return true;
     }
 
-    private async UniTaskVoid FreezeLayoutAsync(LayoutGroup layout)
+    private async UniTask FreezeLayoutAsync(CancellationToken token)
     {
-        if (layout == null) return;
-        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+        var layout = cardContainer.GetComponent<LayoutGroup>();
         if (layout != null) layout.enabled = false;
     }
 
@@ -136,7 +165,7 @@ public class TotemSelectUI : MonoBehaviour
 
     private void OnCardClicked(TotemSelectCardUI clicked)
     {
-        if (_selectedCard == clicked) return;
+        if (_loading || _selectedCard == clicked) return;
         _selectedCard?.Deselect();
         _selectedCard = clicked;
         _selectedCard.Select();
@@ -145,9 +174,10 @@ public class TotemSelectUI : MonoBehaviour
 
     // ── 확인 버튼 ──────────────────────────────────────────────
 
+    /// <summary>Grants the selected totem and completes this selection once.</summary>
     public void OnConfirmClicked()
     {
-        if (_selectedCard == null) return;
+        if (_loading || _selectedCard == null) return;
 
         var data = _selectedCard.GetData();
         if (data != null)
@@ -166,56 +196,44 @@ public class TotemSelectUI : MonoBehaviour
     }
 
     // ── 리롤 버튼 ──────────────────────────────────────────────
-    public async void OnRerollClicked()
+    /// <summary>Rerolls once; clicks during loading do not spend additional currency.</summary>
+    public void OnRerollClicked()
     {
+        if (_loading || _selectionCts == null) return;
         if (!_currencyManager.Spend(rerollCost))
         {
             Debug.Log("[TotemSelectUI] 식량이 부족하여 리롤할 수 없습니다.");
             return;
         }
-        
-        var layout = cardContainer.GetComponent<LayoutGroup>();
-        if (layout != null) layout.enabled = true;
+        RerollAsync(BeginSelection()).Forget();
+    }
 
-        _selectedCard = null;
-        ClearCards();
-        SetConfirmInteractable(false);
-
-        var choices = GetRandomChoices(ChoiceCount);
-        if (choices.Count == 0)
+    private async UniTaskVoid RerollAsync(CancellationToken token)
+    {
+        try
         {
-            Hide();
-            return;
+            if (!await LoadCardsAsync(token))
+            {
+                Hide();
+                return;
+            }
+            token.ThrowIfCancellationRequested();
+            await FreezeLayoutAsync(token);
+            _loading = false;
+            RunSelectionTimer(token).Forget();
         }
-
-        var loadTasks = new List<UniTask>();
-        foreach (var data in choices)
+        catch (OperationCanceledException) { }
+        catch (Exception error)
         {
-            if (data != null) loadTasks.Add(data.LoadAssetsAsync());
+            Debug.LogException(error);
+            if (OwnsSelection(token)) CancelSelection();
         }
-        await UniTask.WhenAll(loadTasks);
-
-        foreach (var data in choices)
-        {
-            var prefab = cardPrefabs[(int)data.tier];
-            var card = Instantiate(prefab, cardContainer);
-            card.Setup(data, OnCardClicked);
-            card.ConfigurePeek(GetComponentInChildren<UI_Peekthrough>(true));
-            _spawnedCards.Add(card);
-        }
-
-        FreezeLayoutAsync(layout).Forget();
-
-        RunSelectionTimer().Forget();
     }
 
     // ── 선택 타이머 ────────────────────────────────────────────
 
-    private async UniTaskVoid RunSelectionTimer()
+    private async UniTaskVoid RunSelectionTimer(CancellationToken token)
     {
-        StopSelectionTimer();
-        _selectionCts = new CancellationTokenSource();
-        var token = _selectionCts.Token;
 
         try
         {
@@ -225,8 +243,8 @@ public class TotemSelectUI : MonoBehaviour
                 if (selectionTimerText != null)
                     selectionTimerText.text = $"{Mathf.CeilToInt(remaining)}";
 
-                await UniTask.Delay(100, DelayType.Realtime, cancellationToken: token);
-                remaining -= 0.1f;
+                await UniTask.Delay(TimerTickMilliseconds, DelayType.Realtime, cancellationToken: token);
+                remaining -= TimerTickSeconds;
             }
 
             // 타임아웃 — 첫 번째 카드 자동 선택
@@ -248,28 +266,39 @@ public class TotemSelectUI : MonoBehaviour
 
     private void StopSelectionTimer()
     {
-        _selectionCts?.Cancel();
-        _selectionCts?.Dispose();
+        var source = _selectionCts;
         _selectionCts = null;
+        source?.Cancel();
+        source?.Dispose();
     }
 
     // ── 닫기 ───────────────────────────────────────────────────
 
     private void Hide()
     {
-        StopSelectionTimer();
-        ClearCards();
+        var callback = _onChoiceMade;
+        CancelSelection();
         gameObject.SetActive(false);
-        _timeScale.Release(this);
-        _timerManager.ResumeTimer();
-
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            cell.OccupyingUnit?.ResumeLoops();
-
-        var cb = _onChoiceMade;
-        _onChoiceMade = null;
-        cb?.Invoke();
+        callback?.Invoke();
     }
+
+    private void CancelSelection()
+    {
+        StopSelectionTimer();
+        _loading = false;
+        _onChoiceMade = null;
+        ClearCards();
+        if (!_ownsPause) return;
+        _ownsPause = false;
+        _timeScale?.Release(this);
+        _timerManager?.ResumeTimer();
+        if (_gridManager != null)
+            foreach (var cell in _gridManager.GetOccupiedCells())
+                cell.OccupyingUnit?.ResumeLoops();
+    }
+
+    private void OnDisable() => CancelSelection();
+    private void OnDestroy() => CancelSelection();
 
     // ── 유틸 ───────────────────────────────────────────────────
 

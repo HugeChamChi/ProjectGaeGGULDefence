@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f16686ccafa1b024898e6e12e88f555d, type: 3}
+  m_Name: HackSlantedGaugeStyle
+  m_EditorClassIdentifier: Assembly-CSharp::HackSlantedGaugeStyle
+  Background: {fileID: 21300000, guid: aebc3dcc472f8524c81f55db5c1f6378, type: 3}
+  HackTag: {fileID: 21300000, guid: 618328750dfda304b92d063e3d9b9364, type: 3}
+  ReadyTag: {fileID: 21300000, guid: 5bee1bbf1edbf7143a80f9c13065d56e, type: 3}
+  TickOn: {fileID: 21300000, guid: a1e6e4f8723d45e4cb4578930c3dda63, type: 3}
+  TickHalf: {fileID: 21300000, guid: 33cfe06936d73ca439ff0792476243bd, type: 3}
+  TickOff: {fileID: 21300000, guid: f165932b3c63f5044b77ceff1d37d004, type: 3}
+  Font: {fileID: 11400000, guid: eb49db5f6883aa34c8df3c5f00492e9f, type: 2}
+  FontMaterial: {fileID: 3067205680753389617, guid: eb49db5f6883aa34c8df3c5f00492e9f,
+    type: 2}

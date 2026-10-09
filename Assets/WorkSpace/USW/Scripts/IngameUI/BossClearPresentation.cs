@@ -74,9 +74,10 @@ public sealed class BossClearPresentation : MonoBehaviour
                 _fusion.NotifyBonusApplied();
             }
             await UniTask.WaitUntil(() => _fusion.IsBonusCountComplete || !_fusion.IsPresenting, cancellationToken: cts.Token);
-            if (config != null)
+            // Only a boss-clear request owns the delayed clear notice.
+            if (pending && config != null)
                 await UniTask.Delay(TimeSpan.FromSeconds(config.BossClearNoticeDelaySeconds), ignoreTimeScale: true, cancellationToken: cts.Token);
-            if (_notice != null)
+            if (pending && _notice != null)
             {
                 _notice.PresentRuntimeNotice();
                 await UniTask.WaitUntil(() => !_notice.IsPresenting, cancellationToken: cts.Token);

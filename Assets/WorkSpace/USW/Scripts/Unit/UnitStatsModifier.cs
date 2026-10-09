@@ -24,8 +24,9 @@ public class UnitStatsModifier : MonoBehaviour
 
     private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier;
 
-    private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
-        / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
+    // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
+    private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
+        * Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true);
 
@@ -118,7 +119,7 @@ public class UnitStatsModifier : MonoBehaviour
         float rowSpeedMult   = Mathf.Max(_deps?.LevelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float tribeSpeedMult = Mathf.Max(1f + (_deps?.LevelUpManager?.GetTribeSpeedBonus(_unit.unitData.unitTribe) ?? 0f), 0.01f);
         
-        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
+        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackFrequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 
         float interval = baseInterval

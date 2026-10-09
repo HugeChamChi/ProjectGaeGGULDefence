@@ -68,8 +68,9 @@ public static class DroneSelectionChecks
             Check(Mathf.Approximately(zelta.CurrentFoodProductionPerSecond,4.8f),"Food UI remains per second");
             manager.RemoveEffect(cards[6]);resource.TickFoodProduction(1);Check(Mathf.Approximately(currency.Currency,18.4f),"Food revert");
             var delta=Component<Drone_Deltan>();delta.unitData=Asset<UnitData>();delta.unitData.skillCooldown.normal=20;
+            delta.unitData.Hacking=Asset<DroneHackingData>();delta.unitData.Hacking.AttacksToCharge.normal=6;
             delta.Init(new UnitDependencies { LevelUpManager=manager });manager.ApplyEffect(cards[9]);
-            Check(Mathf.Approximately(delta.GetCurrentSkillInterval(),18),"Deltan cooldown");
+            Check(delta.RequiredAttacks==5,"Deltan mana requirement reduction");
             var alphaData=Asset<AlphanSkillData>(); alphaData.CooldownSeconds=20;
             using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager,null,null))
             {
@@ -79,13 +80,13 @@ public static class DroneSelectionChecks
 
             var gamma=Component<Drone_Gamman>();gamma.unitData=Asset<UnitData>();gamma.Init(new UnitDependencies {LevelUpManager=manager});
             Set(gamma,"_droneManager",drones);manager.ApplyEffect(cards[4]);
-            gamma.ApplyDroneBuff();Check(Mathf.Approximately(drones.DroneAtkMultiplier,1.036f),"Gamman frequency twelve drones");
+            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.036f),"Gamman stack damage twelve drones");
             for(int i=0;i<20;i++) drones.RegisterDrone(Component<DroneUnit>());
-            gamma.ApplyDroneBuff();Check(Mathf.Approximately(drones.DroneAtkMultiplier,1.09f),"Frequency nine percent cap");
+            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.09f),"Frequency nine percent cap");
             var gammaDrone=Component<DroneUnit>();Set(gammaDrone,"_owner",gamma);drones.RegisterDrone(gammaDrone);
             Set(gamma,"<currentCell>k__BackingField",cell);gamma.gameObject.SetActive(true);
             Set(drones,"_buffEndTime",-1f);manager.ApplyEffect(cards[5]);drones.ApplyEmergencyBuffs();
-            Check(Mathf.Approximately(drones.DroneAtkMultiplier,1.09f),"Emergency applies placed Gamman buff");
+            Check(Mathf.Approximately(drones.DroneAtkMultiplier,1f) && !gamma.IsHacking,"Emergency without live boss does not buff or cast");
 
             var debuffs=new DebuffController(_=>{},()=>true);
             var definition=new DebuffDefinition(1003,"test",DebuffKind.DamageTakenIncrease,"test",5,1,damageMultiplier:1.2m);

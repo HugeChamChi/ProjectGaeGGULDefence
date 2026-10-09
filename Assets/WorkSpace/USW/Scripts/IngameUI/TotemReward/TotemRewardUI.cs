@@ -26,6 +26,7 @@ public class TotemRewardUI : MonoBehaviour
 {
     [VContainer.Inject] private ExpManager _expManager;
     private const int ChoiceCount = 3;
+    [VContainer.Inject] private EndlessRunService _runPenalties;
     private const float TextBlockWidth = 0.55f;
     private const float DetailBlockWidth = 0.84f;
     private const float BackArrowSize = 110f;
@@ -140,7 +141,7 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
-        var choices = TotemChoiceRoller.Roll(_totemPool, _chosenTotems, ChoiceCount);
+        var choices = TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
         if (choices.Count == 0)
         {
             Debug.LogWarning("[TotemRewardUI] 뽑을 토템이 없음");

@@ -3390,7 +3390,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+  - {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
   _useAuthoredParty: 0
+  _useUniformSummonPool: 1
   defaultSpawnOffsetY: 0
   defaultSpawnScale: {x: 1, y: 1, z: 1}
 --- !u!4 &248640386
@@ -7693,6 +7695,7 @@ MonoBehaviour:
   - 0.25
   _droneSquad: []
   _concept: 0
+  _triggerSetIndex: 0
   _loop: 1
   _runtimeTimer: {fileID: 1028531843}
 --- !u!225 &585799968
@@ -15858,7 +15861,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
   - {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
   - {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+  - {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
   _useAuthoredParty: 0
+  _useUniformSummonPool: 1
   defaultSpawnOffsetY: -0.2
   defaultSpawnScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1424770774
@@ -19869,7 +19874,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 2100000, guid: 8958e375db9344978c68a70e12da0b98, type: 2}
+  m_Material: {fileID: 2100000, guid: 2e4fd628bd7953442940d3f85147ad1b, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}

@@ -37,6 +37,7 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private PenaltyRevealFx _penaltyFx;
     private RunPenaltyResult? _pendingPenalty;
     private bool _timerStarted;
+    private bool _sealApplied;
 
     private readonly List<BossEntry> _pendingBosses = new List<BossEntry>();
     private CancellationTokenSource _waveCts;
@@ -90,6 +91,8 @@ public class WaveManager : MonoBehaviour
         if (!_run.TryStart(_endlessMode, out error)) return false;
         CancelFlow();
         _waveCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        _sealApplied = false;
+        if (_gridManager != null) foreach (var cell in _gridManager.AllCells()) cell.Model.SetPermanentSeal(false);
         _waveStarted = false;
         _timerStarted = false;
         SyncWaveIndex();
@@ -247,7 +250,7 @@ public class WaveManager : MonoBehaviour
     private void OnRewardDone(long runId, int round, int bossIndex)
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.AwaitingReward)) return;
-        if (_pendingPenalty.HasValue && _penaltyFx != null)
+        if (_run.AwaitingPenaltyChoice)
         {
             _phase = EncounterPhase.PresentingPenalty;
             PresentPenaltyAsync(runId, round, bossIndex, _waveCts.Token).Forget();
@@ -271,27 +274,31 @@ public class WaveManager : MonoBehaviour
 
     private async UniTaskVoid PresentPenaltyAsync(long runId, int round, int bossIndex, CancellationToken token)
     {
-        var result = _pendingPenalty.Value;
-        _pendingPenalty = null;
-        RunPenaltyData data = null;
-        if (_endlessMode?.PenaltyPool != null)
-            foreach (var entry in _endlessMode.PenaltyPool.Entries)
-                if (entry?.Penalty != null && entry.Penalty.Key == result.PenaltyKey) { data = entry.Penalty; break; }
-        if (data == null) { _run.Fail("Penalty presentation definition is missing: " + result.PenaltyKey); return; }
         _timeScale.Pause(this);
-        bool cancelled;
+        _fieldPause.HoldAttacks(this);
+        _fieldPause.Enter(this);
         try
         {
-            _penaltyFx.gameObject.SetActive(true);
-            cancelled = await _penaltyFx.PlayAsync(data, result.StackCount, token).SuppressCancellationThrow();
+            var choiceUI=GetComponent<PenaltyChoiceUI>();
+            if(choiceUI==null)choiceUI=gameObject.AddComponent<PenaltyChoiceUI>();
+            var chosen=await choiceUI.ChooseAsync(_run.PenaltyChoices,token);
+            if(!OwnsEncounter(runId,round,bossIndex,EncounterPhase.PresentingPenalty) || !_run.TryChoosePenalty(runId,round,chosen.Key)) return;
+            if (!_pendingPenalty.HasValue || !_run.Matches(runId, round)) return;
+            var result=_pendingPenalty.Value;_pendingPenalty=null;
+            if(_penaltyFx!=null)
+            {
+                _penaltyFx.gameObject.SetActive(true);
+                await _penaltyFx.PlayAsync(chosen,result.StackCount,token);
+            }
         }
+        catch(OperationCanceledException) { return; }
         finally
         {
-            if (_penaltyFx != null) _penaltyFx.gameObject.SetActive(false);
+            if(_penaltyFx!=null)_penaltyFx.gameObject.SetActive(false);
+            _fieldPause.Exit(this,_run.IsActive && !_gameManager.IsFinished);
             _timeScale.Release(this);
         }
-        if (cancelled || !OwnsEncounter(runId, round, bossIndex, EncounterPhase.PresentingPenalty)) return;
-        ContinueAfterReward(runId, round);
+        if(OwnsEncounter(runId,round,bossIndex,EncounterPhase.PresentingPenalty)) ContinueAfterReward(runId,round);
     }
 
     private void FinishRound(long runId, int round)
@@ -303,7 +310,16 @@ public class WaveManager : MonoBehaviour
             _gameManager.OnAllWavesCleared();
             return;
         }
-        if (_run.TryAdvanceRound(runId, round)) SpawnWaveBosses();
+        if (_run.TryAdvanceRound(runId, round))
+        {
+            if (_run.HasPermanentSeal && !_sealApplied)
+            {
+                var cells = new List<GridCell>(_gridManager.AllCells());
+                if(cells.Count>0) cells[UnityEngine.Random.Range(0,cells.Count)].Model.SetPermanentSeal(true);
+                _sealApplied=true;
+            }
+            SpawnWaveBosses();
+        }
     }
 
     private bool OwnsEncounter(long runId, int round, int bossIndex, EncounterPhase phase)

@@ -12,6 +12,10 @@ public class UnitFactory : MonoBehaviour
     [Inject] private AssetLifecycleManager _assetLifecycle;
     [SerializeField] private UnitData[] unitDataList;
     [SerializeField] private bool _useAuthoredParty;
+    [SerializeField] private bool _useUniformSummonPool;
+
+    /// <summary>Whether the selected party uses its SO roster for equal-weight normal summons.</summary>
+    public bool UsesUniformSummonPool => _useUniformSummonPool;
 
     public UnitData[] UnitDataList => unitDataList;
     private UnitDependencies _deps;
@@ -20,6 +24,7 @@ public class UnitFactory : MonoBehaviour
     {
         _deps = new UnitDependencies
         {
+            Timer = _resolver.Resolve<TimerController>(),
             Research = _resolver.Resolve<ResearchRunBonuses>(),
             GameManager = _resolver.Resolve<GameManager>(),
             GameDataManager = _resolver.Resolve<GameDataManager>(),
@@ -40,6 +45,7 @@ public class UnitFactory : MonoBehaviour
         if (!_useAuthoredParty && GlobalData.SelectedParty != null && GlobalData.SelectedParty.unitDataList != null)
         {
             unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
+            _useUniformSummonPool = GlobalData.SelectedParty.UseUniformSummonPool;
         }
         ValidateUnitDataList();
 

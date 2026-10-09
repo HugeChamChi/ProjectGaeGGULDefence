@@ -71,6 +71,7 @@ public sealed class CenterToastEntry
         BadgeText.enabled = false;
         Clip.sizeDelta = NoClipSize;
         Clip.anchoredPosition = Vector2.zero;
+        Clip.localScale = Vector3.one;
         Text.rectTransform.anchoredPosition = Vector2.zero;
         Text.rectTransform.localScale = Vector3.one;
         Text.maxVisibleCharacters = 99999;

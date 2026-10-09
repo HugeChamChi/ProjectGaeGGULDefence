@@ -56,7 +56,41 @@ namespace GaeGGUL.UI.Unit
         {
             bool identityChanged = _displayedData != data || _displayedTier != tier;
             if (identityChanged) _view.UpdateBasicInfo(data.unitName, data.icon, tier);
-            if (identityChanged || !_hasStats || _cooldown != cooldown)
+            bool betan = _unit is Drone_Betan || data.prefabAddress == "DroneUnit_Betan";
+            if (betan)
+            {
+                var conversion = _unit?.DroneSelections?.Get(DroneSelectionKind.BetanHackingBomb);
+                _view.UpdateSkillInfo(conversion != null ? "해킹 자폭" : data.skillData?.skillName ?? string.Empty,
+                    conversion != null ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {conversion.Count}개를 추가합니다. 기본 스킬·추가 자폭 모두 전환되며 수리 키트가 발동합니다."
+                    : data.skillData?.description ?? data.GetFormattedDescription(tier),
+                    cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
+            }
+            else if (data.Disigman != null)
+            {
+                int attacks = _unit is Disigman live ? live.RequiredAttacks
+                    : Mathf.Max(1, data.Disigman.AttacksToCharge.Get(tier));
+                float seconds = _unit is Disigman current ? current.SecondsRecovered
+                    : Mathf.Max(0f, data.Disigman.SecondsRecovered.Get(tier));
+                var damage = data.skillData?.hitEffects?.Find(effect => effect is AtkCoefficientDamage) as AtkCoefficientDamage;
+                float coefficient = damage?.coefficient?.Get(tier) ?? 0f;
+                _view.UpdateSkillInfo(data.skillData?.skillName ?? string.Empty,
+                    $"본체 일반공격 {attacks}회마다 공격력 ×{coefficient:0.##}의 한 발을 발사하고 즉시 남은 시간을 {seconds:0.##}초 회복합니다. 드론을 생성하지 않습니다.",
+                    $"공격 {attacks}회 충전");
+            }
+            else if (data.Hacking != null)
+            {
+                bool producer = _unit is Drone_Deltan || data.prefabAddress == "DroneUnit_Deltan";
+                var hacking = data.Hacking;
+                int attacks = _unit is Drone_Deltan delta ? delta.RequiredAttacks : hacking.AttacksToCharge.Get(tier);
+                int production = _unit is Drone_Deltan liveDelta ? liveDelta.NextProduction : hacking.StacksProduced.Get(tier);
+                float perStack = hacking.CoefficientPerStack.Get(tier) * (_unit is Drone_Gamman gamma ? gamma.StackDamageMultiplier : 1f);
+                string description = producer
+                    ? $"소유 드론 일반공격 {attacks}회마다 해킹 스킬을 사용합니다. 다음 생산 {production}스택. 보스 공유 상한 {hacking.Capacity}."
+                    : $"기본 피해 계수 {hacking.BaseCoefficient.Get(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {hacking.MaxStacksConsumed.Get(tier)}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
+                _view.UpdateSkillInfo(producer ? "해킹" : "해킹 기폭", description,
+                    producer ? $"공격 {attacks}회 충전" : $"{cooldown:F1}초");
+            }
+            else if (identityChanged || !_hasStats || _cooldown != cooldown)
                 _view.UpdateSkillInfo(data.skillData != null ? data.skillData.skillName : string.Empty,
                     data.skillData != null ? data.skillData.description : data.GetFormattedDescription(tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty, data.DebuffBindings.Get(tier));

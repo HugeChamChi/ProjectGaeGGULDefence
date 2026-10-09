@@ -11,7 +11,7 @@ public sealed class EndlessModeData : ScriptableObject
     [SerializeField] private int _cycleLength = 10;
     [SerializeField] private int _penaltyInterval = 10;
     [SerializeField] private int _penaltyFirstApplyRound = 11;
-    [SerializeField] private int _penaltyDrawCount = 1;
+    [SerializeField] private int _penaltyDrawCount = 2;
     [SerializeField] private EndlessBossSlot[] _slots = Array.Empty<EndlessBossSlot>();
     [SerializeField] private EndlessGrowthSettings _growth = new();
     [SerializeField] private RunPenaltyPoolData _penaltyPool;
@@ -29,7 +29,7 @@ public sealed class EndlessModeData : ScriptableObject
     public int PenaltyInterval => _penaltyInterval;
     /// <summary>첫 패널티가 활성화되는 1 기반 라운드. 추첨은 직전 라운드 완료 후.</summary>
     public int PenaltyFirstApplyRound => _penaltyFirstApplyRound;
-    /// <summary>경계당 추첨 횟수. 현재 계약은 1만 지원한다.</summary>
+    /// <summary>경계당 제시 후보 수. 현재 계약은 서로 다른 2개 중 1개 선택이다.</summary>
     public int PenaltyDrawCount => _penaltyDrawCount;
     /// <summary>위치별 보스 참조. Position 기준으로 조회하며 배열 순서에 의존하지 않는다.</summary>
     public IReadOnlyList<EndlessBossSlot> Slots => _slots;

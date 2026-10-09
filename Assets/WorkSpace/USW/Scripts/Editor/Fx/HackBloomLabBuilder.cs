@@ -34,14 +34,17 @@ public static class HackBloomLabBuilder
     private static readonly Vector3 DeltanPosition = new Vector3(1.35f, -2.2f, -.1f);
     private static readonly Vector3 DeltanDroneOffset = new Vector3(.85f, .31f, -.3f);
     private const float SpineScale = .17f;
-    // 인게임 상단 HUD 재현: 실제 보스 HP바 프리팹을 인게임 화면(1080 폭)과 같은 자리·폭에 둔다.
-    private const string HpBarPrefab = "Assets/WorkSpace/HSD/Prefab/UI/InGame/BossHpBar.prefab";
-    // 인게임 측정: 해골 중심 x129·y140, HP바는 해골 중심 오른쪽 20부터 x1013까지 (UI_BossHpBar 부모 안 오프셋과 동일)
-    private static readonly Vector2 HpBarPosition = new Vector2(41f, -90f);
-    private static readonly Vector2 HpBarSize = new Vector2(864f, 100f);
-    private const string BossPortrait = "Assets/Imports/GGD_ArtWork/KHJ_Artwork/In-game/SPR_UI2000_BossPortraitFrame.png";
-    private static readonly Vector2 PortraitOffset = new Vector2(-20f, 0f);
-    private const float PortraitSize = 102f;
+    // 인게임 상단 HUD 재현: IngameScene의 보스 정보 묶음(해골 + HP바, 씬에서 덮어쓴 BossHpBg/BossHpFrame 포함)을 그대로 복제한다.
+    private const string IngameScenePath = "Assets/Scenes/IngameScene.unity";
+    private const float CanvasWidth = 1080f;
+    // design/hp,디버프예씨.png의 디버프 줄 대역: debuff_background 타일 + 실제 디버프 아이콘 (방어 약화 / 화상 / 받피증)
+    private const string InGameArt = "Assets/Imports/GGD_ArtWork/KHJ_Artwork/In-game/";
+    private static readonly string[] DebuffIconPaths =
+    {
+        "Assets/Imports/Layer Lab/GUI Pro-FantasyRPG/ResourcesData/Sprites/Component/Icon_PictoIcons/Original/function_icon_life_break.png",
+        "Assets/Imports/Layer Lab/GUI Pro-FantasyHero/ResourcesData/Sptites/Components/Icon_PictoIcons/Original/PictoIcon_Fire.Png",
+        "Assets/Imports/Layer Lab/GUI Pro-FantasyRPG/ResourcesData/Sprites/Component/Icon_PictoIcons/Original/function_icon_skull.png",
+    };
     private const float DroneScale = 1.6f;
 
     /// <summary>씬을 새로 만들어 저장하고 연다.</summary>
@@ -54,8 +57,13 @@ public static class HackBloomLabBuilder
         if (AssetDatabase.LoadAssetAtPath<SceneAsset>(GammanTeleportLabBuilder.ScenePath) == null)
             throw new InvalidOperationException("Missing source lab: " + GammanTeleportLabBuilder.ScenePath);
         if (!AssetDatabase.IsValidFolder(DataPath)) AssetDatabase.CreateFolder("Assets/WorkSpace/USW/Data", "HackBloomLab");
-        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null) AssetDatabase.DeleteAsset(ScenePath);
-        if (!AssetDatabase.CopyAsset(GammanTeleportLabBuilder.ScenePath, ScenePath)) throw new InvalidOperationException("Scene copy failed.");
+        // 기존 씬은 파일 내용만 덮어써 .meta GUID를 유지한다 (다시 만들 때마다 GUID가 바뀌어 git 변경이 생기지 않게).
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
+        {
+            System.IO.File.Copy(GammanTeleportLabBuilder.ScenePath, ScenePath, true);
+            AssetDatabase.ImportAsset(ScenePath, ImportAssetOptions.ForceUpdate);
+        }
+        else if (!AssetDatabase.CopyAsset(GammanTeleportLabBuilder.ScenePath, ScenePath)) throw new InvalidOperationException("Scene copy failed.");
         var scene = EditorSceneManager.OpenScene(ScenePath);
 
         // 감망은 Actor_1 하나만: 다중 비교 그룹은 끄고(감망 랩이 단독 자동재생·자체 GUI를 하지 않도록 참조는 남긴다) 나머지 배우는 지운다.
@@ -128,23 +136,15 @@ public static class HackBloomLabBuilder
         scaler.referenceResolution = new Vector2(1080f, 1920f);
         scaler.matchWidthOrHeight = 0f;
         var uiRoot = Stretch(new GameObject("Numbers", typeof(RectTransform)), canvasGo.transform);
-        var hud = new GameObject("TopHud_Mock", typeof(RectTransform)).GetComponent<RectTransform>();
-        hud.SetParent(canvasGo.transform, false);
-        hud.anchorMin = hud.anchorMax = hud.pivot = new Vector2(.5f, 1f);
-        hud.anchoredPosition = HpBarPosition; hud.sizeDelta = HpBarSize;
+        var hud = CloneIngameBossInfo(canvasGo.transform);
         hud.SetAsFirstSibling();
-        var hpBar = (GameObject)PrefabUtility.InstantiatePrefab(Load<GameObject>(HpBarPrefab), hud);
-        var hpRect = (RectTransform)hpBar.transform;
-        hpRect.anchorMin = Vector2.zero; hpRect.anchorMax = Vector2.one; hpRect.pivot = new Vector2(.5f, 1f);
-        hpRect.anchoredPosition = Vector2.zero; hpRect.sizeDelta = Vector2.zero;
-        var portrait = new GameObject("Boss_Icon", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-        portrait.rectTransform.SetParent(hud, false);
-        portrait.rectTransform.anchorMin = portrait.rectTransform.anchorMax = new Vector2(0f, .5f);
-        portrait.rectTransform.anchoredPosition = PortraitOffset;
-        portrait.rectTransform.sizeDelta = Vector2.one * PortraitSize;
-        portrait.sprite = Load<Sprite>(BossPortrait); portrait.raycastTarget = false;
-        HudText(hud, "Wave_Mock", "WAVE 1", new Vector2(-100f, 36f), TMPro.TextAlignmentOptions.Left);
-        HudText(hud, "Timer_Mock", "90:00", new Vector2(HpBarSize.x * .5f - 41f, 36f), TMPro.TextAlignmentOptions.Center);
+        // HUD보다 뒤에 그릴 레이어 (링 발광이 초상화 뒤에서 빛나게)
+        var backRoot = Stretch(new GameObject("BackFx", typeof(RectTransform)), canvasGo.transform);
+        backRoot.SetAsFirstSibling();
+        var hpView = hud.GetComponentInChildren<UI_BossHpBar>(true);
+        var hpRect = (RectTransform)hpView.transform;
+        HudText(hud, "Wave_Mock", "WAVE 1", new Vector2(-90f, 36f), TMPro.TextAlignmentOptions.Left);
+        HudText(hud, "Timer_Mock", "90:00", new Vector2(hud.sizeDelta.x * .5f - 41f, 36f), TMPro.TextAlignmentOptions.Center);
         var flash = Stretch(new GameObject("ScreenFlash", typeof(RectTransform), typeof(Image)), canvasGo.transform).GetComponent<Image>();
         flash.color = new Color(.92f, .98f, 1f, 0f);
         flash.raycastTarget = false;
@@ -159,8 +159,14 @@ public static class HackBloomLabBuilder
         Ref(so, "_bossVisual", crocus.transform);
         Ref(so, "_boss", target);
         Ref(so, "_hpBar", hpRect);
+        Ref(so, "_hpBarView", hpView);
+        Ref(so, "_debuffTile", Load<Sprite>(InGameArt + "debuff_background.png"));
+        var icons = so.FindProperty("_debuffIcons");
+        icons.arraySize = DebuffIconPaths.Length;
+        for (int i = 0; i < DebuffIconPaths.Length; i++) icons.GetArrayElementAtIndex(i).objectReferenceValue = Load<Sprite>(DebuffIconPaths[i]);
         Ref(so, "_camera", camera);
         Ref(so, "_uiRoot", uiRoot);
+        Ref(so, "_uiBackRoot", backRoot);
         Ref(so, "_flash", flash);
         Ref(so, "_floaterSettings", FloaterSettings());
         var takes = so.FindProperty("_takes");
@@ -199,6 +205,34 @@ public static class HackBloomLabBuilder
         settings.CriticalColor = new DamageStyleLabSettings.Gradient2(new Color(.62f, .9f, 1f), new Color(.12f, .42f, .95f));
         EditorUtility.SetDirty(settings);
         return settings;
+    }
+
+    // IngameScene을 읽기 전용으로 잠깐 열어 Main_TopBar_BossInfomation을 같은 화면 위치·크기로 복제하고 저장 없이 닫는다.
+    private static RectTransform CloneIngameBossInfo(Transform canvas)
+    {
+        var ingame = EditorSceneManager.OpenScene(IngameScenePath, OpenSceneMode.Additive);
+        try
+        {
+            UI_BossHpBar source = null;
+            foreach (var root in ingame.GetRootGameObjects())
+                foreach (var bar in root.GetComponentsInChildren<UI_BossHpBar>(true)) source = bar;
+            if (source == null) throw new InvalidOperationException("UI_BossHpBar not found in " + IngameScenePath);
+            var sourceInfo = (RectTransform)source.transform.parent;
+            var sourceCanvas = (RectTransform)sourceInfo.GetComponentInParent<Canvas>().rootCanvas.transform;
+            var corners = new Vector3[4];
+            sourceInfo.GetWorldCorners(corners);
+            Vector2 min = sourceCanvas.InverseTransformPoint(corners[0]), max = sourceCanvas.InverseTransformPoint(corners[2]);
+            Rect canvasRect = sourceCanvas.rect;
+            float scale = CanvasWidth / canvasRect.width;
+            var clone = (RectTransform)Object.Instantiate(sourceInfo.gameObject, canvas, false).transform;
+            clone.name = sourceInfo.name + "_FromIngame";
+            clone.anchorMin = clone.anchorMax = clone.pivot = new Vector2(0f, 1f);
+            clone.sizeDelta = (max - min) * scale;
+            clone.anchoredPosition = new Vector2(min.x - canvasRect.xMin, max.y - canvasRect.yMax) * scale;
+            clone.localScale = Vector3.one;
+            return clone;
+        }
+        finally { EditorSceneManager.CloseScene(ingame, true); }
     }
 
     // 인게임 상단 WAVE·시간 글자 자리 대역 (HP바 기준 위쪽)

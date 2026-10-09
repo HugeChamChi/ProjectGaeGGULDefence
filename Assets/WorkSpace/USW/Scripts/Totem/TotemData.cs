@@ -29,6 +29,19 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     /// 대괄호가 없고 EffectGroups가 있으면 description을 색 없는 일반 설명으로 먼저 보여준 뒤 그 아래 효과별 색상 줄을 붙인다.</summary>
     public string GetDisplayDescription()
     {
+        if (GrowthStages != null && GrowthStages.Count > 0)
+        {
+            var growthLines = new List<string>();
+            foreach(var stage in GrowthStages)
+            {
+                if(stage==null || stage.Offsets==null || stage.Offsets.Count==0) continue;
+                int minX=int.MaxValue,minY=int.MaxValue,maxX=int.MinValue,maxY=int.MinValue;
+                foreach(var o in stage.Offsets){minX=Mathf.Min(minX,o.x);minY=Mathf.Min(minY,o.y);maxX=Mathf.Max(maxX,o.x);maxY=Mathf.Max(maxY,o.y);}
+                growthLines.Add($"{stage.Name} · {stage.RequiredSeconds/60:0.#}분 · {maxX-minX+1}×{maxY-minY+1} · 공격력 +{stage.AttackBonus*100:0.#}%");
+            }
+            growthLines.Add($"만개 후 전투 {GrowthHarvestSeconds/60:0.#}분마다 식량 {GrowthHarvestFood:0.#}. 이동·회수 시 초기화, 회전 유지.");
+            return string.Join("\n",growthLines);
+        }
         if (!string.IsNullOrEmpty(description) && description.Contains('['))
             return ApplyInlineGroupColors(description, EffectGroups);
         if (!HasEffectGroups) return description;
@@ -78,9 +91,13 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [Header("보조 투사체 (TotemBonusProjectile)")]
     public TotemBonusProjectileSettings BonusProjectile = new TotemBonusProjectileSettings();
 
-    /// <summary>처치 수별 범위 프리셋.</summary>
-    [Header("처치별 범위 성장 (TotemKillRangeGrowth)")]
+    /// <summary>전투 시간별 범위와 공격력 단계.</summary>
+    [Header("뿌리내림 (TotemKillRangeGrowth)")]
     public List<TotemGrowthStage> GrowthStages = new List<TotemGrowthStage>();
+    /// <summary>만개 이후 식량 수확 간격(전투 초).</summary>
+    [Min(0.1f)] public float GrowthHarvestSeconds = 60;
+    /// <summary>수확당 식량.</summary>
+    [Min(0)] public float GrowthHarvestFood = 60;
 
     /// <summary>조커 생성 주기/유닛 구성.</summary>
     [Header("조커 소환 (TotemWildcardSpawner)")]
@@ -180,6 +197,9 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     /// <summary>배치 전 UI 미리보기용 오프셋 (GridManager 불필요).</summary>
     public List<Vector2Int> GetEffectPreviewOffsets()
     {
+        if(GrowthStages != null)
+            foreach(var stage in GrowthStages)
+                if(stage != null && stage.RequiredSeconds == 0) return new List<Vector2Int>(stage.Offsets);
         if (!HasEffectGroups) return CollectPreviewOffsets(effectRanges);
         var offsets = new List<Vector2Int>();
         foreach (var group in EffectGroups)

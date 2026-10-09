@@ -42,9 +42,13 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>자동 및 수동 스킬, 스킬 이벤트와 게이지를 사용할 수 있는지 여부.</summary>
     public virtual bool CanUseSkill => true;
     public virtual bool CanAutoSkill => CanUseSkill;
+    /// <summary>시간 충전 대신 고유 자원을 사용하는 유닛은 false를 반환한다.</summary>
+    public virtual bool UsesTimedSkillCharge => true;
+    /// <summary>자동 스킬의 충전 완료 판단. 사용 가능 상태 검사는 공통 루프가 담당한다.</summary>
+    public virtual bool IsSkillChargeReady(float elapsed, float interval) => elapsed >= interval;
 
     /// <summary>자동/수동 스킬의 쿨다운 표시 여부. 패시브·조커·0 쿨다운은 회색 바로 표시합니다.</summary>
-    public bool HasSkillCooldownGauge
+    public virtual bool HasSkillCooldownGauge
     {
         get
         {
@@ -111,6 +115,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     private UnitResourceComponent _resource;
     private UnitStunState _stun;
     /// <summary>현재 공격/스킬/생산을 제한하는 스턴 상태.</summary>
+    /// <summary>배치는 유지하고 봉인 칸의 작동만 중단한다.</summary>
+    public bool IsCellSealed => currentCell != null && currentCell.Model.IsSealed;
     public bool IsStunned => _stun != null && _stun.IsStunned;
     /// <summary>향후 유닛별 스턴 면역 확장점.</summary>
     public virtual bool StunImmune => false;
@@ -173,7 +179,11 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _buff.Init(this, deps);
         deps.BuffManager?.ApplyActiveGlobalBuffsTo(this);
         deps.GridManager?.RegisterUnitStatus(this);
+        OnInitialized(deps);
     }
+
+    /// <summary>Connect unit-specific dependencies before placement can start the first attack.</summary>
+    protected virtual void OnInitialized(UnitDependencies dependencies) { }
 
     public void OnPlaced(CurrencyManager currency, BossBase boss, GridCell cell = null)
     {
@@ -260,7 +270,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void InvokeOnAttack() => onAttack?.Invoke();
     public void InvokeOnSkillFull() 
     {
-        if (!CanUseSkill || IsStunned) return;
+        if (!CanUseSkill || IsStunned || IsCellSealed) return;
         onSkillFull?.Invoke();
         OnSkillFull();
         ApplySkillDebuff();
@@ -268,7 +278,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     
     protected virtual void OnSkillFull() { }
 
-    public float SkillGaugeProgress 
+    public virtual float SkillGaugeProgress
     {
         get 
         {

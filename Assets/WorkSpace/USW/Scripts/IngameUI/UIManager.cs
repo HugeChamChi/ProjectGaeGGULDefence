@@ -91,6 +91,8 @@ public class UIManager : MonoBehaviour
     {
         // DroneManager → BossManager → UIManager 순환을 피하도록 기존 Start 시점에만 조회한다.
         VContainer.IObjectResolverExtensions.TryResolve(_resolver, out _droneManager);
+        if (_droneManager != null && _bossHpBar != null)
+            gameObject.AddComponent<HackingHud>().Initialize(_droneManager.Hacking, _bossHpBar);
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
