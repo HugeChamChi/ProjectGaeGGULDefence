@@ -14,26 +14,63 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DescriptionTermCatalog
   Entries:
   - Id: combat-drone
-    DisplayName: 전투 드론
+    DisplayName: "\uC804\uD22C \uB4DC\uB860"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 베탕·감망·델탕이 운용하는 일반 공격용 드론입니다. 알팡 액티브 스킬의 공격에도 참여합니다. 추가 전투 드론은 본체의 스킬을 대신 사용하지 않습니다.
+    Body: "\uBCA0\uD0D5\xB7\uAC10\uB9DD\xB7\uB378\uD0D5\uC774 \uC6B4\uC6A9\uD558\uB294
+      \uC77C\uBC18 \uACF5\uACA9\uC6A9 \uB4DC\uB860\uC785\uB2C8\uB2E4. \uC54C\uD321
+      \uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC758 \uACF5\uACA9\uC5D0\uB3C4 \uCC38\uC5EC\uD569\uB2C8\uB2E4.
+      \uCD94\uAC00 \uC804\uD22C \uB4DC\uB860\uC740 \uBCF8\uCCB4\uC758 \uC2A4\uD0AC\uC744
+      \uB300\uC2E0 \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
   - Id: bomb-drone
-    DisplayName: 자폭 드론
+    DisplayName: "\uC790\uD3ED \uB4DC\uB860"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 베탕의 스킬로 생성되어 보스에게 접근한 뒤 폭발하는 드론입니다. 일반 공격용 전투 드론과 별도로 생성됩니다.
+    Body: "\uBCA0\uD0D5\uC758 \uC2A4\uD0AC\uB85C \uC0DD\uC131\uB418\uC5B4 \uBCF4\uC2A4\uC5D0\uAC8C
+      \uC811\uADFC\uD55C \uB4A4 \uD3ED\uBC1C\uD558\uB294 \uB4DC\uB860\uC785\uB2C8\uB2E4.
+      \uC77C\uBC18 \uACF5\uACA9\uC6A9 \uC804\uD22C \uB4DC\uB860\uACFC \uBCC4\uB3C4\uB85C
+      \uC0DD\uC131\uB429\uB2C8\uB2E4."
   - Id: alphan-active
-    DisplayName: 알팡 액티브
+    DisplayName: "\uC54C\uD321 \uC561\uD2F0\uBE0C"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 알팡 족장의 액티브 스킬입니다. 필드의 전투 드론이 공격에 참여합니다. 선택지에 따라 쿨타임, 발사 횟수, 피해 또는 감망 버프 발동이 달라집니다.
+    Body: "\uC54C\uD321 \uC871\uC7A5\uC758 \uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC785\uB2C8\uB2E4.
+      \uD544\uB4DC\uC758 \uC804\uD22C \uB4DC\uB860\uC774 \uACF5\uACA9\uC5D0 \uCC38\uC5EC\uD569\uB2C8\uB2E4.
+      \uC120\uD0DD\uC9C0\uC5D0 \uB530\uB77C \uCFE8\uD0C0\uC784, \uBC1C\uC0AC \uD69F\uC218,
+      \uD53C\uD574 \uB610\uB294 \uAC10\uB9DD \uAE30\uD3ED \uBC1C\uB3D9\uC774 \uB2EC\uB77C\uC9D1\uB2C8\uB2E4."
   - Id: gamman-buff
-    DisplayName: 감망 버프
+    DisplayName: "\uAC10\uB9DD \uAE30\uD3ED"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 감망의 스킬이 필드 드론의 공격력과 공격속도를 강화하는 효과입니다. 주파수 동조는 필드 드론 수에 따른 추가 배율을 상한까지 더하고, 긴급 교신은 알팡 액티브 사용 시 배치된 감망의 버프를 적용합니다.
+    Body: "\uAC10\uB9DD\uC740 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uC18C\uBE44\uD574
+      \uAE30\uBCF8 \uC2A4\uD0AC \uD53C\uD574\uC5D0 \uCD94\uAC00 \uD53C\uD574\uB97C
+      \uB354\uD569\uB2C8\uB2E4. \uC8FC\uD30C\uC218 \uB3D9\uC870\uB294 \uC2A4\uD0DD
+      \uCD94\uAC00 \uD53C\uD574 \uBC30\uC728\uC744 \uB192\uC774\uACE0, \uAE34\uAE09
+      \uAD50\uC2E0\uC740 \uC54C\uD321 \uC561\uD2F0\uBE0C \uC0AC\uC6A9 \uC2DC \uAC10\uB9DD\uC758
+      \uAE30\uD3ED\uC744 \uBC1C\uB3D9\uD569\uB2C8\uB2E4."
   - Id: zeltan-production
-    DisplayName: 젤탕 자체 식량 생산
+    DisplayName: "\uC824\uD0D5 \uC790\uCCB4 \uC2DD\uB7C9 \uC0DD\uC0B0"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 젤탕 본체가 생산하는 식량입니다. 드론당 군단 식량 생산량과 구분됩니다. 에어프라이기는 자체 생산량을 늘리고 정해진 주기마다 모아서 지급합니다.
+    Body: "\uC824\uD0D5 \uBCF8\uCCB4\uAC00 \uC0DD\uC0B0\uD558\uB294 \uC2DD\uB7C9\uC785\uB2C8\uB2E4.
+      \uB4DC\uB860\uB2F9 \uAD70\uB2E8 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9\uACFC \uAD6C\uBD84\uB429\uB2C8\uB2E4.
+      \uC5D0\uC5B4\uD504\uB77C\uC774\uAE30\uB294 \uC790\uCCB4 \uC0DD\uC0B0\uB7C9\uC744
+      \uB298\uB9AC\uACE0 \uC815\uD574\uC9C4 \uC8FC\uAE30\uB9C8\uB2E4 \uBAA8\uC544\uC11C
+      \uC9C0\uAE09\uD569\uB2C8\uB2E4."
   - Id: merge
-    DisplayName: 합성
+    DisplayName: "\uD569\uC131"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: 같은 종류와 등급의 유닛을 합쳐 다음 등급 유닛을 만드는 행동입니다. 지원 요청 바람은 합성이 일어날 때 추가 노말 유닛 생성 확률을 적용합니다.
+    Body: "\uAC19\uC740 \uC885\uB958\uC640 \uB4F1\uAE09\uC758 \uC720\uB2DB\uC744
+      \uD569\uCCD0 \uB2E4\uC74C \uB4F1\uAE09 \uC720\uB2DB\uC744 \uB9CC\uB4DC\uB294
+      \uD589\uB3D9\uC785\uB2C8\uB2E4. \uC9C0\uC6D0 \uC694\uCCAD \uBC14\uB78C\uC740
+      \uD569\uC131\uC774 \uC77C\uC5B4\uB0A0 \uB54C \uCD94\uAC00 \uB178\uB9D0 \uC720\uB2DB
+      \uC0DD\uC131 \uD655\uB960\uC744 \uC801\uC6A9\uD569\uB2C8\uB2E4."
+  - Id: hacking-stack
+    DisplayName: "\uD574\uD0B9 \uC2A4\uD0DD"
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: "\uB378\uD0D5\uC774 \uC77C\uBC18 \uACF5\uACA9\uC73C\uB85C \uC644\uCDA9\uD55C
+      \uB4A4 \uC0DD\uC0B0\uD558\uB294 \uC790\uC6D0\uC785\uB2C8\uB2E4. \uAC10\uB9DD\uC740
+      \uB300\uC0C1\uC758 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uB4F1\uAE09\uBCC4 \uD55C\uB3C4\uAE4C\uC9C0
+      \uC18C\uBE44\uD574 \uC2A4\uD0AC\uC5D0 \uCD94\uAC00 \uD53C\uD574\uB97C \uB354\uD569\uB2C8\uB2E4."
+  - Id: deltan-charge
+    DisplayName: "\uB378\uD0D5 \uC644\uCDA9"
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: "\uB378\uD0D5\uC740 \uC77C\uBC18 \uACF5\uACA9\uC73C\uB85C \uCDA9\uC804\uD569\uB2C8\uB2E4.
+      \uD544\uC694\uD55C \uACF5\uACA9 \uD69F\uC218\uB97C \uCC44\uC6B0\uBA74 \uD574\uD0B9
+      \uC2A4\uD0DD\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4. \uACF5\uACA9 \uC18D\uB3C4\uAC00
+      \uB192\uC73C\uBA74 \uB354 \uBE60\uB974\uAC8C \uCDA9\uC804\uD569\uB2C8\uB2E4."

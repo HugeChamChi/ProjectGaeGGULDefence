@@ -28,13 +28,13 @@ public static class DescriptionFormatter
             if (token.StartsWith("term:", StringComparison.Ordinal))
             {
                 string id = token.Substring(5);
-                if (resolver == null || !resolver.TryResolve(id, out var term)) output.Append('[').Append(id).Append(']');
+                if (resolver == null || !resolver.TryResolve(id, out var term)) output.Append('「').Append(id).Append('」');
                 else
                 {
                     string name = (term.DisplayName ?? id).Replace("<", "\uFF1C").Replace(">", "\uFF1E");
                     bool link = interactive && !insideLink && !string.IsNullOrWhiteSpace(term.Body);
                     if (link) output.Append("<link=\"").Append(id).Append("\"><color=#").Append(ColorUtility.ToHtmlStringRGB(term.Color)).Append("><u>");
-                    output.Append('[').Append(name).Append(']');
+                    output.Append('「').Append(name).Append('」');
                     if (link) output.Append("</u></color></link>");
                 }
             }

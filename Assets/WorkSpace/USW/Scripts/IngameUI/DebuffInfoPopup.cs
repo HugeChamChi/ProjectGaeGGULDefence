@@ -53,18 +53,18 @@ public sealed class DebuffInfoPopup : UI_Base, IDescriptionPopup
 
         var shield = Rect(root.transform, "Backdrop", Vector2.zero, Vector2.one);
         var dim = shield.gameObject.AddComponent<Image>();
-        dim.color = new Color(0, 0, 0, 0.65f);
+        dim.color = new Color(0, 0, 0, 0.45f);
         shield.gameObject.AddComponent<Button>().onClick.AddListener(view.Close);
         view._safeArea = Rect(root.transform, "SafeArea", Vector2.zero, Vector2.one);
         var panel = Rect(view._safeArea, "Panel", new Vector2(0.07f, 0.27f), new Vector2(0.93f, 0.73f));
         view._panel = panel.gameObject;
         var background = panel.gameObject.AddComponent<Image>();
-        background.color = new Color(0.11f, 0.09f, 0.17f, 0.98f);
+        background.color = new Color(0, 0, 0, 0.85f);
         view._title = Text(panel, "Title", source, 42f, new Vector2(0.06f, 0.83f), new Vector2(0.83f, 0.97f));
         view._title.fontStyle = FontStyles.Bold;
-        view._title.alignment = TextAlignmentOptions.MidlineLeft;
+        view._title.alignment = TextAlignmentOptions.TopLeft;
         var close = Rect(panel, "Close", new Vector2(0.85f, 0.84f), new Vector2(0.98f, 0.98f));
-        close.gameObject.AddComponent<Image>().color = new Color(0.24f, 0.21f, 0.3f);
+        close.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.08f);
         close.gameObject.AddComponent<Button>().onClick.AddListener(view.Close);
         var closeText = Text(close, "Label", source, 42f, Vector2.zero, Vector2.one);
         closeText.text = "×"; closeText.alignment = TextAlignmentOptions.Center;
@@ -181,7 +181,7 @@ public sealed class DebuffInfoPopup : UI_Base, IDescriptionPopup
         text.font = source.font;
         text.fontSharedMaterial = source.fontSharedMaterial;
         text.fontSize = size;
-        text.color = new Color(1f, 0.96f, 0.86f);
+        text.color = Color.white;
         text.raycastTarget = false;
         text.textWrappingMode = TextWrappingModes.Normal;
         return text;

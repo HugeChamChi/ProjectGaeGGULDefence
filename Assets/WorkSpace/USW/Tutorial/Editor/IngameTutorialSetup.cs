@@ -36,8 +36,9 @@ public static class IngameTutorialSetup
                 var source = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/WorkSpace/USW/Data/DroneUnits/UnitData_" + name + ".asset");
                 return CopyAsset(source, "TutorialUnit_" + name);
             }
-            var attack = CloneUnit("Deltan");
-            settings.SpawnUnits = new[] { attack, attack, CloneUnit("Zeltan"), CloneUnit("Gamman") };
+            var attack = CloneUnit("Betan");
+            settings.SpawnUnits = new[] { attack, attack, CloneUnit("Gamman"), CloneUnit("Zeltan") };
+            settings.MergeUnit = CloneUnit("Deltan");
             settings.SpawnCells = new[] { new Vector2Int(1,1), new Vector2Int(2,1), new Vector2Int(1,2), new Vector2Int(2,2) };
             AssetDatabase.CreateAsset(settings, DataPath + "/IngameTutorialSettings.asset");
         }
@@ -133,7 +134,7 @@ public static class IngameTutorialSetup
             var so = new SerializedObject(factory);
             so.FindProperty("_useAuthoredParty").boolValue = true;
             var list = so.FindProperty("unitDataList");
-            var units = settings.SpawnUnits.Distinct().ToArray(); list.arraySize = units.Length;
+            var units = settings.SpawnUnits.Append(settings.MergeUnit).Where(u => u != null).Distinct().ToArray(); list.arraySize = units.Length;
             for(int i=0;i<units.Length;i++) list.GetArrayElementAtIndex(i).objectReferenceValue = units[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -259,15 +260,11 @@ public static class IngameTutorialSetup
     private static void ConfigureFirstBattle(Scene scene)
     {
         var settings = AssetDatabase.LoadAssetAtPath<IngameTutorialSettings>(DataPath + "/IngameTutorialSettings.asset");
-        settings.MergeUnit = settings.SpawnUnits[0];
+        TutorialHackingDeckSetup.ConfigureSettings(settings);
         var earthquake = AssetDatabase.LoadAssetAtPath<BossPatternData>("Assets/WorkSpace/USW/Data/BossData/Crocodile/CrocodileEarthquake.asset");
         settings.CounterPattern = CopyAsset(earthquake, "TutorialCounterPattern");
         settings.CounterPattern.interval = 3f;
         EditorUtility.SetDirty(settings.CounterPattern);
-        settings.LevelUpChoices = new[] { 9, 4, 6 }.Select(id =>
-            AssetDatabase.LoadAssetAtPath<LevelUpData>($"Assets/WorkSpace/USW/Data/SelectionData/DroneSelection{id}.asset")).ToArray();
-        settings.TotemChoices = new[] { 1005, 1001, 1006 }.Select(id =>
-            AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Playable/TD{id}Data.asset")).ToArray();
         EditorUtility.SetDirty(settings);
         Set(One<MergeManager>(scene), "_tutorialSettings", settings);
         Set(One<LevelUpUI>(scene), "_tutorialSettings", settings);
@@ -313,6 +310,7 @@ public static class IngameTutorialSetup
         }
         EditorUtility.SetDirty(plan);
         var director = One<IngameTutorialDirector>(scene);
+        TutorialHackingDeckSetup.ConfigureLessons();
         var directorSo = new SerializedObject(director);
         var summon = (Button)directorSo.FindProperty("_summonButton").objectReferenceValue;
         Set(director, "_summonGroup", Group(summon.transform.parent.gameObject));

@@ -16,8 +16,10 @@ MonoBehaviour:
   chooseName: "\uB139?"
   tier: 2
   spawnRate: 1
-  description: "\uB378\uD0D5 \uD574\uD0B9 \uC2A4\uD0AC\uC758 \uC0DD\uC0B0\uB7C9\uC774
-    1\uC2A4\uD0DD \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  description: "\uB378\uD0D5\uC758 {term:hacking-stack} \uC0DD\uC0B0\uB7C9\uC774
+    {Count}\uC2A4\uD0DD \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uB378\uD0D5\uC758 {term:hacking-stack} \uC0DD\uC0B0\uB7C9\uC774
+    \uC99D\uAC00\uD569\uB2C8\uB2E4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

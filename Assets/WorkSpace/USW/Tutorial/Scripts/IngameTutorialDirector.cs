@@ -105,7 +105,7 @@ namespace GaeGGUL.Tutorial
                 _input.CanBeginInteraction = _ => false;
                 // Let gameplay Start methods wire their injected services before starting the battle.
                 await Until(() => _initializer.IsReady, token);
-                foreach (var data in _settings.SpawnUnits.Distinct())
+                foreach (var data in _settings.SpawnUnits.Append(_settings.MergeUnit).Distinct())
                     await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 _game.StartGame(false);
                 var lessons = _plan.Lessons;
@@ -176,9 +176,10 @@ namespace GaeGGUL.Tutorial
                 throw new InvalidOperationException("Tutorial requires four authored summons and a matching first pair.");
             if (_settings.MergeUnit == null || _settings.LevelUpChoices == null || _settings.LevelUpChoices.Length != 3 ||
                 _settings.LevelUpChoices.Any(c => c == null) || _settings.TotemChoices == null || _settings.TotemChoices.Length != 3 ||
-                _settings.TotemChoices.Any(t => t == null || !t.isRotatable) || _settings.CounterPattern == null ||
+                _settings.TotemChoices.Any(t => t == null) || _settings.RequiredTotem == null || !_settings.RequiredTotem.isRotatable ||
+                !_settings.TotemChoices.Contains(_settings.RequiredTotem) || _settings.CounterPattern == null ||
                 _settings.CounterPattern.patternType != BossPatternType.Earthquake || _settings.CounterPattern.ImpactTimeSec <= 0)
-                throw new InvalidOperationException("Tutorial requires a fixed merge unit, three choices and three rotatable totems.");
+                throw new InvalidOperationException("Tutorial requires a fixed merge unit, three choices and three totems including a required rotatable reward.");
             if (_plan != null)
             {
                 if (_targets != null && _targets.Where(t => t != null).GroupBy(t => t.Key).Any(g => string.IsNullOrWhiteSpace(g.Key) || g.Count() > 1))
@@ -374,7 +375,7 @@ namespace GaeGGUL.Tutorial
                     _time.Pause(this);
                     await Delay(_settings.RevealSeconds, token);
                     ShowRecipeDialogue();
-                    var item = _upgradeSlots.GetComponentsInChildren<UI_UpgradeItem>().First(i => i.CanUpgrade);
+                    var item = _upgradeSlots.GetComponentsInChildren<UI_UpgradeItem>().First(i => i.UpgradeTarget == _settings.UpgradeTarget && i.CanUpgrade);
                     _currency.AddCurrency(Mathf.Max(0, item.CurrentCost - _currency.Currency));
                     int level = item.CurrentLevel;
                     _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)item.transform));
@@ -434,13 +435,7 @@ namespace GaeGGUL.Tutorial
                     if (_guidedBoss != null) _guidedBoss.Invincible = false;
                     break;
                 case IngameTutorialStage.TotemChoice:
-                    await Until(() => _rewardUI.IsOpen, token);
-                    Block();
-                    await Until(() => _rewardUI.IsReadyForSelection, token);
-                    ShowRecipeDialogue();
-                    await AwarenessAsync(Ui(_rewardUI.ChoiceArea), token);
-                    _overlay.Hide(); _time.Release(this);
-                    await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+                    await ChooseTotemAsync(token);
                     break;
                 case IngameTutorialStage.OpenInventory:
                     _input.CanBeginInteraction = _ => false; _input.AllowPointerClicks = false;
@@ -622,15 +617,47 @@ namespace GaeGGUL.Tutorial
             }
             foreach (var choice in cards) { choice.AllowSelection = false; choice.SetTutorialPreviewOnly(true); }
             card.OnPeekChanged += Peek;
-            _dialogue.ShowText("선택지를 길게 누르면 해당 선택지의\n영향을 받는 유닛이 강조돼요.\n손을 뗀 뒤 눌러 보상을 선택할 수 있어요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText(_settings.ChoicePreviewInstruction, _lessonIndex, _lessonCount, false);
             _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Hold, Ui((RectTransform)card.transform));
-            try { await Until(() => released, token); }
+            try
+            {
+                await Until(() => released && !_levelUpUI.FieldPreviewBlocksInput, token);
+                foreach (var choice in cards) choice.SetTutorialPreviewOnly(false);
+                Canvas.ForceUpdateCanvases();
+                card.DescriptionText.ForceMeshUpdate();
+                if (card.DescriptionText.textInfo.linkCount == 0)
+                    throw new InvalidOperationException("The tutorial choice requires a linked description term.");
+                _dialogue.ShowText(_settings.ChoiceTermInstruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap,
+                    () => ChoiceTermBounds(card.DescriptionText));
+                await Until(() => _levelUpUI.DescriptionBlocksInput, token);
+                _overlay.Hide();
+                _dialogue.Hide();
+                await Until(() => !_levelUpUI.DescriptionBlocksInput, token);
+                _dialogue.ShowText(_settings.ChoiceSelectInstruction, _lessonIndex, _lessonCount, false);
+            }
             finally
             {
                 if (card != null) card.OnPeekChanged -= Peek;
                 foreach (var choice in cards) if (choice != null) { choice.AllowSelection = true; choice.SetTutorialPreviewOnly(false); }
             }
-            _dialogue.Hide();
+        }
+
+        private static Rect ChoiceTermBounds(TMPro.TMP_Text text)
+        {
+            var link = text.textInfo.linkInfo[0];
+            var canvas = text.GetComponentInParent<Canvas>();
+            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            for (int i = link.linkTextfirstCharacterIndex; i < link.linkTextfirstCharacterIndex + link.linkTextLength; i++)
+            {
+                var character = text.textInfo.characterInfo[i];
+                var a = RectTransformUtility.WorldToScreenPoint(camera, text.transform.TransformPoint(character.bottomLeft));
+                var b = RectTransformUtility.WorldToScreenPoint(camera, text.transform.TransformPoint(character.topRight));
+                min = Vector2.Min(min, a); max = Vector2.Max(max, b);
+            }
+            return Rect.MinMaxRect(min.x - 8, min.y - 8, max.x + 8, max.y + 8);
         }
 
         private async UniTask AwarenessAsync(Func<Rect> target, CancellationToken token)
@@ -658,6 +685,43 @@ namespace GaeGGUL.Tutorial
         private Func<Rect> ButtonArea(Button button) => () => _overlay.ScreenRect(
             (RectTransform)button.transform, button.targetGraphic != null ? button.targetGraphic.raycastPadding : Vector4.zero);
         private Func<Rect> Ui(RectTransform target) => () => _overlay.ScreenRect(target);
+        private Rect RequiredTotemBounds()
+        {
+            var icon = _overlay.ScreenRect(_rewardUI.RequiredChoiceArea);
+            var description = _overlay.ScreenRect(_rewardUI.RequiredChoiceDescriptionArea);
+            return Rect.MinMaxRect(Mathf.Min(icon.xMin, description.xMin), Mathf.Min(icon.yMin, description.yMin),
+                Mathf.Max(icon.xMax, description.xMax), Mathf.Max(icon.yMax, description.yMax));
+        }
+        private async UniTask ChooseTotemAsync(CancellationToken token)
+        {
+            var dialogueRect = (RectTransform)_dialogue.transform;
+            var min = dialogueRect.anchorMin; var max = dialogueRect.anchorMax;
+            var offsetMin = dialogueRect.offsetMin; var offsetMax = dialogueRect.offsetMax;
+            // The required reward is the top band; keep its icon and description uncovered.
+            dialogueRect.anchorMin = new Vector2(0.06f, 0.46f);
+            dialogueRect.anchorMax = new Vector2(0.94f, 0.61f);
+            dialogueRect.offsetMin = dialogueRect.offsetMax = Vector2.zero;
+            try
+            {
+                await Until(() => _rewardUI.IsOpen, token);
+                Block();
+                await Until(() => _rewardUI.IsReadyForSelection, token);
+                ShowRecipeDialogue();
+                await AwarenessAsync(Ui(_rewardUI.ChoiceArea), token);
+                _dialogue.ShowText(_currentRecipe.Instruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
+                await Until(() => _rewardUI.IsReadyForConfirmation, token);
+                _dialogue.ShowText("강조된 버튼을 눌러 토템을 받아 보세요.", _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui(_rewardUI.ConfirmationArea));
+                await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+                _overlay.Hide(); _time.Release(this);
+            }
+            finally
+            {
+                dialogueRect.anchorMin = min; dialogueRect.anchorMax = max;
+                dialogueRect.offsetMin = offsetMin; dialogueRect.offsetMax = offsetMax;
+            }
+        }
         private Rect ScreenBounds(Bounds bounds)
         {
             var min = new Vector2(float.MaxValue, float.MaxValue);

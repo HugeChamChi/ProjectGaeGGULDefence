@@ -24,14 +24,14 @@ public static class ChoiceDescriptionContent
                 card.description = "{term:zeltan-production}이 {ValuePercent}% 증가하며 {Interval}초마다 모아서 지급됩니다.";
                 card.simpleDescription = "{term:zeltan-production}이 증가하며 주기적으로 모아서 지급됩니다."; break;
             case DroneSelectionKind.DeltanDefenseReduction:
-                card.description = "델탕의 {term:debuff:1003} 스킬에 방어력 감소 {ValuePercent}%를 추가합니다. 기존 디버프와 함께 만료됩니다.";
-                card.simpleDescription = "델탕의 {term:debuff:1003} 스킬에 방어력 감소를 추가합니다. 기존 디버프와 함께 만료됩니다."; break;
+                card.description = "델탕의 {term:hacking-stack} 생산량이 {Count}스택 증가합니다.";
+                card.simpleDescription = "델탕의 {term:hacking-stack} 생산량이 증가합니다."; break;
             case DroneSelectionKind.DeltanDamageTaken:
-                card.description = "델탕의 {term:debuff:1003} 스킬에 {value}%p를 추가합니다. 이번 런 동안 고정됩니다.";
-                card.simpleDescription = "델탕의 {term:debuff:1003} 스킬을 무작위로 강화합니다. 이번 런 동안 고정됩니다."; break;
+                card.description = "델탕의 {term:hacking-stack} 생산량이 {value}% 증가합니다. 소수 생산분은 다음 시전으로 이월됩니다.";
+                card.simpleDescription = "델탕의 {term:hacking-stack} 생산량이 증가합니다."; break;
             case DroneSelectionKind.DeltanCooldown:
-                card.description = "델탕의 {term:debuff:1003} 스킬 쿨타임이 {ValuePercent}% 감소합니다.";
-                card.simpleDescription = "델탕의 {term:debuff:1003} 스킬 쿨타임이 감소합니다."; break;
+                card.description = "{term:deltan-charge}에 필요한 공격 횟수가 {ValuePercent}% 감소합니다 (최소 1회 감소).";
+                card.simpleDescription = "{term:deltan-charge}에 필요한 공격 횟수가 감소합니다."; break;
             case DroneSelectionKind.AlphanCooldown:
                 card.description = "{term:alphan-active} 쿨타임이 {ValuePercent}% 감소합니다.";
                 card.simpleDescription = "{term:alphan-active} 쿨타임이 감소합니다."; break;

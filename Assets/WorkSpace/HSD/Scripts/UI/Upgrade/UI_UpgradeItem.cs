@@ -31,6 +31,7 @@ namespace HSD.UI.Upgrade
         private UI_UpgradeItemFeedback _feedback;
 
         public bool CanUpgrade => _canUpgrade;
+        public string UpgradeTarget => _target;
         public int CurrentCost => _currentCost;
         public int CurrentLevel { get; private set; }
 

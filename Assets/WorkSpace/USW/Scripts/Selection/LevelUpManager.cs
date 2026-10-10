@@ -28,6 +28,9 @@ public class LevelUpManager : MonoBehaviour
     public string GetChoiceDescription(LevelUpData card)
     {
         if (card == null) return string.Empty;
+        if ((card.description ?? string.Empty).Contains("{term:"))
+            return DescriptionFormatter.Format(new ChoiceDescriptionAdapter(card, this).Capture(), true,
+                new DescriptionTermResolver(Resources.Load<DescriptionTermCatalog>("DescriptionTermCatalog")), false);
         if (card.droneEffect != null && card.droneEffect.Kind >= DroneSelectionKind.DeltanBackdoor)
             return (card.description ?? string.Empty).Replace("{value}",(card.droneEffect.Value*100f).ToString("0.#"))
                 .Replace("{count}",card.droneEffect.Count.ToString());

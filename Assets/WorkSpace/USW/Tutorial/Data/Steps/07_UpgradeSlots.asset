@@ -17,7 +17,8 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 7
-    Instruction: "식량을 사용해 유닛을 강화할 수 있어요.\n강조된 카드를 <color=#D66A27>한 번 강화</color>해 보세요."
+    Instruction: "\uC2DD\uB7C9\uC73C\uB85C <color=#D66A27>\u300C\uB378\uD0D5\u300D</color>\uC744
+      \uD55C \uBC88 \uAC15\uD654\uD574 \uBCF4\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

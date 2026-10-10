@@ -17,7 +17,7 @@ MonoBehaviour:
     delayBeforeExecute: 0.5
     useDim: 0
     Stage: 1
-    Instruction: "식량을 사용해 <color=#D66A27>유닛을 소환</color>할 수 있어요.\n보스를 처치할 유닛을 소환해 보세요."
+    Instruction: "\uCD9C\uACA9 \uBC84\uD2BC\uC744 \uB20C\uB7EC <color=#D66A27>\u300C\uC720\uB2DB\u300D</color>\uC744 \uC18C\uD658\uD574 \uBCF4\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

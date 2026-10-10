@@ -85,8 +85,8 @@ public static class ChoiceDescriptionChecks
         values["number"] = "999";
         string output = DescriptionFormatter.Format(snapshot, false, resolver, true);
         Assert(output.Contains("<color=red>20%</color>"), "Snapshot must copy values and preserve TMP markup; empty simple falls back.");
-        Assert(output.Contains("<link=\"valid\">") && output.Contains("[\uFF1Cterm\uFF1E]"), "Known terms link and names stay plain text.");
-        Assert(output.Contains("[missing]") && output.Contains("[Empty]") && !output.Contains("<link=\"empty\">"), "Missing and empty terms stay noninteractive.");
+        Assert(output.Contains("<link=\"valid\">") && output.Contains("「\uFF1Cterm\uFF1E」"), "Known terms link and names stay plain text.");
+        Assert(output.Contains("「missing」") && output.Contains("「Empty」") && !output.Contains("<link=\"empty\">"), "Missing and empty terms stay noninteractive.");
         Assert(output.Contains("{unknown}") && output.Contains("{open") && output.Contains("[1~10%]"), "Unknown/malformed tokens and ordinary brackets are retained.");
         Assert(!DescriptionFormatter.Format(snapshot, true, resolver, false).Contains("<link"), "Result descriptions contain no new links.");
         var nested = new DescriptionSnapshot("<link=\"existing\">{term:valid}</link> <color=\"{term:valid}\">x</color>", "short");

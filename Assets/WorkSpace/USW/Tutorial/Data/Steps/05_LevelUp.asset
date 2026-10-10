@@ -17,7 +17,9 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 5
-    Instruction: "게이지가 가득 차면 <color=#D66A27>선택지 보상</color>을 얻어요.\n유닛을 강화할 보상을 선택해 보세요."
+    Instruction: "\uAC8C\uC774\uC9C0\uAC00 \uAC00\uB4DD \uCC28\uBA74 <color=#D66A27>\u300C\uC120\uD0DD\uC9C0
+      \uBCF4\uC0C1\u300D</color>\uC744 \uC5BB\uC5B4\uC694.\n\uC720\uB2DB\uC744 \uAC15\uD654\uD560
+      \uBCF4\uC0C1\uC744 \uC120\uD0DD\uD574 \uBCF4\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

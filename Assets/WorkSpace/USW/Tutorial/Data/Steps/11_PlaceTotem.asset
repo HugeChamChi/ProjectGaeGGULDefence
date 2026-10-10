@@ -17,7 +17,9 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 11
-    Instruction: "토템을 강조된 빈칸으로\n<color=#D66A27>끌어서 설치</color>해 보세요."
+    Instruction: "\u300C\uAC00\uC18D \uD1A0\uD15C\u300D\uC744 \uAC15\uC870\uB41C
+      \uBE48\uCE78\uC73C\uB85C\n<color=#D66A27>\uB04C\uC5B4\uC11C \uC124\uCE58</color>\uD574
+      \uBCF4\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

@@ -17,7 +17,9 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 4
-    Instruction: "같은 유닛을 겹쳐 <color=#D66A27>합성</color>하면\n더 강한 유닛을 얻을 수 있어요."
+    Instruction: "\uAC15\uC870\uB41C \uB450 \uC720\uB2DB\uC744 \uACB9\uCCD0 <color=#D66A27>\u300C\uD569\uC131\u300D</color>\uD574
+      \uBCF4\uC138\uC694.\n\uAC19\uC740 \uC720\uB2DB\uC744 \uD569\uC131\uD558\uBA74
+      \uB354 \uAC15\uD55C \uC720\uB2DB\uC744 \uC5BB\uC744 \uC218 \uC788\uC5B4\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

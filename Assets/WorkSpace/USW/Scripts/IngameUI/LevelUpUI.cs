@@ -38,6 +38,7 @@ public class LevelUpUI : MonoBehaviour
     private readonly Dictionary<LevelUpCardUI, DescriptionSnapshot> _descriptions = new();
     private bool _descriptionSubscribed;
     public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true;
+    public bool FieldPreviewBlocksInput => obj != null && obj.GetComponentInChildren<UI_Peekthrough>(true)?.BlocksSelection == true;
     public float SelectionTimeRemaining { get; private set; }
 
     [SerializeField] private GameObject    obj;

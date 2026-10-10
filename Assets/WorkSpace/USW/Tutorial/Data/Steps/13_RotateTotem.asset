@@ -17,7 +17,10 @@ MonoBehaviour:
     delayBeforeExecute: 1.5
     useDim: 0
     Stage: 13
-    Instruction: "토템을 <color=#D66A27>길게 누른 뒤 옆으로</color> 끌어 보세요.\n회전하여 효과 범위의 방향을 바꿀 수 있어요."
+    Instruction: "\uD1A0\uD15C\uC744 <color=#D66A27>\uAE38\uAC8C \uB204\uB978 \uB4A4
+      \uC606\uC73C\uB85C</color> \uB04C\uC5B4 \uBCF4\uC138\uC694.\n\uD68C\uC804\uD558\uC5EC
+      \u300C\uACF5\uACA9 \uC18D\uB3C4\u300D \uC99D\uAC00 \uBC94\uC704\uC758 \uBC29\uD5A5\uC744
+      \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 
