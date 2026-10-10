@@ -68,8 +68,8 @@ public static class DisigmanRailgunFxLabBuilder
         if (idle == null) Debug.LogWarning($"[DisigmanRailgunLab] 베탕 그림 없음: {IdleSprite}");
 
         var lab = new GameObject("DisigmanRailgunFxLab").AddComponent<DisigmanRailgunFxLab>();
-        var basic = Template(lab.transform, "Fx_Basic", BasicTint);
-        var skill = Template(lab.transform, "Fx_Skill", SkillTint);
+        var basic = Template(lab.transform, "Fx_Basic", BasicTint, false);
+        var skill = Template(lab.transform, "Fx_Skill", SkillTint, true);
 
         var so = new SerializedObject(lab);
         so.FindProperty("_unit").objectReferenceValue = unit;
@@ -96,7 +96,9 @@ public static class DisigmanRailgunFxLabBuilder
         Debug.Log($"[DisigmanRailgunLab] 씬 생성: {ScenePath}");
     }
 
-    private static RailgunBeamFx Template(Transform parent, string name, Color tint)
+    // heavy = 스킬 한 발 "슈우우웅 → 콰아아앙": 빨려 드는 알갱이·연속 조임·움츠림 → 떨리는 빔·다중 충격파·파편·잔광.
+    // 여러 마리가 겹쳐 쏘므로 한 발은 작고 짧게 (사용자 요청 2026-10-09: 차지 0.4초, 규모 축소)
+    private static RailgunBeamFx Template(Transform parent, string name, Color tint, bool heavy)
     {
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -109,6 +111,24 @@ public static class DisigmanRailgunFxLabBuilder
         so.FindProperty("_ringMaterial").objectReferenceValue  = Mat("M_SkyLaser_Ring");
         so.FindProperty("_flareMaterial").objectReferenceValue = Mat("M_SkyLaser_Flare");
         so.FindProperty("_tint").colorValue = tint;
+        if (heavy)
+        {
+            so.FindProperty("_chargeMotes").intValue = 10;
+            so.FindProperty("_moteRadius").floatValue = 1.4f;
+            so.FindProperty("_chargeRingPulses").intValue = 3;
+            so.FindProperty("_preFireSqueeze").floatValue = 0.4f;
+            so.FindProperty("_beamHold").floatValue = 0.1f;
+            so.FindProperty("_beamFade").floatValue = 0.2f;
+            so.FindProperty("_beamPopScale").floatValue = 2.1f;
+            so.FindProperty("_beamJitter").floatValue = 0.2f;
+            so.FindProperty("_flashFade").floatValue = 0.3f;
+            so.FindProperty("_impactShockwaves").intValue = 2;
+            so.FindProperty("_debris").intValue = 8;
+            so.FindProperty("_debrisSpeed").vector2Value = new Vector2(2f, 4.5f);
+            so.FindProperty("_debrisLife").floatValue = 0.35f;
+            so.FindProperty("_impactLinger").floatValue = 0.35f;
+            so.FindProperty("_lingerSize").floatValue = 2f;
+        }
         so.ApplyModifiedPropertiesWithoutUndo();
         return fx;
     }

@@ -5,6 +5,8 @@ using UnityEngine;
 /// RailgunProjectile이 Play()로 시작시키며, 시작과 동시에 투사체에서 떨어져 나와 혼자 끝까지 재생한 뒤 스스로 파괴된다
 /// (투사체는 적중 즉시 파괴되므로 빔 잔광을 남기려면 분리해야 한다). 차지 도중 투사체가 사라지면 발사하지 않고 정리한다.
 /// 쿼드는 Awake에서 내장 Quad 메시로 만들고 머티리얼은 하늘 레이저(SkyLaser) 공용 머티리얼을 그대로 쓴다.
+/// 강화 항목(빨려 드는 빛 알갱이·연속 조임 고리·발사 직전 움츠림·빔 떨림·다중 충격파·파편·잔광)은 기본 0(꺼짐) —
+/// 스킬 한 발처럼 "슈우우웅 → 콰아아앙"이 필요한 템플릿만 켠다 (사용자 요청 2026-10-09).
 /// 시간은 scaled — 인게임 일시정지 시 함께 멈춘다.
 /// </summary>
 public class RailgunBeamFx : MonoBehaviour
@@ -16,6 +18,10 @@ public class RailgunBeamFx : MonoBehaviour
 
     private const string FxLayer = "FX";
     private const int OrderAim = 30, OrderBeam = 31, OrderGlow = 32, OrderRing = 33, OrderCore = 34, OrderFlash = 35, OrderFlare = 36;
+    private const int OrderMote = 37, OrderDebris = 37, OrderLinger = 29;
+    private const float MoteTravelShare = 0.45f;   // 알갱이 하나가 차지 시간 중 날아오는 비율
+    private const float MoteStreak = 3.5f;         // 알갱이가 날아오는 방향으로 늘어나는 배율
+    private const float DebrisStreak = 3f;
 
     [Header("머티리얼 (SkyLaser 공용)")]
     [SerializeField] private Material _beamMaterial;
@@ -42,6 +48,20 @@ public class RailgunBeamFx : MonoBehaviour
     [Tooltip("조준선 깜빡임 속도")]
     [SerializeField] private float _aimFlickerSpeed = 40f;
 
+    [Header("차지 강화 (기본 꺼짐)")]
+    [Tooltip("총구로 빨려 드는 빛 알갱이 수 (0 = 없음)")]
+    [SerializeField] private int _chargeMotes;
+    [Tooltip("알갱이가 출발하는 거리 (월드)")]
+    [SerializeField] private float _moteRadius = 2f;
+    [Tooltip("알갱이 크기 (월드)")]
+    [SerializeField] private float _moteSize = 0.16f;
+    [Tooltip("조여드는 고리 횟수 — 뒤로 갈수록 빨라진다 (1 = 한 번)")]
+    [SerializeField] private int _chargeRingPulses = 1;
+    [Tooltip("발사 직전 빛이 움츠러드는 정도 (0~1) — '…!' 하는 숨 고르기")]
+    [Range(0f, 1f)] [SerializeField] private float _preFireSqueeze;
+    [Tooltip("움츠림 구간 (차지 끝부분 비율)")]
+    [Range(0.02f, 0.5f)] [SerializeField] private float _preFireShare = 0.12f;
+
     [Header("발사")]
     [Tooltip("빔 굵기 (월드)")]
     [SerializeField] private float _beamWidth = 0.42f;
@@ -51,6 +71,8 @@ public class RailgunBeamFx : MonoBehaviour
     [SerializeField] private float _beamHold = 0.05f;
     [Tooltip("빔이 가늘어지며 꺼지는 시간")]
     [SerializeField] private float _beamFade = 0.2f;
+    [Tooltip("유지 중 굵기 떨림 (0 = 없음)")]
+    [Range(0f, 1f)] [SerializeField] private float _beamJitter;
     [Tooltip("총구/착탄 섬광 크기 (월드)")]
     [SerializeField] private float _flashSize = 1.3f;
     [Tooltip("착탄 고리 최대 크기 (월드)")]
@@ -58,7 +80,32 @@ public class RailgunBeamFx : MonoBehaviour
     [Tooltip("섬광이 사그라드는 시간")]
     [SerializeField] private float _flashFade = 0.25f;
 
-    private Renderer _aim, _beam, _chargeGlow, _chargeCore, _chargeRing, _muzzleFlash, _impactFlash, _impactRing, _impactFlare;
+    [Header("착탄 강화 (기본 꺼짐)")]
+    [Tooltip("퍼지는 충격파 고리 수 (1 = 기본 하나)")]
+    [SerializeField] private int _impactShockwaves = 1;
+    [Tooltip("충격파 고리끼리 시작 간격")]
+    [SerializeField] private float _shockwaveInterval = 0.07f;
+    [Tooltip("뒤 고리일수록 커지는 배율")]
+    [SerializeField] private float _shockwaveGrowth = 0.45f;
+    [Tooltip("튀는 파편 수 (0 = 없음)")]
+    [SerializeField] private int _debris;
+    [Tooltip("파편 속도 범위 (월드/초)")]
+    [SerializeField] private Vector2 _debrisSpeed = new Vector2(3f, 7f);
+    [Tooltip("파편 중력 (월드/초²)")]
+    [SerializeField] private float _debrisGravity = 9f;
+    [Tooltip("파편 수명 (초)")]
+    [SerializeField] private float _debrisLife = 0.5f;
+    [Tooltip("파편 크기 (월드)")]
+    [SerializeField] private float _debrisSize = 0.12f;
+    [Tooltip("착탄점 잔광 지속 (초, 0 = 없음)")]
+    [SerializeField] private float _impactLinger;
+    [Tooltip("잔광 크기 (월드)")]
+    [SerializeField] private float _lingerSize = 3f;
+
+    private Renderer _aim, _beam, _chargeGlow, _chargeCore, _chargeRing, _muzzleFlash, _impactFlash, _impactFlare, _linger;
+    private Renderer[] _impactRings, _motes, _debrisQuads;
+    private Vector3[] _moteDirs, _debrisVel;
+    private float[] _moteStart;
     private MaterialPropertyBlock _mpb;
     private Transform _owner;
     private Vector3 _from, _to;
@@ -68,15 +115,29 @@ public class RailgunBeamFx : MonoBehaviour
     private void Awake()
     {
         _mpb = new MaterialPropertyBlock();
+        _linger      = Quad("Linger", _glowMaterial, OrderLinger);
         _aim         = Quad("Aim", _beamMaterial, OrderAim);
         _beam        = Quad("Beam", _beamMaterial, OrderBeam);
         _chargeGlow  = Quad("ChargeGlow", _glowMaterial, OrderGlow);
         _chargeRing  = Quad("ChargeRing", _ringMaterial, OrderRing);
         _chargeCore  = Quad("ChargeCore", _pointMaterial, OrderCore);
         _muzzleFlash = Quad("MuzzleFlash", _flareMaterial, OrderFlare);
-        _impactRing  = Quad("ImpactRing", _ringMaterial, OrderRing);
         _impactFlash = Quad("ImpactFlash", _pointMaterial, OrderFlash);
         _impactFlare = Quad("ImpactFlare", _flareMaterial, OrderFlare);
+
+        _impactRings = new Renderer[Mathf.Max(1, _impactShockwaves)];
+        for (int i = 0; i < _impactRings.Length; i++) _impactRings[i] = Quad("ImpactRing" + i, _ringMaterial, OrderRing);
+
+        int motes = Mathf.Max(0, _chargeMotes);
+        _motes = new Renderer[motes];
+        _moteDirs = new Vector3[motes];
+        _moteStart = new float[motes];
+        for (int i = 0; i < motes; i++) _motes[i] = Quad("Mote" + i, _pointMaterial, OrderMote);
+
+        int debris = Mathf.Max(0, _debris);
+        _debrisQuads = new Renderer[debris];
+        _debrisVel = new Vector3[debris];
+        for (int i = 0; i < debris; i++) _debrisQuads[i] = Quad("Debris" + i, _pointMaterial, OrderDebris);
     }
 
     /// <summary>from(총구) → to(착탄점) 레일건 연출을 시작한다. chargeSeconds 뒤에 빔이 나간다.
@@ -100,8 +161,23 @@ public class RailgunBeamFx : MonoBehaviour
 
         _chargeGlow.transform.position = _chargeCore.transform.position = _chargeRing.transform.position = from;
         _muzzleFlash.transform.position = from;
-        _impactFlash.transform.position = _impactRing.transform.position = _impactFlare.transform.position = to;
+        _impactFlash.transform.position = _impactFlare.transform.position = _linger.transform.position = to;
+        foreach (var r in _impactRings) r.transform.position = to;
         _impactFlare.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f));
+
+        // 알갱이: 고르게 흩어진 방향에서 시차를 두고 출발 (마지막 알갱이도 차지 끝에 도착)
+        for (int i = 0; i < _motes.Length; i++)
+        {
+            float ang = (i + Random.Range(-0.35f, 0.35f)) / _motes.Length * Mathf.PI * 2f;
+            _moteDirs[i] = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f);
+            _moteStart[i] = Random.Range(0f, 1f - MoteTravelShare);
+        }
+        // 파편: 위쪽 반원 위주로 튄다
+        for (int i = 0; i < _debrisQuads.Length; i++)
+        {
+            float ang = Random.Range(-0.15f, 1.15f) * Mathf.PI;
+            _debrisVel[i] = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * Random.Range(_debrisSpeed.x, _debrisSpeed.y) * _scale;
+        }
         Tick();
     }
 
@@ -130,6 +206,7 @@ public class RailgunBeamFx : MonoBehaviour
         {
             _fired = true;
             Hide(_aim); Hide(_chargeRing);
+            foreach (var m in _motes) Hide(m);
         }
 
         float t = _time - _chargeSeconds;
@@ -140,14 +217,46 @@ public class RailgunBeamFx : MonoBehaviour
     {
         float grow = p * p;
         float flicker = 0.75f + 0.25f * Mathf.Sin(_time * _aimFlickerSpeed + _seed);
+        // 발사 직전 숨 고르기: 끝부분에서 빛이 움츠러들었다가 발사로 터진다
+        float squeeze = 1f;
+        if (_preFireSqueeze > 0f && p > 1f - _preFireShare)
+            squeeze = 1f - _preFireSqueeze * Mathf.Sin(Mathf.Clamp01((p - (1f - _preFireShare)) / _preFireShare) * Mathf.PI * 0.5f);
 
-        SetQuad(_chargeGlow, _tint, grow, Vector3.one * (_chargeGlowSize * _scale * Mathf.Lerp(0.3f, 1f, grow)));
+        SetQuad(_chargeGlow, _tint, grow, Vector3.one * (_chargeGlowSize * _scale * Mathf.Lerp(0.3f, 1f, grow) * squeeze));
         SetQuad(_chargeCore, Color.Lerp(_tint, Color.white, p), Mathf.Lerp(0.2f, 1f, grow) * flicker,
-            Vector3.one * (_chargeCoreSize * _scale * Mathf.Lerp(0.4f, 1f, grow)));
-        SetQuad(_chargeRing, _tint, Mathf.Sin(p * Mathf.PI) * 0.9f,
-            Vector3.one * (Mathf.Lerp(_chargeRingSize.x, _chargeRingSize.y, p * (2f - p)) * _scale));
+            Vector3.one * (_chargeCoreSize * _scale * Mathf.Lerp(0.4f, 1f, grow) * Mathf.Lerp(1f, squeeze, 0.6f)));
+
+        // 조임 고리: 횟수가 여러 번이면 뒤로 갈수록 빨라진다 (p^0.6로 앞쪽을 늘리고 뒤쪽을 압축)
+        int pulses = Mathf.Max(1, _chargeRingPulses);
+        float pp = pulses > 1 ? Mathf.Pow(p, 0.6f) * pulses : p;
+        float local = pulses > 1 ? pp - Mathf.Floor(pp) : p;
+        if (pulses > 1 && pp >= pulses) local = 1f;
+        float ringAlpha = Mathf.Sin(local * Mathf.PI) * (pulses > 1 ? Mathf.Lerp(0.5f, 1f, p) : 0.9f);
+        SetQuad(_chargeRing, _tint, ringAlpha,
+            Vector3.one * (Mathf.Lerp(_chargeRingSize.x, _chargeRingSize.y, local * (2f - local)) * _scale));
+
+        DrawMotes(p);
         // 조준선: 뒤로 갈수록 또렷해지고 빠르게 떨린다 — "곧 쏜다" 예고
         SetBeam(_aim, _from, _to, _aimWidth * _scale * Mathf.Lerp(0.5f, 1f, p), _aimAlpha * grow * flicker);
+    }
+
+    // 빛 알갱이: 바깥에서 출발해 가속하며 총구로 빨려 든다. 날아오는 방향으로 길쭉하다.
+    private void DrawMotes(float p)
+    {
+        for (int i = 0; i < _motes.Length; i++)
+        {
+            float q = (p - _moteStart[i]) / MoteTravelShare;
+            if (q < 0f || q >= 1f) { Hide(_motes[i]); continue; }
+            float e = q * q * q;                                     // 끝으로 갈수록 빨라짐
+            var dir = _moteDirs[i];
+            var tr = _motes[i].transform;
+            tr.position = _from + dir * (_moteRadius * _scale * (1f - e));
+            tr.rotation = Quaternion.FromToRotation(Vector3.right, dir);
+            float size = _moteSize * _scale * Mathf.Lerp(1f, 0.5f, q);
+            float alpha = Mathf.Clamp01(q * 4f) * Mathf.Lerp(0.6f, 1f, p);
+            SetQuad(_motes[i], Color.Lerp(_tint, Color.white, q), alpha,
+                new Vector3(size * Mathf.Lerp(1f, MoteStreak, q), size, 1f));
+        }
     }
 
     // 발사 후 경과 t초 그리기. 모두 꺼졌으면 false.
@@ -158,7 +267,10 @@ public class RailgunBeamFx : MonoBehaviour
         if (beamOn)
         {
             if (t < _beamHold)
-                SetBeam(_beam, _from, _to, width * Mathf.Lerp(_beamPopScale, 1.2f, t / _beamHold), 1f);
+            {
+                float jitter = 1f + _beamJitter * Mathf.Sin(t * 90f + _seed) * Mathf.Sin(t * 37f + _seed * 3f);
+                SetBeam(_beam, _from, _to, width * Mathf.Lerp(_beamPopScale, 1.2f, t / _beamHold) * jitter, 1f);
+            }
             else
             {
                 float p = (t - _beamHold) / _beamFade;
@@ -169,7 +281,7 @@ public class RailgunBeamFx : MonoBehaviour
 
         float f = Mathf.Clamp01(t / _flashFade);
         float fade = 1f - f;
-        bool flashOn = f < 1f;
+        bool active = beamOn || f < 1f;
         float flash = _flashSize * _scale;
 
         // 총구: 남은 충전 빛이 섬광으로 터지며 사그라든다
@@ -179,9 +291,45 @@ public class RailgunBeamFx : MonoBehaviour
 
         SetQuad(_impactFlash, Color.Lerp(Color.white, _tint, f), fade * fade, Vector3.one * (flash * (1f + f * 0.5f)));
         SetQuad(_impactFlare, _tint, fade, new Vector3(flash * 2.2f, flash * 1.4f, 1f) * (1f - f * 0.3f));
-        SetQuad(_impactRing, _tint, fade * 0.9f, new Vector3(1f, 0.55f, 1f) * (_impactRingSize * _scale * Mathf.Lerp(0.3f, 1f, 1f - fade * fade)));
 
-        return beamOn || flashOn;
+        // 충격파: 시차를 두고 여러 겹, 뒤 고리일수록 크고 옅게
+        for (int i = 0; i < _impactRings.Length; i++)
+        {
+            float rt = t - i * _shockwaveInterval;
+            if (rt < 0f) { Hide(_impactRings[i]); active = true; continue; }
+            float rf = Mathf.Clamp01(rt / (_flashFade * (1f + i * 0.5f)));
+            float rfade = 1f - rf;
+            if (rf < 1f) active = true;
+            float size = _impactRingSize * _scale * (1f + i * _shockwaveGrowth) * Mathf.Lerp(0.3f, 1f, 1f - rfade * rfade);
+            SetQuad(_impactRings[i], i == 0 ? _tint : Color.Lerp(_tint, Color.white, 0.3f), rfade * (0.9f - i * 0.15f),
+                new Vector3(1f, 0.55f, 1f) * size);
+        }
+
+        // 파편: 위로 튀었다가 떨어지며 사그라든다
+        for (int i = 0; i < _debrisQuads.Length; i++)
+        {
+            float life = _debrisLife * (0.7f + 0.3f * ((i * 0.618f) % 1f));
+            if (t >= life) { Hide(_debrisQuads[i]); continue; }
+            active = true;
+            Vector3 v = _debrisVel[i] + Vector3.down * (_debrisGravity * t);
+            var tr = _debrisQuads[i].transform;
+            tr.position = _to + _debrisVel[i] * t + 0.5f * _debrisGravity * t * t * Vector3.down;
+            tr.rotation = Quaternion.FromToRotation(Vector3.right, v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.right);
+            float k = 1f - t / life;
+            float size = _debrisSize * _scale * Mathf.Lerp(0.5f, 1f, k);
+            SetQuad(_debrisQuads[i], Color.Lerp(_tint, Color.white, k), k, new Vector3(size * DebrisStreak, size, 1f));
+        }
+
+        // 잔광: 착탄점이 한동안 은은하게 남는다
+        if (_impactLinger > 0f && t < _impactLinger)
+        {
+            active = true;
+            float k = 1f - t / _impactLinger;
+            SetQuad(_linger, _tint, k * k * 0.8f, Vector3.one * (_lingerSize * _scale * Mathf.Lerp(1.15f, 0.8f, k)));
+        }
+        else Hide(_linger);
+
+        return active;
     }
 
     private Renderer Quad(string name, Material mat, int order)

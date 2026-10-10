@@ -30,9 +30,18 @@ public class DisigmanRailgunFxLab : MonoBehaviour, IFxLabPlayable
     [Tooltip("스킬까지 필요한 일반공격 수")]
     [SerializeField] private int _attacksToCharge = 6;
     [SerializeField] private float _basicCharge = 0.4f;
-    [SerializeField] private float _skillCharge = 0.55f;
+    [Tooltip("스킬 차지 — 모았다가 터뜨린다 (슈우웅). 여러 마리가 겹치므로 짧게")]
+    [SerializeField] private float _skillCharge = 0.4f;
     [Tooltip("스킬 빔 굵기·섬광 배율")]
-    [SerializeField] private float _skillScale = 1.6f;
+    [SerializeField] private float _skillScale = 1.3f;
+
+    [Header("스킬 타격감 (실험실 연출 — 인게임은 별도 결정)")]
+    [Tooltip("스킬 차지 중 유닛 떨림 최대 폭 (월드) — 차지가 찰수록 커진다")]
+    [SerializeField] private float _skillChargeTremble = 0.025f;
+    [Tooltip("스킬 착탄 순간 화면 흔들림 폭 (월드)")]
+    [SerializeField] private float _skillImpactShake = 0.1f;
+    [Tooltip("화면 흔들림 지속 (초)")]
+    [SerializeField] private float _shakeSeconds = 0.25f;
 
     [Header("유닛 반동")]
     [SerializeField] private float _recoil = 0.08f;
@@ -47,6 +56,9 @@ public class DisigmanRailgunFxLab : MonoBehaviour, IFxLabPlayable
     private int _charged;
     private Vector3 _unitHome;
     private float _clock, _fireAt = -999f, _spriteUntil = -999f;
+    private float _skillChargeFrom = -999f, _shakeAt = -999f;
+    private Transform _cam;
+    private Vector3 _camHome;
     private string _last = "-";
 
     /// <inheritdoc/>
@@ -57,6 +69,8 @@ public class DisigmanRailgunFxLab : MonoBehaviour, IFxLabPlayable
     private void Start()
     {
         if (_unit != null) _unitHome = _unit.transform.position;
+        var cam = Camera.main;
+        if (cam != null) { _cam = cam.transform; _camHome = _cam.position; }
         if (_playOnStart) Play();
     }
 
@@ -121,6 +135,7 @@ public class DisigmanRailgunFxLab : MonoBehaviour, IFxLabPlayable
 
         _fireAt = _clock + charge;
         _spriteUntil = _fireAt + _fireSpriteHold;
+        if (skill) { _skillChargeFrom = _clock; _shakeAt = _fireAt; }
         _last = skill ? "SKILL (+0.3s)" : "BASIC";
     }
 
@@ -133,10 +148,28 @@ public class DisigmanRailgunFxLab : MonoBehaviour, IFxLabPlayable
         var sprite = firing && _fireSprite != null ? _fireSprite : _idleSprite;
         if (sprite != null && _unit.sprite != sprite) _unit.sprite = sprite;
 
-        // 발사 순간 아래로 밀렸다가 돌아온다
+        // 발사 순간 아래로 밀렸다가 돌아온다 (스킬은 더 크게)
         float since = _clock - _fireAt;
         float kick = since >= 0f && since < _recoilReturn ? 1f - since / _recoilReturn : 0f;
-        _unit.transform.position = _unitHome + Vector3.down * (_recoil * kick * kick);
+        bool skillShot = _shakeAt == _fireAt;
+        Vector3 offset = Vector3.down * (_recoil * (skillShot ? 2f : 1f) * kick * kick);
+        // 스킬 차지 중: 차지가 찰수록 부르르 떨린다
+        if (skillShot && _clock < _fireAt && _clock >= _skillChargeFrom)
+        {
+            float p = Mathf.Clamp01((_clock - _skillChargeFrom) / Mathf.Max(0.01f, _fireAt - _skillChargeFrom));
+            float amp = _skillChargeTremble * p * p;
+            offset += new Vector3(Mathf.Sin(_clock * 97f) * amp, Mathf.Sin(_clock * 131f + 1.3f) * amp * 0.6f, 0f);
+        }
+        _unit.transform.position = _unitHome + offset;
+
+        // 스킬 착탄: 화면이 크게 흔들렸다가 가라앉는다
+        if (_cam != null)
+        {
+            float st = _clock - _shakeAt;
+            float k = st >= 0f && st < _shakeSeconds ? 1f - st / _shakeSeconds : 0f;
+            float a = _skillImpactShake * k * k;
+            _cam.position = _camHome + new Vector3(Mathf.Sin(_clock * 83f) * a, Mathf.Sin(_clock * 71f + 0.7f) * a, 0f);
+        }
     }
 
     private void OnGUI()
