@@ -32,7 +32,7 @@ public class MergeManager : MonoBehaviour
         DragHandler.OnDragStartedEvent -= HideButton;
     }
 
-    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private ISelectionEconomyReader _selectionEconomy;
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
@@ -101,7 +101,7 @@ public class MergeManager : MonoBehaviour
         _spawnerManager.RequestMergeSupport();
 
         // [진로 계승] 진로 계승 보유 시 무작위 노멀 유닛 1기 추가 지급
-        if (_levelUpManager?.HasMergeKeepsTribe == true)
+        if (_selectionEconomy?.HasMergeKeepsTribe == true)
         {
             var bonusUnit = _unitFactoryManager.CreateRandomNormalUnit();
             if (bonusUnit != null)

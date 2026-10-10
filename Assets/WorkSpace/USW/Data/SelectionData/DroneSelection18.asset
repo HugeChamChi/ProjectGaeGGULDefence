@@ -12,6 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection18
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects: []
+    Feedback: []
+    Commands:
+    - rid: 1000
   chooseId: 9118
   chooseName: "\uACC4\uC57D \uBB34\uD6A8"
   tier: 2
@@ -33,3 +40,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7b46d9124b74fb74f802ece2bac7652f, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: RerollChoicesCommandDefinition, ns: , asm: Assembly-CSharp}
+      data: 

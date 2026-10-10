@@ -23,7 +23,8 @@ public sealed class DroneBeamVisual : MonoBehaviour
     }
 
     /// <summary>Draws a muzzle-anchored beam and its endpoint glows without applying damage.</summary>
-    public void Draw(Vector3 from, Vector3 to, Color tint, float width, float alpha, float charge, float contact)
+    public void Draw(Vector3 from, Vector3 to, Color tint, float width, float alpha, float charge, float contact,
+        float muzzleSize = -1f, float contactSize = -1f)
     {
         if (_beam == null) return;
         // Keep effects in front of the board and character geometry.
@@ -41,8 +42,8 @@ public sealed class DroneBeamVisual : MonoBehaviour
             _block.SetFloat("_Seed", 0);
             _beam.SetPropertyBlock(_block);
         }
-        Glow(_muzzle, from, width * 2.5f, tint, charge);
-        Glow(_contact, to, width * 3f, tint, contact);
+        Glow(_muzzle, from, muzzleSize >= 0 ? muzzleSize : width * 2.5f, tint, charge);
+        Glow(_contact, to, contactSize >= 0 ? contactSize : width * 3f, tint, contact);
     }
 
     /// <summary>Hides every quad immediately on cancellation or pool return.</summary>

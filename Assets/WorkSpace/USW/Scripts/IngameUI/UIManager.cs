@@ -322,11 +322,11 @@ public class UIManager : MonoBehaviour
         
         if (isWaitTime)
         {
-            // 대기 시간: 크게, 볼드체, 소수점 없음, 둥둥 애니메이션
+            // 대기 시간: 볼드체, 소수점 없음, 둥둥 애니메이션 (크기는 기본 타이머 크기 — 더 키우면 아래 보스 HP바와 겹친다)
             if (!_wasWaitTime)
             {
                 timerText.enableAutoSizing = false;
-                timerText.fontSize = 80f;
+                timerText.fontSize = _timerTextBaseFontSize;
                 timerText.fontStyle = FontStyles.Bold;
                 _wasWaitTime = true;
             }

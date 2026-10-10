@@ -57,11 +57,11 @@ public class Drone_Betan : DroneSpawnerBase
                 if (bomb != null)
                 {
                     // Each accepted bomb owns one attack roll, including the run penalty and existing rounding.
-                    var hacking = DroneSelections?.Get(DroneSelectionKind.BetanHackingBomb);
-                    if (hacking != null && unitData.Hacking != null && _droneManager != null)
+                    var effects = DroneEffects;
+                    if (effects?.HasBombHacking == true && unitData.Hacking != null && _droneManager != null)
                     {
                         var runtime=_droneManager.Hacking;runtime.Configure(unitData.Hacking);
-                        bomb.InitializeHacking(target,runtime,hacking.Count);
+                        bomb.InitializeHacking(target,runtime,effects.HackingStacksPerBomb);
                     }
                     else
                     {

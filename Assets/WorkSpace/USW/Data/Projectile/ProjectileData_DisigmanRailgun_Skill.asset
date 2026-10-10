@@ -17,21 +17,21 @@ MonoBehaviour:
     type: 3}
   projectileAddress: 
   movement:
-    rid: 5888964643206987877
+    rid: 5888964643206987881
   fireEffect:
     rid: -2
   hitEffect:
-    rid: 5888964643206987878
+    rid: 5888964643206987882
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5888964643206987877
+    - rid: 5888964643206987881
       type: {class: StraightMovement, ns: , asm: Assembly-CSharp}
       data:
         duration: 0.35
-    - rid: 5888964643206987878
+    - rid: 5888964643206987882
       type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
       data:
         effectPrefab: {fileID: 0}

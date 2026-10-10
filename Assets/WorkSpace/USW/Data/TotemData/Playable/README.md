@@ -1,6 +1,6 @@
 # 토템 10종 사용/수정 가이드
 
-각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템은 에셋을 보존하고 선택지 풀에서만 제외했습니다.
+각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템(SampleAttack/SampleDualEffect)은 2026-10-10 삭제했습니다.
 
 ## 바로 테스트하기
 

@@ -12,6 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection3
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups:
+    - drone.kind.3
+    Effects:
+    - rid: 1000
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
   chooseId: 9103
   chooseName: "\uC288\uC29D \uCF70\uAD11!!!!!"
   tier: 3
@@ -35,3 +47,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 958d2071caee8b045aab26ea0eac9bde, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: FleetBombDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        PeriodSeconds: 20
+        BombCount: 10

@@ -13,7 +13,7 @@ public class ExpManager : MonoBehaviour
 
     [Inject] private EndlessRunService _runPenalties;
     [Inject] private BossManager _bossManager;
-    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private ISelectionEconomyReader _selectionEconomy;
     [Inject] private GameManager _gameManager;
     [Inject] private FieldPauseVisuals _fieldPause;
 
@@ -57,7 +57,7 @@ public class ExpManager : MonoBehaviour
     public float CalculateExpFromDamage(float damage)
     {
         float multiplier  = _bossManager?.CurrentBoss?.ExpMultiplier ?? 0.01f;
-        float levelUpMult = _levelUpManager?.ExpGainMultiplier ?? 1f;
+        float levelUpMult = _selectionEconomy?.ExpGainMultiplier ?? 1f;
         return damage * multiplier * levelUpMult;
     }
 

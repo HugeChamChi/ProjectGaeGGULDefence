@@ -10,7 +10,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
 {
     private readonly ChieftainSelection _selector;
     private readonly DroneManager _drones;
-    private readonly LevelUpManager _levelUps;
+    private readonly IChiefSelectionReader _effects;
     private readonly GameManager _game;
     private readonly AudioManager _audio;
     private AlphanSkillData _data;
@@ -24,10 +24,10 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
 
     /// <summary>씬 서비스 주입. 드론 매니저가 없는 씬에서도 등록 가능하나 사용은 비활성이다.</summary>
     public AlphanActiveSkill(ChieftainSelection selector, IEnumerable<DroneManager> drones,
-        LevelUpManager levelUps, GameManager game, AudioManager audio,
+        IChiefSelectionReader effects, GameManager game, AudioManager audio,
         IEnumerable<HSD.UI.Effect.UI_ChiefSkillEffect> cutscenes = null)
     {
-        _selector=selector; _levelUps=levelUps; _game=game; _audio=audio;
+        _selector=selector; _effects=effects; _game=game; _audio=audio;
         foreach(var manager in drones) { _drones=manager; break; }
         if (cutscenes != null)
             foreach (var cutscene in cutscenes) { _cutscene = cutscene; break; }
@@ -38,7 +38,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     public bool IsAvailable => !_disposed && _data != null && _drones != null;
     /// <summary>알팡 선택지의 쿨타임 감소만 적용한다. 유닛/셀 스탯을 사용하지 않는다.</summary>
     public float CooldownSeconds => _data == null ? 0 : Mathf.Max(0.05f, _data.CooldownSeconds
-        * (1f-(_levelUps?.DroneSelections.Get(DroneSelectionKind.AlphanCooldown)?.Value ?? 0f)));
+        * (1f-(_effects?.ChiefCooldownReduction ?? 0f)));
     private bool IsPlaying => (_game == null || _game.CurrentState == GameManager.GameState.Playing) && Time.timeScale > 0;
     /// <inheritdoc />
     public float CooldownProgress => IsAvailable ? Mathf.Clamp01(_elapsed / CooldownSeconds) : 0;
@@ -91,7 +91,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
             var cutscene = _cutscene != null ? _cutscene.PlayEffectAsync(Icon,cts.Token) : UniTask.CompletedTask;
             var rally = _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
-                _levelUps?.DroneSelections.Get(DroneSelectionKind.AlphanDoubleShot));
+                new ChiefVolleySettings(_effects?.ChiefVolleyCount ?? 0, _effects?.ChiefVolleyDelay ?? 0f, _effects?.ChiefVolleyDamageRatio ?? 0f));
             await UniTask.WhenAll(cutscene,rally);
         }
         finally

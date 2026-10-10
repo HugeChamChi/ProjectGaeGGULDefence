@@ -48,7 +48,8 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
             if (_castVisual == null) _castVisual = gameObject.AddComponent<HackingCastVisual>();
             var droneSource = OwnedDroneCount > 0 ? OwnedDrones[0] : null;
             _castVisual.Begin(droneSource, target, data, reservation != null);
-            float duration = reservation != null ? data.ContactSeconds : data.HackFlightSeconds;
+            float duration = reservation != null ? data.ConsumerContactSeconds : data.HackFlightSeconds;
+            float recovery = reservation != null ? data.ConsumerRecoverySeconds : data.RecoverySeconds;
             float elapsed = 0;
             while (elapsed < duration || IsHeld())
             {
@@ -70,14 +71,14 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
             }
             _castVisual.Draw(1f);
             elapsed = 0;
-            while (elapsed < data.RecoverySeconds)
+            while (elapsed < recovery)
             {
                 token.ThrowIfCancellationRequested();
                 if (!CanContinue() || target == null || (runtime.Target != target || runtime.Ledger.Generation != generation)) return;
                 if (!IsHeld())
                 {
                     elapsed += Time.deltaTime;
-                    _castVisual.Recover(data.RecoverySeconds > 0 ? elapsed / data.RecoverySeconds : 1f);
+                    _castVisual.Recover(recovery > 0 ? elapsed / recovery : 1f);
                 }
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }

@@ -36,20 +36,47 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>강화 가격 변경 시 표시를 갱신한다.</summary>
     public event Action OnCostChanged;
 
-    /// <summary>카드 할인과 해당 시점 실제 누적 지출에 대한 일회성 환급을 적용한다.</summary>
+    /// <summary>검증된 선택지 할인 전체를 교체한다. 환급 이력/지출은 유지하고 알림은 별도 발행한다.</summary>
+    public void ReplaceSelectionDiscounts(IReadOnlyDictionary<int, float> discounts)
+    {
+        if (discounts == null) throw new ArgumentNullException(nameof(discounts));
+        foreach (var entry in discounts)
+            if (float.IsNaN(entry.Value) || float.IsInfinity(entry.Value) || entry.Value < 0f || entry.Value > 1f)
+                throw new ArgumentException("Invalid selection discount.");
+        _discounts.Clear();
+        foreach (var entry in discounts) _discounts.Add(entry.Key, entry.Value);
+    }
+
+    /// <summary>기존 누적 실제 지출을 기준으로 카드당 한 번만 환급한다.</summary>
+    public void RefundSelectionOnce(int cardId, float rate)
+    {
+        if (float.IsNaN(rate) || float.IsInfinity(rate) || rate < 0f || rate > 1f)
+            throw new ArgumentOutOfRangeException(nameof(rate));
+        if (_refundedCards.Add(cardId)) _currencyManager?.AddCurrency(TotalSpent * rate);
+    }
+
+    /// <summary>모든 지속 값 반영 후 가격 표시를 갱신한다.</summary>
+    public void NotifySelectionDiscountsChanged()
+    {
+        if (OnCostChanged == null) return;
+        foreach (System.Action handler in OnCostChanged.GetInvocationList())
+            try { handler(); } catch (System.Exception error) { Debug.LogException(error); }
+    }
+
+    /// <summary>이관 중 기존 호출을 위한 할인/환급 진입점.</summary>
     public void ApplyDiscountAndRefund(int cardId, float rate)
     {
         if (float.IsNaN(rate) || float.IsInfinity(rate)) return;
         rate = Mathf.Clamp01(rate);
         _discounts[cardId] = rate;
-        if (_refundedCards.Add(cardId)) _currencyManager?.AddCurrency(TotalSpent * rate);
-        OnCostChanged?.Invoke();
+        RefundSelectionOnce(cardId, rate);
+        NotifySelectionDiscountsChanged();
     }
 
     /// <summary>할인만 제거한다. 이미 지급한 환급과 환급 여부는 보존한다.</summary>
     public void RemoveDiscount(int cardId)
     {
-        if (_discounts.Remove(cardId)) OnCostChanged?.Invoke();
+        if (_discounts.Remove(cardId)) NotifySelectionDiscountsChanged();
     }
 
     /// <summary>SO에 등록된 characterId의 독립 강화 키를 반환한다. 미등록 유닛은 강화 보정을 받지 않는다.</summary>

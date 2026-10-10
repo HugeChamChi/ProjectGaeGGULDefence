@@ -5,7 +5,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
 {
     private BossManager _bosses;
     private GameManager _game;
-    private LevelUpManager _levelUp;
+    private IDroneEffectReader _effects;
     private int _carry;
     /// <summary>사망한 보스로부터 다음 보스 한 번에 적용할 잔고.</summary>
     public int PendingCarry => _carry;
@@ -23,7 +23,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     /// <summary>현재 잔고가 귀속된 보스.</summary>
     public BossBase Target { get { Synchronize(); return _target; } }
     /// <summary>생성 직후 씬 주입 의존성을 연결한다.</summary>
-    public void Initialize(BossManager bosses, GameManager game, LevelUpManager levelUp = null) { _bosses = bosses; _game = game; _levelUp = levelUp; }
+    public void Initialize(BossManager bosses, GameManager game, IDroneEffectReader effects = null) { _bosses = bosses; _game = game; _effects = effects; }
     /// <summary>동일 저작 데이터를 사용하는 생산자/소비자를 연결한다.</summary>
     public void Configure(DroneHackingData data)
     {
@@ -54,9 +54,9 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     private void OnTargetDied()
     {
         if (_target == null || !_target.IsDead) return;
-        var carry = _levelUp?.DroneSelections.Get(DroneSelectionKind.HackingCarryover);
-        _carry = carry != null && (_game == null || !_game.IsFinished)
-            ? Mathf.FloorToInt((Ledger.Available + Ledger.Reserved) * carry.Value) : 0;
+        float carry = _effects?.HackingCarryoverRatio ?? 0f;
+        _carry = carry > 0f && (_game == null || !_game.IsFinished)
+            ? Mathf.FloorToInt((Ledger.Available + Ledger.Reserved) * carry) : 0;
         if (_target != null) _target.OnDeath -= OnTargetDied;
         _target = null;
         Ledger.Reset(_data != null ? _data.Capacity : 1);
