@@ -41,7 +41,8 @@ public class CurrencyFloater : FloaterBase
         if (style == null) return;
         _currencyAnimation?.Kill();
         transform.localScale = Vector3.one;
-        var seq = _currencyAnimation = DOTween.Sequence();
+        var seq = _currencyAnimation = DOTween.Sequence().SetUpdate(true);
+        seq.Join(transform.DOScale(0.5f, style.duration).SetEase(Ease.InQuad));
         if (transform is RectTransform rect)
             seq.Join(rect.DOAnchorPosY(rect.anchoredPosition.y + style.moveDistance, style.duration).SetEase(Ease.OutQuad));
         else

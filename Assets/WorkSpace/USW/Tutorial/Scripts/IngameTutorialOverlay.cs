@@ -21,6 +21,7 @@ namespace GaeGGUL.Tutorial
         private Gesture _gesture;
         private float _started;
         private readonly Vector3[] _corners = new Vector3[4];
+        private IngameTutorialDialogue _dialogue;
 
         /// <summary>Number of taps consumed by the overlay; taps never also select underlying UI.</summary>
         public int TapCount { get; private set; }
@@ -38,6 +39,8 @@ namespace GaeGGUL.Tutorial
             _started = Time.unscaledTime;
             _targets.Clear();
             _targets.AddRange(targets);
+            if (_dialogue == null) _dialogue = transform.parent.GetComponentInChildren<IngameTutorialDialogue>(true);
+            _dialogue?.AvoidAreas(this, _targets);
             raycastTarget = true;
             gameObject.SetActive(true);
             RefreshHoles();

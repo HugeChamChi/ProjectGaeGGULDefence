@@ -31,7 +31,7 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
     [SerializeField] private Transform foodFloaterAnchor;
     [Tooltip("식량 생산량을 합산해서 플로터 하나로 표시하는 주기(초)")]
     [SerializeField] private float foodFloaterFlushInterval = 0.4f;
-    [SerializeField] private Vector2 foodFloaterOffset = new Vector2(110f, 0f);
+    [SerializeField] private Vector2 foodFloaterOffset = new Vector2(0f, 40f);
 
     private float _pendingFoodAmount;
 

@@ -237,7 +237,7 @@ public class UnitSpawner : MonoBehaviour
 
         if (startDelaySeconds > 0f)
         {
-            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: false,
+            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: _tutorialSettings != null,
                 cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
             if (canceled || unit == null || cell == null) return;
         }
@@ -286,8 +286,9 @@ public class UnitSpawner : MonoBehaviour
                 Vector3 endPos = cell.transform.position;
 
                 if (lineCurveHeight.HasValue) line.curveHeight = lineCurveHeight.Value;
+                line.UseUnscaledTime = _tutorialSettings != null;
                 line.Fire(startPos, endPos);
-                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: false);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: line.UseUnscaledTime);
             }
         }
 
@@ -297,7 +298,12 @@ public class UnitSpawner : MonoBehaviour
             Transform pParent = effectParent != null ? effectParent : cell.transform;
             var particleObj = RM.Instantiate(spawnEffectPrefab, cell.transform.position, spawnEffectPrefab.transform.rotation, pParent, true);
             var particle = particleObj.GetComponent<ParticleSystem>();
-            if (particle != null) particle.Play();
+            if (particle != null)
+            {
+                var main = particle.main;
+                main.useUnscaledTime = _tutorialSettings != null;
+                particle.Play();
+            }
             RM.Destroy(particleObj, 2f);
         }
 

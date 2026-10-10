@@ -193,6 +193,7 @@ public static class IngameTutorialSetup
             Set(dialogue,"_hint",Label("Hint",new Vector2(.04f,.04f),new Vector2(.96f,.24f),24,new Color(.75f,.8f,.85f)));
         }
         Set(director,"_dialogue",dialogue);
+        dialogue.gameObject.SetActive(false);
         Button ButtonNamed(string name) => All<Button>(scene).Single(b=>b.name==name && b.transform.root.name=="# MainUI");
         var summon = (Button)uiSo.FindProperty("summonButton").objectReferenceValue;
         var upgrade = ButtonNamed("EnchantButton");

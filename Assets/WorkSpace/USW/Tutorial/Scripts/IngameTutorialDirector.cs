@@ -71,6 +71,8 @@ namespace GaeGGUL.Tutorial
         private UnitBase _mergedUnit;
         private TotemBase _placedTotem;
         private GridCell _dropCell;
+        private bool _mergeLearned;
+        private float _bossExpMultiplier;
 
         /// <summary>Current authored lesson, visible to diagnostics and playtest tools.</summary>
         public IngameTutorialStage CurrentStage { get; private set; }
@@ -124,16 +126,21 @@ namespace GaeGGUL.Tutorial
                     if (lesson.delayBeforeExecute > 0) await Delay(lesson.delayBeforeExecute, token);
                     CurrentStage = lesson.Stage;
                     Debug.Log($"[IngameTutorial] {(int)CurrentStage}: {CurrentStage}", this);
+                    bool blockUpgrade = CurrentStage == IngameTutorialStage.ExperienceGauge || CurrentStage == IngameTutorialStage.LevelUp;
+                    bool upgradeInteractable = _upgradeButton.interactable;
+                    if (blockUpgrade) _upgradeButton.interactable = false;
                     try { await lesson.ExecuteAsync(this, token); }
                     finally
                     {
+                        if (blockUpgrade && _upgradeButton != null) _upgradeButton.interactable = upgradeInteractable;
                         if (_dialogue != null) _dialogue.Hide();
                         if (_overlay != null) _overlay.Hide();
                         _time?.Release(this);
                         if (_running && _input != null)
                         {
-                            _input.CanBeginInteraction = _ => false;
+                            _input.CanBeginInteraction = _mergeLearned ? null : _ => false;
                             _input.CanEndInteraction = null;
+                            _input.AllowPointerClicks = _mergeLearned;
                         }
                     }
                 }
@@ -295,6 +302,9 @@ namespace GaeGGUL.Tutorial
             {
                 case IngameTutorialStage.FirstSummon:
                     Block();
+                    _time.Pause(this);
+                    _fieldPause.HoldAttacks(this);
+                    _fieldPause.Enter(this);
                     _income = false;
                     await UniTask.WhenAll(RevealAsync(_summonGroup, token), RevealAsync(_currencyGroup, token));
                     int summons = _settings.SpawnUnits.Length;
@@ -306,6 +316,7 @@ namespace GaeGGUL.Tutorial
                     Block();
                     await Until(() => _grid.GetOccupiedCells().All(c => c.OccupyingUnit == null || c.OccupyingUnit.gameObject.activeInHierarchy), token);
                     _firstUnit = _grid.GetCell(_settings.SpawnCells[0]).OccupyingUnit;
+                    _fieldPause.Exit(this);
                     break;
                 case IngameTutorialStage.BossEntrance:
                     await BossEntranceAsync(token);
@@ -352,11 +363,15 @@ namespace GaeGGUL.Tutorial
                     _exp.AddExp(0);
                     await Until(() => _levelUpUI.IsReadyForSelection, token);
                     ShowRecipeDialogue();
-                    if (_boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = true;
                     await AwarenessAsync(Ui(_levelUpUI.ChoiceArea), token);
                     await PreviewChoiceAsync(token);
-                    _overlay.Hide(); _time.Release(this);
-                    await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token);
+                    var choices = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
+                    var requiredChoice = choices.First(c => c.GetData() == _settings.LevelUpChoices[0]);
+                    foreach (var choice in choices) choice.AllowSelection = choice == requiredChoice;
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)requiredChoice.transform));
+                    _time.Release(this);
+                    try { await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token); }
+                    finally { foreach (var choice in choices) if (choice != null) choice.AllowSelection = true; }
                     _exp.DeferLevelUps = true;
                     _levelUpUI.RequireUnitPreview = false;
                     break;
@@ -382,7 +397,9 @@ namespace GaeGGUL.Tutorial
                     await Until(() => item.CurrentLevel > level, token);
                     Block();
                     _dialogue.ShowText("좋아요! 유닛이 더 강해졌어요!", _lessonIndex, _lessonCount, false);
-                    await Delay(1.2f, token);
+                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_upgradePanel.StatFeedbackArea));
+                    await AcknowledgeAsync(token);
+                    _upgradePanel.CloseStatFeedback();
                     await _upgradePanel.CloseAsync().AttachExternalCancellation(token);
                     _income = false;
                     break;
@@ -400,16 +417,22 @@ namespace GaeGGUL.Tutorial
                             _fieldPause.Exit(this);
                         }
                     }
-                    void Warn(BossPatternData pattern)
-                    {
-                        if (pattern == _settings.CounterPattern) _fieldPause.HoldAttacks(this);
-                    }
                     _patterns.OnPatternCountered += Counter;
-                    _guidedBoss.OnPatternStarted += Warn;
                     try
                     {
                         _patterns.RegisterBoss(_guidedBoss, new[] { _settings.CounterPattern });
                         await Until(() => _patterns.IsCounterablePattern(_guidedBoss), token);
+                        await Delay(0.3f, token);
+                        _fieldPause.HoldAttacks(this);
+                        _dialogue.ShowText("보스가 패턴을 써요! 보스와 필드의 지진 예고를 확인해 주세요.", _lessonIndex, _lessonCount, true);
+                        _time.Pause(this);
+                        _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap,
+                            () => ScreenBounds(_guidedBoss.GetComponentInChildren<Renderer>().bounds),
+                            () => _grid.AllCells().Select(c => World(c)()).Aggregate((a, b) => Rect.MinMaxRect(
+                                Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin), Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax))));
+                        await AcknowledgeAsync(token);
+                        _time.Release(this);
+                        Block();
                         _chiefSkill.Advance(_chiefSkill.CooldownSeconds);
                         await Until(() => _chiefSkill.CanActivate, token);
                         _chiefGroup.transform.localScale = chiefScale * 0.85f;
@@ -428,11 +451,14 @@ namespace GaeGGUL.Tutorial
                         _chiefGroup.transform.DOKill();
                         _chiefGroup.transform.localScale = chiefScale;
                         _patterns.OnPatternCountered -= Counter;
-                        if (_guidedBoss != null) _guidedBoss.OnPatternStarted -= Warn;
                         _patterns.UnregisterBoss(_guidedBoss);
                         _fieldPause.Exit(this);
                     }
-                    if (_guidedBoss != null) _guidedBoss.Invincible = false;
+                    if (_guidedBoss != null)
+                    {
+                        _guidedBoss.PreventDeath = false;
+                        _guidedBoss.TakeDamage(Math.Max(0m, _guidedBoss.CurrentHp - 50m));
+                    }
                     break;
                 case IngameTutorialStage.TotemChoice:
                     await ChooseTotemAsync(token);
@@ -495,8 +521,11 @@ namespace GaeGGUL.Tutorial
             _time.Release(this);
             _wave.StartWave();
             await Until(() => _boss.CurrentBoss != null, token);
-            _boss.CurrentBoss.Invincible = true;
+            _boss.CurrentBoss.PreventDeath = true;
             _guidedBoss = _boss.CurrentBoss;
+            // The experience lesson fills the gauge explicitly; combat damage must not skip that reveal.
+            _bossExpMultiplier = _guidedBoss.ExpMultiplier;
+            _guidedBoss.ExpMultiplier = 0;
             _patterns.UnregisterBoss(_guidedBoss);
             _time.Pause(this);
             if (_camera != null)
@@ -544,6 +573,7 @@ namespace GaeGGUL.Tutorial
             Block(); _time.Release(this);
             await Until(() => _grid.GetOccupiedCells().All(c => c.OccupyingUnit == null || c.OccupyingUnit.gameObject.activeInHierarchy), token);
             _mergedUnit = source.OccupyingUnit != null ? source.OccupyingUnit : target.OccupyingUnit;
+            _mergeLearned = true;
         }
 
         private async UniTask PlaceTotemAsync(CancellationToken token)
@@ -694,33 +724,17 @@ namespace GaeGGUL.Tutorial
         }
         private async UniTask ChooseTotemAsync(CancellationToken token)
         {
-            var dialogueRect = (RectTransform)_dialogue.transform;
-            var min = dialogueRect.anchorMin; var max = dialogueRect.anchorMax;
-            var offsetMin = dialogueRect.offsetMin; var offsetMax = dialogueRect.offsetMax;
-            // The required reward is the top band; keep its icon and description uncovered.
-            dialogueRect.anchorMin = new Vector2(0.06f, 0.46f);
-            dialogueRect.anchorMax = new Vector2(0.94f, 0.61f);
-            dialogueRect.offsetMin = dialogueRect.offsetMax = Vector2.zero;
-            try
-            {
-                await Until(() => _rewardUI.IsOpen, token);
-                Block();
-                await Until(() => _rewardUI.IsReadyForSelection, token);
-                ShowRecipeDialogue();
-                await AwarenessAsync(Ui(_rewardUI.ChoiceArea), token);
-                _dialogue.ShowText(_currentRecipe.Instruction, _lessonIndex, _lessonCount, false);
-                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
-                await Until(() => _rewardUI.IsReadyForConfirmation, token);
-                _dialogue.ShowText("강조된 버튼을 눌러 토템을 받아 보세요.", _lessonIndex, _lessonCount, false);
-                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui(_rewardUI.ConfirmationArea));
-                await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
-                _overlay.Hide(); _time.Release(this);
-            }
-            finally
-            {
-                dialogueRect.anchorMin = min; dialogueRect.anchorMax = max;
-                dialogueRect.offsetMin = offsetMin; dialogueRect.offsetMax = offsetMax;
-            }
+            await Until(() => _rewardUI.IsOpen, token);
+            Block();
+            await Until(() => _rewardUI.IsReadyForSelection, token);
+            _time.Pause(this);
+            _dialogue.ShowText(_currentRecipe.Instruction, _lessonIndex, _lessonCount, false);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
+            await Until(() => _rewardUI.IsReadyForConfirmation, token);
+            _dialogue.ShowText("강조된 버튼을 눌러 토템을 받아 보세요.", _lessonIndex, _lessonCount, false);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui(_rewardUI.ConfirmationArea));
+            await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+            _overlay.Hide(); _time.Release(this);
         }
         private Rect ScreenBounds(Bounds bounds)
         {
@@ -769,11 +783,17 @@ namespace GaeGGUL.Tutorial
             if (_overlay != null) _overlay.Hide();
             _time?.Release(this);
             _time?.Release(_customPauseOwner);
+            _fieldPause?.Exit(this);
             if (_dialogue != null) _dialogue.Hide();
             if (_exp != null) _exp.DeferLevelUps = false;
             if (_levelUpUI != null) _levelUpUI.RequireUnitPreview = false;
             if (_input != null) { _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true; }
             if (_boss != null && _boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
+            if (_guidedBoss != null)
+            {
+                _guidedBoss.PreventDeath = false;
+                _guidedBoss.ExpMultiplier = _bossExpMultiplier;
+            }
             if (_guidedBoss != null && !_guidedBoss.IsDead && _patterns != null) _patterns.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
             foreach (var group in _bossHud) SetVisible(group, true);
             SetVisible(_upgradeGroup,true); SetVisible(_chiefGroup,true); SetVisible(_inventoryGroup,true);

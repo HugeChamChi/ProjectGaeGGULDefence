@@ -113,6 +113,7 @@ public static class IngameTutorialChecks
             {
                 await UniTask.WaitUntil(()=>!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)summon.transform).center,null),cancellationToken:token);
                 Check(dialogue.gameObject.activeInHierarchy,"Summon dialogue stays visible for tap "+(i+1));
+                Check(Time.timeScale==0 && Get<FieldPauseVisuals>(director,"_fieldPause").AttacksHeld,"Summons freeze combat while their visuals continue");
                 int before=spawn.SuccessfulSpawnCount;ClickButton(summon);
                 await UniTask.WaitUntil(()=>spawn.SuccessfulSpawnCount==before+1 && spawn.LastSpawnedUnit.gameObject.activeInHierarchy,cancellationToken:token);
                 if(i<settings.SpawnUnits.Length-1)
@@ -121,7 +122,7 @@ public static class IngameTutorialChecks
             await Stage(IngameTutorialStage.ObserveCombat);
             Check(spawn.SuccessfulSpawnCount==4,"All four authored summons were purchased");
             Check(Get<CurrencyManager>(director,"_currency").Currency<spawn.CurrentCost,"Available summon budget is exhausted");
-            Check(boss.CurrentBoss.Invincible,"Boss survives mandatory lessons");
+            Check(!boss.CurrentBoss.Invincible && boss.CurrentBoss.PreventDeath,"Boss survives mandatory lessons");
             float observedAt=Time.unscaledTime;
             await Stage(IngameTutorialStage.Merge);
             Check(Time.unscaledTime-observedAt>=settings.ObserveCombatSeconds-0.2f,"Combat observation lasts five seconds");
@@ -159,8 +160,20 @@ public static class IngameTutorialChecks
             Check(director.CurrentStage==IngameTutorialStage.UpgradeSlots,"Background tap cannot skip actual upgrade");
             var upgradeBuy=(Button)new SerializedObject(item).FindProperty("btn_Upgrade").objectReferenceValue;
             ClickButton(upgradeBuy);
+            await Frames();
+            Check(Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").StatFeedbackArea != null,"Upgrade opens the unit stat feedback panel");
+            var statPanel = Object.FindFirstObjectByType<GaeGGUL.UI.Unit.UI_UnitInfoPanel>();
+            Check(statPanel != null && Get<bool>(statPanel,"_upgradeFeedback") && statPanel.GetComponentsInChildren<TMPro.TMP_Text>().Count(t=>t.text.Contains("→")) == 2,
+                "Upgrade feedback displays both before/after stat values");
+            dialogue.CompleteTyping();
+            await UniTask.Delay(450,DelayType.Realtime,cancellationToken:token);
+            await Snapshot("07-upgrade-stat-feedback");
+            await Acknowledge();
             await Stage(IngameTutorialStage.ExperienceGauge);
             Check(item.CurrentLevel>previousLevel,"Paid upgrade actually increases its level");
+            upgrade.OnPointerClick(pointer);
+            Check(!upgrade.IsInteractable() && !Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").IsOpen,
+                "Experience tutorial blocks opening the upgrade panel");
             await Acknowledge();
             await UniTask.Delay(900,DelayType.Realtime,cancellationToken:token);
             var exp=Get<ExpManager>(director,"_exp");
@@ -189,6 +202,9 @@ public static class IngameTutorialChecks
             var highlighter=level.GetComponent<LevelUpPeekHighlighter>();
             Check(Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Count>0,"Held choice highlights its affected field units");
             Check(Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Contains(merged),"Holding the fixed first card highlights the merged unit");
+            upgrade.OnPointerClick(pointer);
+            Check(!upgrade.IsInteractable() && !Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").IsOpen,
+                "Choice field preview blocks upgrades even while the tutorial overlay is hidden");
             await Snapshot("04-held-card-unit-highlight");
             card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await UniTask.WaitUntil(()=>!card.TutorialPreviewOnly && !level.FieldPreviewBlocksInput,cancellationToken:token);
@@ -213,18 +229,30 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>level.DescriptionBlocksInput,cancellationToken:token);
             await UniTask.Delay(400,DelayType.Realtime,cancellationToken:token);
             Check(cards.All(c=>!c.AllowSelection) && !overlay.gameObject.activeSelf,"Opening the real tooltip hides the tutorial mask and keeps selection locked");
+            upgrade.OnPointerClick(pointer);
+            Check(!upgrade.IsInteractable() && !Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").IsOpen,
+                "Choice term explanation blocks opening the upgrade panel");
             await Snapshot("06-choice-term-popup");
             var termPopup=Object.FindFirstObjectByType<DebuffInfoPopup>();
             ClickButton(termPopup.transform.Find("SafeArea/Panel/Close").GetComponent<Button>());
             Check(!card.AllowSelection,"Tooltip close animation must finish before selection unlocks");
             await UniTask.WaitUntil(()=>card.AllowSelection && !level.DescriptionBlocksInput,cancellationToken:token);
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Closing the tooltip returns to the choices without selecting one");
+            Check(card.GetData().chooseName == "넹?" && cards.Count(c=>c.AllowSelection) == 1,
+                "Tutorial selection permits only the Neng-question card");
+            var otherChoice = cards.First(c=>c != card);
+            otherChoice.OnPointerDown(pointer);otherChoice.OnPointerUp(pointer);otherChoice.OnPointerClick(pointer);
+            await Frames();
+            Check(game.CurrentState==GameManager.GameState.LevelUp,"Other choice clicks cannot bypass the required tutorial reward");
+            await FocusReady(overlay);
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await Stage(IngameTutorialStage.ChiefSkill);
+            Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
             var patterns=Get<BossPatternController>(director,"_patterns");
             await UniTask.WaitUntil(()=>patterns.IsCounterablePattern(boss.CurrentBoss),cancellationToken:token);
-            Check(boss.CurrentBoss.Invincible,"Boss survives until the chief counter lesson finishes");
+            Check(!boss.CurrentBoss.Invincible && boss.CurrentBoss.PreventDeath,"Boss survives until the chief counter lesson finishes");
             await UniTask.Delay(2200,DelayType.Realtime,cancellationToken:token);
+            await Acknowledge();
             Check(patterns.IsCounterablePattern(boss.CurrentBoss),"Earthquake warning stays counterable while reading instructions");
             Check(grid.AllCells().Any(c=>c.Model.IsBossTelegraphPreviewed),"Earthquake warning is shown on the field");
             var chief=Get<Button>(director,"_chiefButton");
@@ -234,13 +262,11 @@ public static class IngameTutorialChecks
             Check(!patterns.IsCounterablePattern(boss.CurrentBoss),"Actual chief button cancels the earthquake before impact");
             Check(grid.AllCells().All(c=>!c.Model.IsBossTelegraphPreviewed),"Successful counter clears the field warning");
             await Stage(IngameTutorialStage.TotemChoice);
-            Check(!boss.CurrentBoss.Invincible,"Boss can be defeated after reward learning");
-            // Advance only combat duration here; all tutorial input/completion uses real handlers.
-            boss.CurrentBoss.TakeDamage(boss.CurrentBoss.MaxHp*10);
+            Check(boss.CurrentBoss == null || (!boss.CurrentBoss.Invincible && !boss.CurrentBoss.PreventDeath),
+                "Boss can be defeated after reward learning");
             var reward=Get<TotemRewardUI>(director,"_rewardUI");
             await UniTask.WaitUntil(()=>reward.IsReadyForSelection,cancellationToken:token);await Frames();
             Check(dialogue.gameObject.activeInHierarchy,"Reward dialogue starts only after reward reveal");
-            await Acknowledge();
             Check(Get<System.Collections.Generic.List<TotemData>>(reward,"_choices").SequenceEqual(settings.TotemChoices),"Totem reward shows the authored tutorial pool");
             Check(settings.TotemChoices.Length==3 && settings.TotemChoices.Distinct().Count()==3 && settings.RequiredTotem.isRotatable && settings.RequiredTotem.GetSimpleAmount(StatKind.Speed)>0,"Three distinct totems are offered with a required attack-speed reward");
             Call(reward,"OnBandClicked",1);await Frames();

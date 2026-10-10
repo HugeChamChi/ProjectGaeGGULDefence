@@ -3169,7 +3169,7 @@ MonoBehaviour:
   currencyStyle: {fileID: 11400000, guid: a275db2765a5fce4399584a4d0c6e304, type: 2}
   foodFloaterAnchor: {fileID: 1604208028}
   foodFloaterFlushInterval: 0
-  foodFloaterOffset: {x: 110, y: 0}
+  foodFloaterOffset: {x: 0, y: 40}
 --- !u!4 &228236771
 Transform:
   m_ObjectHideFlags: 0

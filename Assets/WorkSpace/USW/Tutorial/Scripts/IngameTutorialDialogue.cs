@@ -23,6 +23,7 @@ namespace GaeGGUL.Tutorial
         private int _characterCount;
         private string _readyHint;
         private bool _glyphMoved;
+        private Vector2 _defaultAnchorMin, _defaultAnchorMax;
 
         public bool IsTyping => gameObject.activeSelf && _instruction.maxVisibleCharacters < _characterCount;
 
@@ -31,10 +32,45 @@ namespace GaeGGUL.Tutorial
             _rect = (RectTransform)transform;
             _restPosition = _rect.anchoredPosition;
             _restScale = _rect.localScale;
+            _defaultAnchorMin = _rect.anchorMin;
+            _defaultAnchorMax = _rect.anchorMax;
             _group = GetComponent<CanvasGroup>();
             if (_group == null) _group = gameObject.AddComponent<CanvasGroup>();
             _group.blocksRaycasts = false;
             _group.interactable = false;
+            _hint.gameObject.SetActive(false);
+        }
+
+        public void AvoidAreas(IngameTutorialOverlay overlay, System.Collections.Generic.IReadOnlyList<System.Func<Rect>> targets)
+        {
+            if (_rect == null) return;
+            _entrance?.Kill();
+            _rect.localScale = _restScale;
+            _group.alpha = 1;
+            _rect.anchorMin = _defaultAnchorMin;
+            _rect.anchorMax = _defaultAnchorMax;
+            _rect.anchoredPosition = _restPosition;
+            if (targets.Count == 0) return;
+            float height = _defaultAnchorMax.y - _defaultAnchorMin.y;
+            float bestOverlap = float.MaxValue;
+            float bestY = 0.8f;
+            foreach (float y in new[] { 0.8f, 0.62f, 0.44f, 0.26f, 0.08f })
+            {
+                _rect.anchorMin = new Vector2(_defaultAnchorMin.x, y);
+                _rect.anchorMax = new Vector2(_defaultAnchorMax.x, Mathf.Min(0.98f, y + height));
+                var bubble = overlay.ScreenRect(_rect);
+                float overlap = 0;
+                foreach (var target in targets)
+                {
+                    var area = target();
+                    overlap += Mathf.Max(0, Mathf.Min(bubble.xMax, area.xMax + 16) - Mathf.Max(bubble.xMin, area.xMin - 16)) *
+                        Mathf.Max(0, Mathf.Min(bubble.yMax, area.yMax + 16) - Mathf.Max(bubble.yMin, area.yMin - 16));
+                }
+                if (overlap < bestOverlap) { bestOverlap = overlap; bestY = y; }
+                if (overlap == 0) break;
+            }
+            _rect.anchorMin = new Vector2(_defaultAnchorMin.x, bestY);
+            _rect.anchorMax = new Vector2(_defaultAnchorMax.x, Mathf.Min(0.98f, bestY + height));
         }
 
         public void Show(IngameTutorialStep step, int total, int index = 0)

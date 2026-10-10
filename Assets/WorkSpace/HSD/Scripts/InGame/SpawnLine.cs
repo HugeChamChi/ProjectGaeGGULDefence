@@ -6,6 +6,7 @@ public class SpawnLine : MonoBehaviour
 {
     [Header("Settings")]
     public float duration = 0.4f;
+    public bool UseUnscaledTime { get; set; }
     public float lineLength = 0.3f;
     public int resolution = 20;
     public int numCapVertices = 5;
@@ -45,7 +46,7 @@ public class SpawnLine : MonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += UseUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             float headT = Mathf.Clamp01(elapsed / duration);
             float tailT = Mathf.Clamp01(headT - lineLength);
 
