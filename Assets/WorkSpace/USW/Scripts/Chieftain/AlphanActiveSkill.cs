@@ -88,6 +88,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
         try
         {
             _drones.ApplyEmergencyBuffs();
+            _drones.RallyBeamPrefab = _data.BeamFx;
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
             var cutscene = _cutscene != null ? _cutscene.PlayEffectAsync(Icon,cts.Token) : UniTask.CompletedTask;
             var rally = _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,

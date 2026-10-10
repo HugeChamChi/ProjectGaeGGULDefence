@@ -189,15 +189,15 @@ public class DroneManager : MonoBehaviour
     [Tooltip("상단 드론의 Y 위치 (위로)")]
     public float droneSpreadYUpper = 0.7f;   // (수정) 본체 머리 부근에 위치하도록 올림
 
-    [Header("집결 대형 설정")]
-    [Tooltip("드론 간 기본 가로 간격 (Unit)")]
-    [SerializeField] private float _rallySpacing   = 0.2f;
-    [Tooltip("드론 간 기본 세로 간격 (Unit)")]
-    [SerializeField] private float _rallyVSpacing   = 0.2f;
-    [Tooltip("집결 대형의 최대 가로 폭 (Unit) (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxWidth   = 2.0f;
-    [Tooltip("집결 대형의 최대 세로 폭 (Unit) (넘으면 간격 자동 축소)")]
-    [SerializeField] private float _rallyMaxHeight  = 1.5f;
+    [Header("집결 대형 (보스 반대쪽으로 열린 부채꼴 — FxLab_ChiefConvergeBeam 기준)")]
+    [Tooltip("부채꼴 반지름 (Unit) — 드론은 합류점 뒤쪽으로 퍼진다")]
+    [SerializeField, Min(0f)] private float _rallyFanRadius = 2.4f;
+    [Tooltip("부채꼴 펼침 각도 (도)")]
+    [SerializeField, Range(30f, 220f)] private float _rallyFanDegrees = 160f;
+    [Tooltip("이 수를 넘으면 안쪽·바깥쪽 두 줄 부채꼴로 나눈다")]
+    [SerializeField, Min(1)] private int _rallySingleRowMax = 10;
+    [Tooltip("두 줄일 때 안쪽 줄 반지름 비율")]
+    [SerializeField, Range(0.3f, 0.95f)] private float _rallyInnerRowRatio = 0.68f;
 
     [Header("집결 연출")]
     [Tooltip("집결 이동 시간 (초)")]
@@ -206,19 +206,20 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private int _rallyWindupMs = 200;
     [Tooltip("원위치 귀환 이동 시간 (초)")]
     [SerializeField] private float _rallyReturnDuration = 0.4f;
+    private ChiefConvergeBeamFx _convergeBeamPrefab;
+    private ChiefConvergeBeamFx _convergeBeam;
 
-    [Header("전기 이펙트")]
-    [Tooltip("전기 선 프리팹 (옵션, LineRenderer 포함된 GameObject)")]
-    [SerializeField] private LineRenderer _electricLinePrefab;
-    [Tooltip("레이저 빔 프리팹 (옵션, LineRenderer 포함된 GameObject)")]
-    [SerializeField] private LineRenderer _laserBeamPrefab;
-
-    [Tooltip("전기 선 렌더러 머티리얼 (프리팹 미사용 시)")]
-    [SerializeField] private Material _electricLineMaterial;
-    [Tooltip("전기 선 굵기 (Unit)")]
-    [SerializeField] private float _electricLineWidth = 0.02f;
-    [SerializeField] private Color _electricColorA = Color.cyan;
-    [SerializeField] private Color _electricColorB = Color.white;
+    /// <summary>집결 사격 수렴 빔 연출 프리팹 — 족장 스킬 데이터(AlphanSkillData.BeamFx)가 넣어 준다. 비어 있으면 연출 없이 피해만 준다.</summary>
+    public ChiefConvergeBeamFx RallyBeamPrefab
+    {
+        get => _convergeBeamPrefab;
+        set
+        {
+            if (_convergeBeamPrefab == value) return;
+            _convergeBeamPrefab = value;
+            if (_convergeBeam != null) { Destroy(_convergeBeam.gameObject); _convergeBeam = null; }
+        }
+    }
 
     [Header("테스트")]
     [SerializeField] private float _testRallyDamage = 50f;
@@ -262,92 +263,35 @@ public class DroneManager : MonoBehaviour
     // ── 족장 집결 폭발 ──────────────────────────────────────────────
 
     /// <summary>
-    /// 1) 모든 드론을 보스 아래 V자 대형으로 집결
-    /// 2) 드론 간 전기 효과(LineRenderer) 연결
-    /// 3) 중앙 드론만 사격 + 전체 데미지
-    /// 4) 원래 위치 귀환 후 궤도 재개
+    /// 1) 모든 드론을 그리드 중앙에서 보스 반대쪽으로 열린 부채꼴로 집결
+    /// 2) 수렴 빔 충전 — 드론마다 빛이 차오르고 조준선이 합류점으로 모인다 (ChiefConvergeBeamFx)
+    /// 3) 빔이 터지는 순간 전체 피해 (연속 사격은 빔 유지 중 Pulse와 함께 추가 피해)
+    /// 4) 빔이 사그라든 뒤 원래 위치 귀환 후 궤도 재개
     /// </summary>
     public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default)
     {
         if (_isRallying || RallyAvailableDroneCount == 0) return;
         _isRallying = true;
-
-        GameObject lrObj = null;
-        CancellationTokenSource lrCts = null;
+        ChiefConvergeBeamFx beam = null;
 
         try
         {
             var snapshot = _drones.FindAll(d => d != null && (d.Owner == null || (!d.Owner.IsStunned && !d.Owner.IsCellSealed))).ToArray();
 
-            // 집결 위치 계산 — 그리드 기하학적 정중앙 기준
-            Vector3 rallyCenter = Vector3.zero;
-            if (_gridManager != null)
-            {
-                rallyCenter = _gridManager.GetAbsoluteCenterPosition();
-            }
+            // 집결 위치 — 그리드 기하학적 정중앙, 부채꼴은 보스 반대쪽으로 열린다
+            Vector3 rallyCenter = _gridManager != null ? _gridManager.GetAbsoluteCenterPosition() : Vector3.zero;
+            rallyCenter.z = 0f;
+            var currentBoss = _bossManager?.CurrentBoss;
+            Vector3 toBoss = currentBoss != null ? currentBoss.transform.position - rallyCenter : Vector3.up;
+            toBoss.z = 0f;
+            Vector3 dir = toBoss.sqrMagnitude > 1e-6f ? toBoss.normalized : Vector3.up;
 
-            // 전기 효과(LineRenderer) 생성
-            lrObj = new GameObject("DroneElectricLines");
-            lrObj.transform.position = Vector3.zero;
-            
-            int lineCount = Mathf.Max(0, snapshot.Length - 1);
-            var lineRenderers = new LineRenderer[lineCount];
-            for (int i = 0; i < lineCount; i++)
-            {
-                LineRenderer lr;
-                if (_electricLinePrefab != null)
-                {
-                    lr = Instantiate(_electricLinePrefab, lrObj.transform);
-                    lr.useWorldSpace = true;
-                    lr.positionCount = 2;
-                }
-                else
-                {
-                    var lineGo = new GameObject($"Line_{i}");
-                    lineGo.transform.SetParent(lrObj.transform, false);
-                    lr = lineGo.AddComponent<LineRenderer>();
-                    lr.material = _electricLineMaterial;
-                    lr.useWorldSpace = true;
-                    lr.positionCount = 2;
-                    lr.startWidth = _electricLineWidth;
-                    lr.endWidth = _electricLineWidth;
-                    lr.sortingOrder = 50; // Grid나 유닛보다 위에 노출
-                }
-                lineRenderers[i] = lr;
-            }
-
-            lrCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            UpdateLineRendererAsync(lrObj, lineRenderers, snapshot, lrCts.Token).Forget();
-
-            // ① 집결 이동 (전체 병렬) - V자 배치
+            // ① 집결 이동 (전체 병렬)
             var moveTasks = new List<UniTask>();
-            
-            float actualSpacing = _rallySpacing;
-            float actualVSpacing = _rallyVSpacing;
-            int count = snapshot.Length;
-
-            if (count > 1)
-            {
-                // 최대 폭 제한에 따른 간격 압축
-                float totalW = (count - 1) * _rallySpacing;
-                if (totalW > _rallyMaxWidth) actualSpacing = _rallyMaxWidth / (count - 1);
-                
-                float totalH = ((count - 1) / 2f) * _rallyVSpacing;
-                if (totalH > _rallyMaxHeight) actualVSpacing = _rallyMaxHeight / ((count - 1) / 2f);
-            }
-
-            // V자 대형 전체를 수직으로 '정중앙'에 맞추기 위해, 대형 전체 높이의 절반만큼 아래로 오프셋
-            float vHeight = ((count - 1) / 2f) * actualVSpacing;
-            float verticalOffset = -vHeight * 0.5f;
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < snapshot.Length; i++)
             {
                 if (snapshot[i] == null) continue;
-                float distFromCenter = Mathf.Abs(i - (count - 1) / 2f);
-                float x = rallyCenter.x + (i - (count - 1) / 2f) * actualSpacing;
-                float y = rallyCenter.y + verticalOffset + distFromCenter * actualVSpacing;
-                var pos = new Vector3(x, y, 0f);
-                moveTasks.Add(snapshot[i].MoveToAsync(pos, _rallyMoveDuration, token));
+                moveTasks.Add(snapshot[i].MoveToAsync(RallySlot(i, snapshot.Length, rallyCenter, dir), _rallyMoveDuration, token));
             }
             if (moveTasks.Count > 0)
                 await UniTask.WhenAll(moveTasks);
@@ -356,49 +300,52 @@ public class DroneManager : MonoBehaviour
             if (await UniTask.Delay(_rallyWindupMs, cancellationToken: token).SuppressCancellationThrow())
                 return;
 
-            // ③ 중앙 드론 사격 + 피해
+            // ③ 수렴 빔 충전 → 발사 순간 피해
             if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
             var boss = _bossManager?.CurrentBoss;
             if (boss != null && !boss.IsDead)
             {
-                int centerIndex = snapshot.Length / 2;
-                if (snapshot[centerIndex] != null)
+                beam = PlayConvergeBeam(snapshot, boss.transform);
+                if (beam != null)
                 {
-                    snapshot[centerIndex].FireRallyShot();
-                    
-                    // 중앙 빔 연출 (전기 선 부모 활용)
-                    Transform beamParent = snapshot[0] != null ? snapshot[0].transform.parent : transform;
-                    SpawnLaserBeamAsync(rallyCenter, boss.transform.position, beamParent).Forget();
+                    bool fired = false;
+                    void OnFired() => fired = true;
+                    beam.Fired += OnFired;
+                    try { await UniTask.WaitUntil(() => fired || !beam.IsPlaying, cancellationToken: token); }
+                    finally { beam.Fired -= OnFired; }
+                    if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
                 }
+                foreach (var d in snapshot) if (d != null) d.PlayActionFlash();
 
-                decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
-                if (doubleShot.Count == 0) boss.TakeDamage(baseDamage);
-                else
+                if (boss != null && !boss.IsDead)
                 {
-                    long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
-                    long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
-                    boss.ApplyRecordedDamage(shotUnits);
-                    for (int shot = 1; shot < doubleShot.Count; shot++)
+                    decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
+                    if (doubleShot.Count == 0) boss.TakeDamage(baseDamage);
+                    else
                     {
-                        if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
-                        if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
-                        if (boss == null || boss.IsDead) break;
-                        if (snapshot[centerIndex] != null) snapshot[centerIndex].FireRallyShot();
-                        SpawnLaserBeamAsync(rallyCenter, boss.transform.position, transform).Forget();
+                        long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
+                        long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
                         boss.ApplyRecordedDamage(shotUnits);
+                        for (int shot = 1; shot < doubleShot.Count; shot++)
+                        {
+                            if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
+                            if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
+                            if (boss == null || boss.IsDead) break;
+                            if (beam != null) beam.Pulse();
+                            boss.ApplyRecordedDamage(shotUnits);
+                        }
                     }
                 }
+
+                // 빔이 사그라들 때까지 대형 유지
+                if (beam != null && beam.IsPlaying)
+                {
+                    if (await UniTask.WaitUntil(() => !beam.IsPlaying, cancellationToken: token).SuppressCancellationThrow())
+                        return;
+                }
             }
 
-            // ④ 귀환 전에 전기 이펙트(라인) 제거
-            lrCts?.Cancel();
-            if (lrObj != null)
-            {
-                Destroy(lrObj);
-                lrObj = null;
-            }
-
-            // ⑤ 귀환 (전체 병렬)
+            // ④ 귀환 (전체 병렬)
             var returnTasks = new List<UniTask>();
             for (int i = 0; i < snapshot.Length; i++)
             {
@@ -408,7 +355,7 @@ public class DroneManager : MonoBehaviour
             if (returnTasks.Count > 0)
                 await UniTask.WhenAll(returnTasks);
 
-            // ⑥ 궤도 재개
+            // ⑤ 궤도 재개
             foreach (var d in snapshot)
             {
                 if (d != null)
@@ -418,95 +365,40 @@ public class DroneManager : MonoBehaviour
         finally
         {
             _isRallying = false;
-            
-            lrCts?.Cancel();
-            lrCts?.Dispose();
-            if (lrObj != null)
-                Destroy(lrObj);
+            if (beam != null && token.IsCancellationRequested) beam.Stop();
         }
     }
 
-    private async UniTaskVoid UpdateLineRendererAsync(GameObject container, LineRenderer[] lineRenderers, DroneUnit[] drones, CancellationToken token)
+    // 보스 반대쪽으로 열린 부채꼴 — 드론이 합류점 뒤에서 앞으로 빔을 모은다.
+    // _rallySingleRowMax를 넘으면 안쪽·바깥쪽 두 줄로 나누고, 바깥 줄은 반 칸 엇갈려 겹치지 않게 한다.
+    private Vector3 RallySlot(int index, int count, Vector3 center, Vector3 dir)
     {
-        try
-        {
-            while (!token.IsCancellationRequested && container != null)
-            {
-                for (int i = 0; i < lineRenderers.Length; i++)
-                {
-                    if (drones[i] != null && drones[i+1] != null)
-                    {
-                        if (!lineRenderers[i].enabled) lineRenderers[i].enabled = true;
-                        
-                        Vector3 posA = drones[i].transform.position;
-                        Vector3 posB = drones[i+1].transform.position;
-                        
-                        lineRenderers[i].SetPosition(0, posA);
-                        lineRenderers[i].SetPosition(1, posB);
-
-                        Color c = UnityEngine.Random.value > 0.5f ? _electricColorA : _electricColorB;
-                        lineRenderers[i].startColor = c;
-                        lineRenderers[i].endColor = c;
-                    }
-                    else
-                    {
-                        lineRenderers[i].enabled = false;
-                    }
-                }
-                
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-        }
-        catch (System.OperationCanceledException) { }
+        bool twoRows = count > _rallySingleRowMax;
+        int inner = twoRows ? count / 2 : count;
+        int row = twoRows && index >= inner ? 1 : 0;
+        int i = row == 0 ? index : index - inner;
+        int n = row == 0 ? inner : count - inner;
+        float step = n <= 1 ? 0f : 1f / (n - 1);
+        float u = n <= 1 ? 0.5f : i * step;
+        if (row == 1) u = Mathf.Clamp01(u + step * 0.25f);
+        float angle = Mathf.Lerp(-_rallyFanDegrees * 0.5f, _rallyFanDegrees * 0.5f, u);
+        float radius = _rallyFanRadius * (twoRows && row == 0 ? _rallyInnerRowRatio : 1f);
+        return center + Quaternion.Euler(0f, 0f, angle) * -dir * radius;
     }
 
-    private async UniTaskVoid SpawnLaserBeamAsync(Vector3 startPos, Vector3 endPos, Transform parent)
+    private ChiefConvergeBeamFx PlayConvergeBeam(DroneUnit[] drones, Transform target)
     {
-        LineRenderer lr;
-        GameObject go;
-        Color baseColor = Color.yellow;
-        
-        if (_laserBeamPrefab != null)
+        if (_convergeBeamPrefab == null) return null;
+        if (_convergeBeam == null)
         {
-            lr = Instantiate(_laserBeamPrefab, parent);
-            go = lr.gameObject;
-            baseColor = lr.startColor;
-            lr.useWorldSpace = true;
-            lr.positionCount = 2;
+            // 부모 스케일 영향을 받지 않게 씬 루트에 둔다 (씬이 끝나면 함께 사라진다)
+            _convergeBeam = Instantiate(_convergeBeamPrefab);
+            _convergeBeam.UseUnscaledTime = false; // 선택지·일시정지 중에는 함께 멈춘다
         }
-        else
-        {
-            go = new GameObject("RallyLaserBeam");
-            go.transform.SetParent(parent, false);
-            lr = go.AddComponent<LineRenderer>();
-            lr.material = _electricLineMaterial; 
-            lr.useWorldSpace = true;
-            lr.positionCount = 2;
-            lr.startWidth = _electricLineWidth * 2f;
-            lr.endWidth = _electricLineWidth * 2f;
-            lr.sortingOrder = 55;
-            
-            lr.startColor = baseColor;
-            lr.endColor = baseColor;
-        }
-        
-        lr.SetPosition(0, startPos);
-        lr.SetPosition(1, endPos);
-
-        // 0.25초 동안 서서히 페이드아웃
-        float duration = 0.25f;
-        float elapsed = 0f;
-        while (elapsed < duration && lr != null)
-        {
-            elapsed += Time.deltaTime;
-            float alpha = 1f - (elapsed / duration);
-            Color fadeColor = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
-            lr.startColor = fadeColor;
-            lr.endColor = fadeColor;
-            await UniTask.Yield(PlayerLoopTiming.Update);
-        }
-        
-        if (go != null) Destroy(go);
+        var muzzles = new List<Transform>(drones.Length);
+        foreach (var d in drones) if (d != null) muzzles.Add(d.transform);
+        _convergeBeam.Play(muzzles, target);
+        return _convergeBeam;
     }
 
     // ── 테스트 ──────────────────────────────────────────────────────
