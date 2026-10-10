@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
-    delayBeforeExecute: 0
+    delayBeforeExecute: 1.5
     useDim: 0
     Stage: 13
-    Instruction: "\uD1A0\uD15C\uC744 \uAFB9 \uB20C\uB7EC \uAC8C\uC774\uC9C0\uB97C
-      \uCC44\uC6B4 \uB4A4 \uC606\uC73C\uB85C \uB04C\uC5B4 \uD68C\uC804\uD574 \uC8FC\uC138\uC694!"
+    Instruction: "토템을 <color=#D66A27>길게 누른 뒤 옆으로</color> 끌어 보세요.\n회전하여 효과 범위의 방향을 바꿀 수 있어요."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +27,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

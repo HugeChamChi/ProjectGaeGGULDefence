@@ -67,12 +67,18 @@ namespace GaeGGUL.Tutorial
         }
 
         /// <summary>Screen rectangle of a UI target, including camera-space canvases.</summary>
-        public Rect ScreenRect(RectTransform target)
+        public Rect ScreenRect(RectTransform target, Vector4 inset = default)
         {
             if (target == null) return Rect.zero;
             var c = target.GetComponentInParent<Canvas>();
             var cam = c != null && c.renderMode != RenderMode.ScreenSpaceOverlay ? c.worldCamera : null;
-            target.GetWorldCorners(_corners);
+            var bounds = target.rect;
+            bounds.xMin += inset.x; bounds.yMin += inset.y;
+            bounds.xMax -= inset.z; bounds.yMax -= inset.w;
+            _corners[0] = target.TransformPoint(new Vector3(bounds.xMin, bounds.yMin));
+            _corners[1] = target.TransformPoint(new Vector3(bounds.xMin, bounds.yMax));
+            _corners[2] = target.TransformPoint(new Vector3(bounds.xMax, bounds.yMax));
+            _corners[3] = target.TransformPoint(new Vector3(bounds.xMax, bounds.yMin));
             var min = new Vector2(float.MaxValue, float.MaxValue);
             var max = new Vector2(float.MinValue, float.MinValue);
             foreach (var corner in _corners)

@@ -13,16 +13,17 @@ MonoBehaviour:
   m_Name: FirstBattleSequence
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialPlan
   Lessons:
-  - {fileID: 11400000, guid: 9364a0d8a8d2981488ffe7679324f0d2, type: 2}
   - {fileID: 11400000, guid: fa4e8d8431bc89349827af02175fb0ae, type: 2}
-  - {fileID: 11400000, guid: 12007f5c7f7db7c4883c4b05da4e9512, type: 2}
+  - {fileID: 11400000, guid: d2c87922ae3096241bd4017a0ba5e43c, type: 2}
+  - {fileID: 11400000, guid: 9364a0d8a8d2981488ffe7679324f0d2, type: 2}
+  - {fileID: 11400000, guid: 638178bf1d6365c4bbc0ee2918e45fa3, type: 2}
   - {fileID: 11400000, guid: 4e31952c224349849af70a68a5c95b1c, type: 2}
-  - {fileID: 11400000, guid: d906705997d4a7347b41e8d760f39c83, type: 2}
   - {fileID: 11400000, guid: 2be753fad8890064e9d8824f06fcd837, type: 2}
   - {fileID: 11400000, guid: f213fabd2ac2b6b4a83be49a21ea745c, type: 2}
+  - {fileID: 11400000, guid: c48507a701cc304469e089622832cf35, type: 2}
+  - {fileID: 11400000, guid: d906705997d4a7347b41e8d760f39c83, type: 2}
   - {fileID: 11400000, guid: 01b07e4284e649c4293afd653d937cbf, type: 2}
   - {fileID: 11400000, guid: 5405142818447f34b8d3c0356da01c46, type: 2}
   - {fileID: 11400000, guid: 8106a87220449414190120134c7ddea0, type: 2}
   - {fileID: 11400000, guid: 1cae16e15d40e054c99da7cca735ad9e, type: 2}
-  - {fileID: 11400000, guid: dddc6690dbbefb04cbe332d269b330a0, type: 2}
   - {fileID: 11400000, guid: 7fd5545a767504446805d401792d61c2, type: 2}

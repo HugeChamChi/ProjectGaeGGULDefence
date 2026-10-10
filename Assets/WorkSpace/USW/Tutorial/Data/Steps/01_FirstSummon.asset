@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
-    delayBeforeExecute: 0
+    delayBeforeExecute: 0.5
     useDim: 0
     Stage: 1
-    Instruction: "\uCD9C\uACA9\uC744 \uB20C\uB7EC \uCCAB \uC720\uB2DB\uC744 \uC18C\uD658\uD574
-      \uC8FC\uC138\uC694!"
+    Instruction: "식량을 사용해 <color=#D66A27>유닛을 소환</color>할 수 있어요.\n보스를 처치할 유닛을 소환해 보세요."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +27,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

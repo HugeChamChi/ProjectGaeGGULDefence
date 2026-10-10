@@ -22,10 +22,22 @@ MonoBehaviour:
   - {x: 2, y: 1}
   - {x: 1, y: 2}
   - {x: 2, y: 2}
+  MergeUnit: {fileID: 11400000, guid: e9004d6b657e20b4dad7e9fa6f872c6d, type: 2}
+  LevelUpChoices:
+  - {fileID: 11400000, guid: 429f8664f6ab1f14eb6a3ed4787c8805, type: 2}
+  - {fileID: 11400000, guid: 336f1df382f348f4fb601f8fae81f598, type: 2}
+  - {fileID: 11400000, guid: 2995610e1b393ea4a9c66cff32c46113, type: 2}
+  TotemChoices:
+  - {fileID: 11400000, guid: 1dd83b38de995f341a84302ae5ebc23f, type: 2}
+  - {fileID: 11400000, guid: 7e5d173d5f1534244a4b9a51d1e10b1e, type: 2}
+  - {fileID: 11400000, guid: 4c7b35476357be04996940b9b3b2c69e, type: 2}
+  CounterPattern: {fileID: 11400000, guid: a3d687d182678da4aa20c0cc82480787, type: 2}
   InitialCost: 20
   CostIncrease: 20
   TrainingFoodPerSecond: 20
   UpgradeFoodThreshold: 100
+  ObserveCombatSeconds: 5
+  ExperienceFillSeconds: 2
   RevealSeconds: 0.35
   FocusSeconds: 0.65
   ChiefDelaySeconds: 6

@@ -42,6 +42,7 @@ public class MergeManager : MonoBehaviour
     public event Action                 OnSelectionCleared;
 
     private UnitBase _selectedUnit;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
 
     // ── 외부 호출 ──────────────────────────────────────────────
 
@@ -74,7 +75,9 @@ public class MergeManager : MonoBehaviour
     private bool MergeTargets(List<(UnitBase unit, GridCell cell)> targets, GridCell spawnCell, Tier nextTier)
     {
         if (_unitFactoryManager == null || _spawnerManager == null) return false;
-        var newUnit = _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
+        var newUnit = _tutorialSettings != null
+            ? _unitFactoryManager.CreateUnitFromData(_tutorialSettings.MergeUnit, nextTier)
+            : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return false;
 
         ClearSelection();

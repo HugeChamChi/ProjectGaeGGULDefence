@@ -39,6 +39,8 @@ public class BossPatternController : MonoBehaviour
     /// <summary>족장 스킬로 예고 패턴이 취소됐을 때 (보스, 취소된 패턴). 카운터 연출 연결용.</summary>
     public event Action<BossBase, BossPatternData> OnPatternCountered;
 
+    public bool IsCounterablePattern(BossBase boss) => boss != null && _entries.TryGetValue(boss, out var entry) && IsCounterable(entry);
+
     private void Start()
     {
         var camera = Camera.main;

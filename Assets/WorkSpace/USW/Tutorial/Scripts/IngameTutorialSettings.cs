@@ -9,12 +9,19 @@ namespace GaeGGUL.Tutorial
         [Header("Fixed summon order: attack / matching attack / two supporting units")]
         public UnitData[] SpawnUnits;
         public Vector2Int[] SpawnCells;
+        [Header("Fixed tutorial rewards")]
+        public UnitData MergeUnit;
+        public LevelUpData[] LevelUpChoices;
+        public TotemData[] TotemChoices;
+        public BossPatternData CounterPattern;
         [Min(0)] public float InitialCost = 20f;
         [Min(0)] public float CostIncrease = 20f;
         [Tooltip("Tutorial-only food income until the upgrade introduction finishes.")]
         [Min(0)] public float TrainingFoodPerSecond = 20f;
         [Min(0)] public float UpgradeFoodThreshold = 100f;
         [Header("Presentation")]
+        [Min(0)] public float ObserveCombatSeconds = 5f;
+        [Min(0.1f)] public float ExperienceFillSeconds = 2f;
         [Min(0.1f)] public float RevealSeconds = 0.35f;
         [Min(0.1f)] public float FocusSeconds = 0.65f;
         [Range(5f, 7f)] public float ChiefDelaySeconds = 6f;

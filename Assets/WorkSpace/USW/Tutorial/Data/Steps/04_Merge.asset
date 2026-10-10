@@ -17,8 +17,7 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 4
-    Instruction: "\uAC19\uC740 \uC720\uB2DB\uC744 \uC11C\uB85C \uACB9\uCE58\uB3C4\uB85D
-      \uB04C\uC5B4 \uD569\uC131\uD574 \uC8FC\uC138\uC694!"
+    Instruction: "같은 유닛을 겹쳐 <color=#D66A27>합성</color>하면\n더 강한 유닛을 얻을 수 있어요."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +27,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

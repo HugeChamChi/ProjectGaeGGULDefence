@@ -17,8 +17,7 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 5
-    Instruction: "\uB808\uBCA8\uC774 \uC62C\uB790\uC5B4\uC694! \uC6D0\uD558\uB294
-      \uB2A5\uB825\uC744 \uD558\uB098 \uC120\uD0DD\uD560 \uC218 \uC788\uC5B4\uC694."
+    Instruction: "게이지가 가득 차면 <color=#D66A27>선택지 보상</color>을 얻어요.\n유닛을 강화할 보상을 선택해 보세요."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +27,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

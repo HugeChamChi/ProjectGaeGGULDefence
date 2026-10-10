@@ -30,6 +30,10 @@ namespace HSD.UI.Upgrade
         private int _requestedCost;
         private UI_UpgradeItemFeedback _feedback;
 
+        public bool CanUpgrade => _canUpgrade;
+        public int CurrentCost => _currentCost;
+        public int CurrentLevel { get; private set; }
+
         private void Awake()
         {
             if (btn_Upgrade != null) btn_Upgrade.onClick.AddListener(RequestUpgrade);
@@ -69,6 +73,7 @@ namespace HSD.UI.Upgrade
 
         public void UpdateUI(UpgradeModel.UpgradeItemData data)
         {
+            CurrentLevel = data.CurrentLevel;
             _canUpgrade = !data.IsMaxLevel && data.UpgradeCost >= 0;
             _currentCost = data.UpgradeCost;
             if (txt_Name != null) txt_Name.text = data.DisplayName;

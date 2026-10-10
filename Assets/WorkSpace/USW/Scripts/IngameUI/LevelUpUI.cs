@@ -48,6 +48,7 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private TMP_Text selectionTimerText;
     [SerializeField] private float    selectionSeconds = 30f;
     [SerializeField] private bool _disableSelectionTimer;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
 
     private const int ChoiceCount = 3;
 
@@ -97,8 +98,10 @@ public class LevelUpUI : MonoBehaviour
         ClearCards();
         _selectedCard = null;
 
-        var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
-        if (RequireUnitPreview && choices.Count > 0)
+        var choices = _tutorialSettings != null
+            ? new List<LevelUpData>(_tutorialSettings.LevelUpChoices)
+            : _levelUpManager.GetRandomChoices(ChoiceCount);
+        if (_tutorialSettings == null && RequireUnitPreview && choices.Count > 0)
         {
             var targets = new List<UnitBase>();
             bool HasUnits(LevelUpData data) => LevelUpFeedbackTargets.Resolve(data, _gridManager, targets) == LevelUpFeedbackDestination.Units;

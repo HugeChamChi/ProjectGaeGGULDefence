@@ -17,8 +17,8 @@ MonoBehaviour:
   textColor: {r: 1, g: 1, b: 0.9490196, a: 1}
   fontSize: 30
   isBold: 0
-  duration: 0.4
-  moveDistance: 60
+  duration: 0.5
+  moveDistance: 24
   scaleCurve:
     serializedVersion: 2
     m_Curve:
