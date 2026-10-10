@@ -29,6 +29,16 @@ public class LevelUpUI : MonoBehaviour
     [Inject] private GameManager _gameManager;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private FieldPauseVisuals _fieldPause;
+    [Inject] private DescriptionDisplaySettings _descriptionSettings;
+    [Inject] private DescriptionTermCatalog _descriptionCatalog;
+    [Inject] private DebuffInfoPresenter _descriptionDebuffs;
+    private IDescriptionTermResolver _descriptionResolver;
+    private IDescriptionPopup _descriptionPopup;
+    private Toggle _descriptionToggle;
+    private readonly Dictionary<LevelUpCardUI, DescriptionSnapshot> _descriptions = new();
+    private bool _descriptionSubscribed;
+    public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true;
+    public float SelectionTimeRemaining { get; private set; }
 
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
@@ -109,7 +119,12 @@ public class LevelUpUI : MonoBehaviour
         {
             var card = Instantiate(cardPrefab, cardContainer);
             card.ConfigurePeek(obj.GetComponentInChildren<UI_Peekthrough>(true));
-            card.Setup(data, OnCardClicked, _levelUpManager.GetChoiceDescription(data));
+            EnsureDescriptions(card.DescriptionText);
+            var snapshot = new ChoiceDescriptionAdapter(data, _levelUpManager).Capture();
+            _descriptions.Add(card, snapshot);
+            card.Setup(data, OnCardClicked, DescriptionFormatter.Format(snapshot, _descriptionSettings.Detailed, _descriptionResolver, true));
+            card.ConfigureDescription(OpenDescriptionTerm, () => !IsReadyForSelection || DescriptionBlocksInput ||
+                _spawnedCards.Any(other => other != null && other != card && other.HasActivePress));
             if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
         }
@@ -189,6 +204,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
+        if (DescriptionBlocksInput) return;
         IsReadyForSelection = false;
         if (!_spawnedCards.Contains(clicked)) return;
         if (_selectedCard == clicked) return;
@@ -248,18 +264,20 @@ public class LevelUpUI : MonoBehaviour
             if (selectionTimerText != null) selectionTimerText.text = string.Empty;
             return;
         }
-        float remaining = selectionSeconds;
-        while (remaining > 0f)
+        SelectionTimeRemaining = selectionSeconds;
+        while (SelectionTimeRemaining > 0f || DescriptionBlocksInput)
         {
             if (selectionTimerText != null)
-                selectionTimerText.text = $"{Mathf.CeilToInt(remaining)}";
+                selectionTimerText.text = $"{Mathf.CeilToInt(SelectionTimeRemaining)}";
 
-            await UniTask.Delay(100, DelayType.Realtime, cancellationToken: token);
-            remaining -= 0.1f;
+            bool blocked = DescriptionBlocksInput;
+            float started = Time.unscaledTime;
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            if (!blocked && !DescriptionBlocksInput) SelectionTimeRemaining = Mathf.Max(0, SelectionTimeRemaining - (Time.unscaledTime - started));
         }
 
         // 시간 초과 — 첫 번째 카드 자동 선택 및 확인
-        if (_spawnedCards.Count > 0)
+        if (!DescriptionBlocksInput && _spawnedCards.Count > 0)
         {
             OnCardClicked(_spawnedCards[0]);
         }
@@ -274,11 +292,17 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnDisable()
     {
+        _descriptionPopup?.HideImmediately();
         if (_closingNormally) return;
         ReleaseForcedPause();
     }
 
-    private void OnDestroy() => ReleaseForcedPause();
+    private void OnDestroy()
+    {
+        ReleaseForcedPause();
+        if (_descriptionSubscribed) _descriptionSettings.Changed -= RefreshDescriptions;
+        if (_descriptionPopup is DebuffInfoPopup popup && popup != null) Destroy(popup.gameObject);
+    }
 
     /// <summary>Run-end cleanup invalidates entrance, selection and timers without applying a card.</summary>
     public void CancelPendingSelection()
@@ -294,6 +318,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void ReleaseForcedPause()
     {
+        _descriptionPopup?.HideImmediately();
         StopSelectionTimer();
         IsReadyForSelection = false;
         if (!_ownsPause) return;
@@ -335,10 +360,49 @@ public class LevelUpUI : MonoBehaviour
 
     private void ClearCards()
     {
+        _descriptionPopup?.HideImmediately();
+        _descriptions.Clear();
         foreach (var card in _spawnedCards)
             if (card != null) Destroy(card.gameObject);
 
         _spawnedCards.Clear();
         _selectedCard = null;
+    }
+
+    private void EnsureDescriptions(TMP_Text source)
+    {
+        if (_descriptionResolver == null) _descriptionResolver = new DescriptionTermResolver(_descriptionCatalog, _descriptionDebuffs);
+        if (_descriptionPopup == null) _descriptionPopup = DebuffInfoPopup.Create(this, obj, source);
+        if (_descriptionToggle == null) _descriptionToggle = DescriptionToggleView.Create(obj.transform, source, value =>
+        {
+            if (CanChangeDescriptionMode()) _descriptionSettings.SetDetailed(value);
+            else _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        });
+        _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        if (!_descriptionSubscribed) { _descriptionSettings.Changed += RefreshDescriptions; _descriptionSubscribed = true; }
+    }
+    private void RefreshDescriptions()
+    {
+        if (_descriptionToggle != null) _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        foreach (var pair in _descriptions)
+            if (pair.Key != null) pair.Key.SetDescription(DescriptionFormatter.Format(pair.Value, _descriptionSettings.Detailed, _descriptionResolver, true));
+    }
+    private void OpenDescriptionTerm(string id)
+    {
+        if (DescriptionBlocksInput || !IsReadyForSelection || !_descriptionResolver.TryResolve(id, out var term)) return;
+        foreach (var card in _spawnedCards) if (card != null) card.CancelDescriptionPress();
+        _descriptionPopup.Show(term.DisplayName, term.Body);
+    }
+    private void Update()
+    {
+        if (obj != null && !obj.activeInHierarchy) _descriptionPopup?.HideImmediately();
+        if (_descriptionToggle == null) return;
+        _descriptionToggle.interactable = CanChangeDescriptionMode();
+    }
+    private bool CanChangeDescriptionMode()
+    {
+        var field = obj.GetComponentInChildren<UI_Peekthrough>(true);
+        return IsReadyForSelection && !DescriptionBlocksInput && (field == null || !field.BlocksSelection) &&
+            !_spawnedCards.Any(card => card != null && (card.HasActivePress || card.TutorialPreviewOnly));
     }
 }

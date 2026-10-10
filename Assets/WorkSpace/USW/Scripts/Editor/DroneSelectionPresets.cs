@@ -68,6 +68,7 @@ public static class DroneSelectionPresets
             default: throw new ArgumentOutOfRangeException(nameof(kind));
         }
         card.spawnRate = 1f;
+        ChoiceDescriptionContent.Configure(card);
     }
 
     /// <summary>사용자가 저장 위치를 정한 새 폴더에 11개 카드와 명시적 풀을 생성한다.</summary>

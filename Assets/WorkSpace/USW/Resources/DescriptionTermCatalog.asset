@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 731c18a30d5243ce9cd95070ccb54d6f, type: 3}
+  m_Name: DescriptionTermCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::DescriptionTermCatalog
+  Entries:
+  - Id: combat-drone
+    DisplayName: 전투 드론
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 베탕·감망·델탕이 운용하는 일반 공격용 드론입니다. 알팡 액티브 스킬의 공격에도 참여합니다. 추가 전투 드론은 본체의 스킬을 대신 사용하지 않습니다.
+  - Id: bomb-drone
+    DisplayName: 자폭 드론
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 베탕의 스킬로 생성되어 보스에게 접근한 뒤 폭발하는 드론입니다. 일반 공격용 전투 드론과 별도로 생성됩니다.
+  - Id: alphan-active
+    DisplayName: 알팡 액티브
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 알팡 족장의 액티브 스킬입니다. 필드의 전투 드론이 공격에 참여합니다. 선택지에 따라 쿨타임, 발사 횟수, 피해 또는 감망 버프 발동이 달라집니다.
+  - Id: gamman-buff
+    DisplayName: 감망 버프
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 감망의 스킬이 필드 드론의 공격력과 공격속도를 강화하는 효과입니다. 주파수 동조는 필드 드론 수에 따른 추가 배율을 상한까지 더하고, 긴급 교신은 알팡 액티브 사용 시 배치된 감망의 버프를 적용합니다.
+  - Id: zeltan-production
+    DisplayName: 젤탕 자체 식량 생산
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 젤탕 본체가 생산하는 식량입니다. 드론당 군단 식량 생산량과 구분됩니다. 에어프라이기는 자체 생산량을 늘리고 정해진 주기마다 모아서 지급합니다.
+  - Id: merge
+    DisplayName: 합성
+    Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
+    Body: 같은 종류와 등급의 유닛을 합쳐 다음 등급 유닛을 만드는 행동입니다. 지원 요청 바람은 합성이 일어날 때 추가 노말 유닛 생성 확률을 적용합니다.

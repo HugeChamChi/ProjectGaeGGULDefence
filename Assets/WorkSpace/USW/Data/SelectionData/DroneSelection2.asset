@@ -16,8 +16,8 @@ MonoBehaviour:
   chooseName: "\uB2E4 \uC3F4 \uC81C\uAEF4\uBC84\uB824!!!!"
   tier: 2
   spawnRate: 1
-  description: "\uBCA0\uD0D5\uC758 \uC804\uD22C \uB4DC\uB860\uC758 \uACF5\uACA9\uC18D\uB3C4\uAC00
-    20% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+  description: "\ubca0\ud0d5\uc758 {term:combat-drone} \uacf5\uaca9\uc18d\ub3c4\uac00 {ValuePercent}% \uc0c1\uc2b9\ud569\ub2c8\ub2e4."
+  simpleDescription: "\ubca0\ud0d5\uc758 {term:combat-drone} \uacf5\uaca9\uc18d\ub3c4\uac00 \uc0c1\uc2b9\ud569\ub2c8\ub2e4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

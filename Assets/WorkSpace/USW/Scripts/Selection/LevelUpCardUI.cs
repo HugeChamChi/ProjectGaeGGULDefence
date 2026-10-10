@@ -20,7 +20,7 @@ using UnityEngine.EventSystems;
 ///   iconImage, borderImage, descriptionText, button
 ///   borderSprites[4] (0=Normal 1=Rare 2=Epic 3=Legend)
 /// </summary>
-public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IPointerClickHandler
+public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IPointerClickHandler, IDragHandler, IBeginDragHandler
 {
     [SerializeField] private Image    iconImage;
     [SerializeField] private Image    borderImage;
@@ -45,6 +45,19 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private int? _releasedPointerId;
     private float _pressedAt;
     private bool _suppressClick;
+    private readonly DescriptionLinkInteraction _termInteraction = new DescriptionLinkInteraction();
+    private bool _termPress;
+    private Action<string> _onTerm;
+    private Func<bool> _descriptionBlocked;
+    public bool TutorialPreviewOnly { get; private set; }
+    public bool HasActivePress => _pointerId.HasValue || _termInteraction.HasPress;
+    public TMP_Text DescriptionText => descriptionText;
+    public void SetTutorialPreviewOnly(bool value) { CancelPress(); TutorialPreviewOnly = value; }
+    public void ConfigureDescription(Action<string> onTerm, Func<bool> blocked)
+    { _onTerm = onTerm; _descriptionBlocked = blocked; if (descriptionText != null) descriptionText.raycastTarget = true; }
+    public void SetDescription(string text)
+    { CancelPress(); if (descriptionText != null) { descriptionText.text = text; descriptionText.ForceMeshUpdate(); } }
+    public void CancelDescriptionPress() => CancelPress();
     /// <summary>Scene guides may require a field preview before permitting selection.</summary>
     public bool AllowSelection { get; set; } = true;
 
@@ -65,24 +78,31 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     /// <summary>짧은 선택과 긴 필드 보기를 구분하는 입력을 시작한다.</summary>
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (Input.touchCount > 1) { CancelPress(); return; }
+        if (_pointerId.HasValue) { _termInteraction.Cancel(); return; }
         if (!isActiveAndEnabled || eventData.button != PointerEventData.InputButton.Left || _pointerId.HasValue ||
+            _descriptionBlocked?.Invoke() == true ||
             (_peek != null && _peek.BlocksSelection) ||
             button == null || !button.IsInteractable()) return;
         _pointerId = eventData.pointerId;
         _releasedPointerId = null;
         _pressedAt = Time.unscaledTime;
         _suppressClick = false;
+        _termPress = !TutorialPreviewOnly && _termInteraction.TryBegin(descriptionText, eventData);
+        if (_termPress) _suppressClick = true;
     }
 
     private void Update()
     {
+        _termInteraction.Tick();
+        if (_pointerId.HasValue && Input.touchCount > 1) { CancelPress(); return; }
         if (_pointerId.HasValue && (button == null || !button.IsActive() ||
             (!button.IsInteractable() && (_peek == null || !_peek.OwnsPeek(this)))))
         {
             CancelPress();
             return;
         }
-        if (_pointerId.HasValue && !_suppressClick && _peek != null &&
+        if (_pointerId.HasValue && !_termPress && !_suppressClick && _peek != null &&
             Time.unscaledTime - _pressedAt >= _holdSeconds)
         {
             _suppressClick = true;
@@ -94,6 +114,14 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     public void OnPointerUp(PointerEventData eventData)
     {
         if (_pointerId != eventData.pointerId) return;
+        if (_termPress)
+        {
+            _releasedPointerId = eventData.pointerId;
+            _pointerId = null;
+            if (_descriptionBlocked?.Invoke() != true && _termInteraction.TryRelease(eventData, _holdSeconds, out string id)) _onTerm?.Invoke(id);
+            _termInteraction.Reset();
+            return;
+        }
         // A release can arrive before Update on the threshold frame.
         if (_peek != null && Time.unscaledTime - _pressedAt >= _holdSeconds) _suppressClick = true;
         _releasedPointerId = eventData.pointerId;
@@ -113,6 +141,8 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         _pointerId = null;
         _releasedPointerId = null;
         _suppressClick = true;
+        _termInteraction.Reset();
+        _termPress = false;
         _peek?.EndPeek(this);
         SetPeeking(false);
     }
@@ -140,6 +170,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     public void Setup(LevelUpData data, Action<LevelUpCardUI> onCardClicked, string resolvedDescription = null)
     {
+        CancelPress();
         _data          = data;
         _onCardClicked = onCardClicked;
 
@@ -198,9 +229,12 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     {
         if (_releasedPointerId != eventData.pointerId || eventData.button != PointerEventData.InputButton.Left) return;
         _releasedPointerId = null;
-        if (isActiveAndEnabled && AllowSelection && !_suppressClick && (_peek == null || !_peek.BlocksSelection) &&
+        if (isActiveAndEnabled && AllowSelection && !TutorialPreviewOnly && !_suppressClick && _descriptionBlocked?.Invoke() != true && (_peek == null || !_peek.BlocksSelection) &&
             button != null && button.IsInteractable()) _onCardClicked?.Invoke(this);
     }
+
+    public void OnDrag(PointerEventData eventData) { if (_termPress) _termInteraction.Observe(eventData); }
+    public void OnBeginDrag(PointerEventData eventData) { if (_termPress) _termInteraction.Cancel(); }
 
     private void ApplyTierSprites(Tier tier)
     {

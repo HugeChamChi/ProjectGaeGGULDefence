@@ -24,13 +24,13 @@ public class LevelUpManager : MonoBehaviour
 {
     /// <summary>현재 런의 드론 선택지 효과.</summary>
     public DroneSelectionState DroneSelections { get; } = new();
+    [Inject] private DebuffInfoPresenter _descriptionDebuffs;
+    [Inject] private DescriptionTermCatalog _descriptionCatalog;
     /// <summary>선택 전에 확정한 랜덤 값을 카드 설명에 반영한다.</summary>
     public string GetChoiceDescription(LevelUpData card)
     {
-        if (card == null) return string.Empty;
-        if (card.droneEffect?.Kind != DroneSelectionKind.DeltanDamageTaken) return card.description;
-        string value = UnityEngine.Mathf.RoundToInt(DroneSelections.PreviewValue(card) * 100).ToString();
-        return (card.description ?? string.Empty).Replace("{value}", value).Replace("[1~10%]", value + "%");
+        return DescriptionFormatter.Format(new ChoiceDescriptionAdapter(card, this).Capture(), true,
+            new DescriptionTermResolver(_descriptionCatalog, _descriptionDebuffs), false);
     }
  
     /// <summary>선택된 족장의 풀을 런 시작에 한 번 확정한다. 런 상태는 씬 수명을 따른다.</summary>

@@ -16,8 +16,8 @@ MonoBehaviour:
   chooseName: "\uB139 !"
   tier: 2
   spawnRate: 1
-  description: "\uB378\uD0D5\uC758 \uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00 \uC2A4\uD0AC\uC5D0
-    [1~10%]\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4"
+  description: "\ub378\ud0d5\uc758 {term:debuff:1003} \uc2a4\ud0ac\uc5d0 {value}%p\ub97c \ucd94\uac00\ud569\ub2c8\ub2e4. \uc774\ubc88 \ub7f0 \ub3d9\uc548 \uace0\uc815\ub429\ub2c8\ub2e4."
+  simpleDescription: "\ub378\ud0d5\uc758 {term:debuff:1003} \uc2a4\ud0ac\uc744 \ubb34\uc791\uc704\ub85c \uac15\ud654\ud569\ub2c8\ub2e4. \uc774\ubc88 \ub7f0 \ub3d9\uc548 \uace0\uc815\ub429\ub2c8\ub2e4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

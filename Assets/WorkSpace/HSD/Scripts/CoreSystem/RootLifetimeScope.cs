@@ -47,6 +47,8 @@ public class RootLifetimeScope : LifetimeScope
         builder.RegisterInstance(_researchTree);
         builder.RegisterInstance(Player.PlayerData);
         builder.Register<GamePresentationSettings>(Lifetime.Singleton);
+        builder.Register<DescriptionDisplaySettings>(Lifetime.Singleton);
+        builder.RegisterInstance(Resources.Load<DescriptionTermCatalog>("DescriptionTermCatalog"));
         builder.Register<PlayerPrefsResearchSaveStore>(Lifetime.Singleton).As<IResearchSaveStore>();
         builder.Register<ResearchAccountContext>(Lifetime.Singleton);
         builder.Register<ResearchSaveService>(Lifetime.Singleton);

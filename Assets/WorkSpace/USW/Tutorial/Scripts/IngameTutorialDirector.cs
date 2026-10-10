@@ -527,7 +527,7 @@ namespace GaeGGUL.Tutorial
                 if (peeking) { previewed = true; _overlay.Hide(); }
                 else if (previewed) released = true;
             }
-            foreach (var choice in cards) choice.AllowSelection = false;
+            foreach (var choice in cards) { choice.AllowSelection = false; choice.SetTutorialPreviewOnly(true); }
             card.OnPeekChanged += Peek;
             _dialogue.ShowText("선택지를 꾹 눌러 강화되는 유닛을 확인해 보세요. 손을 떼면 선택할 수 있어요.", _lessonIndex, _lessonCount, false);
             _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Hold, Ui((RectTransform)card.transform));
@@ -535,7 +535,7 @@ namespace GaeGGUL.Tutorial
             finally
             {
                 if (card != null) card.OnPeekChanged -= Peek;
-                foreach (var choice in cards) if (choice != null) choice.AllowSelection = true;
+                foreach (var choice in cards) if (choice != null) { choice.AllowSelection = true; choice.SetTutorialPreviewOnly(false); }
             }
             _dialogue.Hide();
         }
