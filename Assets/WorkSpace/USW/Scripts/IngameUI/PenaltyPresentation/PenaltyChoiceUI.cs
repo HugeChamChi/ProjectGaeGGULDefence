@@ -20,17 +20,22 @@ public sealed class PenaltyChoiceUI : MonoBehaviour
         var scaler=_root.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1080,1920);scaler.matchWidthOrHeight=.5f;
         var shade=Panel("Shade",_root.transform,new Color(.015f,.02f,.04f,.94f));
         shade.rectTransform.anchorMin=Vector2.zero;shade.rectTransform.anchorMax=Vector2.one;shade.rectTransform.offsetMin=shade.rectTransform.offsetMax=Vector2.zero;
-        Label("다음 승천 패널티를 선택하세요",shade.transform,new Vector2(0,400),new Vector2(940,130),44);
+        var content = new GameObject("SafeContent", typeof(RectTransform));
+        content.transform.SetParent(_root.transform, false);
+        var frame = content.AddComponent<SafeAreaContentFrame>();
+        Canvas.ForceUpdateCanvases();
+        frame.Refresh();
+        Label("다음 승천 패널티를 선택하세요",content.transform,new Vector2(0,400),new Vector2(940,130),44);
         for(int i=0;i<choices.Count;i++)
         {
             var data=choices[i];
-            var panel=Panel("Choice"+i,shade.transform,new Color(.16f,.14f,.08f,1));
+            var panel=Panel("Choice"+i,content.transform,new Color(.16f,.14f,.08f,1));
             panel.rectTransform.sizeDelta=new Vector2(900,250);panel.rectTransform.anchoredPosition=new Vector2(0,180-i*310);
             var button=panel.gameObject.AddComponent<Button>();button.targetGraphic=panel;
             Label(data.DisplayName+"\n<size=75%>"+PenaltyRevealFx.Describe(data)+"</size>",panel.transform,Vector2.zero,new Vector2(830,210),40);
             button.onClick.AddListener(()=>completion.TrySetResult(data));
         }
-        Label("선택한 패널티는 다음 라운드부터 적용됩니다",shade.transform,new Vector2(0,-390),new Vector2(940,100),28);
+        Label("선택한 패널티는 다음 라운드부터 적용됩니다",content.transform,new Vector2(0,-390),new Vector2(940,100),28);
         try { return await completion.Task.AttachExternalCancellation(token); }
         finally { if(_root!=null)Destroy(_root);_root=null; }
     }

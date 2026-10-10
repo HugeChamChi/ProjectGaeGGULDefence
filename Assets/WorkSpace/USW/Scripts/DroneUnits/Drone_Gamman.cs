@@ -8,8 +8,8 @@ public class Drone_Gamman : HackingDroneSpawner
     {
         get
         {
-            var frequency = DroneSelections?.Get(DroneSelectionKind.GammanFrequency);
-            return 1f + (frequency != null ? Mathf.Min(frequency.MaxValue, (_droneManager?.DroneCount ?? 0) * frequency.Value) : 0f);
+            var effects = DroneEffects;
+            return 1f + (effects != null ? Mathf.Min(effects.MaximumStackSkillReduction, (_droneManager?.DroneCount ?? 0) * effects.StackSkillReduction) : 0f);
         }
     }
     /// <summary>SkillData 액션에서 현재 잔고를 확보하고 순간이동 기폭을 시작한다.</summary>

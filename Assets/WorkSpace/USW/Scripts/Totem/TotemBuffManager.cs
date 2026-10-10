@@ -33,23 +33,40 @@ public class TotemBuffManager : MonoBehaviour
 
     public int GetActiveTotemCount() => _activeTotem.Count;
 
+    private SelectionEffectSnapshot _selectionEffects;
+
+    /// <summary>선택지 기여만 교체한다. 다른 출처의 토템/판매/연구 보정은 보존하며 알림은 별도로 발행한다.</summary>
+    public void ReplaceSelectionEffects(SelectionEffectSnapshot effects)
+    {
+        _selectionEffects = effects ?? throw new System.ArgumentNullException(nameof(effects));
+        RebuildCellBuffFlags();
+    }
+
+    /// <summary>모든 지속 값의 반영이 끝난 뒤 선택지 조정자가 한 번 호출한다.</summary>
+    public void NotifySelectionEffectsChanged()
+    {
+        if (OnTotemBuffChanged == null) return;
+        foreach (System.Action handler in OnTotemBuffChanged.GetInvocationList())
+            try { handler(); } catch (System.Exception error) { Debug.LogException(error); }
+    }
+
     // ── 토템 효율 보너스 ──────────────────────────────────────────
     private float _totemEfficiencyBonus = 0f;
-    public float TotemEfficiencyBonus => _totemEfficiencyBonus + (_research?.Get(ResearchStat.TotemEffect) ?? 0f);
+    public float TotemEfficiencyBonus => _totemEfficiencyBonus + (_selectionEffects?.TotemEfficiencyBonus ?? 0f) + (_research?.Get(ResearchStat.TotemEffect) ?? 0f);
 
     // ── 공격력 ───────────────────────────────────────────────────
     private float _totemAttackBonus   = 0f;
     private float _levelUpAttackBonus = 0f;
-    public float AttackMultiplier => Mathf.Max(0.01f, 1f + (_totemAttackBonus * (1f + TotemEfficiencyBonus)) + _levelUpAttackBonus);
+    public float AttackMultiplier => Mathf.Max(0.01f, 1f + (_totemAttackBonus * (1f + TotemEfficiencyBonus)) + (_levelUpAttackBonus + (_selectionEffects?.AttackBonus ?? 0f)));
 
     // ── 속도 (값이 클수록 초당 공격 횟수 증가, 즉 간격은 반비례) ────────────────
     private float _totemSpeedBonus   = 0f;
     private float _levelUpSpeedBonus = 0f;
-    public float SpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemSpeedBonus * (1f + TotemEfficiencyBonus)) + _levelUpSpeedBonus);
+    public float SpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemSpeedBonus * (1f + TotemEfficiencyBonus)) + (_levelUpSpeedBonus + (_selectionEffects?.AttackSpeedBonus ?? 0f)));
 
     // ── 식량 생산 속도 (낮을수록 빠름) ────────────────────────────
     private float _totemFoodSpeedBonus = 0f;
-    public float FoodSpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + _totemFoodSpeedBonus);
+    public float FoodSpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemFoodSpeedBonus + (_selectionEffects?.FoodSpeedBonus ?? 0f)));
 
     // ── 식량 생산량 (고블린 마법사가 낮춤, 토템이 높임) ───────────
     private float _totemFoodAmountBonus = 0f;
@@ -66,25 +83,25 @@ public class TotemBuffManager : MonoBehaviour
 
     // ── 게이지 회복 속도 (낮을수록 빠름) ──────────────────────────
     private float _totemGaugeSpeedBonus = 0f;
-    public float GaugeSpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + _totemGaugeSpeedBonus);
+    public float GaugeSpeedMultiplier => 1f / Mathf.Max(0.1f, 1f + (_totemGaugeSpeedBonus + (_selectionEffects?.GaugeSpeedBonus ?? 0f)));
 
     // ── 투사체 크기 ───────────────────────────────────────────────
     private float _totemProjectileSizeBonus = 0f;
-    public float ProjectileSizeMultiplier => Mathf.Max(0.1f, 1f + _totemProjectileSizeBonus);
+    public float ProjectileSizeMultiplier => Mathf.Max(0.1f, 1f + (_totemProjectileSizeBonus + (_selectionEffects?.ProjectileSizeBonus ?? 0f)));
 
     /// <summary>kind에 해당하는 토템/레벨업 전역 가산 보너스를 반환한다.</summary>
     public float GetGlobalStatBonus(StatKind kind)
     {
         switch (kind)
         {
-            case StatKind.AttackPercent: return _totemAttackBonus * (1f + TotemEfficiencyBonus) + _levelUpAttackBonus;
-            case StatKind.Speed: return _totemSpeedBonus * (1f + TotemEfficiencyBonus) + _levelUpSpeedBonus;
-            case StatKind.FoodSpeed: return _totemFoodSpeedBonus;
+            case StatKind.AttackPercent: return _totemAttackBonus * (1f + TotemEfficiencyBonus) + (_levelUpAttackBonus + (_selectionEffects?.AttackBonus ?? 0f));
+            case StatKind.Speed: return _totemSpeedBonus * (1f + TotemEfficiencyBonus) + (_levelUpSpeedBonus + (_selectionEffects?.AttackSpeedBonus ?? 0f));
+            case StatKind.FoodSpeed: return (_totemFoodSpeedBonus + (_selectionEffects?.FoodSpeedBonus ?? 0f));
             case StatKind.FoodAmount: return _totemFoodAmountBonus * (1f + TotemEfficiencyBonus) - _debuffFoodAmount;
             case StatKind.CritChance: return _totemCritChanceBonus * (1f + TotemEfficiencyBonus);
             case StatKind.CritDamage: return _totemCritDamageBonus * (1f + TotemEfficiencyBonus);
-            case StatKind.GaugeSpeed: return _totemGaugeSpeedBonus;
-            case StatKind.ProjectileSize: return _totemProjectileSizeBonus;
+            case StatKind.GaugeSpeed: return (_totemGaugeSpeedBonus + (_selectionEffects?.GaugeSpeedBonus ?? 0f));
+            case StatKind.ProjectileSize: return (_totemProjectileSizeBonus + (_selectionEffects?.ProjectileSizeBonus ?? 0f));
             default: return 0f;
         }
     }

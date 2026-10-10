@@ -20,7 +20,7 @@ public static class DisigmanRailgunFxSetup
 
     private const int BasicId = 6;
     private const int SkillId = 7;
-    private const float SkillSize = 1.6f;
+    private const float SkillSize = 1.3f;
 
     private struct Variant
     {
@@ -28,10 +28,11 @@ public static class DisigmanRailgunFxSetup
         public int Id;
         public float Charge;
         public Color Tint;
+        public bool Heavy;
     }
 
-    private static readonly Variant Basic = new Variant { Name = "Basic", Id = BasicId, Charge = 0.4f,  Tint = new Color(0.45f, 0.62f, 1f) };
-    private static readonly Variant Skill = new Variant { Name = "Skill", Id = SkillId, Charge = 0.55f, Tint = new Color(0.55f, 0.9f, 1f) };
+    private static readonly Variant Basic = new Variant { Name = "Basic", Id = BasicId, Charge = 0.4f,  Tint = new Color(0.3f, 0.5f, 1f) };
+    private static readonly Variant Skill = new Variant { Name = "Skill", Id = SkillId, Charge = 0.4f, Tint = new Color(0.4f, 0.85f, 1f), Heavy = true };
 
     [MenuItem("Tools/USW/Disigman Railgun FX/Build And Assign")]
     public static void BuildAll()
@@ -61,6 +62,24 @@ public static class DisigmanRailgunFxSetup
         fxSo.FindProperty("_ringMaterial").objectReferenceValue  = Mat("M_SkyLaser_Ring");
         fxSo.FindProperty("_flareMaterial").objectReferenceValue = Mat("M_SkyLaser_Flare");
         fxSo.FindProperty("_tint").colorValue = v.Tint;
+        if (v.Heavy)
+        {
+            fxSo.FindProperty("_chargeMotes").intValue = 10;
+            fxSo.FindProperty("_moteRadius").floatValue = 1.4f;
+            fxSo.FindProperty("_chargeRingPulses").intValue = 3;
+            fxSo.FindProperty("_preFireSqueeze").floatValue = 0.4f;
+            fxSo.FindProperty("_beamHold").floatValue = 0.1f;
+            fxSo.FindProperty("_beamFade").floatValue = 0.2f;
+            fxSo.FindProperty("_beamPopScale").floatValue = 2.1f;
+            fxSo.FindProperty("_beamJitter").floatValue = 0.2f;
+            fxSo.FindProperty("_flashFade").floatValue = 0.3f;
+            fxSo.FindProperty("_impactShockwaves").intValue = 2;
+            fxSo.FindProperty("_debris").intValue = 8;
+            fxSo.FindProperty("_debrisLife").floatValue = 0.35f;
+            fxSo.FindProperty("_impactLinger").floatValue = 0.35f;
+            fxSo.FindProperty("_lingerSize").floatValue = 2f;
+            fxSo.FindProperty("_debrisSpeed").vector2Value = new Vector2(2f, 4.5f);
+        }
         fxSo.ApplyModifiedPropertiesWithoutUndo();
 
         var pSo = new SerializedObject(projectile);

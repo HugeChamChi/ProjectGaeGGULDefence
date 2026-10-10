@@ -20,11 +20,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f5fd4e4aa7e945c96982ebb910d62644
-    m_Address: Disigmang_1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0269d4965664f49439872d185b90b50d
     m_Address: Betang_1
     m_ReadOnly: 0
@@ -594,11 +589,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bb20b7c8894a08b4db7231b503aad6c9
-    m_Address: SampleAttackTotem
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbde5ee2a3f2b5f4c96dd369af1050fd
     m_Address: SPR_UI1000_AdIconBg
     m_ReadOnly: 0
@@ -733,6 +723,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2400_TotemInfo
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5fd4e4aa7e945c96982ebb910d62644
+    m_Address: Disigmang_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f68106d4e90c2084fa449ebf8134e8b3
     m_Address: TD_1010

@@ -59,9 +59,10 @@ namespace GaeGGUL.UI.Unit
             bool betan = _unit is Drone_Betan || data.prefabAddress == "DroneUnit_Betan";
             if (betan)
             {
-                var conversion = _unit?.DroneSelections?.Get(DroneSelectionKind.BetanHackingBomb);
-                _view.UpdateSkillInfo(conversion != null ? "해킹 자폭" : data.skillData?.skillName ?? string.Empty,
-                    conversion != null ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {conversion.Count}개를 추가합니다. 기본 스킬·추가 자폭 모두 전환되며 수리 키트가 발동합니다."
+                var effects = _unit?.DroneEffects;
+                bool conversion = effects?.HasBombHacking == true;
+                _view.UpdateSkillInfo(conversion ? "해킹 자폭" : data.skillData?.skillName ?? string.Empty,
+                    conversion ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬·추가 자폭 모두 전환되며 수리 키트가 발동합니다."
                     : data.skillData?.description ?? data.GetFormattedDescription(tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
             }

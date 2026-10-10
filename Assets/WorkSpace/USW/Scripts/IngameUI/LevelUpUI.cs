@@ -230,7 +230,7 @@ public class LevelUpUI : MonoBehaviour
         SetCardsInteractable(cards, false);
 
         // 리롤 카드는 곧바로 새 카드가 나오므로 패널을 닫지 않는다.
-        bool reroll = selected.GetData()?.specialEffect == LevelUpSpecialEffect.RerollChoices;
+        bool reroll = _levelUpManager.RequestsReroll(selected.GetData());
         try
         {
             await _select.PlayAsync(selected, cards, reroll ? null : _panelGroup, !reroll, token);
@@ -246,10 +246,10 @@ public class LevelUpUI : MonoBehaviour
         if (_selectedCard == null) return;
 
         var data = _selectedCard.GetData();
-        if (data != null)
-            _levelUpManager.ApplyEffect(data);
+        var result = _levelUpManager.TryApplyChoice(data);
+        if (result == SelectionApplyResult.Rejected || result == SelectionApplyResult.Queued) return;
 
-        if (data != null && data.specialEffect == LevelUpSpecialEffect.RerollChoices)
+        if (result == SelectionApplyResult.Reroll)
         {
             _isRerolling = true; // 리롤은 게이지 버스트 없이 카드만 다시 등장한다.
             Show();
@@ -335,7 +335,10 @@ public class LevelUpUI : MonoBehaviour
     }
 
     // ── 닫기 ───────────────────────────────────────────────────
-
+    public void somethingthat()
+    {
+        Hide();
+    }
     private void Hide()
     {
         IsReadyForSelection = false;

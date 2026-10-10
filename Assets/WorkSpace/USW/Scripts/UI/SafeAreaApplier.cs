@@ -1,11 +1,9 @@
-using UnityEditor;
 using UnityEngine;
 
 /// <summary>
 /// 부착된 RectTransform을 Screen.safeArea에 맞게 자동 조정.
 /// SafeAreaRoot 오브젝트에 단 하나만 부착한다.
 /// </summary>
-[ExecuteAlways]
 [RequireComponent(typeof(RectTransform))]
 public class SafeAreaApplier : MonoBehaviour
 {
@@ -16,15 +14,6 @@ public class SafeAreaApplier : MonoBehaviour
     private void Awake()
     {
         _rect = GetComponent<RectTransform>();
-
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-            // 에디터 모드: Undo flush 타이밍 충돌 방지
-            EditorApplication.delayCall += Apply;
-            return;
-        }
-#endif
 
         Apply();
     }
@@ -42,18 +31,16 @@ public class SafeAreaApplier : MonoBehaviour
 
     private void Apply()
     {
-        // 에디터 delayCall로 예약된 뒤 컴포넌트가 제거(씬 전환·오브젝트 삭제)됐으면 건너뛴다
-        if (this == null) return;
+        // 편집 중에는 작성된 앵커를 변경하지 않는다.
+        if (!Application.isPlaying) return;
 
         if (_rect == null)
             _rect = GetComponent<RectTransform>();
 
         if (_rect == null) return;
 
-#if UNITY_EDITOR
         // 에디터 초기화 전 Screen 값이 0인 경우 스킵
         if (Screen.width == 0 || Screen.height == 0) return;
-#endif
 
         _lastSafeArea = Screen.safeArea;
         _lastScreenSize = new Vector2Int(Screen.width, Screen.height);

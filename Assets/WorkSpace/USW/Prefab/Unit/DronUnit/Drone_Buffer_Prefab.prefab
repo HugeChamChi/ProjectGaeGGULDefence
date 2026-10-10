@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragFollowSharpness: 18
-  _projectilePrefab: {fileID: 5140522167497981003, guid: 9010a62b81fb26f4299907050281e310,
+  _projectilePrefab: {fileID: 8045561319927075433, guid: 31422b0d99ebdd948b22bc5c99040397,
     type: 3}
   _actionSprite: {fileID: 0}
   _actionSpriteHoldSeconds: 0.15

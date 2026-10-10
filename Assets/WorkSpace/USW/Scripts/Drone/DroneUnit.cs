@@ -20,7 +20,7 @@ public class DroneUnit : MonoBehaviour
 
     public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
-        / (_owner is Drone_Betan ? 1f + (_owner.DroneSelections?.Get(DroneSelectionKind.BetanAttackSpeed)?.Value ?? 0f) : 1f) : 1f;
+        / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f) : 1f;
     /// <summary>선택지 대상 판별에 사용하는 소유 유닛.</summary>
     public UnitBase Owner => _owner;
     /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>

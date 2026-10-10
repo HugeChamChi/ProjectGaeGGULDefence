@@ -32,6 +32,36 @@ public sealed class DroneHackingData : ScriptableObject
     public Material BeamMaterial;
     /// <summary>World-space width of the skill beam.</summary>
     [Min(.01f)] public float CastBeamWidth = .24f;
+    /// <summary>Authored Gamman choreography shared with the teleport laboratory.</summary>
+    public GammanTeleportTake TeleportTake;
+    /// <summary>Time for the point-blank beam to reach its target after the fire beat begins.</summary>
+    [Min(0)] public float BeamExtensionSeconds = .025f;
+    /// <summary>Contact follows the first firing beat, including its brief beam extension.</summary>
+    public float ConsumerContactSeconds
+    {
+        get
+        {
+            if (TeleportTake?.Beats == null) return ContactSeconds;
+            float elapsed = 0;
+            foreach (var beat in TeleportTake.Beats)
+            {
+                if (beat.Fire) return elapsed + Mathf.Min(BeamExtensionSeconds, beat.Duration);
+                elapsed += Mathf.Max(0, beat.Duration);
+            }
+            return ContactSeconds;
+        }
+    }
+    /// <summary>Remaining authored fire, kickback and return beats after contact.</summary>
+    public float ConsumerRecoverySeconds
+    {
+        get
+        {
+            if (TeleportTake?.Beats == null) return RecoverySeconds;
+            float duration = 0;
+            foreach (var beat in TeleportTake.Beats) duration += Mathf.Max(0, beat.Duration);
+            return Mathf.Max(0, duration - ConsumerContactSeconds);
+        }
+    }
     /// <summary>FXLab과 같은 부드러운 해킹 후광 소재.</summary>
     public Material MarkGlowMaterial;
     /// <summary>표식 부착과 기폭 파동 소재.</summary>

@@ -142,7 +142,7 @@ try {
     var selections=Comp<LevelUpManager>();var production=Data<LevelUpData>();production.chooseId=99120;
     DroneSelectionPresets.Configure(production,DroneSelectionKind.ExtraCombatDrone);selections.ApplyEffect(production);
     var enhanced=Comp<CombatDroneCheckProbe>();enhanced.unitData=Data<UnitData>();enhanced.unitData.maxDroneCount.rare=2;enhanced.unitData.maxDroneCount.epic=3;enhanced.unitData.maxDroneCount.legend=4;
-    enhanced.currentTier=Tier.Rare;enhanced.Init(new UnitDependencies {LevelUpManager=selections});
+    enhanced.currentTier=Tier.Rare;enhanced.Init(new UnitDependencies {SelectionCombat = selections.Effects, DroneEffects = selections.Effects, SelectionChanges = selections.Effects, CombatSettings = selections.CombatConfiguration});
     cells[3,2].RemoveUnit();cells[3,2].TryPlaceUnit(enhanced);Set(enhanced,"<currentCell>k__BackingField",cells[3,2]);enhanced.PlaceForCheck();
     tier.OnPlaced(cells[2,2]);Check(enhanced.currentTier==Tier.Epic && enhanced.OriginalTier==Tier.Rare && enhanced.OwnedDroneCount==3,"Temporary Epic does not unlock production card bonus");
     cells[3,2].RemoveUnit();cells[4,2].TryPlaceUnit(enhanced);Set(enhanced,"<currentCell>k__BackingField",cells[4,2]);tier.PaintAffectedCells();

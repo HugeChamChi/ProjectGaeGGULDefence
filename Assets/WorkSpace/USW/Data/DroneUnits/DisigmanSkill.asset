@@ -34,7 +34,7 @@ MonoBehaviour:
       type: {class: DisigmanSkillAction, ns: , asm: Assembly-CSharp}
       data:
         projectileDataId: 7
-        sizeMultiplier: 1.6
+        sizeMultiplier: 1.3
     - rid: 5888964643206987873
       type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
       data:

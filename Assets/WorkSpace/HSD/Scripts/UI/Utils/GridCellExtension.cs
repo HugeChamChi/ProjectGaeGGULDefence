@@ -5,13 +5,16 @@ namespace GaeGGUL.Extension
     public sealed class GridCellExtension
     {
         private readonly TotemBuffManager _totemManager;
-        private readonly LevelUpManager _levelUpManager;
+        private readonly ISelectionCombatReader _selectionCombat;
+        private readonly GridManager _grid;
+        private const int DefaultRows = 4;
 
         /// <summary>씬의 버프 및 레벨업 서비스를 주입받는다. 기존 계산식은 유지한다.</summary>
-        public GridCellExtension(TotemBuffManager totemManager, LevelUpManager levelUpManager)
+        public GridCellExtension(TotemBuffManager totemManager, ISelectionCombatReader selectionCombat, GridManager grid = null)
         {
             _totemManager = totemManager;
-            _levelUpManager = levelUpManager;
+            _selectionCombat = selectionCombat;
+            _grid = grid;
         }
 
         private float GetAttackMultiplier(GridCell cell)
@@ -37,7 +40,7 @@ namespace GaeGGUL.Extension
             if (cell == null || cell.Model == null) return 1f;
             
             int row = cell.GridPosition.y;
-            float rowSpeedMult = Mathf.Max(_levelUpManager != null ? _levelUpManager.GetRowSpeedMultiplier(row) : 1f, 0.01f);
+            float rowSpeedMult = Mathf.Max(_selectionCombat != null ? _selectionCombat.GetRowSpeedMultiplier(row, _grid != null ? _grid.Rows : DefaultRows) : 1f, 0.01f);
             
             float gaugeSpeedMult = _totemManager != null ? _totemManager.GaugeSpeedMultiplier : 1f;
             float cellSpeedModifier = cell.Model.SpeedModifier;
@@ -49,7 +52,7 @@ namespace GaeGGUL.Extension
 
         public int GetFinalAttack(GridCell cell, float baseAtk)
         {
-            if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetAttackDamage();
+            if (cell != null && cell.OccupyingUnit != null) return cell.OccupyingUnit.GetNonCriticalAttackDamage();
             return Mathf.RoundToInt(baseAtk * GetAttackMultiplier(cell));
         }
 

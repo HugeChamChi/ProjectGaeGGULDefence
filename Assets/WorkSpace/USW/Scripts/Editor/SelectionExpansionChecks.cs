@@ -82,10 +82,14 @@ public static class SelectionExpansionChecks
         Check(unique, "No duplicate cards per draw");
         Check(Math.Abs(counts[0] - 6000) < 200 && Math.Abs(counts[1] - 3000) < 200
             && Math.Abs(counts[2] - 1000) < 150, "60/30/10 independent of card count and spawn weight");
-        manager.RemoveEffect(guarantee); manager.ApplyEffect(guarantee);
+        manager = Component<LevelUpManager>(); // Independent run for each guarantee boundary.
+        Set(manager, "_poolInitialized", true); Set(manager, "_selectedPool", pool);
+        manager.ApplyEffect(guarantee);
         Set(manager, "_effectivePool", new[] { candidates[6] });
         Check(manager.GetRandomChoices().Count == 1, "Legend shortage never inserts lower tiers");
-        manager.RemoveEffect(guarantee); manager.ApplyEffect(guarantee);
+        manager = Component<LevelUpManager>(); // Independent run for each guarantee boundary.
+        Set(manager, "_poolInitialized", true); Set(manager, "_selectedPool", pool);
+        manager.ApplyEffect(guarantee);
         Set(manager, "_effectivePool", new[] { candidates[0] });
         Check(manager.GetRandomChoices().Count == 0, "No eligible legend yields empty draw");
         Check(manager.GetRandomChoices().Count == 1, "Empty forced draw does not retain guarantee");
@@ -120,10 +124,10 @@ public static class SelectionExpansionChecks
 
     private static void CheckDrones(LevelUpManager manager, LevelUpData[] cards)
     {
-        var drones = Component<DroneManager>(); Set(drones, "_levelUpManager", manager);
+        var drones = Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
         var zelta = Component<Drone_Zeltan>(); zelta.unitData = Asset<UnitData>();
         zelta.unitData.foodProduction.normal = 4;
-        zelta.Init(new UnitDependencies { LevelUpManager = manager });
+        zelta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
         var cell = Component<GridCell>(); Set(cell, "<Model>k__BackingField", new GridCellModel());
         Set(zelta, "<currentCell>k__BackingField", cell); zelta.gameObject.SetActive(true);
         drones.SetPerDroneFood(0.15f); drones.RegisterFoodProducer(zelta);
@@ -134,7 +138,9 @@ public static class SelectionExpansionChecks
         Check(Mathf.Approximately(drones.BaseFoodPerDrone, 1.1f) && Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f),
             "Maintenance affects legion production only");
         manager.RemoveEffect(cards[1]); Check(drones.BaseFoodPerDrone == 1f, "Maintenance removal updates immediately");
-        manager.ApplyEffect(cards[1]); drones.UnregisterFoodProducer(zelta);
+        manager.ApplyEffect(cards[1]);
+        Check(drones.BaseFoodPerDrone == 1f, "Removed card cannot be reacquired in same run");
+        drones.UnregisterFoodProducer(zelta);
         Check(Mathf.Approximately(drones.BaseFoodPerDrone, 0.15f), "No Zeltan means no maintenance bonus");
         Check(drones.GetRallyDamage(10, 80) == 800m, "Unmodified rally damage");
         manager.ApplyEffect(cards[2]);
@@ -142,7 +148,7 @@ public static class SelectionExpansionChecks
             "Monocle guaranteed 1.5 with zero-drone boundary");
         manager.RemoveEffect(cards[2]); Check(drones.GetRallyDamage(10, 80) == 800m, "Monocle removed");
         var beta = Component<DroneSelectionCheckBetan>(); beta.unitData = Asset<UnitData>();
-        beta.unitData.skillCooldown.normal = 14; beta.Init(new UnitDependencies { LevelUpManager = manager });
+        beta.unitData.skillCooldown.normal = 14; beta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
         beta.gameObject.SetActive(true); Set(beta, "<currentCell>k__BackingField", cell);
         Set(cell, "<OccupyingUnit>k__BackingField", beta);
         var grid = Component<GridManager>(); Set(grid, "_grid", new[,] { { cell } });

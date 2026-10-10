@@ -39,13 +39,13 @@ public abstract class DroneSpawnerBase : UnitBase
     }
 
     protected readonly List<DroneUnit> _ownedDrones = new();
-    private DroneSelectionState _subscribedSelections;
+    private ISelectionEffectChanges _subscribedSelections;
     private bool _dronesPlaced;
 
     /// <summary>실제 소유 등급이 에픽/전설인 소환자의 전투 드론 상한. 임시 등급 상승은 해금하지 않는다.</summary>
     public int CombatDroneCapacity => unitData == null ? 0 : unitData.maxDroneCount.Get(currentTier)
         + ((OriginalTier == Tier.Epic || OriginalTier == Tier.Legend)
-            ? Mathf.Max(0, DroneSelections?.Get(DroneSelectionKind.ExtraCombatDrone)?.Count ?? 0) : 0);
+            ? Mathf.Max(0, DroneEffects?.ExtraCombatDroneCount ?? 0) : 0);
 
     /// <summary>현재 소유한 전투 드론 수.</summary>
     public int OwnedDroneCount => _ownedDrones.Count;
@@ -81,8 +81,8 @@ public abstract class DroneSpawnerBase : UnitBase
     {
         _dronesPlaced = true;
         UnsubscribeSelections();
-        _subscribedSelections = DroneSelections;
-        if (_subscribedSelections != null) _subscribedSelections.OnChanged += RefreshCombatDrones;
+        _subscribedSelections = SelectionChanges;
+        if (_subscribedSelections != null) _subscribedSelections.OnEffectsChanged += RefreshCombatDrones;
         RefreshCombatDrones();
     }
 
@@ -163,12 +163,35 @@ public abstract class DroneSpawnerBase : UnitBase
         _ownedDrones.Clear();
     }
 
+    /// <summary>풀 재활성화에서는 현재 reader에 한 번만 다시 연결한다.</summary>
+    protected virtual void OnEnable()
+    {
+        if (!_dronesPlaced || currentCell == null) return;
+        UnsubscribeSelections();
+        _subscribedSelections = SelectionChanges;
+        if (_subscribedSelections != null) _subscribedSelections.OnEffectsChanged += RefreshCombatDrones;
+        RefreshCombatDrones();
+    }
+
+    /// <inheritdoc />
+    protected override void OnInitialized(UnitDependencies dependencies)
+    {
+        base.OnInitialized(dependencies);
+        UnsubscribeSelections();
+        if (_dronesPlaced && currentCell != null && isActiveAndEnabled)
+        {
+            _subscribedSelections = SelectionChanges;
+            if (_subscribedSelections != null) _subscribedSelections.OnEffectsChanged += RefreshCombatDrones;
+            RefreshCombatDrones();
+        }
+    }
+
     /// <summary>비활성화 시 선택지 구독을 해제한다.</summary>
     protected virtual void OnDisable() => UnsubscribeSelections();
 
     private void UnsubscribeSelections()
     {
-        if (_subscribedSelections != null) _subscribedSelections.OnChanged -= RefreshCombatDrones;
+        if (_subscribedSelections != null) _subscribedSelections.OnEffectsChanged -= RefreshCombatDrones;
         _subscribedSelections = null;
     }
 }

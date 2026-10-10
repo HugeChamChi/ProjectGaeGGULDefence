@@ -21,7 +21,7 @@ public static class IngameTutorialChecks
     /// <summary>Runs only in a fresh TutorialScene Play session; does not write persistent player state.</summary>
     [MenuItem("Tools/USW/Tutorial/Run Play Checks")]
     public static void Run() => RunAsync().Forget();
-
+    
     private static async UniTaskVoid RunAsync()
     {
         if (!EditorApplication.isPlaying) throw new InvalidOperationException("Enter TutorialScene Play Mode first.");
@@ -346,7 +346,7 @@ public static class IngameTutorialChecks
             File.WriteAllText(Report,log.ToString());Debug.Log(log.ToString());
         }
     }
-
+    
     private static async UniTask CheckCompositionAsync(IngameTutorialDirector director, Action<bool,string> check, CancellationToken token)
     {
         var plan=Get<IngameTutorialPlan>(director,"_plan");
@@ -363,6 +363,7 @@ public static class IngameTutorialChecks
         targetsField.SetValue(director,new[]{binding});
         UniTask Run(CancellationToken ct) => (UniTask)typeof(IngameTutorialDirector).GetMethod("ExecuteCustomAsync",Private).Invoke(director,new object[]{lesson,ct});
         var otherPause=new object();
+        
         try
         {
             lesson.Kind=IngameTutorialLesson.LessonKind.Awareness;lesson.Instruction="QA awareness";lesson.TargetKey="QA";

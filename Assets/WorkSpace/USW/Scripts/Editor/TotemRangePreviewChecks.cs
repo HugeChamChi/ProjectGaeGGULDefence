@@ -25,8 +25,8 @@ public static class TotemRangePreviewChecks
             var inventory = (TotemInventory)resolver.Resolve(typeof(TotemInventory));
             var ui = (TotemInventoryUI)resolver.Resolve(typeof(TotemInventoryUI));
             ((UIManager)resolver.Resolve(typeof(UIManager))).HideStartButton();
-            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/SampleAttackTotemData.asset"));
-            // The editable sample is user content; define the test range only on this runtime clone.
+            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset"));
+            // The playable SO is user content; define the test range only on this runtime clone.
             data.EffectGroups.Clear();
             data.effectRanges.Clear();
             data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.left, Vector2Int.right } });
@@ -36,7 +36,7 @@ public static class TotemRangePreviewChecks
             var probe = new PointerEventData(EventSystem.current) { position = Camera.main.WorldToScreenPoint(origin.transform.position) };
             var probeHits = new List<RaycastResult>();
             await UniTask.WaitUntil(() => { probeHits.Clear(); EventSystem.current.RaycastAll(probe, probeHits); return probeHits.Count == 0; }, cancellationToken: token).Timeout(TimeSpan.FromSeconds(15));
-            check(await spawner.PlaceTotemAtCellAsync(data, origin, token), "Spawn actual sample totem");
+            check(await spawner.PlaceTotemAtCellAsync(data, origin, token), "Spawn actual playable totem");
             var totem = origin.OccupyingTotem;
             var drag = totem.GetComponent<DragHandler>();
             var input = (InputManager)resolver.Resolve(typeof(InputManager));
@@ -57,21 +57,27 @@ public static class TotemRangePreviewChecks
             input.GetType().GetMethod("ProcessPointerUp", flags).Invoke(input, new object[] { screen });
             check(!grid.IsPreviewingTotem(totem) && !left.Model.IsTotemRangePreviewed, "Touch release hides range even when info panel opens");
             check(left.GetComponent<SpriteRenderer>().sharedMaterial != mat && !left.Model.IsTotemRangePreviewed, "Clear restores original cell material");
-            var dualData = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/SampleDualEffectTotemData.asset"));
+            var dualData = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset"));
+            // Keep TD1008's group functions/colors; place each group on one side only on this runtime clone.
+            dualData.EffectGroups[0].Ranges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.left } } };
+            dualData.EffectGroups[1].Ranges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } } };
+            var attackBuff = (SimpleBuffFunction)dualData.EffectGroups[0].Functions[0];
+            var speedBuff = (SimpleBuffFunction)dualData.EffectGroups[1].Functions[0];
             await dualData.LoadAssetsAsync().AttachExternalCancellation(token);
             var dualOrigin = grid.GetCell(4, 0);
-            check(await spawner.PlaceTotemAtCellAsync(dualData, dualOrigin, token), "Place dual-effect sample");
+            check(await spawner.PlaceTotemAtCellAsync(dualData, dualOrigin, token), "Place dual-effect totem");
             var dual = dualOrigin.OccupyingTotem;
             var attackCell = grid.GetCell(3, 0);
             var speedCell = grid.GetCell(5, 0);
-            check(Mathf.Approximately(attackCell.Model.GetTotemCellBonus(StatKind.AttackPercent), 0.1f) && attackCell.Model.GetTotemCellBonus(StatKind.Speed) == 0f, "Attack effect applies only to its own range");
-            check(Mathf.Approximately(speedCell.Model.GetTotemCellBonus(StatKind.Speed), 0.2f) && speedCell.Model.GetTotemCellBonus(StatKind.AttackPercent) == 0f, "Speed effect applies only to its own range");
+            check(Mathf.Approximately(attackCell.Model.GetTotemCellBonus(StatKind.AttackPercent), attackBuff.amount) && attackCell.Model.GetTotemCellBonus(StatKind.Speed) == 0f, "Attack effect applies only to its own range");
+            check(Mathf.Approximately(speedCell.Model.GetTotemCellBonus(StatKind.Speed), speedBuff.amount) && speedCell.Model.GetTotemCellBonus(StatKind.AttackPercent) == 0f, "Speed effect applies only to its own range");
             dual.GetComponent<DragHandler>().BeginPress();
             check(attackCell.Model.TotemPreviewColor == dualData.EffectGroups[0].Color && speedCell.Model.TotemPreviewColor == dualData.EffectGroups[1].Color, "Separate range colors follow groups");
             var properties = new MaterialPropertyBlock();
             speedCell.GetComponent<SpriteRenderer>().GetPropertyBlock(properties);
             check(Mathf.Approximately(properties.GetColor("_StripeColor").b, dualData.EffectGroups[1].Color.b), "Group color reaches shader property block");
-            check(dualData.GetDisplayDescription().Contains("#FF4C1A") && dualData.GetDisplayDescription().Contains("#26B2FF"), "Descriptions use matching rich-text colors");
+            var dualDescription = dualData.GetDisplayDescription();
+            check(dualDescription.Contains("#" + ColorUtility.ToHtmlStringRGB(dualData.EffectGroups[0].Color)) && dualDescription.Contains("#" + ColorUtility.ToHtmlStringRGB(dualData.EffectGroups[1].Color)), "Descriptions use matching rich-text colors");
             ScreenCapture.CaptureScreenshot("Temp/totem-range-dual.png");
             await UniTask.Delay(120, DelayType.Realtime, cancellationToken: token);
             inventory.TryAdd(data);
