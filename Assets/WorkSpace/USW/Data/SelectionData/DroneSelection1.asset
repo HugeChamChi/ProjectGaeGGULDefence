@@ -16,8 +16,8 @@ MonoBehaviour:
   chooseName: "\uB9CC\uB098\uC11C \uBC18\uAC00\uC6CC!"
   tier: 1
   spawnRate: 1
-  description: "{Interval}\ucd08\ub9c8\ub2e4 \ubc30\uce58\ub41c \ubca0\ud0d5 \uac01\uac01\uc758 {term:bomb-drone} {Count}\uae30\ub97c \ucd94\uac00 \uc0dd\uc131\ud569\ub2c8\ub2e4."
-  simpleDescription: "\uc8fc\uae30\uc801\uc73c\ub85c \uac01 \ubca0\ud0d5\uc758 {term:bomb-drone}\uc744 \ucd94\uac00 \uc0dd\uc131\ud569\ub2c8\ub2e4."
+  description: "10\uCD08\uB9C8\uB2E4 \uC790\uD3ED \uB4DC\uB860 1\uAE30\uB97C \uCD94\uAC00\uB85C
+    \uC0DD\uC131\uD569\uB2C8\uB2E4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

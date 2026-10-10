@@ -17,7 +17,7 @@ public static class EndlessConfigurationValidator
         if (!mode.Enabled) errors.Add("비활성 초안 설정");
         if (mode.CycleLength <= 0) errors.Add("순환 길이는 양수여야 합니다.");
         if (mode.PenaltyInterval <= 0 || mode.PenaltyFirstApplyRound <= 1) errors.Add("잘못된 패널티 적용 경계");
-        if (mode.PenaltyDrawCount != 1) errors.Add("현재 회당 1회 추첨만 지원합니다.");
+        if (mode.PenaltyDrawCount != 2) errors.Add("승천은 서로 다른 2개 후보를 제시해야 합니다.");
         var positions = new HashSet<int>();
         if (mode.Slots == null || mode.Slots.Count != mode.CycleLength) errors.Add("순환 위치 수가 순환 길이와 다릅니다.");
         if (mode.Slots != null)
@@ -48,11 +48,19 @@ public static class EndlessConfigurationValidator
     }
 
     /// <summary>초기 런타임이 구현할 수 있는 패널티인지 검사한다. 보스 대상 후보는 아직 예약이다.</summary>
-    public static bool IsSupportedPenalty(RunPenaltyData penalty) => penalty != null && penalty.IsConfigured
-        && IsValidKey(penalty.Key) && !string.IsNullOrWhiteSpace(penalty.DisplayName)
-        && (penalty.Target == RunPenaltyTarget.UnitAttack || penalty.Target == RunPenaltyTarget.UnitAttackFrequency)
-        && penalty.Unit == RunPenaltyUnit.Percent && !double.IsNaN(penalty.Delta) && !double.IsInfinity(penalty.Delta)
-        && penalty.Delta > -100d && penalty.Delta <= 0d;
+    public static bool IsSupportedPenalty(RunPenaltyData penalty)
+    {
+        if(penalty==null || !penalty.IsConfigured || !IsValidKey(penalty.Key) || string.IsNullOrWhiteSpace(penalty.DisplayName)
+            || double.IsNaN(penalty.Delta) || double.IsInfinity(penalty.Delta)) return false;
+        switch(penalty.Target)
+        {
+            case RunPenaltyTarget.UnitAttack: case RunPenaltyTarget.UnitAttackFrequency: case RunPenaltyTarget.ExperienceGain:
+                return penalty.Unit==RunPenaltyUnit.Percent && penalty.Delta>-100 && penalty.Delta<=0;
+            case RunPenaltyTarget.ChoiceReduction: return penalty.Unit==RunPenaltyUnit.Flat && penalty.Delta==-1;
+            case RunPenaltyTarget.PermanentCellSeal: return penalty.Unit==RunPenaltyUnit.Flat && penalty.Delta==1;
+            default:return false;
+        }
+    }
 
     /// <summary>활성 후보와 가중치를 검사한다. 미정 후보는 비활성으로만 보관한다.</summary>
     public static bool TryValidatePool(RunPenaltyPoolData pool, out string error)
@@ -60,6 +68,7 @@ public static class EndlessConfigurationValidator
         if (pool == null || !IsValidKey(pool.Key) || pool.Entries == null) { error = "패널티 풀 미연결/잘못된 키"; return false; }
         var keys = new HashSet<string>(StringComparer.Ordinal);
         bool any = false;
+        int repeatable = 0;
         double sum = 0d;
         foreach (var entry in pool.Entries)
         {
@@ -70,7 +79,9 @@ public static class EndlessConfigurationValidator
             { error = $"{entry.Penalty.Key}: 가중치/효과 미확정 또는 미지원"; return false; }
             any = true;
             sum += entry.Weight;
+            if (!entry.Penalty.OncePerRun) repeatable++;
         }
+        if (repeatable < 2) { error = "서로 다른 반복 가능한 숫자형 후보가 최소 2개 필요합니다."; return false; }
         if (!any || double.IsInfinity(sum)) { error = "유효한 추첨 후보가 없거나 가중치 합이 범위를 초과합니다."; return false; }
         error = "";
         return true;

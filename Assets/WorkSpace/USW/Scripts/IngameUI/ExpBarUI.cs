@@ -8,7 +8,7 @@ using GaeGGUL.Animation;
 /// 플레이어 경험치 바 UI. SummonButton 위에 시각 오버레이로 얹는 용도로도 쓸 수 있다
 /// (마스크/Fill 이미지의 Raycast Target을 꺼두면 버튼 클릭과 기능적으로 겹치지 않는다).
 ///
-/// Slider가 아니라 fillImage에 적용된 LiquidWaveFill 셰이더의 _Fill 프로퍼티로 채워진다:
+/// Slider가 아니라 fillImage의 UI 채움 셰이더(LiquidWaveFill / SortieSmoothSurface)의 _Fill로 채워진다:
 /// 셰이더가 진행도 주변을 사인파로 흔들어 물결처럼 차오르는 수면 경계선을 그린다.
 /// maskRect(RectMask2D)는 더 이상 채움 경계를 담당하지 않고 항상 완전히 열어 둔다
 /// (물결 파고가 경계에서 잘리지 않도록 하기 위함).
@@ -29,7 +29,7 @@ public class ExpBarUI : MonoBehaviour
     [SerializeField] private RectTransform maskRect;
     [Tooltip("진행도 1일 때 maskRect의 목표 높이. 0이면 부모 RectTransform의 현재 높이를 사용.")]
     [SerializeField] private float fullHeight = 0f;
-    [Tooltip("LiquidWaveFill 셰이더가 적용된 Fill 이미지. 진행도를 _Fill 프로퍼티로 흘려준다.")]
+    [Tooltip("UI 채움 셰이더가 적용된 Fill 이미지. 진행도를 _Fill 프로퍼티로 흘려준다.")]
     [SerializeField] private Image fillImage;
     [Tooltip("진행도 0/1이 대응하는 셰이더 _Fill(텍스처 UV.y) 값. 스프라이트 위아래 투명 여백을 건너뛰어 실제 게이지 몸통만 0~100%로 채우도록 조정한다.")]
     [SerializeField] private Vector2 fillUvRange = new Vector2(0f, 1f);
@@ -39,10 +39,13 @@ public class ExpBarUI : MonoBehaviour
     [SerializeField] private Anim_InOutBase scaleAnim;
 
     private static readonly int FillId = Shader.PropertyToID("_Fill");
+    private static readonly int FlowTimeId = Shader.PropertyToID("_FlowTime");
 
     private float _currentProgress;
     private float _lastSoundTime;
     private Material _fillMaterial;
+    private bool _hasFlowTime;
+    private float _flowTime;
 
     private void Start()
     {
@@ -66,6 +69,7 @@ public class ExpBarUI : MonoBehaviour
         {
             _fillMaterial = new Material(fillImage.material);
             fillImage.material = _fillMaterial;
+            _hasFlowTime = _fillMaterial.HasProperty(FlowTimeId);
         }
 
         SetProgressImmediate(0f);
@@ -74,6 +78,13 @@ public class ExpBarUI : MonoBehaviour
         _expManager.OnLevelUp   += OnLevelUp;
 
         Refresh();
+    }
+
+    private void Update()
+    {
+        if (!_hasFlowTime || _fillMaterial == null) return;
+        _flowTime += Time.unscaledDeltaTime;
+        _fillMaterial.SetFloat(FlowTimeId, _flowTime);
     }
 
     private void OnDestroy()
@@ -146,7 +157,11 @@ public class ExpBarUI : MonoBehaviour
     {
         _currentProgress = t;
         if (_fillMaterial == null) return;
-        _fillMaterial.SetFloat(FillId, Mathf.Lerp(fillUvRange.x, fillUvRange.y, Mathf.Clamp01(t)));
+        float progress = Mathf.Clamp01(t);
+        float fill = _hasFlowTime && (progress <= 0f || progress >= 1f)
+            ? progress
+            : Mathf.Lerp(fillUvRange.x, fillUvRange.y, progress);
+        _fillMaterial.SetFloat(FillId, fill);
     }
 
     private void SetProgressImmediate(float t)

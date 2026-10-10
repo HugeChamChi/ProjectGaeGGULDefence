@@ -11,6 +11,7 @@ public class ExpManager : MonoBehaviour
         
     }
 
+    [Inject] private EndlessRunService _runPenalties;
     [Inject] private BossManager _bossManager;
     [Inject] private LevelUpManager _levelUpManager;
     [Inject] private GameManager _gameManager;
@@ -71,7 +72,7 @@ public class ExpManager : MonoBehaviour
     {
         if (_gameManager?.IsFinished == true || IsMaxLevel) return;
 
-        CurrentExp += amount;
+        CurrentExp += amount * (float)(_runPenalties?.ExperienceMultiplier ?? 1d);
         OnExpChanged?.Invoke(CurrentExp);
 
         if (!DeferLevelUps && CurrentExp >= ExpToLevelUp)

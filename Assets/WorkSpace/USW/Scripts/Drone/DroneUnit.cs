@@ -73,6 +73,8 @@ public class DroneUnit : MonoBehaviour
     private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
     private SpineActorVisual        _spineVisual;
+    /// <summary>Animated firing origin for normal shots, hacking and recorded attacks.</summary>
+    public Vector3 MuzzlePosition => _spineVisual != null ? _spineVisual.MuzzlePosition : transform.position;
     private int _attackLifetime;
     private Vector3 _baseScale = Vector3.one;
     private Tween _punchTween;
@@ -349,7 +351,7 @@ public class DroneUnit : MonoBehaviour
         if (cell.IsSealed || cell.IsAttackDisabled || cell.TotemAttackDisabled) return;
         var owner = _owner;
         int lifetime = _attackLifetime;
-        Vector3 origin = transform.position;
+        Vector3 origin = MuzzlePosition;
         var replay = owner.Combat?.BeginDroneBasicAttack(boss, transform,
             () => this != null && _attackLifetime == lifetime && _owner == owner && owner.currentCell != null);
         var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage, kind) : null;
@@ -373,7 +375,7 @@ public class DroneUnit : MonoBehaviour
             applyHit();
             originalHit = true;
             if (shadowArrivedEarly && replay?.CanReplay == true) applyHit();
-        }, origin);
+        });
         replay?.RecordShot(hit => ShootProjectile(targetPos, hit, origin), () =>
         {
             if (originalHit) applyHit();
@@ -396,7 +398,7 @@ public class DroneUnit : MonoBehaviour
             ShootAfterHoldAsync(targetPos, onHitCallback, recordedOrigin, _attackLifetime).Forget();
             return;
         }
-        Vector3 origin = recordedOrigin ?? transform.position;
+        Vector3 origin = recordedOrigin ?? MuzzlePosition;
         _audioManager?.PlaySFX("05.Drone_Attack");
         PlayAttackFrame();
 
@@ -407,6 +409,8 @@ public class DroneUnit : MonoBehaviour
             {
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
+
+                if (p is DroneLaserProjectile laser) laser.BindEmitter(recordedOrigin.HasValue ? null : _spineVisual);
 
                 p.Launch(origin, targetPos, proj =>
                 {

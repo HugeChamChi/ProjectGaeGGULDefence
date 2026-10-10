@@ -17,7 +17,7 @@ MonoBehaviour:
   _cycleLength: 10
   _penaltyInterval: 10
   _penaltyFirstApplyRound: 11
-  _penaltyDrawCount: 1
+  _penaltyDrawCount: 2
   _slots:
   - _position: 1
     _role: 1

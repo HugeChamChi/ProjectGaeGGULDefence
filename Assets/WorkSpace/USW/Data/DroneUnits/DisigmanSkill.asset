@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0501c3a456a47499bcb00e97f9704a, type: 3}
+  m_Name: DisigmanSkill
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillId: 0
+  skillName: "\uC2DC\uAC04 \uD0C8\uD658"
+  description: "\uBCF8\uCCB4 \uACF5\uACA9\uC73C\uB85C \uC644\uCDA9\uD558\uBA74 \uAC15\uD55C
+    \uD55C \uBC1C\uACFC \uC989\uC2DC \uC2DC\uAC04 \uD68C\uBCF5. \uC815\uBCF4\uCC3D\uC740
+    \uD604\uC7AC \uC124\uC815\uC744 \uD45C\uC2DC\uD569\uB2C8\uB2E4."
+  attackSoundAddress: 
+  action:
+    rid: 5888964643206987872
+  hitEffects:
+  - rid: 5888964643206987873
+  additionalEffects: []
+  castEffect:
+    rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 5888964643206987872
+      type: {class: DisigmanSkillAction, ns: , asm: Assembly-CSharp}
+      data:
+        projectileDataId: 7
+        sizeMultiplier: 1.6
+    - rid: 5888964643206987873
+      type: {class: AtkCoefficientDamage, ns: , asm: Assembly-CSharp}
+      data:
+        coefficient:
+          rid: 5888964643206987874
+    - rid: 5888964643206987874
+      type: {class: ConstantFloat, ns: , asm: GGD.Core}
+      data:
+        value: 3

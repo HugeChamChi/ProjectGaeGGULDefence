@@ -34,6 +34,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f5ff2c9d422cc594eb39784a1f5d282e, type: 2}
   - {fileID: 11400000, guid: 373d4a16344bd6144a7e029f42b06aa9, type: 2}
   - {fileID: 11400000, guid: 1063e0f5856261944b9927c9f15f2a38, type: 2}
+  - {fileID: 11400000, guid: d40b7ae9345767248a165880f28f50b7, type: 2}
+  - {fileID: 11400000, guid: 63c28fdeb4a06944ab91b51d6a936422, type: 2}
+  - {fileID: 11400000, guid: fbab0d28e82772c48a9e00c97566992e, type: 2}
+  - {fileID: 11400000, guid: 16550bf79b925db459607b9dc235e2d0, type: 2}
   RareWeight: 60
   EpicWeight: 30
   LegendWeight: 10

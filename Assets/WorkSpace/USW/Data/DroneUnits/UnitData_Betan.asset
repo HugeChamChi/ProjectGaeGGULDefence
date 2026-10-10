@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_Betan
   m_EditorClassIdentifier: 
-  LevelUpPool: {fileID: 0}
-  AlphanSkill: {fileID: 0}
   DebuffBindings:
     _normal:
       _debuffId: 0
@@ -66,6 +64,8 @@ MonoBehaviour:
     legend: 14
   basicAttackData: {fileID: 0}
   skillData: {fileID: 0}
+  Hacking: {fileID: 11400000, guid: 6770f25b048611949929596efc470881, type: 2}
+  SelfDestructAttackCoefficient: 2.5
   SkillGaugeMode: 0
   foodProduction:
     normal: 1

@@ -3,7 +3,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-/// <summary>Owns cancellable timer absorption, committed bonus and delayed clear notice; WaveManager awaits it before rewards.</summary>
+/// <summary>Owns cancellable timer absorption, committed bonus and delayed clear notice; WaveManager awaits it before rewards.
+/// Hack-tagged additions (Disigman time recovery) only show the timer glitch; a boss clear or other addition replaces it.</summary>
 public sealed class BossClearPresentation : MonoBehaviour
 {
     [SerializeField] private TimerBonusLab _fusion;
@@ -22,7 +23,7 @@ public sealed class BossClearPresentation : MonoBehaviour
         Release();
         _timer = timer; _waves = waves; _bosses = bosses; _ui = ui; _config = config;
         _notice = _fusion != null ? _fusion.GetComponent<BossClearNoticeLab>() : null;
-        if (_timer != null) _timer.OnTimeAdded += OnAdditionalTimeAdded;
+        if (_timer != null) _timer.OnTimeAddedFrom += OnAdditionalTimeAdded;
         if (_waves != null) { _waves.OnRunStopped += Cancel; _waves.OnWaveChanged += OnWaveChanged; }
     }
 
@@ -30,11 +31,21 @@ public sealed class BossClearPresentation : MonoBehaviour
     public UniTask PlayBossClearAsync(float seconds, Vector3? bossPosition, GameConfig config, CancellationToken token) =>
         PresentAsync(seconds, bossPosition, config, true, token);
 
-    private void OnAdditionalTimeAdded(float seconds)
+    private void OnAdditionalTimeAdded(float seconds, TimeAddSource source, Vector3? origin)
     {
         // The committed addition inside PresentAsync must not start a second sequence.
         if (_presentationCts != null || seconds <= 0f || !isActiveAndEnabled) return;
+        if (source == TimeAddSource.Hack) { PresentHack(seconds, origin); return; }
         PresentAdditionalAsync(seconds).Forget();
+    }
+
+    // Display only: the time is already on the countdown. Merges into an on-screen hack (J rule).
+    private void PresentHack(float seconds, Vector3? origin)
+    {
+        if (_fusion == null || _stage == null || _timer == null) return;
+        Vector2 point = origin.HasValue && Camera.main != null
+            ? DamageStyleLabUtil.ScreenToLocal(_stage, RectTransformUtility.WorldToScreenPoint(Camera.main, origin.Value)) : Vector2.zero;
+        _fusion.PresentHack(_timer, seconds, point);
     }
 
     private async UniTaskVoid PresentAdditionalAsync(float seconds)
@@ -74,9 +85,10 @@ public sealed class BossClearPresentation : MonoBehaviour
                 _fusion.NotifyBonusApplied();
             }
             await UniTask.WaitUntil(() => _fusion.IsBonusCountComplete || !_fusion.IsPresenting, cancellationToken: cts.Token);
-            if (config != null)
+            // Only a boss-clear request owns the delayed clear notice.
+            if (pending && config != null)
                 await UniTask.Delay(TimeSpan.FromSeconds(config.BossClearNoticeDelaySeconds), ignoreTimeScale: true, cancellationToken: cts.Token);
-            if (_notice != null)
+            if (pending && _notice != null)
             {
                 _notice.PresentRuntimeNotice();
                 await UniTask.WaitUntil(() => !_notice.IsPresenting, cancellationToken: cts.Token);
@@ -112,7 +124,7 @@ public sealed class BossClearPresentation : MonoBehaviour
     }
     private void Release()
     {
-        if (_timer != null) _timer.OnTimeAdded -= OnAdditionalTimeAdded;
+        if (_timer != null) _timer.OnTimeAddedFrom -= OnAdditionalTimeAdded;
         if (_waves != null) { _waves.OnRunStopped -= Cancel; _waves.OnWaveChanged -= OnWaveChanged; }
         Cancel();
     }

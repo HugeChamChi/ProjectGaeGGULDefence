@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class UnitDependencies
 {
+    /// <summary>Scene countdown used by time-recovery skills.</summary>
+    public TimerController Timer { get; set; }
     /// <summary>현재 전투에 고정된 영구 강화 수치.</summary>
     public ResearchRunBonuses Research { get; set; }
     /// <summary>Scene terminal state, shared by food production and combat callbacks.</summary>

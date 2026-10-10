@@ -216,6 +216,8 @@ MonoBehaviour:
   _drag: {fileID: -8214074648721856230}
   _idle: idle
   _dragAnimation: drag
+  _attack: attack
+  _skill: skill
   _attackStart: attack_start
   _attackLoop: attack_loop
   _attackEnd: attack_end
@@ -249,7 +251,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.009911388, y: 0.060085982, z: 0}
-  m_LocalScale: {x: 0.086, y: 0.086, z: 0.086}
+  m_LocalScale: {x: 0.14854546, y: 0.14854546, z: 0.14854546}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4212468674343914903}
@@ -279,7 +281,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: c8ff50adc28cc74448c7959555de9df7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

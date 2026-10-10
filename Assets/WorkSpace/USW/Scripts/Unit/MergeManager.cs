@@ -67,7 +67,7 @@ public class MergeManager : MonoBehaviour
         var targetCell = target.currentCell;
         if (sourceCell == null || targetCell == null || sourceCell == targetCell ||
             sourceCell.OccupyingUnit != dragged || targetCell.OccupyingUnit != target ||
-            sourceCell.Model.IsSealed || targetCell.Model.IsSealed) return false;
+            targetCell.Model.IsSealed) return false;
         return MergeTargets(new List<(UnitBase unit, GridCell cell)>
             { (dragged, sourceCell), (target, targetCell) }, targetCell, (Tier)((int)dragged.OriginalTier + 1));
     }

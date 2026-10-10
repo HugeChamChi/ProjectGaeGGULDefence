@@ -10,7 +10,6 @@ using UnityEngine;
 /// </summary>
 public class SelfDestructDrone : MonoBehaviour
 {
-    [Inject] private BossManager _bossManager;
     [Inject] private DroneManager _droneManager;
     [Inject] private FieldPauseVisuals _fieldPause;
 
@@ -69,13 +68,20 @@ public class SelfDestructDrone : MonoBehaviour
     }
 
     /// <summary>Drone_Betan.SpawnSelfDestructDrones() 에서 호출 — 차징 후 보스를 향해 돌진한다.</summary>
-    public void Initialize(float damage)
+    public void Initialize(int damage, bool critical, BossBase target)
     {
         StopSequence();
         _cts = new CancellationTokenSource();
         _previewTarget = null;
         _previewExplosion = null;
-        SequenceAsync(damage, _cts.Token).Forget();
+        SequenceAsync(new Shot(damage, critical, target), _cts.Token).Forget();
+    }
+
+    /// <summary>폭발 피해 대신 원래 보스에 스택을 생산한다. 기본/선택지 자폭 생성 경로 모두 사용한다.</summary>
+    public void InitializeHacking(BossBase target, DroneHackingRuntime runtime, int stacks)
+    {
+        StopSequence(); _cts=new CancellationTokenSource(); _previewTarget=null; _previewExplosion=null;
+        SequenceAsync(new Shot(target,runtime,stacks),_cts.Token).Forget();
     }
 
     /// <summary>데미지 없이 지정 위치로 연출만 재생한다 (테스트 씬 프리뷰용).</summary>
@@ -87,14 +93,28 @@ public class SelfDestructDrone : MonoBehaviour
         target.z = 0f;
         _previewTarget = target;
         _previewExplosion = explosionOverride;
-        SequenceAsync(0f, _cts.Token).Forget();
+        SequenceAsync(default, _cts.Token).Forget();
     }
 
     // ── 차징 → 돌진 → 폭발 ──────────────────────────────────────────
 
-    private async UniTaskVoid SequenceAsync(float damage, CancellationToken token)
+    private readonly struct Shot
     {
-        if (!TryGetTarget(out Vector3 target))
+        public readonly int Damage;
+        public readonly bool Critical;
+        public readonly BossBase Target;
+        public readonly DroneHackingRuntime Hacking;
+        public readonly int Stacks;
+        public readonly int Generation;
+        public Shot(int damage, bool critical, BossBase target)
+        { Damage = damage; Critical = critical; Target = target; Hacking=null; Stacks=Generation=0; }
+        public Shot(BossBase target,DroneHackingRuntime runtime,int stacks)
+        {Damage=0;Critical=false;Target=target;Hacking=runtime;Stacks=stacks;Generation=runtime.Ledger.Generation;}
+    }
+
+    private async UniTaskVoid SequenceAsync(Shot shot, CancellationToken token)
+    {
+        if (!TryGetTarget(shot, out Vector3 target))
         {
             ReturnToPool();
             return;
@@ -103,8 +123,8 @@ public class SelfDestructDrone : MonoBehaviour
         SetTrailEmitting(false);
         if (await ChargeAsync(target, token)) return;
 
-        // 차징 중 보스가 바뀌었거나 죽었으면 새 착탄 지점을 다시 고른다.
-        if (!TryGetTarget(out target))
+        // Recheck the captured target; a new boss never inherits this shot.
+        if (!TryGetTarget(shot, out target))
         {
             ReturnToPool();
             return;
@@ -114,11 +134,11 @@ public class SelfDestructDrone : MonoBehaviour
         if (_fieldPause != null && await _fieldPause.WaitForAttacksAsync(token).SuppressCancellationThrow()) return;
         if (await DashAsync(target, token)) return;
 
-        Explode(damage, target);
+        Explode(shot, target);
         ReturnToPool();
     }
 
-    private bool TryGetTarget(out Vector3 target)
+    private bool TryGetTarget(Shot shot, out Vector3 target)
     {
         if (_previewTarget.HasValue)
         {
@@ -127,8 +147,9 @@ public class SelfDestructDrone : MonoBehaviour
         }
 
         target = default;
-        var boss = _bossManager?.CurrentBoss;
+        var boss = shot.Target;
         if (boss == null || boss.IsDead) return false;
+        if (shot.Hacking != null && (shot.Hacking.Target != boss || shot.Hacking.Ledger.Generation != shot.Generation)) return false;
 
         var bossArea = boss.GetComponent<BossAreaTarget>();
         target = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
@@ -214,11 +235,21 @@ public class SelfDestructDrone : MonoBehaviour
         return false;
     }
 
-    private void Explode(float damage, Vector3 target)
+    private void Explode(Shot shot, Vector3 target)
     {
-        var boss = _previewTarget.HasValue ? null : _bossManager?.CurrentBoss;
+        var boss = _previewTarget.HasValue ? null : shot.Target;
+        if (shot.Hacking != null)
+        {
+            if(boss!=null && !boss.IsDead && shot.Hacking.Target==boss && shot.Hacking.Ledger.Generation==shot.Generation)
+            {
+                shot.Hacking.Add(boss,shot.Stacks);
+                _droneManager?.NotifySelfDestructExplosion();
+            }
+            return;
+        }
         if (boss != null && !boss.IsDead)
-            boss.ApplyProjectileImpact(() => boss.TakeDamage(Mathf.RoundToInt(damage), target));
+            boss.ApplyProjectileImpact(() => boss.TakeDamage(shot.Damage, target,
+                shot.Critical ? BossDamageKind.Critical : BossDamageKind.Normal));
 
         var explosionPrefab = _previewExplosion != null ? _previewExplosion : _explosionPrefab;
         if (explosionPrefab != null)

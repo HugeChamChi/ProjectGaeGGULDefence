@@ -10,21 +10,54 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     [SerializeField] private DragHandler _drag;
     [SerializeField] private string _idle = "idle";
     [SerializeField] private string _dragAnimation = "drag";
+    [SerializeField] private string _attack = "attack";
+    [SerializeField] private string _skill = "skill";
     [SerializeField] private string _attackStart = "attack_start";
     [SerializeField] private string _attackLoop = "attack_loop";
     [SerializeField] private string _attackEnd = "attack_end";
     private MeshRenderer _renderer;
+    private UnitBase _unit;
     private bool _dragging;
     private bool _paused;
     private bool _previousUnscaled;
 
+    /// <summary>The authored skeleton used for visual-only skill copies.</summary>
+    public SkeletonAnimation Skeleton => _skeleton;
+
+    /// <summary>Animated muzzle position, including the authored skeleton scale and pose.</summary>
+    public Vector3 MuzzlePosition
+    {
+        get
+        {
+            var bone = _skeleton != null ? _skeleton.Skeleton?.FindBone("muzzle") : null;
+            return bone != null ? bone.GetWorldPosition(_skeleton.transform) : transform.position;
+        }
+    }
+
     private void Awake()
     {
         if (_skeleton != null) _renderer = _skeleton.GetComponent<MeshRenderer>();
+        _unit = GetComponent<UnitBase>();
     }
 
-    private void OnEnable() => ResetAnimation();
-    private void OnDisable() { SetPauseIdle(false); ResetAnimation(); }
+    private void OnEnable()
+    {
+        ResetAnimation();
+        if (_unit == null) return;
+        _unit.onAttack?.AddListener(PlayAttack);
+        _unit.onSkillFull?.AddListener(PlaySkill);
+    }
+
+    private void OnDisable()
+    {
+        if (_unit != null)
+        {
+            _unit.onAttack?.RemoveListener(PlayAttack);
+            _unit.onSkillFull?.RemoveListener(PlaySkill);
+        }
+        SetPauseIdle(false);
+        ResetAnimation();
+    }
 
     /// <summary>Resets tracks on pool reuse without changing the authored skin.</summary>
     public void ResetAnimation()
@@ -45,12 +78,34 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     /// <summary>Plays one authored firing cycle and returns to idle; never applies combat effects.</summary>
     public void PlayAttack()
     {
-        if (_skeleton == null || _skeleton.AnimationState == null || !Has(_attackStart)) return;
+        if (_skeleton == null || _skeleton.AnimationState == null || (_drag != null && _drag.IsDragging)) return;
         var state = _skeleton.AnimationState;
+        var current = state.GetTrack(0);
+        if (current != null && current.Animation.Name == _skill && !current.IsComplete) return;
+        if (Has(_attack))
+        {
+            state.SetAnimation(0, _attack, false);
+            QueueIdle();
+            return;
+        }
+        if (!Has(_attackStart)) return;
         state.SetAnimation(0, _attackStart, false);
         if (Has(_attackLoop)) state.AddAnimation(0, _attackLoop, false, 0f);
         if (Has(_attackEnd)) state.AddAnimation(0, _attackEnd, false, 0f);
-        if (Has(_idle)) state.AddAnimation(0, _idle, true, 0f);
+        QueueIdle();
+    }
+
+    /// <summary>Plays the authored skill once, then returns to idle without changing skill effects or timing.</summary>
+    public void PlaySkill()
+    {
+        if (_skeleton == null || _skeleton.AnimationState == null || !Has(_skill)) return;
+        _skeleton.AnimationState.SetAnimation(0, _skill, false);
+        QueueIdle();
+    }
+
+    private void QueueIdle()
+    {
+        if (Has(_idle)) _skeleton.AnimationState.AddAnimation(0, _idle, true, 0f);
     }
 
     /// <inheritdoc />

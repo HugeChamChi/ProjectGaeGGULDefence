@@ -24,13 +24,16 @@ public class LevelUpManager : MonoBehaviour
 {
     /// <summary>현재 런의 드론 선택지 효과.</summary>
     public DroneSelectionState DroneSelections { get; } = new();
-    [Inject] private DebuffInfoPresenter _descriptionDebuffs;
-    [Inject] private DescriptionTermCatalog _descriptionCatalog;
     /// <summary>선택 전에 확정한 랜덤 값을 카드 설명에 반영한다.</summary>
     public string GetChoiceDescription(LevelUpData card)
     {
-        return DescriptionFormatter.Format(new ChoiceDescriptionAdapter(card, this).Capture(), true,
-            new DescriptionTermResolver(_descriptionCatalog, _descriptionDebuffs), false);
+        if (card == null) return string.Empty;
+        if (card.droneEffect != null && card.droneEffect.Kind >= DroneSelectionKind.DeltanBackdoor)
+            return (card.description ?? string.Empty).Replace("{value}",(card.droneEffect.Value*100f).ToString("0.#"))
+                .Replace("{count}",card.droneEffect.Count.ToString());
+        if (card.droneEffect?.Kind != DroneSelectionKind.DeltanDamageTaken) return card.description;
+        string value = UnityEngine.Mathf.RoundToInt(DroneSelections.PreviewValue(card) * 100).ToString();
+        return (card.description ?? string.Empty).Replace("{value}", value).Replace("[1~10%]", value + "%");
     }
  
     /// <summary>선택된 족장의 풀을 런 시작에 한 번 확정한다. 런 상태는 씬 수명을 따른다.</summary>
@@ -155,9 +158,12 @@ public class LevelUpManager : MonoBehaviour
     // 랜덤 선택지 3장 뽑기 (가중치 + 부족 필터)
     // ══════════════════════════════════════════════════════════
 
+    [VContainer.Inject] private EndlessRunService _runPenalties;
+
     public List<LevelUpData> GetRandomChoices(int count = 3)
     {
         if (count <= 0) return new List<LevelUpData>();
+        count = _runPenalties?.GetChoiceCount(count) ?? count;
         if (!_poolInitialized) Init();
         bool forceLegend = _guaranteeNextLegend;
         _guaranteeNextLegend = false;

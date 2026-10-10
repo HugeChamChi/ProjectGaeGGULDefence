@@ -16,8 +16,10 @@ MonoBehaviour:
   chooseName: "\uAE34\uAE09 \uAD50\uC2E0"
   tier: 1
   spawnRate: 1
-  description: "{term:alphan-active} \uc0ac\uc6a9 \uc2dc \ubc30\uce58\ub41c \uac10\ub9dd\uc758 {term:gamman-buff}\ub97c \uc801\uc6a9\ud569\ub2c8\ub2e4."
-  simpleDescription: "{term:alphan-active}\ub85c \ubc30\uce58\ub41c \uac10\ub9dd\uc758 {term:gamman-buff}\ub3c4 \ubc1c\ub3d9\ud569\ub2c8\ub2e4."
+  description: "\uC54C\uD321 \uC561\uD2F0\uBE0C \uC0AC\uC6A9 \uC2DC \uBC30\uCE58\uB41C
+    \uAC10\uB9DD\uC774 \uCD94\uAC00 \uAE30\uD3ED\uD569\uB2C8\uB2E4. \uC774\uBBF8
+    \uAE30\uD3ED \uC911\uC778 \uAC10\uB9DD\uC740 \uC911\uBCF5 \uBC1C\uB3D9\uD558\uC9C0
+    \uC54A\uC2B5\uB2C8\uB2E4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

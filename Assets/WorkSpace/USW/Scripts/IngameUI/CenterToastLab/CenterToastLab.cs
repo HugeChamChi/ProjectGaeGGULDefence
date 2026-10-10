@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 중앙 알림 실험실(FxLab_CenterToast) 드라이버 (사용자 요청 2026-10-02, 참고 design/중앙팝업1.gif).
-/// 재사용 컴포넌트 CenterToast를 그대로 띄워 보고, 연출 방식 4종(A 스택 / B 라인 스플릿 / C 글래스 슬라이드 — 모던, D 펀치 글자)을 비교한다.
+/// 재사용 컴포넌트 CenterToast를 그대로 띄워 보고, 연출 방식(A 스택 / B 라인 스플릿 / C 글래스 슬라이드 — 모던, D 펀치 글자, E·F·G·H 조합)을 비교한다.
+/// 겹쳐 올라가기 실험실(FxLab_CenterToastRise)도 같은 드라이버를 쓴다 — 버튼에 F·G·H만 연결.
 /// 버튼: 문구 한 번씩, 같은 문구 연타(5번), 서로 다른 문구 섞어 연타, 속도, 자동 데모. 문구는 실험용 예시.
 /// 실험실 전용 — FxLabCapture 캡처 대상 (Play() = 자동 데모 처음부터, 1배속).
 /// </summary>
@@ -19,12 +20,14 @@ public sealed class CenterToastLab : MonoBehaviour, IFxLabPlayable
     private const float MaxStep = 1f / 20f;
     private static readonly Color ButtonIdle = new Color(1f, 1f, 1f, 0.15f);
     private static readonly Color ButtonSelected = new Color(0.35f, 0.8f, 0.45f, 0.85f);
-    private static readonly string[] StyleNames = { "A 스택(모던)", "B 라인 스플릿", "C 글래스 슬라이드", "D 펀치 글자", "E = B 디자인 + A 연출(쌓기)", "F = B 디자인 + C 연출(슬라이드)" };
+    private static readonly string[] StyleNames = { "A 스택(모던)", "B 라인 스플릿", "C 글래스 슬라이드", "D 펀치 글자", "E = B 디자인 + A 연출(쌓기)", "F = B 디자인 + C 연출(슬라이드)", "G 슬라이드 + 글자 겹쳐 올라감", "H 슬라이드 + 카드째 겹쳐 올라감", "I 글자 겹침 + 화면 전체 띠" };
 
     [SerializeField] private CenterToast _toast;
     [SerializeField] private CenterToastSettings _settings;
-    [Tooltip("연출 방식 버튼 (A~F 순서)")]
+    [Tooltip("연출 방식 버튼")]
     [SerializeField] private Image[] _styleButtons;
+    [Tooltip("버튼 순서대로 띄울 방식 (CenterToastStyle 정수). 비우면 버튼 i = 방식 i")]
+    [SerializeField] private int[] _styleOrder;
     [SerializeField] private TextMeshProUGUI _status;
     [SerializeField] private float[] _speeds = { 1f, 0.5f, 0.25f };
     [Tooltip("연타 시뮬레이션 간격 (초) — 손가락으로 빠르게 두드리는 정도")]
@@ -89,7 +92,7 @@ public sealed class CenterToastLab : MonoBehaviour, IFxLabPlayable
         _nextAuto = _clock;
     }
 
-    /// <summary>연출 방식 선택 (0=A 스택, 1=B 라인 스플릿, 2=C 글래스 슬라이드, 3=D 펀치 글자, 4=E B+A, 5=F B+C). 설정 에셋에도 저장된다.</summary>
+    /// <summary>연출 방식 선택 (0=A 스택, 1=B 라인 스플릿, 2=C 글래스 슬라이드, 3=D 펀치 글자, 4=E B+A, 5=F B+C, 6=G 글자 겹쳐 올라감, 7=H 카드째). 설정 에셋에도 저장된다.</summary>
     public void SelectStyle(int index)
     {
         _settings.Style = (CenterToastStyle)Mathf.Clamp(index, 0, StyleNames.Length - 1);
@@ -160,9 +163,11 @@ public sealed class CenterToastLab : MonoBehaviour, IFxLabPlayable
         int current = (int)_settings.Style;
         if (_styleButtons != null)
             for (int i = 0; i < _styleButtons.Length; i++)
-                if (_styleButtons[i] != null) _styleButtons[i].color = i == current ? ButtonSelected : ButtonIdle;
+                if (_styleButtons[i] != null) _styleButtons[i].color = StyleOf(i) == current ? ButtonSelected : ButtonIdle;
         UpdateStatus();
     }
+
+    private int StyleOf(int button) => _styleOrder != null && button < _styleOrder.Length ? _styleOrder[button] : button;
 
     private void UpdateStatus()
     {

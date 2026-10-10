@@ -6,20 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Title.unity
-    guid: e2e79a0692eb4b848bca29692cdb76af
-  - enabled: 0
-    path: Assets/Scenes/LobbyScene.unity
-    guid: 128751b03828dc84d96048911fbaea1e
-  - enabled: 0
     path: Assets/Scenes/IngameScene.unity
     guid: 293da426adba53d4d9f2e0e2f152d05e
-  - enabled: 0
-    path: Assets/WorkSpace/USW/Tutorial/Scenes/TutorialScene.unity
-    guid: ef03b98e3b2db344fa5d6cd598eccd01
-  - enabled: 0
-    path: Assets/WorkSpace/USW/Data/OutgameUpgrade.unity
-    guid: ce1fefb5473de9c4081c911c9d84a448
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 96fcee4011df941419f30131796a40ec,
       type: 2}

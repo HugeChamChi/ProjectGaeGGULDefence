@@ -24,8 +24,9 @@ public class UnitStatsModifier : MonoBehaviour
 
     private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier;
 
-    private float UpgradedAttackInterval => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
-        / Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
+    // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
+    private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
+        * Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true);
 
@@ -51,10 +52,6 @@ public class UnitStatsModifier : MonoBehaviour
     /// <summary>Attack-coefficient path; run attack applies once and fixed damage bypasses it.</summary>
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
         => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true);
-
-    /// <summary>평균 1인 균등 배율 [1 - variance, 1 + variance]. 0이면 난수를 쓰지 않는다.</summary>
-    private static float Spread(float variance) =>
-        variance > 0f ? UnityEngine.Random.Range(1f - variance, 1f + variance) : 1f;
 
     private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false)
     {
@@ -91,7 +88,7 @@ public class UnitStatsModifier : MonoBehaviour
 
         // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
         // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.
-        if (rollCritical) damage *= Spread(lu?.DamageVariance ?? 0f);
+        if (rollCritical) damage *= DamageCalculator.Spread(lu?.DamageVariance ?? 0f);
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
         float critChance = (lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f);
@@ -99,7 +96,7 @@ public class UnitStatsModifier : MonoBehaviour
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
-            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * Spread(lu?.CritDamageVariance ?? 0f);
+            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * DamageCalculator.Spread(lu?.CritDamageVariance ?? 0f);
             critical = true;
         }
 
@@ -122,7 +119,7 @@ public class UnitStatsModifier : MonoBehaviour
         float rowSpeedMult   = Mathf.Max(_deps?.LevelUpManager?.GetRowSpeedMultiplier(row) ?? 1f, 0.01f);
         float tribeSpeedMult = Mathf.Max(1f + (_deps?.LevelUpManager?.GetTribeSpeedBonus(_unit.unitData.unitTribe) ?? 0f), 0.01f);
         
-        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackInterval, 0.01f);
+        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackFrequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 
         float interval = baseInterval

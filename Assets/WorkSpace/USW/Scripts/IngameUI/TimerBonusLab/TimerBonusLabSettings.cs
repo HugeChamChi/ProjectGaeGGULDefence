@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// 보스 처치 시간 보너스 연출 실험실(FxLab_TimerBonus) 설정 — 시안 4종(합체·슬롯 릴·질주·스탬프)과 공통 텐션 값.
+/// 보스 처치 시간 보너스 연출 실험실(FxLab_TimerBonus) 설정 — 시안 5종(합체·슬롯 릴·질주·스탬프·해킹)과 공통 텐션 값.
 /// 플레이 중 인스펙터에서 바꾸면 바로 반영되고 에셋에 남는다.
 /// 시간은 초, 거리·속도는 HTML 시안 px 기준 (× PxScale = 1080 캔버스 단위).
 /// 실험실 전용 — 인게임 TimerController/UIManager와 무관.
@@ -74,6 +74,72 @@ public class TimerBonusLabSettings : ScriptableObject
         public float ShakeAmplitude = 11f;
     }
 
+    /// <summary>
+    /// E 해킹: 타이머가 가로 띠로 찢어지고 숫자가 뒤섞이다가 왼쪽부터 새 값으로 고정된다.
+    /// 2026-10-09 사용자 "조금 더 빨리" — 처치~정상화 약 0.94초 → 0.47초.
+    /// 레퍼런스 design/글리치모드.gif — 금 간 크리스탈의 하늘색 스캔라인·행 어긋남 글리치.
+    /// </summary>
+    [Serializable]
+    public class HackTuning
+    {
+        [Tooltip("처치 직후 깜빡깜빡 감염되는 구간")]
+        public float InfectSeconds = 0.05f;
+        [Tooltip("숫자가 뒤섞이며 진행 막대가 차는 시간 (첫 자릿수 고정까지)")]
+        public float HackSeconds = 0.28f;
+        [Tooltip("다음 자릿수가 고정되는 간격")]
+        public float LockStagger = 0.045f;
+        [Tooltip("완료 후 글리치가 가라앉는 시간")]
+        public float SettleSeconds = 0.18f;
+        [Tooltip("글리치 무늬가 바뀌는 간격 (짧을수록 정신없음)")]
+        public float TickSeconds = 0.04f;
+        [Tooltip("타이머를 자르는 가로 띠 수")]
+        [Range(2, 12)] public int SliceCount = 7;
+        [Tooltip("가로 띠가 어긋나는 최대 거리 (px)")]
+        public float MaxSliceShift = 24f;
+        [Tooltip("RGB 잔상 최대 간격 (px)")]
+        public float RgbOffset = 4f;
+        [Tooltip("하늘색 스캔라인 최대 수")]
+        [Range(0, 16)] public int ScanlineCount = 9;
+        [Tooltip("픽셀 노이즈 조각 최대 수")]
+        [Range(0, 24)] public int NoiseBlockCount = 12;
+        [Tooltip("해킹 중 타이머가 하늘색으로 물드는 정도")]
+        [Range(0f, 1f)] public float CyanTint = 0.7f;
+        [Tooltip("완료 후 잔진동 글리치 시점 (완료 기준 초)")]
+        public float[] AftershockTimes = { 0.3f };
+        public float AftershockSeconds = 0.08f;
+
+        [Header("중첩 시안 G~J (여러 캐릭터가 연달아 발동)")]
+        [Tooltip("발동 시점 묶음 — '발동 타이밍' 버튼이 순환. 시점은 처치 기준 초, 발동마다 보너스 1번씩")]
+        public StackTriggerSet[] StackTriggerSets =
+        {
+            new StackTriggerSet { Name = "몰아서 3 + 늦게 1", Times = new[] { 0f, 0.1f, 0.22f, 0.75f } },
+            new StackTriggerSet { Name = "끝날 때쯤", Times = new[] { 0f, 0.4f, 0.52f } },
+            new StackTriggerSet { Name = "연타 6", Times = new[] { 0f, 0.15f, 0.3f, 0.45f, 0.6f, 0.75f } },
+        };
+        [Tooltip("합산: 진행 중에 합쳐질 때마다 고정이 늦춰지는 시간")]
+        public float MergeExtendSeconds = 0.08f;
+        [Tooltip("J: 앞 해킹이 끝난 뒤 이 시간 안의 발동은 결과에 이어 붙어 숫자가 누적된다 (넘으면 단독 짧은 버전)")]
+        public float ChainWindowSeconds = 0.6f;
+        [Tooltip("J: 이어 붙는 짧은 버전끼리 최소 간격 (한꺼번에 몰려도 하나씩 툭툭 보이게)")]
+        public float ChainGapSeconds = 0.12f;
+        [Tooltip("발동한 드론에서 타이머까지 해킹 신호가 날아가는 시간")]
+        public float SignalSeconds = 0.18f;
+
+        [Header("인게임 (디시그망 시간 회복)")]
+        [Tooltip("인게임 해킹 완료 순간 화면 전체 흰 플래시·줌. 꺼짐 = 타이머만 터지고 연출 시계 히트스톱만 (자주 발동해도 눈이 덜 피곤하게)")]
+        public bool RuntimeScreenFlash;
+        [Tooltip("인게임: TIME HACK 막대·결과 글자를 이만큼(px) 더 내린다 — 타이머 바로 아래 보스 HP바를 가리지 않게")]
+        public float RuntimeBarDropPx = 30f;
+    }
+
+    /// <summary>해킹 중첩 시안의 발동 시점 묶음 하나.</summary>
+    [Serializable]
+    public class StackTriggerSet
+    {
+        public string Name;
+        public float[] Times;
+    }
+
     [Header("흐름 (초)")]
     [Tooltip("보스 등장~처치까지 (긴장 구간)")]
     public float PreKillSeconds = 1f;
@@ -126,4 +192,5 @@ public class TimerBonusLabSettings : ScriptableObject
     public SlotReelTuning SlotReel = new SlotReelTuning();
     public DashTuning Dash = new DashTuning();
     public StampTuning Stamp = new StampTuning();
+    public HackTuning Hack = new HackTuning();
 }

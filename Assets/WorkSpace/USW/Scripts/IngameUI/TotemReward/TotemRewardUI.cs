@@ -26,6 +26,7 @@ public class TotemRewardUI : MonoBehaviour
 {
     [VContainer.Inject] private ExpManager _expManager;
     private const int ChoiceCount = 3;
+    [VContainer.Inject] private EndlessRunService _runPenalties;
     private const float TextBlockWidth = 0.55f;
     private const float DetailBlockWidth = 0.84f;
     private const float BackArrowSize = 110f;
@@ -48,7 +49,6 @@ public class TotemRewardUI : MonoBehaviour
     [SerializeField] private TotemRewardSettings _settings;
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] _totemPool;
-    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     [Header("인벤토리 가득 찼을 때 대체 식량")]
     [SerializeField] private float _fallbackFood = 500f;
 
@@ -141,9 +141,7 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
-        var choices = _tutorialSettings != null
-            ? new List<TotemData>(_tutorialSettings.TotemChoices)
-            : TotemChoiceRoller.Roll(_totemPool, _chosenTotems, ChoiceCount);
+        var choices = TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
         if (choices.Count == 0)
         {
             Debug.LogWarning("[TotemRewardUI] 뽑을 토템이 없음");

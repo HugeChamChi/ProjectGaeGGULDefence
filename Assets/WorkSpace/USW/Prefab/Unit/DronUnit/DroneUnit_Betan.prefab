@@ -121,7 +121,6 @@ MonoBehaviour:
   selfDestructPrefab: {fileID: -2181070433245593686, guid: ffc761a047444e446a97aebc507137a9,
     type: 3}
   selfDestructCount: 1
-  selfDestructDamage: 100
   _formation: {fileID: 11400000, guid: 12cfa7153de3ed14fac882de19ec5bc6, type: 2}
 --- !u!114 &8868742873359336193
 MonoBehaviour:

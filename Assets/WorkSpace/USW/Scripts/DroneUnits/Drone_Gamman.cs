@@ -1,31 +1,31 @@
-using UnityEngine;
-using VContainer;
+﻿using UnityEngine;
 
-/// <summary>
-/// 드론 버퍼 — 배치 시 드론 1마리 생성, 스킬 발동 시 모든 드론에 버프 적용.
-/// 유닛 제거 시 소속 드론을 풀로 반환한다.
-/// </summary>
-public class Drone_Gamman : DroneSpawnerBase
+/// <summary>기본 스킬 피해를 유지하며 공유 해킹 스택을 등급별 한도까지 소비하는 기폭 유닛.</summary>
+public class Drone_Gamman : HackingDroneSpawner
 {
-
-
-    [Header("Buffer Settings")]
-    [SerializeField] private float atkBuffMultiplier = 1f;
-    [SerializeField] private float speedBuffMultiplier = 1f;
-    [SerializeField] private float buffDuration = 5f;
-
-    protected override void OnSkillFull()
+    /// <summary>현재 드론 수/선택지를 반영한 스택 추가 피해 배율.</summary>
+    public float StackDamageMultiplier
     {
-        ApplyDroneBuff();
+        get
+        {
+            var frequency = DroneSelections?.Get(DroneSelectionKind.GammanFrequency);
+            return 1f + (frequency != null ? Mathf.Min(frequency.MaxValue, (_droneManager?.DroneCount ?? 0) * frequency.Value) : 0f);
+        }
     }
-    /// <summary>일반 스킬 또는 알팡 긴급 교신으로 같은 버프를 적용한다.</summary>
-    public void ApplyDroneBuff()
+    /// <summary>SkillData 액션에서 현재 잔고를 확보하고 순간이동 기폭을 시작한다.</summary>
+    public void CastHacking()
     {
-        if (unitData == null) return;
+        if (!TryGetHackingTarget(out var runtime, out var target)) return;
+        var data = unitData.Hacking;
+        var reservation = runtime.Reserve(target, data.MaxStacksConsumed.Get(currentTier));
+        if (reservation == null) return;
+        float coefficient = data.BaseCoefficient.Get(currentTier)
+            + reservation.Amount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
+        int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
         _audioManager?.PlaySFX("05.Drone_Buff");
-        var effect = DroneSelections?.Get(DroneSelectionKind.GammanFrequency);
-        float bonus = effect != null ? Mathf.Min(effect.MaxValue, (_droneManager?.DroneCount ?? 0) * effect.Value) : 0f;
-        _droneManager?.ApplyDroneBuff(atkBuffMultiplier + bonus, speedBuffMultiplier + bonus, buffDuration);
         FlashOwnedDrones();
+        StartHacking(runtime, target, 0, reservation, damage, critical);
     }
+    /// <summary>긴급 교신의 추가 기폭. 정상 충전 타이머는 초기화하지 않는다.</summary>
+    public void ApplyDroneBuff() => CastHacking();
 }

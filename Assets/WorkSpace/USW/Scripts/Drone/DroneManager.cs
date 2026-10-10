@@ -10,6 +10,20 @@ using UnityEngine;
 /// </summary>
 public class DroneManager : MonoBehaviour
 {
+    private DroneHackingRuntime _hacking;
+    /// <summary>이 씬의 생산자/소비자가 공유하는 보스 해킹 자원.</summary>
+    public DroneHackingRuntime Hacking
+    {
+        get
+        {
+            if (_hacking == null)
+            {
+                _hacking = gameObject.AddComponent<DroneHackingRuntime>();
+                _hacking.Initialize(_bossManager, _gameManager, _levelUpManager);
+            }
+            return _hacking;
+        }
+    }
     [VContainer.Inject] private BossManager _bossManager;
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private TotemBuffManager _totemBuffManager;
@@ -106,7 +120,7 @@ public class DroneManager : MonoBehaviour
         {
             int count = 0;
             foreach (var drone in _drones)
-                if (drone != null && (drone.Owner == null || !drone.Owner.IsStunned)) count++;
+                if (drone != null && (drone.Owner == null || (!drone.Owner.IsStunned && !drone.Owner.IsCellSealed))) count++;
             return count;
         }
     }
@@ -119,7 +133,7 @@ public class DroneManager : MonoBehaviour
         {
             for (int i = _foodProducers.Count - 1; i >= 0; i--)
                 if (_foodProducers[i] != null && _foodProducers[i].isActiveAndEnabled
-                    && _foodProducers[i].currentCell != null)
+                    && _foodProducers[i].currentCell != null && !_foodProducers[i].IsCellSealed)
                     return _foodProducers[i].FoodPerDronePerSecond;
             return _baseFoodPerDrone;
         }
@@ -140,7 +154,7 @@ public class DroneManager : MonoBehaviour
         float seconds = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.BetanRepairKit)?.Value ?? 0f;
         if (seconds <= 0 || _gridManager == null) return;
         foreach (var cell in _gridManager.GetOccupiedCells())
-            if (cell.OccupyingUnit is Drone_Betan betan && betan.isActiveAndEnabled && betan.Combat != null)
+            if (cell.OccupyingUnit is Drone_Betan betan && betan.isActiveAndEnabled && !betan.IsCellSealed && betan.Combat != null)
                 betan.Combat.SkillTimer = Mathf.Min(betan.GetCurrentSkillInterval(), betan.Combat.SkillTimer + seconds);
     }
 
@@ -264,7 +278,7 @@ public class DroneManager : MonoBehaviour
 
         try
         {
-            var snapshot = _drones.FindAll(d => d != null && (d.Owner == null || !d.Owner.IsStunned)).ToArray();
+            var snapshot = _drones.FindAll(d => d != null && (d.Owner == null || (!d.Owner.IsStunned && !d.Owner.IsCellSealed))).ToArray();
 
             // 집결 위치 계산 — 그리드 기하학적 정중앙 기준
             Vector3 rallyCenter = Vector3.zero;
@@ -526,7 +540,7 @@ public class DroneManager : MonoBehaviour
         foreach (var drone in _drones)
         {
             if (drone == null || !drone.isActiveAndEnabled || drone.Owner == null
-                || drone.Owner.currentCell == null || drone.Owner.IsStunned) continue;
+                || drone.Owner.currentCell == null || drone.Owner.IsStunned || drone.Owner.IsCellSealed) continue;
             _foodProgress.TryGetValue(drone, out float progress);
             progress += deltaTime;
             int ticks = Mathf.FloorToInt(progress);

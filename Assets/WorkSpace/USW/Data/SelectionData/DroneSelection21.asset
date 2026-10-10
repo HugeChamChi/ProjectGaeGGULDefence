@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection21
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  chooseId: 9121
+  chooseName: "\uBC31\uB3C4\uC5B4"
+  tier: 2
+  spawnRate: 1
+  description: "\uB378\uD0D5 \uD574\uD0B9\uC758 \uC0C1\uD55C \uCD08\uACFC \uC2A4\uD0DD
+    1\uAC1C\uB2F9 \uD574\uB2F9 \uB378\uD0D5 \uB9C8\uB098 +{count} (\uC644\uCDA9\uAE4C\uC9C0)."
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 18
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 1
+  icon: {fileID: 21300000, guid: d71d424710176f54a91df98d5b4f7101, type: 3}
+  animationFrames: []
+  frameRate: 12

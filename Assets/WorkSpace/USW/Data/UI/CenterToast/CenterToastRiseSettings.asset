@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89e53179feadb0b448fa3fce28b813fb, type: 3}
+  m_Name: CenterToastRiseSettings
+  m_EditorClassIdentifier: Assembly-CSharp::CenterToastSettings
+  Style: 6
+  AnchorY: 240
+  Scale: 1.2
+  Lifetime: 0.9
+  MaxVisible: 6
+  PushedLifetime: 0.35
+  FontSize: 44
+  ModernText: {r: 0.96, g: 0.97, b: 1, a: 1}
+  ModernGlass: {r: 0.07, g: 0.08, b: 0.11, a: 0.86}
+  ModernWarning: {r: 1, g: 0.33, b: 0.38, a: 1}
+  ModernInfo: {r: 0.36, g: 0.78, b: 1, a: 1}
+  StackGap: 10
+  TextColor: {r: 1, g: 1, b: 1, a: 1}
+  OutlineColor: {r: 0.08, g: 0.05, b: 0.1, a: 1}
+  OutlineWidth: 0.22
+  Background: {r: 0.06, g: 0.05, b: 0.08, a: 0.82}
+  PaddingX: 48
+  Height: 92
+  WarningAccent: {r: 1, g: 0.36, b: 0.36, a: 1}
+  InfoAccent: {r: 1, g: 0.77, b: 0.23, a: 1}

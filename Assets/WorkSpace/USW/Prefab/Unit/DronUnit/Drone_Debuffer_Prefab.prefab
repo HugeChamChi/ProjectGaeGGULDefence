@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragFollowSharpness: 18
-  _projectilePrefab: {fileID: 4753148571306258489, guid: dbe459a00d97875449c6d4cff338119a,
+  _projectilePrefab: {fileID: 7133567085280285419, guid: 5eb6e335499ba374d89c46222b18167d,
     type: 3}
   _actionSprite: {fileID: 0}
   _actionSpriteHoldSeconds: 0.15
@@ -151,6 +151,8 @@ MonoBehaviour:
   _drag: {fileID: 0}
   _idle: idle
   _dragAnimation: drag
+  _attack: attack
+  _skill: skill
   _attackStart: attack_start
   _attackLoop: attack_loop
   _attackEnd: attack_end
@@ -214,7 +216,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: d189dfedef21962439ff615d8dffe579, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

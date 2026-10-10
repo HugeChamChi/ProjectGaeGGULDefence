@@ -7,6 +7,8 @@ public class PartyDataSO : ScriptableObject
     public string partyName;
     public bool isUnlock = true;
     public List<UnitData> unitDataList;
+    /// <summary>Draw normal summons uniformly from this authored roster instead of G01 character weights.</summary>
+    public bool UseUniformSummonPool;
 
     [Header("족장 데이터")]
     /// <summary>Deck card pool and independent chief skill, separate from combat units.</summary>

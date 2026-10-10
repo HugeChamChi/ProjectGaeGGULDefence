@@ -15,6 +15,18 @@ public static class DroneSelectionPresets
         card.tier = Tier.Rare;
         switch (kind)
         {
+            case DroneSelectionKind.DeltanBackdoor:
+                card.chooseName="백도어";card.description="델탕 해킹의 상한 초과 스택 1개당 해당 델탕 마나 +{count} (완충까지).";
+                card.tier=Tier.Epic;e.Count=1;break;
+            case DroneSelectionKind.BetanHackingBomb:
+                card.chooseName="해킹 자폭";card.description="베탕의 모든 자폭 드론을 해킹 드론으로 전환합니다. 폭발 피해 대신 보스 적중 시 해킹 스택 +{count}. 수리 키트도 발동합니다.";
+                card.tier=Tier.Legend;e.Count=1;break;
+            case DroneSelectionKind.HackingCarryover:
+                card.chooseName="포맷 실패";card.description="보스 처치 시 남은 해킹 스택의 {value}%를 내림하여 다음 보스로 이월합니다.";
+                e.Value=.33f;break;
+            case DroneSelectionKind.DeltanZombiePc:
+                card.chooseName="좀비 PC";card.description="델탕 소유 드론 일반 공격 시 {value}% 확률로 마나 +{count}.";
+                e.Value=.15f;e.Count=2;break;
             case DroneSelectionKind.MergeSupport:
                 card.chooseName="지원 요청 바람"; card.description="합성 시 10% 확률로 노말 랜덤 유닛을 생성합니다. 빈칸이 없으면 대기 후 자리가 생기면 생성합니다.";
                 card.tier=Tier.Epic; e.Value=0.1f; break;
@@ -25,27 +37,27 @@ public static class DroneSelectionPresets
                 card.chooseName="만나서 반가워!"; card.description="10초마다 배치된 베탕 각각의 자폭 드론 1기를 추가 생성합니다.";
                 e.Interval=10; e.Count=1; break;
             case DroneSelectionKind.BetanAttackSpeed:
-                card.chooseName="다 쏴 제껴버려!!!!"; card.description="베탕의 전투 드론 공격속도가 20% 상승합니다.";
+                card.chooseName="다 쏴 제껴버려!!!!"; card.description="베탕의 전투 드론 공격 속도가 20% 상승합니다";
                 card.tier=Tier.Epic; e.Value=0.2f; break;
             case DroneSelectionKind.BetanFleetBomb:
-                card.chooseName="슈슝 콰광!!!!!"; card.description="20초마다 필드 전체 베탕의 전투 드론 수만큼 자폭 드론을 추가 생성합니다. 최대 10기.";
+                card.chooseName="슈슝 콰광!!!!!"; card.description="20초마다 필드에 있는 베탕의 전투 드론 수만큼 자폭 드론이 추가 생성됩니다 (최대 10기)";
                 card.tier=Tier.Legend; e.Interval=20; e.Count=10; break;
             case DroneSelectionKind.GammanFrequency:
-                card.chooseName="주파수 동조"; card.description="필드 드론 1기당 감망 버프 배율에 0.3%p를 추가합니다. 최대 9%p.";
+                card.chooseName="주파수 동조"; card.description="필드 드론 1기당 감망의 스택 추가 피해가 0.3% 증가합니다. 최대 9%.";
                 card.tier=Tier.Epic; e.Value=0.003f; e.MaxValue=0.09f; break;
             case DroneSelectionKind.GammanEmergency:
-                card.chooseName="긴급 교신"; card.description="알팡 액티브 스킬 사용 시 배치된 감망의 버프를 적용합니다."; break;
+                card.chooseName="긴급 교신"; card.description="알팡 액티브 사용 시 배치된 감망이 추가 기폭합니다. 이미 기폭 중인 감망은 중복 발동하지 않습니다."; break;
             case DroneSelectionKind.ZeltanAirFryer:
                 card.chooseName="에어프라이기"; card.description="젤탕의 자체 식량 생산량이 20% 증가하며 3초마다 모아서 지급됩니다.";
                 e.Interval=3; e.Value=0.2f; break;
             case DroneSelectionKind.DeltanDefenseReduction:
-                card.chooseName="넹?"; card.description="델탕의 디버프 스킬에 방어력 감소 10%를 추가합니다. 기존 디버프와 함께 만료됩니다.";
-                card.tier=Tier.Epic; e.Value=0.1f; break;
+                card.chooseName="넹?"; card.description="델탕 해킹 스킬의 생산량이 1스택 증가합니다.";
+                card.tier=Tier.Epic; e.Count=1; break;
             case DroneSelectionKind.DeltanDamageTaken:
-                card.chooseName="넹 !"; card.description="델탕의 받는 피해 증가 스킬에 {value}%p를 추가합니다. 이번 런 동안 고정됩니다.";
+                card.chooseName="넹 !"; card.description="델탕 해킹 생산량이 {value}% 증가합니다. 소수 생산분은 다음 시전으로 이월됩니다.";
                 card.tier=Tier.Epic; e.Value=0.01f; e.MaxValue=0.1f; break;
             case DroneSelectionKind.DeltanCooldown:
-                card.chooseName="넹..."; card.description="델탕의 디버프 스킬 쿨타임이 10% 감소합니다.";
+                card.chooseName="넹..."; card.description="델탕 완충에 필요한 공격 횟수가 10% 감소합니다 (최소 1회 감소).";
                 e.Value=0.1f; break;
             case DroneSelectionKind.AlphanCooldown:
                 card.chooseName="위대한 지도자"; card.description="알팡 액티브 스킬 쿨타임이 20% 감소합니다.";

@@ -8,7 +8,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 보스 처치 시간 보너스 연출 실험실 씬(FxLab_TimerBonus)과 설정 에셋을 만든다 (사용자 요청 2026-10-02).
-/// 시안 4종: A 합체 / B 슬롯 릴 / C 질주 / D 스탬프 + 공통 텐션(처치 전 박동, 히트스톱·플래시·줌).
+/// 시안: A 합체 / B 슬롯 릴 / C 질주 / D 스탬프 / E 해킹 / F 해킹 상승(글리치, 2026-10-09)
+/// + G~J 해킹 중첩 비교(재시작·대기열·합산·합산+미니, 세 번째 버튼 줄) + 공통 텐션(처치 전 박동, 히트스톱·플래시·줌).
 /// 처치 전 공격은 실제 드론 유닛 프리팹 3종과 각자의 레이저 투사체 — 피격 이펙트는 실행 중 복제 데이터에서 빼고 쏜다.
 /// 설정 에셋은 없을 때만 만든다 (다시 실행해도 인스펙터에서 튜닝한 값을 덮어쓰지 않음). 씬은 매번 덮어쓴다.
 /// </summary>
@@ -30,7 +31,9 @@ public static class TimerBonusFxLabBuilder
     // 버튼 두 줄 아래부터 상태 줄 위까지를 연출 영역으로 쓴다 (가운데 기준 좌표).
     private static readonly Vector2 StageSize = new Vector2(1080f, 1500f);
     private static readonly Vector2 StagePosition = new Vector2(0f, -70f);
-    private static readonly string[] ConceptButtons = { "A 합체", "B 슬롯 릴", "C 질주", "D 스탬프" };
+    private static readonly string[] ConceptButtons = { "A 합체", "B 슬롯 릴", "C 질주", "D 스탬프", "E 해킹", "F 해킹 상승" };
+    // 해킹 중첩 비교 (여러 캐릭터 연달아 발동) — 시안 번호 6~9, 이 실험실 씬에만 세 번째 줄로 붙인다.
+    private static readonly string[] StackButtons = { "G 재시작", "H 대기열", "I 합산", "J 합산+미니" };
     private const float CaptureDuration = 3.8f;
 
     [MenuItem("Tools/USW/Fx/Build Timer Bonus Lab")]
@@ -56,7 +59,7 @@ public static class TimerBonusFxLabBuilder
     private static void BuildScene()
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        var lab = CreateTimerLab(out _, out _, out var cam);
+        var lab = CreateTimerLab(out _, out _, out var cam, withStackRow: true);
         AddCapture(cam, lab, CaptureDuration, "Temp/FxCapture/TimerBonus");
         EditorSceneManager.SaveScene(scene, ScenePath);
     }
@@ -65,7 +68,7 @@ public static class TimerBonusFxLabBuilder
     /// 지금 열린 빈 씬에 타이머 보너스 실험실(카메라·캔버스·무대·버튼 2줄·상태 줄·드론)을 만든다.
     /// 다른 실험실(BossClearNoticeLabBuilder)이 같은 무대를 재사용한다. 씬 저장은 호출한 쪽에서.
     /// </summary>
-    internal static TimerBonusLab CreateTimerLab(out RectTransform canvasRt, out TMP_FontAsset font, out Camera cam)
+    internal static TimerBonusLab CreateTimerLab(out RectTransform canvasRt, out TMP_FontAsset font, out Camera cam, bool withStackRow = false)
     {
         // 새 씬(Single)을 연 뒤에 에셋을 불러온다 (먼저 불러 두면 저장 시 참조가 fileID 0으로 풀림 — PenaltyFxLabBuilder 참고)
         var settings = AssetDatabase.LoadAssetAtPath<TimerBonusLabSettings>(SettingsPath);
@@ -111,12 +114,24 @@ public static class TimerBonusFxLabBuilder
         var lab = new GameObject("TimerBonusLab", typeof(TimerBonusLab)).GetComponent<TimerBonusLab>();
 
         var rowConcepts = NewButtonRow(canvasRt, "Concepts", -16f);
-        var conceptImages = new Image[ConceptButtons.Length];
+        var conceptImages = new Image[ConceptButtons.Length + (withStackRow ? StackButtons.Length : 0)];
         for (int i = 0; i < ConceptButtons.Length; i++)
         {
             var b = NewButton(rowConcepts, ConceptButtons[i], font);
             UnityEventTools.AddIntPersistentListener(b.onClick, lab.SelectConcept, i);
             conceptImages[i] = b.GetComponent<Image>();
+        }
+        if (withStackRow)
+        {
+            var rowStack = NewButtonRow(canvasRt, "StackConcepts", -16f - RowStep * 2f);
+            for (int i = 0; i < StackButtons.Length; i++)
+            {
+                int index = ConceptButtons.Length + i;
+                var b = NewButton(rowStack, StackButtons[i], font);
+                UnityEventTools.AddIntPersistentListener(b.onClick, lab.SelectConcept, index);
+                conceptImages[index] = b.GetComponent<Image>();
+            }
+            UnityEventTools.AddVoidPersistentListener(NewButton(rowStack, "발동 타이밍", font).onClick, lab.NextTriggerSet);
         }
         var rowControls = NewButtonRow(canvasRt, "Controls", -16f - RowStep);
         UnityEventTools.AddVoidPersistentListener(NewButton(rowControls, "다시 보기", font).onClick, lab.Replay);

@@ -22,7 +22,7 @@ public class UI_TotemInfoPanel : UI_Base
     private TotemKillRangeGrowth _growthTotem;
     private GridCell _displayedCell;
     private int _displayedRotation;
-    private int _displayedKillCount;
+    private int _displayedGrowthSecond;
     /// <summary>Includes the gesture-release shield of the nested detail window.</summary>
     public bool IsEffectInfoOpen => _effectLink?.BlocksOwnerInput == true;
 
@@ -55,7 +55,7 @@ public class UI_TotemInfoPanel : UI_Base
     /// <summary>Shows a placed totem and refreshes its actual range while this panel is open.</summary>
     public void SetData(TotemBase totem, GridManager grid)
     {
-        if (totem == null || !totem.IsActive || totem.CurrentCell == null || grid == null)
+        if (totem == null || !totem.IsPlaced || totem.CurrentCell == null || grid == null)
         {
             Close();
             return;
@@ -70,7 +70,7 @@ public class UI_TotemInfoPanel : UI_Base
     private void LateUpdate()
     {
         if (_grid == null) return;
-        if (_currentTotem == null || !_currentTotem.IsActive || _currentTotem.CurrentCell == null)
+        if (_currentTotem == null || !_currentTotem.IsPlaced || _currentTotem.CurrentCell == null)
         {
             Close();
             return;
@@ -78,16 +78,17 @@ public class UI_TotemInfoPanel : UI_Base
         if (_canvas != null && !_canvas.enabled) return;
         if (_displayedCell != _currentTotem.CurrentCell ||
             _displayedRotation != _currentTotem.RotationStep ||
-            _displayedKillCount != (_growthTotem != null ? _growthTotem.KillCount : 0))
+            _displayedGrowthSecond != (_growthTotem != null ? (int)(_growthTotem.CombatSeconds + _growthTotem.HarvestSeconds) : 0))
             RefreshRuntimeRange();
     }
 
     private void RefreshRuntimeRange()
     {
+        if (_growthTotem != null && txt_Stats != null) txt_Stats.text = _growthTotem.Data.GetDisplayDescription()+"\n\n"+_growthTotem.ProgressDescription;
         rangeGrid?.SetData(_currentTotem, _grid);
         _displayedCell = _currentTotem.CurrentCell;
         _displayedRotation = _currentTotem.RotationStep;
-        _displayedKillCount = _growthTotem != null ? _growthTotem.KillCount : 0;
+        _displayedGrowthSecond = _growthTotem != null ? (int)(_growthTotem.CombatSeconds + _growthTotem.HarvestSeconds) : 0;
     }
 
     private void ClearRuntimeRange()
@@ -96,7 +97,7 @@ public class UI_TotemInfoPanel : UI_Base
         _grid = null;
         _growthTotem = null;
         _displayedCell = null;
-        _displayedKillCount = 0;
+        _displayedGrowthSecond = 0;
     }
 
     private void EnsurePresenter()

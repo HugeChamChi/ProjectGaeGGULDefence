@@ -67,7 +67,7 @@ public class UnitCombatComponent : MonoBehaviour
         if (_unit == null || AttacksHeld || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
 
         if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
-        if (_unit.CanUseSkill) _skillTimer += Time.deltaTime;
+        if (_unit.CanUseSkill && _unit.UsesTimedSkillCharge) _skillTimer += Time.deltaTime;
         // 공격 애니메이션 대기 시간과 무관하게 생산을 진행한다. 스턴 시간은 누적하지 않는다.
         if (_loopCts != null && _unit.currentCell != null && !_unit.IsStunned)
             _resource?.TickFoodProduction(Time.deltaTime);
@@ -85,7 +85,7 @@ public class UnitCombatComponent : MonoBehaviour
         _paused = false;
         _deps?.FieldPause?.RegisterUnit(_unit);
         _loopCts = new CancellationTokenSource();
-        UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+        RunControlLoopAsync(_loopCts.Token).Forget();
     }
 
     public void StopLoops()
@@ -104,11 +104,18 @@ public class UnitCombatComponent : MonoBehaviour
         if (_loopCts == null)
         {
             _loopCts = new CancellationTokenSource();
-            UnitControlLoopAsync(_loopCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
+            RunControlLoopAsync(_loopCts.Token).Forget();
         }
     }
 
     private BossBase LiveBoss => _deps?.BossManager?.CurrentBoss ?? _unit.Boss;
+
+    private async UniTaskVoid RunControlLoopAsync(CancellationToken token)
+    {
+        try { await UnitControlLoopAsync(token); }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception error) { UnityEngine.Debug.LogException(error); }
+    }
 
     private async UniTask UnitControlLoopAsync(CancellationToken token)
     {
@@ -152,7 +159,7 @@ public class UnitCombatComponent : MonoBehaviour
             
             bool canAttack = _unit.currentCell != null && !_unit.currentCell.Model.IsAttackDisabled && !_unit.currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
-            if (_unit.CanUseSkill && _unit.CanAutoSkill && _skillTimer >= skillInterval && canAttack)
+            if (_unit.CanUseSkill && _unit.CanAutoSkill && _unit.IsSkillChargeReady(_skillTimer, skillInterval) && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Skilling);
                 _skillTimer = 0f;

@@ -16,6 +16,8 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private TotemSpawner _totemManager;
     [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private DebuffInfoPresenter _effectInfo;
+    [Header("Center Toast")]
+    [SerializeField] private CenterToast _centerToast;
     [Header("Chief Active Skill")]
     [SerializeField] private UI_ChiefSkillButtonView _chiefSkillButtonView;
 
@@ -46,6 +48,7 @@ public class InGameInstaller : MonoBehaviour
 
     private void Start()
     {
+        if (_spawnerManager != null) _spawnerManager.OnSpawnRejected += ShowSpawnWarning;
         _bossClearPresentation?.Configure(_timerController, _waveManager, _bossManager, _uiManager, _gameManager.Config);
         _waveManager.ConfigureBossClearPresentation(_bossClearPresentation);
         _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
@@ -181,8 +184,11 @@ public class InGameInstaller : MonoBehaviour
 
     // ── 정리 ───────────────────────────────────────────────────
 
+    private void ShowSpawnWarning(string message) => _centerToast?.Show(message, CenterToastKind.Warning);
+
     private void OnDestroy()
     {
+        if (_spawnerManager != null) _spawnerManager.OnSpawnRejected -= ShowSpawnWarning;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         if (_waveManager != null)
         {
