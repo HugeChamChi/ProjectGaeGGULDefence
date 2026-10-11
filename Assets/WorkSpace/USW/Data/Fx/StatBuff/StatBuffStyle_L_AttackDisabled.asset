@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c8dd09147feed94f85f9011dfa863e7, type: 3}
+  m_Name: StatBuffStyle_L_AttackDisabled
+  m_EditorClassIdentifier: Assembly-CSharp::StatBuffFxStyle
+  DisplayName: "\uACF5\uACA9 \uBD88\uAC00 \xB7 \uD68C\uC0C9 X"
+  Usage: "TD1011 \uC704 3\uCE78 \uACF5\uACA9 \uBD88\uAC00 (\uB514\uBC84\uD504) \u2014
+    \uAC00\uB77C\uC549\uB294 \uD68C\uC0C9 \uC138\uBAA8 + \uBA38\uB9AC \uC704 \uBE68\uAC04
+    X"
+  Primary: {r: 0.55, g: 0.6, b: 0.7, a: 1}
+  Secondary: {r: 0.55, g: 0.6, b: 0.7, a: 1}
+  BadgeColor: {r: 1, g: 0.28, b: 0.3, a: 1}
+  AutoOutlineColor: 1
+  OutlineColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.9}
+  Shape: 1
+  Outline: 0
+  Downward: 1
+  Pattern: 0
+  Interval: 0.16
+  Life: 0.85
+  Rise: 0.6
+  Size: {x: 0.22, y: 0.4}
+  Area: {x: 0.65, y: 1.1}
+  Stacked: 0
+  StackGap: 0.62
+  SpinRange: {x: 0, y: 0}
+  RandomTilt: 0
+  Sway: 0
+  SwayFrequency: 6
+  EndScale: 0.55
+  SecondaryShare: 0
+  SecondaryShape: 0
+  SecondaryDownward: 0
+  SparkleInterval: 0
+  SparkleSize: 0.16
+  SparkleColor: {r: 1, g: 1, b: 1, a: 1}
+  SpeedLines: 0
+  SpeedLineInterval: 0.07
+  SpeedLineLength: 0.45
+  SpeedLineSpeed: 3.2
+  Swoosh: 0
+  SwooshArcs: 2
+  SwooshSpeed: 320
+  SwooshRadius: 0.55
+  GroundAura: 1
+  AuraRadius: 0.55
+  TimerPips: 0
+  PipCount: 10
+  Pillar: 0
+  PillarHeight: 1.9
+  PillarWidth: 0.95
+  Badge: 8
+  BadgeY: 1.55
+  BadgeSize: 0.36
+  BadgeHold: 1.4
+  BadgeRepeat: 2
+  BurstRing: 0
+  BurstCount: 4
+  Intro: 0.35
+  Outro: 0.35

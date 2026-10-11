@@ -59,6 +59,8 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<LevelUpManager>();
 
         builder.RegisterComponentInHierarchy<UIManager>();
+        DamageChartLab.RegisterServices(builder, gameObject.scene); // 독립 딜표 비교 씬에서만 등록
+        SceneComponentRegistration.RegisterOptional<SealedGridShaderLab>(builder, gameObject.scene); // 독립 봉인 셰이더 실험실에서만 존재
         SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<DamageFloaterManager>();
         SceneComponentRegistration.RegisterOptional<BossDamageNumbers>(builder, gameObject.scene);

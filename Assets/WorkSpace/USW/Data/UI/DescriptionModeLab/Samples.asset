@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5651375b411024d4eb14c894729553d9, type: 3}
+  m_Name: Samples
+  m_EditorClassIdentifier: Assembly-CSharp::DescriptionModeLabData
+  Glossary: {fileID: 11400000, guid: 316ed9b65c2f2ae4788b0a6a7056466e, type: 2}
+  Selections:
+  - Selection: {fileID: 11400000, guid: d7b716518b1c92b44a95a21f1ef4cc5f, type: 2}
+    Totem: {fileID: 0}
+    BriefTemplate: "\uBCA0\uD0D5\uC758 \uC804\uD22C \uB4DC\uB860 \uACF5\uACA9 \uC18D\uB3C4
+      +{percent}%."
+    DetailedTemplate: "\uBCA0\uD0D5 \uC18C\uC720 \uC804\uD22C \uB4DC\uB860\uC758
+      \uC77C\uBC18 \uACF5\uACA9 \uC18D\uB3C4\uAC00 {percent}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  - Selection: {fileID: 11400000, guid: a38e8efd723635e4c9a1ead2f22e8645, type: 2}
+    Totem: {fileID: 0}
+    BriefTemplate: "\uC871\uC7A5 \uC2A4\uD0AC\uC774 {percent}% \uD53C\uD574\uB85C
+      {count}\uBC88 \uC0AC\uACA9\uD569\uB2C8\uB2E4."
+    DetailedTemplate: "\uC871\uC7A5 \uC9D1\uACB0 \uD53C\uD574\uAC00 \uC6D0\uB798
+      \uD53C\uD574\uC758 {percent}%\uB85C {interval}\uCD08 \uAC04\uACA9\uC73C\uB85C
+      {count}\uD68C \uC801\uC6A9\uB429\uB2C8\uB2E4."
+  - Selection: {fileID: 11400000, guid: 63c28fdeb4a06944ab91b51d6a936422, type: 2}
+    Totem: {fileID: 0}
+    BriefTemplate: "\uC790\uD3ED \uB4DC\uB860\uC774 \uD53C\uD574 \uB300\uC2E0 \uD574\uD0B9
+      \uC2A4\uD0DD +{count}. \uC218\uB9AC \uD0A4\uD2B8\uB3C4 \uBC1C\uB3D9\uD569\uB2C8\uB2E4."
+    DetailedTemplate: "\uBAA8\uB4E0 \uBCA0\uD0D5 \uC790\uD3ED \uB4DC\uB860\uC774
+      \uD3ED\uBC1C \uD53C\uD574 \uB300\uC2E0 \uC801\uC911 \uC2DC \uD574\uD0B9 \uC2A4\uD0DD
+      {count}\uAC1C\uB97C \uC313\uC2B5\uB2C8\uB2E4. \uC218\uB9AC \uD0A4\uD2B8\uB3C4
+      \uBC1C\uB3D9\uD569\uB2C8\uB2E4."
+  Totems:
+  - Selection: {fileID: 0}
+    Totem: {fileID: 11400000, guid: 7e5d173d5f1534244a4b9a51d1e10b1e, type: 2}
+    BriefTemplate: "\uBC94\uC704 \uC548 \uC720\uB2DB\uC758 \uC77C\uBC18 \uACF5\uACA9
+      \uC2DC [{chance}% \uD655\uB960\uB85C \uACF5\uACA9\uB825 {coefficient}%\uC758
+      \uBCF4\uC870 \uD22C\uC0AC\uCCB4] \uBC1C\uC0AC."
+    DetailedTemplate: "\uBC94\uC704 \uC548 \uC720\uB2DB\uC774 \uC77C\uBC18 \uACF5\uACA9\uD560
+      \uB54C\uB9C8\uB2E4 [{chance}% \uD655\uB960\uB85C \uBCF4\uC870 \uD22C\uC0AC\uCCB4]\uB97C
+      \uBC1C\uC0AC\uD569\uB2C8\uB2E4. \uD53C\uD574\uB294 \uD574\uB2F9 \uC720\uB2DB
+      \uACF5\uACA9\uB825\uC758 {coefficient}%\uC785\uB2C8\uB2E4."
+  - Selection: {fileID: 0}
+    Totem: {fileID: 11400000, guid: 716262fab7b56a2419695191945c6008, type: 2}
+    BriefTemplate: "\uC804\uD22C {mature}\uBD84 \uB3D9\uC548 \uACF5\uACA9\uB825 +{start}\u2192{end}%\xB7\uBC94\uC704
+      \uC131\uC7A5. \uB9CC\uAC1C \uD6C4 {harvest}\uBD84\uB9C8\uB2E4 \uC2DD\uB7C9
+      {food}. \uC774\uB3D9\xB7\uD68C\uC218 \uC2DC \uCD08\uAE30\uD654."
+    DetailedTemplate: '{growthDetails}'
+  - Selection: {fileID: 0}
+    Totem: {fileID: 11400000, guid: 84fc18ed0319ffb48a041e653feaf486, type: 2}
+    BriefTemplate: "\uBC94\uC704 \uC548 \uC720\uB2DB [\uACF5\uACA9\uB825 +{attack}%\xB7\uACF5\uACA9
+      \uC18D\uB3C4 -{speedPenalty}%]."
+    DetailedTemplate: "\uBC94\uC704 \uC548 \uC720\uB2DB\uC758 [\uACF5\uACA9\uB825\uC774
+      {attack}% \uC99D\uAC00]\uD558\uACE0, \uACF5\uACA9 \uC18D\uB3C4\uAC00 {speedPenalty}%
+      \uAC10\uC18C\uD569\uB2C8\uB2E4."

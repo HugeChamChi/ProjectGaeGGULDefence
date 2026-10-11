@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 /// 용어 팝업 실험실 씬(FxLab_TermPopup)을 만든다.
 ///   1. IngameScene의 레벨업 패널을 복사한다 — IngameScene은 읽기만 하고 저장하지 않는다.
 ///   2. 복사본에서 게임 스크립트를 떼어 내고 그림·레이아웃만 남긴다. 선택 타이머는 게임처럼 숨긴다.
-///   3. 드라이버(TermPopupLab) + MODE/RESET 버튼을 붙이고, 카드 3장·설명·용어 예시 문구를 채운다.
+///   3. 드라이버(TermPopupLab) + RESET 버튼을 붙이고, 용어 사전(TermGlossary SO)과 4개 키워드가 들어간 카드 3장을 연결한다.
 /// 다시 실행하면 씬을 새로 만든다 (씬에 직접 한 수정은 사라짐).
 /// </summary>
 public static class TermPopupLabBuilder
@@ -26,32 +26,14 @@ public static class TermPopupLabBuilder
     private static readonly Vector2 ReferenceResolution = new Vector2(1080f, 1920f);
     private static readonly Color FieldColor = new Color(0.08f, 0.13f, 0.21f, 1f);
 
-    // 위·가운데·아래 카드. 이름이 없으면 등급 순 아무 카드나 쓴다.
-    private static readonly string[] CardNames = { "전술적 프로토콜", "다 쏴 제껴버려!!!!", "만나서 반가워!" };
+    // 위·가운데·아래 카드 — 4개 키워드(족장 스킬·자폭 드론·해킹스택·시간조작)가 모두 나오게 고른다.
+    // 설명이 비면 카드 SO 설명을 그대로 쓴다 (용어는 사전 별칭으로 자동 링크). 이름이 없으면 아무 카드나 쓴다.
+    private static readonly string[] CardNames = { "전술적 프로토콜", "해킹 자폭", "오류코드 0x00" };
     private static readonly string[] Descriptions =
     {
-        "[[액티브 스킬]]의 피해량이 40% 증가합니다.",
-        "베탕의 [[전투 드론]] 공격 속도가 20% 증가하고, 적중 시 [[화상]]을 1중첩 부여합니다.",
-        "10초마다 [[자폭 드론]] 1기를 추가로 발사하고, 폭발한 보스에게 [[아머브레이크]]를 부여합니다.",
-    };
-
-    private static readonly Color Debuff = new Color(0.886f, 0.408f, 0.235f);
-    private static readonly Color Unit = new Color(0.298f, 0.553f, 0.941f);
-    private static readonly Color Rule = new Color(0.42f, 0.44f, 0.53f);
-
-    // 실험실 예시 문구 — 수치는 화면 확인용이며 실제 값은 디버프 SO에서 온다.
-    private static TermPopupLabTerm[] SampleTerms() => new[]
-    {
-        Term("액티브 스킬", "규칙", Rule, "스킬 게이지가 차면 자동으로 쓰는 유닛 고유 기술.",
-             "드론 유닛의 스킬 게이지가 가득 차면 자동으로 발동하는 고유 기술입니다. 유닛마다 효과가 다르며, 쿨타임·피해량 선택지의 대상이 됩니다.", ""),
-        Term("전투 드론", "유닛", Unit, "베탕 주위를 맴돌며 자동 공격하는 드론.",
-             "베탕을 배치하면 함께 나와 주위를 맴도는 드론입니다. 베탕의 공격력을 따라 보스를 자동 공격하고, 베탕을 회수하면 사라집니다.", ""),
-        Term("화상", "디버프", Debuff, "일정 간격으로 피해를 주는 상태 이상.",
-             "걸린 보스에게 일정 간격으로 피해를 줍니다. 중첩이 쌓일수록 피해가 커지고, 지속 시간이 끝나면 사라집니다.", "최대 5중첩 · 지속 4초 · 0.5초마다"),
-        Term("자폭 드론", "유닛", Unit, "보스에게 날아가 터지는 일회용 드론.",
-             "보스를 향해 날아가 도착하자마자 폭발하는 일회용 드론입니다. 폭발 피해는 발사한 유닛의 공격력을 따릅니다.", ""),
-        Term("아머브레이크", "디버프", Debuff, "보스 방어를 깎아 받는 피해를 늘림.",
-             "보스의 방어를 깎아 모든 공격에 받는 피해가 늘어납니다. 중첩이 쌓일수록 효과가 커집니다.", "최대 10중첩 · 지속 6초 · 중첩당 피해 +3%"),
+        "",
+        "베탕의 모든 자폭 드론을 해킹 드론으로 전환합니다. 폭발 피해 대신 보스 적중 시 해킹 스택 +1. 수리 키트도 발동합니다.",
+        "[실험실 예시] 디시그망 스킬의 시간 회복이 0.1초 늘어납니다.",
     };
 
     [MenuItem("Tools/USW/Fx/Build Term Popup Lab")]
@@ -130,15 +112,16 @@ public static class TermPopupLabBuilder
 
         // 드라이버
         var driver = new GameObject("TermPopupLab", typeof(TermPopupLab)).GetComponent<TermPopupLab>();
-        var modeLabel = BuildButtons(canvasRt, driver, out var punchLabel);
+        BuildButtons(canvasRt, driver);
         var so = new SerializedObject(driver);
         so.FindProperty("_popupCanvas").objectReferenceValue = canvasRt;
         so.FindProperty("_panelObject").objectReferenceValue = panel;
         so.FindProperty("_cardContainer").objectReferenceValue = container;
         so.FindProperty("_cardPrefab").objectReferenceValue = cardPrefab;
         so.FindProperty("_roundedSprite").objectReferenceValue = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-        so.FindProperty("_modeLabel").objectReferenceValue = modeLabel;
-        so.FindProperty("_punchLabel").objectReferenceValue = punchLabel;
+        so.FindProperty("_blurShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>("Assets/WorkSpace/USW/Shaders/UI/UI_SnapshotBlur.shader");
+        TermGlossarySetup.CreateOrFill();
+        so.FindProperty("_glossary").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TermGlossary>(TermGlossarySetup.AssetPath);
         so.FindProperty("_tierReveal").objectReferenceValue = tierReveal;
 
         var cards = PickCards();
@@ -148,23 +131,11 @@ public static class TermPopupLabBuilder
         var descProp = so.FindProperty("_descriptions");
         descProp.arraySize = Descriptions.Length;
         for (int i = 0; i < Descriptions.Length; i++) descProp.GetArrayElementAtIndex(i).stringValue = Descriptions[i];
-        var terms = SampleTerms();
-        var termProp = so.FindProperty("_terms");
-        termProp.arraySize = terms.Length;
-        for (int i = 0; i < terms.Length; i++)
-        {
-            var t = termProp.GetArrayElementAtIndex(i);
-            t.FindPropertyRelative("Id").stringValue = terms[i].Id;
-            t.FindPropertyRelative("Kind").stringValue = terms[i].Kind;
-            t.FindPropertyRelative("KindColor").colorValue = terms[i].KindColor;
-            t.FindPropertyRelative("Short").stringValue = terms[i].Short;
-            t.FindPropertyRelative("Body").stringValue = terms[i].Body;
-            t.FindPropertyRelative("Facts").stringValue = terms[i].Facts;
-        }
         so.ApplyModifiedPropertiesWithoutUndo();
 
         EditorSceneManager.SaveScene(lab, ScenePath);
-        if (openedIngame) EditorSceneManager.CloseScene(ingame, true);
+        // IngameScene이 원래 열려 있었어도 닫는다 — 함께 열린 채 Play하면 두 씬이 같이 돈다 (저장 확인은 위에서 끝남).
+        if (ingame.isLoaded && SceneManager.sceneCount > 1) EditorSceneManager.CloseScene(ingame, true);
         Debug.Log($"[TermPopupLab] 완료: {ScenePath} (카드 {string.Join(", ", cards.Select(c => c.chooseName))}, 등급 연출 {(tierReveal != null ? tierReveal.name : "없음")})");
     }
 
@@ -185,10 +156,7 @@ public static class TermPopupLabBuilder
         return picked.Where(d => d != null).ToArray();
     }
 
-    private static TermPopupLabTerm Term(string id, string kind, Color color, string shortText, string body, string facts) =>
-        new TermPopupLabTerm { Id = id, Kind = kind, KindColor = color, Short = shortText, Body = body, Facts = facts };
-
-    private static TMP_Text BuildButtons(RectTransform canvasRt, TermPopupLab driver, out TMP_Text punchLabel)
+    private static void BuildButtons(RectTransform canvasRt, TermPopupLab driver)
     {
         var row = new GameObject("LabButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
         row.SetParent(canvasRt, false);
@@ -201,15 +169,8 @@ public static class TermPopupLabBuilder
         layout.spacing = 12f;
         layout.childForceExpandWidth = true;
         layout.childControlWidth = layout.childControlHeight = true;
-
-        var mode = NewButton(row, "MODE A+B");
-        UnityEventTools.AddVoidPersistentListener(mode.onClick, driver.CycleMode);
-        var punch = NewButton(row, "B NEW");
-        UnityEventTools.AddVoidPersistentListener(punch.onClick, driver.TogglePunch);
-        punchLabel = punch.GetComponentInChildren<TextMeshProUGUI>();
         var reset = NewButton(row, "RESET");
         UnityEventTools.AddVoidPersistentListener(reset.onClick, driver.Respawn);
-        return mode.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     private static Button NewButton(RectTransform parent, string label)

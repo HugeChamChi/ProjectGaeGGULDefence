@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 685656f2b1747de488b8d2852d08695f, type: 3}
+  m_Name: SealedGridShader_E
+  m_EditorClassIdentifier: Assembly-CSharp::SealedGridShaderVariant
+  DisplayName: "E \xB7 X + \uC790\uBB3C\uC1E0"
+  Description: "\uD070 X\uC758 \uC911\uC559\uC744 \uBE44\uC6B0\uACE0 \uC791\uC740
+    \uC790\uBB3C\uC1E0 \xB7 B \uC0C9\uC0C1"
+  PatternKind: 1
+  PatternScale: 0.64
+  PatternLineWidth: 0.045
+  PatternOpacity: 1
+  FillColor: {r: 0.09, g: 0.12, b: 0.14, a: 0.9}
+  StripeColor: {r: 0.38, g: 0.44, b: 0.47, a: 0.96}
+  StripeSpacing: 0.14
+  StripeWidth: 0.3
+  ScrollSpeed: 0

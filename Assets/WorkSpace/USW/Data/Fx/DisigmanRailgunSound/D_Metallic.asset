@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c9beaf41771231438c6b24c88a58b02, type: 3}
+  m_Name: D_Metallic
+  m_EditorClassIdentifier: Assembly-CSharp::DisigmanRailgunSoundVariant
+  DisplayName: "D \xB7 \uAE08\uC18D \uACF5\uBA85\uD615"
+  Description: "\uAE08\uC18D\uC131 \uACF5\uBA85\uACFC \uC804\uC790\uAE30 \uC794\uD5A5.
+    \uAE30\uACC4\uC801\uC778 \uB290\uB08C."
+  Charge: {fileID: 8300000, guid: ca529709b3ce0c5478444acb91539244, type: 3}
+  SkillCharge: {fileID: 0}
+  Basic: {fileID: 8300000, guid: 0844c22f8190ce5459aa18b51f3aff68, type: 3}
+  Skill: {fileID: 8300000, guid: 2a68850efb8e0de448013ae205d5e837, type: 3}
