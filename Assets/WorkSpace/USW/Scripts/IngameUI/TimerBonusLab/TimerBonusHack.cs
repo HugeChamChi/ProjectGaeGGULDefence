@@ -130,7 +130,6 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         _lab = lab;
         var s = lab.Settings;
         float px = lab.Px;
-        for (int i = 0; i < _percentText.Length; i++) _percentText[i] = $"TIME HACK  {i}%";
         _lockColors = new[] { s.CyanColor, Color.white };
         _doneColors = new[] { s.CyanColor, s.HotColor, Color.white };
 
@@ -162,8 +161,13 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         _barFill.anchoredPosition = Vector2.zero;
         _barFill.sizeDelta = Vector2.zero;
 
-        _state = lab.CreateText("HackState", 13f, s.CyanColor);
-        _state.characterSpacing = 8f;
+        // 인게임에서는 상태 문구 없이 타이머 글리치와 회복량만 표시한다.
+        if (!lab.IsRuntime)
+        {
+            for (int i = 0; i < _percentText.Length; i++) _percentText[i] = $"TIME HACK  {i}%";
+            _state = lab.CreateText("HackState", 13f, s.CyanColor);
+            _state.characterSpacing = 8f;
+        }
         _bonus = lab.CreateText("HackBonus", 30f, s.CyanColor);
     }
 
@@ -181,7 +185,7 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         else _owner = null;
         _root.gameObject.SetActive(visible);
         _barBack.gameObject.SetActive(visible);
-        _state.gameObject.SetActive(visible);
+        if (_state != null) _state.gameObject.SetActive(visible);
         _bonus.gameObject.SetActive(visible);
     }
 
@@ -524,8 +528,11 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         float flash = a >= end ? 1f - Mathf.Clamp01((a - end) / FlashSeconds) : 0f;
         _barFillImage.color = Color.Lerp(_lab.Settings.CyanColor, Color.white, flash);
 
-        TimerBonusLab.SetText(_state, a < end ? _percentText[Mathf.RoundToInt(p * 100f)] : "ACCESS GRANTED");
-        TimerBonusLab.Place(_state, new Vector2(_lab.TimerPosition.x, BarY - StateGapPx * px), Vector2.one, alpha);
+        if (_state != null)
+        {
+            TimerBonusLab.SetText(_state, a < end ? _percentText[Mathf.RoundToInt(p * 100f)] : "ACCESS GRANTED");
+            TimerBonusLab.Place(_state, new Vector2(_lab.TimerPosition.x, BarY - StateGapPx * px), Vector2.one, alpha);
+        }
     }
 
     // 완료 순간 "+15.00"이 글리치로 튀어나왔다가 사라진다.

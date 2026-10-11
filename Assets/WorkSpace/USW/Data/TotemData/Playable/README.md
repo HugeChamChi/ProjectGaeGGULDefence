@@ -1,6 +1,6 @@
-# 토템 10종 사용/수정 가이드
+# 토템 14종 사용/수정 가이드
 
-각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템은 에셋을 보존하고 선택지 풀에서만 제외했습니다.
+각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1014 모두 `Use Sheet Data`를 껐습니다. 1001~1010은 KHJ_Artwork/Totem_Sprite의 같은 번호 그림을, 1011~1014는 전용 그림이 없어 기존 토템 그림(1009/1006/1008/1007)을 임시로 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템(SampleAttack/SampleDualEffect)은 2026-10-10 삭제했습니다.
 
 ## 바로 테스트하기
 
@@ -15,7 +15,7 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 | 번호 / SO | 동작 | 수정할 항목 |
 |---|---|---|
 | TD1001Data | 보조 투사체 | Bonus Projectile 확률 0.33, 계수 0.5; effectRanges |
-| TD1002Data | 공격력 +5%, 처치별 범위 확장 | functions의 amount; Growth Stages의 처치 수/Offsets |
+| TD1002Data | 배치 후 시간에 따라 공격력·범위 성장, 최대 성장 후 식량 수확 | Growth Stages의 RequiredSeconds / AttackBonus / Offsets; GrowthHarvestSeconds / Food |
 | TD1003Data | 5초마다 화염구 피해 100 + 화상 | Debuff Fire Interval / Impact Damage / Projectile; 화상 정의는 Resources/Debuffs/Burn |
 | TD1004Data | 40초마다 조커 생성 | Wildcard Spawn 주기와 Unit |
 | TD1005Data | 위 1칸 임시 등급 상승 | effectRanges; 스킬 SO까지 바꾸려면 Tier Upgrades |
@@ -24,12 +24,16 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 | TD1008Data | 안쪽 공격력 +10%, 바깥 공격속도 +10% | Effect Groups 각각의 Color / Description / Functions / Ranges |
 | TD1009Data | 인접 공격력 +50%, 공격속도 -20% | functions 두 항목; effectRanges |
 | TD1010Data | 10초마다 식량 30 | functions의 FoodGeneratorFunction interval / amount |
+| TD1011Data | 위 가로 3칸 공격 불가 + 아래 1칸 공격속도 +40%, 회전 불가 | attackDisabledRanges / effectRanges / functions(Speed) |
+| TD1012Data | 필드 토템 1개당 치명 확률 +2%·치명 피해 +3%, 전역, 상한 없음 | functions의 CritChance / CritDamage (프리팹 `TotemTotemCount`) |
+| TD1013Data | 같은 가로줄 전체 공격력 +15%, 회전 불가 | functions(AttackPercent); 범위는 좌·우 `DirectionalLineRange` |
+| TD1014Data | 보스 등장 후 7초 동안 오른쪽 세로 3칸 공격속도 +40%, 회전 불가 | functions의 조건부 버프 → `BossEncounterWindowCondition.seconds` / 내부 Speed; effectRanges |
 
-퍼센트 수치는 0.1=10%입니다. 설명은 수치 변경 시 직접 함께 수정해주세요. 그룹을 쓰는 TD1008은 각 Description을 수정합니다.
+퍼센트 수치는 0.1=10%입니다. `description`은 간단히, `DetailedDescription`은 자세히 문구입니다. 일반 수치 변경 시 두 문구도 함께 수정하세요. TD1002 자세히의 `{GrowthStages}`만 단계·수확 SO에서 자동 생성합니다. TD1008의 `[대괄호]`는 EffectGroups 순서의 색으로 표시합니다. 보상 띠는 간단히만, 상세 우측 상단은 공용 설명 스위치이며 매 상세 진입 시 간단히입니다. 성장·수확은 보스 사이 대기에도 진행하고 선택지·보상 정지 중 멈춥니다.
 
 ## 테스트용으로 정한 값
 
-- 등급은 **10종 모두 Normal**입니다. 미확정 밸런스로, 각 SO의 Tier에서 바꿀 수 있습니다.
+- 등급은 **14종 모두 Normal**입니다. 미확정 밸런스로, 각 SO의 Tier에서 바꿀 수 있습니다.
 - TD1001/TD1007 범위는 인접 8칸으로 임시 설정했습니다.
 - TD1008의 +10%/+10%, TD1009의 +50%/-20%, TD1010의 10초/30은 기존 제작 예시값입니다.
 - 방향별 별도 그림이 없어 네 방향 모두 같은 원본 그림을 사용합니다. 방향 전환은 효과 범위에 적용됩니다. 방향 그림이 생기면 rotationSpriteAddresses 4개를 교체하세요.

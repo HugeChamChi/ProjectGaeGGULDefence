@@ -12,10 +12,7 @@ public sealed class DebuffInfoLink : MonoBehaviour, IPointerDownHandler, IPointe
     private DebuffBinding _binding;
     private DebuffInfoPopup _popup;
     private Canvas[] _ownerCanvases;
-    private int _pointer = int.MinValue;
-    private int _pressedLink = -1;
-    private Vector2 _down;
-    private bool _dragged;
+    private readonly DescriptionLinkInteraction _interaction = new DescriptionLinkInteraction();
     private string _sourceText;
     /// <summary>True while the explanation or its release shield is open.</summary>
     public bool BlocksOwnerInput => _popup != null && _popup.BlocksOwnerInput;
@@ -37,45 +34,31 @@ public sealed class DebuffInfoLink : MonoBehaviour, IPointerDownHandler, IPointe
         return _presenter != null ? _presenter.AddLinks(text, binding) : text;
     }
     /// <summary>Closes any owned popup without changing gameplay pause ownership.</summary>
-    public void Clear() { _popup?.HideImmediately(); _pointer = int.MinValue; _pressedLink = -1; }
+    public void Clear() { _popup?.HideImmediately(); _interaction.Reset(); }
     /// <summary>Captures the one pointer and term that began this tap.</summary>
     public void OnPointerDown(PointerEventData data)
     {
-        if (_pointer != int.MinValue || Input.touchCount > 1 || BlocksOwnerInput) { _dragged = true; return; }
-        _pointer = data.pointerId; _down = data.position; _dragged = false;
-        _pressedLink = FindLink(data);
+        if (BlocksOwnerInput) return;
+        _interaction.TryBegin(_text, data);
     }
-    /// <summary>Tracks movement even when an ancestor ScrollRect handled dragging.</summary>
-    public void OnPointerUp(PointerEventData data)
-    {
-        if (_pointer != data.pointerId) return;
-        if (Vector2.Distance(_down, data.position) > DragThreshold || data.dragging) _dragged = true;
-    }
-    /// <summary>Opening is guarded by the original pointer, drag distance and link identity.</summary>
+    public void OnPointerUp(PointerEventData data) => _interaction.Observe(data);
     public void OnPointerClick(PointerEventData data)
     {
-        if (_pointer != data.pointerId) return;
-        _pointer = int.MinValue;
-        if (_dragged || data.dragging || Input.touchCount > 1 || BlocksOwnerInput || _pressedLink < 0 ||
-            Vector2.Distance(_down, data.position) > DragThreshold || _pressedLink != FindLink(data)) return;
-        string key = _text.textInfo.linkInfo[_pressedLink].GetLinkID();
-        if (!key.StartsWith("debuff:") || !int.TryParse(key.Substring(7), out int id) ||
-            _presenter == null || !_presenter.TryBuild(id, _binding, out var model)) return;
+        if (BlocksOwnerInput || !_interaction.TryRelease(data, float.PositiveInfinity, out string key)) return;
+        var resolver = new DescriptionTermResolver(null, _presenter, _binding);
+        if (!resolver.TryResolve(key, out var term)) return;
         if (_popup == null) _popup = DebuffInfoPopup.Create(_owner, _text);
-        _popup.Show(model);
+        _popup.Show(term.DisplayName, term.Body);
         data.Use();
     }
-    /// <summary>Scroll gestures are not taps.</summary>
-    public void OnBeginDrag(PointerEventData data) { _dragged = true; }
-    private float DragThreshold => EventSystem.current != null ? EventSystem.current.pixelDragThreshold : 10f;
-    private int FindLink(PointerEventData data) => TMP_TextUtilities.FindIntersectingLink(_text, data.position, data.pressEventCamera);
+    public void OnBeginDrag(PointerEventData data) => _interaction.Cancel();
     private void LateUpdate()
     {
-        if (Input.touchCount > 1) _dragged = true;
+        _interaction.Tick();
         if (_ownerCanvases != null)
             foreach (var canvas in _ownerCanvases) if (canvas != null && !canvas.enabled) { Clear(); break; }
         // A scroll cancels OnPointerClick; release pointer ownership after the whole gesture.
-        if (_pointer != int.MinValue && Input.touchCount == 0 && !Input.GetMouseButton(0)) _pointer = int.MinValue;
+        if (_interaction.HasPress && Input.touchCount == 0 && !Input.GetMouseButton(0)) _interaction.Reset();
     }
     private void OnDisable() => Clear();
     private void OnDestroy() { if (_popup != null) Destroy(_popup.gameObject); }

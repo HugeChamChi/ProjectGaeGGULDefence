@@ -15,7 +15,10 @@ public class ConditionalBuffFunction : ITotemFunction
     public void Apply(TotemBase totem, GridCell cell, TotemBuffManager buffManager)
     {
         if (condition == null || buff == null) return;
-        if (condition.IsMet(totem, cell))
+        bool met = condition is ITotemBuffContextCondition contextCondition
+            ? contextCondition.IsMet(totem, cell, buffManager)
+            : condition.IsMet(totem, cell);
+        if (met)
             buff.Apply(totem, cell, buffManager);
     }
 }

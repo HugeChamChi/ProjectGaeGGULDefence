@@ -39,7 +39,6 @@ public sealed class ResearchNodeView : MonoBehaviour
     private readonly List<Image> _pips = new List<Image>();
     private bool _pulse;
     private Color _pulseColor;
-    private Image _maxArt;
     private Image _dotsBack;
     private Image _dotsFill;
     private bool _art;
@@ -155,14 +154,6 @@ public sealed class ResearchNodeView : MonoBehaviour
         _selection.gameObject.SetActive(false);
         _icon = ResearchUi.NewImage(rect, "NodeIconSlot", Node.Icon, Vector2.one * size * 0.5f, new Vector2(0f, size * 0.06f));
         _icon.preserveAspect = true;
-        _maxArt = ResearchUi.NewImage(rect, "Node_Max", _s.NodeMaxSprite, new Vector2(size * 0.4f, size * 0.17f), new Vector2(0f, -size * 0.29f));
-        _maxArt.preserveAspect = true;
-        if (_s.NodeMaxSprite == null)
-        {
-            _levelText = ResearchUi.NewText(_maxArt.transform, "MaxText", _s.MaxLabel, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center);
-            _maxArt.enabled = false;
-        }
-        _maxArt.gameObject.SetActive(false);
         if (Node.MaxLevel == 5 && _s.LevelDotsSprite != null)
         {
             var dotsSize = new Vector2(size * 0.42f, size * 0.068f);
@@ -217,7 +208,7 @@ public sealed class ResearchNodeView : MonoBehaviour
 
         if (_levelText != null)
         {
-            _levelText.text = maxed ? _s.MaxLabel : $"{level}/{Node.MaxLevel}";
+            _levelText.text = maxed ? string.Empty : $"{level}/{Node.MaxLevel}";
             bool inside = Node.Shape == ResearchNodeShape.Circle;
             _levelText.color = inside && maxed ? _s.OnColor : maxed ? _s.Accent : available ? _s.Ink : _s.Muted;
         }
@@ -241,25 +232,24 @@ public sealed class ResearchNodeView : MonoBehaviour
         _body.color = Color.white;
         _icon.color = available || maxed ? _s.OnColor : _s.Muted;
         _blocked.gameObject.SetActive(state == ResearchNodeState.Blocked);
-        _maxArt.gameObject.SetActive(maxed);
         if (_dotsBack != null)
         {
-            _dotsBack.gameObject.SetActive(!maxed);
-            _dotsFill.gameObject.SetActive(!maxed);
+            _dotsBack.gameObject.SetActive(true);
+            _dotsFill.gameObject.SetActive(true);
             _dotsBack.color = _s.Faint;
             _dotsFill.color = _s.OnColor;
             _dotsFill.fillAmount = (float)level / Node.MaxLevel;
         }
         for (int i = 0; i < _pips.Count; i++)
         {
-            _pips[i].gameObject.SetActive(!maxed);
+            _pips[i].gameObject.SetActive(true);
             _pips[i].color = i < level ? _s.OnColor : _s.Faint;
         }
         if (_levelText != null)
         {
-            _levelText.text = maxed ? _s.MaxLabel : $"{level}/{Node.MaxLevel}";
+            _levelText.text = maxed ? string.Empty : $"{level}/{Node.MaxLevel}";
             _levelText.color = _s.OnColor;
-            if (_levelText.transform.parent != _maxArt.transform) _levelText.gameObject.SetActive(!maxed);
+            _levelText.gameObject.SetActive(!maxed);
         }
         _pulse = false;
     }

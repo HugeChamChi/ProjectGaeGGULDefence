@@ -19,6 +19,20 @@ namespace HSD.UI.Upgrade
 
         private Dictionary<string, UI_UpgradeItem> _items = new();
         private UpgradePresenter _presenter;
+        private GaeGGUL.UI.Unit.UI_UnitInfoPanel _statFeedback;
+
+        public RectTransform StatFeedbackArea => _statFeedback != null ? (RectTransform)_statFeedback.transform : null;
+
+        public void ShowStatFeedback(UnitBase unit, float attack, float interval)
+        {
+            if (_statFeedback == null) _statFeedback = FindFirstObjectByType<GaeGGUL.UI.Unit.UI_UnitInfoPanel>(FindObjectsInactive.Include);
+            _statFeedback.ShowUpgradeFeedback(unit, attack, interval);
+            var feedbackCanvas = _statFeedback.GetComponent<Canvas>();
+            feedbackCanvas.overrideSorting = true;
+            feedbackCanvas.sortingOrder = Mathf.Max(feedbackCanvas.sortingOrder, _canvas.sortingOrder + 1);
+        }
+
+        public void CloseStatFeedback() => _statFeedback?.Close();
 
         protected override void Awake()
         {

@@ -3,8 +3,12 @@ using UnityEngine;
 /// <summary>A direct-fire unit that restores time after charging with its own basic attacks.</summary>
 public sealed class Disigman : UnitBase
 {
+    [SerializeField] private Transform _muzzle;
     private UnitDependencies _dependencies;
     private int _chargedAttacks;
+
+    /// <summary>Single authored muzzle follows the body's cell facing and breathing scale.</summary>
+    public override Vector3 ProjectileOrigin => _muzzle != null ? _muzzle.position : base.ProjectileOrigin;
 
     /// <summary>Current tier's authored attack requirement, clamped to at least one.</summary>
     public int RequiredAttacks => Mathf.Max(1, unitData?.Disigman != null

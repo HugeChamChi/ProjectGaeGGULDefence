@@ -21,6 +21,19 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     private bool _paused;
     private bool _previousUnscaled;
 
+    /// <summary>The authored skeleton used for visual-only skill copies.</summary>
+    public SkeletonAnimation Skeleton => _skeleton;
+
+    /// <summary>Animated muzzle position, including the authored skeleton scale and pose.</summary>
+    public Vector3 MuzzlePosition
+    {
+        get
+        {
+            var bone = _skeleton != null ? _skeleton.Skeleton?.FindBone("muzzle") : null;
+            return bone != null ? bone.GetWorldPosition(_skeleton.transform) : transform.position;
+        }
+    }
+
     private void Awake()
     {
         if (_skeleton != null) _renderer = _skeleton.GetComponent<MeshRenderer>();

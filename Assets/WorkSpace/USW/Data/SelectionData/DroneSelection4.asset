@@ -12,13 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection4
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups:
+    - drone.kind.4
+    Effects:
+    - rid: 1000
+    Feedback:
+    - Target: 2
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
   chooseId: 9104
   chooseName: "\uC8FC\uD30C\uC218 \uB3D9\uC870"
   tier: 2
   spawnRate: 1
-  description: "\uD544\uB4DC \uB4DC\uB860 1\uAE30\uB2F9 \uAC10\uB9DD\uC758 \uC2A4\uD0DD
-    \uCD94\uAC00 \uD53C\uD574\uAC00 0.3% \uC99D\uAC00\uD569\uB2C8\uB2E4. \uCD5C\uB300
-    9%."
+  description: "\uD574\uD0B9 \uCD94\uAC00 \uD53C\uD574\uAC00 \uC804\uD22C \uB4DC\uB860
+    1\uAE30\uB2F9 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4. (\uCD5C\uB300 {max}%)"
+  simpleDescription: "\uC804\uD22C \uB4DC\uB860 1\uAE30\uB2F9 \uD574\uD0B9 \uCD94\uAC00
+    \uD53C\uD574\uB7C9\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  DescriptionTerms:
+  - combat_drone
+  - hack_stack
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0
@@ -35,3 +51,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a7455f25c75038f499302ebff214515d, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: StackSkillFrequencyDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        ReductionPerStack: 0.003
+        MaximumReduction: 0.09

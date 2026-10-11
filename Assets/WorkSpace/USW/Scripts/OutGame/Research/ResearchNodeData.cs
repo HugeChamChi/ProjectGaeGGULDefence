@@ -22,9 +22,9 @@ public class ResearchNodeData
     [Range(-1, 2)] public int Column;
 
     [Header("해금 조건")]
-    [Tooltip("이 노드들이 최대 레벨이어야 열린다. 비우면 부모 조건 없음")]
+    [Tooltip("부모가 최대 레벨이면 열린다. 단, 택1이 아닌 두 갈래 합류는 양쪽 각각 1레벨 필요. 비우면 부모 조건 없음")]
     public List<string> Parents = new List<string>();
-    [Tooltip("true면 부모 중 하나만 최대여도 열린다 (택1 갈림길 뒤 합류 노드)")]
+    [Tooltip("true면 부모 중 하나만 최대여도 열린다 (택1 합류). 동시에 찍을 수 있는 두 갈래 합류는 양쪽 1레벨 조건 우선")]
     public bool RequireAnyParent;
     [Tooltip("트리 전체 강화 횟수(모든 노드 레벨 합)가 이 값 이상이어야 열린다. 관문 노드용, 0이면 조건 없음")]
     [Min(0)] public int RequiredTotalLevel;

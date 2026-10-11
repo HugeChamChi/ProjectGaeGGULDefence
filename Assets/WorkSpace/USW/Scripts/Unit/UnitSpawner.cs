@@ -8,11 +8,12 @@ using Cysharp.Threading.Tasks;
 public class UnitSpawner : MonoBehaviour
 {
     [Inject] private IObjectResolver _resolver;
+    [Inject] private AudioManager _audioManager;
 
     private UpgradeManager _upgradeManager;
     private GameDataManager _gameDataManager;
     private GameManager _gameManager;
-    private LevelUpManager _levelUpManager;
+    private ISelectionEconomyReader _selectionEconomy;
     private CurrencyManager _currencyManager;
     private GridManager _gridManager;
     private UnitFactory _unitFactory;
@@ -42,7 +43,7 @@ public class UnitSpawner : MonoBehaviour
     /// <summary>성공한 합성마다 한 번 추첨한다. 당첨 보상은 만석이어도 소실되지 않는다.</summary>
     public void RequestMergeSupport()
     {
-        float chance = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.MergeSupport)?.Value ?? 0f;
+        float chance = _selectionEconomy?.MergeSupportChance ?? 0f;
         if (chance > 0f && Random.value < Mathf.Clamp01(chance)) PendingSupportCount++;
     }
 
@@ -93,7 +94,7 @@ public class UnitSpawner : MonoBehaviour
         _upgradeManager = _resolver.Resolve<UpgradeManager>();
         _gameDataManager = _resolver.Resolve<GameDataManager>();
         _gameManager = _resolver.Resolve<GameManager>();
-        _levelUpManager = _resolver.Resolve<LevelUpManager>();
+        _selectionEconomy = _resolver.Resolve<ISelectionEconomyReader>();
         _currencyManager = _resolver.Resolve<CurrencyManager>();
         _gridManager = _resolver.Resolve<GridManager>();
         _unitFactory = _resolver.Resolve<UnitFactory>();
@@ -132,8 +133,8 @@ public class UnitSpawner : MonoBehaviour
         }
 
         // 소환 할인 (할인 티켓 레벨업 효과 등)
-        float discountRate  = _levelUpManager?.SummonDiscountRate ?? 0f;
-        float fixedDiscount = _levelUpManager?.SummonFixedDiscountAmount ?? 0f;
+        float discountRate  = _selectionEconomy?.SummonDiscountRate ?? 0f;
+        float fixedDiscount = _selectionEconomy?.SummonFixedDiscountAmount ?? 0f;
         float effectiveCost = (CurrentCost - fixedDiscount) * Mathf.Max(0f, 1f - discountRate);
         effectiveCost = Mathf.Max(0f, effectiveCost);
 
@@ -215,7 +216,8 @@ public class UnitSpawner : MonoBehaviour
         _unitFactory.InitUnitTransform(unit);
         // Spine replaces the breathing tween that used to restore the prefab's
         // root scale after the spawn effect. Keep that authored scale explicitly.
-        unit.transform.localScale = unit.TryGetComponent<SpineActorVisual>(out _)
+        unit.transform.localScale = (unit.TryGetComponent<SpineActorVisual>(out _)
+            || unit.TryGetComponent<BetangSpineVisual>(out _))
             && unit.unitData != null && unit.unitData.prefab != null
             ? unit.unitData.prefab.transform.localScale
             : spawnScale;
@@ -237,12 +239,13 @@ public class UnitSpawner : MonoBehaviour
 
         if (startDelaySeconds > 0f)
         {
-            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: false,
+            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: _tutorialSettings != null,
                 cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
             if (canceled || unit == null || cell == null) return;
         }
         
         Transform lineParent = effectParent != null ? effectParent : transform;
+        _audioManager?.PlayCue(GameAudioCue.UnitSummon);
 
         // 1. Line Effect (World Space)
         if (spawnLinePrefab != null)
@@ -286,8 +289,9 @@ public class UnitSpawner : MonoBehaviour
                 Vector3 endPos = cell.transform.position;
 
                 if (lineCurveHeight.HasValue) line.curveHeight = lineCurveHeight.Value;
+                line.UseUnscaledTime = _tutorialSettings != null;
                 line.Fire(startPos, endPos);
-                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: false);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: line.UseUnscaledTime);
             }
         }
 
@@ -297,7 +301,12 @@ public class UnitSpawner : MonoBehaviour
             Transform pParent = effectParent != null ? effectParent : cell.transform;
             var particleObj = RM.Instantiate(spawnEffectPrefab, cell.transform.position, spawnEffectPrefab.transform.rotation, pParent, true);
             var particle = particleObj.GetComponent<ParticleSystem>();
-            if (particle != null) particle.Play();
+            if (particle != null)
+            {
+                var main = particle.main;
+                main.useUnscaledTime = _tutorialSettings != null;
+                particle.Play();
+            }
             RM.Destroy(particleObj, 2f);
         }
 
@@ -309,7 +318,7 @@ public class UnitSpawner : MonoBehaviour
             
             unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
 
-            var lu = _levelUpManager;
+            var lu = _selectionEconomy;
             if (lu != null && lu.HasSummonDealsDamage && unit.unitData != null)
             {
                 int dmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SummonDamagePct);
@@ -343,7 +352,7 @@ public class UnitSpawner : MonoBehaviour
             : 5f;
 
         // 판매 시 보스 피해 (자폭병 레벨업 효과) - 유닛 제거 전에 데미지를 미리 계산해야 토템/위치 효과가 적용됨
-        var lu = _levelUpManager;
+        var lu = _selectionEconomy;
         int sellDmg = 0;
         if (lu != null && lu.HasSellDealsDamage && unit.unitData != null)
         {
@@ -358,7 +367,7 @@ public class UnitSpawner : MonoBehaviour
             _currencyManager.AddCurrency(refund);
 
         // 판매 보너스 식량 (서비스 레벨업 효과)
-        float bonusFood = _levelUpManager?.SellBonusFoodAmount ?? 0f;
+        float bonusFood = _selectionEconomy?.SellBonusFoodAmount ?? 0f;
         if (bonusFood > 0f)
             _currencyManager.AddCurrency(bonusFood);
 

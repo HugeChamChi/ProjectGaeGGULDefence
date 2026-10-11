@@ -35,15 +35,15 @@ public static class DroneSelectionChecks
             Set(ui,"descriptionText",label); ui.Setup(cards[8],null,preview);
             Check(label.text==preview && !preview.Contains("{value}"),"TMP resolved description");
             manager.ApplyEffect(cards[8]);
-            float roll=manager.DroneSelections.Get(DroneSelectionKind.DeltanDamageTaken).Value;
+            float roll=manager.Effects.HackingProductionBonus;
             Check(roll>=0.01f && roll<=0.1f && preview.Contains(Mathf.RoundToInt(roll*100)+"%"),"Displayed value applied");
             Check(cards[8].droneEffect.Value==0.01f && cards[8].description.Contains("{value}"),"SO untouched");
             manager.ApplyEffect(cards[8]);
-            Check(manager.DroneSelections.Get(DroneSelectionKind.DeltanDamageTaken).Value==roll,"Duplicate apply does not reroll");
+            Check(manager.Effects.HackingProductionBonus==roll,"Duplicate apply does not reroll");
 
-            var drones=Component<DroneManager>(); Set(drones,"_levelUpManager",manager);
+            var drones=Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
             var beta=Component<DroneSelectionCheckBetan>(); beta.unitData=Asset<UnitData>();
-            beta.unitData.attackSpeed.normal=1; beta.Init(new UnitDependencies { LevelUpManager=manager });
+            beta.unitData.attackSpeed.normal=1; beta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
             var cell=Component<GridCell>(); Set(cell,"<Model>k__BackingField",new GridCellModel());
             Set(beta,"<currentCell>k__BackingField",cell); beta.gameObject.SetActive(true);
             for(int i=0;i<12;i++)
@@ -52,6 +52,9 @@ public static class DroneSelectionChecks
             }
             drones.TickSelections(20); Check(beta.Spawned==0,"No selection no extra bombs");
             manager.ApplyEffect(cards[1]); drones.TickSelections(9); Check(beta.Spawned==0,"Normal waits");
+            var unrelated=Asset<LevelUpData>(); unrelated.chooseId=9199;
+            unrelated.primaryEffect=LevelUpEffectType.ExpGainPercent; unrelated.primaryValue=10;
+            manager.ApplyEffect(unrelated); // Must not reset the nine seconds already accumulated.
             drones.TickSelections(1); Check(beta.Spawned==1,"Normal one bomb at ten seconds");
             manager.ApplyEffect(cards[3]); drones.TickSelections(20); Check(beta.Spawned==13,"Normal plus epic ten cap");
             manager.RemoveEffect(cards[1]);manager.RemoveEffect(cards[3]); drones.TickSelections(60);
@@ -61,7 +64,7 @@ public static class DroneSelectionChecks
             manager.RemoveEffect(cards[2]);Check(Mathf.Approximately(ownDrone.AttackInterval,interval),"Speed restored");
 
             var currency=Component<CurrencyManager>(); var zelta=Component<Drone_Zeltan>(); zelta.unitData=Asset<UnitData>();
-            zelta.unitData.foodProduction.normal=4;zelta.Init(new UnitDependencies { LevelUpManager=manager,CurrencyManager=currency });
+            zelta.unitData.foodProduction.normal=4;zelta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration,CurrencyManager=currency });
             manager.ApplyEffect(cards[6]); var resource=zelta.GetComponent<UnitResourceComponent>();
             resource.TickFoodProduction(2);Check(currency.Currency==0,"Air fryer holds two seconds");
             resource.TickFoodProduction(1);Check(Mathf.Approximately(currency.Currency,14.4f),"Air fryer pays three seconds at 120 percent");
@@ -69,16 +72,16 @@ public static class DroneSelectionChecks
             manager.RemoveEffect(cards[6]);resource.TickFoodProduction(1);Check(Mathf.Approximately(currency.Currency,18.4f),"Food revert");
             var delta=Component<Drone_Deltan>();delta.unitData=Asset<UnitData>();delta.unitData.skillCooldown.normal=20;
             delta.unitData.Hacking=Asset<DroneHackingData>();delta.unitData.Hacking.AttacksToCharge.normal=6;
-            delta.Init(new UnitDependencies { LevelUpManager=manager });manager.ApplyEffect(cards[9]);
+            delta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });manager.ApplyEffect(cards[9]);
             Check(delta.RequiredAttacks==5,"Deltan mana requirement reduction");
             var alphaData=Asset<AlphanSkillData>(); alphaData.CooldownSeconds=20;
-            using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager,null,null))
+            using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager.Effects,null,null))
             {
                 alpha.Configure(alphaData,null); manager.ApplyEffect(cards[10]);
                 Check(Mathf.Approximately(alpha.CooldownSeconds,16),"Independent Alphan cooldown");
             }
 
-            var gamma=Component<Drone_Gamman>();gamma.unitData=Asset<UnitData>();gamma.Init(new UnitDependencies {LevelUpManager=manager});
+            var gamma=Component<Drone_Gamman>();gamma.unitData=Asset<UnitData>();gamma.Init(new UnitDependencies {SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration});
             Set(gamma,"_droneManager",drones);manager.ApplyEffect(cards[4]);
             Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.036f),"Gamman stack damage twelve drones");
             for(int i=0;i<20;i++) drones.RegisterDrone(Component<DroneUnit>());

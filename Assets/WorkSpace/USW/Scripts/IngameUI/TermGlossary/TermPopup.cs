@@ -122,6 +122,8 @@ public sealed class TermPopup : MonoBehaviour
 
     /// <summary>방패가 켜져 있는 동안 true.</summary>
     public bool IsOpen => _shield != null && _shield.activeSelf && !_closing;
+    /// <summary>Includes dismissal so the closing touch cannot select a card behind the sheet.</summary>
+    public bool BlocksOwnerInput => _shield != null && _shield.activeSelf;
     /// <summary>화면에 보이는 시트 높이 (캔버스 기준 단위). Show 때 정해진다.</summary>
     public float SheetHeight => _sheetHeight > 0f ? _sheetHeight : _root.rect.height * _sheetMaxRatio;
     /// <summary>영상 필름 (검증용).</summary>
@@ -374,6 +376,7 @@ public sealed class TermPopup : MonoBehaviour
         Stretch(backdrop);
         _backdrop = backdrop.gameObject.AddComponent<RawImage>();
         _backdrop.raycastTarget = false;
+        backdrop.gameObject.AddComponent<FullScreenUiBackdrop>().Refresh();
         backdrop.gameObject.SetActive(false);
 
         // 방패: 반투명 검정, 누름을 모두 받는다 — 바깥 탭은 닫기만 한다.
@@ -385,6 +388,7 @@ public sealed class TermPopup : MonoBehaviour
         shieldButton.transition = Selectable.Transition.None;
         shieldButton.onClick.AddListener(Close);
         _shield = shield.gameObject;
+        shield.gameObject.AddComponent<FullScreenUiBackdrop>().Refresh();
 
         _sheet = NewRect("Sheet", _root);
         _sheet.anchorMin = new Vector2(0f, 0f);

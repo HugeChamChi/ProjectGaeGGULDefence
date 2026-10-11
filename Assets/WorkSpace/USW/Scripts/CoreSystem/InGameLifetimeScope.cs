@@ -10,7 +10,18 @@ public class InGameLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
-        builder.RegisterInstance(new SceneComponentCollection(gameObject.scene));
+        var sceneComponents = new SceneComponentCollection(gameObject.scene);
+        builder.RegisterInstance(sceneComponents);
+        CombatSettings combatSettings = null;
+        // Scope Awake runs before scene.isLoaded; enumerate roots directly during composition.
+        foreach (var sceneRoot in gameObject.scene.GetRootGameObjects())
+        foreach (var choices in sceneRoot.GetComponentsInChildren<LevelUpManager>(true))
+        {
+            if (combatSettings != null) throw new System.InvalidOperationException("Multiple LevelUpManager configuration sources in scene.");
+            combatSettings = choices.CombatConfiguration;
+        }
+        if (combatSettings == null) throw new System.InvalidOperationException("LevelUpManager combat configuration source is required in scene.");
+        builder.RegisterInstance(combatSettings);
         builder.Register<ResearchRunBonuses>(Lifetime.Scoped);
         builder.RegisterEntryPoint<GaeGGUL.Tutorial.TutorialSceneBinding>();
         SceneComponentRegistration.RegisterOptional<GaeGGUL.Tutorial.TutorialActor>(builder, gameObject.scene);
@@ -56,15 +67,22 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterInstance(mergeEffectSettings);
         builder.Register<MergeEffectPlayer>(Lifetime.Scoped); // 합성 연출 (잔상 흡입 + 먼지구름)
         builder.Register<DragSellService>(Lifetime.Scoped); // 드래그 판매 (판매 띠가 있는 씬에서만 동작)
+        builder.Register<UnitySelectionRandom>(Lifetime.Scoped).As<ISelectionRandom>();
+        builder.Register<LevelUpDrawer>(Lifetime.Scoped);
+        builder.Register(_ => new LevelUpRunState(), Lifetime.Scoped);
+        builder.Register<SelectionEffectReader>(Lifetime.Scoped).AsSelf().AsImplementedInterfaces();
+        builder.Register<SelectionDescriptionFormatter>(Lifetime.Scoped);
+        builder.Register<SelectionCommandExecutor>(Lifetime.Scoped);
         builder.RegisterComponentInHierarchy<LevelUpManager>();
 
+        SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_DebugChoiceInfoPopup>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_DebugTotemPopup>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<UIManager>();
         DamageChartLab.RegisterServices(builder, gameObject.scene); // 독립 딜표 비교 씬에서만 등록
         SceneComponentRegistration.RegisterOptional<SealedGridShaderLab>(builder, gameObject.scene); // 독립 봉인 셰이더 실험실에서만 존재
         SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<DamageFloaterManager>();
         SceneComponentRegistration.RegisterOptional<BossDamageNumbers>(builder, gameObject.scene);
-        SceneComponentRegistration.RegisterOptional<HSD.UI.Effect.UI_ChiefSkillEffect>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_IngameDebugPanel>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_OpenDebugButton>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.UI.Upgrade.UI_UpgradePanel>(builder, gameObject.scene);
@@ -89,6 +107,7 @@ public class InGameLifetimeScope : LifetimeScope
 
         builder.RegisterEntryPoint<AlphanActiveSkill>(Lifetime.Scoped).AsSelf();
         builder.RegisterEntryPoint<GameInitializer>().AsSelf();
+        builder.RegisterEntryPoint<IngameAudioBinding>();
 
         builder.RegisterBuildCallback(resolver =>
         {

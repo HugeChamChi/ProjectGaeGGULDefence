@@ -46,7 +46,7 @@ public class LevelUpPeekHighlighter : MonoBehaviour
         Clear();
         var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _targets);
 
-        if (destination == LevelUpFeedbackDestination.ChiefSkill && _chiefSkillTarget != null)
+        if ((destination & LevelUpFeedbackDestination.ChiefSkill) != 0 && _chiefSkillTarget != null)
         {
             _pulsed = _chiefSkillTarget;
             _pulsedScale = _chiefSkillTarget.localScale;
@@ -54,7 +54,7 @@ public class LevelUpPeekHighlighter : MonoBehaviour
             _ = _chiefSkillTarget.DOScale(_pulsedScale * 1.12f, _hopDuration)
                 .SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetUpdate(true).SetLink(_chiefSkillTarget.gameObject);
         }
-        if (destination != LevelUpFeedbackDestination.Units || _gridManager == null) return;
+        if ((destination & LevelUpFeedbackDestination.Units) == 0 || _gridManager == null) return;
 
         var root = HudRoot;
         foreach (var cell in _gridManager.GetOccupiedCells())

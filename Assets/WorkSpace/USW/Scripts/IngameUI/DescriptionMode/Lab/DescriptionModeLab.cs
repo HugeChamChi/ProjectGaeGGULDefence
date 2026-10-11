@@ -47,7 +47,7 @@ public sealed class DescriptionModeLab : MonoBehaviour
     private void Start()
     {
         _fontSource = _cardPrefab.GetComponentInChildren<TMP_Text>(true);
-        _linker = new TermLinker(_data.Glossary, new Color(0.18f, 0.6f, 0.8f), new Color(1f, 0.62f, 0.1f), string.Empty);
+        _linker = new TermLinker(_data.Glossary, new Color(0.18f, 0.6f, 0.8f), new Color(1f, 0.62f, 0.1f));
         _safeRoot = Rect("DescriptionSafeArea", _canvas);
         Stretch(_safeRoot);
         _safeRoot.gameObject.AddComponent<SafeAreaApplier>();

@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7710743723549950420}
@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragFollowSharpness: 18
-  _projectilePrefab: {fileID: 1187995064842273282, guid: 43c11ca55b0446e44af219557cefef16,
+  _projectilePrefab: {fileID: 4388474334617322786, guid: 5c4da860abe02004cad1cfaf3d4a1d6d,
     type: 3}
   _actionSprite: {fileID: 0}
   _actionSpriteHoldSeconds: 0.15
@@ -151,6 +151,8 @@ MonoBehaviour:
   _drag: {fileID: 0}
   _idle: idle
   _dragAnimation: drag
+  _attack: attack
+  _skill: skill
   _attackStart: attack_start
   _attackLoop: attack_loop
   _attackEnd: attack_end
@@ -214,7 +216,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: d189dfedef21962439ff615d8dffe579, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

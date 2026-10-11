@@ -19,6 +19,7 @@ namespace HSD.InGameDebug
         [SerializeField] private TextMeshProUGUI txt_AccumulatedStats;
         
         private DebugChoiceInfoPresenter _presenter;
+        [VContainer.Inject] private SelectionEffectReader _effects;
 
         public DebugTabType TabType => DebugTabType.LevelUp;
 
@@ -28,7 +29,7 @@ namespace HSD.InGameDebug
             {
                 btn_Close.onClick.AddListener(ClosePopup);
             }
-            _presenter = new DebugChoiceInfoPresenter(this);
+            _presenter = new DebugChoiceInfoPresenter(this, () => _effects);
         }
 
         public void OpenPopup()
@@ -59,70 +60,24 @@ namespace HSD.InGameDebug
 
     public class DebugChoiceInfoPresenter
     {
-        private IDebugChoiceInfoView _view;
-
-        public DebugChoiceInfoPresenter(IDebugChoiceInfoView view)
-        {
-            _view = view;
-        }
-
+        private readonly IDebugChoiceInfoView _view;
+        private readonly System.Func<SelectionEffectReader> _reader;
+        /// <summary>씬의 읽기 전용 상태를 표시한다. 제거된 카드 이력을 다시 합산하지 않는다.</summary>
+        public DebugChoiceInfoPresenter(IDebugChoiceInfoView view, System.Func<SelectionEffectReader> reader)
+        { _view = view; _reader = reader; }
         public void OnOpen()
         {
-            var levelUpManager = Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
-            if (levelUpManager == null || levelUpManager.LevelUpPool == null)
-            {
-                _view.UpdateStatsText("LevelUpManager not found.");
-                return;
-            }
-
-            var chosenIds = levelUpManager.ChosenIds.ToList();
-            var pool = levelUpManager.LevelUpPool;
-
-            Dictionary<string, float> accumulatedStats = new Dictionary<string, float>();
-
-            foreach (var id in chosenIds)
-            {
-                var data = pool.FirstOrDefault(d => d != null && d.chooseId == id);
-                if (data != null)
-                {
-                    AddStat(accumulatedStats, data.primaryEffect.ToString(), data.primaryValue);
-                    AddStat(accumulatedStats, data.secondaryEffect.ToString(), data.secondaryValue);
-                    AddStat(accumulatedStats, data.specialEffect.ToString(), data.specialValue);
-                }
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("<color=yellow><b>[글로벌 적용 선택지 버프 누적 스탯]</b></color>\n");
-
-            if (accumulatedStats.Count == 0)
-            {
-                sb.AppendLine("<color=#bbbbbb>적용된 글로벌 선택지가 없습니다.</color>");
-            }
-            else
-            {
-                foreach (var kvp in accumulatedStats)
-                {
-                    if (kvp.Key == "None" || kvp.Value == 0f) continue;
-                    
-                    string sign = kvp.Value > 0 ? "<color=#00ff00>+</color>" : "<color=#ff0000>-</color>";
-                    sb.AppendLine($"<color=#eeeeee>• {kvp.Key,-20}</color> : {sign}<color=white>{Mathf.Abs(kvp.Value)}</color>");
-                }
-            }
-
-            _view.UpdateStatsText(sb.ToString());
-        }
-
-        private void AddStat(Dictionary<string, float> dict, string effectName, float value)
-        {
-            if (string.IsNullOrEmpty(effectName) || effectName == "None" || value == 0f) return;
-
-            // 칸마다 적용되는 줄별 스탯은 여기서 제외해야 한다.
-            if (effectName.Contains("FrontRow") || effectName.Contains("BackRow")) return;
-
-            if (dict.ContainsKey(effectName))
-                dict[effectName] += value;
-            else
-                dict[effectName] = value;
+            var effects = _reader();
+            if (effects == null) { _view.UpdateStatsText("Selection reader not available."); return; }
+            var text = new StringBuilder("<color=yellow><b>[현재 선택지 효과]</b></color>\n");
+            text.AppendLine($"공격 +{effects.AttackBonus:P0} / 공속 +{effects.AttackSpeedBonus:P0}");
+            text.AppendLine($"치명 확률 {effects.CritChance:P0} / 피해 ×{effects.CritDamageMultiplier:0.##}");
+            text.AppendLine($"식량 속도 +{effects.FoodSpeedBonus:P0} / 경험치 ×{effects.ExpGainMultiplier:0.##}");
+            text.AppendLine($"투사체 크기 +{effects.ProjectileSizeBonus:P0} / 게이지 속도 +{effects.GaugeSpeedBonus:P0}");
+            text.AppendLine($"소환 할인 {effects.SummonDiscountRate:P0} + {effects.SummonFixedDiscountAmount:0.##}");
+            text.AppendLine($"추가 드론 {effects.ExtraCombatDroneCount} / 해킹 생산 +{effects.HackingProductionFlat}, +{effects.HackingProductionBonus:P0}");
+            text.AppendLine($"해킹 자폭 {effects.HasBombHacking} / 스택 {effects.HackingStacksPerBomb}");
+            _view.UpdateStatsText(text.ToString());
         }
     }
 }

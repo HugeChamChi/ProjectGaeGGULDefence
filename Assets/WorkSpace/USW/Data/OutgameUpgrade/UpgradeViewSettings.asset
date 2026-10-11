@@ -20,9 +20,21 @@ MonoBehaviour:
   CircleOutline: {fileID: 21300000, guid: fcadf08db4ab4e745ad615820a87889b, type: 3}
   Shadow: {fileID: 21300000, guid: 0755a77d5bd80d94eaba57a2d5d0f55e, type: 3}
   UpgradeArrow: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
+  GoldIcon: {fileID: 21300000, guid: c76fa86931d74e443b7d123ec3962adf, type: 3}
   BlockedIcon: {fileID: 21300000, guid: 76abe28924c3a9345adaa9cc63c803d3, type: 3}
   RoundedCornerScale: 4
   PanelBackground: {fileID: 21300000, guid: b96fce96b352f5d41ad588e52cc21e43, type: 3}
+  UnfinishedBackground: {r: 0.023529412, g: 0.11764706, b: 0.13333334, a: 1}
+  BackgroundPattern: 5
+  BackgroundDesign: 0
+  BackgroundVignetteStrength: 0.45
+  BackgroundBandColor: {r: 0.16, g: 0.65, b: 0.65, a: 0.18}
+  BackgroundIconA: {fileID: 21300000, guid: 8cef3e686beb744e9b760a5901eb89e6, type: 3}
+  BackgroundIconB: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
+  BackgroundIconTint: {r: 1, g: 1, b: 1, a: 0.12}
+  BackgroundIconSize: 110
+  BackgroundIconRowSpacing: 240
+  BackgroundIconSpeed: 24
   TopBarSprite: {fileID: 21300000, guid: 0d5d5f910e8d09141b68f7ecbd2ca410, type: 3}
   NodeLockedSprite: {fileID: 21300000, guid: eedd67c9a78e6414a89629b8e1d03f22, type: 3}
   NodeAvailableSprite: {fileID: 21300000, guid: ee126ed1eed81d149acd3d0fa698494f,
@@ -47,7 +59,7 @@ MonoBehaviour:
   Muted: {r: 0.54901963, g: 0.5803922, b: 0.6509804, a: 1}
   Faint: {r: 0.22745098, g: 0.25882354, b: 0.32941177, a: 1}
   Soft: {r: 0.17254902, g: 0.2, b: 0.26666668, a: 1}
-  Active: {r: 0.43529412, g: 0.92156863, b: 0.14117648, a: 1}
+  Active: {r: 0.0627451, g: 0.70980394, b: 0.75686276, a: 1}
   Accent: {r: 1, g: 0.77254903, b: 0.078431375, a: 1}
   OnColor: {r: 1, g: 1, b: 1, a: 1}
   ShadowColor: {r: 0, g: 0, b: 0, a: 0.35}

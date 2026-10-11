@@ -12,13 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection3
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups:
+    - drone.kind.3
+    Effects:
+    - rid: 1000
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
   chooseId: 9103
   chooseName: "\uC288\uC29D \uCF70\uAD11!!!!!"
   tier: 3
   spawnRate: 1
-  description: "20\uCD08\uB9C8\uB2E4 \uD544\uB4DC\uC5D0 \uC788\uB294 \uBCA0\uD0D5\uC758
-    \uC804\uD22C \uB4DC\uB860 \uC218\uB9CC\uD07C \uC790\uD3ED \uB4DC\uB860\uC774
-    \uCD94\uAC00 \uC0DD\uC131\uB429\uB2C8\uB2E4 (\uCD5C\uB300 10\uAE30)"
+  description: "{seconds}\uCD08\uB9C8\uB2E4 \uC804\uD22C \uB4DC\uB860\uC758 \uC218\uB9CC\uD07C
+    \uC790\uD3ED \uB4DC\uB860\uC744 \uBC1C\uC0AC\uD569\uB2C8\uB2E4. (\uCD5C\uB300
+    {count}\uAE30)"
+  simpleDescription: "\uC77C\uC815 \uC2DC\uAC04\uB9C8\uB2E4 \uC804\uD22C \uB4DC\uB860
+    \uC218\uB9CC\uD07C \uC790\uD3ED \uB4DC\uB860 \uBC1C\uC0AC\uD569\uB2C8\uB2E4."
+  DescriptionTerms:
+  - combat_drone
+  - self_destruct_drone
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0
@@ -35,3 +52,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 958d2071caee8b045aab26ea0eac9bde, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: FleetBombDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        PeriodSeconds: 20
+        BombCount: 10

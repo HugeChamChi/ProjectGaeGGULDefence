@@ -95,15 +95,15 @@ public static class LevelUpPoolChecks
             manager.Init();
             Check(!manager.GetRandomChoices().Contains(other), "Pool fixed for the run and Init idempotent");
             manager.ApplyEffect(shared);
-            Check(Mathf.Approximately(manager.ExpGainMultiplier, 1.2f), "Existing effect execution");
+            Check(Mathf.Approximately(manager.CurrentEffects.ExpGainMultiplier, 1.2f), "Existing effect execution");
             manager.ApplyEffect(shared);
-            Check(Mathf.Approximately(manager.ExpGainMultiplier, 1.2f), "Duplicate selection does not reapply");
+            Check(Mathf.Approximately(manager.CurrentEffects.ExpGainMultiplier, 1.2f), "Duplicate selection does not reapply");
             Check(!manager.GetRandomChoices().Contains(shared), "Acquired card excluded");
             manager.ApplyEffect(exclusive);
             Check(manager.GetRandomChoices().Count == 0, "Exhausted pool empty");
             manager.RemoveEffect(shared);
-            Check(manager.GetRandomChoices().Contains(shared), "Removed effect becomes selectable again");
-            Check(Mathf.Approximately(manager.ExpGainMultiplier, 1f), "Existing removal execution");
+            Check(!manager.GetRandomChoices().Contains(shared), "Removed card remains excluded for this run");
+            Check(Mathf.Approximately(manager.CurrentEffects.ExpGainMultiplier, 1f), "Existing removal execution");
             Check(shared.primaryValue == 20f && a.Cards.Length == 3, "Shared SO remains unchanged");
 
             var next = root.AddComponent<LevelUpManager>();

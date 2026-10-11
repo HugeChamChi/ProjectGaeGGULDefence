@@ -20,7 +20,7 @@ public class DroneUnit : MonoBehaviour
 
     public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
-        / (_owner is Drone_Betan ? 1f + (_owner.DroneSelections?.Get(DroneSelectionKind.BetanAttackSpeed)?.Value ?? 0f) : 1f) : 1f;
+        / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f) : 1f;
     /// <summary>선택지 대상 판별에 사용하는 소유 유닛.</summary>
     public UnitBase Owner => _owner;
     /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>
@@ -73,7 +73,10 @@ public class DroneUnit : MonoBehaviour
     private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
     private SpineActorVisual        _spineVisual;
+    /// <summary>Animated firing origin for normal shots, hacking and recorded attacks.</summary>
+    public Vector3 MuzzlePosition => _spineVisual != null ? _spineVisual.MuzzlePosition : transform.position;
     private int _attackLifetime;
+    private Vector3 _authoredScale = Vector3.one;
     private Vector3 _baseScale = Vector3.one;
     private Tween _punchTween;
 
@@ -88,7 +91,7 @@ public class DroneUnit : MonoBehaviour
 
         _spriteRenderer = GetComponent<SpriteRenderer>();
         if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
-        _baseScale = transform.localScale;
+        _authoredScale = _baseScale = transform.localScale;
     }
 
     private AnimatorUpdateMode _updateModeBeforePause;
@@ -128,6 +131,7 @@ public class DroneUnit : MonoBehaviour
         _followingOwnerDrag   = false;
 
         StopAll();
+        ApplyFacingByCell();
         transform.position = HomePosition;
 
         _droneManager?.RegisterDrone(this);
@@ -136,6 +140,21 @@ public class DroneUnit : MonoBehaviour
         AttackLoopAsync(_attackCts.Token).Forget();
 
         StartOrbit();
+    }
+
+    // Match UnitBase's cell-facing rule on the whole rig so Spine and its muzzle mirror together.
+    private void ApplyFacingByCell()
+    {
+        _baseScale = _authoredScale;
+        if (_owner?.currentCell != null && _owner._gridManager != null)
+        {
+            int halfColumn = _owner._gridManager.Columns / 2;
+            bool faceLeft = _owner.currentCell.GridPosition.x >= halfColumn;
+            float x = Mathf.Abs(_authoredScale.x);
+            if (x <= 0f) x = 1f;
+            _baseScale.x = faceLeft ? x : -x;
+        }
+        transform.localScale = _baseScale;
     }
 
     // ── 렌더 정렬 (오너보다 항상 앞) ──────────────────────────────────
@@ -349,7 +368,7 @@ public class DroneUnit : MonoBehaviour
         if (cell.IsSealed || cell.IsAttackDisabled || cell.TotemAttackDisabled) return;
         var owner = _owner;
         int lifetime = _attackLifetime;
-        Vector3 origin = transform.position;
+        Vector3 origin = MuzzlePosition;
         var replay = owner.Combat?.BeginDroneBasicAttack(boss, transform,
             () => this != null && _attackLifetime == lifetime && _owner == owner && owner.currentCell != null);
         var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage, kind) : null;
@@ -373,7 +392,7 @@ public class DroneUnit : MonoBehaviour
             applyHit();
             originalHit = true;
             if (shadowArrivedEarly && replay?.CanReplay == true) applyHit();
-        }, origin);
+        });
         replay?.RecordShot(hit => ShootProjectile(targetPos, hit, origin), () =>
         {
             if (originalHit) applyHit();
@@ -396,8 +415,7 @@ public class DroneUnit : MonoBehaviour
             ShootAfterHoldAsync(targetPos, onHitCallback, recordedOrigin, _attackLifetime).Forget();
             return;
         }
-        Vector3 origin = recordedOrigin ?? transform.position;
-        _audioManager?.PlaySFX("05.Drone_Attack");
+        Vector3 origin = recordedOrigin ?? MuzzlePosition;
         PlayAttackFrame();
 
         if (_projectilePrefab != null)
@@ -405,8 +423,12 @@ public class DroneUnit : MonoBehaviour
             var p = RM.Instantiate(_projectilePrefab, origin, Quaternion.identity, true);
             if (p != null)
             {
+                if (!(p is DroneLaserProjectile beam) || !beam.IsSustainedBeam)
+                    _audioManager?.PlayCue(GameAudioCue.DroneLaser);
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
+
+                if (p is DroneLaserProjectile laser) laser.BindEmitter(recordedOrigin.HasValue ? null : _spineVisual);
 
                 p.Launch(origin, targetPos, proj =>
                 {
@@ -417,6 +439,7 @@ public class DroneUnit : MonoBehaviour
         }
         else if (_projectileManager != null)
         {
+            _audioManager?.PlayCue(GameAudioCue.DroneLaser);
             _projectileManager.Launch(origin, targetPos, onHitCallback, _owner);
         }
     }

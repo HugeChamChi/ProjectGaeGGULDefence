@@ -8,6 +8,9 @@ namespace HSD.InGameDebug
     {
         [SerializeField] private TextMeshProUGUI _txtContent;
         [SerializeField] private Button _btnClose;
+        [VContainer.Inject] private ISelectionCombatReader _effects;
+        [VContainer.Inject] private GridManager _grid;
+        private const int DefaultRows = 4;
         
         private void Awake()
         {
@@ -22,9 +25,9 @@ namespace HSD.InGameDebug
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
 
-            var levelUpManager = FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
-            float rowAtkMult = levelUpManager != null ? levelUpManager.GetRowAttackMultiplier(pos.y) : 1f;
-            float rowSpdMult = levelUpManager != null ? levelUpManager.GetRowSpeedMultiplier(pos.y) : 1f;
+            int rows = _grid != null ? _grid.Rows : DefaultRows;
+            float rowAtkMult = _effects?.GetRowAttackMultiplier(pos.y, rows) ?? 1f;
+            float rowSpdMult = _effects?.GetRowSpeedMultiplier(pos.y, rows) ?? 1f;
 
             float rowAtkBonus = (rowAtkMult - 1f) * 100f;
             float rowSpdBonus = (rowSpdMult - 1f) * 100f;

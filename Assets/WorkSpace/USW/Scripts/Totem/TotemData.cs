@@ -24,33 +24,63 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     public Color descriptionHighlightColor = new Color(1f, 0.5f, 0.05f, 1f);
     /// <summary>Whether this data uses independent effect groups.</summary>
     public bool HasEffectGroups => EffectGroups != null && EffectGroups.Exists(group => group != null);
-    /// <summary>Rich-text descriptions use the same color as each effect range.
-    /// description에 [대괄호]가 있으면 그 구간만 순서대로 EffectGroups 색(모자라면 descriptionHighlightColor)을 입힌 한 문장으로 표시하고,
-    /// 대괄호가 없고 EffectGroups가 있으면 description을 색 없는 일반 설명으로 먼저 보여준 뒤 그 아래 효과별 색상 줄을 붙인다.</summary>
-    public string GetDisplayDescription()
+    /// <summary>저작된 간단히/자세히 문구. 기본 호출은 기존 정보창의 자세한 설명을 유지한다.</summary>
+    public string GetDisplayDescription(bool detailed = true)
     {
-        if (GrowthStages != null && GrowthStages.Count > 0)
+        if (detailed && !string.IsNullOrWhiteSpace(DetailedDescription))
         {
-            var growthLines = new List<string>();
-            foreach(var stage in GrowthStages)
-            {
-                if(stage==null || stage.Offsets==null || stage.Offsets.Count==0) continue;
-                int minX=int.MaxValue,minY=int.MaxValue,maxX=int.MinValue,maxY=int.MinValue;
-                foreach(var o in stage.Offsets){minX=Mathf.Min(minX,o.x);minY=Mathf.Min(minY,o.y);maxX=Mathf.Max(maxX,o.x);maxY=Mathf.Max(maxY,o.y);}
-                growthLines.Add($"{stage.Name} · {stage.RequiredSeconds/60:0.#}분 · {maxX-minX+1}×{maxY-minY+1} · 공격력 +{stage.AttackBonus*100:0.#}%");
-            }
-            growthLines.Add($"만개 후 전투 {GrowthHarvestSeconds/60:0.#}분마다 식량 {GrowthHarvestFood:0.#}. 이동·회수 시 초기화, 회전 유지.");
-            return string.Join("\n",growthLines);
+            string text = DetailedDescription.Replace("{GrowthStages}", BuildGrowthStageDescription());
+            return GrowthStages != null && GrowthStages.Count > 0
+                ? text : ApplyInlineGroupColors(text, EffectGroups);
         }
-        if (!string.IsNullOrEmpty(description) && description.Contains('['))
-            return ApplyInlineGroupColors(description, EffectGroups);
-        if (!HasEffectGroups) return description;
+        if (!detailed || !HasEffectGroups || !string.IsNullOrEmpty(description) && description.Contains('['))
+            return string.IsNullOrEmpty(description) ? string.Empty : ApplyInlineGroupColors(description, EffectGroups);
         var lines = new List<string>();
         if (!string.IsNullOrWhiteSpace(description)) lines.Add(description);
         foreach (var group in EffectGroups)
             if (group != null && !string.IsNullOrWhiteSpace(group.Description))
                 lines.Add($"<color=#{ColorUtility.ToHtmlStringRGB(group.Color)}>{group.Description}</color>");
         return string.Join("\n", lines);
+    }
+
+    private string BuildGrowthStageDescription()
+    {
+        if (GrowthStages == null) return string.Empty;
+        var stages = GrowthStages.FindAll(stage => stage != null);
+        stages.Sort((left, right) => left.RequiredSeconds.CompareTo(right.RequiredSeconds));
+        var lines = new List<string>();
+        TotemGrowthStage previous = null;
+        for (int i = 0; i < stages.Count; i++)
+        {
+            var stage = stages[i];
+            var effects = new List<string>();
+            if (previous == null || !Mathf.Approximately(stage.AttackBonus, previous.AttackBonus))
+                effects.Add($"공격력 {stage.AttackBonus * 100:0.#}% 상승");
+            Vector2Int size = GrowthRangeSize(stage);
+            if (previous != null && size != GrowthRangeSize(previous))
+                effects.Add($"범위 {size.x}×{size.y}로 확장");
+            if (i == stages.Count - 1 && GrowthHarvestSeconds > 0 && GrowthHarvestFood > 0)
+                effects.Add($"{FormatDuration(GrowthHarvestSeconds)}마다 식량 {GrowthHarvestFood:0.#} 생성");
+            if (effects.Count > 0)
+                lines.Add($"{(stage.RequiredSeconds == 0 ? "배치" : FormatDuration(stage.RequiredSeconds))}<pos=3.5em>{string.Join(", ", effects)}");
+            previous = stage;
+        }
+        return string.Join("\n", lines);
+    }
+
+    private static string FormatDuration(float seconds)
+        => seconds >= 60 && Mathf.Approximately(seconds % 60, 0) ? $"{seconds / 60:0.#}분" : $"{seconds:0.#}초";
+
+    private static Vector2Int GrowthRangeSize(TotemGrowthStage stage)
+    {
+        if (stage.Offsets == null || stage.Offsets.Count == 0) return Vector2Int.zero;
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+        foreach (var offset in stage.Offsets)
+        {
+            minX = Mathf.Min(minX, offset.x); minY = Mathf.Min(minY, offset.y);
+            maxX = Mathf.Max(maxX, offset.x); maxY = Mathf.Max(maxY, offset.y);
+        }
+        return new Vector2Int(maxX - minX + 1, maxY - minY + 1);
     }
 
     /// <summary>텍스트 안의 [대괄호] 구간을 나타난 순서대로 EffectGroups[0], [1]... 색으로 감싼다.
@@ -91,10 +121,10 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [Header("보조 투사체 (TotemBonusProjectile)")]
     public TotemBonusProjectileSettings BonusProjectile = new TotemBonusProjectileSettings();
 
-    /// <summary>전투 시간별 범위와 공격력 단계.</summary>
+    /// <summary>배치 후 진행 시간별 범위와 공격력 단계.</summary>
     [Header("뿌리내림 (TotemKillRangeGrowth)")]
     public List<TotemGrowthStage> GrowthStages = new List<TotemGrowthStage>();
-    /// <summary>만개 이후 식량 수확 간격(전투 초).</summary>
+    /// <summary>만개 이후 식량 수확 간격(진행 초).</summary>
     [Min(0.1f)] public float GrowthHarvestSeconds = 60;
     /// <summary>수확당 식량.</summary>
     [Min(0)] public float GrowthHarvestFood = 60;
@@ -137,6 +167,8 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [HideInInspector] public GameObject  prefab;
     [HideInInspector] public Sprite[]    rotationSprites = new Sprite[4];
     [TextArea] public string description;
+    /// <summary>자세히 문구. 성장 단계 표는 {GrowthStages} 토큰으로 SO 단계에서 생성한다.</summary>
+    [TextArea(3, 12)] public string DetailedDescription;
 
     public bool IsLoaded => icon != null || prefab != null;
 

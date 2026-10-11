@@ -7,7 +7,7 @@ using UnityEngine;
 /// <summary>
 /// 카드 설명 문자열에서 용어 별칭을 찾아 TMP 링크(&lt;link="term:Id"&gt;)로 감싼다.
 /// 기존 태그와 이미 걸린 링크 안은 건드리지 않고, 같은 자리에서 여러 별칭이 맞으면 가장 긴 것을 쓴다
-/// (DebuffInfoPresenter.AddLinks와 같은 규칙). 영상이 있는 용어는 다른 색과 작은 ▶ 표시로 구분한다.
+/// (DebuffInfoPresenter.AddLinks와 같은 규칙). 영상이 있는 용어는 색상으로만 구분한다.
 /// </summary>
 public sealed class TermLinker
 {
@@ -18,19 +18,21 @@ public sealed class TermLinker
     private readonly TermGlossary _glossary;
     private readonly string _textHex;
     private readonly string _videoHex;
-    private readonly string _videoMark;
 
-    /// <param name="videoMark">영상 용어 앞에 붙일 표시 (글꼴에 없는 글자면 빈 문자열로).</param>
-    public TermLinker(TermGlossary glossary, Color textColor, Color videoColor, string videoMark)
+    /// <summary>Creates clickable terms distinguished only by their text/video colors.</summary>
+    public TermLinker(TermGlossary glossary, Color textColor, Color videoColor)
     {
         _glossary = glossary;
         _textHex = ColorUtility.ToHtmlStringRGB(textColor);
         _videoHex = ColorUtility.ToHtmlStringRGB(videoColor);
-        _videoMark = videoMark ?? string.Empty;
     }
 
     /// <summary>용어에 링크를 건 설명을 돌려준다. 사전이 없으면 원문 그대로.</summary>
     public string AddLinks(string text)
+        => AddLinks(text, null);
+
+    /// <summary>Limits automatic links to the terms authored for this card.</summary>
+    public string AddLinks(string text, IReadOnlyList<string> allowedIds)
     {
         if (string.IsNullOrEmpty(text) || _glossary == null) return text;
         var output = new StringBuilder(text.Length + 64);
@@ -56,6 +58,12 @@ public sealed class TermLinker
                 foreach (var entry in _glossary.Entries)
                 {
                     if (entry?.Aliases == null) continue;
+                    if (allowedIds != null)
+                    {
+                        bool allowed = false;
+                        foreach (var id in allowedIds) if (id == entry.Id) { allowed = true; break; }
+                        if (!allowed) continue;
+                    }
                     foreach (string alias in entry.Aliases)
                     {
                         if (string.IsNullOrEmpty(alias) || (match != null && alias.Length <= match.Length)) continue;
@@ -69,9 +77,8 @@ public sealed class TermLinker
             // <nobr>: "해킹 / 스택"처럼 용어가 두 줄로 갈리면 읽기 어렵고, 두 줄 사이를 누르면 용어가 아닌 카드가 눌린다.
             bool video = hit.Clip != null;
             output.Append("<link=\"").Append(LinkPrefix).Append(hit.Id).Append("\"><nobr><color=#")
-                  .Append(video ? _videoHex : _textHex).Append("><u>");
-            if (video) output.Append(_videoMark);
-            output.Append(match).Append("</u></color></nobr></link>");
+                  .Append(video ? _videoHex : _textHex).Append(">");
+            output.Append(match).Append("</color></nobr></link>");
             i += match.Length;
         }
         return output.ToString();

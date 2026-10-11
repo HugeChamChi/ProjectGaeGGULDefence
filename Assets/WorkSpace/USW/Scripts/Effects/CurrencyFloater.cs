@@ -10,6 +10,7 @@ public class CurrencyFloater : FloaterBase
 {
     [Header("Currency Components")]
     [SerializeField] private Image _icon;
+    private Sequence _currencyAnimation;
 
     protected override void Awake()
     {
@@ -35,6 +36,26 @@ public class CurrencyFloater : FloaterBase
         PlayAnimation(style);
     }
 
+    protected override void PlayAnimation(DamageFloaterStyle style)
+    {
+        if (style == null) return;
+        _currencyAnimation?.Kill();
+        transform.localScale = Vector3.one;
+        var seq = _currencyAnimation = DOTween.Sequence().SetUpdate(true);
+        seq.Join(transform.DOScale(0.5f, style.duration).SetEase(Ease.InQuad));
+        if (transform is RectTransform rect)
+            seq.Join(rect.DOAnchorPosY(rect.anchoredPosition.y + style.moveDistance, style.duration).SetEase(Ease.OutQuad));
+        else
+            seq.Join(transform.DOLocalMoveY(transform.localPosition.y + style.moveDistance, style.duration).SetEase(Ease.OutQuad));
+        if (_tmp != null) seq.Join(_tmp.DOFade(0, style.duration).SetEase(Ease.InQuad));
+        AnimateExtra(seq, style);
+        seq.OnComplete(() =>
+        {
+            _currencyAnimation = null;
+            RM.Destroy(gameObject);
+        });
+    }
+
     protected override void AnimateExtra(Sequence seq, DamageFloaterStyle style)
     {
         if (_icon != null)
@@ -46,6 +67,8 @@ public class CurrencyFloater : FloaterBase
 
     protected override void OnDisable()
     {
+        _currencyAnimation?.Kill();
+        _currencyAnimation = null;
         base.OnDisable();
         _icon?.DOKill();
     }

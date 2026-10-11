@@ -17,6 +17,7 @@ public class ResultBossProgressView : MonoBehaviour
     [SerializeField] private Image _finish;
     [SerializeField, Min(0.1f)] private float _duration = 1.05f;
     [SerializeField, Range(0f, 1f)] private float _nearFinish = 0.9f;
+    [SerializeField] private bool _showRemainingOnly;
     private ResultBossProgressStyle _style;
     private float _shown;
 
@@ -51,11 +52,22 @@ public class ResultBossProgressView : MonoBehaviour
         return sequence;
     }
 
+    /// <summary>건너뛰기와 자연 완료 모두에서 마지막 잔여 HP를 확정한다.</summary>
+    public void Settle(float ratio)
+    {
+        _group.alpha = 1f;
+        _stamp.localScale = Vector3.one;
+        _marker.localScale = Vector3.one;
+        if (_style == ResultBossProgressStyle.FinishLine && ratio >= _nearFinish)
+            _finish.color = new Color(0.45f, 0.95f, 0.8f, 1f);
+        Render(Mathf.Clamp01(ratio));
+    }
+
     private void Render(float progress)
     {
         _shown = progress;
         int damage = Mathf.RoundToInt(progress * 100f);
-        _caption.text = $"HP {damage}% 감소  ·  {100 - damage}% 남음";
+        _caption.text = _showRemainingOnly ? $"{100 - damage}% 남음" : $"HP {damage}% 감소  ·  {100 - damage}% 남음";
         _hpFill.localScale = new Vector3(1f - progress, 1f, 1f);
         _stampReveal.sizeDelta = new Vector2(_stamp.rect.width * progress, _stampReveal.sizeDelta.y);
         _lineFill.localScale = new Vector3(progress, 1f, 1f);

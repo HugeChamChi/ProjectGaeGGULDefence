@@ -22,6 +22,7 @@ using GaeGGUL.UI.Totem;
 /// 화면 요소는 처음 열 때 코드로 만든다 — 이 컴포넌트가 붙은 오브젝트에 Canvas가 있어야 한다.
 /// 모든 연출은 실제 시간(SetUpdate(true))으로 재생된다.
 /// </summary>
+[DefaultExecutionOrder(300)]
 public class TotemRewardUI : MonoBehaviour
 {
     [VContainer.Inject] private ExpManager _expManager;
@@ -29,10 +30,27 @@ public class TotemRewardUI : MonoBehaviour
     [VContainer.Inject] private EndlessRunService _runPenalties;
     private const float TextBlockWidth = 0.55f;
     private const float DetailBlockWidth = 0.84f;
+    private const float GrowthDetailFontScale = 0.8f;
+    private const float GrowthDetailIconScale = 0.75f;
+    private const float GrowthDetailIconHeight = 0.84f;
     private const float BackArrowSize = 110f;
     private const float DotSize = 22f;
     private const float RangeBoxPadding = 5f;  // 정보창 Grid_List와 같은 값
     private const float RangeBoxSpacing = 3f;
+    // FxLab_TotemChoice / 01 DIAGONAL SLASH, at the 1080px reference width.
+    private const float SlashReferenceWidth = 1080f;
+    private const float SlashDistance = 1250f;
+    private const float SlashSlope = 0.414f;
+    private const float SlashOvershoot = 24f;
+    private const float SlashSettleSeconds = 0.095f;
+    private const float SlashFadeSeconds = 0.035f;
+    private const float SlashIconDelay = 0.10f;
+    private const float SlashIconSeconds = 0.23f;
+    private const float SlashCopyDelay = 0.065f;
+    private const float SlashCopySeconds = 0.22f;
+    private const float SlashCopyOffset = 95f;
+    private const float DetailDescriptionMinimumSize = 28f;
+    private const float DetailRangeGap = 24f;
     private static readonly Vector2 ConfirmSize = new Vector2(740f, 150f);
     private static readonly Color ConfirmColor = new Color(1f, 0.72f, 0.17f, 1f);
     private static readonly Color TextDark = new Color(0.08f, 0.08f, 0.08f, 1f);
@@ -47,6 +65,7 @@ public class TotemRewardUI : MonoBehaviour
     [Inject] private WaveManager _waveManager;
 
     [SerializeField] private TotemRewardSettings _settings;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] _totemPool;
     [Header("인벤토리 가득 찼을 때 대체 식량")]
@@ -64,6 +83,12 @@ public class TotemRewardUI : MonoBehaviour
     public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeSelf;
     /// <summary>Overview target for a non-interactive tutorial highlight.</summary>
     public RectTransform ChoiceArea => _overview;
+    public RectTransform RequiredChoiceArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].Icon.rectTransform;
+    public RectTransform RequiredChoiceDescriptionArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].TextBlock;
+    public bool IsReadyForConfirmation => _isOpen && !_busy && _detail != null && _detail.gameObject.activeSelf;
+    public RectTransform ConfirmationArea => _confirmationArea;
+    private RectTransform _confirmationArea;
+    private bool HasRequiredChoice => _tutorialSettings != null && _tutorialSettings.RequiredTotem != null;
 
     private sealed class BandView
     {
@@ -74,6 +99,10 @@ public class TotemRewardUI : MonoBehaviour
         public GameObject DescriptionPanel;
         public TextMeshProUGUI Description;
         public RectTransform TextBlock;
+        public CanvasGroup Group;
+        public CanvasGroup SpeedLines;
+        public Vector2 CopyHome;
+        public Vector2[] Points;
     }
 
     private readonly List<TotemData> _choices = new List<TotemData>();
@@ -88,6 +117,8 @@ public class TotemRewardUI : MonoBehaviour
     private Image _dim;
     private RectTransform _overview;
     private CanvasGroup _overviewGroup;
+    private FullScreenUiBackdrop _overviewFrame;
+    private Vector2 _overviewSize;
     private RectTransform _detail;
     private CanvasGroup _detailGroup;
     private Image _detailBackground;
@@ -97,6 +128,8 @@ public class TotemRewardUI : MonoBehaviour
     private Image _detailIcon;
     private TextMeshProUGUI _detailName;
     private TextMeshProUGUI _detailDescription;
+    private Toggle _descriptionToggle;
+    private bool _showDetailedDescription;
     private UI_TotemRangeGrid _rangeGrid;
     private TextMeshProUGUI _swipeHint;
 
@@ -141,7 +174,9 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
-        var choices = TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
+        var choices = _tutorialSettings != null
+            ? new List<TotemData>(_tutorialSettings.TotemChoices)
+            : TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
         if (choices.Count == 0)
         {
             Debug.LogWarning("[TotemRewardUI] 뽑을 토템이 없음");
@@ -189,12 +224,17 @@ public class TotemRewardUI : MonoBehaviour
         _overview.gameObject.SetActive(true);
         _overviewGroup.alpha = 1f;
 
-        float width = _root.rect.width;
         for (int i = 0; i < _bands.Length; i++)
         {
             bool visible = i < _choices.Count;
             _bands[i].Root.gameObject.SetActive(visible);
-            _bands[i].Root.anchoredPosition = new Vector2(SlideSign(i) * width, 0f);
+            var band = _bands[i];
+            band.Root.anchoredPosition = SlashDirection(i) * SlashDistance * SlashScale;
+            band.Root.localScale = Vector3.one;
+            band.Group.alpha = 0f;
+            band.SpeedLines.alpha = 0f;
+            band.Icon.transform.localScale = Vector3.one * 0.68f;
+            band.TextBlock.anchoredPosition = band.CopyHome + new Vector2(SlideSign(i) * SlashCopyOffset * SlashScale, 0f);
         }
 
         var dimColor = Color.black; dimColor.a = 0f;
@@ -203,17 +243,26 @@ public class TotemRewardUI : MonoBehaviour
 
         var slides = new List<UniTask>();
         for (int i = 0; i < _choices.Count; i++)
-            slides.Add(SlideBandInAsync(_bands[i], i * _settings.BandStaggerSeconds, token));
+            slides.Add(SlideBandInAsync(_bands[i], i, token));
         await UniTask.WhenAll(slides);
     }
 
-    private async UniTask SlideBandInAsync(BandView band, float delay, CancellationToken token)
+    private UniTask SlideBandInAsync(BandView band, int slot, CancellationToken token)
     {
-        await AwaitTween(band.Root.DOAnchorPosX(0f, _settings.BandSlideSeconds).SetDelay(delay).SetEase(Ease.OutCubic)
-            .SetUpdate(true), token);
-        band.Icon.transform.localScale = Vector3.one;
-        OwnTween(band.Icon.transform.DOPunchScale(Vector3.one * 0.18f, 0.3f, 6, 0.6f).SetUpdate(true));
+        var sequence = DOTween.Sequence().SetUpdate(true).SetDelay(slot * _settings.BandStaggerSeconds);
+        sequence.Insert(0f, band.Group.DOFade(1f, SlashFadeSeconds));
+        sequence.Insert(0f, band.Root.DOAnchorPos(-SlashDirection(slot) * SlashOvershoot * SlashScale,
+            _settings.BandSlideSeconds).SetEase(Ease.OutQuart));
+        sequence.Insert(_settings.BandSlideSeconds, band.Root.DOAnchorPos(Vector2.zero, SlashSettleSeconds).SetEase(Ease.OutQuad));
+        sequence.Insert(SlashIconDelay, band.Icon.transform.DOScale(1f, SlashIconSeconds).SetEase(Ease.OutBack, 2f));
+        sequence.Insert(SlashCopyDelay, band.TextBlock.DOAnchorPos(band.CopyHome, SlashCopySeconds).SetEase(Ease.OutQuart));
+        sequence.Insert(SlashIconDelay, band.SpeedLines.DOFade(0.85f, SlashFadeSeconds));
+        sequence.Insert(SlashIconDelay + SlashFadeSeconds, band.SpeedLines.DOFade(0f, 0.15f));
+        return AwaitTween(sequence, token);
     }
+
+    private float SlashScale => _overview.rect.width / SlashReferenceWidth;
+    private static Vector2 SlashDirection(int slot) => new Vector2(SlideSign(slot), SlideSign(slot) * SlashSlope);
 
     /// <summary>위 · 아래 띠는 왼쪽에서, 가운데 띠는 오른쪽에서 들어온다 (아이콘 쪽과 같은 방향).</summary>
     private static float SlideSign(int slot) => slot % 2 == 0 ? -1f : 1f;
@@ -222,6 +271,8 @@ public class TotemRewardUI : MonoBehaviour
 
     private void PopulateOverview()
     {
+        _overviewFrame.Refresh();
+        LayoutOverview();
         for (int i = 0; i < _choices.Count; i++)
         {
             var data = _choices[i];
@@ -230,8 +281,8 @@ public class TotemRewardUI : MonoBehaviour
             band.Icon.sprite = data.icon;
             band.Icon.enabled = data.icon != null;
             band.Name.text = data.totemName;
-            band.Description.text = data.GetDisplayDescription();
-            band.DescriptionPanel.SetActive(ShowDescriptionOnOverview && !string.IsNullOrWhiteSpace(data.description));
+            band.Description.text = data.GetDisplayDescription(detailed: false);
+            band.DescriptionPanel.SetActive(ShowDescriptionOnOverview && !string.IsNullOrWhiteSpace(band.Description.text));
             LayoutRebuilder.ForceRebuildLayoutImmediate(band.TextBlock);
         }
     }
@@ -242,6 +293,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnBandClicked(int slot)
     {
         if (_busy || !_isOpen || slot < 0 || slot >= _choices.Count) return;
+        if (HasRequiredChoice && _choices[slot] != _tutorialSettings.RequiredTotem) return;
         _bands[slot].Root.DOKill(true);
         _bands[slot].Icon.transform.DOKill(true);
         OpenDetailAsync(slot, _selectionCts.Token).Forget();
@@ -254,10 +306,17 @@ public class TotemRewardUI : MonoBehaviour
         _busy = true;
         try
         {
+            // The lab's selection feedback finishes before the existing detail step opens.
+            var selected = DOTween.Sequence().SetUpdate(true);
+            for (int i = 0; i < _choices.Count; i++)
+                selected.Insert(0f, _bands[i].Group.DOFade(i == slot ? 1f : .3f, .14f));
+            selected.Insert(0f, _bands[slot].Icon.transform.DOPunchScale(Vector3.one * .18f, .30f, 5, .5f));
+            selected.Insert(0f, _bands[slot].TextBlock.DOPunchAnchorPos(new Vector2(0f, 12f), .24f, 4, .5f));
+            await AwaitTween(selected, token);
             _overview.gameObject.SetActive(false);
             _detail.gameObject.SetActive(true);
             _detailGroup.alpha = 1f;
-            _swipeArea.SwipeEnabled = AllowDetailSwipe && _choices.Count > 1;
+            _swipeArea.SwipeEnabled = !HasRequiredChoice && AllowDetailSwipe && _choices.Count > 1;
             _swipeArea.Threshold = _settings.SwipeThreshold;
             _swipeHint.gameObject.SetActive(_swipeArea.SwipeEnabled);
             foreach (var dot in _dots) dot.gameObject.SetActive(_swipeArea.SwipeEnabled);
@@ -281,7 +340,8 @@ public class TotemRewardUI : MonoBehaviour
         _detailIcon.sprite = data.icon;
         _detailIcon.enabled = data.icon != null;
         _detailName.text = data.totemName;
-        _detailDescription.text = data.GetDisplayDescription();
+        _showDetailedDescription = false;
+        RefreshDetailDescription();
         _detailDescription.transform.parent.gameObject.SetActive(!string.IsNullOrWhiteSpace(_detailDescription.text));
         _rangeGrid?.SetData(data);
         for (int i = 0; i < _dots.Count; i++)
@@ -292,9 +352,60 @@ public class TotemRewardUI : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(_detailContent);
     }
 
+    private void ToggleDescription(bool detailed)
+    {
+        if (!_isOpen || _busy || _detailIndex < 0 || !_detail.gameObject.activeSelf)
+        {
+            _descriptionToggle.SetIsOnWithoutNotify(_showDetailedDescription);
+            return;
+        }
+        _showDetailedDescription = detailed;
+        RefreshDetailDescription();
+    }
+
+    private void RefreshDetailDescription()
+    {
+        if (_detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        var data = _choices[_detailIndex];
+        bool growthDetails = _showDetailedDescription && data.GrowthStages != null && data.GrowthStages.Count > 0;
+        _detailDescription.alignment = growthDetails ? TextAlignmentOptions.Left : TextAlignmentOptions.Center;
+        _detailDescription.fontSize = _settings.DetailDescriptionSize * (growthDetails ? GrowthDetailFontScale : 1f);
+        float iconSize = _settings.DetailIconSize * (growthDetails ? GrowthDetailIconScale : 1f);
+        float iconY = _root.rect.height * (growthDetails ? GrowthDetailIconHeight : 0.77f);
+        _detailIcon.rectTransform.sizeDelta = Vector2.one * iconSize;
+        _detailIcon.rectTransform.anchoredPosition = new Vector2(_root.rect.width * 0.5f, iconY);
+        var block = (RectTransform)_detailDescription.transform.parent.parent;
+        block.anchoredPosition = new Vector2(_root.rect.width * 0.5f, iconY - iconSize * 0.55f);
+        _detailDescription.text = data.GetDisplayDescription(_showDetailedDescription);
+        _detailDescription.transform.parent.gameObject.SetActive(!string.IsNullOrWhiteSpace(_detailDescription.text));
+        _descriptionToggle.SetIsOnWithoutNotify(_showDetailedDescription);
+        FitDetailDescription();
+    }
+
+    private void FitDetailDescription()
+    {
+        var block = (RectTransform)_detailDescription.transform.parent.parent;
+        float lowerEdge = _rangeGrid != null
+            ? _root.rect.height * 0.31f + _settings.RangeBoxSize.y * _settings.RangeBoxScale * 0.5f
+            : _root.rect.height * 0.175f;
+        float availableHeight = Mathf.Max(1f, block.anchoredPosition.y - lowerEdge - DetailRangeGap);
+        _detailDescription.fontSize = _settings.DetailDescriptionSize;
+        block.localScale = Vector3.one;
+        LayoutRebuilder.ForceRebuildLayoutImmediate(block);
+        while (LayoutUtility.GetPreferredHeight(block) > availableHeight && _detailDescription.fontSize > DetailDescriptionMinimumSize)
+        {
+            _detailDescription.fontSize -= 1f;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(block);
+        }
+        // Long authored copy stays above the range preview even at the minimum font size.
+        float height = LayoutUtility.GetPreferredHeight(block);
+        if (height > availableHeight) block.localScale = Vector3.one * (availableHeight / height);
+    }
+
     private void OnDetailSwipe(int direction)
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _choices.Count < 2) return;
+        if (HasRequiredChoice) return;
         int next = (_detailIndex + direction + _choices.Count) % _choices.Count;
         SwitchDetailAsync(next, direction, _selectionCts.Token).Forget();
     }
@@ -340,7 +451,11 @@ public class TotemRewardUI : MonoBehaviour
         {
             _overview.gameObject.SetActive(true);
             _overviewGroup.alpha = 1f;
-            for (int i = 0; i < _choices.Count; i++) _bands[i].Root.anchoredPosition = Vector2.zero;
+            for (int i = 0; i < _choices.Count; i++)
+            {
+                _bands[i].Root.anchoredPosition = Vector2.zero;
+                _bands[i].Group.alpha = 1f;
+            }
             await AwaitTween(_detailGroup.DOFade(0f, _settings.SwitchSeconds).SetUpdate(true), token);
         }
         catch (OperationCanceledException) { return; }
@@ -356,6 +471,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnConfirmClicked()
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        if (HasRequiredChoice && _choices[_detailIndex] != _tutorialSettings.RequiredTotem) return;
         _busy = true; // Inventory listeners can synchronously reenter selection or stop the run.
         var token = _selectionCts.Token;
         var data = _choices[_detailIndex];
@@ -473,15 +589,24 @@ public class TotemRewardUI : MonoBehaviour
         _rootGroup = gameObject.GetComponent<CanvasGroup>();
         if (_rootGroup == null) _rootGroup = gameObject.AddComponent<CanvasGroup>();
 
+        _root = NewRect("SafeContent", _root);
+        var safeFrame = _root.gameObject.AddComponent<SafeAreaContentFrame>();
+        Canvas.ForceUpdateCanvases();
+        safeFrame.UseFixedHeight();
+
         _container = NewRect("Container", _root);
         Stretch(_container);
 
         _dim = NewImage("Dim", _container, Color.black);
         Stretch(_dim.rectTransform);
+        _dim.gameObject.AddComponent<FullScreenUiBackdrop>();
 
         _overview = NewRect("Overview", _container);
         Stretch(_overview);
+        _overviewFrame = _overview.gameObject.AddComponent<FullScreenUiBackdrop>();
+        _overviewFrame.Refresh();
         _overviewGroup = _overview.gameObject.AddComponent<CanvasGroup>();
+        _overview.gameObject.AddComponent<RectMask2D>();
         for (int i = 0; i < ChoiceCount; i++) _bands[i] = BuildBand(i);
 
         BuildDetail();
@@ -493,6 +618,7 @@ public class TotemRewardUI : MonoBehaviour
         var band = new BandView();
         band.Root = NewRect($"Band_{slot}", _overview);
         Stretch(band.Root);
+        band.Group = band.Root.gameObject.AddComponent<CanvasGroup>();
 
         band.Shape = band.Root.gameObject.AddComponent<UIPolygonGraphic>();
         var u = _settings.UpperBoundary;
@@ -515,6 +641,7 @@ public class TotemRewardUI : MonoBehaviour
                 break;
         }
         band.Shape.SetShape(points, edges, _settings.EdgeColor, _settings.EdgeWidth);
+        band.Points = points;
         var button = band.Root.gameObject.AddComponent<Button>();
         button.transition = Selectable.Transition.None;
         button.targetGraphic = band.Shape;
@@ -525,7 +652,7 @@ public class TotemRewardUI : MonoBehaviour
         bool iconLeft = slot % 2 == 0;
         float iconX = iconLeft ? 0.22f : 0.78f;
         float textX = iconLeft ? 0.675f : 0.325f;
-        var size = _root.rect.size;
+        var size = _overview.rect.size;
 
         band.Icon = NewImage("Icon", band.Root, Color.white);
         band.Icon.preserveAspect = true;
@@ -537,20 +664,72 @@ public class TotemRewardUI : MonoBehaviour
         PlaceAt(band.TextBlock, new Vector2(textX * size.x, BandMidY(points, textX) * size.y),
             new Vector2(TextBlockWidth * size.x, 0f));
         var layout = band.TextBlock.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.childAlignment = iconLeft ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;
+        layout.childAlignment = TextAnchor.MiddleCenter;
         layout.childControlWidth = true; layout.childControlHeight = true;
         layout.childForceExpandWidth = true; layout.childForceExpandHeight = false;
         layout.spacing = 14f;
         band.TextBlock.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        var align = iconLeft ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
+        var align = TextAlignmentOptions.Center;
         band.Name = NewText("Name", band.TextBlock, _settings.OverviewNameSize, Color.white, align);
         band.Name.fontStyle = FontStyles.Bold;
         band.Name.outlineWidth = 0.25f;
         band.Name.outlineColor = Color.black;
 
         band.Description = NewPanelText(band.TextBlock, _settings.OverviewDescriptionSize, align, out band.DescriptionPanel);
+        band.DescriptionPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, .19f);
+        band.CopyHome = band.TextBlock.anchoredPosition;
+        var lines = NewRect("Impact Speed Lines", band.Root);
+        Stretch(lines);
+        band.SpeedLines = lines.gameObject.AddComponent<CanvasGroup>();
+        band.SpeedLines.blocksRaycasts = false;
+        band.SpeedLines.interactable = false;
+        band.SpeedLines.alpha = 0f;
+        for (int j = 0; j < 5; j++)
+        {
+            var line = NewImage($"Streak_{j}", lines, Color.white);
+            line.raycastTarget = false;
+            PlaceAt(line.rectTransform, new Vector2(size.x * 0.5f + (j % 2 == 0 ? -430f : 430f) * SlashScale,
+                band.Icon.rectTransform.anchoredPosition.y + (j - 2) * 65f * SlashScale),
+                new Vector2(140f + j * 19f, 7f + j % 2 * 4f) * SlashScale);
+            line.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 18f);
+        }
         return band;
+    }
+
+    private void LateUpdate()
+    {
+        if (_overview == null || !_isOpen || _busy || _overviewSize == _overview.rect.size) return;
+        LayoutOverview();
+    }
+
+    private void LayoutOverview()
+    {
+        _overviewSize = _overview.rect.size;
+        // Match the lab's 1080x1900 board while letting the colored bands fill every aspect ratio.
+        float contentScale = Mathf.Min(_overviewSize.x / 1080f, _overviewSize.y / 1900f);
+        for (int i = 0; i < _bands.Length; i++)
+        {
+            var band = _bands[i];
+            bool left = i % 2 == 0;
+            float iconX = left ? 230f / 1080f : 840f / 1080f;
+            float textX = left ? 720f / 1080f : 350f / 1080f;
+            float iconY = i == 0 ? 1550f / 1900f : i == 1 ? 1070f / 1900f : 350f / 1900f;
+            float textY = i == 0 ? 1620f / 1900f : i == 1 ? 915f / 1900f : 460f / 1900f;
+            band.Icon.rectTransform.anchoredPosition = new Vector2(iconX * _overviewSize.x, iconY * _overviewSize.y);
+            band.Icon.rectTransform.sizeDelta = Vector2.one * _settings.OverviewIconSize * contentScale;
+            band.Name.fontSize = _settings.OverviewNameSize * contentScale;
+            band.Description.fontSize = _settings.OverviewDescriptionSize * contentScale;
+            band.CopyHome = new Vector2(textX * _overviewSize.x, textY * _overviewSize.y);
+            band.TextBlock.anchoredPosition = band.CopyHome;
+            band.TextBlock.sizeDelta = new Vector2(TextBlockWidth * _overviewSize.x, 0f);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(band.TextBlock);
+            for (int j = 0; j < band.SpeedLines.transform.childCount; j++)
+                PlaceAt((RectTransform)band.SpeedLines.transform.GetChild(j),
+                    new Vector2(_overviewSize.x * 0.5f + (j % 2 == 0 ? -430f : 430f) * SlashScale,
+                        band.Icon.rectTransform.anchoredPosition.y + (j - 2) * 65f * SlashScale),
+                    new Vector2(140f + j * 19f, 7f + j % 2 * 4f) * SlashScale);
+        }
     }
 
     /// <summary>다각형 윗변과 아랫변의 x 위치 높이 평균 (정규화). 꼭짓점 순서: 좌상, 우상, 우하, 좌하.</summary>
@@ -570,6 +749,7 @@ public class TotemRewardUI : MonoBehaviour
 
         _detailBackground = NewImage("Background", _detail, Color.white);
         Stretch(_detailBackground.rectTransform);
+        _detailBackground.gameObject.AddComponent<FullScreenUiBackdrop>();
         _swipeArea = _detailBackground.gameObject.AddComponent<TotemRewardSwipeArea>();
         _swipeArea.OnTap += BackToOverview;
         _swipeArea.OnSwipe += OnDetailSwipe;
@@ -644,8 +824,13 @@ public class TotemRewardUI : MonoBehaviour
             _dots.Add(dot);
         }
 
+        // 상세 내용과 독립된 버튼으로 배경 탭/좌우 밀기와 충돌하지 않는다.
+        _descriptionToggle = DescriptionToggleView.Create(_detail, _detailDescription, ToggleDescription);
+        _descriptionToggle.SetIsOnWithoutNotify(false);
+
         // 확정 버튼은 Content(터치 통과) 밖에 둔다
         var confirm = NewImage("Confirm", _detail, ConfirmColor);
+        _confirmationArea = confirm.rectTransform;
         PlaceAt(confirm.rectTransform, new Vector2(size.x * 0.5f, size.y * 0.075f), ConfirmSize);
         var confirmButton = confirm.gameObject.AddComponent<Button>();
         confirmButton.targetGraphic = confirm;

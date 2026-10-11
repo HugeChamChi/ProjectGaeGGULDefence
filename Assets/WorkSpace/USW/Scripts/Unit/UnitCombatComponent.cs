@@ -255,7 +255,7 @@ public class UnitCombatComponent : MonoBehaviour
             skillAction?.Execute(_unit, this, skillData.hitEffects, skillData.additionalEffects);
         }
 
-        var lu = _deps?.LevelUpManager;
+        var lu = _deps?.SelectionCombat;
         if (lu == null) return;
 
         if (lu.HasBurstOnSkillFull)
@@ -272,7 +272,7 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (attackDisabled || boss == null || boss.IsDead) return;
 
-        var lu = _deps?.LevelUpManager;
+        var lu = _deps?.SelectionCombat;
         if (lu == null) return;
 
         foreach (int n in lu.BonusAttackEveryNHits)
@@ -351,8 +351,8 @@ public class UnitCombatComponent : MonoBehaviour
 
         if (boss != null && !boss.IsDead && _deps?.ProjectileManager != null)
         {
-            // 발사 시작 위치를 유닛의 중심(발밑 + 0.5f)으로 조정
-            Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
+            // 유닛이 저작한 총구 위치를 사용하며 일반 유닛의 기본 위치는 그대로 유지한다.
+            Vector3 spawnPos = _unit.ProjectileOrigin;
             Vector3 targetPos = bossArea != null ? bossArea.GetRandomWorldPosition() : boss.transform.position;
 
             bool originalHit = false;

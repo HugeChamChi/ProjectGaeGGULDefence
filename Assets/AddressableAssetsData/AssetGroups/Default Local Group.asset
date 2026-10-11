@@ -20,18 +20,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f5fd4e4aa7e945c96982ebb910d62644
-    m_Address: Disigmang_1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0269d4965664f49439872d185b90b50d
-    m_Address: Betang_1
+    m_Address: Betang_LegacySprite
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0293ed68660dbae41b373eccc4a7a6ee
     m_Address: 01.Popup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03a37c429b69a83428e7fd8bf0333297
+    m_Address: TD1013
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -219,6 +219,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c27ce4f4c7a6cf418d3da3e87e41ba0
+    m_Address: TD1011
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3f773bd73f287f8449d3bb59dc858ea0
     m_Address: SPR_UI2100_ScreenBg
     m_ReadOnly: 0
@@ -380,6 +385,11 @@ MonoBehaviour:
     - UI2000_BattleHud
     - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 728668a5aba74e048ae3897786bd5c18
+    m_Address: Betang_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d2958068776c34e850ecd91827673b
     m_Address: 03.Magician_attack
     m_ReadOnly: 0
@@ -425,6 +435,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2500_UnitInfo
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 832355071ac18644e89d38dad6edc846
+    m_Address: TD1012
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83a6150ea4c8c65439d8eb6be5d935a4
     m_Address: SPR_UI2000_SummonButton
@@ -594,11 +609,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bb20b7c8894a08b4db7231b503aad6c9
-    m_Address: SampleAttackTotem
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbde5ee2a3f2b5f4c96dd369af1050fd
     m_Address: SPR_UI1000_AdIconBg
     m_ReadOnly: 0
@@ -667,6 +677,11 @@ MonoBehaviour:
     - UI2500_UnitInfo
     - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce067ac06099fd643b9364b1b2a59b77
+    m_Address: TD1014
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ce829f5e2d6b16c49aa37ec746984c2d
     m_Address: TotemWildcardUnit
     m_ReadOnly: 0
@@ -733,6 +748,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2400_TotemInfo
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5fd4e4aa7e945c96982ebb910d62644
+    m_Address: Disigmang_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f68106d4e90c2084fa449ebf8134e8b3
     m_Address: TD_1010

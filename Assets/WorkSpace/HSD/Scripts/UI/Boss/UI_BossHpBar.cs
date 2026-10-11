@@ -112,6 +112,11 @@ public class UI_BossHpBar : MonoBehaviour
 
     private void OnDestroy() => _barTween?.Kill();
 
+    private void OnRectTransformDimensionsChange()
+    {
+        if (_initialized) ApplyBarVisual(_shownRatio);
+    }
+
     /// <summary>런타임에서 총 체력줄 수 변경 (디버그/설정용). 이후 SetHp 호출 시 즉시 반영.</summary>
     public void SetLineCount(int count)
     {
@@ -222,6 +227,12 @@ public class UI_BossHpBar : MonoBehaviour
             offsetMax.x = 0f;
             _hpFillMask.offsetMin = offsetMin;
             _hpFillMask.offsetMax = offsetMax;
+
+            // Keep the artwork at the full bar width while the mask clips it.
+            // A percentage anchor plus fixed pixels only matched one screen size.
+            if (_hpColor != null && _hpColor.rectTransform.parent == _hpFillMask &&
+                _hpFillMask.parent is RectTransform fullBar)
+                _hpColor.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fullBar.rect.width);
         }
 
         int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :

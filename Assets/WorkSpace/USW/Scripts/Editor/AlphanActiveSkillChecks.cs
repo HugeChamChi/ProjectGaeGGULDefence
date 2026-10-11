@@ -64,7 +64,7 @@ public static class AlphanActiveSkillChecks
             var drones=Component<AlphanSkillCheckDroneManager>();var game=Component<GameManager>();
             Set(game,"<CurrentState>k__BackingField",GameManager.GameState.Playing);
             var data=Asset<AlphanSkillData>();data.CooldownSeconds=14;data.DamagePerDrone=80;data.SoundAddress="";
-            skill=new AlphanActiveSkill(spawner,new DroneManager[]{drones},manager,game,null);
+            skill=new AlphanActiveSkill(spawner,new DroneManager[]{drones},manager.Effects,game,null);
             skill.Initialize();
             Check(!skill.IsAvailable && spawner.ActiveSkill==null,"No selection stays unavailable");
             var selected=Asset<ChieftainData>();selected.AlphanSkill=data;
@@ -92,7 +92,7 @@ public static class AlphanActiveSkillChecks
             var cooldown=Asset<LevelUpData>();cooldown.chooseId=9110;DroneSelectionPresets.Configure(cooldown,DroneSelectionKind.AlphanCooldown);manager.ApplyEffect(cooldown);
             Check(Mathf.Approximately(skill.CooldownSeconds,11.2f),"Twenty percent cooldown applies to independent SO");
             var protocol=Asset<LevelUpData>();protocol.chooseId=9111;DroneSelectionPresets.Configure(protocol,DroneSelectionKind.AlphanDoubleShot);manager.ApplyEffect(protocol);
-            skill.Advance(11.2f);Check(skill.TryActivate() && drones.Protocol?.Count==2 && drones.Protocol.Value==0.6f,"Protocol passed to rally");
+            skill.Advance(11.2f);Check(skill.TryActivate() && drones.Protocol.Count==2 && drones.Protocol.DamageRatio==0.6f,"Protocol passed to rally");
             manager.RemoveEffect(cooldown);Check(skill.CooldownSeconds==14,"Cooldown removal restored");
             skill.Advance(14);drones.UnregisterDrone(drone);presenter.OnUpdate(0);
             Check(!button.interactable && label.text=="" && !skill.TryActivate() && skill.CooldownRemaining==0,"Ready but no drones stays disabled without spending charge");
@@ -101,7 +101,7 @@ public static class AlphanActiveSkillChecks
             var castToken=drones.LastToken;spawner.Select(null);
             Check(castToken.IsCancellationRequested && !skill.IsAvailable && spawner.ActiveSkill==null,"Changing selection cancels cast and unbinds");
             Check(spawner.GetComponentInChildren<UnitBase>()==null,"No hidden unit was created");
-            using(var noDrones=new AlphanActiveSkill(null,Array.Empty<DroneManager>(),manager,game,null))
+            using(var noDrones=new AlphanActiveSkill(null,Array.Empty<DroneManager>(),manager.Effects,game,null))
             {noDrones.Configure(data,null);Check(!noDrones.IsAvailable,"Non-drone scene dependency is optional");}
             using(var builderContainer=BuildContainer(spawner,drones,manager,game))
                 Check(builderContainer.Resolve<AlphanActiveSkill>()!=null,"VContainer constructor registration resolves");
@@ -129,7 +129,7 @@ public static class AlphanActiveSkillChecks
         var builder=new VContainer.ContainerBuilder();
         VContainer.ContainerBuilderExtensions.RegisterInstance(builder,spawner);
         if(drones!=null)VContainer.ContainerBuilderExtensions.RegisterInstance(builder,drones);
-        VContainer.ContainerBuilderExtensions.RegisterInstance(builder,manager);
+        VContainer.ContainerBuilderExtensions.RegisterInstance<IChiefSelectionReader>(builder,manager.Effects);
         VContainer.ContainerBuilderExtensions.RegisterInstance(builder,game);
         VContainer.ContainerBuilderExtensions.RegisterInstance(builder,Component<AudioManager>());
         VContainer.ContainerBuilderExtensions.Register<AlphanActiveSkill>(builder,VContainer.Lifetime.Scoped);

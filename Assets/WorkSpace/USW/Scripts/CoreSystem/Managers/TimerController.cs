@@ -8,6 +8,7 @@ using System;
 public class TimerController : MonoBehaviour
 { 
     [VContainer.Inject] private FieldPauseVisuals _fieldPause;
+    [VContainer.Inject] private AudioManager _audioManager;
     public void Init()
     {
         
@@ -63,6 +64,7 @@ public class TimerController : MonoBehaviour
         OnTimerTick?.Invoke(RemainingTime);
         Debug.Log($"[TimerController] +{seconds}초 추가({source}) → 남은 시간: {RemainingTime:F1}초");
         if (seconds <= 0f) return;
+        if (source == TimeAddSource.Default) _audioManager?.PlayCue(GameAudioCue.BossTimeSettlement);
         OnTimeAdded?.Invoke(seconds);
         OnTimeAddedFrom?.Invoke(seconds, source, origin);
     }

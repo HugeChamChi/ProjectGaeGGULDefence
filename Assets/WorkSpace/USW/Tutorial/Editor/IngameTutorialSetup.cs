@@ -36,8 +36,9 @@ public static class IngameTutorialSetup
                 var source = AssetDatabase.LoadAssetAtPath<UnitData>("Assets/WorkSpace/USW/Data/DroneUnits/UnitData_" + name + ".asset");
                 return CopyAsset(source, "TutorialUnit_" + name);
             }
-            var attack = CloneUnit("Deltan");
-            settings.SpawnUnits = new[] { attack, attack, CloneUnit("Zeltan"), CloneUnit("Gamman") };
+            var attack = CloneUnit("Betan");
+            settings.SpawnUnits = new[] { attack, attack, CloneUnit("Gamman"), CloneUnit("Zeltan") };
+            settings.MergeUnit = CloneUnit("Deltan");
             settings.SpawnCells = new[] { new Vector2Int(1,1), new Vector2Int(2,1), new Vector2Int(1,2), new Vector2Int(2,2) };
             AssetDatabase.CreateAsset(settings, DataPath + "/IngameTutorialSettings.asset");
         }
@@ -65,7 +66,7 @@ public static class IngameTutorialSetup
             "토템 버튼을 눌러 획득한 토템을 확인해 주세요!",
             "토템을 표시된 빈칸으로 끌어 배치해 주세요!",
             "배치한 토템을 바로 끌어 표시된 칸으로 옮겨 주세요!",
-            "토템을 꾹 눌러 게이지를 채운 뒤 옆으로 끌어 회전해 주세요!"
+            "토템을 길게 눌러 게이지를 채운 뒤 옆으로 끌어 회전해 주세요!"
         };
         foreach(var step in sequence.steps.OfType<IngameTutorialStep>())
             if(string.IsNullOrWhiteSpace(step.Instruction)) step.Instruction=instructions[(int)step.Stage-1];
@@ -133,7 +134,7 @@ public static class IngameTutorialSetup
             var so = new SerializedObject(factory);
             so.FindProperty("_useAuthoredParty").boolValue = true;
             var list = so.FindProperty("unitDataList");
-            var units = settings.SpawnUnits.Distinct().ToArray(); list.arraySize = units.Length;
+            var units = settings.SpawnUnits.Append(settings.MergeUnit).Where(u => u != null).Distinct().ToArray(); list.arraySize = units.Length;
             for(int i=0;i<units.Length;i++) list.GetArrayElementAtIndex(i).objectReferenceValue = units[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -192,6 +193,7 @@ public static class IngameTutorialSetup
             Set(dialogue,"_hint",Label("Hint",new Vector2(.04f,.04f),new Vector2(.96f,.24f),24,new Color(.75f,.8f,.85f)));
         }
         Set(director,"_dialogue",dialogue);
+        dialogue.gameObject.SetActive(false);
         Button ButtonNamed(string name) => All<Button>(scene).Single(b=>b.name==name && b.transform.root.name=="# MainUI");
         var summon = (Button)uiSo.FindProperty("summonButton").objectReferenceValue;
         var upgrade = ButtonNamed("EnchantButton");
@@ -236,11 +238,145 @@ public static class IngameTutorialSetup
         // Lab/debug controls copied into this scene are not part of the learning flow.
         foreach(var root in scene.GetRootGameObjects())
             if(root.name=="Debug Debug" || root.name=="DamageStyleTestCanvas") root.SetActive(false);
+        ConfigureFirstBattle(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         AssetDatabase.SaveAssets();
         EditorSceneManager.SaveScene(scene);
         Selection.activeGameObject = director.gameObject;
         Debug.Log("TutorialScene: 13 lessons wired; original gacha sequence preserved.");
+    }
+
+    [MenuItem("Tools/USW/Tutorial/Apply First Battle Flow")]
+    public static void ApplyFirstBattleFlow()
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (EditorApplication.isPlayingOrWillChangePlaymode || scene.path != ScenePath || scene.isDirty)
+            throw new InvalidOperationException("Open the saved TutorialScene outside Play Mode first.");
+        ConfigureFirstBattle(scene);
+        AssetDatabase.SaveAssets();
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+    }
+
+    private static void ConfigureFirstBattle(Scene scene)
+    {
+        var settings = AssetDatabase.LoadAssetAtPath<IngameTutorialSettings>(DataPath + "/IngameTutorialSettings.asset");
+        TutorialHackingDeckSetup.ConfigureSettings(settings);
+        var earthquake = AssetDatabase.LoadAssetAtPath<BossPatternData>("Assets/WorkSpace/USW/Data/BossData/Crocodile/CrocodileEarthquake.asset");
+        settings.CounterPattern = CopyAsset(earthquake, "TutorialCounterPattern");
+        settings.CounterPattern.interval = 3f;
+        EditorUtility.SetDirty(settings.CounterPattern);
+        EditorUtility.SetDirty(settings);
+        Set(One<MergeManager>(scene), "_tutorialSettings", settings);
+        Set(One<LevelUpUI>(scene), "_tutorialSettings", settings);
+        Set(One<TotemRewardUI>(scene), "_tutorialSettings", settings);
+        var plan = AssetDatabase.LoadAssetAtPath<IngameTutorialPlan>(DataPath + "/FirstBattleSequence.asset");
+        var recipes = new[]
+        {
+            (IngameTutorialStage.BossEntrance, "보스 등장!"),
+            (IngameTutorialStage.TimeLimit, "시간 안에 <color=#D66A27>보스를 처치</color>해야 해요!"),
+            (IngameTutorialStage.FirstSummon, "식량을 사용해 <color=#D66A27>유닛을 소환</color>할 수 있어요.\n보스를 처치할 유닛을 소환해 보세요."),
+            (IngameTutorialStage.ObserveCombat, ""),
+            (IngameTutorialStage.Merge, "같은 유닛을 겹쳐 <color=#D66A27>합성</color>하면\n더 강한 유닛을 얻을 수 있어요."),
+            (IngameTutorialStage.OpenUpgrade, "이번엔 <color=#D66A27>강화</color> 차례!\n강화 버튼을 눌러 볼까요?"),
+            (IngameTutorialStage.UpgradeSlots, "식량을 사용해 유닛을 강화할 수 있어요.\n강조된 카드를 <color=#D66A27>한 번 강화</color>해 보세요."),
+            (IngameTutorialStage.ExperienceGauge, "출격 버튼에 <color=#D66A27>경험치</color>가 차요!\n가득 차면 강해지는 보상을 고를 수 있어요."),
+            (IngameTutorialStage.LevelUp, "게이지가 가득 차면 <color=#D66A27>선택지 보상</color>을 얻어요.\n유닛을 강화할 보상을 선택해 보세요."),
+            (IngameTutorialStage.ChiefSkill, "보스가 <color=#D66A27>지진</color>을 준비해요!\n<color=#D66A27>족장 스킬</color>을 눌러 보스의 스킬을 막아 봐요!"),
+            (IngameTutorialStage.TotemChoice, "보스 처치! 잘했어요!\n전투를 도와줄 <color=#D66A27>토템</color>을 골라 봐요."),
+            (IngameTutorialStage.OpenInventory, "새 토템이 도착했어요!\n<color=#D66A27>토템 보관함</color>을 열어 봐요."),
+            (IngameTutorialStage.PlaceTotem, "토템을 강조된 빈칸으로\n<color=#D66A27>끌어서 설치</color>해 보세요."),
+            (IngameTutorialStage.RotateTotem, "토템을 <color=#D66A27>길게 누른 뒤 옆으로</color> 끌어 보세요.\n회전하여 효과 범위의 방향을 바꿀 수 있어요.")
+        };
+        plan.Lessons.Clear();
+        foreach (var (stage, instruction) in recipes)
+        {
+            string path = $"{DataPath}/Steps/{(int)stage:00}_{stage}.asset";
+            var lesson = AssetDatabase.LoadAssetAtPath<IngameTutorialLesson>(path);
+            if (lesson == null)
+            {
+                lesson = ScriptableObject.CreateInstance<IngameTutorialLesson>();
+                AssetDatabase.CreateAsset(lesson, path);
+            }
+            lesson.Kind = IngameTutorialLesson.LessonKind.GameplayRecipe;
+            lesson.Gameplay = new IngameTutorialStep
+            {
+                Stage = stage, Instruction = instruction,
+                delayBeforeExecute = stage == IngameTutorialStage.TimeLimit || stage == IngameTutorialStage.FirstSummon ? 0.5f
+                    : stage == IngameTutorialStage.OpenUpgrade || stage == IngameTutorialStage.ExperienceGauge
+                    || stage == IngameTutorialStage.OpenInventory || stage == IngameTutorialStage.RotateTotem ? 1.5f : 0f
+            };
+            plan.Lessons.Add(lesson);
+            EditorUtility.SetDirty(lesson);
+        }
+        EditorUtility.SetDirty(plan);
+        var director = One<IngameTutorialDirector>(scene);
+        TutorialHackingDeckSetup.ConfigureLessons();
+        var directorSo = new SerializedObject(director);
+        var summon = (Button)directorSo.FindProperty("_summonButton").objectReferenceValue;
+        Set(director, "_summonGroup", Group(summon.transform.parent.gameObject));
+        var uiSo = new SerializedObject(One<UIManager>(scene));
+        Set(director, "_currencyGroup", Group(((TMPro.TMP_Text)uiSo.FindProperty("currencyText").objectReferenceValue).transform.parent.gameObject));
+        Set(director, "_timerTarget", ((TMPro.TMP_Text)uiSo.FindProperty("timerText").objectReferenceValue).rectTransform);
+        var expSo = new SerializedObject(One<ExpBarUI>(scene));
+        Set(director, "_experienceTarget", ((Image)expSo.FindProperty("fillImage").objectReferenceValue).rectTransform);
+        var upgradePanel = One<UI_UpgradePanel>(scene);
+        var animation = new SerializedObject(upgradePanel).FindProperty("targetAnim").objectReferenceValue;
+        if (animation != null)
+        {
+            var animationSo = new SerializedObject(animation);
+            animationSo.FindProperty("ignoreTimeScale").boolValue = true;
+            animationSo.ApplyModifiedPropertiesWithoutUndo();
+            if (PrefabUtility.IsPartOfPrefabInstance(animation)) PrefabUtility.RecordPrefabInstancePropertyModifications(animation);
+        }
+
+        var dialogue = (IngameTutorialDialogue)directorSo.FindProperty("_dialogue").objectReferenceValue;
+        var dialogueGroup = Group(dialogue.gameObject);
+        dialogueGroup.blocksRaycasts = false;
+        dialogueGroup.interactable = false;
+        var rect = (RectTransform)dialogue.transform;
+        // Keep the top HUD visible while the timer is highlighted.
+        rect.anchorMin = new Vector2(0.06f, 0.71f);
+        rect.anchorMax = new Vector2(0.94f, 0.86f);
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        const string bubblePath = "Assets/Imports/Layer Lab/GUI Pro-FantasyHero/ResourcesData/Sptites/Components/Frame/";
+        var background = dialogue.GetComponent<Image>();
+        background.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(bubblePath + "BubbleFrame_01_Bg.png");
+        background.type = Image.Type.Sliced;
+        background.color = new Color(1f, 0.975f, 0.90f);
+        background.raycastTarget = false;
+        var shadow = dialogue.GetComponent<Shadow>() ?? dialogue.gameObject.AddComponent<Shadow>();
+        shadow.effectColor = new Color(0.10f, 0.075f, 0.16f, 0.35f);
+        shadow.effectDistance = new Vector2(0, -7);
+        var tail = rect.Find("BubbleTail") as RectTransform;
+        if (tail == null)
+        {
+            tail = (RectTransform)new GameObject("BubbleTail", typeof(RectTransform), typeof(Image)).transform;
+            tail.SetParent(rect, false);
+        }
+        tail.anchorMin = tail.anchorMax = new Vector2(0.18f, 0);
+        tail.pivot = new Vector2(0.5f, 1);
+        tail.anchoredPosition = new Vector2(0, 2);
+        tail.sizeDelta = new Vector2(36, 28);
+        var tailImage = tail.GetComponent<Image>();
+        tailImage.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(bubblePath + "BubbleFrame_01_ArrowBg.png");
+        tailImage.color = background.color;
+        tailImage.raycastTarget = false;
+        var textSo = new SerializedObject(dialogue);
+        const string textMaterialPath = DataPath + "/TutorialDialogueText.mat";
+        var textMaterial = AssetDatabase.LoadAssetAtPath<Material>(textMaterialPath);
+        if (textMaterial == null)
+        {
+            textMaterial = new Material(((TMPro.TMP_Text)textSo.FindProperty("_instruction").objectReferenceValue).fontSharedMaterial);
+            textMaterial.SetFloat(TMPro.ShaderUtilities.ID_OutlineWidth, 0);
+            textMaterial.DisableKeyword("UNDERLAY_ON");
+            AssetDatabase.CreateAsset(textMaterial, textMaterialPath);
+        }
+        foreach (var field in new[] { "_instruction", "_progress", "_hint" })
+            ((TMPro.TMP_Text)textSo.FindProperty(field).objectReferenceValue).fontSharedMaterial = textMaterial;
+        ((TMPro.TMP_Text)textSo.FindProperty("_instruction").objectReferenceValue).color = new Color(0.18f, 0.14f, 0.24f);
+        ((TMPro.TMP_Text)textSo.FindProperty("_progress").objectReferenceValue).color = new Color(0.67f, 0.35f, 0.16f);
+        ((TMPro.TMP_Text)textSo.FindProperty("_hint").objectReferenceValue).color = new Color(0.48f, 0.43f, 0.51f);
     }
 
     private static T CopyAsset<T>(T source,string name) where T:ScriptableObject

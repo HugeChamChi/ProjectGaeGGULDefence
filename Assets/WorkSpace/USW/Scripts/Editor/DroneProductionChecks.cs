@@ -31,7 +31,7 @@ public static class DroneProductionChecks
             Check(support.tier == Tier.Epic && support.droneEffect.Value == 0.1f, "Support preset");
             Check(production.tier == Tier.Legend && production.droneEffect.Count == 1, "Production preset");
 
-            var spawn = Component<SupportSpawnCheckProbe>(); Set(spawn, "_levelUpManager", manager);
+            var spawn = Component<SupportSpawnCheckProbe>(); Set(spawn, "_selectionEconomy", manager.Effects);
             spawn.RequestMergeSupport(); Check(spawn.PendingSupportCount == 0, "No card no reward");
             manager.ApplyEffect(support); UnityEngine.Random.InitState(1919);
             for (int i = 0; i < 10000; i++) spawn.RequestMergeSupport();
@@ -52,13 +52,13 @@ public static class DroneProductionChecks
             Check(spawn.PendingSupportCount == 0 && spawn.Placed == 2, "Second vacancy drains queue even after card removed");
             Check(Component<UnitSpawner>().PendingSupportCount == 0, "New scene owner has no pending rewards");
 
-            var drones = Component<DroneManager>(); Set(drones, "_levelUpManager", manager);
+            var drones = Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
             beta = Component<CombatDroneCheckProbe>(); beta.unitData = Asset<UnitData>();
             Set(beta, "_formation", AssetDatabase.LoadAssetAtPath<DroneFormationSettings>("Assets/WorkSpace/USW/Data/DroneUnits/BetanFormationSettings.asset"));
             beta.unitData.maxDroneCount.normal = 1; beta.unitData.maxDroneCount.rare = 2;
             beta.unitData.maxDroneCount.epic = 3; beta.unitData.maxDroneCount.legend = 4;
             beta.unitData.attackSpeed.legend = 1; beta.unitData.atk.legend = 10;
-            beta.currentTier = Tier.Legend; beta.Init(new UnitDependencies { LevelUpManager = manager });
+            beta.currentTier = Tier.Legend; beta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
             Set(beta, "_droneManager", drones); Set(beta, "<currentCell>k__BackingField", cell);
             beta.gameObject.SetActive(true); beta.PlaceForCheck();
             Check(beta.OwnedDroneCount == 4 && drones.DroneCount == 4, "Legend baseline four registered drones");
@@ -83,8 +83,12 @@ public static class DroneProductionChecks
                 "Reference order: upper left/right, lower left/right, bottom center");
             manager.RemoveEffect(production); Check(beta.OwnedDroneCount == 4 && drones.DroneCount == 4, "Removal retracts extra drone");
             manager.ApplyEffect(production);
+            Check(beta.OwnedDroneCount == 4, "Removed production card cannot be reacquired");
             beta.RemoveForCheck(); Check(drones.DroneCount == 0 && beta.OwnedDroneCount == 0, "Removal unregisters all owned drones");
-            manager.RemoveEffect(production); manager.ApplyEffect(production);
+            manager = Component<LevelUpManager>(); // Fresh scene/run fixture for tier capacity checks.
+            Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
+            beta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
+            manager.ApplyEffect(production);
             Check(beta.OwnedDroneCount == 0, "Removed owner unsubscribed");
             foreach (Tier tier in new[] { Tier.Normal, Tier.Rare, Tier.Epic, Tier.Legend })
             {
@@ -92,9 +96,9 @@ public static class DroneProductionChecks
                 Check(beta.CombatDroneCapacity == beta.unitData.maxDroneCount.Get(tier) + (tier >= Tier.Epic ? 1 : 0), "Capacity tier " + tier);
             }
             var gamma = Component<Drone_Gamman>(); gamma.unitData = Asset<UnitData>(); gamma.unitData.maxDroneCount.epic = 1;
-            gamma.currentTier = Tier.Epic; gamma.Init(new UnitDependencies { LevelUpManager = manager });
+            gamma.currentTier = Tier.Epic; gamma.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
             var delta = Component<Drone_Deltan>(); delta.unitData = gamma.unitData; delta.currentTier = Tier.Epic;
-            delta.Init(new UnitDependencies { LevelUpManager = manager });
+            delta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
             Check(gamma.CombatDroneCapacity == 2 && delta.CombatDroneCapacity == 2, "Gamman and Deltan epic two drones");
             Check(!typeof(DroneSpawnerBase).IsAssignableFrom(typeof(Drone_Zeltan)), "Zeltan excluded from spawn extension");
             Debug.Log($"[DroneProductionChecks] PASS {_passed} assertions.");

@@ -23,6 +23,7 @@ public enum SkyLaserMode
 /// </summary>
 public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
 {
+    [VContainer.Inject] private AudioManager _audioManager;
     /// <summary>발사판 하나와 그 빔.</summary>
     [Serializable]
     public class EmitterRig
@@ -247,6 +248,7 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
 
     private void CancelRun()
     {
+        _audioManager?.SetLaserActive(this, false);
         if (_runCts == null) return;
         var cts = _runCts;
         _runCts = null;
@@ -274,7 +276,11 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
         }
         finally
         {
-            if (_runCts == cts) _runCts = null;
+            if (_runCts == cts)
+            {
+                _audioManager?.SetLaserActive(this, false);
+                _runCts = null;
+            }
             cts.Dispose();
         }
     }
@@ -349,6 +355,7 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
         }
 
         float seed = UnityEngine.Random.value * 10f;
+        _audioManager?.SetLaserActive(this, true);
         await TweenAsync(_sustainExtend, p =>
         {
             foreach (var rig in _emitters)
@@ -402,7 +409,7 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
             rig.Firing = false;
         }
         _impactGlowAmount = 0f;
-
+        _audioManager?.SetLaserActive(this, false);
         await HidePadsAsync(token);
     }
 

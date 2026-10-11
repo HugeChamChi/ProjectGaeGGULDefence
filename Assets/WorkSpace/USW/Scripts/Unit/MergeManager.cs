@@ -32,7 +32,7 @@ public class MergeManager : MonoBehaviour
         DragHandler.OnDragStartedEvent -= HideButton;
     }
 
-    [Inject] private LevelUpManager _levelUpManager;
+    [Inject] private ISelectionEconomyReader _selectionEconomy;
     [Inject] private UnitFactory _unitFactoryManager;
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
@@ -42,6 +42,7 @@ public class MergeManager : MonoBehaviour
     public event Action                 OnSelectionCleared;
 
     private UnitBase _selectedUnit;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
 
     // ── 외부 호출 ──────────────────────────────────────────────
 
@@ -74,7 +75,9 @@ public class MergeManager : MonoBehaviour
     private bool MergeTargets(List<(UnitBase unit, GridCell cell)> targets, GridCell spawnCell, Tier nextTier)
     {
         if (_unitFactoryManager == null || _spawnerManager == null) return false;
-        var newUnit = _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
+        var newUnit = _tutorialSettings != null
+            ? _unitFactoryManager.CreateUnitFromData(_tutorialSettings.MergeUnit, nextTier)
+            : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return false;
 
         ClearSelection();
@@ -101,7 +104,7 @@ public class MergeManager : MonoBehaviour
         _spawnerManager.RequestMergeSupport();
 
         // [진로 계승] 진로 계승 보유 시 무작위 노멀 유닛 1기 추가 지급
-        if (_levelUpManager?.HasMergeKeepsTribe == true)
+        if (_selectionEconomy?.HasMergeKeepsTribe == true)
         {
             var bonusUnit = _unitFactoryManager.CreateRandomNormalUnit();
             if (bonusUnit != null)

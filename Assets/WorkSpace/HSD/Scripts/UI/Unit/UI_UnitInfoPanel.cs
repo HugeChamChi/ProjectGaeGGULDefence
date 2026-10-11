@@ -33,6 +33,7 @@ namespace GaeGGUL.UI.Unit
         public event Action OnDismissRequested;
 
         private UI_UnitInfoPresenter _presenter;
+        private Toggle _descriptionToggle;
         private DebuffInfoLink _effectLink;
 
         /// <summary>Supplies the shared explanation presenter explicitly from scene wiring.</summary>
@@ -46,6 +47,29 @@ namespace GaeGGUL.UI.Unit
 
         private bool _isShowing;
         private bool _justShown;
+        private bool _upgradeFeedback;
+        private float _previousAttack, _previousInterval;
+        private int _previousSortingOrder;
+        private bool _previousOverrideSorting;
+        private Canvas _feedbackCanvas;
+
+        public void ShowUpgradeFeedback(UnitBase unit, float attack, float interval)
+        {
+            SetData(unit);
+            if (_feedbackCanvas == null)
+            {
+                _feedbackCanvas = GetComponent<Canvas>();
+                if (_feedbackCanvas == null) _feedbackCanvas = gameObject.AddComponent<Canvas>();
+                if (GetComponent<GraphicRaycaster>() == null) gameObject.AddComponent<GraphicRaycaster>();
+            }
+            _previousSortingOrder = _feedbackCanvas.sortingOrder;
+            _previousOverrideSorting = _feedbackCanvas.overrideSorting;
+            _upgradeFeedback = true;
+            _previousAttack = attack;
+            _previousInterval = interval;
+            UpdateStats(unit.GetDisplayAttackDamage().ToString("0.##"), $"{unit.GetDisplayAttackInterval():F2}초");
+            if (sellButton != null) sellButton.gameObject.SetActive(false);
+        }
 
         protected override void Awake()
         {
@@ -53,11 +77,15 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
         }
 
+        /// <summary>Shows a placed unit with a brief explanation and live combat values.</summary>
         public void SetData(UnitBase unit, bool canMerge = true)
         {
             if (unit == null) return;
+            RestoreFeedbackSorting();
             _effectLink?.Clear();
-            EnsurePresenter();
+            EnsureDescriptionToggle();
+            _presenter.SetDescriptionMode(false);
+            _descriptionToggle.SetIsOnWithoutNotify(false);
             _presenter.SetUnitData(unit);
             bool showActions = !unit.IsWildcardMergeUnit;
             if (sellButton != null)
@@ -65,16 +93,24 @@ namespace GaeGGUL.UI.Unit
                 sellButton.gameObject.SetActive(showActions);
                 sellButton.SetUnit(showActions ? unit : null);
             }
+            gameObject.SetActive(true);
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
             Open();
             _isShowing = true;
             _justShown = true;
         }
 
+        /// <summary>Shows authored unit information with the brief explanation selected.</summary>
         public void SetData(UnitData data)
         {
+            RestoreFeedbackSorting();
             _effectLink?.Clear();
-            EnsurePresenter();
+            EnsureDescriptionToggle();
+            _presenter.SetDescriptionMode(false);
+            _descriptionToggle.SetIsOnWithoutNotify(false);
             _presenter.SetUnitData(data);
+            gameObject.SetActive(true);
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
             Open();
             _isShowing = true;
             _justShown = true;
@@ -95,6 +131,15 @@ namespace GaeGGUL.UI.Unit
             _isShowing = false;
             _presenter?.Clear();
             await base.CloseAsync();
+            RestoreFeedbackSorting();
+        }
+
+        private void RestoreFeedbackSorting()
+        {
+            if (!_upgradeFeedback) return;
+            _feedbackCanvas.sortingOrder = _previousSortingOrder;
+            _feedbackCanvas.overrideSorting = _previousOverrideSorting;
+            _upgradeFeedback = false;
         }
 
         private void OnDisable()
@@ -127,9 +172,25 @@ namespace GaeGGUL.UI.Unit
             }
 
             _isShowing = false;
+            if (_upgradeFeedback) Close();
             OnDismissRequested?.Invoke();
         }
 
+        private void EnsureDescriptionToggle()
+        {
+            EnsurePresenter();
+            if (_descriptionToggle != null) return;
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
+            _descriptionToggle = InfoPanelPresentation.CreateToggle(transform, txt_SkillDescription,
+                detailed => _presenter.SetDescriptionMode(detailed));
+            ((RectTransform)_descriptionToggle.transform).anchoredPosition = new Vector2(-20f, -72f);
+            if (txt_SkillDescription != null)
+            {
+                txt_SkillDescription.enableAutoSizing = true;
+                txt_SkillDescription.fontSizeMin = 18f;
+                txt_SkillDescription.fontSizeMax = 24f;
+            }
+        }
         private void EnsurePresenter()
         {
             if (_presenter == null)
@@ -154,6 +215,11 @@ namespace GaeGGUL.UI.Unit
         /// <summary>현재 합산 공격력과 공격간격만 표시한다. 별도 강화/식량 표시는 사용하지 않는다.</summary>
         public void UpdateStats(string atkValue, string atkSpeedValue)
         {
+            if (_upgradeFeedback)
+            {
+                atkValue = $"{_previousAttack:0.##} → <color=#69C875>{atkValue}</color>";
+                atkSpeedValue = $"{_previousInterval:F2}초 → <color=#69C875>{atkSpeedValue}</color>";
+            }
             if (statSlot_Atk != null)      statSlot_Atk.Setup(atkValue);
             if (statSlot_AtkSpeed != null) statSlot_AtkSpeed.Setup(atkSpeedValue);
         }

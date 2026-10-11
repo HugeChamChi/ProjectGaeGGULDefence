@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: TD1014Data
+  m_EditorClassIdentifier: Assembly-CSharp::TotemData
+  EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
+  ShadowAttack:
+    DelaySeconds: 0.2
+    VisualSeconds: 0.35
+    FadeSeconds: 0.08
+    Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
+    VisualOffset: {x: 0.15, y: 0.1, z: 0}
+  UseSheetData: 0
+  BonusProjectile:
+    Chance: 0.33
+    AttackCoefficient: 0.5
+    Projectile: {fileID: 0}
+  GrowthStages: []
+  GrowthHarvestSeconds: 60
+  GrowthHarvestFood: 60
+  WildcardSpawn:
+    IntervalSeconds: 40
+    Unit: {fileID: 0}
+  TierUpgrades: []
+  _debuffBinding:
+    _debuffId: 0
+    _trigger: 0
+    _stacksPerApply: 0
+  _debuffFireInterval: 0
+  _debuffImpactDamage: 0
+  _debuffProjectile: {fileID: 0}
+  totemType: 0
+  tier: 0
+  totemName: "TD1014(\uBBF8\uC815)"
+  iconAddress: TD_1007
+  prefabAddress: TD1014
+  rotationSpriteAddresses:
+  - TD_1007
+  - TD_1007
+  - TD_1007
+  - TD_1007
+  icon: {fileID: 21300000, guid: 21584bc7f4d8df342b34084908ef2525, type: 3}
+  prefab: {fileID: 4482161701608774424, guid: ce067ac06099fd643b9364b1b2a59b77, type: 3}
+  rotationSprites:
+  - {fileID: 21300000, guid: 21584bc7f4d8df342b34084908ef2525, type: 3}
+  - {fileID: 21300000, guid: 21584bc7f4d8df342b34084908ef2525, type: 3}
+  - {fileID: 21300000, guid: 21584bc7f4d8df342b34084908ef2525, type: 3}
+  - {fileID: 21300000, guid: 21584bc7f4d8df342b34084908ef2525, type: 3}
+  description: "\uBCF4\uC2A4\uAC00 \uB4F1\uC7A5\uD558\uBA74 7\uCD08 \uB3D9\uC548
+    \uC624\uB978\uCABD 3\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 40% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+  DetailedDescription: "\uBCF4\uC2A4\uAC00 \uB4F1\uC7A5\uD558\uBA74 7\uCD08 \uB3D9\uC548
+    \uC624\uB978\uCABD 3\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 40% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+  functions:
+  - rid: 5888964705059602542
+  effectRanges:
+  - rid: 5888964705059602543
+  attackDisabledRanges: []
+  totemId: 1014
+  isRotatable: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 5888964705059602542
+      type: {class: ConditionalBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        condition:
+          rid: 5888964705059602544
+        buff:
+          kind: 1
+          amount: 0.4
+    - rid: 5888964705059602543
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: 1, y: 1}
+        - {x: 1, y: 0}
+        - {x: 1, y: -1}
+    - rid: 5888964705059602544
+      type: {class: BossEncounterWindowCondition, ns: , asm: Assembly-CSharp}
+      data:
+        seconds: 7

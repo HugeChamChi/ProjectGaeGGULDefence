@@ -30,7 +30,7 @@ public class Drone_Zeltan : UnitBase
     /// <summary>공격하지 않는 식량 생산자는 공격 주기도 0으로 표시한다.</summary>
     public override float GetDisplayAttackInterval() => 0f;
     /// <inheritdoc />
-    public override float FoodPayoutInterval => DroneSelections?.Get(DroneSelectionKind.ZeltanAirFryer)?.Interval ?? 1f;
+    public override float FoodPayoutInterval => DroneEffects?.FoodPayoutInterval ?? 1f;
 
     protected override void OnUnitPlaced()
     {
@@ -52,19 +52,18 @@ public class Drone_Zeltan : UnitBase
 
     private void PlayFoodPayoutVisual()
     {
-        if (DroneSelections?.Get(DroneSelectionKind.ZeltanAirFryer) != null
+        if (DroneEffects?.HasFoodPayoutAnimation == true
             && _spineVisual != null && _spineVisual.isActiveAndEnabled)
             _spineVisual.PlaySkill();
     }
 
     /// <summary>배치된 젤탕이 제공하는 드론당 군단 식량. 정기 점검을 즉시 반영한다.</summary>
     public float FoodPerDronePerSecond => foodPerDronePerSec
-        * (1f + (DroneSelections?.Get(DroneSelectionKind.ZeltanMaintenance)?.Value ?? 0f));
+        * (1f + (DroneEffects?.FleetFoodProductionBonus ?? 0f));
 
     public override float GetBaseFoodPerSecond()
     {
         return unitData != null ? unitData.foodProduction.Get(currentTier)
-            * (1f + (DroneSelections?.Get(DroneSelectionKind.ZeltanAirFryer)?.Value ?? 0f)
-                + (DroneSelections?.Get(DroneSelectionKind.ZeltanColdStorage)?.Value ?? 0f)) : 0f;
+            * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) : 0f;
     }
 }

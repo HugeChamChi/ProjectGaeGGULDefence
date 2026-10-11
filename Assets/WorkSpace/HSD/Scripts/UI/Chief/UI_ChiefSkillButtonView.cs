@@ -14,6 +14,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     [SerializeField] private ChiefSkillReadyBanner _readyBanner;
     [Tooltip("충전 완료 시 틀 위로 솟아오르고 쿨타임 중 가라앉는 초상화 연출 (선택). 비우면 자식에서 찾음")]
     [SerializeField] private ChiefSkillIconMotion _iconMotion;
+    [SerializeField] private ChiefSkillSpinePortrait _spinePortrait;
     [Tooltip("지정하면 족장 스킬 아이콘 대신 이 이미지를 항상 표시한다 (임시 고정 이미지용). 비우면 스킬 아이콘 사용")]
     [SerializeField] private Sprite iconOverride;
 
@@ -37,6 +38,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     private void Awake()
     {
         if (_iconMotion == null) _iconMotion = GetComponentInChildren<ChiefSkillIconMotion>(true);
+        if (_spinePortrait == null) _spinePortrait = GetComponentInChildren<ChiefSkillSpinePortrait>(true);
         if (img_Icon != null)
         {
             _normalIconColor = img_Icon.color;
@@ -138,13 +140,18 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
             // 족장이 정해지기 전(게임 시작 전 대기)에는 씬에 지정된 기본 이미지를 유지한다.
             var sprite = iconOverride != null ? iconOverride : icon != null ? icon : _defaultIcon;
             img_Icon.sprite = sprite;
-            img_Icon.enabled = sprite != null;
+            img_Icon.enabled = _spinePortrait == null && sprite != null;
         }
+        _spinePortrait?.ResetToIdle();
     }
+
+    /// <summary>Shows the authored Spine skill animation after a successful skill activation.</summary>
+    public void PlaySkillAnimation() => _spinePortrait?.PlaySkill();
 
     /// <summary>쿨타임 중일 때 아이콘/버튼을 회색으로, 사용 가능할 때 원래 색으로 되돌린다.</summary>
     public void SetDisabledVisual(bool isOnCooldown)
     {
+        _spinePortrait?.SetTint(isOnCooldown ? disabledColor : _normalIconColor);
         if (img_Icon != null)
         {
             img_Icon.color = isOnCooldown ? disabledColor : _normalIconColor;

@@ -31,6 +31,7 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
     [SerializeField] private Transform foodFloaterAnchor;
     [Tooltip("식량 생산량을 합산해서 플로터 하나로 표시하는 주기(초)")]
     [SerializeField] private float foodFloaterFlushInterval = 0.4f;
+    [SerializeField] private Vector2 foodFloaterOffset = new Vector2(0f, 40f);
 
     private float _pendingFoodAmount;
 
@@ -87,7 +88,13 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
             {
                 Transform anchor = foodFloaterAnchor != null ? foodFloaterAnchor : currencyTextContainer;
                 if (anchor != null)
-                    SpawnCurrencyText(anchor.position, _pendingFoodAmount);
+                {
+                    var anchorCanvas = anchor.GetComponentInParent<Canvas>();
+                    var sourceCamera = anchor is RectTransform && anchorCanvas != null
+                        ? (anchorCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : anchorCanvas.worldCamera)
+                        : Camera.main;
+                    SpawnCurrencyText(anchor.position, _pendingFoodAmount, sourceCamera);
+                }
 
                 _pendingFoodAmount = 0f;
             }
@@ -99,7 +106,10 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
     /// </summary>
     /// <param name="worldPosition">생성할 월드 좌표</param>
     /// <param name="floatAmount">표시할 재화 양</param>
-    public void SpawnCurrencyText(Vector3 worldPosition, float floatAmount)
+    public void SpawnCurrencyText(Vector3 worldPosition, float floatAmount) =>
+        SpawnCurrencyText(worldPosition, floatAmount, Camera.main);
+
+    private void SpawnCurrencyText(Vector3 worldPosition, float floatAmount, Camera sourceCamera)
     {
         if (floatAmount <= 0) return;
         if (currencyTextContainer == null)
@@ -131,10 +141,10 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
                 if (rect != null && canvas != null && canvas.renderMode != RenderMode.WorldSpace)
                 {
                     // Screen Space (Overlay / Camera) 모드
-                    Camera cam = Camera.main;
+                    Camera cam = sourceCamera;
                     Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, worldPosition);
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(currencyTextContainer as RectTransform, screenPoint, canvas.worldCamera, out Vector2 localPoint);
-                    rect.anchoredPosition = localPoint;
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(currencyTextContainer as RectTransform, screenPoint, canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, out Vector2 localPoint);
+                    rect.anchoredPosition = localPoint + foodFloaterOffset;
 
                     Vector3 localPos = rect.localPosition;
                     localPos.z = 0f;

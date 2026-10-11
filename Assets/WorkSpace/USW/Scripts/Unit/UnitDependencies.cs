@@ -11,7 +11,14 @@ public class UnitDependencies
     public GameDataManager GameDataManager { get; set; }
     public GridManager GridManager { get; set; }
     public UpgradeManager UpgradeManager { get; set; }
-    public LevelUpManager LevelUpManager { get; set; }
+    /// <summary>선택지의 읽기 전용 전투 보정.</summary>
+    public ISelectionCombatReader SelectionCombat { get; set; }
+    /// <summary>드론 기능별 설정.</summary>
+    public IDroneEffectReader DroneEffects { get; set; }
+    /// <summary>지속 효과가 확정된 후의 변경 알림.</summary>
+    public ISelectionEffectChanges SelectionChanges { get; set; }
+    /// <summary>씬의 기본 전투 설정.</summary>
+    public CombatSettings CombatSettings { get; set; }
     public TotemBuffManager TotemBuffManager { get; set; }
     public CurrencyFloaterManager CurrencyFloaterManager { get; set; }
     public BossManager BossManager { get; set; }

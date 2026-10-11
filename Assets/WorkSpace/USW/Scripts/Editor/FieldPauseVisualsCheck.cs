@@ -347,7 +347,7 @@ public static class FieldPauseVisualsCheck
         Action<decimal, Vector3?> counter = (_, __) => { hits++; if (hits == 1) OpenLevel(game); };
         boss.OnDamaged += counter;
         var rally = manager.ExecuteRallyAsync(10f, token,
-            new DroneSelectionEffect { Count = 2, Value = .5f, Interval = .15f });
+            new ChiefVolleySettings(2, .15f, .5f));
         await UniTask.WaitUntil(() => hits > 0, cancellationToken: token);
         await Real(1.1f, token);
         Check(hits == 1, "D2 rally double-shot holds second damage and shot: " + hits);
@@ -389,8 +389,8 @@ public static class FieldPauseVisualsCheck
         var card = ScriptableObject.CreateInstance<LevelUpData>();
         card.chooseId = 990022;
         card.droneEffect = new DroneSelectionEffect { Kind = DroneSelectionKind.BetanPeriodicBomb, Interval = .1f, Count = 1 };
-        var selections = resolver.Resolve<LevelUpManager>().DroneSelections;
-        selections.Add(card);
+        var selections = resolver.Resolve<LevelUpManager>();
+        selections.ApplyEffect(card);
         int bombsBefore = Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None).Length;
         Set(manager, "_betanNormalTimer", .05f);
         manager.TickSelections(10f);
@@ -401,7 +401,7 @@ public static class FieldPauseVisualsCheck
         manager.TickSelections(.2f);
         Check(Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None).Length > bombsBefore,
             "R3 configured periodic Betan summons restart after release");
-        selections.Remove(card.chooseId); Object.Destroy(card);
+        selections.RemoveEffect(card); Object.Destroy(card);
         foreach (var bomb in Object.FindObjectsByType<SelfDestructDrone>(FindObjectsSortMode.None)) Object.Destroy(bomb.gameObject);
         source.OnRemoved(); cell.RemoveTotem(); Object.Destroy(source.gameObject);
         boss.Debuffs.Clear();

@@ -1,6 +1,7 @@
 using System;
 using VContainer;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -28,6 +29,21 @@ public class LevelUpUI : MonoBehaviour
     [Inject] private GameManager _gameManager;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private FieldPauseVisuals _fieldPause;
+    [Inject] private DescriptionDisplaySettings _descriptionSettings;
+    [Inject] private DescriptionTermCatalog _descriptionCatalog;
+    [Inject] private DebuffInfoPresenter _descriptionDebuffs;
+    private IDescriptionTermResolver _descriptionResolver;
+    private IDescriptionPopup _descriptionPopup;
+    private Toggle _descriptionToggle;
+    private readonly Dictionary<LevelUpCardUI, DescriptionSnapshot> _descriptions = new();
+    private bool _descriptionSubscribed;
+    private ChoiceGlossaryView _glossaryView;
+    private TermLinker _termLinker;
+    [SerializeField] private TermGlossary _termGlossary;
+    [SerializeField] private Shader _descriptionBlurShader;
+    public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true || _glossaryView != null && _glossaryView.BlocksOwnerInput;
+    public bool FieldPreviewBlocksInput => obj != null && obj.GetComponentInChildren<UI_Peekthrough>(true)?.BlocksSelection == true;
+    public float SelectionTimeRemaining { get; private set; }
 
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
@@ -37,6 +53,7 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private TMP_Text selectionTimerText;
     [SerializeField] private float    selectionSeconds = 30f;
     [SerializeField] private bool _disableSelectionTimer;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
 
     private const int ChoiceCount = 3;
 
@@ -57,6 +74,8 @@ public class LevelUpUI : MonoBehaviour
     public bool IsReadyForSelection { get; private set; }
     /// <summary>Choice area used by scene-owned interaction guides.</summary>
     public RectTransform ChoiceArea => cardContainer as RectTransform;
+    /// <summary>Tutorials need one applicable unit card to teach hold-to-preview.</summary>
+    public bool RequireUnitPreview { get; set; }
 
     private void Awake()
     {
@@ -84,7 +103,20 @@ public class LevelUpUI : MonoBehaviour
         ClearCards();
         _selectedCard = null;
 
-        var choices = _levelUpManager.GetRandomChoices(ChoiceCount);
+        var choices = _tutorialSettings != null
+            ? new List<LevelUpData>(_tutorialSettings.LevelUpChoices)
+            : _levelUpManager.GetRandomChoices(ChoiceCount);
+        if (_tutorialSettings == null && RequireUnitPreview && choices.Count > 0)
+        {
+            var targets = new List<UnitBase>();
+            bool HasUnits(LevelUpData data) => LevelUpFeedbackTargets.Resolve(data, _gridManager, targets) == LevelUpFeedbackDestination.Units;
+            if (!choices.Any(HasUnits))
+            {
+                var preview = _levelUpManager.LevelUpPool.FirstOrDefault(c => c != null && c.spawnRate > 0 &&
+                    !_levelUpManager.ChosenIds.Contains(c.chooseId) && HasUnits(c));
+                if (preview != null) choices[0] = preview;
+            }
+        }
         if (choices.Count == 0)
         {
             // 풀 소진/설정 누락 시 빈 패널에서 게임이 정지하지 않도록 선택 단계를 마친다.
@@ -95,7 +127,12 @@ public class LevelUpUI : MonoBehaviour
         {
             var card = Instantiate(cardPrefab, cardContainer);
             card.ConfigurePeek(obj.GetComponentInChildren<UI_Peekthrough>(true));
-            card.Setup(data, OnCardClicked, _levelUpManager.GetChoiceDescription(data));
+            EnsureDescriptions(card.DescriptionText);
+            var snapshot = new ChoiceDescriptionAdapter(data, _levelUpManager).Capture();
+            _descriptions.Add(card, snapshot);
+            card.Setup(data, OnCardClicked, FormatDescription(snapshot, data));
+            card.ConfigureDescription(id => OpenDescriptionTerm(card, id), () => !IsReadyForSelection || DescriptionBlocksInput ||
+                _spawnedCards.Any(other => other != null && other != card && other.HasActivePress));
             if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
         }
@@ -175,6 +212,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
+        if (DescriptionBlocksInput) return;
         IsReadyForSelection = false;
         if (!_spawnedCards.Contains(clicked)) return;
         if (_selectedCard == clicked) return;
@@ -196,7 +234,7 @@ public class LevelUpUI : MonoBehaviour
         SetCardsInteractable(cards, false);
 
         // 리롤 카드는 곧바로 새 카드가 나오므로 패널을 닫지 않는다.
-        bool reroll = selected.GetData()?.specialEffect == LevelUpSpecialEffect.RerollChoices;
+        bool reroll = _levelUpManager.RequestsReroll(selected.GetData());
         try
         {
             await _select.PlayAsync(selected, cards, reroll ? null : _panelGroup, !reroll, token);
@@ -212,10 +250,10 @@ public class LevelUpUI : MonoBehaviour
         if (_selectedCard == null) return;
 
         var data = _selectedCard.GetData();
-        if (data != null)
-            _levelUpManager.ApplyEffect(data);
+        var result = _levelUpManager.TryApplyChoice(data);
+        if (result == SelectionApplyResult.Rejected || result == SelectionApplyResult.Queued) return;
 
-        if (data != null && data.specialEffect == LevelUpSpecialEffect.RerollChoices)
+        if (result == SelectionApplyResult.Reroll)
         {
             _isRerolling = true; // 리롤은 게이지 버스트 없이 카드만 다시 등장한다.
             Show();
@@ -234,18 +272,20 @@ public class LevelUpUI : MonoBehaviour
             if (selectionTimerText != null) selectionTimerText.text = string.Empty;
             return;
         }
-        float remaining = selectionSeconds;
-        while (remaining > 0f)
+        SelectionTimeRemaining = selectionSeconds;
+        while (SelectionTimeRemaining > 0f || DescriptionBlocksInput)
         {
             if (selectionTimerText != null)
-                selectionTimerText.text = $"{Mathf.CeilToInt(remaining)}";
+                selectionTimerText.text = $"{Mathf.CeilToInt(SelectionTimeRemaining)}";
 
-            await UniTask.Delay(100, DelayType.Realtime, cancellationToken: token);
-            remaining -= 0.1f;
+            bool blocked = DescriptionBlocksInput;
+            float started = Time.unscaledTime;
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            if (!blocked && !DescriptionBlocksInput) SelectionTimeRemaining = Mathf.Max(0, SelectionTimeRemaining - (Time.unscaledTime - started));
         }
 
         // 시간 초과 — 첫 번째 카드 자동 선택 및 확인
-        if (_spawnedCards.Count > 0)
+        if (!DescriptionBlocksInput && _spawnedCards.Count > 0)
         {
             OnCardClicked(_spawnedCards[0]);
         }
@@ -260,11 +300,17 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnDisable()
     {
+        _descriptionPopup?.HideImmediately();
         if (_closingNormally) return;
         ReleaseForcedPause();
     }
 
-    private void OnDestroy() => ReleaseForcedPause();
+    private void OnDestroy()
+    {
+        ReleaseForcedPause();
+        if (_descriptionSubscribed) _descriptionSettings.Changed -= RefreshDescriptions;
+        if (_descriptionPopup is DebuffInfoPopup popup && popup != null) Destroy(popup.gameObject);
+    }
 
     /// <summary>Run-end cleanup invalidates entrance, selection and timers without applying a card.</summary>
     public void CancelPendingSelection()
@@ -280,6 +326,8 @@ public class LevelUpUI : MonoBehaviour
 
     private void ReleaseForcedPause()
     {
+        _glossaryView?.HideImmediately();
+        _descriptionPopup?.HideImmediately();
         StopSelectionTimer();
         IsReadyForSelection = false;
         if (!_ownsPause) return;
@@ -292,7 +340,10 @@ public class LevelUpUI : MonoBehaviour
     }
 
     // ── 닫기 ───────────────────────────────────────────────────
-
+    public void somethingthat()
+    {
+        Hide();
+    }
     private void Hide()
     {
         IsReadyForSelection = false;
@@ -321,10 +372,65 @@ public class LevelUpUI : MonoBehaviour
 
     private void ClearCards()
     {
+        _glossaryView?.HideImmediately();
+        _descriptionPopup?.HideImmediately();
+        _descriptions.Clear();
         foreach (var card in _spawnedCards)
             if (card != null) Destroy(card.gameObject);
 
         _spawnedCards.Clear();
         _selectedCard = null;
+    }
+
+    private void EnsureDescriptions(TMP_Text source)
+    {
+        if (_descriptionResolver == null) _descriptionResolver = new DescriptionTermResolver(_descriptionCatalog, _descriptionDebuffs);
+        if (_descriptionPopup == null) _descriptionPopup = DebuffInfoPopup.Create(this, obj, source);
+        if (_glossaryView == null && _termGlossary != null)
+        {
+            _termLinker = new TermLinker(_termGlossary, new Color(0.18f, 0.6f, 0.8f), new Color(1f, 0.62f, 0.1f));
+            _glossaryView = ChoiceGlossaryView.Create(obj.transform, source, cardContainer as RectTransform,
+                _termGlossary, _descriptionBlurShader, _descriptionSettings);
+        }
+        if (_descriptionToggle == null) _descriptionToggle = DescriptionToggleView.Create(obj.transform, source, value =>
+        {
+            if (CanChangeDescriptionMode()) _descriptionSettings.SetDetailed(value);
+            else _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        });
+        _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        if (_glossaryView != null) _glossaryView.transform.SetAsLastSibling();
+        if (!_descriptionSubscribed) { _descriptionSettings.Changed += RefreshDescriptions; _descriptionSubscribed = true; }
+    }
+    private void RefreshDescriptions()
+    {
+        if (_descriptionToggle != null) _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        foreach (var pair in _descriptions)
+            if (pair.Key != null) pair.Key.SetDescription(FormatDescription(pair.Value, pair.Key.GetData()));
+    }
+    private string FormatDescription(DescriptionSnapshot snapshot, LevelUpData data)
+    {
+        var text = DescriptionFormatter.Format(snapshot, _descriptionSettings.Detailed, _descriptionResolver, true);
+        return _termLinker == null ? text : _termLinker.AddLinks(text, data.DescriptionTerms);
+    }
+    private void OpenDescriptionTerm(LevelUpCardUI source, string id)
+    {
+        if (DescriptionBlocksInput || !IsReadyForSelection) return;
+        foreach (var card in _spawnedCards) if (card != null) card.CancelDescriptionPress();
+        if (id.StartsWith(TermLinker.LinkPrefix, StringComparison.Ordinal) && _glossaryView != null &&
+            _glossaryView.Show(source, id.Substring(TermLinker.LinkPrefix.Length))) return;
+        if (!_descriptionResolver.TryResolve(id, out var term)) return;
+        _descriptionPopup.Show(term.DisplayName, term.Body);
+    }
+    private void Update()
+    {
+        if (obj != null && !obj.activeInHierarchy) { _descriptionPopup?.HideImmediately(); _glossaryView?.HideImmediately(); }
+        if (_descriptionToggle == null) return;
+        _descriptionToggle.interactable = CanChangeDescriptionMode();
+    }
+    private bool CanChangeDescriptionMode()
+    {
+        var field = obj.GetComponentInChildren<UI_Peekthrough>(true);
+        return IsReadyForSelection && !DescriptionBlocksInput && (field == null || !field.BlocksSelection) &&
+            !_spawnedCards.Any(card => card != null && (card.HasActivePress || card.TutorialPreviewOnly));
     }
 }

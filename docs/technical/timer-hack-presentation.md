@@ -2,12 +2,14 @@
 
 > 작성 2026-10-09 · 실험실 `FxLab_TimerBonus` 시안 E·F·G~J
 > 상태: **인게임 연결 (2026-10-09, `c8eb903c`)** — 디시그망 스킬 시간 회복(`TimeAddSource.Hack`)에만 E + J. 보스 처치 등 다른 시간 증가는 A 합체 그대로.
-> 인게임 차이: 화면 전체 플래시 없이 타이머만(`HackTuning.RuntimeScreenFlash`), HUD 타이머 글꼴·재질 사본, 정수 3자리(100초 이상), TIME HACK 막대는 HP바 아래(`RuntimeBarDropPx`). 해킹 중 보스 처치 → A가 이어받음.
-> 미검증: 정상 진입 실제 발동, Android 성능(§7). 아래 §7 "미진행" 항목 중 시간 반영·`Time.timeScale` 미사용·HUD 이식은 처리됨.
+> 인게임 차이: 화면 전체 플래시 없이 타이머만(`HackTuning.RuntimeScreenFlash`), HUD 타이머 글꼴·재질 사본, 정수 3자리(100초 이상), 진행 막대는 HP바 아래(`RuntimeBarDropPx`). **2026-10-11: 인게임 `TIME HACK n%` / `ACCESS GRANTED` 문구 제거** — 상태 TMP를 생성하지 않으며 숫자 글리치·막대·실제 회복량은 유지. 해킹 중 보스 처치 → A가 이어받음.
+> 검증: 2026-10-11 루트 IngameScene 실제 DI/디시그망 공격 충전·시간 회복 경로 확인. Android 성능은 미측정(§7). 아래 §7 "미진행" 항목 중 시간 반영·`Time.timeScale` 미사용·HUD 이식은 처리됨.
 
 ---
 
 ## 1. 개요
+
+아래 타임라인·표·기존 이미지는 **실험실 비교 시안**이다. `TIME HACK` / `ACCESS GRANTED`는 실험실에만 남아 있으며 인게임에는 표시하지 않는다. 인게임 회복량은 디시그망 SO에서 읽는다(현재 +0.3초).
 
 드론(캐릭터)이 **타이머를 해킹해서 남은 시간을 올리는** 순간의 연출.
 타이머가 홀로그램처럼 가로 띠로 찢어지고 숫자가 마구 뒤섞이다가, 왼쪽 자리부터 새 값으로 "탁탁탁탁" 고정되며
@@ -141,17 +143,17 @@ I(이전 규칙)는 고정 중에 합쳐지면 이미 고정된 자리가 다시
 
 ---
 
-## 7. 인게임 적용 시 주의 (미진행)
+## 7. 인게임 적용 현황과 검증 경계
 
 - **시간은 발동 즉시 `TimerController`에 반영**, 연출은 표시만. 연출 중 씬 종료·일시정지에도 실제 값이 틀어지지 않게.
-- 히트스톱은 실험실 시계만 멈춘다. 인게임은 `Time.timeScale` 직접 쓰기 금지 → `TimeScaleService.Request/Release` (AGENTS.md).
-- 현재 Develop의 런타임 바인딩(`TimerBonusLab.Present`)은 **시안 A(합체)만** 지원하고 실제 HUD `TMP_Text` 한 장에 그린다.
-  해킹 연출은 실험실 전용 숫자 묶음(`TimerBonusDigits` 띠 사본 12개)에 의존하므로, 인게임 HUD 타이머 구조에 맞춘 이식이 필요하다.
+- 히트스톱은 연출 내부 시계만 멈춘다. 인게임에서 `Time.timeScale`을 직접 변경하지 않는다.
+- `BossClearPresentation`이 `TimerController.OnTimeAddedFrom`의 Hack 이벤트를 받아 `TimerBonusLab.PresentHack`을 호출한다. HUD 스타일·숫자 사본 이식 완료. 다른 시간 증가는 `Present`의 시안 A를 사용한다.
+- 루트 검증 근거: [2026-10-11 연출 정리](../../outputs/chief-disigman-fx-cleanup-20261011/RESULT.md). 테스트 입력·기존 오디오 오류·Android 미측정은 해당 보고서에 구분했다.
 - **성능 미검증**: 띠 사본 12개 × TMP 9장 ≈ 108개 TMP + RectMask2D. Android(30fps, 드로우콜 100 이하)에서 측정 필요 — 띠 수를 줄이거나 셰이더 방식으로 바꾸는 안 검토.
 - 중첩 규칙 J의 판단(합산/이어 붙임)은 발동 시각 목록만으로 결정 → 실제 게임 이벤트 큐로 옮기기 쉬움.
 
 ## 8. 미결정 / 다음
 
-- 인게임 연결 시점과 트리거(보스 처치 보너스 vs 해킹 선택지 효과) 확정.
-- 결과 글자 표기(`x4` 대신 아이콘·한글 등), `TIME HACK` / `ACCESS GRANTED` 문구 현지화.
+- 현재 인게임 트리거는 디시그망 스킬 시간 회복이며 보스 처치 보너스는 A를 유지한다.
+- 결과 글자 표기(`x4` 대신 아이콘·한글 등)는 추가 결정 가능. 상태 문구 현지화는 인게임 제거로 불필요하며 실험실 비교 문구는 보존.
 - Android 실기기 성능·가독성 확인.

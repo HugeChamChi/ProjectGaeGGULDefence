@@ -35,11 +35,11 @@ public static class UnitInfoDisplayChecks
             Set(attack, "txt_Value", atkText); Set(attack, "txt_BonusValue", bonus); Set(speed, "txt_Value", speedText);
             Set(panel, "statSlot_Atk", attack); Set(panel, "statSlot_AtkSpeed", speed);
             var presenter = new UI_UnitInfoPresenter(panel); Set(panel, "_presenter", presenter);
-            var manager = Component<LevelUpManager>(); var drones = Component<DroneManager>(); Set(drones, "_levelUpManager", manager);
+            var manager = Component<LevelUpManager>(); var drones = Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
             beta = Component<CombatDroneCheckProbe>(); beta.unitData = Asset<UnitData>(); beta.currentTier = Tier.Legend;
             beta.unitData.atk.legend = 80; beta.unitData.attackSpeed.legend = 2; beta.unitData.skillCooldown.legend = 14;
             beta.unitData.maxDroneCount.legend = 4;
-            beta.Init(new UnitDependencies { LevelUpManager = manager }); Set(beta, "_droneManager", drones);
+            beta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration }); Set(beta, "_droneManager", drones);
             var cell = Component<GridCell>(); Set(cell, "<Model>k__BackingField", new GridCellModel());
             Set(beta, "<currentCell>k__BackingField", cell); beta.gameObject.SetActive(true); beta.PlaceForCheck();
             presenter.SetUnitData(beta);
@@ -69,7 +69,7 @@ public static class UnitInfoDisplayChecks
             manager.RemoveEffect(production); presenter.Refresh(); Check(atkText.text == "480", "Removed drone reduces display");
             beta.RemoveForCheck(); presenter.Refresh(); Check(atkText.text == "0", "No live drones means zero combined attack");
             Set(beta, "<currentCell>k__BackingField", null); Check(!presenter.Refresh(), "Removed unit invalidates current view");
-            var liveBetan=Component<Drone_Betan>();liveBetan.unitData=Asset<UnitData>();liveBetan.unitData.Hacking=Asset<DroneHackingData>();liveBetan.Init(new UnitDependencies{LevelUpManager=manager});
+            var liveBetan=Component<Drone_Betan>();liveBetan.unitData=Asset<UnitData>();liveBetan.unitData.Hacking=Asset<DroneHackingData>();liveBetan.Init(new UnitDependencies{SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration});
             presenter.SetUnitData(liveBetan);Check(skillText.text!="해킹 기폭","Betan shared data never shows Gamman skill");
             var conversion=Asset<LevelUpData>();conversion.chooseId=15103;DroneSelectionPresets.Configure(conversion,DroneSelectionKind.BetanHackingBomb);manager.ApplyEffect(conversion);
             presenter.Refresh();Check(skillText.text=="해킹 자폭" && skillDescription.text.Contains("1개"),"open panel reflects hacking conversion");

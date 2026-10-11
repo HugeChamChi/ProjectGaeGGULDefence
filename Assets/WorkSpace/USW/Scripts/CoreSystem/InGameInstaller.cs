@@ -53,7 +53,7 @@ public class InGameInstaller : MonoBehaviour
         _waveManager.ConfigureBossClearPresentation(_bossClearPresentation);
         _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
         _totemInfoPanel?.ConfigureEffectInfo(_effectInfo);
-        if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && _totemInfoPanel.IsEffectInfoOpen;
+        if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && (_totemInfoPanel.IsEffectInfoOpen || _totemInfoPanel.ContainsScreenPoint(Input.mousePosition));
         _chiefSkillButtonView?.Construct(_chieftainSelection);
         WireUnitActionPopup();
         WireTotemActionPopup();

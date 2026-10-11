@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: TD1013Data
+  m_EditorClassIdentifier: Assembly-CSharp::TotemData
+  EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
+  ShadowAttack:
+    DelaySeconds: 0.2
+    VisualSeconds: 0.35
+    FadeSeconds: 0.08
+    Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
+    VisualOffset: {x: 0.15, y: 0.1, z: 0}
+  UseSheetData: 0
+  BonusProjectile:
+    Chance: 0.33
+    AttackCoefficient: 0.5
+    Projectile: {fileID: 0}
+  GrowthStages: []
+  GrowthHarvestSeconds: 60
+  GrowthHarvestFood: 60
+  WildcardSpawn:
+    IntervalSeconds: 40
+    Unit: {fileID: 0}
+  TierUpgrades: []
+  _debuffBinding:
+    _debuffId: 0
+    _trigger: 0
+    _stacksPerApply: 0
+  _debuffFireInterval: 0
+  _debuffImpactDamage: 0
+  _debuffProjectile: {fileID: 0}
+  totemType: 0
+  tier: 0
+  totemName: "TD1013(\uBBF8\uC815)"
+  iconAddress: TD_1008
+  prefabAddress: TD1013
+  rotationSpriteAddresses:
+  - TD_1008
+  - TD_1008
+  - TD_1008
+  - TD_1008
+  icon: {fileID: 21300000, guid: 6f190a3e07ce66e4e86caf21fc98628b, type: 3}
+  prefab: {fileID: 4482161701608774424, guid: 03a37c429b69a83428e7fd8bf0333297, type: 3}
+  rotationSprites:
+  - {fileID: 21300000, guid: 6f190a3e07ce66e4e86caf21fc98628b, type: 3}
+  - {fileID: 21300000, guid: 6f190a3e07ce66e4e86caf21fc98628b, type: 3}
+  - {fileID: 21300000, guid: 6f190a3e07ce66e4e86caf21fc98628b, type: 3}
+  - {fileID: 21300000, guid: 6f190a3e07ce66e4e86caf21fc98628b, type: 3}
+  description: "\uAC19\uC740 \uAC00\uB85C\uC904\uC758 \uBAA8\uB4E0 \uC720\uB2DB \uACF5\uACA9\uB825\uC774
+    15% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+  DetailedDescription: "\uAC19\uC740 \uAC00\uB85C\uC904\uC758 \uBAA8\uB4E0 \uC720\uB2DB
+    \uACF5\uACA9\uB825\uC774 15% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+  functions:
+  - rid: 5888964705059602539
+  effectRanges:
+  - rid: 5888964705059602540
+  - rid: 5888964705059602541
+  attackDisabledRanges: []
+  totemId: 1013
+  isRotatable: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 5888964705059602539
+      type: {class: SimpleBuffFunction, ns: , asm: Assembly-CSharp}
+      data:
+        kind: 0
+        amount: 0.15
+    - rid: 5888964705059602540
+      type: {class: DirectionalLineRange, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 2
+        rotationAware: 0
+    - rid: 5888964705059602541
+      type: {class: DirectionalLineRange, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 3
+        rotationAware: 0

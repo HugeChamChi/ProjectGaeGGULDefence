@@ -37,6 +37,8 @@ public class BossManager : MonoBehaviour
 
     public IReadOnlyList<BossBase> CurrentBosses => _currentBosses;
     public BossBase CurrentBoss => _currentBosses.Count > 0 ? _currentBosses[0] : null;
+    /// <summary>World position used by the upcoming boss entrance camera.</summary>
+    public Vector3 SpawnPosition => bossSpawnPoint != null ? bossSpawnPoint.transform.position : transform.position;
     public BossEntry PrevBossEntry => _prevBossEntry;
     public Action<BossEntry, BossEntry> OnBossEntryed; // Changed to pass both prev and current
 

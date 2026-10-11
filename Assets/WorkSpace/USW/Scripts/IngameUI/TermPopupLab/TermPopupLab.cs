@@ -76,7 +76,7 @@ public sealed class TermPopupLab : MonoBehaviour
     private void Start()
     {
         if (_panelObject != null) _panelObject.SetActive(true);
-        _linker = new TermLinker(_glossary, _termColor, _videoTermColor, VideoMark());
+        _linker = new TermLinker(_glossary, _termColor, _videoTermColor);
         Respawn();
     }
 
@@ -261,13 +261,6 @@ public sealed class TermPopupLab : MonoBehaviour
             if (card != null) card.Deselect();
         }
         catch (OperationCanceledException) { }
-    }
-
-    // 게임 글꼴에 ▶가 있으면 영상 용어 앞에 작게 붙인다 (없으면 색으로만 구분 — 글꼴에 없는 글자는 □로 나온다).
-    private string VideoMark()
-    {
-        var font = _cardPrefab != null ? _cardPrefab.GetComponentInChildren<TMP_Text>(true)?.font : null;
-        return font != null && font.HasCharacter('▶', true) ? "<size=70%>▶</size>" : string.Empty;
     }
 
     // LevelUpCardUI.descriptionText는 private이라, Setup이 넣은 글자와 같은 TMP를 찾는다.

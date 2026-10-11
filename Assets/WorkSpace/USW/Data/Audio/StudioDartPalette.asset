@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dee3afe3341a6674cba005b41e892c02, type: 3}
+  m_Name: StudioDartPalette
+  m_EditorClassIdentifier: Assembly-CSharp::GameAudioPalette
+  Music: {fileID: 8300000, guid: a75ba0f9172f4df40ad2098796a85f17, type: 3}
+  MusicGain: 0.28
+  MusicFadeSeconds: 1.2
+  MusicSpeedBlendSeconds: 0.2
+  VoiceBudget: 8
+  RepeatedVoiceBudget: 2
+  SfxGainCeiling: 0.7
+  RepeatedLowPassHz: 6500
+  MusicDuck: 0.5
+  RepeatedDuck: 0.2
+  DuckAttackSeconds: 0.035
+  DuckReleaseSeconds: 0.4
+  TailFadeSeconds: 0.035
+  LaserFadeSeconds: 0.08
+  Cues:
+  - Cue: 0
+    Clip: {fileID: 8300000, guid: 8c34599145a7ee34c83b1e1968ab27e3, type: 3}
+    Gain: 0.28
+    Priority: 200
+    MinimumInterval: 0.25
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+  - Cue: 1
+    Clip: {fileID: 8300000, guid: 8c1b1a7bfe2eae048850831f53a86d29, type: 3}
+    Gain: 0.09
+    Priority: 30
+    MinimumInterval: 0.25
+    MaximumVoices: 1
+    MaximumSeconds: 0.22
+    PitchVariation: 0.025
+    Repeated: 1
+    DucksBackground: 0
+  - Cue: 2
+    Clip: {fileID: 8300000, guid: cf9bea450473722409c48ebe7bf071e5, type: 3}
+    Gain: 0.14
+    Priority: 20
+    MinimumInterval: 0
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 1
+    DucksBackground: 0
+  - Cue: 3
+    Clip: {fileID: 8300000, guid: 9c2a8bd8ad57d7b4892cc1bfdc18c410, type: 3}
+    Gain: 0.4
+    Priority: 120
+    MinimumInterval: 0.08
+    MaximumVoices: 2
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+  - Cue: 4
+    Clip: {fileID: 8300000, guid: 1542c07472527b1469358fe723b21b30, type: 3}
+    Gain: 0.5
+    Priority: 150
+    MinimumInterval: 0.2
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+  - Cue: 5
+    Clip: {fileID: 8300000, guid: 02c87ff7882690b4985eeacaf3e0b2f9, type: 3}
+    Gain: 0.65
+    Priority: 150
+    MinimumInterval: 0.12
+    MaximumVoices: 1
+    MaximumSeconds: 0.3
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+  - Cue: 6
+    Clip: {fileID: 8300000, guid: 586d751f988b139439a0608c34f256ad, type: 3}
+    Gain: 0.38
+    Priority: 240
+    MinimumInterval: 0.5
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 1

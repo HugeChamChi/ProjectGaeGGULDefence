@@ -174,6 +174,8 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>true면 TakeDamage가 무시된다(체력 무한). 스킬 테스트 씬처럼 보스가 죽지 않아야
     /// 하는 특수 상황에서만 코드로 켠다 — 기본값 false로 일반 게임플레이엔 영향 없다.</summary>
     public bool Invincible { get; set; } = false;
+    /// <summary>Guided battles can accept damage while preserving the boss for a required lesson.</summary>
+    public bool PreventDeath { get; set; }
 
     /// <summary>데미지 1당 지급할 경험치 배율. BossManager.SpawnSingleBoss가 BossEntry 기준으로 설정한다.</summary>
     public float ExpMultiplier { get; set; } = 0.01f;
@@ -238,6 +240,7 @@ public abstract class BossBase : MonoBehaviour
     private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind)
     {
         if (IsDead || Invincible || !CombatAllowsDamage || units <= 0) return;
+        if (PreventDeath) units = Math.Min(units, Math.Max(0, _health.CurrentUnits - CombatHealth.Scale));
         long actual = _health.ApplyDamage(units);
         bool died = IsDead;
         if (died) { Debuffs?.Clear(); _deathStarted = true; }

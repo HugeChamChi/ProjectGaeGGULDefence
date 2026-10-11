@@ -35,18 +35,21 @@ namespace GaeGGUL.Tutorial
         {
             switch (stage)
             {
-                case IngameTutorialStage.BossEntrance: return new[] { IngameTutorialStage.FirstSummon };
+                case IngameTutorialStage.TimeLimit: return new[] { IngameTutorialStage.BossEntrance };
+                case IngameTutorialStage.FirstSummon: return new[] { IngameTutorialStage.TimeLimit };
+                case IngameTutorialStage.ObserveCombat: return new[] { IngameTutorialStage.FirstSummon };
                 case IngameTutorialStage.ThreeSummons: return new[] { IngameTutorialStage.BossEntrance };
-                case IngameTutorialStage.Merge: return new[] { IngameTutorialStage.ThreeSummons };
-                case IngameTutorialStage.LevelUp: return new[] { IngameTutorialStage.Merge };
-                case IngameTutorialStage.OpenUpgrade: return new[] { IngameTutorialStage.BossEntrance };
+                case IngameTutorialStage.Merge: return new[] { IngameTutorialStage.ObserveCombat };
+                case IngameTutorialStage.ExperienceGauge: return new[] { IngameTutorialStage.UpgradeSlots };
+                case IngameTutorialStage.LevelUp: return new[] { IngameTutorialStage.ExperienceGauge };
+                case IngameTutorialStage.OpenUpgrade: return new[] { IngameTutorialStage.Merge };
                 case IngameTutorialStage.UpgradeSlots: return new[] { IngameTutorialStage.OpenUpgrade };
                 case IngameTutorialStage.ChiefSkill: return new[] { IngameTutorialStage.LevelUp, IngameTutorialStage.UpgradeSlots };
                 case IngameTutorialStage.TotemChoice: return new[] { IngameTutorialStage.ChiefSkill };
                 case IngameTutorialStage.OpenInventory: return new[] { IngameTutorialStage.TotemChoice };
                 case IngameTutorialStage.PlaceTotem: return new[] { IngameTutorialStage.OpenInventory };
                 case IngameTutorialStage.MoveTotem: return new[] { IngameTutorialStage.PlaceTotem };
-                case IngameTutorialStage.RotateTotem: return new[] { IngameTutorialStage.MoveTotem };
+                case IngameTutorialStage.RotateTotem: return new[] { IngameTutorialStage.PlaceTotem };
                 default: return System.Array.Empty<IngameTutorialStage>();
             }
         }

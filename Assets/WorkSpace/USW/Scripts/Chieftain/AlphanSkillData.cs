@@ -8,4 +8,6 @@ public sealed class AlphanSkillData : ScriptableObject
     [Min(0)] public float DamagePerDrone = 80f;
     public Sprite Icon;
     public string SoundAddress = "05.Leader_Skill_Effect";
+    [Tooltip("집결 사격 수렴 빔 연출 프리팹 (Prefab/Effect/ChiefConvergeBeam). 비어 있으면 연출 없이 피해만 준다")]
+    public ChiefConvergeBeamFx BeamFx;
 }

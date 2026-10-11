@@ -54,10 +54,10 @@ MonoBehaviour:
     epic: 240
     legend: 800
   attackSpeed:
-    normal: 1.2
-    rare: 1.3
-    epic: 1.4
-    legend: 1.5
+    normal: 0.9
+    rare: 1
+    epic: 1.1
+    legend: 1.2
   skillCooldown:
     normal: 6
     rare: 6
@@ -66,6 +66,7 @@ MonoBehaviour:
   basicAttackData: {fileID: 0}
   skillData: {fileID: 11400000, guid: 04c139997394c404f8142a0c2b7b9080, type: 2}
   Hacking: {fileID: 11400000, guid: 6770f25b048611949929596efc470881, type: 2}
+  Disigman: {fileID: 0}
   SelfDestructAttackCoefficient: 0
   SkillGaugeMode: 0
   foodProduction:

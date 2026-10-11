@@ -580,3 +580,32 @@ ProjectSettings/ProjectSettings.asset
 ProjectSettings/UnityConnectSettings.asset
 ---
 
+## Session End: 20261010_032732
+### Commits
+63352d10 [Feat] 드론 해킹 연출 기능 구현
+c8eb903c [Feat] 디시그망 시간 회복에 타이머 해킹 글리치(E+J) 인게임 연결
+### Uncommitted Changes
+Assets/Scenes/IngameScene.unity
+Assets/WorkSpace/HSD/Scripts/Chief/PlayerChiefManager.cs
+Assets/WorkSpace/HSD/Scripts/UI/Chief/UI_ChiefButton.cs
+Assets/WorkSpace/USW/Data/DroneUnits/DisigmanSkill.asset
+Assets/WorkSpace/USW/Data/DroneUnits/DroneHacking.asset
+Assets/WorkSpace/USW/Data/Projectile/ProjectileData_DisigmanRailgun_Basic.asset
+Assets/WorkSpace/USW/Data/Projectile/ProjectileData_DisigmanRailgun_Skill.asset
+Assets/WorkSpace/USW/Data/UI/TimerBonusLab/TimerBonusLabSettings.asset
+Assets/WorkSpace/USW/Prefab/Effect/DisigmanRailgun/RailgunProjectile_Basic.prefab
+Assets/WorkSpace/USW/Prefab/Effect/DisigmanRailgun/RailgunProjectile_Skill.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/Drone_Buffer_Prefab.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/Drone_Debuffer_Prefab.prefab
+Assets/WorkSpace/USW/Prefab/Unit/DronUnit/Drone_Normal_Prefab.prefab
+Assets/WorkSpace/USW/Scripts/Combat/Fx/RailgunBeamFx.cs
+Assets/WorkSpace/USW/Scripts/Drone/DroneBeamVisual.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/DroneHackingData.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingCastVisual.cs
+Assets/WorkSpace/USW/Scripts/DroneUnits/HackingDroneSpawner.cs
+Assets/WorkSpace/USW/Scripts/Editor/Fx/DisigmanRailgunFxSetup.cs
+Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs
+Assets/WorkSpace/production/session-logs/session-log.md
+docs/technical/levelup-system.md
+---
+
