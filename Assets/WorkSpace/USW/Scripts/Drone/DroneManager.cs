@@ -19,7 +19,7 @@ public class DroneManager : MonoBehaviour
             if (_hacking == null)
             {
                 _hacking = gameObject.AddComponent<DroneHackingRuntime>();
-                _hacking.Initialize(_bossManager, _gameManager, _levelUpManager);
+                _hacking.Initialize(_bossManager, _gameManager, _effects);
             }
             return _hacking;
         }
@@ -28,11 +28,12 @@ public class DroneManager : MonoBehaviour
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private TotemBuffManager _totemBuffManager;
     [VContainer.Inject] private GridManager _gridManager;
-    [VContainer.Inject] private LevelUpManager _levelUpManager;
+    [VContainer.Inject] private IDroneEffectReader _effects;
+    [VContainer.Inject] private IChiefSelectionReader _chiefEffects;
     [VContainer.Inject] private GameManager _gameManager;
     [VContainer.Inject] private FieldPauseVisuals _fieldPause;
     private float _betanNormalTimer, _betanEpicTimer;
-    private DroneSelectionEffect _normalEffect, _epicEffect;
+    private (float Interval, int Count) _normalEffect, _epicEffect;
     private readonly List<Drone_Betan> _betans = new();
     private readonly HashSet<Drone_Betan> _betanMembership = new();
 
@@ -47,12 +48,11 @@ public class DroneManager : MonoBehaviour
     public void TickSelections(float deltaTime)
     {
         if (_fieldPause?.AttacksHeld == true) return;
-        var state = _levelUpManager?.DroneSelections;
-        var normal = state?.Get(DroneSelectionKind.BetanPeriodicBomb);
-        var epic = state?.Get(DroneSelectionKind.BetanFleetBomb);
+        var normal = (Interval: _effects?.PeriodicBombInterval ?? 0f, Count: _effects?.PeriodicBombCount ?? 0);
+        var epic = (Interval: _effects?.FleetBombInterval ?? 0f, Count: _effects?.FleetBombCount ?? 0);
         if (_normalEffect != normal) { _normalEffect = normal; _betanNormalTimer = 0; }
         if (_epicEffect != epic) { _epicEffect = epic; _betanEpicTimer = 0; }
-        if (deltaTime <= 0 || (normal == null && epic == null)) return;
+        if (deltaTime <= 0 || (normal.Count == 0 && epic.Count == 0)) return;
         _betans.Clear();
         _betanMembership.Clear();
         int fleetCount = 0;
@@ -64,7 +64,7 @@ public class DroneManager : MonoBehaviour
             if (_betanMembership.Add(betan)) _betans.Add(betan);
         }
         if (fleetCount == 0) { _betanNormalTimer = _betanEpicTimer = 0; return; }
-        if (normal != null && normal.Interval > 0)
+        if (normal.Count > 0 && normal.Interval > 0)
         {
             _betanNormalTimer += deltaTime;
             while (_betanNormalTimer >= normal.Interval)
@@ -73,7 +73,7 @@ public class DroneManager : MonoBehaviour
                 foreach (var betan in _betans) betan.SpawnSelfDestructDrones(normal.Count);
             }
         }
-        if (epic != null && epic.Interval > 0)
+        if (epic.Count > 0 && epic.Interval > 0)
         {
             _betanEpicTimer += deltaTime;
             while (_betanEpicTimer >= epic.Interval)
@@ -93,7 +93,7 @@ public class DroneManager : MonoBehaviour
     /// <summary>알팡 액티브에서 배치된 감망의 버프를 각 한 번 발동한다.</summary>
     public virtual void ApplyEmergencyBuffs()
     {
-        if (_levelUpManager?.DroneSelections.Get(DroneSelectionKind.GammanEmergency) == null) return;
+        if (_effects?.HasEmptyStackDamage != true) return;
         var owners = new HashSet<Drone_Gamman>();
         foreach (var drone in _drones)
             if (drone != null && drone.Owner is Drone_Gamman gamman && gamman.currentCell != null && gamman.isActiveAndEnabled)
@@ -151,7 +151,7 @@ public class DroneManager : MonoBehaviour
     /// <summary>실제 자폭마다 배치된 베탕의 충전을 앞당긴다. 완충을 넘는 시간은 저장하지 않는다.</summary>
     public void NotifySelfDestructExplosion()
     {
-        float seconds = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.BetanRepairKit)?.Value ?? 0f;
+        float seconds = _effects?.ExplosionSkillRecoverySeconds ?? 0f;
         if (seconds <= 0 || _gridManager == null) return;
         foreach (var cell in _gridManager.GetOccupiedCells())
             if (cell.OccupyingUnit is Drone_Betan betan && betan.isActiveAndEnabled && !betan.IsCellSealed && betan.Combat != null)
@@ -162,8 +162,7 @@ public class DroneManager : MonoBehaviour
     public decimal GetRallyDamage(int droneCount, float damagePerDrone)
     {
         decimal damage = Mathf.RoundToInt(droneCount * damagePerDrone);
-        var monocle = _levelUpManager?.DroneSelections.Get(DroneSelectionKind.AlphanGoldenMonocle);
-        return monocle == null ? damage : damage * (decimal)monocle.Value;
+        return _chiefEffects?.HasRallyDamage == true ? damage * (decimal)_chiefEffects.RallyDamageBonus : damage;
     }
 
     // ── 드론 버프 ───────────────────────────────────────────────────
@@ -268,7 +267,7 @@ public class DroneManager : MonoBehaviour
     /// 3) 중앙 드론만 사격 + 전체 데미지
     /// 4) 원래 위치 귀환 후 궤도 재개
     /// </summary>
-    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, DroneSelectionEffect doubleShot = null)
+    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default)
     {
         if (_isRallying || RallyAvailableDroneCount == 0) return;
         _isRallying = true;
@@ -373,11 +372,11 @@ public class DroneManager : MonoBehaviour
                 }
 
                 decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
-                if (doubleShot == null) boss.TakeDamage(baseDamage);
+                if (doubleShot.Count == 0) boss.TakeDamage(baseDamage);
                 else
                 {
                     long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
-                    long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.Value, System.MidpointRounding.AwayFromZero);
+                    long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
                     boss.ApplyRecordedDamage(shotUnits);
                     for (int shot = 1; shot < doubleShot.Count; shot++)
                     {

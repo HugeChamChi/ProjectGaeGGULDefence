@@ -58,7 +58,7 @@ public sealed class TimerBonusSlotReel : ITimerBonusConcept
             string to = TimerBonusDigits.Format(_lab.RemainingAt(end) + _lab.Bonus);
             for (int j = 0; j < ReelCount; j++)
             {
-                int ci = TimerBonusDigits.CharIndexOf(j);
+                int ci = digits.CharIndexOf(j);
                 int f = from[ci] - '0', target = to[ci] - '0';
                 int distance = ((target - f) % 10 + 10) % 10 + 10 * (ExtraSpins + j);
                 float stopAt = start + tune.SpinSeconds + j * tune.Stagger;

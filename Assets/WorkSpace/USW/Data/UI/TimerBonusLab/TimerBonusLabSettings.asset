@@ -112,3 +112,5 @@ MonoBehaviour:
     ChainWindowSeconds: 0.6
     ChainGapSeconds: 0.12
     SignalSeconds: 0.18
+    RuntimeScreenFlash: 0
+    RuntimeBarDropPx: 24.2

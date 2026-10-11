@@ -12,10 +12,7 @@ public class UI_ChiefButton : MonoBehaviour
         if (Player.Chief != null)
         {
             Player.Chief.ChangeSelectId += ChiefChange;
-            if (Player.Chief.SelectChiefData != null && img_Chief != null)
-            {
-                img_Chief.sprite = Player.Chief.SelectChiefData.Icon;
-            }
+            ChiefChange(Player.Chief.SelectedChiefId);
         }
         
         if (btn_Chief != null)
@@ -26,7 +23,9 @@ public class UI_ChiefButton : MonoBehaviour
 
     private void ChiefChange(int id)
     {
-        img_Chief.sprite = Table.Character.Chief.GetChief(id).Icon;
+        if (img_Chief == null) return;
+        var chief = Table.Character?.Chief?.GetChief(id);
+        img_Chief.sprite = chief != null ? chief.Icon : null;
     }
 
     private void OnDestroy()

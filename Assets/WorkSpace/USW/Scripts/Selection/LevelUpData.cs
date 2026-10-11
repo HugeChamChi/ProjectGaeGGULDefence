@@ -11,9 +11,13 @@ using UnityEngine.Serialization;
 /// secondaryEffect/secondaryValue : 부 스탯 효과 (다중강화 전용)
 /// specialEffect/specialValue   : 특수 로직 효과
 /// </summary>
-[CreateAssetMenu(fileName = "LevelUpData", menuName = "Game/LevelUpData")]
 public class LevelUpData : ScriptableObject
 {
+    /// <summary>1 = 조합형 정의. 0은 Editor 이관 입력 또는 역사 검사의 임시 fixture 전용이다.</summary>
+    [HideInInspector] public int EffectSchemaVersion;
+    /// <summary>새 저작 형식. 버전1에서만 읽고 기존 필드와 동시 적용하지 않는다.</summary>
+    public SelectionCardDefinition Composition = new();
+
     [Header("Identity")]
     public int              chooseId;
     public string           chooseName;
@@ -26,19 +30,19 @@ public class LevelUpData : ScriptableObject
     public UnitTribe[]      applicableTribes;
 
     [Header("Primary Effect")]
-    public LevelUpEffectType primaryEffect;
-    public float             primaryValue;   // 양수=증가, 음수=감소
+    [HideInInspector] public LevelUpEffectType primaryEffect;
+    [HideInInspector] public float             primaryValue;
 
     [Header("Secondary Effect (다중강화 전용)")]
-    public LevelUpEffectType secondaryEffect;
-    public float             secondaryValue;
+    [HideInInspector] public LevelUpEffectType secondaryEffect;
+    [HideInInspector] public float             secondaryValue;
 
     [Header("Special Effect")]
-    public LevelUpSpecialEffect specialEffect;
-    public float                specialValue;
+    [HideInInspector] public LevelUpSpecialEffect specialEffect;
+    [HideInInspector] public float                specialValue;
 
     [Header("Drone Selection (선택 사항)")]
-    public DroneSelectionEffect droneEffect;
+    [HideInInspector] public DroneSelectionEffect droneEffect;
 
     [Header("Display")]
     public Sprite   icon;

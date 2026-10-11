@@ -12,11 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection6
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups:
+    - drone.kind.6
+    Effects:
+    - rid: 1000
+    Feedback:
+    - Target: 3
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
   chooseId: 9106
   chooseName: "\uC5D0\uC5B4\uD504\uB77C\uC774\uAE30"
   tier: 1
   spawnRate: 1
-  description: "\uC824\uD0D5\uC758 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9\uC774 20% \uC99D\uAC00 \uD569\uB2C8\uB2E4.\n(3\uCD08\uB9C8\uB2E4 \uC77C\uAD04 \uC9C0\uAE09)"
+  description: "\uC824\uD0D5\uC758 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9\uC774 20% \uC99D\uAC00
+    \uD569\uB2C8\uB2E4.\n(3\uCD08\uB9C8\uB2E4 \uC77C\uAD04 \uC9C0\uAE09)"
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0
@@ -33,3 +46,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5db0da4e08fc26a4faec7d0059825d9f, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: FoodPayoutDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        PeriodSeconds: 3
+        BonusRatio: 0.2

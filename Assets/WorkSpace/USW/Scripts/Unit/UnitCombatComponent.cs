@@ -255,7 +255,7 @@ public class UnitCombatComponent : MonoBehaviour
             skillAction?.Execute(_unit, this, skillData.hitEffects, skillData.additionalEffects);
         }
 
-        var lu = _deps?.LevelUpManager;
+        var lu = _deps?.SelectionCombat;
         if (lu == null) return;
 
         if (lu.HasBurstOnSkillFull)
@@ -272,7 +272,7 @@ public class UnitCombatComponent : MonoBehaviour
         var boss = LiveBoss;
         if (attackDisabled || boss == null || boss.IsDead) return;
 
-        var lu = _deps?.LevelUpManager;
+        var lu = _deps?.SelectionCombat;
         if (lu == null) return;
 
         foreach (int n in lu.BonusAttackEveryNHits)

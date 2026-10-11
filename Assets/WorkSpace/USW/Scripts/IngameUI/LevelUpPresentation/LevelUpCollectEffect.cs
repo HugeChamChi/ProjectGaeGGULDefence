@@ -137,9 +137,9 @@ public class LevelUpCollectEffect : MonoBehaviour
             var destination = LevelUpFeedbackTargets.Resolve(data, _gridManager, _targetUnits);
             Vector3 from = orbRt.position;
             var flights = new List<UniTask>();
-            if (destination == LevelUpFeedbackDestination.Units && _targetUnits.Count > 0)
+            if ((destination & LevelUpFeedbackDestination.Units) != 0 && _targetUnits.Count > 0)
                 flights.Add(FlyToUnitsAsync(root, from));
-            else if (destination == LevelUpFeedbackDestination.ChiefSkill && _chiefSkillTarget != null)
+            if ((destination & LevelUpFeedbackDestination.ChiefSkill) != 0 && _chiefSkillTarget != null)
                 flights.Add(FlyBranchAsync(root, from, LevelUpUiSpace.WorldPointIn(root, _chiefSkillTarget),
                                            _chiefSkillTarget, _arriveBurstSize));
 

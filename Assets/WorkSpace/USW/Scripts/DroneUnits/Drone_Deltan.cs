@@ -11,8 +11,8 @@ public class Drone_Deltan : HackingDroneSpawner
         get
         {
             int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.AttacksToCharge.Get(currentTier) : 1);
-            var card = DroneSelections?.Get(DroneSelectionKind.DeltanCooldown);
-            return card == null ? baseline : Mathf.Max(1, baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * card.Value)));
+            var effects = DroneEffects;
+            return effects?.HasManaRequirementReduction != true ? baseline : Mathf.Max(1, baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction)));
         }
     }
     /// <summary>현재 모은 유효 일반공격 수.</summary>
@@ -20,8 +20,8 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <summary>선택지와 이월 소수량을 포함한 다음 시전의 생산량. 조회는 상태를 바꾸지 않는다.</summary>
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
     private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.StacksProduced.Get(currentTier) : 0)
-        + (DroneSelections?.Get(DroneSelectionKind.DeltanDefenseReduction)?.Count ?? 0))
-        * (1f + (DroneSelections?.Get(DroneSelectionKind.DeltanDamageTaken)?.Value ?? 0f)) + _productionRemainder;
+        + (DroneEffects?.HackingProductionFlat ?? 0))
+        * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;
     /// <inheritdoc />
     public override bool UsesTimedSkillCharge => false;
     /// <inheritdoc />
@@ -43,8 +43,8 @@ public class Drone_Deltan : HackingDroneSpawner
     {
         if (isActiveAndEnabled && currentCell != null && unitData?.Hacking != null)
         {
-            var zombie=DroneSelections?.Get(DroneSelectionKind.DeltanZombiePc);
-            int extra=zombie!=null && Random.value<zombie.Value ? zombie.Count : 0;
+            var effects = DroneEffects;
+            int extra=effects != null && effects.BonusManaCount > 0 && Random.value < effects.BonusManaChance ? effects.BonusManaCount : 0;
             AddMana(1+extra);
         }
     }
@@ -52,8 +52,7 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <inheritdoc />
     protected override void OnHackingProduced(int requested,int accepted)
     {
-        var backdoor=DroneSelections?.Get(DroneSelectionKind.DeltanBackdoor);
-        if(backdoor!=null) AddMana((requested-accepted)*backdoor.Count);
+        AddMana((requested - accepted) * (DroneEffects?.OverflowManaPerStack ?? 0));
     }
     /// <inheritdoc />
     protected override void OnUnitRemoved()

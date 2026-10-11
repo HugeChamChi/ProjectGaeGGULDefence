@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286febab3729a65e339b3d4d31a1df72, type: 3}
+  m_Name: ProjectileData_DisigmanRailgun_Basic
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  id: 6
+  projectilePrefab: {fileID: 3538567538607566513, guid: 339077e339c2781458ea9d715936ef42,
+    type: 3}
+  projectileAddress: 
+  movement:
+    rid: 5888964643206987883
+  fireEffect:
+    rid: -2
+  hitEffect:
+    rid: 5888964643206987884
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 5888964643206987883
+      type: {class: StraightMovement, ns: , asm: Assembly-CSharp}
+      data:
+        duration: 0.35
+    - rid: 5888964643206987884
+      type: {class: PrefabProjectileEffect, ns: , asm: Assembly-CSharp}
+      data:
+        effectPrefab: {fileID: 0}
+        duration: 1
+        sfxName: 05.Drone_Attack_Hit

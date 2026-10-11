@@ -473,11 +473,17 @@ public class TotemRewardUI : MonoBehaviour
         _rootGroup = gameObject.GetComponent<CanvasGroup>();
         if (_rootGroup == null) _rootGroup = gameObject.AddComponent<CanvasGroup>();
 
+        _root = NewRect("SafeContent", _root);
+        var safeFrame = _root.gameObject.AddComponent<SafeAreaContentFrame>();
+        Canvas.ForceUpdateCanvases();
+        safeFrame.UseFixedHeight();
+
         _container = NewRect("Container", _root);
         Stretch(_container);
 
         _dim = NewImage("Dim", _container, Color.black);
         Stretch(_dim.rectTransform);
+        _dim.gameObject.AddComponent<FullScreenUiBackdrop>();
 
         _overview = NewRect("Overview", _container);
         Stretch(_overview);

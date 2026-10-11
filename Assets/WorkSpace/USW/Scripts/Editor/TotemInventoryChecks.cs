@@ -30,7 +30,9 @@ public static class TotemInventoryChecks
             var ui = (TotemInventoryUI)resolver.Resolve(typeof(TotemInventoryUI));
             var rotation = (TotemRotationUI)resolver.Resolve(typeof(TotemRotationUI));
             check(inventory.Items.Count == 0, "Fresh run inventory empty");
-            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/SampleAttackTotemData.asset"));
+            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset"));
+            // Rotation gestures are checked below; enable rotation only on this runtime clone.
+            data.isRotatable = true;
             await data.LoadAssetsAsync().AttachExternalCancellation(token);
             selection = UnityEngine.Object.FindFirstObjectByType<TotemSelectUI>(FindObjectsInactive.Include);
             var poolField = typeof(TotemSelectUI).GetField("totemPool", Private);

@@ -131,7 +131,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     private BuffController _buff;
     private UnitDependencies _deps;
     /// <summary>팩토리가 주입한 런별 드론 선택지 상태.</summary>
-    public DroneSelectionState DroneSelections => _deps?.LevelUpManager?.DroneSelections;
+    public IDroneEffectReader DroneEffects => _deps?.DroneEffects;
+    /// <summary>현재 팩토리가 연결한 효과 변경 알림.</summary>
+    protected ISelectionEffectChanges SelectionChanges => _deps?.SelectionChanges;
     /// <summary>개별 유닛의 선택지 쿨타임 배율.</summary>
     public virtual float SkillCooldownMultiplier => 1f;
     /// <summary>식량 지급을 묶는 기본 초 간격. 초당 생산량과 별개다.</summary>
@@ -327,7 +329,6 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     // ── Backward Compatibility Wrappers for Subclasses & UI ──
     public TotemBuffManager _totemBuffManager => _deps?.TotemBuffManager;
-    public LevelUpManager _levelUpManager => _deps?.LevelUpManager;
     public AudioManager _audioManager => _deps?.AudioManager;
     public BossBase _boss => Boss;
     public GridManager _gridManager => _deps?.GridManager;

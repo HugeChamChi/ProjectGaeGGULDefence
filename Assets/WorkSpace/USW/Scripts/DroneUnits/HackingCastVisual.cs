@@ -1,52 +1,68 @@
 using UnityEngine;
 
-/// <summary>GammanTeleport의 점멸/접촉을 재생한다. 실제 드론/그리드/집결 위치는 바꾸지 않는다.</summary>
+/// <summary>해킹탄과 실험실 원본 타임라인의 감망 워프 연출을 재생한다.</summary>
 public sealed class HackingCastVisual : MonoBehaviour
 {
-    private SpriteRenderer _copy;
-    private LineRenderer _beam;
+    private GammanChargeWarpVisual _warp;
+    private DroneBeamVisual _beam;
     private BossBase _target;
     private Vector3 _origin;
     private DroneHackingData _data;
     private bool _consumer;
-    /// <summary>시각 사본과 공유 머티리얼 선을 만들고 재사용한다.</summary>
-    public void Begin(SpriteRenderer source, BossBase target, DroneHackingData data, bool consumer)
+    private float _progress, _recovery;
+    private bool _running;
+    /// <summary>해킹탄 또는 실제 드론 외형의 워프 타임라인을 시작한다.</summary>
+    public void Begin(DroneUnit source, BossBase target, DroneHackingData data, bool consumer)
     {
+        Clear();
         _target = target; _data = data; _consumer = consumer;
-        _origin = source != null ? source.transform.position : transform.position;
-        if (_copy == null)
+        _origin = source != null ? source.MuzzlePosition : transform.position;
+        _running = true; _recovery = -1f;
+        if (consumer)
         {
-            var go = new GameObject("HackTeleportDrone");
-            go.transform.SetParent(transform, false);
-            _copy = go.AddComponent<SpriteRenderer>();
-            _copy.sortingLayerName = "FX"; _copy.sortingOrder = 40;
-            _beam = go.AddComponent<LineRenderer>();
-            _beam.positionCount = 2; _beam.useWorldSpace = true;
-            _beam.sortingLayerName = "FX"; _beam.sortingOrder = 39;
+            if (_warp == null) _warp = gameObject.AddComponent<GammanChargeWarpVisual>();
+            _warp.Begin(source, target, data);
+            return;
         }
-        _copy.sprite = source != null ? source.sprite : null;
-        Vector3 worldScale = source != null ? source.transform.lossyScale : Vector3.one;
-        Vector3 parentScale = transform.lossyScale;
-        _copy.transform.localScale = new Vector3(worldScale.x / Mathf.Max(.001f, Mathf.Abs(parentScale.x)),
-            worldScale.y / Mathf.Max(.001f, Mathf.Abs(parentScale.y)), 1f);
-        _beam.sharedMaterial = data.LineMaterial;
-        _beam.startColor = _beam.endColor = data.HackColor;
-        _beam.startWidth = .08f; _beam.endWidth = .03f;
+        if (_beam == null)
+        {
+            var go = new GameObject("HackingLabBeam");
+            go.transform.SetParent(transform, false);
+            _beam = go.AddComponent<DroneBeamVisual>();
+        }
+        _beam.Initialize(data.BeamMaterial, data.MarkGlowMaterial);
         Draw(0);
     }
     /// <summary>전투 시간 진행률로 움직이며 피해를 만들지 않는다.</summary>
     public void Draw(float progress)
     {
-        if (_target == null) { Clear(); return; }
+        _progress = Mathf.Clamp01(progress);
+        Render();
+    }
+    /// <summary>접촉 이후 원본 타임라인의 반동·점멸 복귀를 진행한다.</summary>
+    public void Recover(float progress) { _recovery = Mathf.Clamp01(progress); Render(); }
+    private void LateUpdate() { if (_running) Render(); }
+    private void Render()
+    {
+        if (!_running || _target == null) { Clear(); return; }
+        if (_consumer)
+        {
+            _warp.Draw(_recovery < 0 ? _progress * _data.ConsumerContactSeconds
+                : _data.ConsumerContactSeconds + _recovery * _data.ConsumerRecoverySeconds);
+            return;
+        }
         Vector3 contact = _target.transform.position;
-        Vector3 point = _consumer ? contact + _data.TeleportOffset : Vector3.Lerp(_origin, contact, progress);
-        _copy.transform.position = point;
-        _copy.enabled = _consumer && progress > .15f;
-        _copy.color = new Color(1f, 1f, 1f, progress < .3f ? .45f : 1f);
-        _beam.enabled = _data.LineMaterial != null && (!_consumer || progress >= .8f);
-        _beam.SetPosition(0, _consumer ? point : Vector3.Lerp(_origin, contact, Mathf.Max(0, progress - .18f)));
-        _beam.SetPosition(1, _consumer ? contact : point);
+        float fade = _recovery < 0 ? 1 : 1 - _recovery;
+        Vector3 tip = Vector3.Lerp(_origin, contact, _progress);
+        Vector3 tail = Vector3.Lerp(_origin, contact, Mathf.Max(0, _progress - .18f));
+        _beam.Draw(tail, tip, _data.HackColor, _data.CastBeamWidth, fade, .35f * fade, fade);
     }
     /// <summary>취소/복귀 시 모든 외형을 숨긴다.</summary>
-    public void Clear() { if (_copy != null) _copy.enabled = false; if (_beam != null) _beam.enabled = false; }
+    public void Clear()
+    {
+        _running = false;
+        _beam?.Clear();
+        _warp?.Clear();
+    }
+    private void OnDisable() => Clear();
 }

@@ -11,6 +11,8 @@ using static TimerBonusEase;
 /// 처치 전 긴장(드론 레이저·빨간 박동·미세 떨림, 보스 피격 반응 없음) → 처치 순간 히트스톱·플래시·줌 → 시안별 보너스 연출 → 카운트다운.
 /// 히트스톱은 실험실 시계만 멈춘다. 인게임에 붙일 때는 Time.timeScale 대신 TimeScaleService.Request/Release.
 /// 게임 코드와 무관한 실험실 전용. FxLabCapture 캡처 대상 (Play() = 현재 시안 1배속 처음부터).
+/// 인게임 바인딩(_runtimeTimer 연결 시): A 합체(보스 처치 보너스, Present)와 E 해킹 + J 중첩(디시그망 시간 회복, PresentHack)만 쓴다.
+/// 해킹 중에는 HUD 타이머를 숨기고 같은 글꼴·재질의 숫자 사본(정수 3자리)을 그 자리에 그린다. 실제 시간은 건드리지 않는다.
 /// </summary>
 public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 {
@@ -33,6 +35,9 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     private const float GlowGoldAlpha = 0.55f;
     private const float GlowFlashAlpha = 0.3f;
     private const float FlashWhiten = 0.7f;
+    private const int RuntimeIntDigits = 3;           // 인게임 타이머는 100초를 넘을 수 있다 (90초 시작 + 보스 처치 보너스)
+    private const int RuntimeFusionConcept = 0;
+    private const int RuntimeHackConcept = 1;
     private static readonly Color ButtonIdle = new Color(1f, 1f, 1f, 0.15f);
     private static readonly Color ButtonSelected = new Color(0.35f, 0.8f, 0.45f, 0.85f);
     private static readonly Color Pink = new Color(1f, 0.84f, 0.87f);
@@ -69,6 +74,15 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     private Vector3 _timerBaseScale;
     private Color _timerBaseColor;
     private Vector2 _liveTimerSize;
+    private float _liveFontSize;
+    private float _liveScaleRatio = 1f;
+    private bool _hackActive;
+    private TimerBonusHackStack _liveHack;
+    private readonly List<float> _liveTriggers = new List<float>();
+    private readonly List<float> _liveTriggerBonus = new List<float>();
+    private readonly List<Vector2> _liveTriggerOrigin = new List<Vector2>();
+    private float[] _liveTriggerArray = System.Array.Empty<float>();
+    private float _liveAdded;
 
     /// <summary>True only while a real time addition is being presented.</summary>
     public bool IsPresenting => _runtimeTimer != null && _running && _ready;
@@ -78,6 +92,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     public void Present(TimerController clock, float added, Vector2 bossCenter, bool bonusPending = false)
     {
         if (!_ready) Start();
+        if (!_ready) return;
+        EndHack();
         _liveClock = clock;
         _liveBonus = added;
         _liveBonusPending = bonusPending;
@@ -96,10 +112,52 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     /// <summary>Called immediately after the authoritative countdown receives the pending bonus.</summary>
     public void NotifyBonusApplied() => _liveBonusPending = false;
 
+    /// <summary>True while the E hack (Disigman time recovery) is on screen.</summary>
+    public bool IsPresentingHack => IsPresenting && _hackActive;
+
+    /// <summary>
+    /// E 해킹 + J 중첩 — 이미 실제 타이머에 붙은 해킹 시간을 표시만 한다 (시간은 호출 전에 AddTime으로 반영돼 있어야 한다).
+    /// 해킹이 화면에 있으면 발동을 더하고(합산/이어 붙임), A 합체가 진행 중이면 표시하지 않는다.
+    /// originOnStage는 신호가 출발할 연출 영역 좌표(그 유닛 위치).
+    /// </summary>
+    public void PresentHack(TimerController clock, float added, Vector2 originOnStage)
+    {
+        if (!IsRuntime || added <= 0f || clock == null) return;
+        if (!_ready) Start();
+        if (!_ready || _liveHack == null) return;
+        if (IsPresenting && !_hackActive) return;   // 보스 처치 연출이 타이머를 쓰는 중
+
+        if (!IsPresentingHack)
+        {
+            _liveClock = clock;
+            _liveBonus = added;
+            _liveBonusPending = false;
+            _liveTriggers.Clear();
+            _liveTriggerBonus.Clear();
+            _liveTriggerOrigin.Clear();
+            _liveAdded = 0f;
+            _liveScaleRatio = _stage.lossyScale.x > 1e-6f ? _runtimeTimer.rectTransform.lossyScale.x / _stage.lossyScale.x : 1f;
+            SwitchConcept(RuntimeHackConcept);
+            _hackActive = true;
+            UpdateBonusText();
+            Restart();
+            _t = _settings.PreKillSeconds;
+            _shakeRoot.gameObject.SetActive(true);
+            _flash.gameObject.SetActive(true);
+            _timerRoot.gameObject.SetActive(true);
+        }
+        _liveTriggers.Add(Mathf.Max(0f, KillTime));
+        _liveTriggerBonus.Add(added);
+        _liveTriggerOrigin.Add(originOnStage);
+        _liveTriggerArray = _liveTriggers.ToArray();
+        _liveAdded += added;
+    }
+
     /// <summary>Releases timer appearance on completion, scene exit or a stopped run.</summary>
     public void CancelPresentation()
     {
         if (!IsRuntime || !_ready) return;
+        EndHack();
         _running = false;
         _particles.Clear();
         if (_shakeRoot != null) _shakeRoot.gameObject.SetActive(false);
@@ -167,20 +225,40 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     internal TimerBonusLabSettings Settings => _settings;
     internal float Px => _settings.PxScale;
     internal float Bonus => IsRuntime ? _liveBonus : _settings.Bonuses.Length > 0 ? _settings.Bonuses[_bonusIndex] : 0f;
+    /// <summary>중첩 해킹 i번째 발동의 보너스 (인게임은 발동마다 실제 회복량, 실험실은 공통 보너스).</summary>
+    internal float StackTriggerBonus(int i) => IsRuntime && i < _liveTriggerBonus.Count ? _liveTriggerBonus[i] : Bonus;
+    /// <summary>인게임: i번째 발동 유닛의 연출 영역 좌표.</summary>
+    internal bool TryGetTriggerOrigin(int i, out Vector2 origin)
+    {
+        bool ok = i >= 0 && i < _liveTriggerOrigin.Count;
+        origin = ok ? _liveTriggerOrigin[i] : Vector2.zero;
+        return ok;
+    }
     /// <summary>"+15.00"</summary>
     internal string BonusText => _bonusText;
     /// <summary>"+15"</summary>
     internal string BonusShortText => _bonusShortText;
     /// <summary>지금 남은 시간 (보너스 제외).</summary>
-    internal double Now => IsRuntime ? (_liveClock != null ? _liveClock.RemainingTime - (_liveBonusPending ? 0f : _liveBonus) : 0f) : _settings.BaseRemaining - _t;
+    internal double Now => !IsRuntime ? _settings.BaseRemaining - _t
+        : _liveClock == null ? 0d
+        : _hackActive ? _liveClock.RemainingTime - _liveAdded   // 해킹으로 붙은 시간은 모두 빼고 (해킹 렌더러가 단계별로 더해 보인다)
+        : _liveClock.RemainingTime - (_liveBonusPending ? 0f : _liveBonus);
     internal Vector2 TimerPosition => IsRuntime ? (Vector2)_stage.InverseTransformPoint(_runtimeTimer.transform.position) : _timerPosition;
-    internal Vector2 TimerSize => IsRuntime ? _liveTimerSize : _main.Size;
+    internal Vector2 TimerSize => IsRuntime && !_hackActive ? _liveTimerSize : _main.Size;
+    /// <summary>타이머 숫자 글자 크기 (인게임은 HUD 타이머 크기).</summary>
+    internal float TimerFontSize => IsRuntime ? _liveFontSize : _settings.TimerFontSize;
+    /// <summary>타이머 숫자 정수 자릿수 (인게임 3, 실험실 2).</summary>
+    internal int TimerIntDigits => IsRuntime ? RuntimeIntDigits : 2;
+    /// <summary>숫자 사본이 글꼴 재질·스타일을 따라 할 원본 (인게임 HUD 타이머, 실험실은 없음).</summary>
+    internal TMP_Text TimerStyleSource => IsRuntime ? _runtimeTimer : null;
+    /// <summary>평소 타이머 색.</summary>
+    internal Color TimerBaseColor => IsRuntime ? _timerBaseColor : _settings.TimerColor;
     internal Vector2 BossCenter => IsRuntime ? _liveBossCenter : _bossPosition + new Vector2(0f, _bossSize * 0.5f);
     internal Vector2 StageSize => _stage.rect.size;
     internal TimerBonusDigits MainDigits => _main;
     /// <summary>타이머 묶음 루트 — 여기 붙인 자식은 타이머 이동·박동·크기를 같이 따른다 (본체보다 위에 그려짐).</summary>
     internal RectTransform TimerRoot => _timerRoot;
-    internal TMP_FontAsset Font => _font;
+    internal TMP_FontAsset Font => IsRuntime && _runtimeTimer.font != null ? _runtimeTimer.font : _font;
     internal RectTransform FxLayer => _fx;
     internal float Pulse { get => _pulse; set => _pulse = value; }
     internal float Zoom { get => _zoom; set => _zoom = value; }
@@ -193,6 +271,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     {
         get
         {
+            if (IsRuntime) return _liveTriggerArray;
             var sets = _settings.Hack.StackTriggerSets;
             if (sets == null || sets.Length == 0) return System.Array.Empty<float>();
             return sets[Mathf.Clamp(_triggerSetIndex, 0, sets.Length - 1)].Times ?? System.Array.Empty<float>();
@@ -203,7 +282,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     private float Speed => _speeds.Length > 0 ? _speeds[Mathf.Clamp(_speedIndex, 0, _speeds.Length - 1)] : 1f;
 
     /// <summary>처치 시점 기준 a초의 남은 시간 (보너스 제외).</summary>
-    internal double RemainingAt(float a) => _settings.BaseRemaining - (_settings.PreKillSeconds + a);
+    internal double RemainingAt(float a) => IsRuntime ? Now - (a - KillTime) : _settings.BaseRemaining - (_settings.PreKillSeconds + a);
 
     // ── 생명주기 ──────────────────────────────────────────────
 
@@ -219,8 +298,9 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _bonusIndex = Mathf.Clamp(_settings.DefaultBonusIndex, 0, Mathf.Max(0, _settings.Bonuses.Length - 1));
         UpdateBonusText();
         BuildView();
-        var stackHack = new TimerBonusHack();   // G~J가 같이 쓰는 해킹 렌더러 (실험실 전용)
-        _concepts = IsRuntime ? new ITimerBonusConcept[] { new TimerBonusFusion() } : new ITimerBonusConcept[]
+        var stackHack = new TimerBonusHack();   // G~J가 같이 쓰는 해킹 렌더러 (인게임은 J만)
+        if (IsRuntime) _liveHack = new TimerBonusHackStack(stackHack, TimerBonusHackStack.Mode.MergeMini);
+        _concepts = IsRuntime ? new ITimerBonusConcept[] { new TimerBonusFusion(), _liveHack } : new ITimerBonusConcept[]
         {
             new TimerBonusFusion(),
             new TimerBonusSlotReel(),
@@ -260,7 +340,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         if (_running && !frozen)
         {
             _t += dt;
-            if (_t >= LoopSeconds)
+            if (_t >= LoopSeconds && !_hackActive)
             {
                 if (_loop) Restart();
                 else { _t = LoopSeconds; _running = false; }
@@ -284,7 +364,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _whiteFlash *= Decay(FlashDecay, fadeStep);
         _zoom *= Decay(ZoomDecay, fadeStep);
         ApplyFrame();
-        if (IsRuntime && a >= _settings.AnimSeconds) CancelPresentation();
+        if (IsRuntime && (_hackActive ? a >= _liveHack.VisibleEnd : a >= _settings.AnimSeconds)) CancelPresentation();
         if (Time.frameCount % 6 == 0) UpdateStatus();
     }
 
@@ -349,7 +429,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     /// <summary>타이머 세 겹(본체·잔상 2장)에 같은 값을 쓴다.</summary>
     internal void SetTimerValue(double seconds)
     {
-        if (IsRuntime) { _runtimeTimer.text = System.Math.Max(0d, seconds).ToString("F2", CultureInfo.InvariantCulture); return; }
+        if (IsRuntime && !_hackActive) { _runtimeTimer.text = System.Math.Max(0d, seconds).ToString("F2", CultureInfo.InvariantCulture); return; }
         _main.SetValue(seconds);
         _ghostCyan.SetValue(seconds);
         _ghostHot.SetValue(seconds);
@@ -369,6 +449,14 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _main.SetDigit(reel, digit);
         _ghostCyan.SetDigit(reel, digit);
         _ghostHot.SetDigit(reel, digit);
+    }
+
+    /// <summary>정수 3자리 숫자(인게임)에서 백의 자리 칸 숨김 — 본체·잔상 2장에 같이.</summary>
+    internal void SetTimerLeadingHidden(bool hidden)
+    {
+        _main.SetLeadingHidden(hidden);
+        _ghostCyan.SetLeadingHidden(hidden);
+        _ghostHot.SetLeadingHidden(hidden);
     }
 
     /// <summary>타이머 본체 투명도 (0~1, 잔상은 SetGhosts로 따로). 시안이 본체를 직접 대신 그릴 때 0.</summary>
@@ -400,6 +488,9 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _whiteFlash = Mathf.Max(_whiteFlash, _settings.ImpactFlash * strength);
         _zoom = Mathf.Max(_zoom, _settings.ImpactZoom * strength);
     }
+
+    /// <summary>히트스톱만 (연출 시계 정지 — 게임 시간은 건드리지 않음). 인게임 해킹 완료처럼 화면 플래시 없이 타이머만 터뜨릴 때.</summary>
+    internal void HitStop(float strength) => _hold = Mathf.Max(_hold, _settings.ImpactHitStop * strength);
 
     /// <summary>이번 반복에서 처음이면 true (한 번만 터지는 이벤트).</summary>
     internal bool Once(int key) => _fired.Add(key);
@@ -530,6 +621,15 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
             _timerBaseScale = _runtimeTimer.rectTransform.localScale;
             _timerBaseColor = _runtimeTimer.color;
             _liveTimerSize = _runtimeTimer.rectTransform.rect.size;
+            _liveFontSize = _runtimeTimer.fontSize;
+            // 해킹용 숫자 사본 (HUD 타이머 자리에 겹쳐 그림): 잔상 2장 → 본체. 평소엔 꺼 둔다.
+            _timerRoot = NewRect("HackTimer", _shakeRoot, Vector2.zero);
+            _ghostCyan = new TimerBonusDigits(_timerRoot, "GhostCyan", Font, _liveFontSize, RuntimeIntDigits);
+            _ghostHot = new TimerBonusDigits(_timerRoot, "GhostHot", Font, _liveFontSize, RuntimeIntDigits);
+            _main = new TimerBonusDigits(_timerRoot, "Main", Font, _liveFontSize, RuntimeIntDigits);
+            foreach (var d in new[] { _ghostCyan, _ghostHot, _main }) d.MatchStyle(_runtimeTimer);
+            _timerRoot.sizeDelta = _main.Size;
+            _timerRoot.gameObject.SetActive(false);
             _fx = NewRect("Fx", _shakeRoot, Vector2.zero);
             Stretch(_fx);
             var liveParticles = NewRect("Particles", _shakeRoot, Vector2.zero);
@@ -676,6 +776,27 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 
     private void ApplyFrame()
     {
+        if (IsRuntime && _hackActive)
+        {
+            // HUD 타이머는 숨기고 그 자리에 사본을 그린다. 흔들림은 타이머에만 (화면은 그대로).
+            _runtimeTimer.canvasRenderer.SetAlpha(0f);
+            float hp = (1f + _pulse) * _liveScaleRatio;
+            _timerRoot.anchoredPosition = TimerPosition + _timerOffset + _shake;
+            _timerRoot.localScale = new Vector3(_timerScale.x * hp, _timerScale.y * hp, 1f);
+            var hc = Color.Lerp(_timerBaseColor, _settings.CyanColor, Mathf.Clamp01(_hack));
+            hc = Color.Lerp(hc, Color.white, Mathf.Clamp01(_timerFlash) * FlashWhiten);
+            hc.a *= Mathf.Clamp01(_timerAlpha);
+            _main.SetColor(hc);
+            _ghostCyan.SetColor(WithAlpha(_settings.CyanColor, _ghostAlpha));
+            _ghostHot.SetColor(WithAlpha(_settings.HotColor, _ghostAlpha));
+            _ghostCyan.Root.anchoredPosition = new Vector2(-_ghostOffset, 0f);
+            _ghostHot.Root.anchoredPosition = new Vector2(_ghostOffset, 0f);
+            _main.SetSkew(_timerSkew);
+            _ghostCyan.SetSkew(_timerSkew);
+            _ghostHot.SetSkew(_timerSkew);
+            _flash.color = WithAlpha(Color.white, Mathf.Clamp01(_whiteFlash));
+            return;
+        }
         if (IsRuntime)
         {
             _runtimeTimer.rectTransform.anchoredPosition = _timerBasePosition + _timerOffset;
@@ -708,6 +829,31 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
         _ghostHot.SetSkew(_timerSkew);
 
         _flash.color = WithAlpha(Color.white, Mathf.Clamp01(_whiteFlash));
+    }
+
+    // 인게임: 그릴 시안 교체 (A 합체 ↔ J 해킹). 해킹 렌더러는 마지막에 켠 쪽만 끌 수 있으므로 끈 뒤 켠다.
+    private void SwitchConcept(int index)
+    {
+        if (_concept == index) return;
+        _concepts[_concept].SetVisible(false);
+        _concept = Mathf.Clamp(index, 0, _concepts.Length - 1);
+        _concepts[_concept].SetVisible(true);
+    }
+
+    // 인게임 해킹 정리: 사본을 끄고 HUD 타이머를 실제 값으로 되돌린다.
+    private void EndHack()
+    {
+        if (!_hackActive) return;
+        _hackActive = false;
+        _liveTriggers.Clear();
+        _liveTriggerBonus.Clear();
+        _liveTriggerOrigin.Clear();
+        _liveTriggerArray = System.Array.Empty<float>();
+        _liveAdded = 0f;
+        _hold = 0f;
+        if (_timerRoot != null) _timerRoot.gameObject.SetActive(false);
+        if (_runtimeTimer != null) _runtimeTimer.canvasRenderer.SetAlpha(1f);
+        SwitchConcept(RuntimeFusionConcept);
     }
 
     private void UpdateBonusText()

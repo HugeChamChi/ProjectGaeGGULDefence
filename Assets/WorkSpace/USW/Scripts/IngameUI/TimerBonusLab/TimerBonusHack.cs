@@ -14,6 +14,8 @@ using static TimerBonusEase;
 /// 중첩 실험(시안 G~J, TimerBonusHackStack)은 RenderRun으로 해킹 한 번(Run)을 시작 시각·보너스·짧은 버전 여부와 함께 그린다.
 /// 상승 모드(시안 F, 사용자 요청 2026-10-09): 뒤섞는 대신 진행 막대가 끊겨 찰 때마다 숫자가 덩어리째 올라가
 /// "시간을 주입한다"는 느낌을 준다. 소수 자리만 글리치로 흔들리고, 한 칸 오를 때마다 위로 튀는 불꽃·박동.
+/// 인게임(디시그망 시간 회복, 2026-10-09): 실제 HUD 타이머의 글꼴·재질·색으로 그리고, 정수 3자리(100초 이상)를 지원하며,
+/// 완료 순간 화면 전체 플래시 없이 연출 시계 히트스톱만 준다 (HackTuning.RuntimeScreenFlash로 다시 켤 수 있음).
 /// </summary>
 public sealed class TimerBonusHack : ITimerBonusConcept
 {
@@ -22,7 +24,7 @@ public sealed class TimerBonusHack : ITimerBonusConcept
     private const int KeyStepBase = 200;
     private const int KeyRunBase = 10000;
     private const int KeyRunStride = 1000;
-    private const int ReelCount = 4;
+    private const int MaxReels = 5;
     private const int MaxSlices = 12;
     private const int MaxScanlines = 16;
     private const int MaxBlocks = 24;
@@ -102,8 +104,8 @@ public sealed class TimerBonusHack : ITimerBonusConcept
     private Image _barFillImage;
     private TextMeshProUGUI _state;
     private TextMeshProUGUI _bonus;
-    private readonly int[] _digits = new int[ReelCount];
-    private readonly bool[] _scrambling = new bool[ReelCount];
+    private readonly int[] _digits = new int[MaxReels];
+    private readonly bool[] _scrambling = new bool[MaxReels];
     private readonly string[] _percentText = new string[101];
     private Color[] _lockColors;
     private Color[] _doneColors;
@@ -140,7 +142,9 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         {
             var band = TimerBonusLab.NewRect((_countUp ? "UpSlice" : "Slice") + i, _sliceRoot, new Vector2(bandWidth, 10f));
             band.gameObject.AddComponent<RectMask2D>();
-            _slices[i] = new Slice { Band = band, Digits = new TimerBonusDigits(band, "Digits", lab.Font, s.TimerFontSize) };
+            var digits = new TimerBonusDigits(band, "Digits", lab.Font, lab.TimerFontSize, lab.TimerIntDigits);
+            digits.MatchStyle(lab.TimerStyleSource);
+            _slices[i] = new Slice { Band = band, Digits = digits };
         }
         var scanRoot = TimerBonusLab.NewRect("Scanlines", _root, Vector2.zero);
         for (int i = 0; i < MaxScanlines; i++) _scan[i] = TimerBonusLab.CreateImage("Scan" + i, scanRoot, Color.clear);
@@ -195,6 +199,18 @@ public sealed class TimerBonusHack : ITimerBonusConcept
     /// <summary>해킹이 끝나고 글리치가 가라앉기까지 포함한 길이 (대기열 간격).</summary>
     internal float FinishOf(in Run run) => EndOf(run) + _lab.Settings.Hack.SettleSeconds;
 
+    /// <summary>해킹 기준 초 — 결과 글자·막대·잔진동까지 모두 사라지는 순간 (인게임 연출 종료 판정).</summary>
+    internal float VisibleUntilOf(in Run run)
+    {
+        var tune = _lab.Settings.Hack;
+        float tail = Mathf.Max(tune.SettleSeconds, BonusPopSeconds + BonusHoldSeconds + BonusFadeSeconds, BarHoldSeconds + BarFadeSeconds);
+        if (tune.AftershockTimes != null && !run.Mini)
+            foreach (float t in tune.AftershockTimes) tail = Mathf.Max(tail, t + tune.AftershockSeconds);
+        return EndOf(run) + tail;
+    }
+
+    private int ReelCount => _lab.MainDigits.ReelCount;
+
     private void Timings(in Run run, out float infectEnd, out float lockStart, out float end)
     {
         var tune = _lab.Settings.Hack;
@@ -223,7 +239,7 @@ public sealed class TimerBonusHack : ITimerBonusConcept
 
         float tint = a < 0f ? 0f : a < end ? 1f : 1f - Mathf.Clamp01((a - end - TintFadeDelay) / TintFadeSeconds);
         _lab.SetHack(tint * tune.CyanTint);
-        var baseColor = Color.Lerp(s.TimerColor, s.CyanColor, tint * tune.CyanTint);
+        var baseColor = Color.Lerp(_lab.TimerBaseColor, s.CyanColor, tint * tune.CyanTint);
         if (a >= end) baseColor = Color.Lerp(baseColor, Color.white, 0.7f * (1f - Mathf.Clamp01((a - end) / FlashSeconds)));
 
         bool on = g > 0.001f;
@@ -264,7 +280,9 @@ public sealed class TimerBonusHack : ITimerBonusConcept
             }
             else
             {
-                _lab.Impact(0.85f);
+                // 인게임은 타이머만 터지게 — 화면 전체 플래시·줌 없이 연출 시계만 잠깐 멈춘다.
+                if (_lab.IsRuntime && !tune.RuntimeScreenFlash) _lab.HitStop(0.85f);
+                else _lab.Impact(0.85f);
                 _lab.Ring(timer, 30f, 125f, s.CyanColor, 0.4f);
                 _lab.Burst(timer, 22, 220f, 560f, _doneColors, drag: 0.07f);
             }
@@ -312,18 +330,23 @@ public sealed class TimerBonusHack : ITimerBonusConcept
     private void RenderDigits(float a, int k, float g, TimerBonusLabSettings.HackTuning tune, float infectEnd, float lockStart, float end)
     {
         for (int j = 0; j < ReelCount; j++) _scrambling[j] = false;
+        var main = _lab.MainDigits;
         if (a < 0f || a >= end)
         {
             double v = RunNow + (a >= end ? _run.Bonus : 0f);
             _lab.SetTimerValue(v);
-            Fill(TimerBonusDigits.Format(v));
+            string shown = main.FormatValue(v);
+            SetLeadingHidden(!HasLeading(shown));
+            Fill(shown);
             return;
         }
-        string live = TimerBonusDigits.Format(RunNow);
-        string to = TimerBonusDigits.Format(_lab.RemainingAt(_run.Start + end) + _run.BaseAdded + _run.Bonus);
+        string live = main.FormatValue(RunNow);
+        string to = main.FormatValue(_lab.RemainingAt(_run.Start + end) + _run.BaseAdded + _run.Bonus);
+        // 100초를 넘나들지 않으면 맨 앞(백의 자리) 칸은 숨긴 채 뒤섞는다.
+        SetLeadingHidden(!HasLeading(live) && !HasLeading(to));
         for (int j = 0; j < ReelCount; j++)
         {
-            int ci = TimerBonusDigits.CharIndexOf(j);
+            int ci = main.CharIndexOf(j);
             int d;
             if (a < infectEnd)
                 d = g > 0f && Hash(k, j, SaltInfect) < 0.35f ? Digit(k, j, SaltDigit) : live[ci] - '0';
@@ -341,10 +364,12 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         for (int j = 0; j < ReelCount; j++) _scrambling[j] = false;
         double v = RunNow + (a >= infectEnd ? _run.Bonus * progress : 0f);
         _lab.SetTimerValue(v);
-        Fill(TimerBonusDigits.Format(v));
+        string shown = _lab.MainDigits.FormatValue(v);
+        SetLeadingHidden(!HasLeading(shown));
+        Fill(shown);
         if (a < infectEnd || a >= end) return;
 
-        for (int j = 2; j < ReelCount; j++)
+        for (int j = _lab.MainDigits.IntDigits; j < ReelCount; j++)
         {
             if (Hash(k, j, SaltInfect) >= DecimalNoiseChance) continue;
             _digits[j] = Digit(k, j, SaltDigit);
@@ -393,7 +418,17 @@ public sealed class TimerBonusHack : ITimerBonusConcept
 
     private void Fill(string formatted)
     {
-        for (int j = 0; j < ReelCount; j++) _digits[j] = formatted[TimerBonusDigits.CharIndexOf(j)] - '0';
+        var main = _lab.MainDigits;
+        for (int j = 0; j < ReelCount; j++) _digits[j] = formatted[main.CharIndexOf(j)] - '0';
+    }
+
+    // 정수 3자리 묶음에서 백의 자리가 있으면 true (2자리 실험실 묶음은 항상 false → 숨김 처리 자체가 없음).
+    private bool HasLeading(string formatted) => _lab.MainDigits.IntDigits >= 3 && formatted[0] != '0';
+
+    private void SetLeadingHidden(bool hidden)
+    {
+        _lab.SetTimerLeadingHidden(hidden);
+        foreach (var sl in _slices) sl?.Digits.SetLeadingHidden(hidden);
     }
 
     // 숫자 칸 높이를 n개의 가로 띠로 나눠 각 띠에 마스크한 숫자 사본을 놓고, 띠마다 좌우로 어긋내고 물들인다.
@@ -484,6 +519,7 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         if (a < end && Hash(k, 0, SaltBar) < 0.12f * g) alpha *= 0.3f;
         _barBack.canvasRenderer.SetAlpha(alpha);
         _barFillImage.canvasRenderer.SetAlpha(alpha);
+        _barBack.rectTransform.anchoredPosition = new Vector2(_lab.TimerPosition.x, BarY);
         _barFill.sizeDelta = new Vector2(p * BarWidthPx * px, 0f);
         float flash = a >= end ? 1f - Mathf.Clamp01((a - end) / FlashSeconds) : 0f;
         _barFillImage.color = Color.Lerp(_lab.Settings.CyanColor, Color.white, flash);
@@ -511,7 +547,8 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         TimerBonusLab.Place(_bonus, new Vector2(_lab.TimerPosition.x + jx, BarY - BonusGapPx * px), new Vector2(pop, pop), alpha);
     }
 
-    private float BarY => _lab.TimerPosition.y - _lab.TimerSize.y * 0.5f - BarGapPx * _lab.Px;
+    private float BarY => _lab.TimerPosition.y - _lab.TimerSize.y * 0.5f
+        - (BarGapPx + (_lab.IsRuntime ? _lab.Settings.Hack.RuntimeBarDropPx : 0f)) * _lab.Px;
 
     private static int Digit(int k, int i, int salt) => Mathf.Min(9, (int)(Hash(k, i, salt) * 10f));
 

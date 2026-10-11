@@ -11,6 +11,7 @@ using UnityEngine;
 /// 진행 막대는 합쳐져도 뒤로 가지 않는다(전 시안 공통). I는 비교용으로 이전 규칙(고정 끝 전까지 합산) 유지.
 /// 시간 보너스 자체는 발동 순간 붙는다고 가정하고, 표시만 규칙에 따라 따라간다.
 /// 네 시안이 한 렌더러(TimerBonusHack)를 같이 쓴다. 발동 순간마다 해당 드론에서 하늘색 신호가 타이머로 날아간다.
+/// 인게임(J만 사용): 발동 목록은 실제 디시그망 스킬이 들어올 때마다 늘어나고, 신호는 그 디시그망 위치에서 발동 순간 출발한다.
 /// </summary>
 public sealed class TimerBonusHackStack : ITimerBonusConcept
 {
@@ -28,6 +29,9 @@ public sealed class TimerBonusHackStack : ITimerBonusConcept
     private readonly TimerBonusHack.Run[] _runs = new TimerBonusHack.Run[MaxRuns];
     private TimerBonusLab _lab;
     private Color[] _signalColors;
+
+    /// <summary>처치(첫 발동) 기준 초 — 지금까지 발동한 해킹이 모두 사라지는 순간. 인게임 연출 종료 판정에 쓴다.</summary>
+    internal float VisibleEnd { get; private set; }
 
     /// <param name="renderer">시안끼리 같이 쓰는 해킹 렌더러 (Setup은 처음 한 번만 실제로 만든다)</param>
     public TimerBonusHackStack(TimerBonusHack renderer, Mode mode)
@@ -70,19 +74,20 @@ public sealed class TimerBonusHackStack : ITimerBonusConcept
         for (int i = 0; i < runCount; i++)
             if (_runs[i].Start <= a) current = i;
         if (runCount == 0) _runs[0] = new TimerBonusHack.Run { Bonus = _lab.Bonus, Stacks = 1 };
+        VisibleEnd = runCount > 0 ? _runs[runCount - 1].Start + _renderer.VisibleUntilOf(_runs[runCount - 1]) : 0f;
         _renderer.RenderRun(a, _runs[current]);
     }
 
     // 지금(a)까지 발동한 것만으로 해킹 목록을 만든다 (미래 발동은 모름). 매 프레임 처음부터 다시 계산해서 같은 a에는 같은 화면.
     private int BuildRuns(float a, float[] triggers, int count, TimerBonusLabSettings.HackTuning tune)
     {
-        float bonus = _lab.Bonus;
         int n = 0;
         double applied = 0d;
         for (int i = 0; i < count; i++)
         {
             float t = triggers[i];
             if (t > a) break;
+            float bonus = _lab.StackTriggerBonus(i);
             switch (_mode)
             {
                 case Mode.Restart:
@@ -146,11 +151,15 @@ public sealed class TimerBonusHackStack : ITimerBonusConcept
     private void EmitSignals(float a, float[] triggers, int count, float lead)
     {
         var slots = _lab.Settings.DroneSlots;
-        if (slots == null || slots.Length == 0) return;
+        bool live = _lab.IsRuntime;
+        if (!live && (slots == null || slots.Length == 0)) return;
         for (int i = 0; i < count; i++)
         {
-            if (a < triggers[i] - lead || !_lab.Once(KeySignalBase + i)) continue;
-            Vector2 from = _lab.BossCenter + slots[i % slots.Length] * _lab.Px;
+            // 실험실은 발동 시점을 미리 알아 도착에 맞춰 먼저 쏘고, 인게임은 발동 순간 그 유닛에서 출발한다.
+            if (a < triggers[i] - (live ? 0f : lead) || !_lab.Once(KeySignalBase + i)) continue;
+            Vector2 from;
+            if (live) { if (!_lab.TryGetTriggerOrigin(i, out from)) continue; }
+            else from = _lab.BossCenter + slots[i % slots.Length] * _lab.Px;
             for (int d = 0; d < SignalDots; d++)
             {
                 _lab.Emit(new TimerBonusParticles.Particle

@@ -12,6 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
   m_Name: DroneSelection4
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups:
+    - drone.kind.4
+    Effects:
+    - rid: 1000
+    Feedback:
+    - Target: 2
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
   chooseId: 9104
   chooseName: "\uC8FC\uD30C\uC218 \uB3D9\uC870"
   tier: 2
@@ -35,3 +47,11 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a7455f25c75038f499302ebff214515d, type: 3}
   animationFrames: []
   frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: StackSkillFrequencyDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        ReductionPerStack: 0.003
+        MaximumReduction: 0.09

@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5166461653094588583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 300600804867666738}
+  - component: {fileID: 3538567538607566513}
+  m_Layer: 0
+  m_Name: RailgunProjectile_Basic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &300600804867666738
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5166461653094588583}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6691143056115466532}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3538567538607566513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5166461653094588583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8a747b2e8602444088dcbbcd41b5e1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RailgunProjectile
+  _data: {fileID: 0}
+  _chargeSeconds: 0.4
+  _muzzleOffset: {x: 0, y: 0}
+  _fx: {fileID: 3462621789370033431}
+--- !u!1 &8865411905411245464
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6691143056115466532}
+  - component: {fileID: 3462621789370033431}
+  m_Layer: 0
+  m_Name: Fx
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6691143056115466532
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8865411905411245464}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 300600804867666738}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3462621789370033431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8865411905411245464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f50162ad7e02ea449206bfc46ec1c63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RailgunBeamFx
+  _beamMaterial: {fileID: 2100000, guid: 196bbe912775b2744a94ad95ff83e1f8, type: 2}
+  _glowMaterial: {fileID: 2100000, guid: 5b350729f11fcf54bbd714a24d193900, type: 2}
+  _pointMaterial: {fileID: 2100000, guid: af8ca99b63ea1d6499035a0199882bb0, type: 2}
+  _ringMaterial: {fileID: 2100000, guid: f2998c87212275a4d98481258ffd0130, type: 2}
+  _flareMaterial: {fileID: 2100000, guid: 4691740d10c900944b01e8bbe94a9973, type: 2}
+  _tint: {r: 0.3, g: 0.5, b: 1, a: 1}
+  _chargeGlowSize: 1.7
+  _chargeCoreSize: 0.65
+  _chargeRingSize: {x: 2.2, y: 0.3}
+  _aimWidth: 0.1
+  _aimAlpha: 0.75
+  _aimFlickerSpeed: 40
+  _chargeMotes: 0
+  _moteRadius: 2
+  _moteSize: 0.16
+  _chargeRingPulses: 1
+  _preFireSqueeze: 0
+  _preFireShare: 0.12
+  _beamWidth: 0.42
+  _beamPopScale: 1.8
+  _beamHold: 0.05
+  _beamFade: 0.2
+  _beamJitter: 0
+  _flashSize: 1.3
+  _impactRingSize: 1.8
+  _flashFade: 0.25
+  _impactShockwaves: 1
+  _shockwaveInterval: 0.07
+  _shockwaveGrowth: 0.45
+  _debris: 0
+  _debrisSpeed: {x: 3, y: 7}
+  _debrisGravity: 9
+  _debrisLife: 0.5
+  _debrisSize: 0.12
+  _impactLinger: 0
+  _lingerSize: 3

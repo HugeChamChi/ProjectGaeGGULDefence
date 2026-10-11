@@ -44,6 +44,10 @@ MonoBehaviour:
   TeleportOffset: {x: -1.4, y: 0.35, z: -0.2}
   HackColor: {r: 0.38, g: 0.86, b: 1, a: 1}
   LineMaterial: {fileID: 2100000, guid: 0f145a51257c53448aca6a300e4428d6, type: 2}
+  BeamMaterial: {fileID: 2100000, guid: 196bbe912775b2744a94ad95ff83e1f8, type: 2}
+  CastBeamWidth: 0.24
+  TeleportTake: {fileID: 11400000, guid: 7652c37e307b64d43941269507a4d8df, type: 2}
+  BeamExtensionSeconds: 0.025
   MarkGlowMaterial: {fileID: 2100000, guid: 5b350729f11fcf54bbd714a24d193900, type: 2}
   MarkRingMaterial: {fileID: 2100000, guid: f2998c87212275a4d98481258ffd0130, type: 2}
   StacksPerMark: 5

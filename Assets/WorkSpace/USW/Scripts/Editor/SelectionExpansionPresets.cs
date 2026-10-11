@@ -39,6 +39,8 @@ public static class SelectionExpansionPresets
                 card.specialEffect = LevelUpSpecialEffect.RerollChoices;
                 break;
         }
+        card.Composition = SelectionDefinitionReader.CopyLegacyForMigration(card);
+        card.EffectSchemaVersion = 1;
     }
 
     /// <summary>선택한 새 경로에 7개 SO와 초안 풀을 생성한다. 자동으로 족장 풀에 합치지 않는다.</summary>

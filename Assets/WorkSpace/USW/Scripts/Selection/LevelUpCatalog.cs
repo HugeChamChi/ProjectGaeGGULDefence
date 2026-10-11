@@ -19,11 +19,19 @@ public sealed class LevelUpCatalog : ILevelUpCatalog
 
             var ids = new List<int>();
             var seen = new HashSet<int>();
+            var groups = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var card in pool.Cards ?? Array.Empty<LevelUpData>())
             {
                 if (card == null) throw new ArgumentException($"풀 {pool.PoolId}: 누락된 카드 참조");
                 if (_cards.TryGetValue(card.chooseId, out var existing) && existing != card)
                     throw new ArgumentException($"서로 다른 카드 SO의 chooseId 중복: {card.chooseId}");
+                var definition = SelectionDefinitionReader.CopyDefinition(card);
+                foreach (string group in definition.ExclusiveGroups)
+                {
+                    if (groups.TryGetValue(group, out int owner) && owner != card.chooseId)
+                        throw new ArgumentException($"풀 {pool.PoolId}: 기능 그룹 {group} 중복 ({owner}, {card.chooseId})");
+                    groups[group] = card.chooseId;
+                }
                 _cards[card.chooseId] = card;
                 if (seen.Add(card.chooseId)) ids.Add(card.chooseId);
             }

@@ -60,7 +60,8 @@ public sealed class Disigman : UnitBase
         if (!CanUseSkill || !CanAct || !IsSkillChargeReady(0f, 0f)
             || target == null || target.IsDead || _dependencies?.Timer == null) return false;
         _chargedAttacks = 0;
-        _dependencies.Timer.AddTime(SecondsRecovered);
+        // Tagged as a hack so the timer shows the glitch presentation (signal leaves from this unit).
+        _dependencies.Timer.AddTime(SecondsRecovered, TimeAddSource.Hack, transform.position);
         return true;
     }
 }

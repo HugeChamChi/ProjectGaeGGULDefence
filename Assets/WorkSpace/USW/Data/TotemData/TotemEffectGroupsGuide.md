@@ -1,11 +1,11 @@
 # 효과별 토템 범위와 색상 설정
 
-`SampleDualEffectTotemData.asset`을 복제해서 사용하세요. 왼쪽 1칸은 공격력 +10%(주황), 오른쪽 1칸은 공격속도 +20%(파랑)인 샘플입니다. 선택지 풀에는 자동 추가하지 않았으므로, 게임에서 선택하려면 IngameScene의 TotemSelectPanel 토템 풀에 넣어주세요. 복제본의 ID도 고유하게 변경하세요.
+효과 그룹 예시는 `Playable/TD1008Data.asset`(안쪽 1칸 링 공격력 +10%, 바깥 2칸 링 공격속도 +10%)입니다. 복제해서 사용하고 복제본의 ID를 고유하게 변경하세요. 게임에서 선택하려면 `TotemRewardCanvas` 프리팹의 TotemRewardUI → Totem Pool에 추가합니다.
 
 ## TotemData 설정
 
 - `UseSheetData`: 끄기. SO 값을 사용합니다.
-- 프리팹: `GenericBuffTotem`을 사용하는 프리팹. 샘플은 기존 `SampleAttackTotem` 주소를 공유합니다.
+- 프리팹: `GenericBuffTotem`을 사용하는 프리팹(예: `TD1008`).
 - `EffectGroups`: 효과마다 항목을 하나씩 추가합니다.
   - `Label`: 범례에 보여줄 짧은 이름(공격력, 공격속도 등).
   - `Description`: 해당 색상으로 표시할 설명.
