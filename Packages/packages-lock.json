@@ -48,6 +48,15 @@
       },
       "hash": "382a43a30f4dab4c7f02d770b4ec7d084813bbe4"
     },
+    "com.singularitygroup.hotreload": {
+      "version": "file:com.singularitygroup.hotreload",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      }
+    },
     "com.unity.2d.animation": {
       "version": "13.0.4",
       "depth": 1,
