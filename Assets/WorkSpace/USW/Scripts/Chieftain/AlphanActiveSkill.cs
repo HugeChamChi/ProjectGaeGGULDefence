@@ -20,17 +20,13 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     private bool _disposed;
     private bool _initialized;
     private CancellationTokenSource _castCts;
-    private HSD.UI.Effect.UI_ChiefSkillEffect _cutscene;
 
     /// <summary>씬 서비스 주입. 드론 매니저가 없는 씬에서도 등록 가능하나 사용은 비활성이다.</summary>
     public AlphanActiveSkill(ChieftainSelection selector, IEnumerable<DroneManager> drones,
-        IChiefSelectionReader effects, GameManager game, AudioManager audio,
-        IEnumerable<HSD.UI.Effect.UI_ChiefSkillEffect> cutscenes = null)
+        IChiefSelectionReader effects, GameManager game, AudioManager audio)
     {
         _selector=selector; _effects=effects; _game=game; _audio=audio;
         foreach(var manager in drones) { _drones=manager; break; }
-        if (cutscenes != null)
-            foreach (var cutscene in cutscenes) { _cutscene = cutscene; break; }
     }
     /// <inheritdoc />
     public Sprite Icon => _data != null && _data.Icon != null ? _data.Icon : _fallbackIcon;
@@ -90,10 +86,8 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
             _drones.ApplyEmergencyBuffs();
             _drones.RallyBeamPrefab = _data.BeamFx;
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
-            var cutscene = _cutscene != null ? _cutscene.PlayEffectAsync(Icon,cts.Token) : UniTask.CompletedTask;
-            var rally = _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
+            await _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
                 new ChiefVolleySettings(_effects?.ChiefVolleyCount ?? 0, _effects?.ChiefVolleyDelay ?? 0f, _effects?.ChiefVolleyDamageRatio ?? 0f));
-            await UniTask.WhenAll(cutscene,rally);
         }
         finally
         {

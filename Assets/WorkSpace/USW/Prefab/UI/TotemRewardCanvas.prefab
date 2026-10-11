@@ -126,4 +126,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 85bce41727b53334b89feae719bfda9c, type: 2}
   - {fileID: 11400000, guid: 84fc18ed0319ffb48a041e653feaf486, type: 2}
   - {fileID: 11400000, guid: 32d4f66d1a95fab48931139d345150d9, type: 2}
+  - {fileID: 11400000, guid: 8435df81a477d2b42a53fd9562eb92ff, type: 2}
+  - {fileID: 11400000, guid: 5af00e8e3b5a23146a6fbf4aa1c1cb5f, type: 2}
+  - {fileID: 11400000, guid: fd07a5863f9ff524086a4c0902ff20e9, type: 2}
+  - {fileID: 11400000, guid: ee3f41e81233f6c40adc1b52154eb905, type: 2}
   _fallbackFood: 500

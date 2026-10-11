@@ -26,6 +26,8 @@ MonoBehaviour:
     AttackCoefficient: 0.5
     Projectile: {fileID: 0}
   GrowthStages: []
+  GrowthHarvestSeconds: 60
+  GrowthHarvestFood: 60
   WildcardSpawn:
     IntervalSeconds: 40
     Unit: {fileID: 0}
@@ -54,7 +56,12 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 0d8f65a6a5567c245bbf3d402459948f, type: 3}
   - {fileID: 21300000, guid: 0d8f65a6a5567c245bbf3d402459948f, type: 3}
   - {fileID: 21300000, guid: 0d8f65a6a5567c245bbf3d402459948f, type: 3}
-  description: "\uBC94\uC704 \uC548 \uC720\uB2DB\uC758 \uB4F1\uAE09\uC744 1\uB2E8\uACC4 \uC0C1\uC2B9\uC2DC\uD0B5\uB2C8\uB2E4.\n[\uCD5C\uB300 \uCE58 \uC774\uC0C1\uC73C\uB85C\uB294 \uC131\uC7A5\uD558\uC9C0 \uC54A\uC74C]"
+  description: "\uBC94\uC704 \uC548 \uC720\uB2DB \uB4F1\uAE09\uC774 \uC784\uC2DC\uB85C
+    \uD55C \uB2E8\uACC4 \uC62C\uB77C\uAC11\uB2C8\uB2E4."
+  DetailedDescription: "\uBC94\uC704 \uC548\uC5D0 \uC788\uB294 \uB3D9\uC548 \uC720\uB2DB
+    \uB4F1\uAE09\uC774 \uD55C \uB2E8\uACC4 \uC0C1\uC2B9\uD569\uB2C8\uB2E4. \uBC94\uC704\uB97C
+    \uBC97\uC5B4\uB098\uBA74 \uC6D0\uB798 \uB4F1\uAE09\uC73C\uB85C \uB3CC\uC544\uC624\uBA70,
+    \uC5EC\uB7EC \uAC1C\uB97C \uACB9\uCCD0\uB3C4 \uD55C \uB2E8\uACC4\uB9CC \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
   functions: []
   effectRanges:
   - rid: 1992779463445184611

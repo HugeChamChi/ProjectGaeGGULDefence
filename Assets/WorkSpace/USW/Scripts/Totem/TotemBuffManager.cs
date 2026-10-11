@@ -14,9 +14,82 @@ public class TotemBuffManager : MonoBehaviour
     public void Init()
     {
         if (_gridManager == null) _gridManager = _resolver.Resolve<GridManager>();
+        if (_bossManager == null) _resolver.TryResolve(out _bossManager);
+        if (_gameManager == null) _resolver.TryResolve(out _gameManager);
+        if (_fieldPause == null) _resolver.TryResolve(out _fieldPause);
+        if (_bossManager != null)
+        {
+            _bossManager.OnBossEntryed -= OnBossEntered;
+            _bossManager.OnBossEntryed += OnBossEntered;
+        }
     }
 
     private GridManager _gridManager;
+    private BossManager _bossManager;
+    private GameManager _gameManager;
+    private FieldPauseVisuals _fieldPause;
+
+    // ── 보스 등장 경과 시간 (BossEncounterWindowCondition) ──────
+    private float _bossEncounterSeconds = -1f;
+    private float _nextEncounterThreshold = float.PositiveInfinity;
+
+    /// <summary>현재 보스가 등장한 뒤 전투가 진행된 시간(초). 첫 보스 전이면 음수.</summary>
+    public float BossEncounterSeconds => _bossEncounterSeconds;
+
+    /// <summary>현재 보스 등장 후 지정 시간 이내인지.</summary>
+    public bool IsWithinBossEncounter(float seconds) => _bossEncounterSeconds >= 0f && _bossEncounterSeconds < seconds;
+
+    private void OnBossEntered(BossEntry previous, BossEntry current)
+    {
+        _bossEncounterSeconds = 0f;
+        RebuildCellBuffFlags();
+    }
+
+    private void Update()
+    {
+        if (_bossEncounterSeconds < 0f || !IsEncounterClockRunning()) return;
+        _bossEncounterSeconds += Time.deltaTime;
+        if (_bossEncounterSeconds >= _nextEncounterThreshold) RebuildCellBuffFlags();
+    }
+
+    /// <summary>전투 중이고 일시정지·선택 유예가 아니며 보스가 살아 있을 때만 시간이 흐른다.</summary>
+    private bool IsEncounterClockRunning()
+    {
+        if (_gameManager == null || _gameManager.CurrentState != GameManager.GameState.Playing) return false;
+        if (Time.timeScale <= 0f || _fieldPause?.AttacksHeld == true) return false;
+        var boss = _bossManager?.CurrentBoss;
+        return boss != null && !boss.IsDead;
+    }
+
+    /// <summary>활성 토템의 보스 등장 조건 중 아직 지나지 않은 가장 이른 종료 시점.</summary>
+    private float FindNextEncounterThreshold()
+    {
+        float next = float.PositiveInfinity;
+        foreach (var totem in _activeTotem)
+        {
+            var data = totem != null && totem.IsActive ? totem.Data : null;
+            if (data == null) continue;
+            CollectEncounterThreshold(data.functions, ref next);
+            if (data.EffectGroups == null) continue;
+            foreach (var group in data.EffectGroups)
+                if (group != null) CollectEncounterThreshold(group.Functions, ref next);
+        }
+        return next;
+    }
+
+    private void CollectEncounterThreshold(List<ITotemFunction> functions, ref float next)
+    {
+        if (functions == null) return;
+        foreach (var function in functions)
+            if (function is ConditionalBuffFunction { condition: BossEncounterWindowCondition window }
+                && window.seconds > _bossEncounterSeconds && window.seconds < next)
+                next = window.seconds;
+    }
+
+    private void OnDestroy()
+    {
+        if (_bossManager != null) _bossManager.OnBossEntryed -= OnBossEntered;
+    }
 
     // 활성 토템 목록 직접 관리 (FindObjectsOfType 대체)
     private readonly List<TotemBase> _activeTotem = new();
@@ -279,6 +352,9 @@ public class TotemBuffManager : MonoBehaviour
                 foreach (var cell in totem.GetAffectedCells())
                     if (cell != null && !_attackDebuffSources.ContainsKey(cell)) _attackDebuffSources.Add(cell, totem);
         }
+
+        // 3) 보스 등장 조건이 끝나는 다음 시점에 다시 계산하도록 예약
+        _nextEncounterThreshold = FindNextEncounterThreshold();
     }
 }
 

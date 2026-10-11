@@ -122,10 +122,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
   - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  description: "\uC0B4\uC544 \uC788\uB294 \uBCF4\uC2A4\uC640 \uC804\uD22C \uC911
-    \uC790\uB77C\uB294 \uBFCC\uB9AC\uB0B4\uB9BC. \uC774\uB3D9\xB7\uD68C\uC218 \uC2DC
-    \uCD08\uAE30\uD654, \uD68C\uC804 \uC720\uC9C0. \uB2E8\uACC4\uBCC4 \uC218\uCE58\uB294
-    \uC131\uC7A5 \uC124\uC815\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
+  description: "\uBC30\uCE58 \uD6C4 \uC81C\uC790\uB9AC\uC5D0\uC11C \uC2DC\uAC04\uC774
+    \uC9C0\uB0A0\uC218\uB85D \uD6A8\uACFC\uAC00 \uAC15\uD654\uB429\uB2C8\uB2E4."
+  DetailedDescription: "\uBC30\uCE58 \uD6C4 \uC2DC\uAC04\uC774 \uC9C0\uB0A0\uC218\uB85D
+    \uAC15\uD574\uC9D1\uB2C8\uB2E4.\n\n{GrowthStages}\n\n\uC62E\uAE30\uAC70\uB098
+    \uD68C\uC218\uD558\uBA74 \uCC98\uC74C\uBD80\uD130 \uB2E4\uC2DC \uC790\uB78D\uB2C8\uB2E4."
   functions: []
   effectRanges:
   - rid: 1992779482763886693

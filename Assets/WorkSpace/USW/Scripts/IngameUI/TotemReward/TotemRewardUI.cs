@@ -97,6 +97,8 @@ public class TotemRewardUI : MonoBehaviour
     private Image _detailIcon;
     private TextMeshProUGUI _detailName;
     private TextMeshProUGUI _detailDescription;
+    private TextMeshProUGUI _descriptionToggleLabel;
+    private bool _showDetailedDescription;
     private UI_TotemRangeGrid _rangeGrid;
     private TextMeshProUGUI _swipeHint;
 
@@ -230,7 +232,7 @@ public class TotemRewardUI : MonoBehaviour
             band.Icon.sprite = data.icon;
             band.Icon.enabled = data.icon != null;
             band.Name.text = data.totemName;
-            band.Description.text = data.GetDisplayDescription();
+            band.Description.text = data.GetDisplayDescription(detailed: false);
             band.DescriptionPanel.SetActive(ShowDescriptionOnOverview && !string.IsNullOrWhiteSpace(data.description));
             LayoutRebuilder.ForceRebuildLayoutImmediate(band.TextBlock);
         }
@@ -281,7 +283,8 @@ public class TotemRewardUI : MonoBehaviour
         _detailIcon.sprite = data.icon;
         _detailIcon.enabled = data.icon != null;
         _detailName.text = data.totemName;
-        _detailDescription.text = data.GetDisplayDescription();
+        _showDetailedDescription = false;
+        RefreshDetailDescription();
         _detailDescription.transform.parent.gameObject.SetActive(!string.IsNullOrWhiteSpace(_detailDescription.text));
         _rangeGrid?.SetData(data);
         for (int i = 0; i < _dots.Count; i++)
@@ -290,6 +293,22 @@ public class TotemRewardUI : MonoBehaviour
             _dots[i].color = i == slot ? Color.white : new Color(1f, 1f, 1f, 0.35f);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(_detailContent);
+    }
+
+    private void ToggleDescription()
+    {
+        if (!_isOpen || _busy || _detailIndex < 0 || !_detail.gameObject.activeSelf) return;
+        _showDetailedDescription = !_showDetailedDescription;
+        RefreshDetailDescription();
+    }
+
+    private void RefreshDetailDescription()
+    {
+        if (_detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        _detailDescription.text = _choices[_detailIndex].GetDisplayDescription(_showDetailedDescription);
+        _detailDescription.transform.parent.gameObject.SetActive(!string.IsNullOrWhiteSpace(_detailDescription.text));
+        _descriptionToggleLabel.text = _showDetailedDescription ? "간단히" : "자세히";
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)_detailDescription.transform.parent.parent);
     }
 
     private void OnDetailSwipe(int direction)
@@ -649,6 +668,16 @@ public class TotemRewardUI : MonoBehaviour
             dot.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             _dots.Add(dot);
         }
+
+        // 상세 내용과 독립된 버튼으로 배경 탭/좌우 밀기와 충돌하지 않는다.
+        var descriptionToggle = NewImage("DescriptionToggle", _detail, PanelDark);
+        PlaceAt(descriptionToggle.rectTransform, new Vector2(size.x - 180f, size.y - 110f), new Vector2(260f, 84f));
+        var toggleButton = descriptionToggle.gameObject.AddComponent<Button>();
+        toggleButton.targetGraphic = descriptionToggle;
+        toggleButton.onClick.AddListener(ToggleDescription);
+        _descriptionToggleLabel = NewText("Label", descriptionToggle.rectTransform, 40f, Color.white, TextAlignmentOptions.Center);
+        _descriptionToggleLabel.text = "자세히";
+        Stretch(_descriptionToggleLabel.rectTransform);
 
         // 확정 버튼은 Content(터치 통과) 밖에 둔다
         var confirm = NewImage("Confirm", _detail, ConfirmColor);

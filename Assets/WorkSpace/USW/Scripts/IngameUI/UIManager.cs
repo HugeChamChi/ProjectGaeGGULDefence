@@ -404,7 +404,7 @@ public class UIManager : MonoBehaviour
         if (_resultScreen != null && data != null)
         {
             _resultScreen.UseUnscaledTime = true;
-            _resultScreen.Show(data, ResultScreenTone.Plain, true);
+            _resultScreen.Show(data, ResultScreenTone.Plain, true, isWin);
         }
         else if (resultPanel != null) resultPanel.SetActive(true);
     }

@@ -81,7 +81,6 @@ public class InGameLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<DamageFloaterManager>();
         SceneComponentRegistration.RegisterOptional<BossDamageNumbers>(builder, gameObject.scene);
-        SceneComponentRegistration.RegisterOptional<HSD.UI.Effect.UI_ChiefSkillEffect>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_IngameDebugPanel>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_OpenDebugButton>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.UI.Upgrade.UI_UpgradePanel>(builder, gameObject.scene);
