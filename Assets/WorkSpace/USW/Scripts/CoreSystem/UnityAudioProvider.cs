@@ -54,7 +54,8 @@ public class UnityAudioProvider : IAudioProvider
             if (mixerGroup == null && groupType != AudioGroup.Master)
             {
                 Debug.LogWarning($"[AudioManager] No MixerGroup found for {groupName}. Using Master as fallback.");
-                mixerGroup = _mainMixer.FindMatchingGroups("Master")[0];
+                var masterGroups = _mainMixer.FindMatchingGroups("Master");
+                mixerGroup = masterGroups.Length > 0 ? masterGroups[0] : null;
             }
 
             // 2. Exposed Parameter 이름 규칙: {GroupName}_Vol

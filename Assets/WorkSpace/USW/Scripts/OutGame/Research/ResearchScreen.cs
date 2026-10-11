@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -41,7 +41,7 @@ public sealed class ResearchScreen : MonoBehaviour
     [Tooltip("마지막으로 쓴 추천 방식(0 버튼형 / 1 토글형)을 저장하는 PlayerPrefs 키")]
     [SerializeField] private string _modeKey = "OutgameUpgrade.RecommendMode";
     [Tooltip("테스트용 [구성 전환] [초기화] 버튼 표시")]
-    [SerializeField] private bool _showTestButtons = true;
+    [SerializeField] private bool _showTestButtons = false;
 
     private ResearchProgress[] _progresses;
     private ResearchTreeView[] _views;
@@ -66,7 +66,6 @@ public sealed class ResearchScreen : MonoBehaviour
     private const int StartingTestGold = 10000;
     private int _testGold = StartingTestGold;
     private TextMeshProUGUI _goldBalance;
-
     /// <summary>루트에 등록된 저장 서비스와 계정 경계를 주입한다.</summary>
     [Inject]
     public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes)
@@ -76,6 +75,12 @@ public sealed class ResearchScreen : MonoBehaviour
     public ResearchProgress Progress => _progresses?[_current];
     /// <summary>현재 선택된 노드.</summary>
     public ResearchNodeData Selected => _selected;
+
+    public void SetBackgroundSettings(ResearchViewSettings settings)
+    {
+        if (_views == null) return;
+        foreach (var view in _views) view.SetBackgroundSettings(settings);
+    }
 
     private ResearchTreeView View => _views[_current];
 
@@ -216,10 +221,9 @@ public sealed class ResearchScreen : MonoBehaviour
         var root = _content = ResearchUi.Stretch(ResearchUi.NewRect(transform, "Content"));
         _status.transform.parent.SetAsLastSibling();
         _back.transform.SetAsLastSibling();
-        var bg = ResearchUi.NewImage(root, "PanelBg", s.PanelBackground, Vector2.zero, Vector2.zero);
+        var bg = ResearchUi.NewImage(root, "PanelBg", null, Vector2.zero, Vector2.zero);
         ResearchUi.Stretch(bg.rectTransform);
-        bg.color = s.PanelBackground != null ? Color.white : s.Background;
-
+        bg.color = s.UnfinishedBackground;
         var topBar = ResearchUi.NewImage(root, "TopBar", s.TopBarSprite, Vector2.zero, Vector2.zero);
         topBar.color = s.TopBarSprite != null ? Color.white : s.Surface;
         topBar.rectTransform.anchorMin = new Vector2(0f, 1f);
@@ -241,7 +245,8 @@ public sealed class ResearchScreen : MonoBehaviour
         _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", _testGold.ToString("N0"), 34f, s.FontBold, TextAlignmentOptions.Right);
         ResearchUi.Stretch(_goldBalance.rectTransform, 68f, 0f, 16f, 0f);
 
-        var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, s.PanelHeight, 0f, TopBarHeight);
+        float testBarHeight = _showTestButtons ? Margin * 2f + TopButtonHeight : 0f;
+        var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, s.PanelHeight, 0f, TopBarHeight + testBarHeight);
 
         _progresses = new ResearchProgress[_trees.Length];
         _views = new ResearchTreeView[_trees.Length];
@@ -396,6 +401,7 @@ public sealed class ResearchScreen : MonoBehaviour
             Progress.ResetAll();
             ShowTree(_current);
         });
+
     }
 
     private void BuildToast(RectTransform root)

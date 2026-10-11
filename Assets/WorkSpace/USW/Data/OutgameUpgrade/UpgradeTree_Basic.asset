@@ -27,7 +27,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 0
     MaxLevel: 3
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 0
     Column: 0
     Parents: []
@@ -40,7 +40,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: e0d9939b4e24549aebfe1441f4104b8b, type: 3}
     Shape: 0
     MaxLevel: 3
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.001
     Row: 1
     Column: -1
     Parents:
@@ -54,7 +54,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 9851fb8e6f12a40d09379e3d9a144449, type: 3}
     Shape: 0
     MaxLevel: 3
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.003
     Row: 1
     Column: 1
     Parents:
@@ -68,7 +68,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 9df0f4d8c02014347ad2d7de427e0ced, type: 3}
     Shape: 0
     MaxLevel: 3
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.003
     Row: 2
     Column: -1
     Parents:
@@ -82,7 +82,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 447cb81759d8742888a02fa6be150fd0, type: 3}
     Shape: 0
     MaxLevel: 3
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 2
     Column: 1
     Parents:
@@ -96,7 +96,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 1
     MaxLevel: 5
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 3
     Column: 0
     Parents:
@@ -111,7 +111,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 038ccab8cd184d04cb1bfa1d79704320, type: 3}
     Shape: 2
     MaxLevel: 1
-    ValuePerLevel: 0.1
+    ValuePerLevel: 0.015
     Row: 3
     Column: 2
     Parents:
@@ -125,7 +125,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 0
     MaxLevel: 5
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 4
     Column: 0
     Parents:
@@ -139,7 +139,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 1e41e49e206bc2947b8943351eed53d3, type: 3}
     Shape: 0
     MaxLevel: 5
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 5
     Column: -1
     Parents:
@@ -153,7 +153,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: a5edbb1acb3234a5db0f0daa141eb77b, type: 3}
     Shape: 0
     MaxLevel: 5
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.004
     Row: 5
     Column: 1
     Parents:
@@ -167,7 +167,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f5d3c19ee35f34a7dae4a36e5ec57472, type: 3}
     Shape: 0
     MaxLevel: 5
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.003
     Row: 6
     Column: -1
     Parents:
@@ -181,7 +181,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: e7f5d551fd1925040bd01a8ec66c0ae0, type: 3}
     Shape: 0
     MaxLevel: 5
-    ValuePerLevel: 30
+    ValuePerLevel: 3
     Row: 6
     Column: 1
     Parents:
@@ -195,7 +195,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 1
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 7
     Column: 0
     Parents:
@@ -210,7 +210,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 038ccab8cd184d04cb1bfa1d79704320, type: 3}
     Shape: 2
     MaxLevel: 1
-    ValuePerLevel: 30
+    ValuePerLevel: 5
     Row: 7
     Column: 2
     Parents:
@@ -224,7 +224,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 12ce67a96878541b29388f9452483249, type: 3}
     Shape: 0
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 8
     Column: 0
     Parents:
@@ -238,7 +238,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 0
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 9
     Column: -1
     Parents:
@@ -252,7 +252,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: e0d9939b4e24549aebfe1441f4104b8b, type: 3}
     Shape: 0
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.001
     Row: 9
     Column: 1
     Parents:
@@ -266,7 +266,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 9851fb8e6f12a40d09379e3d9a144449, type: 3}
     Shape: 0
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.003
     Row: 10
     Column: -1
     Parents:
@@ -280,7 +280,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 9df0f4d8c02014347ad2d7de427e0ced, type: 3}
     Shape: 0
     MaxLevel: 7
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.003
     Row: 10
     Column: 1
     Parents:
@@ -294,7 +294,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: f9b293277bc1b4e24b12ba67c353239b, type: 3}
     Shape: 1
     MaxLevel: 9
-    ValuePerLevel: 0.02
+    ValuePerLevel: 0.002
     Row: 11
     Column: 0
     Parents:
@@ -309,7 +309,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 038ccab8cd184d04cb1bfa1d79704320, type: 3}
     Shape: 2
     MaxLevel: 1
-    ValuePerLevel: 0.1
+    ValuePerLevel: 0.01
     Row: 11
     Column: 2
     Parents:

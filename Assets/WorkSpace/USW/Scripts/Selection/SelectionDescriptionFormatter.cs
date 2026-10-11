@@ -30,7 +30,9 @@ public sealed class SelectionDescriptionFormatter
                 case BonusManaDefinition d: text = text.Replace("{value}", Percent(d.Chance)).Replace("{count}", d.ManaCount.ToString(CultureInfo.InvariantCulture)); break;
             }
         }
-        if (text.IndexOf('{') >= 0 || text.IndexOf('}') >= 0)
+        // 용어 링크는 설명 UI에서 해석한다. 수치 검증에서 정상 링크 토큰은 제외한다.
+        string numericText = System.Text.RegularExpressions.Regex.Replace(text, @"\{term:[a-z0-9:-]+\}", string.Empty);
+        if (numericText.IndexOf('{') >= 0 || numericText.IndexOf('}') >= 0)
             throw new ArgumentException("Selection description contains an unresolved or malformed token: " + text);
         return text;
     }

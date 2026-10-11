@@ -154,7 +154,7 @@ public static class ResearchSetup
             AddPerLevel(n, r2, Next(), ResearchNodeShape.Square, b + 2, 1, max, r1);
             AddPerLevel(n, core, ResearchStat.AttackPercent, ResearchNodeShape.Circle, b + 3, 0, max + 2, l2, r2);
             var special = Add(n, $"S-{block + 1}", specials[block], ResearchNodeShape.Special, b + 3, 2, 1,
-                PerLevel(specials[block], 10f), 0, core);
+                PerLevel(specials[block], true), 0, core);
             special.Icon = Mui("Icon/Reward/Medal");
             previous = core;
         }
@@ -162,9 +162,20 @@ public static class ResearchSetup
 
     private static void AddPerLevel(List<ResearchNodeData> list, string id, ResearchStat stat, ResearchNodeShape shape, int row, int column,
         int maxLevel, params string[] parents) =>
-        Add(list, id, stat, shape, row, column, maxLevel, PerLevel(stat, 2f), 0, parents);
+        Add(list, id, stat, shape, row, column, maxLevel, PerLevel(stat, false), 0, parents);
 
-    private static float PerLevel(ResearchStat stat, float percentDefault) => stat == ResearchStat.StartFood ? 30f : percentDefault / 100f;
+    // 기본 트리 전체 강화 시 공속 +3%, 치명타 확률 +1%p. 같은 스탯의 노드는 합산된다.
+    private static float PerLevel(ResearchStat stat, bool special) => stat switch
+    {
+        ResearchStat.AttackSpeedPercent => 0.003f,
+        ResearchStat.CritChance => 0.001f,
+        ResearchStat.CritDamage => 0.003f,
+        ResearchStat.BurnDamage => 0.004f,
+        ResearchStat.BossDamage => special ? 0.015f : 0.003f,
+        ResearchStat.StartFood => special ? 5f : 3f,
+        ResearchStat.TotemEffect => special ? 0.01f : 0.002f,
+        _ => 0.002f,
+    };
 
     private static ResearchNodeData Add(List<ResearchNodeData> list, string id, ResearchStat stat, ResearchNodeShape shape, int row, int column,
         int maxLevel, float perLevel, int recommendOrder, params string[] parents)

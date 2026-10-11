@@ -83,6 +83,8 @@ public class LevelUpManager : MonoBehaviour
     /// <summary>확정 프리뷰로 설명을 만들며 반복 조회는 재추첨하지 않는다.</summary>
     public string GetChoiceDescription(LevelUpData card)
         => card == null ? string.Empty : GetFormatter().Format(State.Prepare(card, UnityEngine.Random.Range));
+    /// <summary>설명 UI와 실제 획득이 같은 런 캐시의 확정 값을 사용한다.</summary>
+    public SelectionCardSnapshot PrepareChoice(LevelUpData card) => State.Prepare(card, UnityEngine.Random.Range);
     private SelectionDescriptionFormatter GetFormatter() { EnsureRuntime(); return _formatter; }
     /// <summary>선택 연출 전에 재추첨 여부를 조회한다.</summary>
     public bool RequestsReroll(LevelUpData card)

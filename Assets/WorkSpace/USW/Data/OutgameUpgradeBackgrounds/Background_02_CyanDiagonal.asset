@@ -1,0 +1,126 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f82abd6c1f5af3544b5153c8ddf52a4a, type: 3}
+  m_Name: Background_02_CyanDiagonal
+  m_EditorClassIdentifier: Assembly-CSharp::ResearchViewSettings
+  FontBold: {fileID: 11400000, guid: 34571da45f3f3d8419493b418172203f, type: 2}
+  FontRegular: {fileID: 11400000, guid: 4e5648a79c753f44eb5571f3a22454ae, type: 2}
+  RoundedFill: {fileID: 21300000, guid: 5618123237d1d3f49a5a6025287065f7, type: 3}
+  RoundedOutline: {fileID: 21300000, guid: 6f26b2434055f404d8d9c0b82e4de90f, type: 3}
+  CircleFill: {fileID: 21300000, guid: d25e2ce15dd1c67438e4b70f404fb197, type: 3}
+  CircleOutline: {fileID: 21300000, guid: fcadf08db4ab4e745ad615820a87889b, type: 3}
+  Shadow: {fileID: 21300000, guid: 0755a77d5bd80d94eaba57a2d5d0f55e, type: 3}
+  UpgradeArrow: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
+  GoldIcon: {fileID: 21300000, guid: c76fa86931d74e443b7d123ec3962adf, type: 3}
+  BlockedIcon: {fileID: 21300000, guid: 76abe28924c3a9345adaa9cc63c803d3, type: 3}
+  RoundedCornerScale: 4
+  PanelBackground: {fileID: 21300000, guid: b96fce96b352f5d41ad588e52cc21e43, type: 3}
+  UnfinishedBackground: {r: 0.023529412, g: 0.11764706, b: 0.13333334, a: 1}
+  BackgroundPattern: 5
+  BackgroundDesign: 2
+  BackgroundVignetteStrength: 0.1
+  BackgroundBandColor: {r: 0.39215687, g: 0.92156863, b: 0.92941177, a: 1}
+  BackgroundBottomFadeHeight: 260
+  BackgroundSmallIconScale: 0.6
+  BackgroundIconA: {fileID: 21300000, guid: 8cef3e686beb744e9b760a5901eb89e6, type: 3}
+  BackgroundIconB: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
+  BackgroundIconTint: {r: 1, g: 1, b: 1, a: 0.12}
+  BackgroundIconSize: 210
+  BackgroundIconRowSpacing: 220
+  BackgroundIconSpeed: 24
+  TopBarSprite: {fileID: 21300000, guid: 0d5d5f910e8d09141b68f7ecbd2ca410, type: 3}
+  NodeLockedSprite: {fileID: 21300000, guid: eedd67c9a78e6414a89629b8e1d03f22, type: 3}
+  NodeAvailableSprite: {fileID: 21300000, guid: ee126ed1eed81d149acd3d0fa698494f,
+    type: 3}
+  NodeRecommendSprite: {fileID: 21300000, guid: 99fceb23b8e06c845979ba71f2484959,
+    type: 3}
+  NodeMaxSprite: {fileID: 21300000, guid: a9687fc42df05954195adf3ecbd8c43d, type: 3}
+  RecommendBadgeSprite: {fileID: 21300000, guid: 0d3267b51ad2b7944808647ab6b36f16,
+    type: 3}
+  LevelDotsSprite: {fileID: 21300000, guid: 93ad0dad943750442838c2e351df9ece, type: 3}
+  NodeIconSlotSprite: {fileID: 21300000, guid: e12be4bf77b547549974edf72cc666c9, type: 3}
+  LineLockedSprite: {fileID: 21300000, guid: 884db2fe279b6fe408cbed5103b507de, type: 3}
+  LineActiveSprite: {fileID: 21300000, guid: 330e54d51ecaf0a4088b78cb6ea07a92, type: 3}
+  CardBackground: {fileID: 21300000, guid: c3347f9a835285246ab099004cd959cb, type: 3}
+  IconFrameSprite: {fileID: 21300000, guid: ce4d1f01c9fabdc41abfc4671ea1c212, type: 3}
+  UpgradeButtonSprite: {fileID: 21300000, guid: b763b9917428df74b8e7bd951d753f98,
+    type: 3}
+  MaxLabelSprite: {fileID: 21300000, guid: 96e3e7fa654b72b4591913a5915f65e7, type: 3}
+  Background: {r: 0.15294118, g: 0.5176471, b: 0.6784314, a: 1}
+  Surface: {r: 0.13333334, g: 0.15686275, b: 0.21176471, a: 1}
+  Ink: {r: 1, g: 1, b: 1, a: 1}
+  Muted: {r: 0.54901963, g: 0.5803922, b: 0.6509804, a: 1}
+  Faint: {r: 0.22745098, g: 0.25882354, b: 0.32941177, a: 1}
+  Soft: {r: 0.17254902, g: 0.2, b: 0.26666668, a: 1}
+  Active: {r: 0.0627451, g: 0.70980394, b: 0.75686276, a: 1}
+  Accent: {r: 1, g: 0.77254903, b: 0.078431375, a: 1}
+  OnColor: {r: 1, g: 1, b: 1, a: 1}
+  ShadowColor: {r: 0, g: 0, b: 0, a: 0.35}
+  NodeSize: 190
+  CircleNodeSize: 200
+  DiamondNodeSize: 190
+  SelectionPadding: 12
+  PulseSeconds: 1.4
+  PulseMinAlpha: 0.45
+  LineWidth: 14
+  TreeCenterX: -70
+  ColumnOffset: 190
+  SpecialColumnX: 350
+  RowSpacing: 255
+  ContentPadding: 200
+  PanelHeight: 440
+  FollowByDefault: 1
+  ToastSeconds: 1.3
+  TitleFormat: "\uAC15\uD654 {0}"
+  UpgradeLabel: "\uAC15\uD654"
+  MaxLabel: MAX
+  LockedLabel: "\uC7A0\uAE40"
+  ChangeChoiceLabel: "\uC120\uD0DD \uBC14\uAFB8\uAE30"
+  RecommendLabel: "\uCD94\uCC9C"
+  RecommendButtonLabel: "\uCD94\uCC9C \uAC15\uD654"
+  FollowLabel: "\uCD94\uCC9C \uB530\uB77C\uAC00\uAE30"
+  ToastFormat: '{0} Lv.{1}   {2}'
+  GateLabelFormat: "{0}\uB2E8\uACC4 \xB7 \uC804\uCCB4 \uAC15\uD654 {1}/{2}"
+  GateOpenFormat: "{0}\uB2E8\uACC4 \uC5F4\uB9BC"
+  LayoutButtonFormat: "\uAD6C\uC131: {0}"
+  ResetLabel: "\uCD08\uAE30\uD654"
+  Stats:
+  - Stat: 0
+    DisplayName: "\uACF5\uACA9\uB825"
+    IsPercent: 1
+  - Stat: 1
+    DisplayName: "\uACF5\uACA9 \uC18D\uB3C4"
+    IsPercent: 1
+  - Stat: 2
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD655\uB960"
+    IsPercent: 1
+  - Stat: 3
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 4
+    DisplayName: "\uC2A4\uD0AC \uCFE8\uD0C0\uC784 \uAC10\uC18C"
+    IsPercent: 1
+  - Stat: 5
+    DisplayName: "\uC2DD\uB7C9 \uC0DD\uC0B0"
+    IsPercent: 1
+  - Stat: 6
+    DisplayName: "\uC2DC\uC791 \uC2DD\uB7C9"
+    IsPercent: 0
+  - Stat: 7
+    DisplayName: "\uBCF4\uC2A4 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 8
+    DisplayName: "\uD654\uC0C1 \uD53C\uD574"
+    IsPercent: 1
+  - Stat: 9
+    DisplayName: "\uD1A0\uD15C \uD6A8\uACFC"
+    IsPercent: 1

@@ -45,6 +45,21 @@ public class ResearchViewSettings : ScriptableObject
     [Header("UI3600 제작 아트 (미연결 시 기존 도형 사용)")]
     /// <summary>전체 트리 배경.</summary>
     public Sprite PanelBackground;
+    [Header("강화 진행 배경 / 스크롤 시안")]
+    public Color UnfinishedBackground = new Color32(0x08, 0x10, 0x1A, 0xFF);
+    public ResearchBackgroundPattern BackgroundPattern = ResearchBackgroundPattern.AlternatingUp;
+    public ResearchBackgroundDesign BackgroundDesign;
+    [Range(0f, 0.85f)] public float BackgroundVignetteStrength = 0.45f;
+    public Color BackgroundBandColor = new Color(0.16f, 0.65f, 0.65f, 0.18f);
+    [Min(0f)] public float BackgroundBottomFadeHeight = 260f;
+    [Range(0.2f, 1f)] public float BackgroundSmallIconScale = 0.45f;
+    public Sprite BackgroundIconA;
+    public Sprite BackgroundIconB;
+    public Color BackgroundIconTint = new Color(0.18f, 0.65f, 0.78f, 0.16f);
+    [Min(20f)] public float BackgroundIconSize = 110f;
+    [Min(80f)] public float BackgroundIconRowSpacing = 240f;
+    [Min(0f)] public float BackgroundIconSpeed = 35f;
+    [Header("UI3600 제작 아트 (계속)")]
     /// <summary>상단 타이틀 바.</summary>
     public Sprite TopBarSprite;
     /// <summary>잠금 노드 바탕.</summary>

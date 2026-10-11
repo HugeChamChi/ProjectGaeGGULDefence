@@ -28,7 +28,9 @@ public sealed class ChoiceDescriptionAdapter : IDescriptionSource
             values["Count"] = e.Count.ToString(CultureInfo.InvariantCulture);
             if (e.Kind == DroneSelectionKind.DeltanDamageTaken)
             {
-                values["value"] = UnityEngine.Mathf.RoundToInt(_manager.DroneSelections.PreviewValue(_card) * 100f).ToString(CultureInfo.InvariantCulture);
+                var prepared = _manager.PrepareChoice(_card);
+                var effects = SelectionEffectProjector.Project(new[] { prepared }, 0f);
+                values["value"] = UnityEngine.Mathf.RoundToInt(effects.HackingProductionBonus * 100f).ToString(CultureInfo.InvariantCulture);
                 detailed = (detailed ?? string.Empty).Replace("[1~10%]", "{value}%");
             }
         }

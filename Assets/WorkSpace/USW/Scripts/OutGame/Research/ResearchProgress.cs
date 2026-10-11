@@ -54,6 +54,12 @@ public sealed class ResearchProgress
     {
         if (node.RequiredTotalLevel > 0 && TotalLevel < node.RequiredTotalLevel) return false;
         if (node.Parents.Count == 0) return true;
+        if (RequiresBothParentsStarted(node))
+        {
+            foreach (string parentId in node.Parents)
+                if (GetLevel(_tree.Find(parentId)) < 1) return false;
+            return true;
+        }
         bool any = false, all = true;
         foreach (string parentId in node.Parents)
         {
@@ -63,6 +69,28 @@ public sealed class ResearchProgress
             all &= maxed;
         }
         return node.RequireAnyParent ? any : all;
+    }
+
+    /// <summary>동시에 찍을 수 있는 두 갈래의 합류는 양쪽 1레벨씩 필요하다. 택1 합류는 기존 조건을 쓴다.</summary>
+    public bool RequiresBothParentsStarted(ResearchNodeData node)
+    {
+        if (node.Parents.Count != 2) return false;
+        var left = _tree.Find(node.Parents[0]);
+        var right = _tree.Find(node.Parents[1]);
+        if (left == null || right == null) return false;
+        return string.IsNullOrEmpty(left.ExclusiveGroup) || left.ExclusiveGroup != right.ExclusiveGroup;
+    }
+
+    /// <summary>배경이 차오를 가장 높은 MAX 행. 아직 MAX가 없으면 -1.</summary>
+    public int HighestMaxedRow
+    {
+        get
+        {
+            int row = -1;
+            foreach (var node in _tree.Nodes)
+                if (node != null && GetLevel(node) >= node.MaxLevel) row = Math.Max(row, node.Row);
+            return row;
+        }
     }
 
     /// <summary>택1 그룹에서 다른 노드를 이미 골랐는지 (레벨 1 이상).</summary>

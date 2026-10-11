@@ -113,9 +113,9 @@ public static class ChoiceDescriptionChecks
             resolver.TryResolve("debuff:1003", out _);
             Assert(captured.Equals(UnityEngine.Random.state), "Toggling/rendering/tooltip lookup must not consume RNG.");
             var repeated = new ChoiceDescriptionAdapter(card, manager).Capture();
-            manager.DroneSelections.Add(card);
+            manager.ApplyEffect(card);
             Assert(repeated.Values["value"] == snapshot.Values["value"] && captured.Equals(UnityEngine.Random.state), "Existing run cache must preserve the displayed roll on selection.");
-            Assert(Mathf.RoundToInt(manager.DroneSelections.Get(DroneSelectionKind.DeltanDamageTaken).Value * 100).ToString() == snapshot.Values["value"], "Applied value must match the snapshot.");
+            Assert(Mathf.RoundToInt(manager.CurrentEffects.HackingProductionBonus * 100).ToString() == snapshot.Values["value"], "Applied value must match the snapshot.");
         }
         finally { UnityEngine.Random.state = savedRandom; UnityEngine.Object.DestroyImmediate(root); }
     }

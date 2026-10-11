@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
@@ -17,12 +17,6 @@ public sealed class ResearchTreeView : IDisposable
     private const float LaneNameFont = 34f;
     private const float GateLabelFont = 30f;
     private const float GateLabelGap = 26f;
-    private const float BadgeWidth = 110f;
-    private const float BadgeHeight = 50f;
-    private const float BadgeFont = 30f;
-    private const float BadgeGap = 4f; // 노드 윗변에 걸치도록 (배지 가운데가 윗변 바로 위)
-    private const float BadgeBob = 10f;
-    private const float BadgeBobSeconds = 0.5f;
     private const float LineSampleSize = 2f;
 
     private readonly struct Segment
@@ -45,6 +39,7 @@ public sealed class ResearchTreeView : IDisposable
     private ResearchNodeView _selected;
     private readonly Sprite _lineLockedArt;
     private readonly Sprite _lineActiveArt;
+    public ResearchBackground Background { get; private set; }
 
     /// <summary>노드를 눌렀을 때.</summary>
     public event Action<ResearchNodeData> OnNodeClicked;
@@ -81,6 +76,11 @@ public sealed class ResearchTreeView : IDisposable
         int maxRow = 0;
         foreach (var node in _tree.Nodes) if (node != null) maxRow = Mathf.Max(maxRow, node.Row);
         _content.sizeDelta = new Vector2(0f, maxRow * _s.RowSpacing + _s.ContentPadding * 2f);
+
+        var background = ResearchUi.Stretch(ResearchUi.NewRect(viewport, "ProgressBackground"));
+        background.SetAsFirstSibling();
+        Background = background.gameObject.AddComponent<ResearchBackground>();
+        Background.Initialize(viewport, _content, settings, progress);
 
         var backLayer = ResearchUi.Stretch(ResearchUi.NewRect(_content, "Back"));
         _lineLayer = ResearchUi.Stretch(ResearchUi.NewRect(_content, "Lines"));
@@ -132,7 +132,10 @@ public sealed class ResearchTreeView : IDisposable
 
         _badge.gameObject.SetActive(recommended != null);
         if (recommended != null)
-            _badge.anchoredPosition = PositionOf(recommended) + new Vector2(0f, VisualHalf(recommended) + BadgeGap);
+        {
+            _badge.anchoredPosition = PositionOf(recommended);
+            _badge.localScale = Vector3.one * (_s.SizeOf(recommended) / _s.NodeSize);
+        }
     }
 
     /// <summary>선택 표시를 옮긴다.</summary>
@@ -147,6 +150,19 @@ public sealed class ResearchTreeView : IDisposable
     public void Punch(ResearchNodeData node)
     {
         if (node != null && _views.TryGetValue(node.Id, out var view)) view.Punch();
+    }
+
+    public void SetBackgroundSettings(ResearchViewSettings settings)
+    {
+        var old = Background.gameObject;
+        old.SetActive(false);
+        UnityEngine.Object.Destroy(old);
+        var layer = ResearchUi.Stretch(ResearchUi.NewRect(_scroll.viewport, "ProgressBackground"));
+        layer.SetAsFirstSibling();
+        Background = layer.gameObject.AddComponent<ResearchBackground>();
+        Background.Initialize(_scroll.viewport, _content, settings, _progress);
+        Refresh();
+        Background.RefreshVisuals();
     }
 
     /// <summary>노드가 화면 세로 가운데 오도록 스크롤한다.</summary>
@@ -215,27 +231,7 @@ public sealed class ResearchTreeView : IDisposable
     {
         var root = ResearchUi.NewRect(layer, "RecommendBadge");
         root.anchorMin = root.anchorMax = new Vector2(0.5f, 0f);
-        if (_s.RecommendBadgeSprite != null)
-        {
-            float width = _s.NodeSize * 0.72f;
-            float height = width * _s.RecommendBadgeSprite.rect.height / _s.RecommendBadgeSprite.rect.width;
-            root.sizeDelta = new Vector2(width, height);
-            var art = ResearchUi.NewImage(root, "Badge", _s.RecommendBadgeSprite, root.sizeDelta, new Vector2(-_s.NodeSize * 0.13f, 0f));
-            var label = ResearchUi.NewText(art.transform, "Text", _s.RecommendLabel, BadgeFont, _s.FontBold, TextAlignmentOptions.Center);
-            label.color = _s.OnColor;
-            var arrow = ResearchUi.NewImage(root, "Arrow", _s.UpgradeArrow, Vector2.one * height * 0.8f, new Vector2(_s.NodeSize * 0.4f, 0f));
-            arrow.color = _s.Active;
-            arrow.preserveAspect = true;
-            return root;
-        }
-        root.sizeDelta = new Vector2(BadgeWidth, BadgeHeight);
-        var pill = ResearchUi.NewImage(root, "Pill", _s.RoundedFill, new Vector2(BadgeWidth, BadgeHeight), Vector2.zero);
-        pill.type = Image.Type.Sliced;
-        pill.pixelsPerUnitMultiplier = _s.RoundedCornerScale * 1.5f;
-        pill.color = _s.Active;
-        var text = ResearchUi.NewText(pill.transform, "Text", _s.RecommendLabel, BadgeFont, _s.FontBold, TextAlignmentOptions.Center);
-        text.color = _s.OnColor;
-        pill.rectTransform.DOAnchorPosY(BadgeBob, BadgeBobSeconds).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetLink(pill.gameObject);
+        ResearchRecommendationDesign.Build(root, _s);
         return root;
     }
 
@@ -280,6 +276,7 @@ public sealed class ResearchTreeView : IDisposable
             }
             else rect.sizeDelta = new Vector2(Mathf.Abs(seg.A.x - seg.B.x) + _s.LineWidth, Mathf.Abs(seg.A.y - seg.B.y) + _s.LineWidth);
             _lines.Add((image, seg.Parent));
+
         }
     }
 
