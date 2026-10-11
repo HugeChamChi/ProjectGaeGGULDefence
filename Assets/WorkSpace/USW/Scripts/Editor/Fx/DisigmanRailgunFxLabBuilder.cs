@@ -11,21 +11,21 @@ using UnityEngine;
 public static class DisigmanRailgunFxLabBuilder
 {
     private const string ScenePath  = "Assets/WorkSpace/USW/Scene/FxLab_DisigmanRailgun.unity";
-    private const string MatRoot    = "Assets/WorkSpace/USW/Materials/Fx/SkyLaser";
+    internal const string MatRoot    = "Assets/WorkSpace/USW/Materials/Fx/SkyLaser";
     private const string SpriteRoot = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Drone_Deck/Character_Designs";
     private const string IdleSprite = "Betang_1";
     private const string FireSprite = "Betang_2";
-    private const string BgPath     = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Battlefield_BG/Battlefield_BG_Extended.jpg";
-    private const string BossPath   = "Assets/Imports/GGD_ArtWork/JSY_Artwork/BOSS/SPR_Boss1_001.png";
+    internal const string BgPath     = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Battlefield_BG/Battlefield_BG_Extended.jpg";
+    internal const string BossPath   = "Assets/Imports/GGD_ArtWork/JSY_Artwork/BOSS/SPR_Boss1_001.png";
 
     // 인게임 IngameScene 기준값 (SkyLaserFxLabBuilder와 동일)
-    private static readonly Vector3 CameraPos = new Vector3(0f, 3f, -13f);
-    private const float CameraPitch           = 7f;
-    private const float CameraFov             = 60f;
-    private static readonly Vector3 BgPos     = new Vector3(0f, 0.88f, 0f);
-    private const float BgScale               = 0.8f;
-    private static readonly Vector3 BossPos   = new Vector3(0f, 3.28f, 0f);
-    private const float BossScale             = 0.56f;
+    internal static readonly Vector3 CameraPos = new Vector3(0f, 3f, -13f);
+    internal const float CameraPitch           = 7f;
+    internal const float CameraFov             = 60f;
+    internal static readonly Vector3 BgPos     = new Vector3(0f, 0.88f, 0f);
+    internal const float BgScale               = 0.8f;
+    internal static readonly Vector3 BossPos   = new Vector3(0f, 3.28f, 0f);
+    internal const float BossScale             = 0.56f;
 
     // 임시 베탕 외형 — 512px / 687ppu ≈ 0.75 → 약 1.19 월드 (인게임 감망·델탕·젤탕 렌더 높이와 맞춤)
     private static readonly Vector3 UnitPos = new Vector3(-0.9f, -1.4f, 0f);
@@ -33,7 +33,7 @@ public static class DisigmanRailgunFxLabBuilder
     private const int UnitOrder             = 5;
 
     private static readonly Color BasicTint = new Color(0.3f, 0.5f, 1f, 1f);
-    private static readonly Color SkillTint = new Color(0.4f, 0.85f, 1f, 1f);
+    internal static readonly Color SkillTint = new Color(0.4f, 0.85f, 1f, 1f);
 
     [MenuItem("Tools/USW/Fx/Build Disigman Railgun Lab")]
     public static void Build()
@@ -98,7 +98,7 @@ public static class DisigmanRailgunFxLabBuilder
 
     // heavy = 스킬 한 발 "슈우우웅 → 콰아아앙": 빨려 드는 알갱이·연속 조임·움츠림 → 떨리는 빔·다중 충격파·파편·잔광.
     // 여러 마리가 겹쳐 쏘므로 한 발은 작고 짧게 (사용자 요청 2026-10-09: 차지 0.4초, 규모 축소)
-    private static RailgunBeamFx Template(Transform parent, string name, Color tint, bool heavy)
+    internal static RailgunBeamFx Template(Transform parent, string name, Color tint, bool heavy)
     {
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -140,7 +140,7 @@ public static class DisigmanRailgunFxLabBuilder
         return mat;
     }
 
-    private static GameObject NewSprite(string name, Sprite sprite, Vector3 pos, float scale, int order)
+    internal static GameObject NewSprite(string name, Sprite sprite, Vector3 pos, float scale, int order)
     {
         var go = new GameObject(name, typeof(SpriteRenderer));
         go.transform.position = pos;
