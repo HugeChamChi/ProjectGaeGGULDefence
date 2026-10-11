@@ -28,11 +28,11 @@ MonoBehaviour:
   chooseName: "\uB139 !"
   tier: 2
   spawnRate: 1
-  description: "\uB378\uD0D5\uC758 {term:hacking-stack} \uC0DD\uC0B0\uB7C9\uC774
-    {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4. \uC18C\uC218 \uC0DD\uC0B0\uBD84\uC740
-    \uB2E4\uC74C \uC2DC\uC804\uC73C\uB85C \uC774\uC6D4\uB429\uB2C8\uB2E4."
-  simpleDescription: "\uB378\uD0D5\uC758 {term:hacking-stack} \uC0DD\uC0B0\uB7C9\uC774
-    \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  description: "\uD574\uD0B9 \uC801\uC6A9 \uC2DC \uC2A4\uD0DD\uC774 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4.
+    (\uC18C\uC218 \uC2A4\uD0DD\uC740 \uB2E4\uC74C \uD574\uD0B9\uC5D0 \uD569\uC0B0)"
+  simpleDescription: "\uBD80\uC5EC\uD558\uB294 \uD574\uD0B9 \uC2A4\uD0DD\uC774 \uAC15\uD654\uB429\uB2C8\uB2E4."
+  DescriptionTerms:
+  - hack_stack
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

@@ -11,7 +11,7 @@ public class TotemInfoPresenter
         _view = view;
     }
 
-    public void SetData(TotemData data)
+    public void SetData(TotemData data, bool detailed = true)
     {
         _currentData = data;
         if (data == null)
@@ -20,16 +20,16 @@ public class TotemInfoPresenter
             return;
         }
 
-        string statString = BuildStatString(data);
+        string statString = BuildStatString(data, detailed);
         _view.UpdateUI(data.icon, data.totemName, statString, data.tier, data);
     }
 
-    private string BuildStatString(TotemData data)
+    private string BuildStatString(TotemData data, bool detailed)
     {
         if (data == null) return string.Empty;
 
         // 1. SO에 작성된 description 또는 EffectGroups 설명이 있는 경우 최우선 사용 ([대괄호] 강조 색상 처리 포함)
-        string displayDesc = data.GetDisplayDescription();
+        string displayDesc = data.GetDisplayDescription(detailed);
         if (!string.IsNullOrWhiteSpace(displayDesc))
         {
             return displayDesc;

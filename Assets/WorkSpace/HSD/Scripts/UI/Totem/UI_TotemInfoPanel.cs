@@ -3,6 +3,7 @@ using GaeGGUL.UI.Common;
 using GaeGGUL.UI.Totem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 
 public class UI_TotemInfoPanel : UI_Base
@@ -16,6 +17,11 @@ public class UI_TotemInfoPanel : UI_Base
     [SerializeField] private UI_TotemRangeGrid rangeGrid;
 
     private TotemInfoPresenter _presenter;
+    private Toggle _descriptionToggle;
+    private TotemData _descriptionData;
+    private bool _detailed;
+    private float _baseHeight;
+    private Vector2 _basePosition;
     private DebuffInfoLink _effectLink;
     private TotemBase _currentTotem;
     private GridManager _grid;
@@ -26,6 +32,14 @@ public class UI_TotemInfoPanel : UI_Base
     /// <summary>Includes the gesture-release shield of the nested detail window.</summary>
     public bool IsEffectInfoOpen => _effectLink?.BlocksOwnerInput == true;
 
+    /// <summary>Keeps touches on the open information window from dismissing its action popup.</summary>
+    public bool ContainsScreenPoint(Vector2 point)
+    {
+        if (!gameObject.activeInHierarchy || (_canvas != null && !_canvas.enabled)) return false;
+        var canvas = _canvas != null ? _canvas : GetComponentInParent<Canvas>();
+        var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+        return RectTransformUtility.RectangleContainsScreenPoint((RectTransform)transform, point, camera);
+    }
     /// <summary>Supplies the shared explanation presenter explicitly from scene wiring.</summary>
     [VContainer.Inject]
     public void ConfigureEffectInfo(DebuffInfoPresenter presenter)
@@ -47,8 +61,13 @@ public class UI_TotemInfoPanel : UI_Base
         ClearRuntimeRange();
         _effectLink?.Clear();
         EnsurePresenter();
-        _presenter.SetData(data);
+        EnsureDescriptionToggle();
+        _descriptionData = data;
+        _detailed = false;
+        _descriptionToggle.SetIsOnWithoutNotify(false);
+        _presenter.SetData(data, _detailed);
         gameObject.SetActive(true);
+        _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
         if (_canvas != null) _canvas.enabled = true;
     }
 
@@ -84,8 +103,7 @@ public class UI_TotemInfoPanel : UI_Base
 
     private void RefreshRuntimeRange()
     {
-        if (_growthTotem != null && txt_Stats != null) txt_Stats.text = _growthTotem.Data.GetDisplayDescription()+"\n\n"+_growthTotem.ProgressDescription;
-        rangeGrid?.SetData(_currentTotem, _grid);
+        RefreshDescription();
         _displayedCell = _currentTotem.CurrentCell;
         _displayedRotation = _currentTotem.RotationStep;
         _displayedGrowthSecond = _growthTotem != null ? (int)(_growthTotem.CombatSeconds + _growthTotem.HarvestSeconds) : 0;
@@ -98,8 +116,68 @@ public class UI_TotemInfoPanel : UI_Base
         _growthTotem = null;
         _displayedCell = null;
         _displayedGrowthSecond = 0;
+        _descriptionData = null;
     }
 
+    private void EnsureDescriptionToggle()
+    {
+        if (_descriptionToggle != null) return;
+        var rect = (RectTransform)transform;
+        _baseHeight = rect.rect.height;
+        _basePosition = rect.anchoredPosition;
+        _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
+        _descriptionToggle = InfoPanelPresentation.CreateToggle(transform, txt_Stats, detailed =>
+        {
+            _detailed = detailed;
+            RefreshDescription();
+        });
+        if (txt_Name != null)
+        {
+            var name = txt_Name.rectTransform;
+            name.anchorMin = name.anchorMax = new Vector2(0, 1);
+            name.pivot = new Vector2(0, 1);
+            name.anchoredPosition = new Vector2(20, -12);
+            name.sizeDelta = new Vector2(510, 52);
+            txt_Name.enableAutoSizing = true;
+            txt_Name.fontSizeMin = 24;
+            txt_Name.fontSizeMax = 30;
+        }
+    }
+
+    private void RefreshDescription()
+    {
+        if (_descriptionData == null) return;
+        _presenter.SetData(_descriptionData, _detailed);
+        if (_growthTotem != null && txt_Stats != null)
+        {
+            txt_Stats.text = _descriptionData.GetDisplayDescription(_detailed) + "\n\n" + _growthTotem.ProgressDescription;
+            FitDescription();
+        }
+        if (_currentTotem != null && _grid != null) rangeGrid?.SetData(_currentTotem, _grid);
+    }
+
+    private void FitDescription()
+    {
+        if (_descriptionToggle == null || txt_Stats == null) return;
+        const float descriptionWidth = 286f;
+        const float padding = 24f;
+        float textHeight = Mathf.Max(182f, txt_Stats.GetPreferredValues(txt_Stats.text, descriptionWidth, float.PositiveInfinity).y);
+        var outer = txt_Stats.transform.parent.parent as RectTransform;
+        var inner = txt_Stats.transform.parent as RectTransform;
+        outer.anchorMin = outer.anchorMax = Vector2.one;
+        outer.pivot = Vector2.one;
+        outer.anchoredPosition = new Vector2(-20, -85);
+        outer.sizeDelta = new Vector2(descriptionWidth + padding, textHeight + padding);
+        inner.anchorMin = Vector2.zero;
+        inner.anchorMax = Vector2.one;
+        inner.offsetMin = inner.offsetMax = Vector2.zero;
+        txt_Stats.rectTransform.offsetMin = Vector2.one * (padding * .5f);
+        txt_Stats.rectTransform.offsetMax = -Vector2.one * (padding * .5f);
+        var root = (RectTransform)transform;
+        float height = Mathf.Max(_baseHeight, 85f + textHeight + padding + 20f);
+        root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+        root.anchoredPosition = _basePosition + Vector2.up * ((height - _baseHeight) * .5f);
+    }
     private void EnsurePresenter()
     {
         if (_presenter == null) _presenter = new TotemInfoPresenter(this);
@@ -111,7 +189,11 @@ public class UI_TotemInfoPanel : UI_Base
         if (txt_Name != null) { txt_Name.text = name; txt_Name.color = tier.GetTextColor(); }
         DebuffBinding binding = default;
         if (data != null) data.TryGetDebuffBinding(out binding);
-        if (txt_Stats != null) txt_Stats.text = _effectLink != null ? _effectLink.SetDescription(stats, binding) : stats;
+        if (txt_Stats != null)
+        {
+            txt_Stats.text = _effectLink != null ? _effectLink.SetDescription(stats, binding) : stats;
+            FitDescription();
+        }
 
         if (rangeGrid != null)
         {

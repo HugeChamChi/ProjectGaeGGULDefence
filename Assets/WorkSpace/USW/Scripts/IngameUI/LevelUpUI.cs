@@ -37,7 +37,11 @@ public class LevelUpUI : MonoBehaviour
     private Toggle _descriptionToggle;
     private readonly Dictionary<LevelUpCardUI, DescriptionSnapshot> _descriptions = new();
     private bool _descriptionSubscribed;
-    public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true;
+    private ChoiceGlossaryView _glossaryView;
+    private TermLinker _termLinker;
+    [SerializeField] private TermGlossary _termGlossary;
+    [SerializeField] private Shader _descriptionBlurShader;
+    public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true || _glossaryView != null && _glossaryView.BlocksOwnerInput;
     public bool FieldPreviewBlocksInput => obj != null && obj.GetComponentInChildren<UI_Peekthrough>(true)?.BlocksSelection == true;
     public float SelectionTimeRemaining { get; private set; }
 
@@ -126,8 +130,8 @@ public class LevelUpUI : MonoBehaviour
             EnsureDescriptions(card.DescriptionText);
             var snapshot = new ChoiceDescriptionAdapter(data, _levelUpManager).Capture();
             _descriptions.Add(card, snapshot);
-            card.Setup(data, OnCardClicked, DescriptionFormatter.Format(snapshot, _descriptionSettings.Detailed, _descriptionResolver, true));
-            card.ConfigureDescription(OpenDescriptionTerm, () => !IsReadyForSelection || DescriptionBlocksInput ||
+            card.Setup(data, OnCardClicked, FormatDescription(snapshot, data));
+            card.ConfigureDescription(id => OpenDescriptionTerm(card, id), () => !IsReadyForSelection || DescriptionBlocksInput ||
                 _spawnedCards.Any(other => other != null && other != card && other.HasActivePress));
             if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
@@ -322,6 +326,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void ReleaseForcedPause()
     {
+        _glossaryView?.HideImmediately();
         _descriptionPopup?.HideImmediately();
         StopSelectionTimer();
         IsReadyForSelection = false;
@@ -367,6 +372,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void ClearCards()
     {
+        _glossaryView?.HideImmediately();
         _descriptionPopup?.HideImmediately();
         _descriptions.Clear();
         foreach (var card in _spawnedCards)
@@ -380,29 +386,44 @@ public class LevelUpUI : MonoBehaviour
     {
         if (_descriptionResolver == null) _descriptionResolver = new DescriptionTermResolver(_descriptionCatalog, _descriptionDebuffs);
         if (_descriptionPopup == null) _descriptionPopup = DebuffInfoPopup.Create(this, obj, source);
+        if (_glossaryView == null && _termGlossary != null)
+        {
+            _termLinker = new TermLinker(_termGlossary, new Color(0.18f, 0.6f, 0.8f), new Color(1f, 0.62f, 0.1f));
+            _glossaryView = ChoiceGlossaryView.Create(obj.transform, source, cardContainer as RectTransform,
+                _termGlossary, _descriptionBlurShader, _descriptionSettings);
+        }
         if (_descriptionToggle == null) _descriptionToggle = DescriptionToggleView.Create(obj.transform, source, value =>
         {
             if (CanChangeDescriptionMode()) _descriptionSettings.SetDetailed(value);
             else _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
         });
         _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
+        if (_glossaryView != null) _glossaryView.transform.SetAsLastSibling();
         if (!_descriptionSubscribed) { _descriptionSettings.Changed += RefreshDescriptions; _descriptionSubscribed = true; }
     }
     private void RefreshDescriptions()
     {
         if (_descriptionToggle != null) _descriptionToggle.SetIsOnWithoutNotify(_descriptionSettings.Detailed);
         foreach (var pair in _descriptions)
-            if (pair.Key != null) pair.Key.SetDescription(DescriptionFormatter.Format(pair.Value, _descriptionSettings.Detailed, _descriptionResolver, true));
+            if (pair.Key != null) pair.Key.SetDescription(FormatDescription(pair.Value, pair.Key.GetData()));
     }
-    private void OpenDescriptionTerm(string id)
+    private string FormatDescription(DescriptionSnapshot snapshot, LevelUpData data)
     {
-        if (DescriptionBlocksInput || !IsReadyForSelection || !_descriptionResolver.TryResolve(id, out var term)) return;
+        var text = DescriptionFormatter.Format(snapshot, _descriptionSettings.Detailed, _descriptionResolver, true);
+        return _termLinker == null ? text : _termLinker.AddLinks(text, data.DescriptionTerms);
+    }
+    private void OpenDescriptionTerm(LevelUpCardUI source, string id)
+    {
+        if (DescriptionBlocksInput || !IsReadyForSelection) return;
         foreach (var card in _spawnedCards) if (card != null) card.CancelDescriptionPress();
+        if (id.StartsWith(TermLinker.LinkPrefix, StringComparison.Ordinal) && _glossaryView != null &&
+            _glossaryView.Show(source, id.Substring(TermLinker.LinkPrefix.Length))) return;
+        if (!_descriptionResolver.TryResolve(id, out var term)) return;
         _descriptionPopup.Show(term.DisplayName, term.Body);
     }
     private void Update()
     {
-        if (obj != null && !obj.activeInHierarchy) _descriptionPopup?.HideImmediately();
+        if (obj != null && !obj.activeInHierarchy) { _descriptionPopup?.HideImmediately(); _glossaryView?.HideImmediately(); }
         if (_descriptionToggle == null) return;
         _descriptionToggle.interactable = CanChangeDescriptionMode();
     }

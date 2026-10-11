@@ -22,7 +22,6 @@ public class Drone_Gamman : HackingDroneSpawner
         float coefficient = data.BaseCoefficient.Get(currentTier)
             + reservation.Amount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-        _audioManager?.PlaySFX("05.Drone_Buff");
         FlashOwnedDrones();
         StartHacking(runtime, target, 0, reservation, damage, critical);
     }

@@ -26,4 +26,10 @@ Composition.Feedback는 기능 소유자·행·부족·실제 소유 등급 조�
 
 보스 처치 [TotemRewardUI](../../Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardUI.cs)는 독립 보상 화면이다. LevelUpUI/구 TotemSelectUI의 UI_Peekthrough와 동일한 기능이 있다고 가정하지 않는다. 세 화면의 실제 연결·상호작용을 구분한다. 보상 세션 취소는 큐·콜백·트윈을 함께 정리한다.
 
+2026-10-11 토템 보상 등장에는 `FxLab_TotemChoice`의 **01 DIAGONAL SLASH**를 적용했다. 위·아래 띠는 왼쪽 아래에서, 가운데는 오른쪽 위에서 진입한다. 이동 0.19초·자리별 지연 0.095초와 짧은 반동·아이콘 확대·속도선은 게임 정지 중에도 실제 시간으로 재생된다. 모든 등장 동작이 끝난 뒤 선택을 받으며, 취소 시 해당 세션 트윈을 종료한다. 개요는 간단히만, 상세는 공용 `DescriptionToggleView` 스위치로 전환한다. 토템은 상세를 새로 열 때마다 간단히로 시작하며 레벨업 저장 설정과 공유하지 않는다. 긴 상세 문구는 범위 그림 위의 가용 높이에 맞춘다.
+
+레벨업은 HSD의 `DescriptionDisplaySettings`(상세 기본 ON, PlayerPrefs 저장)와 공용 스위치를 사용한다. 병합에서 누락된 `DroneSelection1~20` 중 17개 요약을 `ChoiceDescriptionContent` 원문으로 복구했다. 21~24 등 별도 요약이 없는 카드는 기존 상세 문구로 대체된다. `ChoiceDescriptionAdapter`는 제거된 `DroneSelections` API나 숨겨진 레거시 수치 대신 `LevelUpManager.GetChoiceDescriptionSnapshot`의 조합형 런 프리뷰를 읽는다. 숫자는 `SelectionDescriptionFormatter`, 용어 링크와 상세/요약 선택은 `DescriptionFormatter`가 처리한다. 토글과 용어 팝업을 열어도 확정 랜덤 값을 다시 추첨하지 않는다.
+
 게임/보상 순서는 [인게임 진행](../../design/gdd/ingame-system.md), 제작 중인 족장 참조는 [족장 문서](alphan-active-skill.md), 확장 기획은 [미채택 드론 카드 제안](drone-build-selection-design.md)에 있다.
+
+2026-10-11 사용자 문구·최신 용어 연출 적용: [quick-spec](../../design/quick-specs/levelup-term-definitions-2026-10-11.md)의 엑셀 C/E/F열을 24장에 반영했다. ChoiceGlossaryView는 최신 B 바텀시트·영상·블러를 기존 설정과 연결하며, 설명의 숫자는 확정 Composition snapshot을 사용한다. 토템 개요는 물리 화면 전체에 맞추고 상세 조작은 safe frame에 유지한다. [검증](../../outputs/choice-screen-fixes-20261011/RESULT.md).

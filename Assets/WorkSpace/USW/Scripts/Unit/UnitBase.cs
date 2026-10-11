@@ -333,6 +333,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public BossBase _boss => Boss;
     public GridManager _gridManager => _deps?.GridManager;
     
+    /// <summary>World-space origin shared by authored projectiles and recorded attack replays.</summary>
+    public virtual Vector3 ProjectileOrigin => transform.position + Vector3.up * 0.5f;
+
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
 
     public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;

@@ -14,7 +14,10 @@ public sealed class FullScreenUiBackdrop : MonoBehaviour
         _parent = transform.parent as RectTransform;
         _canvas = GetComponentInParent<Canvas>();
     }
-    private void LateUpdate()
+    private void LateUpdate() => Refresh();
+
+    /// <summary>Immediately fits to the physical screen, including areas outside a safe content frame.</summary>
+    public void Refresh()
     {
         if (_parent == null || _canvas == null) return;
         var camera = _canvas.rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.rootCanvas.worldCamera;

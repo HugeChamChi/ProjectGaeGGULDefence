@@ -3,13 +3,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Top-right switch shared by production and test choice panels.</summary>
+/// <summary>Shared brief/detailed switch using the standard Unity Toggle.</summary>
 public static class DescriptionToggleView
 {
     private static Sprite _trackSprite;
     private static Sprite _knobSprite;
     internal static Sprite TrackSprite => _trackSprite ??= RoundedSprite(92, 48);
     internal static Sprite KnobSprite => _knobSprite ??= RoundedSprite(38, 38);
+    /// <summary>Creates a thumb switch; ON selects detailed descriptions.</summary>
     public static Toggle Create(Transform parent, TMP_Text source, Action<bool> changed)
     {
         var root = new GameObject("DetailedDescriptionToggle", typeof(RectTransform), typeof(Toggle));
@@ -18,33 +19,46 @@ public static class DescriptionToggleView
         rect.anchorMin = rect.anchorMax = Vector2.one;
         rect.pivot = Vector2.one;
         rect.anchoredPosition = new Vector2(-32, -40);
-        rect.sizeDelta = new Vector2(280, 64);
-        var label = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-        var lr = (RectTransform)label.transform; lr.SetParent(rect, false);
-        lr.anchorMin = Vector2.zero; lr.anchorMax = new Vector2(0.62f, 1);
-        lr.offsetMin = lr.offsetMax = Vector2.zero;
-        var text = label.GetComponent<TextMeshProUGUI>();
-        text.font = source.font; text.fontSharedMaterial = source.fontSharedMaterial;
-        text.text = "상세 설명"; text.fontSize = 26; text.color = Color.white;
-        text.alignment = TextAlignmentOptions.MidlineRight; text.raycastTarget = false;
-        var track = new GameObject("Track", typeof(RectTransform), typeof(Image));
-        var tr = (RectTransform)track.transform; tr.SetParent(rect, false);
-        tr.anchorMin = tr.anchorMax = new Vector2(1, 0.5f); tr.pivot = new Vector2(1, 0.5f);
-        tr.sizeDelta = new Vector2(92, 48);
-        var background = track.GetComponent<Image>();
-        background.sprite = TrackSprite;
-        var knob = new GameObject("Knob", typeof(RectTransform), typeof(Image));
-        var kr = (RectTransform)knob.transform; kr.SetParent(tr, false);
-        kr.anchorMin = kr.anchorMax = new Vector2(0, 0.5f);
-        kr.sizeDelta = new Vector2(38, 38);
-        var knobImage = knob.GetComponent<Image>();
-        knobImage.sprite = KnobSprite;
-        knobImage.color = new Color(1, 0.96f, 0.86f); knobImage.raycastTarget = false;
+        rect.sizeDelta = new Vector2(340, 64);
+        var background = root.AddComponent<Image>();
+        background.color = Color.clear;
         var toggle = root.GetComponent<Toggle>();
         toggle.targetGraphic = background;
-        toggle.onValueChanged.AddListener(value => changed(value));
+        toggle.transition = Selectable.Transition.None;
+        toggle.onValueChanged.AddListener(value => changed?.Invoke(value));
         var visual = root.AddComponent<DescriptionSwitchVisual>();
-        visual.Toggle = toggle; visual.Track = background; visual.Knob = kr;
+        visual.Toggle = toggle;
+        var track = new GameObject("Track", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        var trackRect = track.rectTransform;
+        trackRect.SetParent(rect, false);
+        trackRect.anchorMin = trackRect.anchorMax = new Vector2(0.5f, 0.5f);
+        trackRect.sizeDelta = new Vector2(92, 48);
+        track.sprite = TrackSprite;
+        track.raycastTarget = false;
+        visual.Track = track;
+        var knob = new GameObject("Knob", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        knob.rectTransform.SetParent(trackRect, false);
+        knob.rectTransform.anchorMin = knob.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        knob.rectTransform.sizeDelta = new Vector2(38, 38);
+        knob.sprite = KnobSprite;
+        knob.color = new Color(1, 0.96f, 0.86f);
+        knob.raycastTarget = false;
+        visual.Knob = knob.rectTransform;
+        for (int i = 0; i < 2; i++)
+        {
+            bool detailed = i == 1;
+            var label = new GameObject(detailed ? "DetailedLabel" : "BriefLabel", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+            label.rectTransform.SetParent(rect, false);
+            label.rectTransform.anchorMin = new Vector2(detailed ? 0.67f : 0f, 0f);
+            label.rectTransform.anchorMax = new Vector2(detailed ? 1f : 0.33f, 1f);
+            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            if (source != null) { label.font = source.font; label.fontSharedMaterial = source.fontSharedMaterial; }
+            label.text = detailed ? "자세히" : "간단히";
+            label.fontSize = 26f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+            visual.Labels[i] = label;
+        }
         return toggle;
     }
 

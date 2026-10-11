@@ -12,28 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7609eac6928357a4e9ba8e8a4edac487, type: 3}
   m_Name: TotemRewardSettings
   m_EditorClassIdentifier: Assembly-CSharp::TotemRewardSettings
+  _projectileGraceSeconds: 0.4
   _showDescriptionOnOverview: 1
   _allowDetailSwipe: 1
   _useTierColors: 0
   _slotColors:
-  - {r: 0.16, g: 0.84, b: 0.96, a: 1}
-  - {r: 0.95, g: 0.3, b: 0.17, a: 1}
-  - {r: 0.96, g: 0.74, b: 0.17, a: 1}
+  - {r: 0, g: 0.8, b: 0.91, a: 1}
+  - {r: 1, g: 0.23, b: 0.065, a: 1}
+  - {r: 1, g: 0.75, b: 0, a: 1}
   _tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
   _edgeColor: {r: 0, g: 0, b: 0, a: 1}
   _edgeWidth: 16
   _dimAlpha: 0.7
   _upperBoundary: {x: 0.38, y: 0.22}
-  _lowerBoundary: {x: 0.6, y: 0.78}
+  _lowerBoundary: {x: 0.78, y: 0.57}
   _font: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
   _backIcon: {fileID: 21300000, guid: 14a7ee0e32e7440fa97ff8b85aee8206, type: 3}
-  _overviewNameSize: 72
-  _overviewDescriptionSize: 42
+  _overviewNameSize: 61
+  _overviewDescriptionSize: 39
   _detailNameSize: 72
   _detailDescriptionSize: 44
   _confirmLabel: "\uD655\uC815"
   _swipeHint: "\uC88C\uC6B0\uB85C \uB118\uACA8 \uBE44\uAD50"
-  _overviewIconSize: 380
+  _overviewIconSize: 365
   _detailIconSize: 360
   _rangeDisplaySettings: {fileID: 11400000, guid: bc35f0151471b044eb49e43bfd377839,
     type: 2}
@@ -43,7 +44,7 @@ MonoBehaviour:
   _rangeBoxSize: {x: 233, y: 284}
   _rangeBoxScale: 1.6
   _dimSeconds: 0.35
-  _bandSlideSeconds: 0.3
-  _bandStaggerSeconds: 0.1
+  _bandSlideSeconds: 0.19
+  _bandStaggerSeconds: 0.095
   _switchSeconds: 0.2
   _swipeThreshold: 120

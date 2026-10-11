@@ -38,6 +38,7 @@ public class RootLifetimeScope : LifetimeScope
         {
             builder.RegisterComponent(audioManager);
         }
+        builder.RegisterComponentInHierarchy<UIFeedbackController>();
 
         builder.Register<BackendGameData>(Lifetime.Singleton).AsSelf();
         builder.Register<BackendSession>(Lifetime.Singleton);

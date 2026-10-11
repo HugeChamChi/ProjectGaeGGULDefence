@@ -73,8 +73,8 @@ MonoBehaviour:
   - Label: POINT BLANK FIRE
     Duration: 0.34
     AtHome: 0
-    From: {x: 0.7, y: 1.65, z: -0.4}
-    To: {x: 0.7, y: 1.65, z: -0.4}
+    From: {x: 1.1, y: 2, z: -0.4}
+    To: {x: 1.1, y: 2, z: -0.4}
     Body: 1
     Fire: 1
     Snap: 1
@@ -84,8 +84,8 @@ MonoBehaviour:
   - Label: KICKBACK
     Duration: 0.18
     AtHome: 0
-    From: {x: 0.7, y: 1.65, z: -0.4}
-    To: {x: 1.1, y: 2.15, z: -0.4}
+    From: {x: 1.1, y: 2, z: -0.4}
+    To: {x: 1.5, y: 2.5, z: -0.4}
     Body: 1
     Fire: 0
     Snap: 0
@@ -95,8 +95,8 @@ MonoBehaviour:
   - Label: RETURN BLINK
     Duration: 0.07
     AtHome: 0
-    From: {x: 1.1, y: 2.15, z: -0.4}
-    To: {x: 1.1, y: 2.15, z: -0.4}
+    From: {x: 1.5, y: 2.5, z: -0.4}
+    To: {x: 1.5, y: 2.5, z: -0.4}
     Body: 0
     Fire: 0
     Snap: 1

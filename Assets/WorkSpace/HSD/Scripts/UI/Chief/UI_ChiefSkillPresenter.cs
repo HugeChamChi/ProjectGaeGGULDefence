@@ -54,7 +54,7 @@ public class UI_ChiefSkillPresenter
 
     public void ExecuteSkill()
     {
-        _skill?.TryActivate();
+        if (_skill != null && _skill.TryActivate()) _view.PlaySkillAnimation();
         OnUpdate(0f);
     }
 }

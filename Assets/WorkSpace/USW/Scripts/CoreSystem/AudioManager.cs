@@ -1,213 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
-using System.Collections.Generic;
 
-public enum AudioGroup
-{
-    BGM,
-    SFX,
-    Master
-}
+/// <summary>Player-controlled audio mixer channels; serialized values retain their existing order.</summary>
+public enum AudioGroup { BGM, SFX, Master }
 
-/// <summary>
-/// 오디오 엔진(Unity/Native 등)에 상관없이 게임 비즈니스 로직을 처리하는 매니저
-/// 10년차 시니어 팁: 리소스 로드 자동화 및 Strategy 패턴을 통한 유연한 확장성 확보
-/// </summary>
+/// <summary>App-owned audio entry point. Only sounds authored in the approved palette can play.</summary>
 public class AudioManager : MonoBehaviour
 {
-    private const string BGM_PATH_ROOT = "";
-    private const string SFX_PATH_ROOT = "";
-    private const string MIXER_RESOURCE_PATH = "Master"; // Resources 내 AudioMixer 경로
-
-    // 실제 기능을 수행하는 구현체 (Interface)
+    private const string MixerResourcePath = "Master";
+    private const string VolumeKeyPrefix = "Audio_Vol_";
+    private const string MuteKeyPrefix = "Audio_Mute_";
+    [SerializeField] private GameAudioPalette _palette;
     private IAudioProvider _provider;
+    private UnityAudioProvider _unityProvider;
+    private readonly Dictionary<string, AudioCueDefinition> _cueByName = new Dictionary<string, AudioCueDefinition>(StringComparer.Ordinal);
 
-    #region Properties (Convenience for Master/BGM/SFX)
-
-    public int MasterVolume
-    {
-        get => GetVolume(AudioGroup.Master);
-        set => SetVolume(AudioGroup.Master, value);
-    }
-
-    public int BGMVolume
-    {
-        get => GetVolume(AudioGroup.BGM);
-        set => SetVolume(AudioGroup.BGM, value);
-    }
-
-    public int SFXVolume
-    {
-        get => GetVolume(AudioGroup.SFX);
-        set => SetVolume(AudioGroup.SFX, value);
-    }
-
-    #endregion
+    /// <summary>Existing 0–100 master preference.</summary>
+    public int MasterVolume { get => GetVolume(AudioGroup.Master); set => SetVolume(AudioGroup.Master, value); }
+    /// <summary>Existing 0–100 music preference, independent of authored mix gains.</summary>
+    public int BGMVolume { get => GetVolume(AudioGroup.BGM); set => SetVolume(AudioGroup.BGM, value); }
+    /// <summary>Existing 0–100 effects preference, independent of authored mix gains.</summary>
+    public int SFXVolume { get => GetVolume(AudioGroup.SFX); set => SetVolume(AudioGroup.SFX, value); }
 
     protected void Awake()
     {
-        // 앱 오디오의 수명은 RootLifetimeScope가 소유한다.
-        InitializeEngine();
-    }
-
-    private void InitializeEngine()
-    {
-        // 1. AudioMixer 로드 (Resources)
-        AudioMixer mainMixer = RM.Load<AudioMixer>(MIXER_RESOURCE_PATH);
-        
-        if (mainMixer == null)
+        var mixer = RM.Load<AudioMixer>(MixerResourcePath);
+        if (mixer == null || _palette == null)
         {
-            Debug.LogError($"[AudioManager] Failed to load AudioMixer at Resources/{MIXER_RESOURCE_PATH}");
+            Debug.LogError("[AudioManager] Master mixer and approved GameAudioPalette are required.");
             return;
         }
-
-        // 2. 구현체 초기화
-        _provider = new UnityAudioProvider(gameObject, mainMixer);
+        _unityProvider = new UnityAudioProvider(gameObject, mixer, _palette);
+        foreach (var cue in _palette.Cues)
+        {
+            if (cue == null) continue;
+            _cueByName[cue.Cue.ToString()] = cue;
+            if (cue.Clip != null) _cueByName[cue.Clip.name] = cue;
+        }
+        _provider = _unityProvider;
         _provider.Init();
+    }
 
-        // 3. 저장된 데이터 로드
+    private void Start()
+    {
+        // Mixer parameters are applied after Awake, preserving all existing preference keys.
         LoadSettings();
+        if (_palette != null) PlayBGM(_palette.Music);
     }
+    private void Update() => _unityProvider?.Tick(Time.unscaledDeltaTime);
+    private void OnDestroy() => _unityProvider?.Dispose();
 
-    #region Volume Control
-
-    public void SetVolume(AudioGroup group, int volume)
-    {
-        _provider?.SetVolume(group, volume);
-        SaveSettings();
-    }
-
+    /// <summary>Applies and persists the existing volume preference.</summary>
+    public void SetVolume(AudioGroup group, int volume) { _provider?.SetVolume(group, volume); SaveSettings(); }
+    /// <summary>Reads the existing volume preference.</summary>
     public int GetVolume(AudioGroup group) => _provider?.GetVolume(group) ?? 0;
-
-    #endregion
-
-    #region Mute Control
-
-    public void SetMute(AudioGroup group, bool isMute)
-    {
-        _provider?.SetMute(group, isMute);
-        SaveSettings();
-        
-        Debug.Log($"[AudioManager] {group} Mute: {isMute}");
-    }
-
-    public bool IsMuted(AudioGroup group)
-    {
-        return _provider?.IsMuted(group) ?? false;
-    }
-
-    #endregion
-
-    #region Persistence
-
-    private const string VOL_KEY_PREFIX = "Audio_Vol_";
-    private const string MUTE_KEY_PREFIX = "Audio_Mute_";
+    /// <summary>Applies and persists the existing mute preference.</summary>
+    public void SetMute(AudioGroup group, bool isMute) { _provider?.SetMute(group, isMute); SaveSettings(); }
+    /// <summary>Reads the existing mute preference.</summary>
+    public bool IsMuted(AudioGroup group) => _provider?.IsMuted(group) ?? false;
 
     private void SaveSettings()
     {
-        foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
+        foreach (AudioGroup group in Enum.GetValues(typeof(AudioGroup)))
         {
-            PlayerPrefs.SetInt($"{VOL_KEY_PREFIX}{group}", GetVolume(group));
-            PlayerPrefs.SetInt($"{MUTE_KEY_PREFIX}{group}", IsMuted(group) ? 1 : 0);
+            PlayerPrefs.SetInt(VolumeKeyPrefix + group, GetVolume(group));
+            PlayerPrefs.SetInt(MuteKeyPrefix + group, IsMuted(group) ? 1 : 0);
         }
         PlayerPrefs.Save();
     }
-
     private void LoadSettings()
     {
-        foreach (AudioGroup group in System.Enum.GetValues(typeof(AudioGroup)))
+        foreach (AudioGroup group in Enum.GetValues(typeof(AudioGroup)))
         {
-            // 볼륨 로드 (기본값 100)
-            int savedVol = PlayerPrefs.GetInt($"{VOL_KEY_PREFIX}{group}", 100);
-            _provider?.SetVolume(group, savedVol);
-
-            // 뮤트 로드 (기본값 0=false)
-            bool savedMute = PlayerPrefs.GetInt($"{MUTE_KEY_PREFIX}{group}", 0) == 1;
-            _provider?.SetMute(group, savedMute);
+            _provider?.SetVolume(group, PlayerPrefs.GetInt(VolumeKeyPrefix + group, 100));
+            _provider?.SetMute(group, PlayerPrefs.GetInt(MuteKeyPrefix + group, 0) == 1);
         }
     }
 
-    #endregion
-
-    #region BGM Methods
-
+    /// <summary>Legacy string entry accepts only the approved music's name/path.</summary>
     public void PlayBGM(string address)
     {
-        string fullPath = $"{BGM_PATH_ROOT}{address}";
-        AudioClip clip = RM.Load<AudioClip>(fullPath);
-
-        if (clip != null)
-            PlayBGM(clip);
-        else
-            Debug.LogWarning($"[AudioManager] BGM 로드 실패: {fullPath}");
+        if (_palette?.Music != null && ClipName(address) == _palette.Music.name) PlayBGM(_palette.Music);
     }
-
-    public void PlayBGM(AudioClip clip) => _provider?.PlayBGM(clip);
+    /// <summary>Loops the approved music; repeated requests never restart the loop.</summary>
+    public void PlayBGM(AudioClip clip)
+    { if (_palette != null && clip == _palette.Music) _provider?.PlayBGM(clip); }
+    /// <summary>Fades out music without overwriting the user's volume preference.</summary>
     public void StopBGM() => _provider?.StopBGM();
 
-    #endregion
+    /// <summary>Blends BGM speed with gameplay slowdown; zero keeps music audible at normal speed.</summary>
+    public void SetMusicSpeed(float gameplaySpeed) => _unityProvider?.SetMusicSpeed(gameplaySpeed);
 
-    #region SFX Methods
+    /// <summary>Plays the authored cue under its global cooldown, voice cap and priority.</summary>
+    public void PlayCue(GameAudioCue cue) => _unityProvider?.PlayCue(_palette?.Find(cue));
+    /// <summary>Shares one sustained laser texture between all live emitters.</summary>
+    public void SetLaserActive(UnityEngine.Object owner, bool active) => _unityProvider?.SetLaserActive(owner, active);
+    /// <summary>Scene binding permits combat textures only while the battlefield is running.</summary>
+    public void SetCombatActive(bool active) => _unityProvider?.SetCombatActive(active);
+    /// <summary>Scene exit clears outstanding laser emitters while app music continues.</summary>
+    public void ClearCombatAudio() => _unityProvider?.ClearCombat();
 
-    private readonly HashSet<string> _preloadedSFX = new HashSet<string>();
-
-    /// <summary>
-    /// 필요한 사운드를 미리 비동기 로드해 메모리에 올립니다.
-    /// 이후 PlaySFX 호출 시 RM.Load가 불려도 즉시(동기) 로드되어 렉이 발생하지 않습니다.
-    /// </summary>
-    public async Cysharp.Threading.Tasks.UniTask PreloadSFXAsync(IEnumerable<string> addresses)
+    /// <summary>Compatibility entry for serialized events. Unknown and retired sounds remain silent.</summary>
+    public void PlaySFX(string address, float pitchRandomness = .1f)
     {
-        var tasks = new List<Cysharp.Threading.Tasks.UniTask>();
-        foreach (var addr in addresses)
+        var cue = ResolveCue(address);
+        if (cue != null) _unityProvider?.PlayCue(cue, pitchRandomness);
+    }
+    /// <summary>Raw clips are accepted only when they are exact approved palette references.</summary>
+    public void PlaySFX(AudioClip clip, float pitchRandomness = .1f)
+    { if (_palette?.Find(clip) != null) _provider?.PlaySFX(clip, pitchRandomness); }
+
+    private AudioCueDefinition ResolveCue(string address)
+    {
+        if (string.IsNullOrEmpty(address) || _palette == null) return null;
+        string name = ClipName(address);
+        if (_cueByName.TryGetValue(name, out var authored)) return authored;
+        // Only semantically compatible legacy calls survive the transition. No arbitrary RM.Load.
+        switch (name)
         {
-            if (string.IsNullOrEmpty(addr)) continue;
-            string fullPath = $"{SFX_PATH_ROOT}{addr}";
-            
-            if (!_preloadedSFX.Contains(fullPath))
-            {
-                tasks.Add(PreloadSingleAsync(fullPath));
-            }
+            case "02.Summon":
+                return _palette.Find(GameAudioCue.UnitSummon);
+            case "05.Drone_Attack":
+                return _palette.Find(GameAudioCue.DroneLaser);
+            default: return null;
         }
-        await Cysharp.Threading.Tasks.UniTask.WhenAll(tasks);
     }
 
-    private async Cysharp.Threading.Tasks.UniTask PreloadSingleAsync(string fullPath)
+    private static string ClipName(string address)
     {
-        var clip = await RM.LoadAsync<AudioClip>(fullPath);
-        if (clip != null)
+        if (string.IsNullOrEmpty(address)) return string.Empty;
+        string name = address.Replace('\\', '/');
+        int slash = name.LastIndexOf('/');
+        if (slash >= 0) name = name.Substring(slash + 1);
+        return name.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) ? name.Substring(0, name.Length - 4) : name;
+    }
+
+    /// <summary>Prepares only palette clips. Caller cancellation never unloads app-owned audio.</summary>
+    public async UniTask PreloadPaletteAsync(CancellationToken cancellationToken)
+    {
+        if (_palette == null) return;
+        foreach (var cue in _palette.Cues)
         {
-            _preloadedSFX.Add(fullPath);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (cue?.Clip == null) continue;
+            if (cue.Clip.loadState == AudioDataLoadState.Unloaded) cue.Clip.LoadAudioData();
+            await UniTask.WaitWhile(() => cue.Clip.loadState == AudioDataLoadState.Loading, cancellationToken: cancellationToken);
+            if (cue.Clip.loadState == AudioDataLoadState.Failed)
+                Debug.LogError("[AudioManager] Approved clip failed to load: " + cue.Clip.name);
         }
     }
 
-    /// <summary>
-    /// 메모리에 올려둔 사운드 에셋들을 해제합니다.
-    /// </summary>
-    public void ReleasePreloadedSFX()
-    {
-        foreach (var path in _preloadedSFX)
-        {
-            var clip = RM.Load<AudioClip>(path);
-            if (clip != null) RM.Unload(clip);
-        }
-        _preloadedSFX.Clear();
-    }
-
-    public void PlaySFX(string address, float pitchRandomness = 0.1f)
-    {
-        if (string.IsNullOrEmpty(address)) return;
-
-        string fullPath = $"{SFX_PATH_ROOT}{address}";
-        AudioClip clip = RM.Load<AudioClip>(fullPath);
-
-        if (clip != null)
-            PlaySFX(clip, pitchRandomness);
-        else
-            Debug.LogWarning($"[AudioManager] SFX 로드 실패: {fullPath}");
-
-    }
-
-    public void PlaySFX(AudioClip clip, float pitchRandomness = 0.1f) => _provider?.PlaySFX(clip, pitchRandomness);
-
-    #endregion
+    /// <summary>Compatibility preload never loads retired addresses; it prepares the app palette.</summary>
+    public UniTask PreloadSFXAsync(IEnumerable<string> addresses)
+        => PreloadPaletteAsync(this.GetCancellationTokenOnDestroy());
+    /// <summary>The root palette owns clip references until app teardown; scene callers cannot unload them.</summary>
+    public void ReleasePreloadedSFX() { }
 }

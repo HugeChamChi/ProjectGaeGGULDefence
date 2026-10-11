@@ -33,6 +33,7 @@ namespace GaeGGUL.UI.Unit
         public event Action OnDismissRequested;
 
         private UI_UnitInfoPresenter _presenter;
+        private Toggle _descriptionToggle;
         private DebuffInfoLink _effectLink;
 
         /// <summary>Supplies the shared explanation presenter explicitly from scene wiring.</summary>
@@ -76,12 +77,15 @@ namespace GaeGGUL.UI.Unit
             EnsurePresenter();
         }
 
+        /// <summary>Shows a placed unit with a brief explanation and live combat values.</summary>
         public void SetData(UnitBase unit, bool canMerge = true)
         {
             if (unit == null) return;
             RestoreFeedbackSorting();
             _effectLink?.Clear();
-            EnsurePresenter();
+            EnsureDescriptionToggle();
+            _presenter.SetDescriptionMode(false);
+            _descriptionToggle.SetIsOnWithoutNotify(false);
             _presenter.SetUnitData(unit);
             bool showActions = !unit.IsWildcardMergeUnit;
             if (sellButton != null)
@@ -89,17 +93,24 @@ namespace GaeGGUL.UI.Unit
                 sellButton.gameObject.SetActive(showActions);
                 sellButton.SetUnit(showActions ? unit : null);
             }
+            gameObject.SetActive(true);
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
             Open();
             _isShowing = true;
             _justShown = true;
         }
 
+        /// <summary>Shows authored unit information with the brief explanation selected.</summary>
         public void SetData(UnitData data)
         {
             RestoreFeedbackSorting();
             _effectLink?.Clear();
-            EnsurePresenter();
+            EnsureDescriptionToggle();
+            _presenter.SetDescriptionMode(false);
+            _descriptionToggle.SetIsOnWithoutNotify(false);
             _presenter.SetUnitData(data);
+            gameObject.SetActive(true);
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
             Open();
             _isShowing = true;
             _justShown = true;
@@ -165,6 +176,21 @@ namespace GaeGGUL.UI.Unit
             OnDismissRequested?.Invoke();
         }
 
+        private void EnsureDescriptionToggle()
+        {
+            EnsurePresenter();
+            if (_descriptionToggle != null) return;
+            _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
+            _descriptionToggle = InfoPanelPresentation.CreateToggle(transform, txt_SkillDescription,
+                detailed => _presenter.SetDescriptionMode(detailed));
+            ((RectTransform)_descriptionToggle.transform).anchoredPosition = new Vector2(-20f, -72f);
+            if (txt_SkillDescription != null)
+            {
+                txt_SkillDescription.enableAutoSizing = true;
+                txt_SkillDescription.fontSizeMin = 18f;
+                txt_SkillDescription.fontSizeMax = 24f;
+            }
+        }
         private void EnsurePresenter()
         {
             if (_presenter == null)

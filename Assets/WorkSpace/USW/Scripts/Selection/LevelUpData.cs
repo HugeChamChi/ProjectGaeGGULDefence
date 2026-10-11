@@ -26,6 +26,8 @@ public class LevelUpData : ScriptableObject
     public float            spawnRate;
     [TextArea] public string description;
     [TextArea] public string simpleDescription;
+    /// <summary>Authored glossary pointers for this choice; unrelated aliases are not linked.</summary>
+    public string[] DescriptionTerms = System.Array.Empty<string>();
 
     [Header("Tribe Filter (비어있으면 항상 등장)")]
     public UnitTribe[]      applicableTribes;

@@ -10,7 +10,9 @@ public class UI_BossIcon : MonoBehaviour
 
     private void Start()
     {
+        if (_bossManager == null) return;
         _bossManager.OnBossEntryed += ChangeIcon;
+        ChangeIcon(null, _bossManager.PrevBossEntry);
     }
 
     private void OnDestroy()
@@ -23,6 +25,8 @@ public class UI_BossIcon : MonoBehaviour
 
     private void ChangeIcon(BossEntry currentEntry, BossEntry nextEntry)
     {
-        if (_imgBossIcon != null) _imgBossIcon.sprite = nextEntry?.Icon;
+        if (_imgBossIcon == null) return;
+        _imgBossIcon.sprite = nextEntry?.Icon;
+        _imgBossIcon.enabled = _imgBossIcon.sprite != null;
     }
 }

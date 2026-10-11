@@ -22,7 +22,6 @@ using GaeGGUL.Animation;
 public class ExpBarUI : MonoBehaviour
 {
     [Inject] private ExpManager _expManager;
-    [Inject] private AudioManager _audioManager;
 
     [Header("마스킹 게이지 (아래→위)")]
     [Tooltip("아래쪽 정렬된 RectMask2D 컨테이너. 물결 셰이더가 채움을 담당하므로 항상 완전히 개방해 둔다.")]
@@ -42,7 +41,6 @@ public class ExpBarUI : MonoBehaviour
     private static readonly int FlowTimeId = Shader.PropertyToID("_FlowTime");
 
     private float _currentProgress;
-    private float _lastSoundTime;
     private Material _fillMaterial;
     private bool _hasFlowTime;
     private float _flowTime;
@@ -100,19 +98,12 @@ public class ExpBarUI : MonoBehaviour
 
     private void OnExpChanged(float _)
     {
-        if (Time.unscaledTime - _lastSoundTime > 0.05f)
-        {
-            _audioManager.PlaySFX("02.Expup");
-            _lastSoundTime = Time.unscaledTime;
-        }
-
         Refresh(levelUp: false);
         ScaleAnimation();
     }
 
     private void OnLevelUp()
     {
-        _audioManager.PlaySFX("02.Levelup");
         Refresh(levelUp: true);
     }
 

@@ -47,7 +47,7 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
         {
             if (_castVisual == null) _castVisual = gameObject.AddComponent<HackingCastVisual>();
             var droneSource = OwnedDroneCount > 0 ? OwnedDrones[0] : null;
-            _castVisual.Begin(droneSource, target, data, reservation != null);
+            _castVisual.Begin(droneSource, target, data, reservation != null, _audioManager, reservation?.Amount > 0);
             float duration = reservation != null ? data.ConsumerContactSeconds : data.HackFlightSeconds;
             float recovery = reservation != null ? data.ConsumerRecoverySeconds : data.RecoverySeconds;
             float elapsed = 0;

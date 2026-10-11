@@ -68,7 +68,6 @@ public class Drone_Deltan : HackingDroneSpawner
         float exact = ExactProduction;
         int produced = Mathf.FloorToInt(exact);
         _productionRemainder = exact - produced;
-        _audioManager?.PlaySFX("05.Drone_Debuff");
         FlashOwnedDrones();
         StartHacking(runtime, target, produced, null, 0, false);
     }

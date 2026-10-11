@@ -122,10 +122,6 @@ public abstract class DroneSpawnerBase : UnitBase
         {
             drone.Initialize(this, offset);
 
-            if (IsFirstPlacement)
-            {
-                _audioManager?.PlaySFX("05.Drone_Summon");
-            }
             _ownedDrones.Add(drone);
         }
     }

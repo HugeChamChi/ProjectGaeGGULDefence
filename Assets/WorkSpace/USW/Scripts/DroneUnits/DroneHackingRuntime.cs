@@ -23,7 +23,8 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     /// <summary>현재 잔고가 귀속된 보스.</summary>
     public BossBase Target { get { Synchronize(); return _target; } }
     /// <summary>생성 직후 씬 주입 의존성을 연결한다.</summary>
-    public void Initialize(BossManager bosses, GameManager game, IDroneEffectReader effects = null) { _bosses = bosses; _game = game; _effects = effects; }
+    public void Initialize(BossManager bosses, GameManager game, IDroneEffectReader effects = null)
+    { _bosses = bosses; _game = game; _effects = effects; }
     /// <summary>동일 저작 데이터를 사용하는 생산자/소비자를 연결한다.</summary>
     public void Configure(DroneHackingData data)
     {

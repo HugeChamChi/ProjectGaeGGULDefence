@@ -15,3 +15,5 @@ View는 Unity 참조와 화면 갱신/입력을 제공하고 Presenter가 데이
 족장 선택은 PlayerChiefManager의 저장 데이터와 ChieftainSelection의 인게임 전달, IChiefActiveSkill HUD를 구분한다. [족장 현재 구조](../../../../docs/technical/alphan-active-skill.md), [데이터 초기화](../../../../docs/technical/server-client-data-architecture.md)를 참조한다.
 
 레벨업·토템 보상·필드 보기·결과창은 [선택/정지](../../../../docs/technical/levelup-system.md)와 [진행 GDD](../../../../design/gdd/ingame-system.md)에 설명한다. 공유 코딩 규칙은 [AGENTS.md](../../../../AGENTS.md)에만 유지한다.
+
+2026-10-11 후속 적용: 유닛·배치 토템 정보창은 우측 상단 공용 `DescriptionToggleView`로 간단히/자세히를 전환한다. 매 열기 간단히로 초기화하며 선택지 저장 설정과 독립이다. 유닛은 SO 설명과 현재 전투 수치, 토템은 같은 SO의 두 문구와 현재 성장/수확·범위를 표시한다. `InfoPanelPresentation`이 활성화 후 화면 캔버스와 정렬30을 적용해 정렬20의 피해 숫자가 창 뒤에 그려지게 한다. 씬/프리팹 추가 배선은 필요 없다. [실제 플레이 검증](../../../../outputs/info-toggle-20261011/RESULT.md).

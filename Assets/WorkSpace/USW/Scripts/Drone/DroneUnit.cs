@@ -416,7 +416,6 @@ public class DroneUnit : MonoBehaviour
             return;
         }
         Vector3 origin = recordedOrigin ?? MuzzlePosition;
-        _audioManager?.PlaySFX("05.Drone_Attack");
         PlayAttackFrame();
 
         if (_projectilePrefab != null)
@@ -424,6 +423,8 @@ public class DroneUnit : MonoBehaviour
             var p = RM.Instantiate(_projectilePrefab, origin, Quaternion.identity, true);
             if (p != null)
             {
+                if (!(p is DroneLaserProjectile beam) || !beam.IsSustainedBeam)
+                    _audioManager?.PlayCue(GameAudioCue.DroneLaser);
                 // 부모를 설정하지 않거나 null로 두어 WorldSpace 좌표계를 온전히 사용
                 p.transform.SetParent(null);
 
@@ -438,6 +439,7 @@ public class DroneUnit : MonoBehaviour
         }
         else if (_projectileManager != null)
         {
+            _audioManager?.PlayCue(GameAudioCue.DroneLaser);
             _projectileManager.Launch(origin, targetPos, onHitCallback, _owner);
         }
     }

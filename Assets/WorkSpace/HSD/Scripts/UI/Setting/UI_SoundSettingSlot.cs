@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using DG.Tweening;
 
 namespace HSD.UI.Setting
 {
@@ -16,6 +17,12 @@ namespace HSD.UI.Setting
         [Header("Visual Objects")]
         [SerializeField] private GameObject _objSoundOn;
         [SerializeField] private GameObject _objSoundOff;
+        [SerializeField, Min(0f)] private float _transitionSeconds = 0.2f;
+
+        private CanvasGroup _soundOnGroup, _soundOffGroup;
+        private Tween _visualTween;
+        private bool _hasVisualState, _soundOn;
+        private float _visualProgress;
 
         public AudioGroup Group => _group;
 
@@ -54,8 +61,59 @@ namespace HSD.UI.Setting
 
         private void UpdateVisual(bool isSoundOn)
         {
-            if (_objSoundOn != null) _objSoundOn.SetActive(isSoundOn);
-            if (_objSoundOff != null) _objSoundOff.SetActive(!isSoundOn);
+            if (_hasVisualState && _soundOn == isSoundOn) return;
+            if (_soundOnGroup == null && _objSoundOn != null)
+            {
+                _soundOnGroup = _objSoundOn.GetComponent<CanvasGroup>();
+                if (_soundOnGroup == null) _soundOnGroup = _objSoundOn.AddComponent<CanvasGroup>();
+            }
+            if (_soundOffGroup == null && _objSoundOff != null)
+            {
+                _soundOffGroup = _objSoundOff.GetComponent<CanvasGroup>();
+                if (_soundOffGroup == null) _soundOffGroup = _objSoundOff.AddComponent<CanvasGroup>();
+            }
+            bool immediate = !_hasVisualState || !Application.isPlaying || !isActiveAndEnabled || _transitionSeconds <= 0f;
+            _hasVisualState = true;
+            _soundOn = isSoundOn;
+            _visualTween?.Kill();
+            _visualTween = null;
+            float target = isSoundOn ? 1f : 0f;
+            if (immediate)
+            {
+                _visualProgress = target;
+                ApplyVisual();
+            }
+            else
+            {
+                _visualTween = DOTween.To(() => _visualProgress, value => { _visualProgress = value; ApplyVisual(); }, target, _transitionSeconds)
+                    .SetEase(Ease.OutCubic).SetUpdate(true).SetLink(gameObject)
+                    .OnComplete(() => _visualTween = null);
+            }
         }
+
+        private void ApplyVisual()
+        {
+            if (_soundOnGroup != null)
+            {
+                _soundOnGroup.gameObject.SetActive(_visualProgress > 0f || _soundOn);
+                _soundOnGroup.alpha = _visualProgress;
+            }
+            if (_soundOffGroup != null)
+            {
+                _soundOffGroup.gameObject.SetActive(_visualProgress < 1f || !_soundOn);
+                _soundOffGroup.alpha = 1f - _visualProgress;
+            }
+        }
+
+        private void OnEnable() => _hasVisualState = false;
+
+        private void OnDisable()
+        {
+            _visualTween?.Kill();
+            _visualTween = null;
+            _hasVisualState = false;
+        }
+
+        private void OnDestroy() => _visualTween?.Kill();
     }
 }

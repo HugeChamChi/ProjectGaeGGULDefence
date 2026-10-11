@@ -15,7 +15,7 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 | 번호 / SO | 동작 | 수정할 항목 |
 |---|---|---|
 | TD1001Data | 보조 투사체 | Bonus Projectile 확률 0.33, 계수 0.5; effectRanges |
-| TD1002Data | 공격력 +5%, 처치별 범위 확장 | functions의 amount; Growth Stages의 처치 수/Offsets |
+| TD1002Data | 배치 후 시간에 따라 공격력·범위 성장, 최대 성장 후 식량 수확 | Growth Stages의 RequiredSeconds / AttackBonus / Offsets; GrowthHarvestSeconds / Food |
 | TD1003Data | 5초마다 화염구 피해 100 + 화상 | Debuff Fire Interval / Impact Damage / Projectile; 화상 정의는 Resources/Debuffs/Burn |
 | TD1004Data | 40초마다 조커 생성 | Wildcard Spawn 주기와 Unit |
 | TD1005Data | 위 1칸 임시 등급 상승 | effectRanges; 스킬 SO까지 바꾸려면 Tier Upgrades |
@@ -29,7 +29,7 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 | TD1013Data | 같은 가로줄 전체 공격력 +15%, 회전 불가 | functions(AttackPercent); 범위는 좌·우 `DirectionalLineRange` |
 | TD1014Data | 보스 등장 후 7초 동안 오른쪽 세로 3칸 공격속도 +40%, 회전 불가 | functions의 조건부 버프 → `BossEncounterWindowCondition.seconds` / 내부 Speed; effectRanges |
 
-퍼센트 수치는 0.1=10%입니다. 설명은 수치 변경 시 직접 함께 수정해주세요. 그룹을 쓰는 TD1008은 각 Description을 수정합니다.
+퍼센트 수치는 0.1=10%입니다. `description`은 간단히, `DetailedDescription`은 자세히 문구입니다. 일반 수치 변경 시 두 문구도 함께 수정하세요. TD1002 자세히의 `{GrowthStages}`만 단계·수확 SO에서 자동 생성합니다. TD1008의 `[대괄호]`는 EffectGroups 순서의 색으로 표시합니다. 보상 띠는 간단히만, 상세 우측 상단은 공용 설명 스위치이며 매 상세 진입 시 간단히입니다. 성장·수확은 보스 사이 대기에도 진행하고 선택지·보상 정지 중 멈춥니다.
 
 ## 테스트용으로 정한 값
 

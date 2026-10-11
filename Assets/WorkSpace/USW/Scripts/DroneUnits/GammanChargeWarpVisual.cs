@@ -19,11 +19,15 @@ public sealed class GammanChargeWarpVisual : MonoBehaviour
     private float _elapsed;
     private int _lastBeat = -1;
     private int _sortingLayer, _sortingOrder;
+    private AudioManager _audio;
+    private bool _hasStacks;
 
     /// <summary>Captures the visual pose for exact restoration, including cancellation and pool return.</summary>
-    public void Begin(DroneUnit drone, BossBase target, DroneHackingData data)
+    public void Begin(DroneUnit drone, BossBase target, DroneHackingData data,
+        AudioManager audio = null, bool hasStacks = false)
     {
         Clear();
+        _audio = audio; _hasStacks = hasStacks;
         _skeleton = drone != null ? drone.GetComponent<SpineActorVisual>()?.Skeleton : null;
         _data = data; _target = target;
         if (_skeleton == null || data.TeleportTake?.Beats == null || data.TeleportTake.Beats.Length == 0) return;
@@ -72,10 +76,12 @@ public sealed class GammanChargeWarpVisual : MonoBehaviour
         while (index < take.Beats.Length - 1 && elapsed >= take.Beats[index].Duration)
             elapsed -= Mathf.Max(0, take.Beats[index++].Duration);
         var beat = take.Beats[index];
+        _audio?.SetLaserActive(this, beat.Fire);
         float p = Mathf.Clamp01(elapsed / Mathf.Max(.001f, beat.Duration));
         if (index != _lastBeat)
         {
             _lastBeat = index;
+            if (beat.Fire && _hasStacks) _audio?.PlayCue(GameAudioCue.StackExplosion);
             if (beat.Fire && _skeleton.Skeleton.Data.FindAnimation("attack") != null)
                 _skeleton.AnimationState.SetAnimation(0, "attack", false);
         }
@@ -120,6 +126,7 @@ public sealed class GammanChargeWarpVisual : MonoBehaviour
     /// <summary>Restores the actual drone even when the boss dies or the cast is interrupted.</summary>
     public void Clear()
     {
+        _audio?.SetLaserActive(this, false);
         if (_running && _skeleton != null)
         {
             _skeleton.transform.localPosition = _localPosition;

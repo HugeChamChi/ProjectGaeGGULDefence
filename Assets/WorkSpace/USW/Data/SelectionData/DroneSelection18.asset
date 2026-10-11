@@ -23,7 +23,10 @@ MonoBehaviour:
   chooseName: "\uACC4\uC57D \uBB34\uD6A8"
   tier: 2
   spawnRate: 1
-  description: "\uC120\uD0DD\uC9C0\uB97C \uC989\uC2DC \uB2E4\uC2DC \uBF51\uC2B5\uB2C8\uB2E4."
+  description: "\uD604\uC7AC \uC120\uD0DD\uC9C0 \uBAA9\uB85D\uC744 \uC989\uC2DC \uC0C8\uB85C\uACE0\uCE68
+    \uD558\uC5EC \uCD9C\uB825\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC120\uD0DD\uC9C0\uB97C \uB2E4\uC2DC \uBF51\uC2B5\uB2C8\uB2E4."
+  DescriptionTerms: []
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

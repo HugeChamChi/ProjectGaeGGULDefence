@@ -12,7 +12,8 @@ public sealed class HackingCastVisual : MonoBehaviour
     private float _progress, _recovery;
     private bool _running;
     /// <summary>해킹탄 또는 실제 드론 외형의 워프 타임라인을 시작한다.</summary>
-    public void Begin(DroneUnit source, BossBase target, DroneHackingData data, bool consumer)
+    public void Begin(DroneUnit source, BossBase target, DroneHackingData data, bool consumer,
+        AudioManager audio = null, bool hasStacks = false)
     {
         Clear();
         _target = target; _data = data; _consumer = consumer;
@@ -21,7 +22,7 @@ public sealed class HackingCastVisual : MonoBehaviour
         if (consumer)
         {
             if (_warp == null) _warp = gameObject.AddComponent<GammanChargeWarpVisual>();
-            _warp.Begin(source, target, data);
+            _warp.Begin(source, target, data, audio, hasStacks);
             return;
         }
         if (_beam == null)

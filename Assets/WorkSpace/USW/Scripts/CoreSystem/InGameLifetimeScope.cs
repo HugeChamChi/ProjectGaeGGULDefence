@@ -105,6 +105,7 @@ public class InGameLifetimeScope : LifetimeScope
 
         builder.RegisterEntryPoint<AlphanActiveSkill>(Lifetime.Scoped).AsSelf();
         builder.RegisterEntryPoint<GameInitializer>().AsSelf();
+        builder.RegisterEntryPoint<IngameAudioBinding>();
 
         builder.RegisterBuildCallback(resolver =>
         {

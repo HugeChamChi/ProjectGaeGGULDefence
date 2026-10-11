@@ -43,9 +43,7 @@ public class SelfDestructDrone : MonoBehaviour
     [SerializeField] private GameObject _explosionPrefab;
     [SerializeField, Min(0.1f)] private float _explosionLifetime = 1.5f;
     [Tooltip("폭발 효과음 (비우면 재생 안 함).")]
-    [SerializeField] private string _explosionSfx;
 
-    [Inject] private AudioManager _audioManager;
 
     private CancellationTokenSource _cts;
     private SpriteRenderer _spriteRenderer;
@@ -257,8 +255,6 @@ public class SelfDestructDrone : MonoBehaviour
             var fx = RM.Instantiate(explosionPrefab, target, Quaternion.identity, true);
             if (fx != null) RM.Destroy(fx, _explosionLifetime);
         }
-        if (!string.IsNullOrEmpty(_explosionSfx))
-            _audioManager?.PlaySFX(_explosionSfx);
 
         if (!_previewTarget.HasValue) _droneManager?.NotifySelfDestructExplosion();
     }

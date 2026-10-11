@@ -13,8 +13,13 @@ public class ProjectileTable
 
     const string LABEL = "ProjectileData";
 
+    /// <summary>True once the authored projectile catalog has been loaded.</summary>
+    public bool IsInitialized => _dict.Count > 0;
+
+    /// <summary>Loads the catalog once; scene entry reuses data initialized by the title.</summary>
     public async UniTask InitializeAsync()
     {
+        if (IsInitialized) return;
         var list = await RM.LoadAllAsync<ProjectileData>(LABEL);
         foreach (var data in list)
             _dict.TryAdd(data.id, data);

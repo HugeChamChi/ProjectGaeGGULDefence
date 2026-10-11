@@ -22,6 +22,7 @@ public class UpgradeManager : MonoBehaviour
     }
 
     [Inject] private CurrencyManager _currencyManager;
+    [Inject] private AudioManager _audioManager;
     [Inject] private UpgradeKeyOverrides _keyOverrides;
     [Inject] private UpgradeSettings _settings;
 
@@ -155,6 +156,7 @@ public class UpgradeManager : MonoBehaviour
     {
         int cost = GetUpgradeCost(upgradeTarget);
         if (cost < 0) return false;
+        _audioManager?.PlayCue(GameAudioCue.UpgradeAttempt);
         if (_currencyManager == null || !_currencyManager.Spend(cost)) return false;
         TotalSpent += cost;
 

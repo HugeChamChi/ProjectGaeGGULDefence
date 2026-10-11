@@ -33,9 +33,9 @@ public static class DescriptionFormatter
                 {
                     string name = (term.DisplayName ?? id).Replace("<", "\uFF1C").Replace(">", "\uFF1E");
                     bool link = interactive && !insideLink && !string.IsNullOrWhiteSpace(term.Body);
-                    if (link) output.Append("<link=\"").Append(id).Append("\"><color=#").Append(ColorUtility.ToHtmlStringRGB(term.Color)).Append("><u>");
+                    if (link) output.Append("<link=\"").Append(id).Append("\"><color=#").Append(ColorUtility.ToHtmlStringRGB(term.Color)).Append(">");
                     output.Append('「').Append(name).Append('」');
-                    if (link) output.Append("</u></color></link>");
+                    if (link) output.Append("</color></link>");
                 }
             }
             else if (snapshot.Values.TryGetValue(token, out string value)) output.Append(value);

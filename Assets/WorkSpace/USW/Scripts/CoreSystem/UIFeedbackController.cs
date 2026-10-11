@@ -12,10 +12,6 @@ public class UIFeedbackController : MonoBehaviour
 {
     [Inject] private AudioManager _audioManager;
 
-    [Header("Sound Settings")]
-    [SerializeField] private string buttonSFX = "01.Button_Touch(max vol)";
-    [SerializeField] private string touchSFX  = "01.Screen_touch(max vol)";
-
     [Header("Effect Settings")]
     [SerializeField] private ParticleImage clickEffectPrefab; // 클릭 시 생성될 ParticleImage 프리팹
     [SerializeField] private RectTransform effectParent;      // 이펙트가 생성될 UI 부모 (최상위 Canvas 권장)
@@ -27,43 +23,42 @@ public class UIFeedbackController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            HandleClickFeedback();
+            HandleClickFeedback(Input.mousePosition);
         }
     }
 
-    private void HandleClickFeedback()
+    private void HandleClickFeedback(Vector2 screenPos)
     {
         if (EventSystem.current == null) return;
 
-        Vector2 mousePos = Input.mousePosition;
-
         // 1. 클릭 대상 판별 (Raycast)
         PointerEventData eventData = new PointerEventData(EventSystem.current);
-        eventData.position = mousePos;
+        eventData.position = screenPos;
 
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
 
-        bool isButton = false;
+        bool isHudButton = false;
         if (results.Count > 0)
         {
             GameObject hitObj = results[0].gameObject;
-            Button btn = hitObj.GetComponentInParent<Button>();
+            Selectable btn = hitObj.GetComponentInParent<Selectable>();
             
-            if (btn != null && btn.interactable)
+            if (btn != null && btn.IsActive() && btn.IsInteractable())
             {
-                isButton = true;
+                var scope = btn.GetComponentInParent<BottomHudAudioScope>();
+                isHudButton = scope != null && scope.Contains(btn);
             }
         }
 
         // C#의 ?. 연산자는 유니티에서 파괴된(Destroyed) 오브젝트를 걸러내지 못하므로 명시적 null 체크 필수
-        if (_audioManager != null)
+        if (_audioManager != null && isHudButton)
         {
-            _audioManager.PlaySFX(isButton ? buttonSFX : touchSFX);
+            _audioManager.PlayCue(GameAudioCue.HudButton);
         }
 
         // 3. ParticleImage 이펙트 재생
-        PlayClickEffect(mousePos);
+        PlayClickEffect(screenPos);
     }
 
     private void PlayClickEffect(Vector2 screenPos)

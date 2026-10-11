@@ -85,6 +85,10 @@ public class LevelUpManager : MonoBehaviour
         => card == null ? string.Empty : GetFormatter().Format(State.Prepare(card, UnityEngine.Random.Range));
     /// <summary>설명 UI와 실제 획득이 같은 런 캐시의 확정 값을 사용한다.</summary>
     public SelectionCardSnapshot PrepareChoice(LevelUpData card) => State.Prepare(card, UnityEngine.Random.Range);
+    /// <summary>상세/요약 UI가 실제 효과와 같은 런 프리뷰의 확정 수치를 사용한다.</summary>
+    public DescriptionSnapshot GetChoiceDescriptionSnapshot(LevelUpData card)
+        => card == null ? new DescriptionSnapshot(null, null)
+            : GetFormatter().Capture(State.Prepare(card, UnityEngine.Random.Range), card.simpleDescription);
     private SelectionDescriptionFormatter GetFormatter() { EnsureRuntime(); return _formatter; }
     /// <summary>선택 연출 전에 재추첨 여부를 조회한다.</summary>
     public bool RequestsReroll(LevelUpData card)

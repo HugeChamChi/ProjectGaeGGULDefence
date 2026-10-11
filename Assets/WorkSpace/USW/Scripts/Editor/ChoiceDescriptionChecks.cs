@@ -25,9 +25,10 @@ public static class ChoiceDescriptionChecks
                 errors.Add("Missing, unsafe or duplicate catalog ID.");
             else if (string.IsNullOrWhiteSpace(entry.DisplayName) || string.IsNullOrWhiteSpace(entry.Body)) errors.Add(entry.Id + ": missing name/body.");
         }
-        var allowed = new HashSet<string> { "primaryValue", "secondaryValue", "specialValue", "Interval", "Value", "ValuePercent", "MaxValuePercent", "Count", "value" };
+        var allowed = new HashSet<string> { "primaryValue", "secondaryValue", "specialValue", "Interval", "Value", "ValuePercent", "MaxValuePercent", "Count", "value", "count", "seconds", "max", "refund" };
         int count = 0;
-        for (int i = 1; i <= 20; i++)
+        var glossary = AssetDatabase.LoadAssetAtPath<TermGlossary>("Assets/WorkSpace/USW/Data/UI/TermGlossary.asset");
+        for (int i = 1; i <= 24; i++)
         {
             var card = AssetDatabase.LoadAssetAtPath<LevelUpData>("Assets/WorkSpace/USW/Data/SelectionData/DroneSelection" + i + ".asset");
             if (card == null) { errors.Add("Missing card " + i); continue; }
@@ -35,18 +36,18 @@ public static class ChoiceDescriptionChecks
             if (string.IsNullOrWhiteSpace(card.simpleDescription)) errors.Add(card.name + ": missing simple description.");
             CheckTemplate(card.description, card.name + " detailed", card);
             CheckTemplate(card.simpleDescription, card.name + " simple", card);
-            var authored = ScriptableObject.CreateInstance<LevelUpData>();
-            authored.droneEffect = card.droneEffect; authored.specialEffect = card.specialEffect;
-            ChoiceDescriptionContent.Configure(authored);
-            if (card.description != authored.description || card.simpleDescription != authored.simpleDescription)
-                errors.Add(card.name + ": asset wording differs from builder wording.");
-            UnityEngine.Object.DestroyImmediate(authored);
+            SelectionDescriptionFormatter.ValidateTemplate(card.description, card.Composition);
+            SelectionDescriptionFormatter.ValidateTemplate(card.simpleDescription, card.Composition);
+            foreach (var id in card.DescriptionTerms)
+                if (glossary == null || !glossary.TryFind(id, out var term) || string.IsNullOrWhiteSpace(term.BriefBody) || string.IsNullOrWhiteSpace(term.DetailedBody))
+                    errors.Add(card.name + ": missing pointed term " + id);
         }
-        Assert(count == 20, "All 20 existing cards must be validated.");
+        Assert(count == 24, "All 24 authored cards must be validated.");
         if (errors.Count > 0) throw new InvalidOperationException(string.Join("\n", errors));
         CheckFormatter();
+        CheckTermLinks(glossary);
         CheckRandomBoundary(resolver);
-        Debug.Log("[Descriptions] PASS: 20 cards, catalog/debuff terms, allowed tokens, builder wording, formatter fallbacks/markup and random snapshot boundary. Input/layout require the standalone Play checks and visual QA.");
+        Debug.Log("[Descriptions] PASS: 24 cards, glossary pointers, catalog/debuff terms, composition tokens, formatter fallbacks/markup and random snapshot boundary. Input/layout require Play checks and visual QA.");
 
         void CheckTemplate(string text, string label, LevelUpData card)
         {
@@ -61,7 +62,6 @@ public static class ChoiceDescriptionChecks
                     if (!resolver.TryResolve(token.Substring(5), out var term) || string.IsNullOrWhiteSpace(term.Body)) errors.Add(label + ": unresolved/empty term " + token);
                 }
                 else if (!allowed.Contains(token)) errors.Add(label + ": unknown numeric token " + token);
-                else if (token == "value" && card.droneEffect?.Kind != DroneSelectionKind.DeltanDamageTaken) errors.Add(label + ": random value token outside Deltan.");
             }
             if (Regex.IsMatch(text, @"\{(?:ValuePercent|MaxValuePercent)\}%(?!p)") && card.droneEffect?.Kind == DroneSelectionKind.GammanFrequency)
                 errors.Add(label + ": additive Gamman bonus must use %p.");
@@ -73,6 +73,23 @@ public static class ChoiceDescriptionChecks
     {
         var settings = Resources.Load<DebuffSettings>("DebuffSettings");
         return new DescriptionTermResolver(catalog, new DebuffInfoPresenter(settings, new DebuffCatalog(settings)));
+    }
+    private static void CheckTermLinks(TermGlossary glossary)
+    {
+        var linker = new TermLinker(glossary, Color.cyan, Color.yellow);
+        var card = AssetDatabase.LoadAssetAtPath<LevelUpData>("Assets/WorkSpace/USW/Data/SelectionData/DroneSelection9.asset");
+        foreach (var text in new[] { card.simpleDescription, card.description })
+        {
+            string linked = linker.AddLinks(text, card.DescriptionTerms);
+            Assert(TermLinker.LinkedIds(linked).SequenceEqual(new[] { "hack_stack" }),
+                "9109 hacking skill must open hacking in both modes, never mana.");
+            Assert(linked.Contains("해킹 스킬</color>"), "The complete hacking skill phrase must be interactive.");
+            Assert(!linked.Contains("<u>") && !linked.Contains("▶"), "Terms use only colors without underline or video markers.");
+        }
+        Assert(TermLinker.LinkedIds(linker.AddLinks("해킹 스킬, 마나")).SequenceEqual(new[] { "hack_stack", "mana" }),
+            "Hacking skill and mana must retain distinct glossary meanings.");
+        foreach (var id in new[] { "self_destruct_drone", "chief_skill", "hack_stack", "time_manipulation" })
+            Assert(glossary.TryFind(id, out var entry) && entry.Clip != null, "Video term missing its clip: " + id);
     }
     private static void CheckFormatter()
     {
@@ -100,6 +117,9 @@ public static class ChoiceDescriptionChecks
         var savedRandom = UnityEngine.Random.state;
         var root = new GameObject("DescriptionSnapshotCheck");
         var manager = root.AddComponent<LevelUpManager>();
+        var state = new LevelUpRunState();
+        typeof(LevelUpManager).GetField("_runState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .SetValue(manager, state);
         try
         {
             var card = AssetDatabase.LoadAssetAtPath<LevelUpData>("Assets/WorkSpace/USW/Data/SelectionData/DroneSelection8.asset");
@@ -115,7 +135,7 @@ public static class ChoiceDescriptionChecks
             var repeated = new ChoiceDescriptionAdapter(card, manager).Capture();
             manager.ApplyEffect(card);
             Assert(repeated.Values["value"] == snapshot.Values["value"] && captured.Equals(UnityEngine.Random.state), "Existing run cache must preserve the displayed roll on selection.");
-            Assert(Mathf.RoundToInt(manager.CurrentEffects.HackingProductionBonus * 100).ToString() == snapshot.Values["value"], "Applied value must match the snapshot.");
+            Assert(Mathf.RoundToInt(manager.CurrentEffects.HackingProductionBonus * 100).ToString() == snapshot.Values["value"], "Applied composition value must match the snapshot.");
         }
         finally { UnityEngine.Random.state = savedRandom; UnityEngine.Object.DestroyImmediate(root); }
     }

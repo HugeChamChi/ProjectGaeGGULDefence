@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossData
   _displayName: DummyBoss2
   _prefab: {fileID: 5097534829583230306, guid: 67b930a4bb684fd488d42f204f2e0932, type: 3}
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: c04f17808312b4548badf98a7a7679e6, type: 3}
   _maxHp: 40000
   _defense: 0
   _hpLineCount: 420

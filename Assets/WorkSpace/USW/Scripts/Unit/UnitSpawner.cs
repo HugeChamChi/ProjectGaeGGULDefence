@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 public class UnitSpawner : MonoBehaviour
 {
     [Inject] private IObjectResolver _resolver;
+    [Inject] private AudioManager _audioManager;
 
     private UpgradeManager _upgradeManager;
     private GameDataManager _gameDataManager;
@@ -244,6 +245,7 @@ public class UnitSpawner : MonoBehaviour
         }
         
         Transform lineParent = effectParent != null ? effectParent : transform;
+        _audioManager?.PlayCue(GameAudioCue.UnitSummon);
 
         // 1. Line Effect (World Space)
         if (spawnLinePrefab != null)

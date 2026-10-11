@@ -7,6 +7,7 @@ public sealed class SafeAreaContentFrame : MonoBehaviour
 {
     [SerializeField] private Vector2 _referenceResolution = new Vector2(1080f, 1920f);
     [SerializeField] private bool _expandHeight = true;
+    private bool _expandWidth;
     private RectTransform _rect;
     private RectTransform _parent;
     private Canvas _canvas;
@@ -32,6 +33,14 @@ public sealed class SafeAreaContentFrame : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>Uses all available safe space while retaining the reference text scale on tablets.</summary>
+    public void UseFullSafeArea()
+    {
+        _expandWidth = _expandHeight = true;
+        _lastSafe = Rect.zero;
+        Refresh();
+    }
+
     /// <summary>Applies the safe frame in Play only; authored editor transforms are never changed.</summary>
     public void Refresh()
     {
@@ -50,7 +59,7 @@ public sealed class SafeAreaContentFrame : MonoBehaviour
         _rect.anchorMin = _rect.anchorMax = new Vector2(0.5f, 0.5f);
         _rect.pivot = new Vector2(0.5f, 0.5f);
         _rect.localScale = Vector3.one * (scale / parentScale);
-        _rect.sizeDelta = new Vector2(_referenceResolution.x, _expandHeight ? safe.height / scale : _referenceResolution.y);
+        _rect.sizeDelta = new Vector2(_expandWidth ? safe.width / scale : _referenceResolution.x, _expandHeight ? safe.height / scale : _referenceResolution.y);
         _rect.anchoredPosition = center - _parent.rect.center;
     }
 }
