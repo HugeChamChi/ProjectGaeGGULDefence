@@ -78,6 +78,7 @@ crashlytics-build.properties
 .claude/settings.local.json
 .claude/agent-memory/
 production/session-logs/
+**/production/session-logs/
 CLAUDE.md
 /.claude
 /design
@@ -87,6 +88,7 @@ GEMINI.md
 /Assets/Imports/**
 !/Assets/Imports/**/
 !/Assets/Imports/**/*.meta
+/Assets/Imports/**/production/session-logs/
 /.gemini
 Assets/GEMINI.md
 Assets/GEMINI.md.meta
