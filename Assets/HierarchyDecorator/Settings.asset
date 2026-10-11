@@ -5193,19 +5193,6 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 0082b02dde60706459f3db3360e1fa1a, type: 3}
         hasToggle: 1
-      - displayName: Drone_Alphan
-        name: Drone_Alphan, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: Drone_Alphan
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: Drone_Alphan
-          m_TextWithWhitespace: "Drone_Alphan\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 0
-        script: {fileID: 0}
-        hasToggle: 1
       - displayName: Drone_Betan
         name: Drone_Betan, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
         content:
@@ -5314,20 +5301,6 @@ MonoBehaviour:
         excluded: 0
         isBuiltIn: 0
         script: {fileID: 11500000, guid: 28748cd53a7dcb04c95dfb94344ddfd2, type: 3}
-        hasToggle: 1
-      - displayName: AutoPlay_ChiefSkillEffect
-        name: HSD.UI.Effect.Tests.AutoPlay_ChiefSkillEffect, Assembly-CSharp, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: AutoPlay_ChiefSkillEffect
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: AutoPlay_ChiefSkillEffect
-          m_TextWithWhitespace: "AutoPlay_ChiefSkillEffect\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 0
-        script: {fileID: 11500000, guid: 88b30021a8eda144abe67cf40341cafb, type: 3}
         hasToggle: 1
       - displayName: GridManager
         name: GridManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null

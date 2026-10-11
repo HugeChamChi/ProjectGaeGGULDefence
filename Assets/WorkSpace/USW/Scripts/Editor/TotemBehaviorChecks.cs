@@ -151,13 +151,13 @@ public static class TotemBehaviorChecks
         ((List<BossBase>)bosses.CurrentBosses).Add(boss);
         var currency=Component<CurrencyManager>();
         var totem=Place<TotemKillRangeGrowth>(grid,manager,data,new Vector2Int(2,2));
-        Set(totem,"_game",game);Set(totem,"_bosses",bosses);Set(totem,"_currency",currency);
+        Set(totem,"_game",game);Set(totem,"_currency",currency);
         Check(totem.GetAffectedCells().Count==9 && totem.StageIndex==0,"initial3x3");
-        totem.TickCombat(59);Check(totem.StageIndex==0,"before60");totem.TickCombat(1);Check(totem.StageIndex==1 && totem.GetAffectedCells().Count==9,"root60");
+        Check(totem.ProgressDescription=="다음 강화까지 60초","initial progress without stage name");totem.TickCombat(59);Check(totem.StageIndex==0&&totem.ProgressDescription=="다음 강화까지 1초","before60");totem.TickCombat(1);Check(totem.StageIndex==1 && totem.GetAffectedCells().Count==9,"root60");
         Check(Mathf.Approximately(grid.GetCell(3,3).Model.GetTotemCellBonus(StatKind.AttackPercent),.1f),"stage attack replaces not stacks");
         totem.TickCombat(60);Check(totem.StageIndex==2&&totem.GetAffectedCells().Count==16,"stem120");
         totem.Rotate();Check(totem.CombatSeconds==120,"rotation keeps time");
-        totem.TickCombat(60);Check(totem.StageIndex==3&&currency.Currency==0,"bloom180 no early harvest");
+        totem.TickCombat(60);Check(totem.StageIndex==3&&currency.Currency==0&&totem.ProgressDescription=="다음 식량까지 60초","bloom180 no early harvest");
         totem.TickCombat(59);Check(currency.Currency==0,"harvest wait");totem.TickCombat(1);Check(currency.Currency==60,"harvest240");
         var cell=totem.CurrentCell;cell.Model.SetPermanentSeal(true);totem.TickCombat(60);Check(currency.Currency==60&&!totem.IsActive,"sealed stops harvest");cell.Model.SetPermanentSeal(false);
         Check(totem.StageIndex==3,"unseal keeps growth");
@@ -167,8 +167,9 @@ public static class TotemBehaviorChecks
             Set(totem,"_timeScale",scale);scale.Pause(totem);totem.TickCombat(60);
             Check(currency.Currency==60,"TimeScaleService pause blocks nonzero supplied delta");scale.Release(totem);
         }
-        ((List<BossBase>)bosses.CurrentBosses).Clear();totem.TickCombat(60);Check(currency.Currency==60,"no boss stops time");
+        ((List<BossBase>)bosses.CurrentBosses).Clear();totem.TickCombat(60);Check(currency.Currency==120,"no boss continues harvest");
         totem.OnRemoved();cell.RemoveTotem();totem.OnPlaced(cell);cell.TryPlaceTotem(totem);Check(totem.CombatSeconds==0&&totem.HarvestSeconds==0&&totem.StageIndex==0,"moving resets all");
+        totem.TickCombat(3);Check(totem.CombatSeconds==3&&totem.ProgressDescription=="다음 강화까지 57초","no boss continues growth");
         totem.OnRemoved();cell.RemoveTotem();Check(grid.GetCell(3,3).Model.GetTotemCellBonus(StatKind.AttackPercent)==0,"remove clears buff");
     }
 

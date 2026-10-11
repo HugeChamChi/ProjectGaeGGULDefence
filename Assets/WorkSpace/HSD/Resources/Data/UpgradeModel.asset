@@ -21,7 +21,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 03e1a8655e1fe60419f9f0b57619438f, type: 3}
   - targetKey: Betan
     displayName: "\uBCA0\uD0D5"
-    icon: {fileID: 21300000, guid: 0269d4965664f49439872d185b90b50d, type: 3}
+    icon: {fileID: 21300000, guid: 728668a5aba74e048ae3897786bd5c18, type: 3}
   - targetKey: Disigman
     displayName: "\uB514\uC2DC\uADF8\uB9DD"
     icon: {fileID: 21300000, guid: 0269d4965664f49439872d185b90b50d, type: 3}

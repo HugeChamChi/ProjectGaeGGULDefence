@@ -215,7 +215,8 @@ public class UnitSpawner : MonoBehaviour
         _unitFactory.InitUnitTransform(unit);
         // Spine replaces the breathing tween that used to restore the prefab's
         // root scale after the spawn effect. Keep that authored scale explicitly.
-        unit.transform.localScale = unit.TryGetComponent<SpineActorVisual>(out _)
+        unit.transform.localScale = (unit.TryGetComponent<SpineActorVisual>(out _)
+            || unit.TryGetComponent<BetangSpineVisual>(out _))
             && unit.unitData != null && unit.unitData.prefab != null
             ? unit.unitData.prefab.transform.localScale
             : spawnScale;

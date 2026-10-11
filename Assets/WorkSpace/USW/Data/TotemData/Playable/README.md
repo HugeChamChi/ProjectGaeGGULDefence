@@ -1,6 +1,6 @@
-# 토템 10종 사용/수정 가이드
+# 토템 14종 사용/수정 가이드
 
-각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1010 모두 `Use Sheet Data`를 껐고, KHJ_Artwork/Totem_Sprite의 같은 번호 그림을 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템(SampleAttack/SampleDualEffect)은 2026-10-10 삭제했습니다.
+각 번호의 `TD1001.prefab`은 외형·동작, `TD1001Data.asset`은 이름·효과·범위·수치를 담당합니다. 1001~1014 모두 `Use Sheet Data`를 껐습니다. 1001~1010은 KHJ_Artwork/Totem_Sprite의 같은 번호 그림을, 1011~1014는 전용 그림이 없어 기존 토템 그림(1009/1006/1008/1007)을 임시로 연결했습니다. 보스 보상의 현재 풀은 IngameScene의 TotemRewardUI가 참조합니다. 풀 연결과 선택 흐름은 [토템 GDD](../../../../../../design/gdd/totem-system.md)에서 확인합니다. 기존 샘플 토템(SampleAttack/SampleDualEffect)은 2026-10-10 삭제했습니다.
 
 ## 바로 테스트하기
 
@@ -24,12 +24,16 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 | TD1008Data | 안쪽 공격력 +10%, 바깥 공격속도 +10% | Effect Groups 각각의 Color / Description / Functions / Ranges |
 | TD1009Data | 인접 공격력 +50%, 공격속도 -20% | functions 두 항목; effectRanges |
 | TD1010Data | 10초마다 식량 30 | functions의 FoodGeneratorFunction interval / amount |
+| TD1011Data | 위 가로 3칸 공격 불가 + 아래 1칸 공격속도 +40%, 회전 불가 | attackDisabledRanges / effectRanges / functions(Speed) |
+| TD1012Data | 필드 토템 1개당 치명 확률 +2%·치명 피해 +3%, 전역, 상한 없음 | functions의 CritChance / CritDamage (프리팹 `TotemTotemCount`) |
+| TD1013Data | 같은 가로줄 전체 공격력 +15%, 회전 불가 | functions(AttackPercent); 범위는 좌·우 `DirectionalLineRange` |
+| TD1014Data | 보스 등장 후 7초 동안 오른쪽 세로 3칸 공격속도 +40%, 회전 불가 | functions의 조건부 버프 → `BossEncounterWindowCondition.seconds` / 내부 Speed; effectRanges |
 
 퍼센트 수치는 0.1=10%입니다. 설명은 수치 변경 시 직접 함께 수정해주세요. 그룹을 쓰는 TD1008은 각 Description을 수정합니다.
 
 ## 테스트용으로 정한 값
 
-- 등급은 **10종 모두 Normal**입니다. 미확정 밸런스로, 각 SO의 Tier에서 바꿀 수 있습니다.
+- 등급은 **14종 모두 Normal**입니다. 미확정 밸런스로, 각 SO의 Tier에서 바꿀 수 있습니다.
 - TD1001/TD1007 범위는 인접 8칸으로 임시 설정했습니다.
 - TD1008의 +10%/+10%, TD1009의 +50%/-20%, TD1010의 10초/30은 기존 제작 예시값입니다.
 - 방향별 별도 그림이 없어 네 방향 모두 같은 원본 그림을 사용합니다. 방향 전환은 효과 범위에 적용됩니다. 방향 그림이 생기면 rotationSpriteAddresses 4개를 교체하세요.

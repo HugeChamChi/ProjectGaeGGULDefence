@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// 결과 화면 프리팹(UI_ResultScreen)과 실험실 씬(FxLab_Result)을 만든다 (사용자 요청 2026-10-01, 레퍼런스 design/전투종료예시1·2).
+/// 결과 화면 프리팹(UI_ResultScreen)과 실험실 씬(FxLab_Result)을 만든다. 현행 배치는 design/전투종료예시.png.
 ///   FxLab_Result 한 씬에서 담백 결과 화면의 HP 정산·도장·결승선을 비교한다.
 ///   아트: UI2600 배너·배경, 알팡 일러스트, 선택지 아이콘, 골드/EXP 아이콘, UI2200 버튼(9-slice).
 /// 다시 실행하면 프리팹/씬을 이 값으로 덮어쓴다 — 인스펙터에서 튜닝한 뒤에는 이 파일 값도 갱신할 것.
@@ -45,6 +45,7 @@ public static class ResultScreenLabBuilder
     {
         if (EditorApplication.isPlaying) { Debug.LogError("[ResultScreenLab] 플레이 중에는 실행하지 않는다"); return; }
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        ResultScreenReferenceLayout.ImportArt();
         var art = Art.Load();
         if (!art.IsValid(out string missing))
         {
@@ -276,6 +277,7 @@ public static class ResultScreenLabBuilder
 
         int uiLayer = LayerMask.NameToLayer("UI");
         foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = uiLayer;
+        ResultScreenReferenceLayout.Configure(root);
         PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         Object.DestroyImmediate(root);
     }

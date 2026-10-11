@@ -76,6 +76,7 @@ public class DroneUnit : MonoBehaviour
     /// <summary>Animated firing origin for normal shots, hacking and recorded attacks.</summary>
     public Vector3 MuzzlePosition => _spineVisual != null ? _spineVisual.MuzzlePosition : transform.position;
     private int _attackLifetime;
+    private Vector3 _authoredScale = Vector3.one;
     private Vector3 _baseScale = Vector3.one;
     private Tween _punchTween;
 
@@ -90,7 +91,7 @@ public class DroneUnit : MonoBehaviour
 
         _spriteRenderer = GetComponent<SpriteRenderer>();
         if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
-        _baseScale = transform.localScale;
+        _authoredScale = _baseScale = transform.localScale;
     }
 
     private AnimatorUpdateMode _updateModeBeforePause;
@@ -130,6 +131,7 @@ public class DroneUnit : MonoBehaviour
         _followingOwnerDrag   = false;
 
         StopAll();
+        ApplyFacingByCell();
         transform.position = HomePosition;
 
         _droneManager?.RegisterDrone(this);
@@ -138,6 +140,21 @@ public class DroneUnit : MonoBehaviour
         AttackLoopAsync(_attackCts.Token).Forget();
 
         StartOrbit();
+    }
+
+    // Match UnitBase's cell-facing rule on the whole rig so Spine and its muzzle mirror together.
+    private void ApplyFacingByCell()
+    {
+        _baseScale = _authoredScale;
+        if (_owner?.currentCell != null && _owner._gridManager != null)
+        {
+            int halfColumn = _owner._gridManager.Columns / 2;
+            bool faceLeft = _owner.currentCell.GridPosition.x >= halfColumn;
+            float x = Mathf.Abs(_authoredScale.x);
+            if (x <= 0f) x = 1f;
+            _baseScale.x = faceLeft ? x : -x;
+        }
+        transform.localScale = _baseScale;
     }
 
     // ── 렌더 정렬 (오너보다 항상 앞) ──────────────────────────────────

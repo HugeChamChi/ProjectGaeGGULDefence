@@ -119,6 +119,7 @@ namespace GaeGGUL.UI.Totem
             {
                 AddOffsets(map, data.GetEffectPreviewOffsets(), settings.defaultRangeColor);
             }
+            AddOffsets(map, data.GetAttackDisabledPreviewOffsets(), settings.debuffRangeColor);
             ShowRange(map);
             if (map.Count > 0) UpdateLegend(data);
         }
@@ -144,6 +145,7 @@ namespace GaeGGUL.UI.Totem
             {
                 AddCells(map, totem.GetAffectedCells(), origin, settings.defaultRangeColor);
             }
+            AddCells(map, totem.Data.GetAttackDisabledCells(totem, grid), origin, settings.debuffRangeColor);
             ShowRange(map);
             if (map.Count > 0) UpdateLegend(totem.Data);
         }
