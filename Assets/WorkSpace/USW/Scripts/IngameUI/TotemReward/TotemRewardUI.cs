@@ -47,6 +47,7 @@ public class TotemRewardUI : MonoBehaviour
     [Inject] private WaveManager _waveManager;
 
     [SerializeField] private TotemRewardSettings _settings;
+    [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] _totemPool;
     [Header("인벤토리 가득 찼을 때 대체 식량")]
@@ -64,6 +65,12 @@ public class TotemRewardUI : MonoBehaviour
     public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeSelf;
     /// <summary>Overview target for a non-interactive tutorial highlight.</summary>
     public RectTransform ChoiceArea => _overview;
+    public RectTransform RequiredChoiceArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].Icon.rectTransform;
+    public RectTransform RequiredChoiceDescriptionArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].TextBlock;
+    public bool IsReadyForConfirmation => _isOpen && !_busy && _detail != null && _detail.gameObject.activeSelf;
+    public RectTransform ConfirmationArea => _confirmationArea;
+    private RectTransform _confirmationArea;
+    private bool HasRequiredChoice => _tutorialSettings != null && _tutorialSettings.RequiredTotem != null;
 
     private sealed class BandView
     {
@@ -141,7 +148,9 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
-        var choices = TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
+        var choices = _tutorialSettings != null
+            ? new List<TotemData>(_tutorialSettings.TotemChoices)
+            : TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
         if (choices.Count == 0)
         {
             Debug.LogWarning("[TotemRewardUI] 뽑을 토템이 없음");
@@ -242,6 +251,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnBandClicked(int slot)
     {
         if (_busy || !_isOpen || slot < 0 || slot >= _choices.Count) return;
+        if (HasRequiredChoice && _choices[slot] != _tutorialSettings.RequiredTotem) return;
         _bands[slot].Root.DOKill(true);
         _bands[slot].Icon.transform.DOKill(true);
         OpenDetailAsync(slot, _selectionCts.Token).Forget();
@@ -257,7 +267,7 @@ public class TotemRewardUI : MonoBehaviour
             _overview.gameObject.SetActive(false);
             _detail.gameObject.SetActive(true);
             _detailGroup.alpha = 1f;
-            _swipeArea.SwipeEnabled = AllowDetailSwipe && _choices.Count > 1;
+            _swipeArea.SwipeEnabled = !HasRequiredChoice && AllowDetailSwipe && _choices.Count > 1;
             _swipeArea.Threshold = _settings.SwipeThreshold;
             _swipeHint.gameObject.SetActive(_swipeArea.SwipeEnabled);
             foreach (var dot in _dots) dot.gameObject.SetActive(_swipeArea.SwipeEnabled);
@@ -295,6 +305,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnDetailSwipe(int direction)
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _choices.Count < 2) return;
+        if (HasRequiredChoice) return;
         int next = (_detailIndex + direction + _choices.Count) % _choices.Count;
         SwitchDetailAsync(next, direction, _selectionCts.Token).Forget();
     }
@@ -356,6 +367,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnConfirmClicked()
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
+        if (HasRequiredChoice && _choices[_detailIndex] != _tutorialSettings.RequiredTotem) return;
         _busy = true; // Inventory listeners can synchronously reenter selection or stop the run.
         var token = _selectionCts.Token;
         var data = _choices[_detailIndex];
@@ -652,6 +664,7 @@ public class TotemRewardUI : MonoBehaviour
 
         // 확정 버튼은 Content(터치 통과) 밖에 둔다
         var confirm = NewImage("Confirm", _detail, ConfirmColor);
+        _confirmationArea = confirm.rectTransform;
         PlaceAt(confirm.rectTransform, new Vector2(size.x * 0.5f, size.y * 0.075f), ConfirmSize);
         var confirmButton = confirm.gameObject.AddComponent<Button>();
         confirmButton.targetGraphic = confirm;

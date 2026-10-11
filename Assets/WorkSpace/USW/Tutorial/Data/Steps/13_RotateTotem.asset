@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
-    delayBeforeExecute: 0
+    delayBeforeExecute: 1.5
     useDim: 0
     Stage: 13
-    Instruction: "\uD1A0\uD15C\uC744 \uAFB9 \uB20C\uB7EC \uAC8C\uC774\uC9C0\uB97C
-      \uCC44\uC6B4 \uB4A4 \uC606\uC73C\uB85C \uB04C\uC5B4 \uD68C\uC804\uD574 \uC8FC\uC138\uC694!"
+    Instruction: "\uD1A0\uD15C\uC744 <color=#D66A27>\uAE38\uAC8C \uB204\uB978 \uB4A4
+      \uC606\uC73C\uB85C</color> \uB04C\uC5B4 \uBCF4\uC138\uC694.\n\uD68C\uC804\uD558\uC5EC
+      \u300C\uACF5\uACA9 \uC18D\uB3C4\u300D \uC99D\uAC00 \uBC94\uC704\uC758 \uBC29\uD5A5\uC744
+      \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +30,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

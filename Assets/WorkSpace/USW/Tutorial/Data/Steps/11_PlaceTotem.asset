@@ -17,8 +17,9 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 11
-    Instruction: "\uD1A0\uD15C\uC744 \uD45C\uC2DC\uB41C \uBE48\uCE78\uC73C\uB85C
-      \uB04C\uC5B4 \uBC30\uCE58\uD574 \uC8FC\uC138\uC694!"
+    Instruction: "\u300C\uAC00\uC18D \uD1A0\uD15C\u300D\uC744 \uAC15\uC870\uB41C
+      \uBE48\uCE78\uC73C\uB85C\n<color=#D66A27>\uB04C\uC5B4\uC11C \uC124\uCE58</color>\uD574
+      \uBCF4\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 
@@ -28,3 +29,4 @@ MonoBehaviour:
   PauseGameplay: 1
   Dim: 1
   ShowHand: 1
+  AllowWorldInput: 0

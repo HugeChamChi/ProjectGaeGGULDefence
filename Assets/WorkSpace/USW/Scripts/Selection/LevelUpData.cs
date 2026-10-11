@@ -25,6 +25,7 @@ public class LevelUpData : ScriptableObject
     public Tier             tier = Tier.Rare;   // 레벨업 카드 등급: 레어/에픽/레전더리 (일반 없음)
     public float            spawnRate;
     [TextArea] public string description;
+    [TextArea] public string simpleDescription;
 
     [Header("Tribe Filter (비어있으면 항상 등장)")]
     public UnitTribe[]      applicableTribes;

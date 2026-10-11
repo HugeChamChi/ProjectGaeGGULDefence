@@ -28,8 +28,10 @@ MonoBehaviour:
   chooseName: "\uB139..."
   tier: 1
   spawnRate: 1
-  description: "\uB378\uD0D5 \uC644\uCDA9\uC5D0 \uD544\uC694\uD55C \uACF5\uACA9 \uD69F\uC218\uAC00
-    10% \uAC10\uC18C\uD569\uB2C8\uB2E4 (\uCD5C\uC18C 1\uD68C \uAC10\uC18C)."
+  description: "{term:deltan-charge}\uC5D0 \uD544\uC694\uD55C \uACF5\uACA9 \uD69F\uC218\uAC00
+    {ValuePercent}% \uAC10\uC18C\uD569\uB2C8\uB2E4 (\uCD5C\uC18C 1\uD68C \uAC10\uC18C)."
+  simpleDescription: "{term:deltan-charge}\uC5D0 \uD544\uC694\uD55C \uACF5\uACA9
+    \uD69F\uC218\uAC00 \uAC10\uC18C\uD569\uB2C8\uB2E4."
   applicableTribes: 
   primaryEffect: 0
   primaryValue: 0

@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1001}
+  - component: {fileID: 1002}
+  m_Layer: 0
+  m_Name: Casual Choice Fx Lab
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e27e83eca5041ffa24976b833aa9cf2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CasualChoiceFxLab
+  _art: {fileID: 11400000, guid: ffa310289b88c1945be540b4bb9274c8, type: 2}
+  _cardPrefab: {fileID: 5806277029578392937, guid: f68a4a3597302d64bba1713d604ed175, type: 3}
+  _scrollingBackground: {fileID: 2100000, guid: 5b3d546c70d241aa87ad4d732b6b7698, type: 2}
+  _samples:
+  - {fileID: 11400000, guid: 68e6d86379d56be41881f24652b48c47, type: 2}
+  - {fileID: 11400000, guid: d7b716518b1c92b44a95a21f1ef4cc5f, type: 2}
+  - {fileID: 11400000, guid: 2fd9e7747a4f61b488547f31b463dff0, type: 2}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 1001}

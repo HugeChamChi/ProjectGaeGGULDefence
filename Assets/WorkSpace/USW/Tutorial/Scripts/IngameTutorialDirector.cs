@@ -24,6 +24,10 @@ namespace GaeGGUL.Tutorial
         [SerializeField] private IngameTutorialOverlay _overlay;
         [SerializeField] private IngameTutorialDialogue _dialogue;
         [SerializeField] private Button _summonButton;
+        [SerializeField] private CanvasGroup _summonGroup;
+        [SerializeField] private CanvasGroup _currencyGroup;
+        [SerializeField] private RectTransform _timerTarget;
+        [SerializeField] private RectTransform _experienceTarget;
         [SerializeField] private Button _upgradeButton;
         [SerializeField] private Button _chiefButton;
         [SerializeField] private Button _inventoryButton;
@@ -48,6 +52,8 @@ namespace GaeGGUL.Tutorial
         [Inject] private InputManager _input;
         [Inject] private TotemInventory _inventory;
         [Inject] private BossPatternController _patterns;
+        [Inject] private AlphanActiveSkill _chiefSkill;
+        [Inject] private FieldPauseVisuals _fieldPause;
         [Inject] private IngameTutorialProgress _progress;
         [Inject] private SceneChangeManager _scenes;
         [SerializeField] private Button _completeButton;
@@ -60,9 +66,13 @@ namespace GaeGGUL.Tutorial
         private bool _hasCameraPose;
         private Vector3 _cameraPosition;
         private float _cameraSize;
+        private float _cameraFov;
         private UnitBase _firstUnit;
+        private UnitBase _mergedUnit;
         private TotemBase _placedTotem;
         private GridCell _dropCell;
+        private bool _mergeLearned;
+        private float _bossExpMultiplier;
 
         /// <summary>Current authored lesson, visible to diagnostics and playtest tools.</summary>
         public IngameTutorialStage CurrentStage { get; private set; }
@@ -89,14 +99,15 @@ namespace GaeGGUL.Tutorial
                 _camera = Camera.main;
                 _running = true;
                 _exp.DeferLevelUps = true;
-                _overlay.Show(_settings, false, false, false, false);
+                _overlay.Show(_settings, false, false, false, IngameTutorialOverlay.Gesture.Tap);
                 foreach (var group in _bossHud) SetVisible(group, false);
                 SetVisible(_upgradeGroup, false); SetVisible(_chiefGroup, false); SetVisible(_inventoryGroup, false);
+                SetVisible(_summonGroup, false); SetVisible(_currencyGroup, false);
                 _input.AllowPointerClicks = false;
                 _input.CanBeginInteraction = _ => false;
                 // Let gameplay Start methods wire their injected services before starting the battle.
                 await Until(() => _initializer.IsReady, token);
-                foreach (var data in _settings.SpawnUnits.Distinct())
+                foreach (var data in _settings.SpawnUnits.Append(_settings.MergeUnit).Distinct())
                     await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 _game.StartGame(false);
                 var lessons = _plan.Lessons;
@@ -111,20 +122,25 @@ namespace GaeGGUL.Tutorial
                     }
                     var lesson = asset.Gameplay;
                     _currentRecipe = lesson;
-                    CurrentStage = lesson.Stage;
                     _dialogue.Hide();
-                    Debug.Log($"[IngameTutorial] {(int)CurrentStage}: {CurrentStage}", this);
                     if (lesson.delayBeforeExecute > 0) await Delay(lesson.delayBeforeExecute, token);
+                    CurrentStage = lesson.Stage;
+                    Debug.Log($"[IngameTutorial] {(int)CurrentStage}: {CurrentStage}", this);
+                    bool blockUpgrade = CurrentStage == IngameTutorialStage.ExperienceGauge || CurrentStage == IngameTutorialStage.LevelUp;
+                    bool upgradeInteractable = _upgradeButton.interactable;
+                    if (blockUpgrade) _upgradeButton.interactable = false;
                     try { await lesson.ExecuteAsync(this, token); }
                     finally
                     {
+                        if (blockUpgrade && _upgradeButton != null) _upgradeButton.interactable = upgradeInteractable;
                         if (_dialogue != null) _dialogue.Hide();
                         if (_overlay != null) _overlay.Hide();
                         _time?.Release(this);
                         if (_running && _input != null)
                         {
-                            _input.CanBeginInteraction = _ => false;
+                            _input.CanBeginInteraction = _mergeLearned ? null : _ => false;
                             _input.CanEndInteraction = null;
+                            _input.AllowPointerClicks = _mergeLearned;
                         }
                     }
                 }
@@ -165,6 +181,12 @@ namespace GaeGGUL.Tutorial
                 _settings.SpawnCells == null || _settings.SpawnCells.Length != 4 ||
                 _settings.SpawnUnits.Any(d => d == null) || _settings.SpawnUnits[0] != _settings.SpawnUnits[1])
                 throw new InvalidOperationException("Tutorial requires four authored summons and a matching first pair.");
+            if (_settings.MergeUnit == null || _settings.LevelUpChoices == null || _settings.LevelUpChoices.Length != 3 ||
+                _settings.LevelUpChoices.Any(c => c == null) || _settings.TotemChoices == null || _settings.TotemChoices.Length != 3 ||
+                _settings.TotemChoices.Any(t => t == null) || _settings.RequiredTotem == null || !_settings.RequiredTotem.isRotatable ||
+                !_settings.TotemChoices.Contains(_settings.RequiredTotem) || _settings.CounterPattern == null ||
+                _settings.CounterPattern.patternType != BossPatternType.Earthquake || _settings.CounterPattern.ImpactTimeSec <= 0)
+                throw new InvalidOperationException("Tutorial requires a fixed merge unit, three choices and three totems including a required rotatable reward.");
             if (_plan != null)
             {
                 if (_targets != null && _targets.Where(t => t != null).GroupBy(t => t.Key).Any(g => string.IsNullOrWhiteSpace(g.Key) || g.Count() > 1))
@@ -236,13 +258,12 @@ namespace GaeGGUL.Tutorial
             if (lesson.PauseGameplay) _time.Pause(_customPauseOwner);
             _dialogue.ShowText(lesson.Instruction, _lessonIndex, _lessonCount, awareness);
             var areas = target == null ? Array.Empty<Func<Rect>>() : new[] { Ui(target.Highlight) };
-            _overlay.Show(_settings, button, lesson.Dim, lesson.ShowHand && button, false, areas);
+            _overlay.Show(_settings, button, lesson.Dim, lesson.ShowHand && button, IngameTutorialOverlay.Gesture.Tap, areas);
             try
             {
                 if (awareness)
                 {
-                    int before = _overlay.TapCount;
-                    await Until(() => _overlay.TapCount > before, token);
+                    await AcknowledgeAsync(token);
                 }
                 else if (button)
                 {
@@ -280,20 +301,55 @@ namespace GaeGGUL.Tutorial
             switch (stage)
             {
                 case IngameTutorialStage.FirstSummon:
+                    Block();
+                    _time.Pause(this);
+                    _fieldPause.HoldAttacks(this);
+                    _fieldPause.Enter(this);
+                    _income = false;
+                    await UniTask.WhenAll(RevealAsync(_summonGroup, token), RevealAsync(_currencyGroup, token));
+                    int summons = _settings.SpawnUnits.Length;
+                    float budget = summons * _spawner.CurrentCost + _settings.CostIncrease * summons * (summons - 1) / 2f;
+                    _currency.AddCurrency(Mathf.Max(0, budget - _currency.Currency));
                     ShowRecipeDialogue();
-                    await SummonAsync(token);
-                    _firstUnit = _spawner.LastSpawnedUnit;
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(_summonButton));
+                    await Until(() => _spawner.SuccessfulSpawnCount >= summons, token);
+                    Block();
+                    await Until(() => _grid.GetOccupiedCells().All(c => c.OccupyingUnit == null || c.OccupyingUnit.gameObject.activeInHierarchy), token);
+                    _firstUnit = _grid.GetCell(_settings.SpawnCells[0]).OccupyingUnit;
+                    _fieldPause.Exit(this);
                     break;
                 case IngameTutorialStage.BossEntrance:
-                    ShowRecipeDialogue();
                     await BossEntranceAsync(token);
-                    _income = true;
+                    break;
+                case IngameTutorialStage.TimeLimit:
+                    ShowRecipeDialogue();
+                    await AwarenessAsync(Ui(_timerTarget), token);
+                    break;
+                case IngameTutorialStage.ObserveCombat:
+                    Block();
+                    await Delay(_settings.ObserveCombatSeconds, token);
+                    break;
+                case IngameTutorialStage.ExperienceGauge:
+                    ShowRecipeDialogue();
+                    await AwarenessAsync(Ui(_experienceTarget), token);
+                    _time.Release(this);
+                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_experienceTarget));
+                    float startExp = _exp.CurrentExp;
+                    float requiredExp = _exp.ExpToLevelUp;
+                    const int fillSteps = 20;
+                    for (int i = 1; i <= fillSteps; i++)
+                    {
+                        await Delay(_settings.ExperienceFillSeconds / fillSteps, token);
+                        _exp.AddExp(Mathf.Max(0, Mathf.Lerp(startExp, requiredExp, i / (float)fillSteps) - _exp.CurrentExp));
+                    }
+                    await Delay(0.4f, token);
                     break;
                 case IngameTutorialStage.ThreeSummons:
                     Block();
                     float total = _spawner.CurrentCost * 3 + _settings.CostIncrease * 3;
                     await Until(() => _currency.Currency >= total, token);
                     ShowRecipeDialogue();
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(_summonButton));
                     for (int i = 0; i < 3; i++) await SummonAsync(token);
                     break;
                 case IngameTutorialStage.Merge:
@@ -302,53 +358,110 @@ namespace GaeGGUL.Tutorial
                     break;
                 case IngameTutorialStage.LevelUp:
                     Block();
-                    _boss.CurrentBoss.Invincible = false;
+                    _levelUpUI.RequireUnitPreview = true;
                     _exp.DeferLevelUps = false;
                     _exp.AddExp(0);
                     await Until(() => _levelUpUI.IsReadyForSelection, token);
                     ShowRecipeDialogue();
-                    if (_boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = true;
                     await AwarenessAsync(Ui(_levelUpUI.ChoiceArea), token);
-                    _overlay.Hide(); _time.Release(this);
-                    await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token);
+                    await PreviewChoiceAsync(token);
+                    var choices = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
+                    var requiredChoice = choices.First(c => c.GetData() == _settings.LevelUpChoices[0]);
+                    foreach (var choice in choices) choice.AllowSelection = choice == requiredChoice;
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)requiredChoice.transform));
+                    _time.Release(this);
+                    try { await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token); }
+                    finally { foreach (var choice in choices) if (choice != null) choice.AllowSelection = true; }
                     _exp.DeferLevelUps = true;
+                    _levelUpUI.RequireUnitPreview = false;
                     break;
                 case IngameTutorialStage.OpenUpgrade:
                     Block();
-                    await Until(() => _currency.Currency >= _settings.UpgradeFoodThreshold, token);
+                    _time.Pause(this);
+                    _currency.AddCurrency(Mathf.Max(0, _settings.UpgradeFoodThreshold - _currency.Currency));
                     await RevealAsync(_upgradeGroup, token);
                     ShowRecipeDialogue();
                     _time.Pause(this);
-                    _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_upgradeButton.transform));
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(_upgradeButton));
                     await Until(() => _upgradePanel.IsOpen, token);
                     break;
                 case IngameTutorialStage.UpgradeSlots:
                     Block();
+                    _time.Pause(this);
                     await Delay(_settings.RevealSeconds, token);
                     ShowRecipeDialogue();
-                    await AwarenessAsync(Ui(_upgradeSlots), token);
-                    _overlay.Hide();
-                    _time.Release(this);
-                    await Until(() => !_upgradePanel.IsOpen, token);
+                    var item = _upgradeSlots.GetComponentsInChildren<UI_UpgradeItem>().First(i => i.UpgradeTarget == _settings.UpgradeTarget && i.CanUpgrade);
+                    _currency.AddCurrency(Mathf.Max(0, item.CurrentCost - _currency.Currency));
+                    int level = item.CurrentLevel;
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)item.transform));
+                    await Until(() => item.CurrentLevel > level, token);
+                    Block();
+                    _dialogue.ShowText("좋아요! 유닛이 더 강해졌어요!", _lessonIndex, _lessonCount, false);
+                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_upgradePanel.StatFeedbackArea));
+                    await AcknowledgeAsync(token);
+                    _upgradePanel.CloseStatFeedback();
+                    await _upgradePanel.CloseAsync().AttachExternalCancellation(token);
                     _income = false;
                     break;
                 case IngameTutorialStage.ChiefSkill:
                     Block();
-                    await Delay(_settings.ChiefDelaySeconds, token);
-                    await RevealAsync(_chiefGroup, token);
-                    ShowRecipeDialogue();
-                    await AwarenessAsync(Ui((RectTransform)_chiefButton.transform), token);
-                    _overlay.Hide(); _time.Release(this);
-                    if (_boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
+                    await Until(() => Time.timeScale > 0, token);
+                    bool countered = false;
+                    var chiefScale = _chiefGroup.transform.localScale;
+                    void Counter(BossBase boss, BossPatternData pattern)
+                    {
+                        if (boss == _guidedBoss && pattern == _settings.CounterPattern)
+                        {
+                            countered = true;
+                            _patterns.UnregisterBoss(boss);
+                            _fieldPause.Exit(this);
+                        }
+                    }
+                    _patterns.OnPatternCountered += Counter;
+                    try
+                    {
+                        _patterns.RegisterBoss(_guidedBoss, new[] { _settings.CounterPattern });
+                        await Until(() => _patterns.IsCounterablePattern(_guidedBoss), token);
+                        await Delay(0.3f, token);
+                        _fieldPause.HoldAttacks(this);
+                        _dialogue.ShowText("보스가 패턴을 써요! 보스와 필드의 지진 예고를 확인해 주세요.", _lessonIndex, _lessonCount, true);
+                        _time.Pause(this);
+                        _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap,
+                            () => ScreenBounds(_guidedBoss.GetComponentInChildren<Renderer>().bounds),
+                            () => _grid.AllCells().Select(c => World(c)()).Aggregate((a, b) => Rect.MinMaxRect(
+                                Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin), Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax))));
+                        await AcknowledgeAsync(token);
+                        _time.Release(this);
+                        Block();
+                        _chiefSkill.Advance(_chiefSkill.CooldownSeconds);
+                        await Until(() => _chiefSkill.CanActivate, token);
+                        _chiefGroup.transform.localScale = chiefScale * 0.85f;
+                        await UniTask.WhenAll(RevealAsync(_chiefGroup, token),
+                            _chiefGroup.transform.DOScale(chiefScale, _settings.RevealSeconds).SetEase(Ease.OutBack)
+                                .SetUpdate(true).ToUniTask(cancellationToken: token));
+                        ShowRecipeDialogue();
+                        _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)_chiefButton.transform));
+                        await Until(() => countered, token);
+                        Block();
+                        _dialogue.ShowText("좋아요! 족장 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
+                        await Delay(1.5f, token);
+                    }
+                    finally
+                    {
+                        _chiefGroup.transform.DOKill();
+                        _chiefGroup.transform.localScale = chiefScale;
+                        _patterns.OnPatternCountered -= Counter;
+                        _patterns.UnregisterBoss(_guidedBoss);
+                        _fieldPause.Exit(this);
+                    }
+                    if (_guidedBoss != null)
+                    {
+                        _guidedBoss.PreventDeath = false;
+                        _guidedBoss.TakeDamage(Math.Max(0m, _guidedBoss.CurrentHp - 50m));
+                    }
                     break;
                 case IngameTutorialStage.TotemChoice:
-                    await Until(() => _rewardUI.IsOpen, token);
-                    Block();
-                    await Until(() => _rewardUI.IsReadyForSelection, token);
-                    ShowRecipeDialogue();
-                    await AwarenessAsync(Ui(_rewardUI.ChoiceArea), token);
-                    _overlay.Hide(); _time.Release(this);
-                    await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+                    await ChooseTotemAsync(token);
                     break;
                 case IngameTutorialStage.OpenInventory:
                     _input.CanBeginInteraction = _ => false; _input.AllowPointerClicks = false;
@@ -356,7 +469,7 @@ namespace GaeGGUL.Tutorial
                     Block();
                     await RevealAsync(_inventoryGroup, token);
                     ShowRecipeDialogue();
-                    _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_inventoryButton.transform));
+                    _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)_inventoryButton.transform));
                     await Until(() => _inventoryUI.IsOpen, token);
                     break;
                 case IngameTutorialStage.PlaceTotem:
@@ -378,31 +491,51 @@ namespace GaeGGUL.Tutorial
         {
             int count = _spawner.SuccessfulSpawnCount;
             _time.Pause(this);
-            _overlay.Show(_settings, true, true, true, false, Ui((RectTransform)_summonButton.transform));
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(_summonButton));
             await Until(() => _spawner.SuccessfulSpawnCount > count, token);
-            Block(); _time.Release(this);
+            Block();
+            _time.Release(this);
             await Until(() => _spawner.LastSpawnedUnit != null && _spawner.LastSpawnedUnit.gameObject.activeInHierarchy, token);
         }
 
         private async UniTask BossEntranceAsync(CancellationToken token)
         {
             Block();
+            _time.Pause(this);
+            if (_camera != null)
+            {
+                _cameraPosition = _camera.transform.position; _cameraSize = _camera.orthographicSize;
+                _cameraFov = _camera.fieldOfView; _hasCameraPose = true;
+                var target = _boss.SpawnPosition; target.z = _cameraPosition.z;
+                await DOTween.Sequence().SetUpdate(true)
+                    .Append(_camera.transform.DOShakePosition(0.2f, new Vector3(0.08f, 0.08f, 0), 12, 90, false, true))
+                    .AppendInterval(0.12f)
+                    .Append(_camera.transform.DOShakePosition(0.26f, new Vector3(0.14f, 0.14f, 0), 14, 90, false, true))
+                    .AppendInterval(0.12f)
+                    .Append(_camera.transform.DOMove(target, _settings.CameraZoomSeconds))
+                    .Join(_camera.orthographic
+                        ? _camera.DOOrthoSize(_cameraSize * _settings.CameraZoomRatio, _settings.CameraZoomSeconds)
+                        : _camera.DOFieldOfView(_cameraFov * _settings.CameraZoomRatio, _settings.CameraZoomSeconds))
+                    .ToUniTask(cancellationToken: token);
+            }
+            _time.Release(this);
             _wave.StartWave();
             await Until(() => _boss.CurrentBoss != null, token);
-            _boss.CurrentBoss.Invincible = true;
+            _boss.CurrentBoss.PreventDeath = true;
             _guidedBoss = _boss.CurrentBoss;
+            // The experience lesson fills the gauge explicitly; combat damage must not skip that reveal.
+            _bossExpMultiplier = _guidedBoss.ExpMultiplier;
+            _guidedBoss.ExpMultiplier = 0;
             _patterns.UnregisterBoss(_guidedBoss);
             _time.Pause(this);
-            if (_camera != null && _camera.orthographic)
+            if (_camera != null)
             {
-                _cameraPosition = _camera.transform.position; _cameraSize = _camera.orthographicSize; _hasCameraPose = true;
-                var target = _boss.CurrentBoss.transform.position; target.z = _cameraPosition.z;
                 var zoom = DOTween.Sequence().SetUpdate(true)
-                    .Append(_camera.transform.DOMove(target, _settings.CameraZoomSeconds))
-                    .Join(_camera.DOOrthoSize(_cameraSize * _settings.CameraZoomRatio, _settings.CameraZoomSeconds))
-                    .AppendInterval(_settings.CameraHoldSeconds)
+                    .Append(_camera.transform.DOShakePosition(_settings.CameraHoldSeconds, new Vector3(0.12f, 0.12f, 0), 18, 90, false, true))
                     .Append(_camera.transform.DOMove(_cameraPosition, _settings.CameraZoomSeconds))
-                    .Join(_camera.DOOrthoSize(_cameraSize, _settings.CameraZoomSeconds));
+                    .Join(_camera.orthographic
+                        ? _camera.DOOrthoSize(_cameraSize, _settings.CameraZoomSeconds)
+                        : _camera.DOFieldOfView(_cameraFov, _settings.CameraZoomSeconds));
                 await zoom.ToUniTask(cancellationToken: token);
                 _hasCameraPose = false;
             }
@@ -420,12 +553,27 @@ namespace GaeGGUL.Tutorial
             _time.Pause(this);
             _input.CanBeginInteraction = d => ReferenceEquals(d, a) || ReferenceEquals(d, b);
             _input.CanEndInteraction = (d, p) => IsCellAt(p, ReferenceEquals(d, a) ? target : source);
-            _overlay.Show(_settings, true, true, true, false, World(source), World(target));
-            await Until(() => _firstUnit == null && other == null &&
-                (source.OccupyingUnit != null || target.OccupyingUnit != null), token);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Drag, World(_firstUnit.currentCell), World(other.currentCell));
+            _input.AllowPointerClicks = false;
+            // Only the tutorial overlay should receive UI clicks during the forced merge.
+            var uiRaycasters = FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None)
+                .Where(r => r.isActiveAndEnabled && !_overlay.transform.IsChildOf(r.transform)).ToArray();
+            foreach (var raycaster in uiRaycasters) raycaster.enabled = false;
+            try
+            {
+                await Until(() => _firstUnit == null && other == null &&
+                    (source.OccupyingUnit != null || target.OccupyingUnit != null), token);
+            }
+            finally
+            {
+                foreach (var raycaster in uiRaycasters)
+                    if (raycaster != null) raycaster.enabled = true;
+            }
             _input.CanBeginInteraction = _ => false; _input.CanEndInteraction = null;
             Block(); _time.Release(this);
             await Until(() => _grid.GetOccupiedCells().All(c => c.OccupyingUnit == null || c.OccupyingUnit.gameObject.activeInHierarchy), token);
+            _mergedUnit = source.OccupyingUnit != null ? source.OccupyingUnit : target.OccupyingUnit;
+            _mergeLearned = true;
         }
 
         private async UniTask PlaceTotemAsync(CancellationToken token)
@@ -433,8 +581,10 @@ namespace GaeGGUL.Tutorial
             if (!_inventory.Items[0].isRotatable) throw new InvalidOperationException("Tutorial reward must be rotatable.");
             _dropCell = _grid.GetEmptyCells().OrderBy(c => c.GridPosition.y).ThenBy(c => c.GridPosition.x).First();
             await Delay(_settings.RevealSeconds, token);
-            _overlay.Show(_settings, true, true, true, false, Ui(_inventoryUI.GetSlotRect(0)), World(_dropCell));
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Drag, Ui(_inventoryUI.GetSlotRect(0)), World(_dropCell));
             var previousPlacement = _inventory.CanPlace;
+            bool previousClose = _inventoryUI.AllowClose;
+            _inventoryUI.AllowClose = false;
             _inventory.CanPlace = (index, cell) => index == 0 && cell == _dropCell;
             try
             {
@@ -446,7 +596,7 @@ namespace GaeGGUL.Tutorial
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                 }
             }
-            finally { _inventory.CanPlace = previousPlacement; }
+            finally { _inventory.CanPlace = previousPlacement; _inventoryUI.AllowClose = previousClose; }
             _placedTotem = _dropCell.OccupyingTotem;
             await Until(() => !_inventoryUI.IsDraggingOrPlacing, token);
         }
@@ -454,12 +604,19 @@ namespace GaeGGUL.Tutorial
         private async UniTask MoveTotemAsync(CancellationToken token)
         {
             var source = _placedTotem.CurrentCell;
-            _dropCell = _grid.GetEmptyCells().OrderBy(c => (c.GridPosition - source.GridPosition).sqrMagnitude).First();
+            // Leave a tile between the source and destination so the two spotlights stay distinct.
+            var destination = _grid.GetEmptyCells()
+                .Where(c => c != source && (c.GridPosition - source.GridPosition).sqrMagnitude >= 4)
+                .OrderBy(c => Mathf.Abs(c.GridPosition.y - source.GridPosition.y))
+                .ThenBy(c => (c.GridPosition - source.GridPosition).sqrMagnitude)
+                .ThenBy(c => c.GridPosition.x)
+                .First();
+            _dropCell = destination;
             var drag = _placedTotem.GetComponent<DragHandler>();
             _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
-            _input.CanEndInteraction = (d, p) => !drag.IsRotating && IsCellAt(p, _dropCell);
-            _overlay.Show(_settings, true, true, true, false, World(source), World(_dropCell));
-            await Until(() => _placedTotem.CurrentCell == _dropCell, token);
+            _input.CanEndInteraction = (d, p) => !drag.IsRotating && IsCellAt(p, destination);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Drag, World(source), World(destination));
+            await Until(() => _placedTotem.CurrentCell == destination && source.OccupyingTotem != _placedTotem, token);
         }
 
         private async UniTask RotateTotemAsync(CancellationToken token)
@@ -468,31 +625,135 @@ namespace GaeGGUL.Tutorial
             var drag = _placedTotem.GetComponent<DragHandler>();
             _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
             _input.CanEndInteraction = (d, p) => drag.IsRotating;
-            _overlay.Show(_settings, true, true, true, true, World(_placedTotem.CurrentCell));
-            await Until(() => _placedTotem.RotationStep != rotation, token);
+            drag.RotationOnly = true;
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.HoldDrag, World(_placedTotem.CurrentCell));
+            try { await Until(() => _placedTotem.RotationStep != rotation, token); }
+            finally { if (drag != null) drag.RotationOnly = false; }
+        }
+
+        private async UniTask PreviewChoiceAsync(CancellationToken token)
+        {
+            var cards = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
+            var targets = new System.Collections.Generic.List<UnitBase>();
+            var card = cards.First(c => c.GetData() == _settings.LevelUpChoices[0]);
+            if (LevelUpFeedbackTargets.Resolve(card.GetData(), _grid, targets) != LevelUpFeedbackDestination.Units || !targets.Contains(_mergedUnit))
+                throw new InvalidOperationException("Tutorial preview must highlight the fixed merged unit.");
+            bool previewed = false;
+            bool released = false;
+            void Peek(LevelUpCardUI source, bool peeking)
+            {
+                if (peeking) { previewed = true; _overlay.Hide(); }
+                else if (previewed) released = true;
+            }
+            foreach (var choice in cards) { choice.AllowSelection = false; choice.SetTutorialPreviewOnly(true); }
+            card.OnPeekChanged += Peek;
+            _dialogue.ShowText(_settings.ChoicePreviewInstruction, _lessonIndex, _lessonCount, false);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Hold, Ui((RectTransform)card.transform));
+            try
+            {
+                await Until(() => released && !_levelUpUI.FieldPreviewBlocksInput, token);
+                foreach (var choice in cards) choice.SetTutorialPreviewOnly(false);
+                Canvas.ForceUpdateCanvases();
+                card.DescriptionText.ForceMeshUpdate();
+                if (card.DescriptionText.textInfo.linkCount == 0)
+                    throw new InvalidOperationException("The tutorial choice requires a linked description term.");
+                _dialogue.ShowText(_settings.ChoiceTermInstruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap,
+                    () => ChoiceTermBounds(card.DescriptionText));
+                await Until(() => _levelUpUI.DescriptionBlocksInput, token);
+                _overlay.Hide();
+                _dialogue.Hide();
+                await Until(() => !_levelUpUI.DescriptionBlocksInput, token);
+                _dialogue.ShowText(_settings.ChoiceSelectInstruction, _lessonIndex, _lessonCount, false);
+            }
+            finally
+            {
+                if (card != null) card.OnPeekChanged -= Peek;
+                foreach (var choice in cards) if (choice != null) { choice.AllowSelection = true; choice.SetTutorialPreviewOnly(false); }
+            }
+        }
+
+        private static Rect ChoiceTermBounds(TMPro.TMP_Text text)
+        {
+            var link = text.textInfo.linkInfo[0];
+            var canvas = text.GetComponentInParent<Canvas>();
+            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            for (int i = link.linkTextfirstCharacterIndex; i < link.linkTextfirstCharacterIndex + link.linkTextLength; i++)
+            {
+                var character = text.textInfo.characterInfo[i];
+                var a = RectTransformUtility.WorldToScreenPoint(camera, text.transform.TransformPoint(character.bottomLeft));
+                var b = RectTransformUtility.WorldToScreenPoint(camera, text.transform.TransformPoint(character.topRight));
+                min = Vector2.Min(min, a); max = Vector2.Max(max, b);
+            }
+            return Rect.MinMaxRect(min.x - 8, min.y - 8, max.x + 8, max.y + 8);
         }
 
         private async UniTask AwarenessAsync(Func<Rect> target, CancellationToken token)
         {
             _time.Pause(this);
-            int count = _overlay.TapCount;
-            _overlay.Show(_settings, false, true, false, false, target);
-            await Until(() => _overlay.TapCount > count, token);
+            _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, target);
+            await AcknowledgeAsync(token);
             _dialogue.Hide();
             Block();
             // Do not let the dismissing touch become a world press on the same frame.
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
         }
 
+        private async UniTask AcknowledgeAsync(CancellationToken token)
+        {
+            while (true)
+            {
+                int count = _overlay.TapCount;
+                await Until(() => _overlay.TapCount > count, token);
+                if (!_dialogue.IsTyping) return;
+                _dialogue.CompleteTyping();
+            }
+        }
+
+        private Func<Rect> ButtonArea(Button button) => () => _overlay.ScreenRect(
+            (RectTransform)button.transform, button.targetGraphic != null ? button.targetGraphic.raycastPadding : Vector4.zero);
         private Func<Rect> Ui(RectTransform target) => () => _overlay.ScreenRect(target);
+        private Rect RequiredTotemBounds()
+        {
+            var icon = _overlay.ScreenRect(_rewardUI.RequiredChoiceArea);
+            var description = _overlay.ScreenRect(_rewardUI.RequiredChoiceDescriptionArea);
+            return Rect.MinMaxRect(Mathf.Min(icon.xMin, description.xMin), Mathf.Min(icon.yMin, description.yMin),
+                Mathf.Max(icon.xMax, description.xMax), Mathf.Max(icon.yMax, description.yMax));
+        }
+        private async UniTask ChooseTotemAsync(CancellationToken token)
+        {
+            await Until(() => _rewardUI.IsOpen, token);
+            Block();
+            await Until(() => _rewardUI.IsReadyForSelection, token);
+            _time.Pause(this);
+            _dialogue.ShowText(_currentRecipe.Instruction, _lessonIndex, _lessonCount, false);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
+            await Until(() => _rewardUI.IsReadyForConfirmation, token);
+            _dialogue.ShowText("강조된 버튼을 눌러 토템을 받아 보세요.", _lessonIndex, _lessonCount, false);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui(_rewardUI.ConfirmationArea));
+            await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
+            _overlay.Hide(); _time.Release(this);
+        }
+        private Rect ScreenBounds(Bounds bounds)
+        {
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = bounds.center + Vector3.Scale(bounds.extents,
+                    new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                var point = (Vector2)_camera.WorldToScreenPoint(corner);
+                min = Vector2.Min(min, point); max = Vector2.Max(max, point);
+            }
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
         private Func<Rect> World(GridCell cell) => () =>
         {
             if (cell == null || _camera == null) return Rect.zero;
             if (!cell.TryGetVisualBounds(out var bounds)) bounds = new Bounds(cell.transform.position, Vector3.one);
-            // Include the occupant above the tile so the pointing hand reaches its collider.
-            var lo = _camera.WorldToScreenPoint(bounds.min);
-            var hi = _camera.WorldToScreenPoint(bounds.max + Vector3.up * bounds.size.y);
-            return Rect.MinMaxRect(Mathf.Min(lo.x,hi.x), Mathf.Min(lo.y,hi.y), Mathf.Max(lo.x,hi.x), Mathf.Max(lo.y,hi.y));
+            return ScreenBounds(bounds);
         };
         private static bool IsCellAt(Vector2 p, GridCell cell)
         {
@@ -500,7 +761,7 @@ namespace GaeGGUL.Tutorial
                 if (hit.collider.GetComponent<GridCell>() == cell) return true;
             return false;
         }
-        private void Block() => _overlay.Show(_settings, false, false, false, false);
+        private void Block() => _overlay.Show(_settings, false, false, false, IngameTutorialOverlay.Gesture.Tap);
         private static UniTask Until(Func<bool> predicate, CancellationToken token) => UniTask.WaitUntil(predicate, cancellationToken: token);
         private static UniTask Delay(float seconds, CancellationToken token) => UniTask.Delay(TimeSpan.FromSeconds(seconds), ignoreTimeScale: true, cancellationToken: token);
         private static void SetVisible(CanvasGroup group, bool visible)
@@ -522,14 +783,22 @@ namespace GaeGGUL.Tutorial
             if (_overlay != null) _overlay.Hide();
             _time?.Release(this);
             _time?.Release(_customPauseOwner);
+            _fieldPause?.Exit(this);
             if (_dialogue != null) _dialogue.Hide();
             if (_exp != null) _exp.DeferLevelUps = false;
+            if (_levelUpUI != null) _levelUpUI.RequireUnitPreview = false;
             if (_input != null) { _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true; }
             if (_boss != null && _boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
+            if (_guidedBoss != null)
+            {
+                _guidedBoss.PreventDeath = false;
+                _guidedBoss.ExpMultiplier = _bossExpMultiplier;
+            }
             if (_guidedBoss != null && !_guidedBoss.IsDead && _patterns != null) _patterns.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
             foreach (var group in _bossHud) SetVisible(group, true);
             SetVisible(_upgradeGroup,true); SetVisible(_chiefGroup,true); SetVisible(_inventoryGroup,true);
-            if (_hasCameraPose && _camera != null) { _camera.transform.position = _cameraPosition; _camera.orthographicSize = _cameraSize; }
+            SetVisible(_summonGroup, true); SetVisible(_currencyGroup, true);
+            if (_hasCameraPose && _camera != null) { _camera.transform.position = _cameraPosition; _camera.orthographicSize = _cameraSize; _camera.fieldOfView = _cameraFov; }
         }
         private void OnDisable() { _cts?.Cancel(); Restore(); }
     }

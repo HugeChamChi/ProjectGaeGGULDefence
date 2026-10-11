@@ -10,6 +10,18 @@ namespace HSD.UI.Upgrade
     {
         [Inject] private CurrencyManager _currencyManager;
         [Inject] private UpgradeManager _upgradeManager;
+        [Inject] private GridManager _gridManager;
+
+        public UnitBase GetFeedbackUnit(string target)
+        {
+            foreach (var cell in _gridManager.GetOccupiedCells())
+            {
+                var unit = cell.OccupyingUnit;
+                if (unit != null && _upgradeManager.GetJobType(unit.unitData.characterId.Get(unit.currentTier)) == target)
+                    return unit;
+            }
+            return null;
+        }
 
         [Serializable]
         public struct UpgradeDisplayConfig

@@ -77,6 +77,9 @@ public sealed class ResearchProgress
     /// <summary>지금 한 단계 올릴 수 있는지.</summary>
     public bool CanUpgrade(ResearchNodeData node) => node != null && _tree.Find(node.Id) == node && GetState(node) == ResearchNodeState.Available;
 
+    /// <summary>임시 골드 비용: 행과 다음 레벨에 비례한다.</summary>
+    public int GetUpgradeCost(ResearchNodeData node) => 100 * (Math.Max(0, node.Row) + 1) * (GetLevel(node) + 1);
+
     /// <summary>한 단계 올리고 저장한다. 못 올리면 false.</summary>
     public bool TryUpgrade(ResearchNodeData node)
     {
