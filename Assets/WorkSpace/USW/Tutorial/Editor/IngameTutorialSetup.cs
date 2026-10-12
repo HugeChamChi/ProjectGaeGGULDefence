@@ -116,7 +116,7 @@ public static class IngameTutorialSetup
             var so = new SerializedObject(boss);
             so.FindProperty("_prefab").objectReferenceValue = sourceEntry.Prefab;
             so.FindProperty("_icon").objectReferenceValue = sourceEntry.Icon;
-            so.FindProperty("_maxHp").longValue = 12000;
+            so.FindProperty("_maxHp").longValue = 9000;
             so.FindProperty("_defense").doubleValue = 0;
             so.FindProperty("_expReward").floatValue = 100;
             so.ApplyModifiedPropertiesWithoutUndo();

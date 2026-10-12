@@ -21,12 +21,16 @@ public static class IngameTutorialChecks
     /// <summary>Runs only in a fresh TutorialScene Play session; does not write persistent player state.</summary>
     [MenuItem("Tools/USW/Tutorial/Run Play Checks")]
     public static void Run() => RunAsync().Forget();
+
+    [MenuItem("Tools/USW/Tutorial/Run First Boss Balance Check")]
+    public static void RunFirstBossBalance() => RunAsync(true).Forget();
     
-    private static async UniTaskVoid RunAsync()
+    private static async UniTaskVoid RunAsync(bool firstBossBalanceOnly = false)
     {
         if (!EditorApplication.isPlaying) throw new InvalidOperationException("Enter TutorialScene Play Mode first.");
         Directory.CreateDirectory("outputs/tutorial-qa");
         var log = new StringBuilder();
+        string report = firstBossBalanceOnly ? "outputs/tutorial-qa/balance.txt" : Report;
         var director = Object.FindFirstObjectByType<IngameTutorialDirector>();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(director.GetCancellationTokenOnDestroy());
         using var timeout = cts.CancelAfterSlim(TimeSpan.FromMinutes(5), DelayType.Realtime);
@@ -37,7 +41,7 @@ public static class IngameTutorialChecks
         void Check(bool condition,string description)
         {
             if(!condition) throw new Exception(description);
-            log.AppendLine("PASS " + description);File.WriteAllText(Report,log.ToString());
+            log.AppendLine("PASS " + description);File.WriteAllText(report,log.ToString());
         }
         async UniTask Stage(IngameTutorialStage stage)
         {
@@ -234,7 +238,8 @@ public static class IngameTutorialChecks
                 "Choice term explanation blocks opening the upgrade panel");
             await Snapshot("06-choice-term-popup");
             var termPopup=Object.FindFirstObjectByType<DebuffInfoPopup>();
-            ClickButton(termPopup.transform.Find("SafeArea/Panel/Close").GetComponent<Button>());
+            if (termPopup != null) termPopup.Close();
+            else Object.FindFirstObjectByType<TermPopup>().Close();
             Check(!card.AllowSelection,"Tooltip close animation must finish before selection unlocks");
             await UniTask.WaitUntil(()=>card.AllowSelection && !level.DescriptionBlocksInput,cancellationToken:token);
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Closing the tooltip returns to the choices without selecting one");
@@ -245,6 +250,7 @@ public static class IngameTutorialChecks
             await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Other choice clicks cannot bypass the required tutorial reward");
             await FocusReady(overlay);
+            pointer.position = overlay.ScreenRect((RectTransform)card.transform).center + Vector2.up * 150f;
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await Stage(IngameTutorialStage.ChiefSkill);
             Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
@@ -257,10 +263,24 @@ public static class IngameTutorialChecks
             Check(grid.AllCells().Any(c=>c.Model.IsBossTelegraphPreviewed),"Earthquake warning is shown on the field");
             var chief=Get<Button>(director,"_chiefButton");
             await UniTask.WaitUntil(()=>chief.interactable && !overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)chief.transform).center,null),cancellationToken:token);
+            var measuredBoss = boss.CurrentBoss;
+            var counterHp = measuredBoss.CurrentHp;
+            float counterTime = Time.realtimeSinceStartup;
+            float counterGameTime = Time.time;
             ClickButton(chief);
             await Frames();
             Check(!patterns.IsCounterablePattern(boss.CurrentBoss),"Actual chief button cancels the earthquake before impact");
             Check(grid.AllCells().All(c=>!c.Model.IsBossTelegraphPreviewed),"Successful counter clears the field warning");
+            if (firstBossBalanceOnly)
+            {
+                await UniTask.WaitUntil(() => measuredBoss == null || measuredBoss.IsDead ||
+                    Time.realtimeSinceStartup - counterTime > 45f, cancellationToken: token);
+                float elapsed = Time.realtimeSinceStartup - counterTime;
+                log.AppendLine($"MEASURE hp_at_counter={counterHp} real_seconds={elapsed:F3} game_seconds={Time.time-counterGameTime:F3} dead={measuredBoss == null || measuredBoss.IsDead}");
+                Check(measuredBoss == null || measuredBoss.IsDead, "First boss dies after chief counter");
+                Check(elapsed <= 11f, "First boss dies within approximately 10 seconds of chief button");
+                return;
+            }
             await Stage(IngameTutorialStage.TotemChoice);
             Check(boss.CurrentBoss == null || (!boss.CurrentBoss.Invincible && !boss.CurrentBoss.PreventDeath),
                 "Boss can be defeated after reward learning");
@@ -343,7 +363,8 @@ public static class IngameTutorialChecks
         {
             if(hadProgress) PlayerPrefs.SetInt(completedKey,previousProgress); else PlayerPrefs.DeleteKey(completedKey);
             PlayerPrefs.Save();
-            File.WriteAllText(Report,log.ToString());Debug.Log(log.ToString());
+            File.WriteAllText(report,log.ToString());Debug.Log(log.ToString());
+            if (firstBossBalanceOnly) EditorApplication.isPlaying = false;
         }
     }
     
