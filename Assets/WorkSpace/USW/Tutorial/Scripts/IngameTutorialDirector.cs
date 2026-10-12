@@ -509,7 +509,6 @@ namespace GaeGGUL.Tutorial
                     if (_guidedBoss != null)
                     {
                         _guidedBoss.PreventDeath = false;
-                        _guidedBoss.TakeDamage(Math.Max(0m, _guidedBoss.CurrentHp - 50m));
                     }
                     break;
                 case IngameTutorialStage.TotemChoice:
