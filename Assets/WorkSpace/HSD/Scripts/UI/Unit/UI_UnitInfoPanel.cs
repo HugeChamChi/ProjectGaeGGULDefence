@@ -189,12 +189,6 @@ namespace GaeGGUL.UI.Unit
             _descriptionToggle = InfoPanelPresentation.CreateToggle(transform, txt_SkillDescription,
                 detailed => _presenter.SetDescriptionMode(detailed));
             ((RectTransform)_descriptionToggle.transform).anchoredPosition = new Vector2(-20f, -72f);
-            if (txt_SkillDescription != null)
-            {
-                txt_SkillDescription.enableAutoSizing = true;
-                txt_SkillDescription.fontSizeMin = 18f;
-                txt_SkillDescription.fontSizeMax = 24f;
-            }
         }
         private void EnsurePresenter()
         {
@@ -216,7 +210,6 @@ namespace GaeGGUL.UI.Unit
             if (txt_SkillDescription != null) txt_SkillDescription.text = _effectLink != null ? _effectLink.SetDescription(skillDescription, binding) : skillDescription;
             if (txt_SkillCooldown != null)
             {
-                txt_SkillCooldown.textWrappingMode = TextWrappingModes.NoWrap;
                 txt_SkillCooldown.text = cooldownText;
             }
         }

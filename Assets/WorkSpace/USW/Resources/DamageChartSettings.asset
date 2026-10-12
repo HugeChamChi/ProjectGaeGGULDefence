@@ -54,7 +54,7 @@ MonoBehaviour:
   RefreshInterval: 0.16
   WarmupSeconds: 12
   BurstDamage: 42000
-  RuntimePanelMin: {x: 0.03, y: 0.18}
-  RuntimePanelMax: {x: 0.97, y: 0.78}
-  VisibleRows: 6
+  RuntimePanelMin: {x: 0.03, y: 0.52}
+  RuntimePanelMax: {x: 0.97, y: 0.945}
+  VisibleRows: 5
   RuntimeTextScale: 1.08

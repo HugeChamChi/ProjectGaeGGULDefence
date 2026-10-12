@@ -113,7 +113,7 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>dialogue.gameObject.activeSelf,cancellationToken:token);
             overlay.OnPointerClick(pointer);await Frames();
             Check(director.CurrentStage==IngameTutorialStage.FirstSummon,"Background taps cannot skip forced summons");
-            await FocusReady(overlay);
+            await FocusReady(overlay);await Snapshot("00-first-summon");
             float summonFocusStarted=Get<float>(overlay,"_started");
             for(int i=0;i<settings.SpawnUnits.Length;i++)
             {
@@ -218,6 +218,24 @@ public static class IngameTutorialChecks
             Check(cards.Select(c=>c.GetData()).SequenceEqual(settings.LevelUpChoices),"Choice cards use the fixed authored order");
             await UniTask.WaitUntil(()=>cards.All(c=>!c.AllowSelection),cancellationToken:token);
             await FocusReady(overlay);
+            dialogue.CompleteTyping();
+            await UniTask.WaitUntil(()=>
+            {
+                float elapsed=Mathf.Max(0,Time.unscaledTime-Get<float>(overlay,"_started")-settings.FocusSeconds)%settings.GestureSeconds;
+                return elapsed>0.35f && elapsed<settings.HoldGestureSeconds;
+            },cancellationToken:token);
+            await Frames();
+            var cueMesh=overlay.canvasRenderer.GetMesh();
+            {
+                var cueVertices=cueMesh.vertices.Skip(Mathf.Max(0,cueMesh.vertexCount-192)).ToArray();
+                var cuePoints=cueVertices.Select(v=>RectTransformUtility.WorldToScreenPoint(null,overlay.rectTransform.TransformPoint(v))).ToArray();
+                var cueRect=Rect.MinMaxRect(cuePoints.Min(p=>p.x),cuePoints.Min(p=>p.y),cuePoints.Max(p=>p.x),cuePoints.Max(p=>p.y));
+                var handRect=overlay.ScreenRect(Get<Image>(overlay,"_handImage").rectTransform);
+                Check(cueVertices.Length==192 && !cueRect.Overlaps(handRect) && cueRect.xMin>=0 && cueRect.yMin>=0 && cueRect.xMax<=Screen.width && cueRect.yMax<=Screen.height,"Complete hold progress ring stays on screen and clear of the hand pointer");
+                Check(Vector2.Distance(cueRect.center,handRect.center)<Screen.width*0.25f,"Hold progress stays close to the pointer rather than in a screen corner");
+            }
+            Check(settings.ChoicePreviewInstruction.Contains("#FF9D32"),"Hold instruction uses authored orange emphasis");
+            await Snapshot("04a-hold-preview-guide");
             var previewTargets=new System.Collections.Generic.List<UnitBase>();
             var card=cards.FirstOrDefault(c=>LevelUpFeedbackTargets.Resolve(c.GetData(),grid,previewTargets)==LevelUpFeedbackDestination.Units)
                 ?? cards.First(c=>c.GetData().specialEffect!=LevelUpSpecialEffect.RerollChoices);
@@ -255,21 +273,22 @@ public static class IngameTutorialChecks
             ExecuteEvents.Execute(termTarget,pointer,ExecuteEvents.pointerClickHandler);
             await UniTask.WaitUntil(()=>level.DescriptionBlocksInput,cancellationToken:token);
             await UniTask.Delay(400,DelayType.Realtime,cancellationToken:token);
-            Check(cards.All(c=>!c.AllowSelection) && !overlay.gameObject.activeSelf,"Opening the real tooltip hides the tutorial mask and keeps selection locked");
+            Check(cards.All(c=>!c.AllowSelection) && overlay.gameObject.activeSelf && !overlay.raycastTarget && Get<bool>(overlay,"_hand") && level.DescriptionVideoArea!=null,"Term video shows a tapping pointer while keeping modal input and selection locks");
             upgrade.OnPointerClick(pointer);
             Check(!upgrade.IsInteractable() && !Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").IsOpen,
                 "Choice term explanation blocks opening the upgrade panel");
             await Snapshot("06-choice-term-popup");
-            var termPopup=Object.FindFirstObjectByType<DebuffInfoPopup>();
-            if (termPopup != null) termPopup.Close();
-            else Object.FindFirstObjectByType<TermPopup>().Close();
+            var termPopup=Object.FindFirstObjectByType<TermPopup>();
+            Check(termPopup!=null && termPopup.Film.Rect.gameObject.activeInHierarchy,"Authored hacking term displays its video");
+            ClickButton(Get<GameObject>(termPopup,"_shield").GetComponent<Button>(),overlay.ScreenRect(level.DescriptionVideoArea).center);
             Check(!card.AllowSelection,"Tooltip close animation must finish before selection unlocks");
             await UniTask.WaitUntil(()=>!level.DescriptionBlocksInput,cancellationToken:token);
             float closedAt=Time.unscaledTime;
             await UniTask.Delay(900,DelayType.Realtime,cancellationToken:token);
             Check(!card.AllowSelection && !dialogue.gameObject.activeSelf && !Get<bool>(overlay,"_hand"),"Term return stays quiet without a pointer or selection during delay");
             await UniTask.WaitUntil(()=>card.AllowSelection,cancellationToken:token);
-            Check(Time.unscaledTime-closedAt>=settings.ChoiceReturnPointDelaySeconds-0.1f && !dialogue.gameObject.activeSelf,"Term return waits 1.5 seconds then shows only pointing");
+            Check(Time.unscaledTime-closedAt>=settings.ChoiceReturnPointDelaySeconds-0.1f && dialogue.gameObject.activeSelf && Get<TMPro.TMP_Text>(dialogue,"_instruction").text==settings.ChoiceSelectInstruction,"Term return waits then restores the Neng selection instruction and pointer");
+            dialogue.CompleteTyping();await Snapshot("06b-choice-select-guide");
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Closing the tooltip returns to the choices without selecting one");
             Check(card.GetData().chooseName == "넹?" && cards.Count(c=>c.AllowSelection) == 1,
                 "Tutorial selection permits only the Neng-question card");
@@ -318,6 +337,13 @@ public static class IngameTutorialChecks
                 return;
             }
             await Stage(IngameTutorialStage.TotemChoice);
+            await UniTask.WaitUntil(()=>!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)summon.transform).center,null),cancellationToken:token);
+            var summonWallet=Get<CurrencyManager>(director,"_currency");
+            summonWallet.AddCurrency(Mathf.Max(0,spawn.CurrentCost-summonWallet.Currency));
+            int beforeFreeSummon=spawn.SuccessfulSpawnCount;
+            ClickButton(summon);
+            await UniTask.WaitUntil(()=>spawn.SuccessfulSpawnCount==beforeFreeSummon+1,cancellationToken:token);
+            Check(Get<int>(director,"_summonLimit")==int.MaxValue,"Summoning unlocks immediately after the chief lesson, before the totem reward");
             Check(boss.CurrentBoss == null || (!boss.CurrentBoss.Invincible && !boss.CurrentBoss.PreventDeath),
                 "Boss can be defeated after reward learning");
             var reward=Get<TotemRewardUI>(director,"_rewardUI");
@@ -358,17 +384,19 @@ public static class IngameTutorialChecks
             await SwipeDetail(-1);
             Check(reward.DetailChoice==settings.RequiredTotem && reward.DetailRotationBadge!=null,"Returning to acceleration shows its actual rotation badge");
             await Acknowledge();
+            await UniTask.WaitUntil(()=>Get<TotemRotateBadgeView>(director,"_rotationComparison")!=null,cancellationToken:token);
             await FocusReady(overlay);
-            pointer.position=pointer.pressPosition=overlay.ScreenRect(reward.DetailSwipeArea).center;
-            swipe.OnPointerClick(pointer);
-            await UniTask.WaitUntil(()=>reward.IsReadyForSelection,cancellationToken:token);
-            await FocusReady(overlay);
-            ClickButton(overview,overlay.ScreenRect(reward.RequiredChoiceArea).center);
-            await UniTask.WaitUntil(()=>reward.IsReadyForConfirmation && reward.AllowTutorialConfirmation,cancellationToken:token);
-            await FocusReady(overlay);
-            dialogue.CompleteTyping();await Snapshot("09-forced-totem-confirm");
-            var confirm=reward.GetComponentsInChildren<Button>().First(b=>b.name.Contains("Confirm"));ClickButton(confirm);
+            var comparison=Get<TotemRotateBadgeView>(director,"_rotationComparison");
+            var crossedRect=overlay.ScreenRect((RectTransform)comparison.transform);
+            var normalRect=overlay.ScreenRect(reward.DetailRotationBadge);
+            Check(comparison.transform.Find("Slash").gameObject.activeInHierarchy && settings.NonRotatableExample!=null && !settings.NonRotatableExample.isRotatable,"Crossed comparison uses a real non-rotatable totem and its shared badge artwork");
+            Check(crossedRect.xMax<normalRect.xMin && Mathf.Abs(crossedRect.center.y-normalRect.center.y)<1f,"Crossed badge is beside the actual rotation icon without overlap");
+            var comparisonFocus=Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Single()();
+            Check(comparisonFocus==crossedRect && !reward.AllowTutorialConfirmation && !reward.AllowTutorialBack && !input.AllowPointerClicks,"Non-rotation explanation focuses its crossed icon and blocks early selection and gameplay");
+            dialogue.CompleteTyping();await Snapshot("09-crossed-rotation-badge");
+            await Acknowledge();
             await Stage(IngameTutorialStage.OpenInventory);
+            Check(Get<TotemInventory>(director,"_inventory").Items.Count==1 && !reward.IsOpen && !reward.AllowTutorialConfirmation && Get<TotemRotateBadgeView>(director,"_rotationComparison")==null,"Explanation automatically confirms exactly one acceleration totem without returning or reselecting");
             var invButton=Get<Button>(director,"_inventoryButton");
             await UniTask.WaitUntil(()=>!overlay.IsRaycastLocationValid(overlay.ScreenRect((RectTransform)invButton.transform).center,null),cancellationToken:token);ClickButton(invButton);
             await Stage(IngameTutorialStage.PlaceTotem);await UniTask.Delay(500,DelayType.Realtime,cancellationToken:token);
@@ -417,7 +445,40 @@ public static class IngameTutorialChecks
             await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
             var end=(Vector2)Camera.main.WorldToScreenPoint(totem.transform.position)+Vector2.right*150;
             Call(input,"ProcessPointerMove",end);Call(input,"ProcessPointerUp",end);
+            // ≡ 메뉴 수업 (사용자 10-13): 메뉴 → 딜 기여도 → 메뉴 → 선택지 보관함 → 메뉴 → 설정 위치
+            var tutorialMenu=Object.FindFirstObjectByType<IngameHudMenu>();
+            var tutorialChart=Object.FindFirstObjectByType<IngameDamageChart>();
+            var tutorialInventory=Object.FindFirstObjectByType<SelectionInventoryUI>();
+            async UniTask Instruction(string text) { await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==text,cancellationToken:token); await FocusReady(overlay); await Frames(); }
+            async UniTask OpenMenu() { await Instruction(settings.MenuReopenInstruction); ClickButton(tutorialMenu.MenuButton); await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token); }
+            await Stage(IngameTutorialStage.OptionsMenu);
+            await Instruction(settings.MenuOpenInstruction);
+            Check(Time.timeScale==0 && !input.AllowPointerClicks && tutorialMenu.gameObject.activeInHierarchy,"Menu lesson pauses the field before the final battle with the menu visible");
+            ClickButton(tutorialMenu.MenuButton);
+            await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token);
+            await Instruction(settings.MenuDamageInstruction);
+            ClickButton(tutorialMenu.DamageButton);
+            await Instruction(settings.MenuDamageExplanation);
+            Check(tutorialChart.IsOpen && tutorialChart.VisibleRowCount>0,"Menu lesson opens the actual damage chart with tutorial damage");
+            await UniTask.WaitUntil(()=>!dialogue.IsTyping,cancellationToken:token);await FocusReady(overlay);
+            await Snapshot("08a-menu-damage");
+            await Acknowledge();
+            await OpenMenu();
+            await Instruction(settings.MenuSelectionInstruction);
+            ClickButton(tutorialMenu.SelectionButton);
+            await Instruction(settings.MenuSelectionExplanation);
+            var expectedOwned=new[]{settings.LevelUpChoices[0]}.Concat(settings.GrantedChoices).ToArray();
+            Check(tutorialInventory.IsOpen && tutorialInventory.ItemCount==expectedOwned.Length && expectedOwned.Select(c=>c.chooseId).SequenceEqual(new[]{9107,9102,9105}),"Selection inventory shows the picked choice plus the granted 9102 and 9105");
+            await Snapshot("08b-menu-selection");
+            await Acknowledge();
+            await UniTask.WaitUntil(()=>!tutorialInventory.IsOpen,cancellationToken:token);
+            await OpenMenu();
+            await Instruction(settings.MenuSettingsExplanation);
+            await UniTask.WaitUntil(()=>!dialogue.IsTyping,cancellationToken:token);await FocusReady(overlay);
+            await Snapshot("08c-menu-settings");
+            await Acknowledge();
             await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==settings.CombatPracticeInstruction,cancellationToken:token);
+            Check(!tutorialMenu.IsExpanded && !tutorialChart.IsOpen && !tutorialInventory.IsOpen,"Menu lesson closes every window before the final battle");
             Check(!input.AllowPointerClicks && Time.timeScale==0,"Final combat explanation blocks gameplay input");
             await Acknowledge();
             await UniTask.WaitUntil(()=>boss.CurrentBoss!=null && Get<WaveManager>(director,"_wave").CurrentWave==2,cancellationToken:token);
@@ -433,7 +494,7 @@ public static class IngameTutorialChecks
                 await UniTask.Delay(400,DelayType.Realtime,cancellationToken:token);
                 ClickButton(Get<Button>(optionsMenu,"_selectionButton"));
                 await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
-                Check(acquired.IsOpen && acquired.Selected!=null && settings.LevelUpChoices.Contains(acquired.Selected.Card),"Tutorial menu displays its actually acquired level-up choice");
+                Check(acquired.IsOpen && acquired.ItemCount==1+settings.GrantedChoices.Length && acquired.Selected!=null && settings.GrantedChoices.Contains(acquired.Selected.Card),"Tutorial menu displays its actually acquired level-up choices");
                 time.Release(optionsFixture);
                 Check(time.Current==0 && time.IsRequesting(acquired),"Tutorial selection inventory owns its gameplay pause");
                 await Snapshot("08-acquired-options");
@@ -446,7 +507,12 @@ public static class IngameTutorialChecks
             Check(totem.RotationStep==1,"Hold then drag right rotates the totem");
             var effectAfter=totem.Data.GetEffectCells(totem,grid).ToArray();
             Check(!effectAfter.SequenceEqual(effectBefore) && effectAfter.All(c=>c.HasSpeedBuff) && effectBefore.Except(effectAfter).All(c=>!c.HasSpeedBuff),"Rotation moves the attack-speed buff and removes it from the old cells");
-            Check(!input.AllowPointerClicks && Get<GameObject>(director,"_completionPanel").activeInHierarchy,"Completion keeps gameplay blocked behind the lobby action");
+            var result=Object.FindFirstObjectByType<ResultScreenView>();
+            Check(!input.AllowPointerClicks && result!=null && !Get<GameObject>(director,"_completionPanel").activeInHierarchy,"Wave 3 completion blocks gameplay behind the shared battle result instead of the old completion overlay");
+            Check(game.CurrentState==GameManager.GameState.Win && game.ResultSnapshot!=null && game.ResultSnapshot.Round==3 && game.ResultSnapshot.BossKills==3,"Tutorial result commits its actual Wave 3 victory and three boss kills");
+            Check(!Get<Button>(result,"_retryButton").gameObject.activeSelf && Get<Button>(result,"_homeButton").gameObject.activeInHierarchy,"Tutorial result leads to the lobby without offering an unintended replay");
+            await UniTask.Delay(5500,DelayType.Realtime,cancellationToken:token);
+            await Snapshot("10-wave3-battle-result");
             Check(!dialogue.gameObject.activeInHierarchy && !overlay.gameObject.activeInHierarchy,"Dialogue and highlight close together");
             Check(invUi.AllowClose,"Tutorial restores normal inventory closing");
             await CheckCompositionAsync(director,Check,token);

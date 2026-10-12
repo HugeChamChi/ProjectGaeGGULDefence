@@ -25,5 +25,8 @@ public class ResultScreenData
 
     public ResultReward[] Rewards;
 
+    /// <summary>패배 순간 필드 보스 그림. 있으면 결과 화면이 고정 초상화 대신 이 보스를 이어 보여 준다.</summary>
+    [NonSerialized] public ResultBossSnapshot BossSnapshot;
+
     public bool IsNewRecord => Round > BestRound;
 }

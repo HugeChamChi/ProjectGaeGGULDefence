@@ -50,6 +50,8 @@ public static class TutorialHackingDeckSetup
             AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset"),
             AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1005Data.asset") };
         settings.RequiredTotem = totem;
+        if (settings.NonRotatableExample == null)
+            settings.NonRotatableExample = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset");
         EditorUtility.SetDirty(settings);
     }
 

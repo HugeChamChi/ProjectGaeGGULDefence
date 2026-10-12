@@ -13,6 +13,7 @@ public sealed class TotemRotateBadgeView : MonoBehaviour
     private Image _background;
     private Image _icon;
     private Image _slash;
+    private Vector2 _comparisonOffset;
 
     /// <summary>Creates the badge once beneath its target; canvas scaling preserves the authored diameter.</summary>
     public static TotemRotateBadgeView Create(RectTransform target, TotemRotateBadgeSettings settings, float diameter)
@@ -57,6 +58,17 @@ public sealed class TotemRotateBadgeView : MonoBehaviour
         RefreshGeometry();
     }
 
+    /// <summary>Creates a tutorial comparison beside this badge using the same artwork and authored totem flag.</summary>
+    public TotemRotateBadgeView CreateComparison(TotemData data, float gap)
+    {
+        var comparison = Create(_target, _settings, _diameter);
+        if (comparison == null) return null;
+        comparison.name = "TutorialRotationComparison";
+        comparison._comparisonOffset = Vector2.left * (_diameter + gap);
+        comparison.SetData(data);
+        return comparison;
+    }
+
     private void LateUpdate() => RefreshGeometry();
 
     private void RefreshGeometry()
@@ -68,7 +80,7 @@ public sealed class TotemRotateBadgeView : MonoBehaviour
         var scale = new Vector3(Mathf.Abs(canvasScale.x / targetScale.x), Mathf.Abs(canvasScale.y / targetScale.y), 1f);
         _rect.localScale = scale;
         float inset = _diameter * 0.5f * _settings.CornerInset;
-        _rect.anchoredPosition = new Vector2(-inset * scale.x, -inset * scale.y);
+        _rect.anchoredPosition = Vector2.Scale(new Vector2(-inset, -inset) + _comparisonOffset, scale);
     }
 
     private Image AddImage(string name, Sprite sprite, Vector2 size)

@@ -42,6 +42,8 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private TermGlossary _termGlossary;
     [SerializeField] private Shader _descriptionBlurShader;
     public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true || _glossaryView != null && _glossaryView.BlocksOwnerInput;
+    /// <summary>Visible term video, allowing a tutorial to point without searching the hierarchy.</summary>
+    public RectTransform DescriptionVideoArea => _glossaryView != null ? _glossaryView.VideoArea : null;
     public bool FieldPreviewBlocksInput => obj != null && obj.GetComponentInChildren<UI_Peekthrough>(true)?.BlocksSelection == true;
     public float SelectionTimeRemaining { get; private set; }
 

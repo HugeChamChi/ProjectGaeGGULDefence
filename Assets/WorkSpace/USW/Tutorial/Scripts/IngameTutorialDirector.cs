@@ -61,6 +61,8 @@ namespace GaeGGUL.Tutorial
         [Inject] private AppInitialization _appInitialization;
         [Inject] private AppLoadingScreen _loadingScreen;
         [Inject] private TimerController _timer;
+        [Inject] private UIManager _ui;
+        [Inject] private LevelUpManager _levelUp;
         [SerializeField] private Button _completeButton;
         [SerializeField] private GameObject _completionPanel;
         private bool _returning;
@@ -79,9 +81,12 @@ namespace GaeGGUL.Tutorial
         private GridCell _dropCell;
         private float _bossExpMultiplier;
         private int _summonLimit;
+        private bool _freeSummoning;
         private Func<bool> _previousSummonPermission;
         private UniTaskCompletionSource _contentDownload;
         private Exception _contentDownloadError;
+        private UniTaskCompletionSource _lobbyPreparation;
+        private TotemRotateBadgeView _rotationComparison;
 
         /// <summary>Current authored lesson, visible to diagnostics and playtest tools.</summary>
         public IngameTutorialStage CurrentStage { get; private set; }
@@ -90,6 +95,7 @@ namespace GaeGGUL.Tutorial
 
         private void Start()
         {
+            _ui.ConfigureResultNavigation(ReturnToLobby, false, true);
             if (_completionPanel != null) _completionPanel.SetActive(false);
             if (_completeButton != null)
             {
@@ -120,7 +126,8 @@ namespace GaeGGUL.Tutorial
                 _input.CanBeginInteraction = _ => false;
                 // Let gameplay Start methods wire their injected services before starting the battle.
                 await Until(() => _initializer.IsReady, token);
-                DownloadContentInBackgroundAsync(token).Forget();
+                DownloadContentInBackgroundAsync(this.GetCancellationTokenOnDestroy()).Forget();
+                PrepareLobbyInBackgroundAsync(this.GetCancellationTokenOnDestroy()).Forget();
                 foreach (var data in _settings.SpawnUnits.Append(_settings.MergeUnit).Distinct())
                     await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 _game.StartGame(false);
@@ -151,7 +158,7 @@ namespace GaeGGUL.Tutorial
                     {
                         if (blockUpgrade && _upgradeButton != null) _upgradeButton.interactable = upgradeInteractable;
                         if (_dialogue != null) _dialogue.Hide();
-                        _summonLimit = 0;
+                        _summonLimit = _freeSummoning ? int.MaxValue : 0;
                         if (_overlay != null) Block();
                         _time?.Release(this);
                         if (_running && _input != null) LockWorldInput();
@@ -171,56 +178,48 @@ namespace GaeGGUL.Tutorial
             {
                 HoldCompletionScreen();
                 _progress.Complete();
-                if (_completeButton != null) _completeButton.gameObject.SetActive(true);
             }
         }
 
         private void HoldCompletionScreen()
         {
-            // Keep the finished lesson stable: no further bosses, cards or rewards behind the return button.
+            // Commit the real run snapshot before stopping its wave/reward state.
             _exp.DeferLevelUps = true;
             _exp.CancelPendingLevelUp();
             _time.Pause(this);
             _fieldPause.HoldAttacks(this);
             _timer.StopTimer();
-            _wave.StopRun();
             _levelUpUI?.CancelPendingSelection();
             _rewardUI?.CancelPendingRewards();
             _input.AllowPointerClicks = false;
             _input.CanBeginInteraction = _ => false;
             _input.CanEndInteraction = null;
-            if (_completionPanel != null)
-            {
-                _completionPanel.transform.SetAsLastSibling();
-                _completionPanel.SetActive(true);
-            }
-            if (_completeButton != null) _completeButton.transform.SetAsLastSibling();
+            _game.OnAllWavesCleared();
         }
 
-        /// <summary>타이틀에서 하던 앱 초기화를 마친 뒤 완료 안내 버튼에서 로비로 이동한다.</summary>
+        /// <summary>Reuses preparation started during the tutorial when the battle result requests the lobby.</summary>
         public void ReturnToLobby() => ReturnToLobbyAsync().Forget();
 
         private async UniTask ReturnToLobbyAsync()
         {
             if (!IsComplete || _returning) return;
             _returning = true;
-            var label = _completeButton != null ? _completeButton.GetComponentInChildren<TMPro.TMP_Text>(true) : null;
-            string originalLabel = label != null ? label.text : string.Empty;
-            if (_completeButton != null) _completeButton.interactable = false;
-            if (label != null) label.text = "로비 준비 중…";
+            _ui.SetResultNavigationBusy(true);
             var token = this.GetCancellationTokenOnDestroy();
             bool failed = false;
             try
             {
                 _time.Pause(this);
-                _loadingScreen?.Show("로비 준비 중…");
-                await _scenes.TransitionToSceneAsync("LobbyScene",
-                    beforeLoad: async () =>
-                    {
-                        if (_contentDownload != null) await _contentDownload.Task.AttachExternalCancellation(token);
-                        if (_contentDownloadError != null) await DownloadContentAsync(token);
-                        await _appInitialization.InitializeAsync(token);
-                    });
+                // Keep the result visible if a real connection is still pending; fade only for the scene change.
+                if (_contentDownload != null) await _contentDownload.Task.AttachExternalCancellation(token);
+                if (_contentDownloadError != null)
+                {
+                    await DownloadContentAsync(token);
+                    _contentDownloadError = null;
+                }
+                if (_lobbyPreparation != null) await _lobbyPreparation.Task.AttachExternalCancellation(token);
+                await _appInitialization.InitializeAsync(token);
+                await _scenes.TransitionToSceneAsync("LobbyScene");
             }
             catch (OperationCanceledException) { }
             catch (Exception error)
@@ -231,9 +230,7 @@ namespace GaeGGUL.Tutorial
             finally
             {
                 _returning = false;
-                _loadingScreen?.Hide();
-                if (_completeButton != null) _completeButton.interactable = true;
-                if (label != null) label.text = failed ? "로비 연결 실패 · 다시 시도" : originalLabel;
+                if (_ui != null) _ui.SetResultNavigationBusy(false, failed);
             }
         }
 
@@ -251,6 +248,8 @@ namespace GaeGGUL.Tutorial
                 !_settings.TotemChoices.Contains(_settings.RequiredTotem) || _settings.CounterPattern == null ||
                 _settings.CounterPattern.patternType != BossPatternType.Earthquake || _settings.CounterPattern.ImpactTimeSec <= 0)
                 throw new InvalidOperationException("Tutorial requires a fixed merge unit, three choices and three totems including a required rotatable reward.");
+            if (_settings.NonRotatableExample == null || _settings.NonRotatableExample.isRotatable)
+                throw new InvalidOperationException("Tutorial requires an authored non-rotatable badge example.");
             if (_plan != null)
             {
                 if (_targets != null && _targets.Where(t => t != null).GroupBy(t => t.Key).Any(g => string.IsNullOrWhiteSpace(g.Key) || g.Count() > 1))
@@ -435,12 +434,14 @@ namespace GaeGGUL.Tutorial
                     var choices = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
                     var requiredChoice = choices.First(c => c.GetData() == _settings.LevelUpChoices[0]);
                     foreach (var choice in choices) choice.AllowSelection = choice == requiredChoice;
+                    _dialogue.ShowText(_settings.ChoiceSelectInstruction, _lessonIndex, _lessonCount, false);
                     _overlay.Show(_settings, true, false, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)requiredChoice.transform));
                     _time.Release(this);
                     try { await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token); }
                     finally { foreach (var choice in choices) if (choice != null) choice.AllowSelection = true; }
                     _exp.DeferLevelUps = true;
                     _levelUpUI.RequireUnitPreview = false;
+                    GrantTutorialChoices();
                     break;
                 case IngameTutorialStage.OpenUpgrade:
                     Block();
@@ -464,7 +465,10 @@ namespace GaeGGUL.Tutorial
                     await Until(() => item.CurrentLevel > level, token);
                     Block();
                     _dialogue.ShowText("좋아요! 유닛이 더 강해졌어요!", _lessonIndex, _lessonCount, false);
-                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_upgradePanel.StatFeedbackArea));
+                    // 정보창 루트는 위쪽 빈 여백까지 포함하므로 실제 판(Background)만 비춘다.
+                    var feedback = _upgradePanel.StatFeedbackArea;
+                    var feedbackPanel = feedback != null ? feedback.Find("Background") as RectTransform : null;
+                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(feedbackPanel != null ? feedbackPanel : feedback));
                     await AcknowledgeAsync(token);
                     _upgradePanel.CloseStatFeedback();
                     await _upgradePanel.CloseAsync().AttachExternalCancellation(token);
@@ -525,6 +529,8 @@ namespace GaeGGUL.Tutorial
                     {
                         _guidedBoss.PreventDeath = false;
                     }
+                    _freeSummoning = true;
+                    _summonLimit = int.MaxValue;
                     break;
                 case IngameTutorialStage.TotemChoice:
                     await ChooseTotemAsync(token);
@@ -549,9 +555,84 @@ namespace GaeGGUL.Tutorial
                 case IngameTutorialStage.RotateTotem:
                     _time.Pause(this); ShowRecipeDialogue();
                     await RotateTotemAsync(token);
+                    // ≡ 메뉴 수업이 뒤에 있으면 마지막 전투는 그 수업이 끝난 뒤 연다.
+                    if (!HasLesson(IngameTutorialStage.OptionsMenu)) await PracticeBattleAsync(token);
+                    break;
+                case IngameTutorialStage.OptionsMenu:
+                    await OptionsMenuAsync(token);
                     await PracticeBattleAsync(token);
                     break;
             }
+        }
+
+        private bool HasLesson(IngameTutorialStage stage) => _plan.Lessons.Any(lesson => lesson != null &&
+            lesson.Kind == IngameTutorialLesson.LessonKind.GameplayRecipe && lesson.Gameplay.Stage == stage);
+
+        // 레벨업에서 고른 카드 뒤로 정해 둔 카드를 실제로 획득시킨다(보관함 1·2·3번, 족장 스킬 기폭).
+        private void GrantTutorialChoices()
+        {
+            if (_settings.GrantedChoices == null || _levelUp == null) return;
+            foreach (var card in _settings.GrantedChoices)
+            {
+                if (card == null) continue;
+                var result = _levelUp.TryApplyChoice(card);
+                if (result == SelectionApplyResult.Rejected) Debug.LogWarning($"[IngameTutorial] 지급 선택지 거절: {card.chooseId}", this);
+            }
+        }
+
+        // ≡ 메뉴 수업: 메뉴 열기 → 딜 기여도 → 선택지 보관함 → 설정 위치. 각 창은 실제 버튼을 눌러 연다.
+        private async UniTask OptionsMenuAsync(CancellationToken token)
+        {
+            var menu = FindFirstObjectByType<IngameHudMenu>(FindObjectsInactive.Include);
+            var chart = FindFirstObjectByType<IngameDamageChart>(FindObjectsInactive.Include);
+            var inventory = FindFirstObjectByType<SelectionInventoryUI>(FindObjectsInactive.Include);
+            if (menu == null) { Debug.LogWarning("[IngameTutorial] ≡ 메뉴가 없어 메뉴 수업을 건너뜁니다.", this); return; }
+            LockWorldInput(); Block();
+            _time.Pause(this);
+            if (_optionsButton != null) _optionsButton.SetActive(true);
+
+            await OpenMenuAsync(menu, _settings.MenuOpenInstruction, token);
+            if (chart != null)
+            {
+                _dialogue.ShowText(_settings.MenuDamageInstruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(menu.DamageButton));
+                await Until(() => chart.IsOpen && chart.PanelArea != null, token);
+                Block();
+                _dialogue.ShowText(_settings.MenuDamageExplanation, _lessonIndex, _lessonCount, true);
+                await AwarenessAsync(Ui(chart.PanelArea), token);
+                chart.Close();
+                await OpenMenuAsync(menu, _settings.MenuReopenInstruction, token);
+            }
+            if (inventory != null)
+            {
+                _dialogue.ShowText(_settings.MenuSelectionInstruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(menu.SelectionButton));
+                await Until(() => inventory.IsOpen, token);
+                Block();
+                await Delay(_settings.FocusSeconds, token); // 칸이 왼쪽 위부터 채워지는 연출을 보여 준다
+                _dialogue.ShowText(_settings.MenuSelectionExplanation, _lessonIndex, _lessonCount, true);
+                await AwarenessAsync(Ui(inventory.PanelArea), token);
+                inventory.Close();
+                await Until(() => !inventory.IsOpen, token);
+                await OpenMenuAsync(menu, _settings.MenuReopenInstruction, token);
+            }
+            // 설정은 열지 않고 위치만 알려 준다.
+            _dialogue.ShowText(_settings.MenuSettingsExplanation, _lessonIndex, _lessonCount, true);
+            await AwarenessAsync(ButtonArea(menu.SettingsButton), token);
+            menu.SetExpanded(false);
+            await Until(() => menu.IsSettled, token);
+        }
+
+        private async UniTask OpenMenuAsync(IngameHudMenu menu, string instruction, CancellationToken token)
+        {
+            if (!menu.IsExpanded)
+            {
+                _dialogue.ShowText(instruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(menu.MenuButton));
+                await Until(() => menu.IsExpanded, token);
+                Block();
+            }
+            await Until(() => menu.IsSettled, token);
         }
 
         private async UniTask SummonAsync(CancellationToken token)
@@ -731,8 +812,10 @@ namespace GaeGGUL.Tutorial
                 _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap,
                     () => ChoiceTermBounds(card.DescriptionText));
                 await Until(() => _levelUpUI.DescriptionBlocksInput, token);
-                _overlay.Hide();
                 _dialogue.Hide();
+                if (_levelUpUI.DescriptionVideoArea != null)
+                    _overlay.PointAt(_settings, Ui(_levelUpUI.DescriptionVideoArea));
+                else _overlay.Hide();
                 await Until(() => !_levelUpUI.DescriptionBlocksInput, token);
                 Block();
                 await Delay(_settings.ChoiceReturnPointDelaySeconds, token);
@@ -783,8 +866,9 @@ namespace GaeGGUL.Tutorial
             }
         }
 
+        // 터치 영역을 넓힌 여백만 반영한다. 줄이는 여백까지 쓰면 버튼 위아래가 어둡게 잘린다(출격 73/88).
         private Func<Rect> ButtonArea(Button button) => () => _overlay.ScreenRect(
-            (RectTransform)button.transform, button.targetGraphic != null ? button.targetGraphic.raycastPadding : Vector4.zero);
+            (RectTransform)button.transform, button.targetGraphic != null ? Vector4.Min(button.targetGraphic.raycastPadding, Vector4.zero) : Vector4.zero);
         private Func<Rect> Ui(RectTransform target) => () => _overlay.ScreenRect(target);
         private Rect RequiredTotemBounds()
         {
@@ -799,6 +883,8 @@ namespace GaeGGUL.Tutorial
             _dialogue.Hide();
             Block();
             _time.Release(this);
+            if (_freeSummoning)
+                _overlay.Show(_settings, true, false, false, IngameTutorialOverlay.Gesture.Tap, ButtonArea(_summonButton));
             await Until(() => _rewardUI.IsOpen, token);
             Block();
             await Until(() => _rewardUI.IsReadyForSelection, token);
@@ -820,18 +906,21 @@ namespace GaeGGUL.Tutorial
             _rewardUI.SetTutorialBrowsing(false);
             _dialogue.ShowText(_settings.TotemRotationBadgeInstruction, _lessonIndex, _lessonCount, true);
             await AwarenessAsync(Ui(_rewardUI.DetailRotationBadge), token);
-            _dialogue.ShowText(_settings.TotemReselectInstruction, _lessonIndex, _lessonCount, false);
-            _rewardUI.AllowTutorialBack = true;
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, TotemSwipeBounds);
-            await Until(() => _rewardUI.IsReadyForSelection, token);
-            _rewardUI.AllowTutorialBack = false;
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
-            await Until(() => _rewardUI.IsReadyForConfirmation, token);
-            _dialogue.ShowText("강조된 버튼을 눌러 토템을 받아 보세요.", _lessonIndex, _lessonCount, false);
-            _rewardUI.AllowTutorialConfirmation = true;
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui(_rewardUI.ConfirmationArea));
+            var badge = _rewardUI.DetailRotationBadge.GetComponent<TotemRotateBadgeView>();
+            _rotationComparison = badge.CreateComparison(_settings.NonRotatableExample, _settings.TotemBadgeComparisonGap);
+            try
+            {
+                _dialogue.ShowText(_settings.TotemNoRotationInstruction, _lessonIndex, _lessonCount, true);
+                await AwarenessAsync(Ui((RectTransform)_rotationComparison.transform), token);
+            }
+            finally
+            {
+                if (_rotationComparison != null) Destroy(_rotationComparison.gameObject);
+                _rotationComparison = null;
+            }
+            Block();
+            if (!_rewardUI.ConfirmTutorialChoice()) throw new InvalidOperationException("Required tutorial totem is not ready to confirm.");
             await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
-            _rewardUI.AllowTutorialConfirmation = false;
             Block();
         }
 
@@ -893,6 +982,22 @@ namespace GaeGGUL.Tutorial
                 Debug.LogWarning("[IngameTutorial] 콘텐츠 다운로드는 로비 이동 때 다시 시도합니다: " + error.Message);
             }
             finally { _contentDownload.TrySetResult(); }
+        }
+
+        private async UniTaskVoid PrepareLobbyInBackgroundAsync(CancellationToken token)
+        {
+            _lobbyPreparation = new UniTaskCompletionSource();
+            try
+            {
+                await _appInitialization.InitializeAsync(token);
+                Debug.Log("[IngameTutorial] Background lobby initialization completed");
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+            catch (Exception error)
+            {
+                Debug.LogWarning("[IngameTutorial] 로비 초기화는 로비 이동 때 다시 시도합니다: " + error.Message);
+            }
+            finally { _lobbyPreparation.TrySetResult(); }
         }
 
         private static async UniTask DownloadContentAsync(CancellationToken token)

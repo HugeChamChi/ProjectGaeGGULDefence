@@ -26,6 +26,9 @@ public sealed class ChoiceGlossaryView : MonoBehaviour
 
     /// <summary>Whether this view still owns the closing or opening touch.</summary>
     public bool BlocksOwnerInput => _popup != null && _popup.BlocksOwnerInput;
+    /// <summary>Currently visible term video area for scene-owned tutorial pointing.</summary>
+    public RectTransform VideoArea => _popup != null && _popup.Film != null &&
+        _popup.Film.Rect.gameObject.activeInHierarchy ? _popup.Film.Rect : null;
 
     /// <summary>Creates a safe-area sheet with an edge-to-edge modal shield.</summary>
     public static ChoiceGlossaryView Create(Transform parent, TMP_Text font, RectTransform cards,

@@ -69,7 +69,6 @@ public static class TutorialPresentationSync
             CopyFields<InGameInstaller>("/// InGameInstaller", "_centerToast", "_bossClearPresentation");
             CopyFields<UIManager>("@ Managers/UIManager", "_resultScreen");
             CopyFields<WaveManager>("@ Managers/WaveManager", "_penaltyFx");
-            CopyFields<TMPro.TextMeshProUGUI>("# MainUI/MainUI_SafeAreaRoot/MainUI_TopBar/Main_Topbar_TimerPanel/Main_Topbar_TimerText(TMP)", "m_fontSize", "m_fontSizeBase");
             CopyFields<UnityEngine.UI.Image>("# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons/Summon/SummonButton/Summon_MaskBackground/Summon_Background (1)", "m_Material");
             var level = new SerializedObject(Find(target, "@ Managers/LevelUpManager").GetComponent<LevelUpManager>());
             var game = new SerializedObject(Find(target, "@ Managers/GameManager").GetComponent<GameManager>());
@@ -88,6 +87,7 @@ public static class TutorialPresentationSync
     {
         const string top = "# MainUI/MainUI_SafeAreaRoot/MainUI_TopBar";
         const string buttons = "# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons";
+        const string boss = top + "/Main_TopBar_BossInfomation/";
         var originals = source.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RectTransform>(true));
         var copies = target.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RectTransform>(true)).ToArray();
         foreach (var original in originals)
@@ -95,6 +95,9 @@ public static class TutorialPresentationSync
             string path = Path(original);
             if (path != top && !path.StartsWith(top + "/", StringComparison.Ordinal) &&
                 path != buttons && !path.StartsWith(buttons + "/", StringComparison.Ordinal)) continue;
+            // Keep the tutorial's icon coverage, artwork clipping and line-count placement.
+            if (path == boss + "Boss_Icon" || path == boss + "BossHpBar" ||
+                path.StartsWith(boss + "BossHpBar/", StringComparison.Ordinal)) continue;
             var copy = copies.FirstOrDefault(t => Path(t) == path);
             if (copy == null) continue;
             copy.anchorMin = original.anchorMin; copy.anchorMax = original.anchorMax;
@@ -108,8 +111,28 @@ public static class TutorialPresentationSync
         if (summon != null)
         {
             summon.anchoredPosition += Vector2.up * 32f;
+            summon.sizeDelta = new Vector2(summon.sizeDelta.x, 230f);
             if (PrefabUtility.IsPartOfPrefabInstance(summon)) PrefabUtility.RecordPrefabInstancePropertyModifications(summon);
         }
+        var food = copies.FirstOrDefault(t => Path(t) == "# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/MainUI_InteractableBar_Food");
+        if (food != null && summon != null)
+        {
+            food.anchoredPosition = new Vector2(food.anchoredPosition.x, summon.anchoredPosition.y + summon.sizeDelta.y * 0.5f + 42f);
+            if (PrefabUtility.IsPartOfPrefabInstance(food)) PrefabUtility.RecordPrefabInstancePropertyModifications(food);
+        }
+        // Geometry alone does not copy TMP typography. Keep the complete authored timer style.
+        const string timerPath = top + "/Main_Topbar_TimerPanel/Main_Topbar_TimerText(TMP)";
+        var fromTimer = originals.First(t => Path(t) == timerPath).GetComponent<TMPro.TextMeshProUGUI>();
+        var toTimer = copies.First(t => Path(t) == timerPath).GetComponent<TMPro.TextMeshProUGUI>();
+        var fromStyle = new SerializedObject(fromTimer);
+        var toStyle = new SerializedObject(toTimer);
+        foreach (var field in new[] { "m_fontAsset", "m_sharedMaterial", "m_fontSize", "m_fontSizeBase", "m_enableAutoSizing", "m_fontSizeMin", "m_fontSizeMax", "m_fontStyle", "m_fontColor", "m_HorizontalAlignment", "m_VerticalAlignment", "m_characterSpacing", "m_wordSpacing", "m_lineSpacing", "m_paragraphSpacing", "m_margin" })
+        {
+            var property = fromStyle.FindProperty(field);
+            if (property != null) toStyle.CopyFromSerializedProperty(property);
+        }
+        toStyle.ApplyModifiedPropertiesWithoutUndo();
+        if (PrefabUtility.IsPartOfPrefabInstance(toTimer)) PrefabUtility.RecordPrefabInstancePropertyModifications(toTimer);
         var menu = copies.FirstOrDefault(t => t.GetComponent<IngameHudMenu>() != null);
         if (menu != null)
         {

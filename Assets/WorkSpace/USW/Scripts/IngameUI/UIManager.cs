@@ -74,7 +74,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private ResultScreenView _resultScreen;
     private GameObject _endInputShield;
     private bool _resultShown;
+    private HackingHud _hackingHud;
     private bool _navigationStarted;
+    private System.Action _resultHomeRequested;
+
+    /// <summary>Uses scene-specific lobby preparation without replacing the shared battle result.
+    /// lobbyInAdSlot은 보상 더 받기 칸 자리에 로비로 버튼을 둔다.</summary>
+    public void ConfigureResultNavigation(System.Action homeRequested, bool allowRetry = true, bool lobbyInAdSlot = false)
+    {
+        _resultHomeRequested = homeRequested;
+        _resultScreen?.SetRetryAvailable(allowRetry);
+        _resultScreen?.SetLobbyInAdSlot(lobbyInAdSlot);
+    }
+
+    /// <summary>Updates result navigation while its scene prepares or retries a lobby connection.</summary>
+    public void SetResultNavigationBusy(bool busy, bool failed = false) => _resultScreen?.SetNavigationBusy(busy, failed);
 
     protected void Awake()
     {
@@ -92,7 +106,10 @@ public class UIManager : MonoBehaviour
         // DroneManager → BossManager → UIManager 순환을 피하도록 기존 Start 시점에만 조회한다.
         VContainer.IObjectResolverExtensions.TryResolve(_resolver, out _droneManager);
         if (_droneManager != null && _bossHpBar != null)
-            gameObject.AddComponent<HackingHud>().Initialize(_droneManager.Hacking, _bossHpBar);
+        {
+            _hackingHud = gameObject.AddComponent<HackingHud>();
+            _hackingHud.Initialize(_droneManager.Hacking, _bossHpBar);
+        }
 
         if (summonButton != null)
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
@@ -401,6 +418,8 @@ public class UIManager : MonoBehaviour
         if (_resultShown) return;
         _resultShown = true;
         _timeScale.Pause(this);
+        // 해킹 스택 링은 전투 HUD라 결과 화면 위에 남기지 않는다.
+        _hackingHud?.Hide();
         if (_endInputShield != null) _endInputShield.SetActive(false);
         if (_resultScreen != null && data != null)
         {
@@ -434,6 +453,11 @@ public class UIManager : MonoBehaviour
     private void OnHomeButtonPressed()
     {
         if (_navigationStarted) return;
+        if (_resultHomeRequested != null)
+        {
+            _resultHomeRequested();
+            return;
+        }
         _navigationStarted = true;
         _gameManager.CancelEndPresentation();
         _timeScale.ReleaseAll();

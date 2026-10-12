@@ -503,6 +503,17 @@ public class TotemRewardUI : MonoBehaviour
 
     // ── 확정 · 닫기 ────────────────────────────────────────────
 
+    /// <summary>Confirms the settled required reward after the tutorial explanation through the normal grant path.</summary>
+    public bool ConfirmTutorialChoice()
+    {
+        if (!HasRequiredChoice || !IsReadyForConfirmation || DetailChoice != _tutorialSettings.RequiredTotem)
+            return false;
+        AllowTutorialConfirmation = true;
+        OnConfirmClicked();
+        AllowTutorialConfirmation = false;
+        return true;
+    }
+
     private void OnConfirmClicked()
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;

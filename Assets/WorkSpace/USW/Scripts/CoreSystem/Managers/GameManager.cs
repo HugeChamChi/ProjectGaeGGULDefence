@@ -155,6 +155,9 @@ public class GameManager : MonoBehaviour
 
     private void FinishResult(bool isWin)
     {
+        // 패배면 결과 화면이 그 보스를 이어받도록 마지막 모습을 찍어 둔다.
+        if (!isWin && _resultSnapshot != null && _resolver.TryResolve<BossManager>(out var bosses))
+            _resultSnapshot.BossSnapshot = ResultBossSnapshot.Capture(bosses.CurrentBoss, Camera.main);
         // Pause first, then clean up owners/units. No normal-speed frame during the handoff.
         _uiManager.ShowResult(isWin, _resultSnapshot);
         StopAllUnits();

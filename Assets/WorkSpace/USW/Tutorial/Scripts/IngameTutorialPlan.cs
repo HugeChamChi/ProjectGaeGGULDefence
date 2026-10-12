@@ -50,6 +50,8 @@ namespace GaeGGUL.Tutorial
                 case IngameTutorialStage.PlaceTotem: return new[] { IngameTutorialStage.OpenInventory };
                 case IngameTutorialStage.MoveTotem: return new[] { IngameTutorialStage.PlaceTotem };
                 case IngameTutorialStage.RotateTotem: return new[] { IngameTutorialStage.MoveTotem };
+                // 딜 기여도에 볼거리가 쌓이고 획득 선택지가 있는 뒤. 마지막 전투는 이 블록이 이어서 연다.
+                case IngameTutorialStage.OptionsMenu: return new[] { IngameTutorialStage.LevelUp, IngameTutorialStage.RotateTotem };
                 default: return System.Array.Empty<IngameTutorialStage>();
             }
         }

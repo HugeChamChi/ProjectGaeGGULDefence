@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 using TMPro;
 using DG.Tweening;
 
-/// <summary>전체 체력 비율과 남은 체력줄을 표시하는 보스 체력바.</summary>
+/// <summary>전체 또는 현재 줄의 체력 비율과 남은 체력줄을 표시하는 보스 체력바.</summary>
 public class UI_BossHpBar : MonoBehaviour
 {
     [Header("Debuffs")]
@@ -54,6 +54,13 @@ public class UI_BossHpBar : MonoBehaviour
     [Min(1)]
     [Tooltip("총 체력줄 수 (예: 100). 색은 아래 Line Colors 를 순서대로 분배·보간")]
     [SerializeField] private int _lineCount = 5;
+    [Tooltip("현재 남은 한 줄의 HP 비율로 채운다. 끄면 기존 전체 HP 비율로 표시한다.")]
+    [SerializeField] private bool _fillCurrentLine;
+    [Tooltip("HP 몸통 배경. 채움·다음 줄 그림을 이 배경과 같은 가로 자리·폭에 그려 정확히 겹친다. 비우면 채움 부모 폭을 쓴다.")]
+    [SerializeField] private Image _hpBackground;
+    private RectTransform _nextLineMask;
+    private Image _nextLineFill;
+    private readonly Vector3[] _backgroundCorners = new Vector3[4];
 
     /// <summary>줄 색 계산 방식.</summary>
     public enum LineColorMode
@@ -216,18 +223,41 @@ public class UI_BossHpBar : MonoBehaviour
     private void ApplyBarVisual(float shownRatio)
     {
         int lineCount = LineCount;
+        int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :
+            shownRatio <= 0f ? 0 : Mathf.Clamp(Mathf.CeilToInt(shownRatio * lineCount), 1, lineCount);
+        float fillRatio = _fillCurrentLine && shownLine > 0
+            ? Mathf.Clamp01(shownRatio * lineCount - (shownLine - 1)) : shownRatio;
 
-        // 전체 비율만큼 Mask 가로 길이 (왼쪽 고정, 오른쪽이 줄어듦).
+        // 표시 비율만큼 Mask 가로 길이 (왼쪽 고정, 오른쪽이 줄어듦).
         // 앵커 기반이라 Pivot 설정과 무관하게 왼쪽 정렬 + 부모 폭 상대.
+        Vector2 padding = Vector2.zero;
+        float coverStart = 0f;
+        float artLeft = 0f, artWidth = 0f;
         if (_hpFillMask != null)
         {
             var fullBar = _hpFillMask.parent as RectTransform;
-            Vector2 padding = Vector2.zero;
+            if (fullBar != null)
+            {
+                // 채움 그림의 가로 자리·폭은 몸통 배경과 같게 (튜토리얼은 배경이 아이콘 밑까지 더 길다).
+                artWidth = fullBar.rect.width;
+                if (_hpBackground != null)
+                {
+                    _hpBackground.rectTransform.GetWorldCorners(_backgroundCorners);
+                    float left = fullBar.InverseTransformPoint(_backgroundCorners[0]).x;
+                    float right = fullBar.InverseTransformPoint(_backgroundCorners[2]).x;
+                    artLeft = left - fullBar.rect.xMin;
+                    artWidth = right - left;
+                }
+            }
             if (fullBar != null && _hpColor != null && _hpColor.sprite != null)
             {
                 float pixels = _hpColor.sprite.rect.width;
                 if (pixels > 0f)
-                    padding = _fillSpriteHorizontalPadding * (fullBar.rect.width / pixels);
+                {
+                    padding = _fillSpriteHorizontalPadding * (artWidth / pixels);
+                    padding.x += artLeft;
+                    padding.y += fullBar.rect.width - (artLeft + artWidth);
+                }
             }
             if (fullBar != null && _fillStartAfter != null)
             {
@@ -239,17 +269,25 @@ public class UI_BossHpBar : MonoBehaviour
             }
             if (fullBar != null)
                 padding.x = Mathf.Clamp(padding.x, 0f, Mathf.Max(0f, fullBar.rect.width - padding.y));
+            // 비율은 아이콘 오른쪽부터 재되, 칠하기는 위에 그려지는 둥근 아이콘 중심부터 시작해
+            // 원 테두리가 휘는 자리에 배경이 비치지 않게 한다.
+            coverStart = padding.x;
+            if (fullBar != null && IconDrawsAboveBar())
+            {
+                float center = fullBar.InverseTransformPoint(_fillStartAfter.TransformPoint(_fillStartAfter.rect.center)).x;
+                coverStart = Mathf.Clamp(center - fullBar.rect.xMin, 0f, padding.x);
+            }
             Vector2 anchorMin = _hpFillMask.anchorMin;
             Vector2 anchorMax = _hpFillMask.anchorMax;
             anchorMin.x = 0f;
-            anchorMax.x = shownRatio;
+            anchorMax.x = fillRatio;
             _hpFillMask.anchorMin = anchorMin;
             _hpFillMask.anchorMax = anchorMax;
 
             Vector2 offsetMin = _hpFillMask.offsetMin;
             Vector2 offsetMax = _hpFillMask.offsetMax;
-            offsetMin.x = padding.x;
-            offsetMax.x = Mathf.Lerp(padding.x, -padding.y, shownRatio);
+            offsetMin.x = coverStart;
+            offsetMax.x = Mathf.Lerp(padding.x, -padding.y, fillRatio);
             _hpFillMask.offsetMin = offsetMin;
             _hpFillMask.offsetMax = offsetMax;
 
@@ -257,21 +295,75 @@ public class UI_BossHpBar : MonoBehaviour
             // A percentage anchor plus fixed pixels only matched one screen size.
             if (_hpColor != null && _hpColor.rectTransform.parent == _hpFillMask && fullBar != null)
                 _hpColor.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left,
-                    -padding.x, fullBar.rect.width);
+                    artLeft - coverStart, artWidth);
         }
-
-        int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :
-            shownRatio <= 0f
-                ? 0
-                : Mathf.Clamp(Mathf.CeilToInt(shownRatio * lineCount), 1, lineCount);
 
         if (_hpColor != null && shownLine >= 1)
             _hpColor.color = EvaluateLineColor(shownLine, lineCount);
+        ApplyNextLine(shownLine, lineCount, padding, coverStart, artLeft, artWidth);
 
         if (_hpLineText != null)
             _hpLineText.text = _linePrefix + shownLine;
     }
 
+
+    // 줄 단위 채움에서 깎인 자리에 다음 줄 색을 보여 준다. 마지막 줄이면 배경이 드러난다.
+    // 다음 줄 층은 현재 줄이 가득 찼을 때의 채움과 같은 마스크·그림 배치를 그대로 쓴다.
+    // 그래서 현재 줄이 꽉 차 있으면 다음 줄 색이 가장자리로 한 픽셀도 새지 않는다.
+    private void ApplyNextLine(int shownLine, int lineCount, Vector2 padding, float coverStart, float artLeft, float artWidth)
+    {
+        var fullBar = _hpFillMask != null ? _hpFillMask.parent as RectTransform : null;
+        bool visible = _fillCurrentLine && shownLine > 1 && _hpColor != null && fullBar != null;
+        if (!visible)
+        {
+            if (_nextLineFill != null) _nextLineFill.enabled = false;
+            return;
+        }
+        if (_nextLineFill == null)
+        {
+            var mask = new GameObject("HpNextLineMask", typeof(RectTransform), typeof(RectMask2D));
+            mask.transform.SetParent(fullBar, false);
+            mask.transform.SetSiblingIndex(_hpFillMask.GetSiblingIndex());
+            _nextLineMask = (RectTransform)mask.transform;
+            var go = new GameObject("HpNextLine", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(_nextLineMask, false);
+            _nextLineFill = go.GetComponent<Image>();
+            _nextLineFill.raycastTarget = false;
+        }
+        _nextLineFill.sprite = _hpColor.sprite;
+        _nextLineFill.type = _hpColor.type;
+        _nextLineFill.pixelsPerUnitMultiplier = _hpColor.pixelsPerUnitMultiplier;
+        _nextLineFill.material = _hpColor.material;
+
+        // 채움 마스크의 fillRatio = 1 상태와 같은 영역.
+        _nextLineMask.pivot = _hpFillMask.pivot;
+        _nextLineMask.anchorMin = new Vector2(0f, _hpFillMask.anchorMin.y);
+        _nextLineMask.anchorMax = new Vector2(1f, _hpFillMask.anchorMax.y);
+        _nextLineMask.offsetMin = new Vector2(coverStart, _hpFillMask.offsetMin.y);
+        _nextLineMask.offsetMax = new Vector2(-padding.y, _hpFillMask.offsetMax.y);
+        _nextLineMask.localScale = _hpFillMask.localScale;
+
+        // 채움 그림과 같은 배치(전체 바 폭, 왼쪽 여백만큼 당김).
+        var from = _hpColor.rectTransform;
+        var rect = _nextLineFill.rectTransform;
+        rect.pivot = from.pivot;
+        rect.anchorMin = from.anchorMin;
+        rect.anchorMax = from.anchorMax;
+        rect.offsetMin = from.offsetMin;
+        rect.offsetMax = from.offsetMax;
+        if (from.parent == _hpFillMask)
+            rect.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, artLeft - coverStart, artWidth);
+        _nextLineFill.enabled = true;
+        _nextLineFill.color = EvaluateLineColor(shownLine - 1, lineCount);
+    }
+
+    // 아이콘이 이 바와 같은 부모에서 뒤 순서(위에 그려짐)일 때만 아이콘 밑으로 칠을 넣는다.
+    private bool IconDrawsAboveBar()
+    {
+        if (_fillStartAfter == null) return false;
+        var bar = transform;
+        return _fillStartAfter.parent == bar.parent && _fillStartAfter.GetSiblingIndex() > bar.GetSiblingIndex();
+    }
 
     /// <summary>
     /// 현재 줄(1~lineCount)을 팔레트 색에 순서대로 분배하고 사이는 보간해서 반환한다.

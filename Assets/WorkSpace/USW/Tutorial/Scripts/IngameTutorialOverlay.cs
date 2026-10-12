@@ -18,12 +18,22 @@ namespace GaeGGUL.Tutorial
         private bool _allowTargets;
         private bool _dim;
         private bool _hand;
+        private bool _pointerOnly;
         private Gesture _gesture;
         private float _started;
         private readonly Vector3[] _corners = new Vector3[4];
         private IngameTutorialDialogue _dialogue;
         private const float HandReferenceWidth = 1080f;
         private Image _handImage;
+        private Material _spotlight;
+        private const int MaxSpotlightHoles = 8;
+        private readonly Vector4[] _spotlightHoles = new Vector4[MaxSpotlightHoles];
+        private static readonly int HolesId = Shader.PropertyToID("_Holes");
+        private static readonly int HoleCountId = Shader.PropertyToID("_HoleCount");
+        private static readonly int RadiusId = Shader.PropertyToID("_Radius");
+        private static readonly int FeatherId = Shader.PropertyToID("_Feather");
+        // Hold cue vertices sit far from every hole so the spotlight shader keeps their color.
+        private static readonly Vector2 OutsideSpotlight = new Vector2(1e5f, 1e5f);
 
         /// <summary>Number of taps consumed by the overlay; taps never also select underlying UI.</summary>
         public int TapCount { get; private set; }
@@ -37,6 +47,7 @@ namespace GaeGGUL.Tutorial
             _allowTargets = allowTargets;
             _dim = dim;
             _hand = hand;
+            _pointerOnly = false;
             _gesture = gesture;
             _started = Time.unscaledTime;
             _targets.Clear();
@@ -59,12 +70,21 @@ namespace GaeGGUL.Tutorial
             gameObject.SetActive(false);
         }
 
+        /// <summary>Animates a pointing tap without intercepting the modal's own input.</summary>
+        public void PointAt(IngameTutorialSettings settings, Func<Rect> target)
+        {
+            Show(settings, true, false, true, Gesture.Tap, target);
+            _pointerOnly = true;
+            raycastTarget = false;
+        }
+
         /// <summary>Consumes an awareness dismissal without forwarding it to a choice.</summary>
         public void OnPointerClick(PointerEventData eventData) => TapCount++;
 
         /// <summary>Only explicitly permitted target interiors pass through to UI/world input.</summary>
         public bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)
         {
+            if (_pointerOnly) return false;
             if (!_allowTargets) return true;
             if (IsTransitioning) return true;
             foreach (var target in _targets)
@@ -129,7 +149,13 @@ namespace GaeGGUL.Tutorial
             vh.Clear();
             if (_settings == null) return;
             var bounds = rectTransform.rect;
-            if (_dim)
+            if (_dim && UseSpotlight())
+            {
+                float fade = Mathf.SmoothStep(0, 1, Mathf.Clamp01((Time.unscaledTime - _started) / (_settings.FocusSeconds * 0.2f)));
+                // One full-screen quad; the shader cuts rounded, feathered holes from local coordinates in UV0.
+                Quad(vh, bounds, new Color(0, 0, 0, _settings.DimAlpha * fade), true);
+            }
+            else if (_dim)
             {
                 float fade = Mathf.SmoothStep(0, 1, Mathf.Clamp01((Time.unscaledTime - _started) / (_settings.FocusSeconds * 0.2f)));
                 var dimColor = new Color(0, 0, 0, _settings.DimAlpha * fade);
@@ -170,7 +196,7 @@ namespace GaeGGUL.Tutorial
             float radius = _settings.HoldCueRadius * scale;
             float inner = Mathf.Max(0f, radius - _settings.HoldCueThickness * scale);
             const int segments = 48;
-            var center = _holes[0].center;
+            var center = _holes[0].center + _settings.HoldCueOffset * scale;
             for (int i = 0; i < segments; i++)
             {
                 float a = Mathf.PI * 0.5f - Mathf.PI * 2f * i / segments;
@@ -180,10 +206,10 @@ namespace GaeGGUL.Tutorial
                 var from = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
                 var to = new Vector2(Mathf.Cos(b), Mathf.Sin(b));
                 int n = vh.currentVertCount;
-                vh.AddVert(center + from * inner, color, Vector2.zero);
-                vh.AddVert(center + from * radius, color, Vector2.zero);
-                vh.AddVert(center + to * radius, color, Vector2.zero);
-                vh.AddVert(center + to * inner, color, Vector2.zero);
+                vh.AddVert(center + from * inner, color, OutsideSpotlight);
+                vh.AddVert(center + from * radius, color, OutsideSpotlight);
+                vh.AddVert(center + to * radius, color, OutsideSpotlight);
+                vh.AddVert(center + to * inner, color, OutsideSpotlight);
                 vh.AddTriangle(n, n + 1, n + 2);
                 vh.AddTriangle(n, n + 2, n + 3);
             }
@@ -231,13 +257,39 @@ namespace GaeGGUL.Tutorial
             rect.localScale = Vector3.one * (pressed && hold > 0f ? 0.88f : 1f);
         }
 
-        private static void Quad(VertexHelper vh, Rect r, Color color)
+        // Creates the per-overlay spotlight material and uploads the current holes in local coordinates.
+        private bool UseSpotlight()
+        {
+            if (_settings.SpotlightMaterial == null) return false;
+            if (_spotlight == null)
+            {
+                _spotlight = new Material(_settings.SpotlightMaterial) { name = "TutorialSpotlight (Instance)" };
+                material = _spotlight;
+            }
+            float scale = rectTransform.rect.width / HandReferenceWidth;
+            int count = Mathf.Min(_holes.Count, MaxSpotlightHoles);
+            for (int i = 0; i < count; i++)
+                _spotlightHoles[i] = new Vector4(_holes[i].xMin, _holes[i].yMin, _holes[i].xMax, _holes[i].yMax);
+            _spotlight.SetVectorArray(HolesId, _spotlightHoles);
+            _spotlight.SetInt(HoleCountId, count);
+            _spotlight.SetFloat(RadiusId, _settings.SpotlightCornerRadius * scale);
+            _spotlight.SetFloat(FeatherId, _settings.SpotlightFeather * scale);
+            return true;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (_spotlight != null) Destroy(_spotlight);
+        }
+
+        private static void Quad(VertexHelper vh, Rect r, Color color, bool localUv = false)
         {
             int n = vh.currentVertCount;
-            vh.AddVert(new Vector3(r.xMin, r.yMin), color, Vector2.zero);
-            vh.AddVert(new Vector3(r.xMin, r.yMax), color, Vector2.zero);
-            vh.AddVert(new Vector3(r.xMax, r.yMax), color, Vector2.zero);
-            vh.AddVert(new Vector3(r.xMax, r.yMin), color, Vector2.zero);
+            vh.AddVert(new Vector3(r.xMin, r.yMin), color, localUv ? new Vector2(r.xMin, r.yMin) : OutsideSpotlight);
+            vh.AddVert(new Vector3(r.xMin, r.yMax), color, localUv ? new Vector2(r.xMin, r.yMax) : OutsideSpotlight);
+            vh.AddVert(new Vector3(r.xMax, r.yMax), color, localUv ? new Vector2(r.xMax, r.yMax) : OutsideSpotlight);
+            vh.AddVert(new Vector3(r.xMax, r.yMin), color, localUv ? new Vector2(r.xMax, r.yMin) : OutsideSpotlight);
             vh.AddTriangle(n, n+1, n+2); vh.AddTriangle(n, n+2, n+3);
         }
     }

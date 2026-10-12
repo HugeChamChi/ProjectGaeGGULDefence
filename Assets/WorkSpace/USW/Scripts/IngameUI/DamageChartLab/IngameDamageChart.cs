@@ -4,7 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-/// <summary>햄버거 딜표 버튼에서 실제 유닛·토템 피해를 C 가로막대 시안으로 표시한다.</summary>
+/// <summary>
+/// 햄버거 딜표 버튼에서 실제 유닛·토템 피해를 C 가로막대 시안으로 표시한다.
+/// 전투를 보면서 확인하도록 게임을 멈추지 않고, 창은 그리드가 보이게 화면 위쪽에 둔다(위치는 DamageChartSettings).
+/// 닫기는 바깥 누르기로만 한다 (사용자 10-13 "딜표 X 지우고 일시정지 안 해도 돼").
+/// </summary>
 public sealed class IngameDamageChart : MonoBehaviour
 {
     private const int GameplaySortingOrder = 310;
@@ -14,18 +18,19 @@ public sealed class IngameDamageChart : MonoBehaviour
     [SerializeField] private IngameHudMenu _menu;
     [Inject] private DamageContributionLedger _ledger;
     [Inject] private DamageChartLabSettings _settings;
-    [Inject] private TimeScaleService _timeScale;
     private readonly Dictionary<DamageContributionEntry, DamageContributionRowView> _rows =
         new Dictionary<DamageContributionEntry, DamageContributionRowView>();
     private readonly List<DamageContributionEntry> _sorted = new List<DamageContributionEntry>();
     private DamageChartUiFactory _ui;
     private GameObject _canvasObject;
-    private RectTransform _content, _viewport;
+    private RectTransform _content, _viewport, _panel;
     private TMP_Text _title, _total, _dps, _empty;
     private float _refreshClock;
 
     /// <summary>현재 표시 상태.</summary>
     public bool IsOpen => _canvasObject != null && _canvasObject.activeSelf;
+    /// <summary>딜표 창 영역 (튜토리얼 안내 위치). 처음 열기 전에는 null.</summary>
+    public RectTransform PanelArea => _panel;
     /// <summary>현재 표시 중인 실제 피해 출처 종류 수.</summary>
     public int VisibleRowCount => _sorted.Count;
     /// <summary>정확한 전투 집계.</summary>
@@ -36,7 +41,7 @@ public sealed class IngameDamageChart : MonoBehaviour
         if (_menu != null) _menu.DamageChartRequested.AddListener(Open);
     }
 
-    /// <summary>실제 누적 피해를 표시한다. 이 창 소유의 정지만 닫을 때 해제한다.</summary>
+    /// <summary>실제 누적 피해를 표시한다. 전투는 계속 진행된다.</summary>
     public void Open() => OpenAtSortingOrder(GameplaySortingOrder);
 
     /// <summary>확정된 이번 런의 딜표를 결과 화면 위에 표시한다.</summary>
@@ -54,15 +59,13 @@ public sealed class IngameDamageChart : MonoBehaviour
         _canvasObject.GetComponent<Canvas>().sortingOrder = sortingOrder;
         _title.text = _ledger.IsFinalized ? "최종 딜 기여도" : "딜 기여도";
         _canvasObject.SetActive(true);
-        _timeScale?.Pause(this);
         Refresh();
     }
 
-    /// <summary>기록을 유지하고 화면 및 이 창의 정지를 해제한다.</summary>
+    /// <summary>기록을 유지하고 화면을 닫는다.</summary>
     public void Close()
     {
         if (_canvasObject != null) _canvasObject.SetActive(false);
-        _timeScale?.Release(this);
     }
 
     private void Update()
@@ -129,16 +132,16 @@ public sealed class IngameDamageChart : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(540f, 1168f); scaler.matchWidthOrHeight = .5f;
         var backdrop = _ui.Image("DamageChartBackdrop", _canvasObject.transform, Vector2.zero, Vector2.one,
-            new Color(.025f, .05f, .075f, .73f));
+            new Color(.025f, .05f, .075f, .35f)); // 아래 그리드가 보이게 옅게. 누르면 닫힘
         backdrop.raycastTarget = true;
         backdrop.gameObject.AddComponent<Button>().onClick.AddListener(Close);
         var panel = _ui.Image("DamageChartPanel", _canvasObject.transform, _settings.RuntimePanelMin,
             _settings.RuntimePanelMax, _style.PanelColor);
         panel.raycastTarget = true;
+        _panel = panel.rectTransform;
         new DamageChartSkinView(panel, _ui).Apply(_style.PanelSprite, _style.FrameShapeSprite, _style.PanelColor);
         _title = _ui.Text("ChartTitle", panel.transform, "딜 기여도", new Vector2(.05f,.92f), new Vector2(.78f,.98f),
             22f, _style.TextColor);
-        _ui.Button("DamageChartClose", panel.transform, "×", new Vector2(.85f,.90f), new Vector2(.98f,.99f), Close);
         _ui.Text("DamageCaption", panel.transform, "전체 누적 피해", new Vector2(.05f,.85f), new Vector2(.60f,.91f),
             16f, _style.MutedColor);
         _total = _ui.Text("TotalDamage", panel.transform, "0", new Vector2(.05f,.77f), new Vector2(.61f,.86f),
@@ -165,7 +168,6 @@ public sealed class IngameDamageChart : MonoBehaviour
     {
         if (_menu != null) _menu.DamageChartRequested.RemoveListener(Open);
         foreach (var row in _rows.Values) row.Dispose();
-        _timeScale?.Release(this);
         if (_canvasObject != null) Destroy(_canvasObject);
     }
 }

@@ -38,6 +38,13 @@ public sealed class HackingHud : MonoBehaviour
         _reserved.raycastTarget = false;
         _reserved.rectTransform.sizeDelta = new Vector2(220, 30);
     }
+    /// <summary>링과 확보 표시를 숨기고 더 갱신하지 않는다(전투 종료 시).</summary>
+    public void Hide()
+    {
+        if (_parent != null) _parent.gameObject.SetActive(false);
+        enabled = false;
+    }
+
     private void LateUpdate()
     {
         if (_gauge == null || _runtime == null || _bar == null) return;

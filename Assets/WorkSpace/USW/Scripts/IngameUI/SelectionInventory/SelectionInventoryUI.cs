@@ -120,6 +120,10 @@ public sealed class SelectionInventoryUI : MonoBehaviour
     public SelectionInventoryItem Selected => _selected;
     /// <summary>용어 시트 (검증용).</summary>
     public TermPopup TermPopup => _termPopup;
+    /// <summary>보관함 창 영역 (튜토리얼 안내 위치).</summary>
+    public RectTransform PanelArea => _panel;
+    /// <summary>현재 표시 중인 칸 수 (검증용, 빈칸 제외).</summary>
+    public int ItemCount { get { int n = 0; foreach (var s in _slots) if (s.gameObject.activeSelf && s.Item != null) n++; return n; } }
 
     private void Start()
     {

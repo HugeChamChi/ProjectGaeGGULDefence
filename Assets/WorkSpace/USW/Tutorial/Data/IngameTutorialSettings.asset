@@ -28,12 +28,47 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bc4c748e27ffc85448fa237342157adb, type: 2}
   - {fileID: 11400000, guid: e21d7bf323b86e74cb36c6b3edceb059, type: 2}
   - {fileID: 11400000, guid: 429f8664f6ab1f14eb6a3ed4787c8805, type: 2}
+  GrantedChoices:
+  - {fileID: 11400000, guid: d7b716518b1c92b44a95a21f1ef4cc5f, type: 2}
+  - {fileID: 11400000, guid: a6e5732dcc0c22845adb4c2442a5c8c5, type: 2}
   TotemChoices:
   - {fileID: 11400000, guid: 44f0490da603f2f49bea690fe7c7a979, type: 2}
   - {fileID: 11400000, guid: 7e5d173d5f1534244a4b9a51d1e10b1e, type: 2}
   - {fileID: 11400000, guid: 1dd83b38de995f341a84302ae5ebc23f, type: 2}
   RequiredTotem: {fileID: 11400000, guid: 44f0490da603f2f49bea690fe7c7a979, type: 2}
+  NonRotatableExample: {fileID: 11400000, guid: 716262fab7b56a2419695191945c6008,
+    type: 2}
   CounterPattern: {fileID: 11400000, guid: a3d687d182678da4aa20c0cc82480787, type: 2}
+  TotemSwipeInstruction: "\uC88C\uC6B0\uB85C \uBC00\uC5B4 \uB2E4\uB978 \uD1A0\uD15C\uB3C4
+    \uD655\uC778\uD574 \uBCF4\uC138\uC694.\n\uC544\uC9C1 \uC120\uD0DD\uD558\uC9C0
+    \uC54A\uACE0 \uD6A8\uACFC\uC640 \uBC94\uC704\uB97C \uC0B4\uD3B4\uBCFC \uAC70\uC608\uC694."
+  TotemRotationBadgeInstruction: "\uC774 \uD68C\uC804 \uC544\uC774\uCF58\uC740 \uD1A0\uD15C\uC758
+    \uD6A8\uACFC \uBC94\uC704\uB97C \uB3CC\uB9B4 \uC218 \uC788\uB2E4\uB294 \uB73B\uC774\uC5D0\uC694."
+  TotemNoRotationInstruction: "\uBE57\uAE08\uC774 \uC788\uB294 \uC544\uC774\uCF58\uC740
+    \uD68C\uC804\uD560 \uC218 \uC5C6\uC5B4\uC694."
+  TotemBadgeComparisonGap: 16
+  TotemReturnInstruction: "\uD655\uC778\uD588\uC73C\uBA74 \uAC00\uC18D \uD1A0\uD15C\uC73C\uB85C
+    \uB3CC\uC544\uC640 \uC8FC\uC138\uC694.\n\uC88C\uC6B0\uB85C \uBC00\uC5B4 \uAC00\uC18D
+    \uD1A0\uD15C\uC744 \uCC3E\uC544\uBCF4\uC138\uC694."
+  CombatPracticeInstruction: "\uD1A0\uD15C \uC774\uB3D9\uACFC \uD68C\uC804\uC744
+    \uBAA8\uB450 \uBC30\uC6E0\uC5B4\uC694!\n\uC774\uC81C WAVE 3 \uBCF4\uC2A4\uAE4C\uC9C0
+    \uBB3C\uB9AC\uCCD0 \uBCF4\uC138\uC694."
+  MenuOpenInstruction: "\uC804\uD22C \uC911\uC5D0 \uBCFC \uC218 \uC788\uB294 \uC815\uBCF4\uB294
+    \uC774 \uBA54\uB274\uC5D0 \uBAA8\uC5EC \uC788\uC5B4\uC694.\n\uBA54\uB274 \uBC84\uD2BC\uC744
+    \uB20C\uB7EC \uBCF4\uC138\uC694."
+  MenuDamageInstruction: "\uB51C \uAE30\uC5EC\uB3C4\uB97C \uB20C\uB7EC \uBCF4\uC138\uC694."
+  MenuDamageExplanation: "\uC9C0\uAE08\uAE4C\uC9C0 \uB204\uAC00 \uD53C\uD574\uB97C
+    \uC5BC\uB9C8\uB098 \uC92C\uB294\uC9C0 \uBCFC \uC218 \uC788\uC5B4\uC694.\n\uC804\uD22C
+    \uC911\uC5D0\uB3C4 \uC5F4\uC5B4 \uB454 \uCC44\uB85C \uD655\uC778\uD560 \uC218
+    \uC788\uC5B4\uC694."
+  MenuReopenInstruction: "\uBA54\uB274\uB97C \uB2E4\uC2DC \uC5F4\uC5B4 \uBCF4\uC138\uC694."
+  MenuSelectionInstruction: "\uC774\uBC88\uC5D4 \uC120\uD0DD\uC9C0\uB97C \uB20C\uB7EC
+    \uBCF4\uC138\uC694."
+  MenuSelectionExplanation: "\uB808\uBCA8\uC5C5\uC5D0\uC11C \uC5BB\uC740 \uC120\uD0DD\uC9C0\uB294
+    \uC5EC\uAE30\uC5D0 \uBAA8\uC5EC\uC694.\n\uBAA8\uC11C\uB9AC\uC758 \uC5BC\uAD74\uC774
+    \uD6A8\uACFC\uB97C \uBC1B\uB294 \uC720\uB2DB\uC774\uC5D0\uC694."
+  MenuSettingsExplanation: "\uC18C\uB9AC\uC640 \uC9C4\uB3D9\uC740 \uC5EC\uAE30 \uC124\uC815\uC5D0\uC11C
+    \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
   InitialCost: 20
   CostIncrease: 20
   TrainingFoodPerSecond: 20
@@ -44,16 +79,18 @@ MonoBehaviour:
   HandIdleTip: {x: 0.23, y: 0.86}
   HandPressedTip: {x: 0.18, y: 0.76}
   HandTapPressedFraction: 0.5
-  ChoicePreviewInstruction: "\uC120\uD0DD\uC9C0\uB97C <b><color=#FFD15C>\uAFB9 \uB204\uB974\uACE0
+  ChoicePreviewInstruction: "<b><color=#FF9D32>\uC120\uD0DD\uC9C0\uB97C \uAFB9 \uB204\uB974\uACE0
     \uC788\uC5B4 \uBCF4\uC138\uC694.</color></b>\n\uC601\uD5A5\uC744 \uBC1B\uB294
-    \uC720\uB2DB\uC774 \uAC15\uC870\uB3FC\uC694. \uD655\uC778\uD55C \uB4A4 \uC190\uC744
-    \uB5BC\uC138\uC694."
+    \uC720\uB2DB\uC744 \uD655\uC778\uD55C \uB4A4 \uC190\uC744 \uB5BC\uC5B4 \uC8FC\uC138\uC694."
   ChoiceTermInstruction: "\uAC15\uC870\uB41C \u300C\uC6A9\uC5B4\u300D\uB97C \uB20C\uB7EC
     \uC124\uBA85\uC744 \uD655\uC778\uD574 \uBCF4\uC138\uC694.\n\uD655\uC778\uC774
     \uB05D\uB098\uBA74 \uC124\uBA85 \uCC3D\uC744 \uB2EB\uC544 \uC8FC\uC138\uC694."
+  ChoiceSelectInstruction: "\uC774\uC81C <color=#FF9D32>\u300C\uB139?\u300D \uC120\uD0DD\uC9C0</color>\uB97C
+    \uB20C\uB7EC \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."
   ChoiceReturnPointDelaySeconds: 1.5
   HoldCueRadius: 44
   HoldCueThickness: 8
+  HoldCueOffset: {x: -84, y: 64}
   HoldCueColor: {r: 1, g: 0.8, b: 0.25, a: 1}
   ObserveCombatSeconds: 5
   ExperienceFillSeconds: 2
@@ -66,4 +103,7 @@ MonoBehaviour:
   GestureSeconds: 1.6
   HoldGestureSeconds: 1.05
   DimAlpha: 0.65
-  HighlightPaddingPixels: 0
+  HighlightPaddingPixels: 8
+  SpotlightMaterial: {fileID: 2100000, guid: b10588e4949d0cd4c80eb9bd4119a541, type: 2}
+  SpotlightCornerRadius: 28
+  SpotlightFeather: 28

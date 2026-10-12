@@ -18,6 +18,7 @@ public class ResultScreenView : MonoBehaviour
     private const float HeaderInTime = 0.15f;
     private const float ChiefInTime = 0.55f;
     private const float RoundInTime = 0.45f;
+    private const float BossCarryDuration = 0.55f;
 
     [Header("공통")]
     [SerializeField] private Image _dim;
@@ -91,6 +92,49 @@ public class ResultScreenView : MonoBehaviour
     /// <summary>로비로 버튼.</summary>
     public event Action HomeRequested;
 
+    /// <summary>Allows a scene to hide replay when completion should lead to the lobby.</summary>
+    public void SetRetryAvailable(bool available)
+    {
+        _retryAvailable = available;
+        ApplyNavigationLayout();
+    }
+
+    /// <summary>보상 더 받기 칸을 빼고 그 자리에 로비로 버튼을 둔다(튜토리얼 전용).</summary>
+    public void SetLobbyInAdSlot(bool enabled)
+    {
+        _lobbyInAdSlot = enabled;
+        ApplyNavigationLayout();
+    }
+
+    private void ApplyNavigationLayout()
+    {
+        var rect = (RectTransform)_homeButton.transform;
+        if (!_navigationPositionCached)
+        {
+            _homeBasePosition = rect.anchoredPosition;
+            _navigationPositionCached = true;
+        }
+        _retryButton.gameObject.SetActive(_retryAvailable);
+        _adSlot.gameObject.SetActive(!_lobbyInAdSlot);
+        if (_lobbyInAdSlot)
+        {
+            var ad = (RectTransform)_adSlot.transform;
+            rect.position = ad.TransformPoint(ad.rect.center);
+            rect.anchoredPosition += (rect.pivot - new Vector2(0.5f, 0.5f)) * rect.rect.size;
+        }
+        else
+            rect.anchoredPosition = _retryAvailable ? _homeBasePosition : new Vector2(0f, _homeBasePosition.y);
+    }
+
+    /// <summary>Prevents duplicate navigation while keeping a failed connection retryable.</summary>
+    public void SetNavigationBusy(bool busy, bool failed = false)
+    {
+        _retryButton.interactable = !busy;
+        _homeButton.interactable = !busy;
+        var label = _homeButton.GetComponentInChildren<TMP_Text>();
+        if (label != null) label.text = busy ? "연결 중…" : failed ? "연결 재시도" : "로비로";
+    }
+
     /// <summary>광고를 보고 2배 보상을 받는 요청. 실제 광고 시청과 지급은 호출자가 처리한다.</summary>
     public event Action AdRewardRequested;
 
@@ -111,8 +155,17 @@ public class ResultScreenView : MonoBehaviour
     private Vector2 _headerBasePos;
     private Vector2 _rewardBasePos;
     private bool _cached;
+    private bool _navigationPositionCached;
+    private bool _retryAvailable = true;
+    private bool _lobbyInAdSlot;
+    private Vector2 _homeBasePosition;
     private ResultScreenData _data;
     private SafeAreaContentFrame _contentFrame;
+    private Image _chiefImage;
+    private RawImage _carriedBoss;
+    private ResultBossSnapshot _bossSnapshot;
+    private Vector3 _carriedBossTarget;
+    private Vector2 _carriedBossTargetSize;
 
     private void Awake()
     {
@@ -131,6 +184,8 @@ public class ResultScreenView : MonoBehaviour
         Kill();
         HideBuildPopupImmediately();
     }
+
+    private void OnDestroy() => ReleaseBossSnapshot();
 
     /// <summary>결과 화면을 처음부터 재생한다.</summary>
     public void Show(ResultScreenData data, ResultScreenTone tone, bool showBuild, bool isWin = false)
@@ -153,7 +208,15 @@ public class ResultScreenView : MonoBehaviour
         headerRt.anchoredPosition = _headerBasePos + Vector2.up * _headerDropDistance;
         s.Insert(HeaderInTime, _header.DOFade(1f, 0.25f));
         s.Insert(HeaderInTime, headerRt.DOAnchorPos(_headerBasePos, 0.5f).SetEase(Ease.OutBack));
-        s.Insert(ChiefInTime, _chief.DOScale(1f, 0.45f).SetEase(Ease.OutBack));
+        if (PrepareCarriedBoss(data.BossSnapshot))
+        {
+            // 패배시킨 보스가 필드 자리에서 그대로 남아 있다가 결과 배치 자리로 옮겨 간다.
+            var bossRt = _carriedBoss.rectTransform;
+            s.Insert(ChiefInTime, bossRt.DOLocalMove(_carriedBossTarget, BossCarryDuration).SetEase(Ease.OutCubic));
+            s.Insert(ChiefInTime, bossRt.DOSizeDelta(_carriedBossTargetSize, BossCarryDuration).SetEase(Ease.OutCubic));
+        }
+        else
+            s.Insert(ChiefInTime, _chief.DOScale(1f, 0.45f).SetEase(Ease.OutBack));
         s.Insert(RoundInTime, _recordBlock.DOFade(1f, 0.2f));
         int shownRound = 0;
         s.Insert(RoundInTime, DOTween.To(() => shownRound, v => { shownRound = v; _roundValue.text = v.ToString(); },
@@ -223,7 +286,7 @@ public class ResultScreenView : MonoBehaviour
             t += 0.15f;
         }
         bool canAdvertise = AdRewardRequested != null && hasRewards;
-        _adSlot.gameObject.SetActive(true);
+        _adSlot.gameObject.SetActive(!_lobbyInAdSlot);
         _adRewardButton.interactable = canAdvertise;
         s.Insert(t, _adSlot.DOFade(canAdvertise ? _adSlotAlpha : 0.5f, 0.2f));
         s.Insert(t, _adSlot.transform.DOScale(1f, 0.28f).SetEase(Ease.OutBack));
@@ -239,6 +302,11 @@ public class ResultScreenView : MonoBehaviour
         _header.alpha = _recordBlock.alpha = _rewardBlock.alpha = _buttons.alpha = 1f;
         ((RectTransform)_header.transform).anchoredPosition = _headerBasePos;
         _chief.localScale = Vector3.one;
+        if (_carriedBoss != null && _carriedBoss.enabled)
+        {
+            _carriedBoss.rectTransform.localPosition = _carriedBossTarget;
+            _carriedBoss.rectTransform.sizeDelta = _carriedBossTargetSize;
+        }
         _roundValue.text = _data.Round.ToString();
         if (_bossProgress != null && _data.LastBossDamageRatio >= 0f)
             _bossProgress.Settle(_data.LastBossDamageRatio);
@@ -271,6 +339,59 @@ public class ResultScreenView : MonoBehaviour
             if (graphic is TextMeshProUGUI text) text.ForceMeshUpdate();
         }
         Canvas.ForceUpdateCanvases();
+    }
+
+    // 보스 그림이 있으면 고정 초상화를 숨기고, 그림을 찍힌 화면 위치에 놓은 뒤 목표 배치를 계산한다.
+    private bool PrepareCarriedBoss(ResultBossSnapshot snapshot)
+    {
+        if (snapshot != _bossSnapshot) ReleaseBossSnapshot();
+        _bossSnapshot = snapshot;
+        bool carried = snapshot != null && snapshot.Texture != null && _chief.parent is RectTransform;
+        if (_chiefImage != null) _chiefImage.enabled = !carried;
+        if (!carried)
+        {
+            if (_carriedBoss != null) _carriedBoss.enabled = false;
+            return false;
+        }
+        var parent = (RectTransform)_chief.parent;
+        if (_carriedBoss == null)
+        {
+            var go = new GameObject("CarriedBoss", typeof(RectTransform), typeof(RawImage));
+            go.transform.SetParent(parent, false);
+            go.transform.SetSiblingIndex(_chief.GetSiblingIndex() + 1);
+            _carriedBoss = go.GetComponent<RawImage>();
+            _carriedBoss.raycastTarget = false;
+            var rt = _carriedBoss.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        }
+        var screen = snapshot.ScreenRect;
+        _carriedBoss.texture = snapshot.Texture;
+        _carriedBoss.uvRect = new Rect(0f, 0f, 1f, 1f);
+        _carriedBoss.enabled = true;
+
+        var canvas = parent.GetComponentInParent<Canvas>().rootCanvas;
+        var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen.min, cam, out var min);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen.max, cam, out var max);
+        var bossRt = _carriedBoss.rectTransform;
+        bossRt.localScale = Vector3.one;
+        bossRt.localPosition = (min + max) * 0.5f;
+        bossRt.sizeDelta = max - min;
+
+        // 기존 초상화 칸 안에 비율을 유지해 맞춘다.
+        var box = _chief.rect.size;
+        var size = max - min;
+        float fit = Mathf.Min(box.x / size.x, box.y / size.y);
+        _carriedBossTargetSize = size * fit;
+        _carriedBossTarget = _chief.localPosition + (Vector3)(_chief.rect.center);
+        return true;
+    }
+
+    private void ReleaseBossSnapshot()
+    {
+        if (_carriedBoss != null) _carriedBoss.texture = null;
+        _bossSnapshot?.Dispose();
+        _bossSnapshot = null;
     }
 
     private void ShowRunStats()
@@ -461,6 +582,7 @@ public class ResultScreenView : MonoBehaviour
         if (_cached) return;
         _cached = true;
         _contentFrame = GetComponentInChildren<SafeAreaContentFrame>(true);
+        _chiefImage = _chief.GetComponent<Image>();
         // Lab parent order is 0; production result order may be 2100 or higher.
         // Keep the popup above its result instead of using the prefab's absolute lab order.
         if (_buildPopup != null)

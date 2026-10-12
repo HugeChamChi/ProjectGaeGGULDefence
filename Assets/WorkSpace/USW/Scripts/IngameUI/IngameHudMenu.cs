@@ -37,6 +37,16 @@ public sealed class IngameHudMenu : MonoBehaviour
     public UnityEvent SelectionListRequested => _onSelectionListRequested;
     /// <summary>실제 누적 피해 딜표를 여는 연결점.</summary>
     public UnityEvent DamageChartRequested => _onDamageChartRequested;
+    /// <summary>≡ 버튼 (튜토리얼 안내 위치).</summary>
+    public Button MenuButton => _menuButton;
+    /// <summary>선택지 보관함 버튼 (튜토리얼 안내 위치).</summary>
+    public Button SelectionButton => _selectionButton;
+    /// <summary>설정 버튼 (튜토리얼 안내 위치).</summary>
+    public Button SettingsButton => _settingsButton;
+    /// <summary>딜 기여도 버튼 (튜토리얼 안내 위치).</summary>
+    public Button DamageButton => _damageButton;
+    /// <summary>펼침/접힘 연출이 끝나 항목 위치가 고정됐는지.</summary>
+    public bool IsSettled => Mathf.Approximately(_openness, _expanded ? 1f : 0f);
 
     private void Awake()
     {
