@@ -93,6 +93,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.Register<DamageContributionLedger>(Lifetime.Scoped);
         if (!isDamageChartLab) builder.RegisterEntryPoint<DamageContributionBinding>();
         SceneComponentRegistration.RegisterOptional<IngameDamageChart>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<SelectionInventoryUI>(builder, gameObject.scene);
         DamageChartLab.RegisterServices(builder, gameObject.scene); // 독립 딜표 비교 씬에서만 등록
         SceneComponentRegistration.RegisterOptional<SealedGridShaderLab>(builder, gameObject.scene); // 독립 봉인 셰이더 실험실에서만 존재
         SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);

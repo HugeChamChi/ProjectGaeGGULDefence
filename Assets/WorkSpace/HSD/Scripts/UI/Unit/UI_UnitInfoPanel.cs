@@ -109,6 +109,11 @@ namespace GaeGGUL.UI.Unit
             _presenter.SetDescriptionMode(false);
             _descriptionToggle.SetIsOnWithoutNotify(false);
             _presenter.SetUnitData(data);
+            if (sellButton != null)
+            {
+                sellButton.SetUnit(null);
+                sellButton.gameObject.SetActive(false);
+            }
             gameObject.SetActive(true);
             _canvas = InfoPanelPresentation.EnsureCanvas(gameObject);
             Open();

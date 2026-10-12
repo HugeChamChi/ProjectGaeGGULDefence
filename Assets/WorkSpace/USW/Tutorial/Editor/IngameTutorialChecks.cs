@@ -92,7 +92,7 @@ public static class IngameTutorialChecks
             }
             await Stage(IngameTutorialStage.TimeLimit);
             Check(!Get<TMPro.TMP_Text>(dialogue,"_progress").gameObject.activeSelf,"Guide shows only the instruction without a numbered header");
-            Check(!GameObject.Find("# MainUI").transform.Find("MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons/Menu_Button").gameObject.activeSelf,"Tutorial option button is hidden");
+            Check(!Object.FindFirstObjectByType<IngameHudMenu>(FindObjectsInactive.Include).gameObject.activeSelf,"Tutorial option button is hidden");
             Check(spawn.SuccessfulSpawnCount==0 && boss.CurrentBoss!=null,"Boss enters before any summons");
             var camera=Camera.main;
             Check(Vector3.Distance(camera.transform.position,Get<Vector3>(director,"_cameraPosition"))<0.001f,"Entrance restores camera position");
@@ -422,6 +422,26 @@ public static class IngameTutorialChecks
             await Acknowledge();
             await UniTask.WaitUntil(()=>boss.CurrentBoss!=null && Get<WaveManager>(director,"_wave").CurrentWave==2,cancellationToken:token);
             Check(boss.CurrentBoss.MaxHp==4500,"Wave 3 practice boss uses authored 4500 HP");
+            var optionsMenu=Object.FindFirstObjectByType<IngameHudMenu>();
+            var acquired=Object.FindFirstObjectByType<SelectionInventoryUI>();
+            var time=Get<TimeScaleService>(director,"_time");
+            var optionsFixture=new object();
+            time.Pause(optionsFixture);
+            try
+            {
+                ClickButton(Get<Button>(optionsMenu,"_menuButton"));
+                await UniTask.Delay(400,DelayType.Realtime,cancellationToken:token);
+                ClickButton(Get<Button>(optionsMenu,"_selectionButton"));
+                await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
+                Check(acquired.IsOpen && acquired.Selected!=null && settings.LevelUpChoices.Contains(acquired.Selected.Card),"Tutorial menu displays its actually acquired level-up choice");
+                time.Release(optionsFixture);
+                Check(time.Current==0 && time.IsRequesting(acquired),"Tutorial selection inventory owns its gameplay pause");
+                await Snapshot("08-acquired-options");
+                ClickButton(Get<Button>(acquired,"_closeButton"));
+                await UniTask.Delay(250,DelayType.Realtime,cancellationToken:token);
+                Check(!acquired.IsOpen && time.Current==1 && input.AllowPointerClicks,"Closing tutorial selection inventory resumes practice combat");
+            }
+            finally { time.Release(optionsFixture); }
             await UniTask.WaitUntil(()=>director.IsComplete,cancellationToken:token);
             Check(totem.RotationStep==1,"Hold then drag right rotates the totem");
             var effectAfter=totem.Data.GetEffectCells(totem,grid).ToArray();

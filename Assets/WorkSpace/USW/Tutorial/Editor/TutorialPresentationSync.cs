@@ -110,7 +110,7 @@ public static class TutorialPresentationSync
             summon.anchoredPosition += Vector2.up * 32f;
             if (PrefabUtility.IsPartOfPrefabInstance(summon)) PrefabUtility.RecordPrefabInstancePropertyModifications(summon);
         }
-        var menu = copies.FirstOrDefault(t => Path(t) == "# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons/Menu_Button");
+        var menu = copies.FirstOrDefault(t => t.GetComponent<IngameHudMenu>() != null);
         if (menu != null)
         {
             menu.gameObject.SetActive(false);

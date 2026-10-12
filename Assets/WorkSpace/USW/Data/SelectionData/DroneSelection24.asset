@@ -18,7 +18,11 @@ MonoBehaviour:
     - drone.kind.21
     Effects:
     - rid: 1000
-    Feedback: []
+    Feedback:
+    - Target: 4
+      Row: 0
+      Tribes: []
+      RequiresHighOwnedTier: 0
     Commands: []
   chooseId: 9124
   chooseName: "\uC880\uBE44 PC"
