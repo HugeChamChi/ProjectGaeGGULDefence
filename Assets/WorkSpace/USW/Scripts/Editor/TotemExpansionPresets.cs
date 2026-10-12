@@ -31,7 +31,6 @@ public static class TotemExpansionPresets
     public static void Configure(TotemData data, int id)
     {
         if (data == null || id < 1008 || id > 1010) throw new System.ArgumentException("TD1008~1010 SO required.");
-        data.UseSheetData = false;
         data.functions = new List<ITotemFunction>();
         data.effectRanges = new List<ITotemRange>();
         data.attackDisabledRanges = new List<ITotemRange>();

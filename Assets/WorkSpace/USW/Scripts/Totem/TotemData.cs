@@ -112,11 +112,6 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [Header("그림자 공격 (TotemShadowAttack)")]
     public TotemShadowAttackSettings ShadowAttack = new TotemShadowAttackSettings();
 
-    /// <summary>기존 시트 동기화를 사용할지 여부. SO 제작 시 false.</summary>
-    [Header("데이터 원본")]
-    [Tooltip("끄면 SO의 수치/기능/범위/디버프를 그대로 사용합니다. 기존 시트 토템만 켜세요.")]
-    public bool UseSheetData = true;
-
     /// <summary>일반 공격 반응 보조 투사체 구성.</summary>
     [Header("보조 투사체 (TotemBonusProjectile)")]
     public TotemBonusProjectileSettings BonusProjectile = new TotemBonusProjectileSettings();
@@ -142,12 +137,11 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [SerializeField] private DebuffBinding _debuffBinding;
     [SerializeField] private double _debuffFireInterval;
     [SerializeField] private double _debuffImpactDamage;
-    private decimal? _sheetDebuffImpactDamage;
     [SerializeField] private ProjectileData _debuffProjectile;
     /// <summary>발사 간격(초), 부여자 설정.</summary>
     public double DebuffFireInterval => _debuffFireInterval;
     /// <summary>화염구 즉발 기본 피해, 부여자 설정.</summary>
-    public decimal DebuffImpactDamage => _sheetDebuffImpactDamage ?? (decimal)_debuffImpactDamage;
+    public decimal DebuffImpactDamage => (decimal)_debuffImpactDamage;
     /// <summary>발사체 시각/이동 구성.</summary>
     public ProjectileData DebuffProjectile => _debuffProjectile;
     /// <inheritdoc />
@@ -253,50 +247,8 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [Header("시트 연동")]
     [Tooltip("구글 시트 totem_id 컬럼 값. 런타임 시트 데이터 매핑 키.")]
     public int  totemId     = 0;
-    [Tooltip("회전 가능 여부. 시트 is_rotatable 컬럼이 있으면 런타임에 덮어쓰기됨.")]
+    [Tooltip("회전 가능 여부.")]
     public bool isRotatable = true;
-
-    /// <summary>
-    /// 구글 시트에서 가져온 토템 데이터를 SO 인스턴스에 적용합니다.
-    /// </summary>
-    public void ApplySheetData(GameDataManager.TotemSheetRow row)
-    {
-        if (!UseSheetData || row == null) return;
-
-        // 1. 기본 정보 덮어쓰기
-        if (!string.IsNullOrEmpty(row.TotemName)) totemName = row.TotemName;
-        tier = row.Grade;
-        if (row.DebuffBinding.HasValue) _debuffBinding = row.DebuffBinding.Value;
-        if (row.DebuffFireInterval.HasValue) _debuffFireInterval = row.DebuffFireInterval.Value;
-        if (row.DebuffImpactDamage.HasValue) _sheetDebuffImpactDamage = row.DebuffImpactDamage.Value;
-        isRotatable = row.IsRotatable;
-
-        // 2. functions 재구성 (시트의 flat 수치 기준 — 조건부 버프 등 SO 전용 구성은 시트에 없으므로
-        //    여기서는 항상 단순 버프로만 재구성한다)
-        functions = new List<ITotemFunction>();
-        AddSimpleFunctionIfPositive(StatKind.AttackPercent,     row.AtkIncreaseRate);
-        AddSimpleFunctionIfPositive(StatKind.Speed,      row.AttackSpeedIncreaseRate);
-        AddSimpleFunctionIfPositive(StatKind.FoodSpeed,  row.FoodProductionRate);
-        AddSimpleFunctionIfPositive(StatKind.FoodAmount, row.FoodAmount);
-        AddSimpleFunctionIfPositive(StatKind.CritChance, row.CriticalChanceRate);
-        AddSimpleFunctionIfPositive(StatKind.CritDamage, row.CriticalDamageRate);
-
-        // 3. 범위 데이터 덮어쓰기 (시트에 데이터가 존재할 경우에만 — 없으면 SO에 설정된 범위 유지)
-        if (row.EffectRange != null && row.EffectRange.Count > 0)
-        {
-            effectRanges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int>(row.EffectRange) } };
-        }
-
-        if (row.AttackDisabledRange != null && row.AttackDisabledRange.Count > 0)
-        {
-            attackDisabledRanges = new List<ITotemRange> { new TotemRelativeOffsetRange { offsets = new List<Vector2Int>(row.AttackDisabledRange) } };
-        }
-    }
-
-    private void AddSimpleFunctionIfPositive(StatKind kind, float amount)
-    {
-        if (amount > 0f) functions.Add(new SimpleBuffFunction { kind = kind, amount = amount });
-    }
 
     public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()
     {

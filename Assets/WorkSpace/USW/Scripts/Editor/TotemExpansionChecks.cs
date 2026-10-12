@@ -101,7 +101,7 @@ public static class TotemExpansionChecks
         TotemExpansionPresets.Configure(data, 1010);
         Check(data.GetFoodGenerator() != null && data.GetFoodGenerator().interval > 0 && data.GetFoodGenerator().amount > 0,
             "Food generator uses existing editable interval and amount");
-        Check(data.GetEffectPreviewOffsets().Count == 0 && !data.UseSheetData, "Food generation needs no neighboring unit");
+        Check(data.GetEffectPreviewOffsets().Count == 0, "Food generation needs no neighboring unit");
     }
 
     private static void CheckShadow(GridManager grid, TotemBuffManager buffs)
@@ -133,7 +133,6 @@ public static class TotemExpansionChecks
         Set(unit, "<currentCell>k__BackingField", cell);
         unit.gameObject.AddComponent<SpriteRenderer>();
         var data = Asset<TotemData>();
-        data.UseSheetData = false;
         data.effectRanges.Add(new TotemSquareRingRange());
         var totem = Place<TotemShadowAttack>(data, grid, buffs);
         Invoke(unit.Combat, "ExecuteAttack");

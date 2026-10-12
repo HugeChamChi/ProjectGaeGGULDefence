@@ -18,7 +18,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     { binding = default; return totemData != null && totemData.TryGetDebuffBinding(out binding); }
     [Inject] protected TotemBuffManager _totemBuffManager;
     [Inject] protected GridManager _gridManager;
-    [Inject] protected GameDataManager _gameDataManager;
     [Inject] private BossManager _debuffBossManager;
     [Inject] private ProjectilePool _debuffProjectilePool;
     [Inject] private GameManager _debuffGameManager;
@@ -74,8 +73,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
             Debug.LogError($"TotemBase({name}): totemData 미연결");
             return;
         }
-
-        SyncStatsWithSheet();
 
         CurrentCell = cell;
         _isPlaced = true;
@@ -225,26 +222,6 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     protected abstract void RemoveBuff();
     public abstract void PaintAffectedCells();
     public abstract List<GridCell> GetAffectedCells();
-
-    protected virtual void SyncStatsWithSheet()
-    {
-        if (totemData == null || !totemData.UseSheetData || _gameDataManager == null || !_gameDataManager.IsLoaded) return;
-
-        // 원본 ScriptableObject가 오염되는 것을 방지하기 위해 런타임 인스턴스로 복제
-        if (!_isDataCloned)
-        {
-            _authoredData = totemData;
-            totemData = Instantiate(totemData);
-            totemData.name = totemData.name + "_Runtime";
-            _isDataCloned = true;
-        }
-
-        var sheetRow = _gameDataManager.GetTotemRow(totemData.totemId);
-        if (sheetRow != null)
-        {
-            totemData.ApplySheetData(sheetRow);
-        }
-    }
 
     private void OnDestroy()
     {

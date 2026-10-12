@@ -25,7 +25,6 @@ public static class TotemBehaviorChecks
         _scene = EditorSceneManager.NewPreviewScene();
         try
         {
-            CheckSheetIsolation();
             CheckCharge();
             CheckTierAndMerge();
             var grid = CreateGrid();
@@ -65,22 +64,6 @@ public static class TotemBehaviorChecks
             EditorSceneManager.ClosePreviewScene(_scene);
             foreach(var asset in _assets)if(asset!=null)UnityEngine.Object.DestroyImmediate(asset);_assets.Clear();
         }
-    }
-
-    private static void CheckSheetIsolation()
-    {
-        var data = Asset<TotemData>();
-        data.UseSheetData = false;
-        data.totemName = "SO";
-        var conditional = new ConditionalBuffFunction();
-        data.functions.Add(conditional);
-        data.ApplySheetData(new GameDataManager.TotemSheetRow { TotemName = "Sheet", AtkIncreaseRate = 0.8f });
-        Check(data.totemName == "SO" && data.functions.Count == 1 && data.functions[0] == conditional,
-            "SO mode preserves authored functions and identity");
-        data.UseSheetData = true;
-        data.ApplySheetData(new GameDataManager.TotemSheetRow { TotemName = "Sheet", AtkIncreaseRate = 0.8f });
-        Check(data.totemName == "Sheet" && Mathf.Approximately(data.GetSimpleAmount(StatKind.AttackPercent), 0.8f),
-            "legacy sheet mode still applies data");
     }
 
     private static void CheckCharge()
@@ -140,7 +123,7 @@ public static class TotemBehaviorChecks
 
     private static void CheckGrowth(GridManager grid, TotemBuffManager manager)
     {
-        var data=Asset<TotemData>();data.UseSheetData=false;data.isRotatable=true;
+        var data=Asset<TotemData>();data.isRotatable=true;
         for(int i=0;i<4;i++)
         {
             var stage=new TotemGrowthStage {RequiredSeconds=i*60,AttackBonus=new[]{.05f,.1f,.1f,.15f}[i]};
@@ -176,7 +159,6 @@ public static class TotemBehaviorChecks
     private static void CheckBonusTargets(GridManager grid, TotemBuffManager manager)
     {
         var data = Asset<TotemData>();
-        data.UseSheetData = false;
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
         var unit = Unit<FrogArcher>(Asset<UnitData>());
         var cell = grid.GetCell(3, 2);
@@ -201,7 +183,6 @@ public static class TotemBehaviorChecks
     private static void CheckBonusFiring(GridManager grid, TotemBuffManager manager)
     {
         var data = Asset<TotemData>();
-        data.UseSheetData = false;
         data.BonusProjectile.Chance = 1;
         data.BonusProjectile.AttackCoefficient = 0.5f;
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
@@ -247,11 +228,9 @@ public static class TotemBehaviorChecks
         foreach (var definition in settings.CreateDefinitions())
             if (definition.Kind == DebuffKind.ArmorBreak) armorId = definition.Id;
         var data = Asset<TotemData>();
-        data.UseSheetData = false;
         Set(data, "_debuffBinding", new DebuffBinding(armorId, DebuffTrigger.AffectedUnitBasicAttackAttempt, 1));
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
         var other = Asset<TotemData>();
-        other.UseSheetData = false;
         Set(other, "_debuffBinding", new DebuffBinding(armorId, DebuffTrigger.AffectedUnitBasicAttackAttempt, 1));
         other.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.left } });
         var first = Place<GenericBuffTotem>(grid, manager, data, new Vector2Int(2, 2));
@@ -272,7 +251,6 @@ public static class TotemBehaviorChecks
     private static void CheckTierRange(GridManager grid, TotemBuffManager manager)
     {
         var data = Asset<TotemData>();
-        data.UseSheetData = false;
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
         var unit = Unit<FrogArcher>(Asset<UnitData>());
         var cell = grid.GetCell(3, 2);

@@ -54,7 +54,7 @@ try {
     T Place<T>(TotemData data) where T:TotemBase {
         var t=Comp<T>();Set(t,"totemData",data);Set(t,"_gridManager",grid);Set(t,"_totemBuffManager",buffs);totems.Add(t);t.OnPlaced(cells[2,2]);return t;
     }
-    TotemData RangeData() {var d=Data<TotemData>();d.UseSheetData=false;d.effectRanges.Add(new TotemRelativeOffsetRange {offsets=new System.Collections.Generic.List<UnityEngine.Vector2Int>{UnityEngine.Vector2Int.right}});return d;}
+    TotemData RangeData() {var d=Data<TotemData>();d.effectRanges.Add(new TotemRelativeOffsetRange {offsets=new System.Collections.Generic.List<UnityEngine.Vector2Int>{UnityEngine.Vector2Int.right}});return d;}
     var bonusData=RangeData();bonusData.BonusProjectile.Chance=1f;
     var bonus=Place<TotemBonusProjectile>(bonusData);Set(bonus,"_bosses",bosses);Set(bonus,"_projectiles",pool);
     int before=Launches();Call(drone,"LaunchProjectile",100);

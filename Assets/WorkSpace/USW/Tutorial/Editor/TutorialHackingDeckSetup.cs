@@ -38,7 +38,6 @@ public static class TutorialHackingDeckSetup
             totem.totemId = 99003;
             totem.totemName = "가속 토템";
             totem.totemType = TotemType.SpeedBuff;
-            totem.UseSheetData = false;
             totem.isRotatable = true;
             totem.EffectGroups.Clear();
             totem.description = "앞쪽 1칸에 배치된 유닛의 「공격 속도」가 10% 증가합니다.\n회전하면 효과 범위의 방향이 바뀝니다.";

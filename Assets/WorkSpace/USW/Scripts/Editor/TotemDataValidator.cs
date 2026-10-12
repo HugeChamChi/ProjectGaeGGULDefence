@@ -31,7 +31,6 @@ public static class TotemDataValidator
         if (!string.IsNullOrEmpty(data.prefabAddress) && prefab == null) Fail(data, "Prefab Address를 찾을 수 없습니다.");
         if (data.HasEffectGroups)
         {
-            if (data.UseSheetData) Fail(data, "효과 묶음을 사용할 때 Use Sheet Data를 끄세요.");
             if (behavior != null && behavior is not GenericBuffTotem) Fail(data, "효과 묶음은 GenericBuffTotem 프리팹을 사용하세요.");
             var usedOffsets = new HashSet<Vector2Int>();
             foreach (var group in data.EffectGroups)
@@ -42,8 +41,6 @@ public static class TotemDataValidator
                     if (!usedOffsets.Add(offset)) Fail(data, "효과 묶음의 범위가 겹칩니다. 서로 다른 범위를 지정하세요.");
             }
         }
-        if (data.UseSheetData && behavior is not null && behavior is not GenericBuffTotem)
-            Debug.LogWarning($"[{data.name}] SO 기능 구성을 유지하려면 Use Sheet Data를 끄세요.", data);
 
         if (behavior is TotemShadowAttack)
         {

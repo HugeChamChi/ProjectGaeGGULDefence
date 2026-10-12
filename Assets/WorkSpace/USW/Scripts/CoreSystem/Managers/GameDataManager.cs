@@ -9,31 +9,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 /// <summary>
-/// 잔존 시트 3개를 병렬 로드합니다. 캐릭터·게임 설정은 에디터에서 시트값을 반영한 SO를 사용합니다.
+/// 잔존 시트 2개를 병렬 로드합니다. 캐릭터·게임 설정·토템은 에디터에서 관리하는 SO를 사용합니다.
 /// _gameDataManager 로 접근합니다.
 ///
 /// 담당 시트:
 ///   - 소환 등장 확률    (gid=1984586417)
 ///   - 보스 HP/경험치    (gid=1622284954)
-///   - 토템 데이터       (gid=660087267)
-///
-/// ─ 토템 시트 컬럼 규칙 ──────────────────────────────────────────────
-///   수치 컬럼(atk_increase_rate 등)은 정수 퍼센트(10 = 10%) 저장.
-///   파서에서 ÷100 하여 소수 비율(0.1 = 10%)로 변환.
-///
-///   effect_range / attack_disabled_range 형식: "x,y;x,y;..."
-///     좌표 규칙:  +x=우(右) / -x=좌(左) / -y=상(上) / +y=하(下)
-///     예) 상 1칸 → "0,-1"  /  상 3칸 → "0,-1;0,-2;0,-3"
-///         좌우 → "-1,0;1,0"  /  비어있음 → ""
-///
-///   시트 헤더 행 예시 (컬럼 순서):
-///     totem_id, totem_name, Local_key, grade, spawn_rate,
-///     effect_range, is_rotatable, attack_disabled_range, effect,
-///     atk_increase_rate, atk_decrease_rate,
-///     attack_speed_increase_rate, attack_speed_decrease_rate,
-///     critical_chance_rate, critical_damage_rate,
-///     cooldown_decrease_rate, projectile_size_rate,
-///     food_production_rate, food_amount, exp_gain_rate
 /// </summary>
 public class GameDataManager
 {
@@ -51,7 +32,6 @@ public class GameDataManager
 
     private const string GidSpawnRate = "1984586417";
     private const string GidBoss = "1622284954";
-    private const string GidTotem = "660087267";
 
     public bool IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -68,9 +48,6 @@ public class GameDataManager
     private readonly Dictionary<int, BossSheetRow> _bossByRoundId = new();
     private int _currentBossRoundId = -1;
 
-    // ── 토템 데이터 ───────────────────────────────────────
-    private readonly Dictionary<int, TotemSheetRow> _totemRows = new();
-
     public async UniTask LoadAllAsync(CancellationToken token = default)
     {
         IsLoaded = false;
@@ -78,13 +55,12 @@ public class GameDataManager
         {
             try
             {
-                var (spawnCsv, bossCsv, totemCsv) = await UniTask.WhenAll(
+                var (spawnCsv, bossCsv) = await UniTask.WhenAll(
                     FetchCsvAsync(GidSpawnRate, token),
-                    FetchCsvAsync(GidBoss, token),
-                    FetchCsvAsync(GidTotem, token)
+                    FetchCsvAsync(GidBoss, token)
                 );
 
-                if (spawnCsv == null || bossCsv == null || totemCsv == null)
+                if (spawnCsv == null || bossCsv == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
                     await UniTask.Delay(3000, DelayType.Realtime, cancellationToken: token);
@@ -100,7 +76,6 @@ public class GameDataManager
                     pendingDebuffs = DebuffSheetParser.Parse(SplitCsvRows(debuffCsv));
                 }
                 ParseBossData(bossCsv);
-                ParseTotemData(totemCsv);
                 ValidateDebuffBindings(pendingDebuffs);
                 if (pendingDebuffs != null) _debuffCatalog.Replace(pendingDebuffs);
 
@@ -125,17 +100,6 @@ public class GameDataManager
             foreach (var local in _debuffSettings.CreateDefinitions())
                 if (!definitions.TryGetValue(local.Id, out var remote) || remote.Kind != local.Kind || remote.StackGroup != local.StackGroup)
                     throw new FormatException($"Debuff sheet must preserve local identity {local.Id}/{local.Key}/{local.StackGroup}.");
-        void Validate(DebuffBinding? optional, string source)
-        {
-            if (!optional.HasValue || !optional.Value.IsConfigured) return;
-            var binding = optional.Value;
-            DebuffDefinition definition;
-            bool found = definitions != null ? definitions.TryGetValue(binding.DebuffId, out definition) : _debuffCatalog.TryGet(binding.DebuffId, out definition);
-            if (!found) throw new FormatException($"{source}: unknown debuff_id={binding.DebuffId}");
-            if (binding.Trigger == DebuffTrigger.AffectedUnitBasicAttackAttempt && definition.Kind != DebuffKind.ArmorBreak)
-                throw new FormatException($"{source}: attack-attempt binding must be ArmorBreak.");
-        }
-        foreach (var row in _totemRows.Values) Validate(row.DebuffBinding, $"Totem {row.TotemId}");
     }
 
     private async UniTask<string> FetchCsvAsync(string gid, CancellationToken token)
@@ -211,144 +175,6 @@ public class GameDataManager
                 DropExpAmount = expAmt,
             };
         }
-    }
-
-    // ── 토템 시트 파싱 ────────────────────────────────────
-    // 헤더 행 기반으로 컬럼 위치를 자동 감지합니다.
-    // 수치 컬럼은 정수 퍼센트(10 = 10%) 형식이므로 100으로 나눠 저장합니다.
-
-    private void ParseTotemData(string csv)
-    {
-        _totemRows.Clear();
-        var rows = SplitCsvRows(csv);
-        if (rows.Count < 2) return;
-
-        var headers = rows[0];
-
-        // ── 컬럼 인덱스 감지 ──
-        int iId = FindCol(headers, "totem_id");
-        int iName = FindCol(headers, "totem_name");
-        int iGrade = FindCol(headers, "grade");
-        int iEffect = FindCol(headers, "effect");
-        int iRange = FindCol(headers, "effect_range");
-        int iDisabled = FindCol(headers, "attack_disabled_range");
-        int iRotatable = FindCol(headers, "is_rotatable");
-        int iAtkUp = FindCol(headers, "atk_increase_rate");
-        int iAtkDown = FindCol(headers, "atk_decrease_rate");
-        int iSpdUp = FindCol(headers, "attack_speed_increase_rate");
-        int iSpdDown = FindCol(headers, "attack_speed_decrease_rate");
-        int iCritCh = FindCol(headers, "critical_chance_rate");
-        int iCritDmg = FindCol(headers, "critical_damage_rate");
-        int iCooldown = FindCol(headers, "cooldown_decrease_rate");
-        int iProj = FindCol(headers, "projectile_size_rate");
-        int iFoodProd = FindCol(headers, "food_production_rate");
-        int iFoodAmt = FindCol(headers, "food_amount");
-        int iExpGain = FindCol(headers, "exp_gain_rate");
-
-        if (iId < 0)
-        {
-            Debug.LogWarning("[GameDataManager] 토템 시트: totem_id 컬럼 없음. 헤더 행 확인 필요.");
-            return;
-        }
-
-        // is_rotatable 헤더가 없으면 위치 기반 fallback (시트의 7번째 컬럼)
-        bool usePositionalRotatable = iRotatable < 0;
-        if (usePositionalRotatable)
-            Debug.LogWarning("[GameDataManager] 토템 시트: is_rotatable 헤더 없음. 컬럼 6번 위치로 fallback.");
-
-        for (int i = 1; i < rows.Count; i++)
-        {
-            var cols = rows[i];
-            if (cols.Length == 0 || iId >= cols.Length) continue;
-            if (!int.TryParse(cols[iId], out int id)) continue;
-
-            var row = new TotemSheetRow { TotemId = id };
-            row.DebuffBinding = DebuffSheetParser.ParseBinding(headers, cols, false, $"Totem row {i + 1} id={id}");
-            if (row.DebuffBinding.HasValue && row.DebuffBinding.Value.Trigger == DebuffTrigger.ProjectileHit)
-            {
-                int intervalColumn = DebuffSheetParser.Column(headers, "debuff_fire_interval_sec");
-                int damageColumn = DebuffSheetParser.Column(headers, "debuff_impact_damage");
-                if (intervalColumn < 0 || damageColumn < 0 || intervalColumn >= cols.Length || damageColumn >= cols.Length)
-                    throw new FormatException($"Totem {id}: missing projectile settings.");
-                row.DebuffFireInterval = double.Parse(cols[intervalColumn], NumberStyles.Float, CultureInfo.InvariantCulture);
-                row.DebuffImpactDamage = decimal.Parse(cols[damageColumn], NumberStyles.Float, CultureInfo.InvariantCulture);
-                if (row.DebuffFireInterval <= 0 || double.IsNaN(row.DebuffFireInterval.Value) || double.IsInfinity(row.DebuffFireInterval.Value) ||
-                    row.DebuffImpactDamage < 0 || row.DebuffImpactDamage > CombatHealth.MaximumHp)
-                    throw new FormatException($"Totem {id}: invalid projectile settings.");
-            }
-
-            if (iName >= 0 && iName < cols.Length) row.TotemName = cols[iName];
-            if (iGrade >= 0 && iGrade < cols.Length) row.Grade = ParseTotemTier(cols[iGrade]);
-            if (iEffect >= 0 && iEffect < cols.Length) row.Effect = cols[iEffect];
-            if (iRange >= 0 && iRange < cols.Length) row.EffectRange = ParseOffsets(cols[iRange]);
-            if (iDisabled >= 0 && iDisabled < cols.Length) row.AttackDisabledRange = ParseOffsets(cols[iDisabled]);
-
-            // is_rotatable: 헤더 기반 → 없으면 위치 기반 (index 6)
-            int rotCol = usePositionalRotatable ? 6 : iRotatable;
-            if (rotCol >= 0 && rotCol < cols.Length)
-            {
-                var v = cols[rotCol].ToLowerInvariant();
-                row.IsRotatable = v == "true" || v == "1" || v == "yes";
-            }
-
-            // 수치 컬럼: 정수 퍼센트(10 = 10%) → ÷100 → 소수 비율(0.1)
-            TrySetPct(cols, iAtkUp, ref row.AtkIncreaseRate);
-            TrySetPct(cols, iAtkDown, ref row.AtkDecreaseRate);
-            TrySetPct(cols, iSpdUp, ref row.AttackSpeedIncreaseRate);
-            TrySetPct(cols, iSpdDown, ref row.AttackSpeedDecreaseRate);
-            TrySetPct(cols, iCritCh, ref row.CriticalChanceRate);
-            TrySetPct(cols, iCritDmg, ref row.CriticalDamageRate);
-            TrySetPct(cols, iCooldown, ref row.CooldownDecreaseRate);
-            TrySetPct(cols, iProj, ref row.ProjectileSizeRate);
-            TrySetPct(cols, iFoodProd, ref row.FoodProductionRate);
-            TrySetFloat(cols, iFoodAmt, ref row.FoodAmount);
-            TrySetPct(cols, iExpGain, ref row.ExpGainRate);
-
-            _totemRows[id] = row;
-        }
-
-        Debug.Log($"[GameDataManager] 토템 시트 {_totemRows.Count}행 로드 완료");
-    }
-
-    // 정수 퍼센트
-    private static void TrySetPct(string[] cols, int idx, ref float field)
-    {
-        if (idx < 0 || idx >= cols.Length) return;
-        if (float.TryParse(cols[idx], NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
-            field = v;
-    }
-
-    // 소수 그대로 저장 (food_amount는 절댓값이므로 ÷100 불필요)
-    private static void TrySetFloat(string[] cols, int idx, ref float field)
-    {
-        if (idx < 0 || idx >= cols.Length) return;
-        if (float.TryParse(cols[idx], NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
-            field = v;
-    }
-
-    /// <summary>
-    /// "x,y;x,y;..." 형식의 오프셋 문자열을 Vector2Int 목록으로 파싱합니다.
-    /// 빈 문자열이거나 좌표 형식이 아니면 빈 리스트를 반환합니다.
-    /// 좌표 규칙: +x=우 / -x=좌 / -y=상 / +y=하
-    /// </summary>
-    public static List<Vector2Int> ParseOffsets(string raw)
-    {
-        var result = new List<Vector2Int>();
-        if (string.IsNullOrWhiteSpace(raw)) return result;
-
-        // 숫자나 '-'로 시작하지 않으면 한글 텍스트 등 비좌표 값 — 무시
-        raw = raw.Trim();
-        if (raw.Length == 0 || (!char.IsDigit(raw[0]) && raw[0] != '-')) return result;
-
-        foreach (var pair in raw.Split(';'))
-        {
-            var xy = pair.Trim().Split(',');
-            if (xy.Length != 2) continue;
-            if (int.TryParse(xy[0].Trim(), out int x) &&
-                int.TryParse(xy[1].Trim(), out int y))
-                result.Add(new Vector2Int(x, y));
-        }
-        return result;
     }
 
     /// <summary>
@@ -445,24 +271,6 @@ public class GameDataManager
         return fields.ToArray();
     }
 
-    private static int FindCol(string[] headers, string name)
-    {
-        for (int i = 0; i < headers.Length; i++)
-            if (string.Equals(headers[i], name, StringComparison.OrdinalIgnoreCase))
-                return i;
-        return -1;
-    }
-
-    private static Tier ParseTotemTier(string grade) =>
-        grade.Trim().ToLowerInvariant() switch
-        {
-            "normal" or "노말" or "common" or "0" => Tier.Normal,
-            "rare" or "레어" or "1" => Tier.Rare,
-            "epic" or "에픽" or "2" => Tier.Epic,
-            "legend" or "legendary" or "전설" or "special" or "3" => Tier.Legend,
-            _ => Tier.Normal,
-        };
-
     // ── 외부 API ─────────────────────────────────────────
 
     public int GetRandomSpawnCharacterId()
@@ -506,10 +314,6 @@ public class GameDataManager
     public float GetCurrentExpMultiplier()
         => _currentBossRoundId >= 0 ? GetExpMultiplierForRound(_currentBossRoundId) : 0.01f;
 
-    /// <summary>totemId 기준 시트 데이터 반환. 시트 미로드 또는 미등록은 null.</summary>
-    public TotemSheetRow GetTotemRow(int totemId)
-        => _totemRows.TryGetValue(totemId, out var row) ? row : null;
-
     // ── 내부 데이터 클래스 ────────────────────────────────
 
     private class BossSheetRow
@@ -520,40 +324,6 @@ public class GameDataManager
         public double? Defense;
         public float DropExpPerHealth;
         public float DropExpAmount;
-    }
-
-    /// <summary>
-    /// 구글 시트 토템 행 데이터.
-    /// 수치 필드는 소수 비율 형식 (0.1 = 10%). 파서에서 ÷100 처리됨.
-    /// EffectRange / AttackDisabledRange: 리스트가 비어있으면 SO 데이터로 fallback.
-    /// </summary>
-    public class TotemSheetRow
-    {
-        public DebuffBinding? DebuffBinding;
-        public double? DebuffFireInterval;
-        public decimal? DebuffImpactDamage;
-        public int TotemId;
-        public string TotemName;
-        public Tier Grade;
-        public string Effect;
-        public bool IsRotatable = true;
-
-        // 범위 좌표 (+x=우 / -x=좌 / -y=상 / +y=하)
-        public List<Vector2Int> EffectRange = new();
-        public List<Vector2Int> AttackDisabledRange = new();
-
-        // 버프/디버프 수치 (0.1 = 10%)
-        public float AtkIncreaseRate;
-        public float AtkDecreaseRate;
-        public float AttackSpeedIncreaseRate;
-        public float AttackSpeedDecreaseRate;
-        public float CriticalChanceRate;
-        public float CriticalDamageRate;
-        public float CooldownDecreaseRate;
-        public float ProjectileSizeRate;
-        public float FoodProductionRate;
-        public float FoodAmount;
-        public float ExpGainRate;
     }
 
 }

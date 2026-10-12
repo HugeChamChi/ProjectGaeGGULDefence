@@ -105,7 +105,6 @@ public static class TotemBatchTD1011Builder
         data.totemName = $"{id}(미정)";
         data.tier = Tier.Normal;
         data.description = spec.Description;
-        data.UseSheetData = false;
         data.isRotatable = false;
         data.prefabAddress = id;
         data.iconAddress = art.iconAddress;
