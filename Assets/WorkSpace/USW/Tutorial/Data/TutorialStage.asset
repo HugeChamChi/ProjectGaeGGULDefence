@@ -15,11 +15,5 @@ MonoBehaviour:
   stageName: StageData
   waves:
   - {fileID: 11400000, guid: c37d888801cbdd94a92fad5cf6b740ac, type: 2}
-  - {fileID: 11400000, guid: 810df8b3b1fb214478a55719cb44f2f9, type: 2}
+  - {fileID: 11400000, guid: d82e7e386360a69459f227cd3150da5c, type: 2}
   - {fileID: 11400000, guid: 0956cbb88b37bda49afe38f927bcd818, type: 2}
-  - {fileID: 11400000, guid: 143e1fe08df08a243bb45e02de4e3b07, type: 2}
-  - {fileID: 11400000, guid: 3679caace4af27248bab025549f31594, type: 2}
-  - {fileID: 11400000, guid: 8287916b81b56334d8173f88c26eda98, type: 2}
-  - {fileID: 11400000, guid: 3aaf6da918e03ad47ac25aef4eb1d09e, type: 2}
-  - {fileID: 11400000, guid: c39813e7c222d814cbf2503f99fa2999, type: 2}
-  - {fileID: 11400000, guid: 9f9c3fa0f52de5044885ac5c82bd8a2a, type: 2}

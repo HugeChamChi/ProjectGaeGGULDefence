@@ -12,6 +12,13 @@ namespace GaeGGUL.Tutorial
         [SerializeField] private TMP_Text _hint;
         [SerializeField, Min(1)] private float _charactersPerSecond = 38f;
         [SerializeField, Min(0.1f)] private float _popSeconds = 0.36f;
+        [Header("Content fit (canvas pixels)")]
+        [SerializeField, Min(1f)] private float _minimumWidth = 560f;
+        [SerializeField, Min(1f)] private float _maximumWidth = 920f;
+        [SerializeField, Min(1f)] private float _minimumHeight = 140f;
+        [SerializeField, Min(1f)] private float _maximumHeight = 300f;
+        [SerializeField, Min(0f)] private float _horizontalPadding = 44f;
+        [SerializeField, Min(0f)] private float _verticalPadding = 28f;
         private RectTransform _rect;
         private CanvasGroup _group;
         private Vector2 _restPosition;
@@ -24,6 +31,7 @@ namespace GaeGGUL.Tutorial
         private string _readyHint;
         private bool _glyphMoved;
         private Vector2 _defaultAnchorMin, _defaultAnchorMax;
+        private float _baseAnchorY;
 
         public bool IsTyping => gameObject.activeSelf && _instruction.maxVisibleCharacters < _characterCount;
 
@@ -34,6 +42,7 @@ namespace GaeGGUL.Tutorial
             _restScale = _rect.localScale;
             _defaultAnchorMin = _rect.anchorMin;
             _defaultAnchorMax = _rect.anchorMax;
+            _baseAnchorY = _rect.anchorMin.y;
             _group = GetComponent<CanvasGroup>();
             if (_group == null) _group = gameObject.AddComponent<CanvasGroup>();
             _group.blocksRaycasts = false;
@@ -85,8 +94,9 @@ namespace GaeGGUL.Tutorial
         {
             gameObject.SetActive(true);
             _entrance?.Kill();
-            _progress.text = $"첫 전투 가이드  ·  {index} / {total}";
+            if (_progress != null) _progress.gameObject.SetActive(false);
             _instruction.text = instruction;
+            FitInstruction(instruction);
             _instruction.maxVisibleCharacters = int.MaxValue;
             _instruction.ForceMeshUpdate();
             _characterCount = _instruction.textInfo.characterCount;
@@ -102,6 +112,29 @@ namespace GaeGGUL.Tutorial
                 .Append(_rect.DOScale(_restScale, _popSeconds).SetEase(Ease.OutBack, 1.5f))
                 .Join(_rect.DOAnchorPos(_restPosition, _popSeconds).SetEase(Ease.OutCubic))
                 .Join(_group.DOFade(1f, 0.16f));
+        }
+
+        private void FitInstruction(string instruction)
+        {
+            var parent = _rect.parent as RectTransform;
+            if (parent == null || parent.rect.width <= 0f || parent.rect.height <= 0f) return;
+            float maxWidth = Mathf.Min(_maximumWidth, parent.rect.width * 0.88f);
+            float naturalWidth = _instruction.GetPreferredValues(instruction, Mathf.Infinity, Mathf.Infinity).x;
+            float width = Mathf.Clamp(naturalWidth + _horizontalPadding * 2f, Mathf.Min(_minimumWidth, maxWidth), maxWidth);
+            float textHeight = _instruction.GetPreferredValues(instruction, Mathf.Max(1f, width - _horizontalPadding * 2f), Mathf.Infinity).y;
+            float height = Mathf.Clamp(textHeight + _verticalPadding * 2f, _minimumHeight, _maximumHeight);
+            float x = (1f - width / parent.rect.width) * 0.5f;
+            float normalizedHeight = height / parent.rect.height;
+            float y = Mathf.Min(_baseAnchorY, 0.98f - normalizedHeight);
+            _defaultAnchorMin = new Vector2(x, y);
+            _defaultAnchorMax = new Vector2(1f - x, y + normalizedHeight);
+            _rect.anchorMin = _defaultAnchorMin;
+            _rect.anchorMax = _defaultAnchorMax;
+            _rect.sizeDelta = Vector2.zero;
+            var text = _instruction.rectTransform;
+            text.anchorMin = Vector2.zero; text.anchorMax = Vector2.one;
+            text.offsetMin = new Vector2(_horizontalPadding, _verticalPadding);
+            text.offsetMax = new Vector2(-_horizontalPadding, -_verticalPadding);
         }
 
         private void Update()

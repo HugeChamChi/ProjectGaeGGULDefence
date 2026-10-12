@@ -22,7 +22,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     public void SetChargedPresentation(bool charged, bool immediate = false)
     {
         _readyBanner?.SetCharged(charged, immediate);
-        _iconMotion?.SetCharged(charged, immediate);
+        _iconMotion?.SetCharged(charged || (_spinePortrait != null && _spinePortrait.IsPlayingSkill), immediate);
     }
 
     [Header("쿨타임 중 비활성화 연출")]
@@ -151,7 +151,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     /// <summary>쿨타임 중일 때 아이콘/버튼을 회색으로, 사용 가능할 때 원래 색으로 되돌린다.</summary>
     public void SetDisabledVisual(bool isOnCooldown)
     {
-        _spinePortrait?.SetTint(isOnCooldown ? disabledColor : _normalIconColor);
+        _spinePortrait?.SetTint(isOnCooldown && !_spinePortrait.IsPlayingSkill ? disabledColor : _normalIconColor);
         if (img_Icon != null)
         {
             img_Icon.color = isOnCooldown ? disabledColor : _normalIconColor;

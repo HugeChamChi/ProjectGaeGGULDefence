@@ -191,6 +191,8 @@ public class UI_TotemInfoPanel : UI_Base
         if (data != null) data.TryGetDebuffBinding(out binding);
         if (txt_Stats != null)
         {
+            txt_Stats.lineSpacing = 0f;
+            txt_Stats.paragraphSpacing = 0f;
             txt_Stats.text = _effectLink != null ? _effectLink.SetDescription(stats, binding) : stats;
             FitDescription();
         }

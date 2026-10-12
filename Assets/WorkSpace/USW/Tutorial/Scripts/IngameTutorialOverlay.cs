@@ -9,7 +9,7 @@ namespace GaeGGUL.Tutorial
     /// <summary>Multiple highlight holes with matching input filtering, in screen coordinates.</summary>
     public sealed class IngameTutorialOverlay : MaskableGraphic, ICanvasRaycastFilter, IPointerClickHandler
     {
-        public enum Gesture { Tap, Hold, Drag, HoldDrag }
+        public enum Gesture { Tap, Hold, Drag, HoldDrag, Swipe }
         private readonly List<Func<Rect>> _targets = new();
         private readonly List<Rect> _holes = new();
         private readonly List<float> _xs = new();
@@ -156,6 +156,37 @@ namespace GaeGGUL.Tutorial
             }
             // Even an invisible input blocker needs geometry for GraphicRaycaster.
             if (!_dim) Quad(vh, bounds, Color.clear);
+            DrawHoldCue(vh);
+        }
+
+        private void DrawHoldCue(VertexHelper vh)
+        {
+            if (!_hand || _holes.Count == 0 || IsTransitioning ||
+                (_gesture != Gesture.Hold && _gesture != Gesture.HoldDrag)) return;
+            float elapsed = Mathf.Max(0f, Time.unscaledTime - _started - _settings.FocusSeconds) % _settings.GestureSeconds;
+            float progress = Mathf.Clamp01(elapsed / Mathf.Max(0.1f, _settings.HoldGestureSeconds));
+            if (elapsed > _settings.HoldGestureSeconds) return;
+            float scale = rectTransform.rect.width / HandReferenceWidth;
+            float radius = _settings.HoldCueRadius * scale;
+            float inner = Mathf.Max(0f, radius - _settings.HoldCueThickness * scale);
+            const int segments = 48;
+            var center = _holes[0].center;
+            for (int i = 0; i < segments; i++)
+            {
+                float a = Mathf.PI * 0.5f - Mathf.PI * 2f * i / segments;
+                float b = Mathf.PI * 0.5f - Mathf.PI * 2f * (i + 1) / segments;
+                var color = _settings.HoldCueColor;
+                if ((i + 1f) / segments > progress) color.a *= 0.2f;
+                var from = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                var to = new Vector2(Mathf.Cos(b), Mathf.Sin(b));
+                int n = vh.currentVertCount;
+                vh.AddVert(center + from * inner, color, Vector2.zero);
+                vh.AddVert(center + from * radius, color, Vector2.zero);
+                vh.AddVert(center + to * radius, color, Vector2.zero);
+                vh.AddVert(center + to * inner, color, Vector2.zero);
+                vh.AddTriangle(n, n + 1, n + 2);
+                vh.AddTriangle(n, n + 2, n + 3);
+            }
         }
 
         private void UpdateHand()
@@ -176,22 +207,28 @@ namespace GaeGGUL.Tutorial
                 _handImage.preserveAspect = true;
             }
             _handImage.gameObject.SetActive(true);
-            float elapsed = (Time.unscaledTime - _started) % _settings.GestureSeconds;
+            float elapsed = Mathf.Max(0f, Time.unscaledTime - _started - _settings.FocusSeconds) % _settings.GestureSeconds;
             float hold = _gesture == Gesture.Hold || _gesture == Gesture.HoldDrag ? _settings.HoldGestureSeconds : 0f;
             float t = Mathf.Clamp01((elapsed - hold) / Mathf.Max(0.1f, _settings.GestureSeconds - hold));
             Vector2 from = _holes[0].center;
             Vector2 to = _gesture == Gesture.Drag && _holes.Count > 1 ? _holes[1].center : from;
+            if (_gesture == Gesture.Swipe)
+            {
+                from.x += _holes[0].width * 0.3f;
+                to.x -= _holes[0].width * 0.3f;
+            }
             if (_gesture == Gesture.HoldDrag) to += Vector2.right * _holes[0].width;
             Vector2 tip = Vector2.Lerp(from, to, Mathf.SmoothStep(0, 1, t));
             bool pressed = _gesture == Gesture.Tap
                 ? elapsed < _settings.GestureSeconds * _settings.HandTapPressedFraction
-                : elapsed < hold || t < 1f;
+                : _gesture == Gesture.Hold ? elapsed < hold : elapsed < hold || t < 0.85f;
             _handImage.sprite = pressed ? _settings.HandPressedSprite : _settings.HandIdleSprite;
             var rect = _handImage.rectTransform;
             rect.anchorMin = rect.anchorMax = rectTransform.pivot;
             rect.pivot = pressed ? _settings.HandPressedTip : _settings.HandIdleTip;
             rect.sizeDelta = _settings.HandSize * (rectTransform.rect.width / HandReferenceWidth);
             rect.anchoredPosition = tip;
+            rect.localScale = Vector3.one * (pressed && hold > 0f ? 0.88f : 1f);
         }
 
         private static void Quad(VertexHelper vh, Rect r, Color color)

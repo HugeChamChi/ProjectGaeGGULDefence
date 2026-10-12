@@ -15,7 +15,7 @@ MonoBehaviour:
   _displayName: DummyBoss4
   _prefab: {fileID: 5097534829583230306, guid: d86fe7f00858ea242bbefbd96899a365, type: 3}
   _icon: {fileID: 21300000, guid: 944711193559c5240a860accbb0a279f, type: 3}
-  _maxHp: 500
+  _maxHp: 4500
   _defense: 0
   _hpLineCount: 3
   _expReward: 0

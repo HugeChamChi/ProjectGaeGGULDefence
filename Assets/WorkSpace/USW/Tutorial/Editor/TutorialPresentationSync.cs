@@ -62,6 +62,7 @@ public static class TutorialPresentationSync
                 if (PrefabUtility.IsPartOfPrefabInstance(to.targetObject))
                     PrefabUtility.RecordPrefabInstancePropertyModifications(to.targetObject);
             }
+            SyncHudLayout(source, target);
             EnsureObject("BossDamageNumbersCanvas");
             EnsureObject("# MainUI/CenterToast");
             CopyFields<BossDamageNumbers>("BossDamageNumbersCanvas", "_settings", "_cookieSettings", "_fontIndex");
@@ -80,6 +81,41 @@ public static class TutorialPresentationSync
             EditorSceneManager.SaveScene(target);
         }
         finally { EditorSceneManager.ClosePreviewScene(source); }
+    }
+
+    /// <summary>Synchronizes shared HUD geometry without copying tutorial visibility or gameplay wiring.</summary>
+    public static void SyncHudLayout(Scene source, Scene target)
+    {
+        const string top = "# MainUI/MainUI_SafeAreaRoot/MainUI_TopBar";
+        const string buttons = "# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons";
+        var originals = source.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RectTransform>(true));
+        var copies = target.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RectTransform>(true)).ToArray();
+        foreach (var original in originals)
+        {
+            string path = Path(original);
+            if (path != top && !path.StartsWith(top + "/", StringComparison.Ordinal) &&
+                path != buttons && !path.StartsWith(buttons + "/", StringComparison.Ordinal)) continue;
+            var copy = copies.FirstOrDefault(t => Path(t) == path);
+            if (copy == null) continue;
+            copy.anchorMin = original.anchorMin; copy.anchorMax = original.anchorMax;
+            copy.pivot = original.pivot; copy.sizeDelta = original.sizeDelta;
+            copy.anchoredPosition3D = original.anchoredPosition3D;
+            copy.localScale = original.localScale; copy.localRotation = original.localRotation;
+            if (PrefabUtility.IsPartOfPrefabInstance(copy)) PrefabUtility.RecordPrefabInstancePropertyModifications(copy);
+        }
+        // Keep a visible gap below the large sortie button, including its frame outline.
+        var summon = copies.FirstOrDefault(t => Path(t) == buttons + "/Summon");
+        if (summon != null)
+        {
+            summon.anchoredPosition += Vector2.up * 32f;
+            if (PrefabUtility.IsPartOfPrefabInstance(summon)) PrefabUtility.RecordPrefabInstancePropertyModifications(summon);
+        }
+        var menu = copies.FirstOrDefault(t => Path(t) == "# MainUI/MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons/Menu_Button");
+        if (menu != null)
+        {
+            menu.gameObject.SetActive(false);
+            if (PrefabUtility.IsPartOfPrefabInstance(menu.gameObject)) PrefabUtility.RecordPrefabInstancePropertyModifications(menu.gameObject);
+        }
     }
 
     private static string Path(Transform t) => t.parent == null ? t.name : Path(t.parent) + "/" + t.name;

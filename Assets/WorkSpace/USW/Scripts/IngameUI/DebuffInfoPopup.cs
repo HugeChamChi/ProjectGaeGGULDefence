@@ -75,7 +75,8 @@ public sealed class DebuffInfoPopup : UI_Base, IDescriptionPopup
         view._body = Text(viewport, "Body", source, 32f, new Vector2(0, 1), Vector2.one);
         view._body.rectTransform.pivot = new Vector2(0.5f, 1f);
         view._body.alignment = TextAlignmentOptions.TopLeft;
-        view._body.lineSpacing = 8f;
+        view._body.lineSpacing = 0f;
+        view._body.paragraphSpacing = 0f;
         view._body.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         view._scroll = viewport.gameObject.AddComponent<ScrollRect>();
         view._scroll.viewport = viewport;

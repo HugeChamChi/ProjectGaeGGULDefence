@@ -123,8 +123,12 @@ public class UnitSpawner : MonoBehaviour
         OnCostChanged?.Invoke(CurrentCost);
     }
 
+    /// <summary>Optional scene-owned permission checked before spending currency or creating a unit.</summary>
+    public System.Func<bool> CanPlayerSummon { get; set; }
+
     public void OnSpawnButtonPressed()
     {
+        if (CanPlayerSummon != null && !CanPlayerSummon()) return;
         if (_gameManager.CurrentState != GameManager.GameState.Playing)
         {
             Debug.Log("게임 시작 후 배치 가능합니다.");

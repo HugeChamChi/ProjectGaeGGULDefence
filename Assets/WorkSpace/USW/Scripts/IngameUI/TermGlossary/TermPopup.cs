@@ -464,7 +464,8 @@ public sealed class TermPopup : MonoBehaviour
         _title.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
         _body = Text(_sheet, "Body", 37f, SheetText);
-        _body.lineSpacing = 12f;
+        _body.lineSpacing = 0f;
+        _body.paragraphSpacing = 0f;
         _facts = Text(_sheet, "Facts", 32f, FactColor);
         _chipLabel = Text(_sheet, "ChipLabel", 26f, Muted);
         _chipLabel.text = "이 카드의 다른 용어";

@@ -77,7 +77,7 @@ namespace HSD.UI.Upgrade
             CurrentLevel = data.CurrentLevel;
             _canUpgrade = !data.IsMaxLevel && data.UpgradeCost >= 0;
             _currentCost = data.UpgradeCost;
-            if (txt_Name != null) txt_Name.text = data.DisplayName;
+            if (txt_Name != null) txt_Name.gameObject.SetActive(false);
             
             if (data.IsMaxLevel)
             {

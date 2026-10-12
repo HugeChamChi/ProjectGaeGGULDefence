@@ -91,6 +91,8 @@ public static class IngameTutorialChecks
                 overlay.OnPointerClick(pointer);await Frames();
             }
             await Stage(IngameTutorialStage.TimeLimit);
+            Check(!Get<TMPro.TMP_Text>(dialogue,"_progress").gameObject.activeSelf,"Guide shows only the instruction without a numbered header");
+            Check(!GameObject.Find("# MainUI").transform.Find("MainUI_SafeAreaRoot/MainUI_InteractableBar/Buttons/Menu_Button").gameObject.activeSelf,"Tutorial option button is hidden");
             Check(spawn.SuccessfulSpawnCount==0 && boss.CurrentBoss!=null,"Boss enters before any summons");
             var camera=Camera.main;
             Check(Vector3.Distance(camera.transform.position,Get<Vector3>(director,"_cameraPosition"))<0.001f,"Entrance restores camera position");
@@ -127,7 +129,26 @@ public static class IngameTutorialChecks
             Check(spawn.SuccessfulSpawnCount==4,"All four authored summons were purchased");
             Check(Get<CurrencyManager>(director,"_currency").Currency<spawn.CurrentCost,"Available summon budget is exhausted");
             Check(!boss.CurrentBoss.Invincible && boss.CurrentBoss.PreventDeath,"Boss survives mandatory lessons");
+            async UniTask SpamUntil(IngameTutorialStage stage)
+            {
+                int before=spawn.SuccessfulSpawnCount;
+                var wallet=Get<CurrencyManager>(director,"_currency");
+                float balance=wallet.Currency;
+                wallet.AddCurrency(spawn.CurrentCost * 20f);
+                float added=wallet.Currency-balance;
+                int taps=0;
+                while(director.CurrentStage!=stage)
+                {
+                    float funded=wallet.Currency;
+                    for(int tap=0;tap<10;tap++) { summon.onClick.Invoke(); taps++; }
+                    if(spawn.SuccessfulSpawnCount!=before || wallet.Currency!=funded) throw new Exception("Transition spam summoned or spent food");
+                    await UniTask.Yield(PlayerLoopTiming.Update,token);
+                }
+                wallet.Spend(added);
+                Check(taps>0,"Transition spam blocked "+taps+" funded summon requests before "+stage);
+            }
             float observedAt=Time.unscaledTime;
+            await SpamUntil(IngameTutorialStage.Merge);
             await Stage(IngameTutorialStage.Merge);
             Check(Time.unscaledTime-observedAt>=settings.ObserveCombatSeconds-0.2f,"Combat observation lasts five seconds");
             await FocusReady(overlay);await Frames();
@@ -149,6 +170,7 @@ public static class IngameTutorialChecks
             Drag(input,first.GetComponent<Collider2D>().bounds.center,new Vector2(-100,-100));await Frames();
             Check(origin.OccupyingUnit==first,"Invalid merge drop is rejected without losing unit");
             Drag(input,first.GetComponent<Collider2D>().bounds.center,target.transform.position);
+            await SpamUntil(IngameTutorialStage.OpenUpgrade);
             await Stage(IngameTutorialStage.OpenUpgrade);
             Check(first==null && second==null,"Real merge consumes both ingredients");
             var merged=Get<UnitBase>(director,"_mergedUnit");
@@ -159,6 +181,7 @@ public static class IngameTutorialChecks
             await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
             await FocusReady(overlay);
             var item=Get<RectTransform>(director,"_upgradeSlots").GetComponentsInChildren<HSD.UI.Upgrade.UI_UpgradeItem>().First(i=>i.UpgradeTarget==settings.UpgradeTarget && i.CanUpgrade);
+            Check(!Get<TMPro.TextMeshProUGUI>(item,"txt_Name").gameObject.activeSelf,"Upgrade cards hide unit names");
             int previousLevel=item.CurrentLevel;
             overlay.OnPointerClick(pointer);await Frames();
             Check(director.CurrentStage==IngameTutorialStage.UpgradeSlots,"Background tap cannot skip actual upgrade");
@@ -241,7 +264,12 @@ public static class IngameTutorialChecks
             if (termPopup != null) termPopup.Close();
             else Object.FindFirstObjectByType<TermPopup>().Close();
             Check(!card.AllowSelection,"Tooltip close animation must finish before selection unlocks");
-            await UniTask.WaitUntil(()=>card.AllowSelection && !level.DescriptionBlocksInput,cancellationToken:token);
+            await UniTask.WaitUntil(()=>!level.DescriptionBlocksInput,cancellationToken:token);
+            float closedAt=Time.unscaledTime;
+            await UniTask.Delay(900,DelayType.Realtime,cancellationToken:token);
+            Check(!card.AllowSelection && !dialogue.gameObject.activeSelf && !Get<bool>(overlay,"_hand"),"Term return stays quiet without a pointer or selection during delay");
+            await UniTask.WaitUntil(()=>card.AllowSelection,cancellationToken:token);
+            Check(Time.unscaledTime-closedAt>=settings.ChoiceReturnPointDelaySeconds-0.1f && !dialogue.gameObject.activeSelf,"Term return waits 1.5 seconds then shows only pointing");
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Closing the tooltip returns to the choices without selecting one");
             Check(card.GetData().chooseName == "넹?" && cards.Count(c=>c.AllowSelection) == 1,
                 "Tutorial selection permits only the Neng-question card");
@@ -253,6 +281,7 @@ public static class IngameTutorialChecks
             pointer.position = overlay.ScreenRect((RectTransform)card.transform).center + Vector2.up * 150f;
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await Stage(IngameTutorialStage.ChiefSkill);
+            Check(Get<GameObject>(director,"_optionsButton").activeSelf,"Options appear after reaching the level-up choices");
             Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
             var patterns=Get<BossPatternController>(director,"_patterns");
             await UniTask.WaitUntil(()=>patterns.IsCounterablePattern(boss.CurrentBoss),cancellationToken:token);
@@ -268,7 +297,14 @@ public static class IngameTutorialChecks
             float counterTime = Time.realtimeSinceStartup;
             float counterGameTime = Time.time;
             ClickButton(chief);
+            var portrait=chief.GetComponentInChildren<ChiefSkillSpinePortrait>(true);
+            var motion=chief.GetComponentInChildren<ChiefSkillIconMotion>(true);
+            Check(portrait!=null && portrait.IsPlayingSkill,"Actual chief activation starts tracked skill motion");
             await Frames();
+            Check(Get<bool>(motion,"_charged") && !chief.interactable,"Skill motion stays outside box while cooldown disables button");
+            await UniTask.WaitUntil(()=>!portrait.IsPlayingSkill,cancellationToken:token);
+            await Frames();
+            Check(!Get<bool>(motion,"_charged"),"Chief retracts only after skill motion completes");
             Check(!patterns.IsCounterablePattern(boss.CurrentBoss),"Actual chief button cancels the earthquake before impact");
             Check(grid.AllCells().All(c=>!c.Model.IsBossTelegraphPreviewed),"Successful counter clears the field warning");
             if (firstBossBalanceOnly)
@@ -286,6 +322,8 @@ public static class IngameTutorialChecks
                 "Boss can be defeated after reward learning");
             var reward=Get<TotemRewardUI>(director,"_rewardUI");
             await UniTask.WaitUntil(()=>reward.IsReadyForSelection,cancellationToken:token);await Frames();
+            Check(Get<WaveManager>(director,"_wave").CurrentWave==1,"Totem guide opens immediately after the second boss reward");
+            Check(!input.AllowPointerClicks,"World input stays locked while teaching rewards");
             Check(dialogue.gameObject.activeInHierarchy,"Reward dialogue starts only after reward reveal");
             Check(Get<System.Collections.Generic.List<TotemData>>(reward,"_choices").SequenceEqual(settings.TotemChoices),"Totem reward shows the authored tutorial pool");
             Check(settings.TotemChoices.Length==3 && settings.TotemChoices.Distinct().Count()==3 && settings.RequiredTotem.isRotatable && settings.RequiredTotem.GetSimpleAmount(StatKind.Speed)>0,"Three distinct totems are offered with a required attack-speed reward");
@@ -300,8 +338,33 @@ public static class IngameTutorialChecks
             var overview=reward.ChoiceArea.GetComponentsInChildren<Button>().First();
             ClickButton(overview,overlay.ScreenRect(reward.RequiredChoiceArea).center);
             await UniTask.Delay(1000,DelayType.Realtime,cancellationToken:token);
-            Call(reward,"OnDetailSwipe",1);await Frames();
-            Check(Get<int>(reward,"_detailIndex")==0,"Detail swipe cannot change the required tutorial totem");
+            var swipe = Get<TotemRewardSwipeArea>(reward,"_swipeArea");
+            async UniTask SwipeDetail(int direction)
+            {
+                await FocusReady(overlay);
+                pointer.pressPosition=overlay.ScreenRect(reward.DetailSwipeArea).center;
+                pointer.position=pointer.pressPosition;
+                var hits=new System.Collections.Generic.List<RaycastResult>(); EventSystem.current.RaycastAll(pointer,hits);
+                Check(hits.Count>0 && ExecuteEvents.GetEventHandler<IEndDragHandler>(hits[0].gameObject)==swipe.gameObject,"Actual UI raycast reaches the totem swipe receiver");
+                pointer.position=pointer.pressPosition + Vector2.left*direction*200f;
+                swipe.OnBeginDrag(pointer);swipe.OnDrag(pointer);swipe.OnEndDrag(pointer);
+                await UniTask.Delay(500,DelayType.Realtime,cancellationToken:token);
+            }
+            typeof(TotemRewardUI).GetMethod("OnConfirmClicked",Private).Invoke(reward,null);
+            Check(reward.IsOpen && !reward.AllowTutorialConfirmation,"Early confirmation is rejected by the reward handler");
+            await SwipeDetail(1);
+            Check(reward.DetailChoice!=null && reward.DetailChoice!=settings.RequiredTotem,"Real detail swipe reveals another tutorial totem");
+            Check(!reward.AllowTutorialConfirmation,"Browsing cannot confirm a reward early");
+            await SwipeDetail(-1);
+            Check(reward.DetailChoice==settings.RequiredTotem && reward.DetailRotationBadge!=null,"Returning to acceleration shows its actual rotation badge");
+            await Acknowledge();
+            await FocusReady(overlay);
+            pointer.position=pointer.pressPosition=overlay.ScreenRect(reward.DetailSwipeArea).center;
+            swipe.OnPointerClick(pointer);
+            await UniTask.WaitUntil(()=>reward.IsReadyForSelection,cancellationToken:token);
+            await FocusReady(overlay);
+            ClickButton(overview,overlay.ScreenRect(reward.RequiredChoiceArea).center);
+            await UniTask.WaitUntil(()=>reward.IsReadyForConfirmation && reward.AllowTutorialConfirmation,cancellationToken:token);
             await FocusReady(overlay);
             dialogue.CompleteTyping();await Snapshot("09-forced-totem-confirm");
             var confirm=reward.GetComponentsInChildren<Button>().First(b=>b.name.Contains("Confirm"));ClickButton(confirm);
@@ -329,12 +392,18 @@ public static class IngameTutorialChecks
             pointer.pressPosition=overlay.ScreenRect(invUi.GetSlotRect(0)).center;
             var drop=Get<GridCell>(director,"_dropCell");pointer.position=Camera.main.WorldToScreenPoint(drop.transform.position);
             slot.OnBeginDrag(pointer);slot.OnDrag(pointer);slot.OnEndDrag(pointer);
+            await Stage(IngameTutorialStage.MoveTotem);
+            await FocusReady(overlay);
+            var movingTotem=Get<TotemBase>(director,"_placedTotem");
+            var moveDestination=Get<GridCell>(director,"_dropCell");
+            Check(movingTotem.CurrentCell==expectedCell,"Movement is taught immediately after placement");
+            Drag(input,movingTotem.transform.position,moveDestination.transform.position);
             await Stage(IngameTutorialStage.RotateTotem);
             await FocusReady(overlay);await Frames();
             var totem=Get<TotemBase>(director,"_placedTotem");
             var effectBefore=totem.Data.GetEffectCells(totem,grid).ToArray();
             Check(totem.Data.GetSimpleAmount(StatKind.Speed)==0.1f && effectBefore.Length>0 && effectBefore.All(c=>c.HasSpeedBuff),"Placed tutorial totem applies attack speed to its actual cells");
-            Check(totem.Data.isRotatable && totem.CurrentCell==expectedCell,"Installed totem proceeds directly to rotation");
+            Check(totem.Data.isRotatable && totem.CurrentCell==moveDestination,"Rotation follows successful totem movement");
             Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==1,"Rotation highlights only the installed totem");
             var rotationDrag=totem.GetComponent<DragHandler>();
             var originalPosition=totem.transform.position;
@@ -348,11 +417,16 @@ public static class IngameTutorialChecks
             await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
             var end=(Vector2)Camera.main.WorldToScreenPoint(totem.transform.position)+Vector2.right*150;
             Call(input,"ProcessPointerMove",end);Call(input,"ProcessPointerUp",end);
+            await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==settings.CombatPracticeInstruction,cancellationToken:token);
+            Check(!input.AllowPointerClicks && Time.timeScale==0,"Final combat explanation blocks gameplay input");
+            await Acknowledge();
+            await UniTask.WaitUntil(()=>boss.CurrentBoss!=null && Get<WaveManager>(director,"_wave").CurrentWave==2,cancellationToken:token);
+            Check(boss.CurrentBoss.MaxHp==4500,"Wave 3 practice boss uses authored 4500 HP");
             await UniTask.WaitUntil(()=>director.IsComplete,cancellationToken:token);
             Check(totem.RotationStep==1,"Hold then drag right rotates the totem");
             var effectAfter=totem.Data.GetEffectCells(totem,grid).ToArray();
             Check(!effectAfter.SequenceEqual(effectBefore) && effectAfter.All(c=>c.HasSpeedBuff) && effectBefore.Except(effectAfter).All(c=>!c.HasSpeedBuff),"Rotation moves the attack-speed buff and removes it from the old cells");
-            Check(input.CanBeginInteraction==null && input.CanEndInteraction==null && input.AllowPointerClicks,"Completion restores normal world input");
+            Check(!input.AllowPointerClicks && Get<GameObject>(director,"_completionPanel").activeInHierarchy,"Completion keeps gameplay blocked behind the lobby action");
             Check(!dialogue.gameObject.activeInHierarchy && !overlay.gameObject.activeInHierarchy,"Dialogue and highlight close together");
             Check(invUi.AllowClose,"Tutorial restores normal inventory closing");
             await CheckCompositionAsync(director,Check,token);

@@ -49,7 +49,7 @@ namespace GaeGGUL.Tutorial
                 case IngameTutorialStage.OpenInventory: return new[] { IngameTutorialStage.TotemChoice };
                 case IngameTutorialStage.PlaceTotem: return new[] { IngameTutorialStage.OpenInventory };
                 case IngameTutorialStage.MoveTotem: return new[] { IngameTutorialStage.PlaceTotem };
-                case IngameTutorialStage.RotateTotem: return new[] { IngameTutorialStage.PlaceTotem };
+                case IngameTutorialStage.RotateTotem: return new[] { IngameTutorialStage.MoveTotem };
                 default: return System.Array.Empty<IngameTutorialStage>();
             }
         }

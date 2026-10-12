@@ -91,6 +91,33 @@ public class TotemRewardUI : MonoBehaviour
     public RectTransform RequiredChoiceDescriptionArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].TextBlock;
     public bool IsReadyForConfirmation => _isOpen && !_busy && _detail != null && _detail.gameObject.activeSelf;
     public RectTransform ConfirmationArea => _confirmationArea;
+    /// <summary>Current settled detail, used by the tutorial's real swipe lesson.</summary>
+    public TotemData DetailChoice => IsReadyForConfirmation ? _choices[_detailIndex] : null;
+    /// <summary>Background receiving horizontal detail swipes.</summary>
+    public RectTransform DetailSwipeArea => _detailBackground != null ? _detailBackground.rectTransform : null;
+    /// <summary>Actual rotation badge shown beside the current detail range.</summary>
+    public RectTransform DetailRotationBadge => _rangeGrid != null
+        ? _rangeGrid.GetComponentInChildren<TotemRotateBadgeView>()?.transform as RectTransform : null;
+    /// <summary>Enables the final required reward only after the browsing lesson.</summary>
+    public bool AllowTutorialConfirmation { get; set; }
+    /// <summary>Enables returning to overview when the tutorial asks for a second selection.</summary>
+    public bool AllowTutorialBack { get; set; }
+    private bool _tutorialBrowsing;
+
+    /// <summary>Allows real swipes while retaining the authored required reward for confirmation.</summary>
+    public void SetTutorialBrowsing(bool enabled)
+    {
+        _tutorialBrowsing = enabled;
+        RefreshSwipePermission();
+    }
+
+    private void RefreshSwipePermission()
+    {
+        if (_swipeArea == null) return;
+        _swipeArea.SwipeEnabled = (HasRequiredChoice ? _tutorialBrowsing : AllowDetailSwipe) && _choices.Count > 1;
+        _swipeHint.gameObject.SetActive(_swipeArea.SwipeEnabled);
+        foreach (var dot in _dots) dot.gameObject.SetActive(_swipeArea.SwipeEnabled);
+    }
     private RectTransform _confirmationArea;
     private bool HasRequiredChoice => _tutorialSettings != null && _tutorialSettings.RequiredTotem != null;
 
@@ -323,7 +350,7 @@ public class TotemRewardUI : MonoBehaviour
             _overview.gameObject.SetActive(false);
             _detail.gameObject.SetActive(true);
             _detailGroup.alpha = 1f;
-            _swipeArea.SwipeEnabled = !HasRequiredChoice && AllowDetailSwipe && _choices.Count > 1;
+            RefreshSwipePermission();
             _swipeArea.Threshold = _settings.SwipeThreshold;
             _swipeHint.gameObject.SetActive(_swipeArea.SwipeEnabled);
             foreach (var dot in _dots) dot.gameObject.SetActive(_swipeArea.SwipeEnabled);
@@ -412,7 +439,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnDetailSwipe(int direction)
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _choices.Count < 2) return;
-        if (HasRequiredChoice) return;
+        if (_swipeArea == null || !_swipeArea.SwipeEnabled) return;
         int next = (_detailIndex + direction + _choices.Count) % _choices.Count;
         SwitchDetailAsync(next, direction, _selectionCts.Token).Forget();
     }
@@ -444,6 +471,7 @@ public class TotemRewardUI : MonoBehaviour
     private void BackToOverview()
     {
         if (!_isOpen || _busy || _detail == null || !_detail.gameObject.activeSelf) return;
+        if (HasRequiredChoice && !AllowTutorialBack) return;
         BackToOverviewAsync(_selectionCts.Token).Forget();
     }
 
@@ -478,7 +506,7 @@ public class TotemRewardUI : MonoBehaviour
     private void OnConfirmClicked()
     {
         if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
-        if (HasRequiredChoice && _choices[_detailIndex] != _tutorialSettings.RequiredTotem) return;
+        if (HasRequiredChoice && (!AllowTutorialConfirmation || _choices[_detailIndex] != _tutorialSettings.RequiredTotem)) return;
         _busy = true; // Inventory listeners can synchronously reenter selection or stop the run.
         var token = _selectionCts.Token;
         var data = _choices[_detailIndex];
