@@ -16,7 +16,7 @@ public static class TotemInventoryChecks
     {
         var checks = new List<string>();
         Action<bool, string> check = (ok, label) => { if (!ok) throw new Exception(label); checks.Add(label); };
-        TotemSelectUI selection = null;
+        TotemRewardUI selection = null;
         TotemData[] originalPool = null;
         try
         {
@@ -34,30 +34,27 @@ public static class TotemInventoryChecks
             // Rotation gestures are checked below; enable rotation only on this runtime clone.
             data.isRotatable = true;
             await data.LoadAssetsAsync().AttachExternalCancellation(token);
-            selection = UnityEngine.Object.FindFirstObjectByType<TotemSelectUI>(FindObjectsInactive.Include);
-            var poolField = typeof(TotemSelectUI).GetField("totemPool", Private);
+            selection = UnityEngine.Object.FindFirstObjectByType<TotemRewardUI>(FindObjectsInactive.Include);
+            var poolField = typeof(TotemRewardUI).GetField("_totemPool", Private);
             originalPool = (TotemData[])poolField.GetValue(selection);
             poolField.SetValue(selection, new[] { data });
             int callbacks = 0;
             int emptyBefore = grid.GetEmptyCells().Count;
             selection.Show(() => callbacks++);
-            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
-            var cards = (List<TotemSelectCardUI>)typeof(TotemSelectUI).GetField("_spawnedCards", Private).GetValue(selection);
-            check(cards.Count == 1, "Reward card loaded");
-            typeof(TotemSelectUI).GetMethod("OnCardClicked", Private).Invoke(selection, new object[] { cards[0] });
-            selection.OnConfirmClicked();
+            await UniTask.WaitUntil(() => selection.IsReadyForSelection, cancellationToken: token);
+            check(selection.ChoiceArea.Find("Band_0").gameObject.activeSelf && !selection.ChoiceArea.Find("Band_1").gameObject.activeSelf, "Single reward band loaded");
+            await ConfirmFirstReward(selection, token);
             check(inventory.Items.Count == 1 && grid.GetEmptyCells().Count == emptyBefore, "Reward enters inventory instead of grid");
             check(callbacks == 1, "Reward callback exactly once");
             for (int i = 0; i < 4; i++) check(inventory.TryAdd(data), "Accept stored item " + (i + 2));
             check(!inventory.TryAdd(data) && inventory.Items.Count == 5, "Capacity five enforced");
-            var chosen = (HashSet<int>)typeof(TotemSelectUI).GetField("_chosenTotems", Private).GetValue(selection);
+            var chosen = (HashSet<int>)typeof(TotemRewardUI).GetField("_chosenTotems", Private).GetValue(selection);
             chosen.Clear();
             float beforeFood = currency.Currency;
-            float fallback = (float)typeof(TotemSelectUI).GetField("fallbackFood", Private).GetValue(selection);
+            float fallback = (float)typeof(TotemRewardUI).GetField("_fallbackFood", Private).GetValue(selection);
             selection.Show(() => callbacks++);
-            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
-            typeof(TotemSelectUI).GetMethod("OnCardClicked", Private).Invoke(selection, new object[] { cards[0] });
-            selection.OnConfirmClicked();
+            await UniTask.WaitUntil(() => selection.IsReadyForSelection, cancellationToken: token);
+            await ConfirmFirstReward(selection, token);
             check(inventory.Items.Count == 5 && Mathf.Approximately(currency.Currency - beforeFood, fallback), "Overflow converts once to configured food");
             check(callbacks == 2, "Overflow resumes reward flow once");
             var button = (Button)typeof(TotemInventoryUI).GetField("_toggleButton", Private).GetValue(ui);
@@ -116,7 +113,19 @@ public static class TotemInventoryChecks
         }
         finally
         {
-            if (selection != null && originalPool != null) typeof(TotemSelectUI).GetField("totemPool", Private).SetValue(selection, originalPool);
+            if (selection != null)
+            {
+                selection.CancelPendingRewards();
+                if (originalPool != null) typeof(TotemRewardUI).GetField("_totemPool", Private).SetValue(selection, originalPool);
+            }
         }
+    }
+
+    private static async UniTask ConfirmFirstReward(TotemRewardUI selection, CancellationToken token)
+    {
+        selection.ChoiceArea.Find("Band_0").GetComponent<Button>().onClick.Invoke();
+        await UniTask.WaitUntil(() => selection.IsReadyForConfirmation, cancellationToken: token);
+        selection.ConfirmationArea.GetComponent<Button>().onClick.Invoke();
+        await UniTask.WaitUntil(() => !selection.IsOpen, cancellationToken: token);
     }
 }

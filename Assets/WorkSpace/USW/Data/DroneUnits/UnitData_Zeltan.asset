@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 103d5ad74baa83544a496f59d5842ab7, type: 3}
   m_Name: UnitData_Zeltan
   m_EditorClassIdentifier: 
-  LevelUpPool: {fileID: 0}
-  AlphanSkill: {fileID: 0}
   DebuffBindings:
     _normal:
       _debuffId: 0
@@ -66,6 +64,11 @@ MonoBehaviour:
     legend: 0
   basicAttackData: {fileID: 11400000, guid: babb139463dfc08418bc07df3c073f4c, type: 2}
   skillData: {fileID: 0}
+  _skillDisplayName: "\uC2DD\uB7C9 \uC0DD\uC0B0"
+  Hacking: {fileID: 0}
+  Disigman: {fileID: 0}
+  SelfDestructAttackCoefficient: 0
+  SkillGaugeMode: 0
   foodProduction:
     normal: 4
     rare: 8

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: A_Electromagnetic
   m_EditorClassIdentifier: Assembly-CSharp::DisigmanRailgunSoundVariant
   DisplayName: "A \xB7 \uC804\uC790\uAE30\uD615"
-  Description: "\uC804\uC790\uAE30 \uCDA9\uC804 \uB4A4 \uC9E7\uACE0 \uB2E8\uB2E8\uD55C
-    \uCDA9\uACA9. \uAE30\uBCF8 \uAD8C\uC7A5\uC548."
-  Charge: {fileID: 8300000, guid: 20f6fa9324e6cd642912ef2988d93b8b, type: 3}
-  SkillCharge: {fileID: 0}
-  Basic: {fileID: 8300000, guid: 1c8e32bbb44f7f54e9c7387db23e1d4b, type: 3}
-  Skill: {fileID: 8300000, guid: c48d851a4f4705d4295aace0d48c2ebe, type: 3}
+  Description: "\uC804\uC790\uAE30 A \xB7 \uC9E7\uC740 \uB514\uC9C0\uD138 \uBC1C\uC0AC
+    / \uD328\uD0B7 \uCDA9\uC804\uACFC \uC808\uC81C\uB41C \uAE00\uB9AC\uCE58 \uCC29\uD0C4"
+  Charge: {fileID: 8300000, guid: c02cfd0e780da4047b5b4abba44f543a, type: 3}
+  SkillCharge: {fileID: 8300000, guid: 774fa29884d228a4da85387dc8f7118b, type: 3}
+  Basic: {fileID: 8300000, guid: ea0ee7280c3df58489a8412f52d03ee8, type: 3}
+  Skill: {fileID: 8300000, guid: 4a133248d76e528439c385bbbe196f69, type: 3}

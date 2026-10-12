@@ -268,15 +268,21 @@ public class DroneManager : MonoBehaviour
     /// 3) 빔이 터지는 순간 전체 피해 (연속 사격은 빔 유지 중 Pulse와 함께 추가 피해)
     /// 4) 빔이 사그라든 뒤 원래 위치 귀환 후 궤도 재개
     /// </summary>
-    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default)
+    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default, ChieftainData source = null)
     {
         if (_isRallying || RallyAvailableDroneCount == 0) return;
         _isRallying = true;
         ChiefConvergeBeamFx beam = null;
+        DroneUnit[] snapshot = System.Array.Empty<DroneUnit>();
+        int[] lifetimes = System.Array.Empty<int>();
+        bool IsCurrent(int index) => snapshot[index] != null && snapshot[index].isActiveAndEnabled
+            && snapshot[index].PlacementLifetime == lifetimes[index];
 
         try
         {
-            var snapshot = _drones.FindAll(d => d != null && (d.Owner == null || (!d.Owner.IsStunned && !d.Owner.IsCellSealed))).ToArray();
+            snapshot = _drones.FindAll(d => d != null && (d.Owner == null || (!d.Owner.IsStunned && !d.Owner.IsCellSealed))).ToArray();
+            lifetimes = new int[snapshot.Length];
+            for (int i = 0; i < snapshot.Length; i++) lifetimes[i] = snapshot[i].PlacementLifetime;
 
             // 집결 위치 — 그리드 기하학적 정중앙, 부채꼴은 보스 반대쪽으로 열린다
             Vector3 rallyCenter = _gridManager != null ? _gridManager.GetAbsoluteCenterPosition() : Vector3.zero;
@@ -290,7 +296,7 @@ public class DroneManager : MonoBehaviour
             var moveTasks = new List<UniTask>();
             for (int i = 0; i < snapshot.Length; i++)
             {
-                if (snapshot[i] == null) continue;
+                if (!IsCurrent(i)) continue;
                 moveTasks.Add(snapshot[i].MoveToAsync(RallySlot(i, snapshot.Length, rallyCenter, dir), _rallyMoveDuration, token));
             }
             if (moveTasks.Count > 0)
@@ -305,7 +311,7 @@ public class DroneManager : MonoBehaviour
             var boss = _bossManager?.CurrentBoss;
             if (boss != null && !boss.IsDead)
             {
-                beam = PlayConvergeBeam(snapshot, boss.transform);
+                beam = PlayConvergeBeam(snapshot, boss.transform, lifetimes);
                 if (beam != null)
                 {
                     bool fired = false;
@@ -315,24 +321,24 @@ public class DroneManager : MonoBehaviour
                     finally { beam.Fired -= OnFired; }
                     if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
                 }
-                foreach (var d in snapshot) if (d != null) d.PlayActionFlash();
+                for (int i = 0; i < snapshot.Length; i++) if (IsCurrent(i)) snapshot[i].PlayActionFlash();
 
                 if (boss != null && !boss.IsDead)
                 {
                     decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
-                    if (doubleShot.Count == 0) boss.TakeDamage(baseDamage);
+                    if (doubleShot.Count == 0) boss.TakeDamage(baseDamage, source: source);
                     else
                     {
                         long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
                         long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
-                        boss.ApplyRecordedDamage(shotUnits);
+                        boss.ApplyRecordedDamage(shotUnits, source: source);
                         for (int shot = 1; shot < doubleShot.Count; shot++)
                         {
                             if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
                             if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
                             if (boss == null || boss.IsDead) break;
                             if (beam != null) beam.Pulse();
-                            boss.ApplyRecordedDamage(shotUnits);
+                            boss.ApplyRecordedDamage(shotUnits, source: source);
                         }
                     }
                 }
@@ -349,23 +355,21 @@ public class DroneManager : MonoBehaviour
             var returnTasks = new List<UniTask>();
             for (int i = 0; i < snapshot.Length; i++)
             {
-                if (snapshot[i] != null)
+                if (IsCurrent(i))
                     returnTasks.Add(snapshot[i].ReturnToHomeAsync(_rallyReturnDuration, token));
             }
             if (returnTasks.Count > 0)
                 await UniTask.WhenAll(returnTasks);
 
             // ⑤ 궤도 재개
-            foreach (var d in snapshot)
-            {
-                if (d != null)
-                    d.StartOrbit();
-            }
+            for (int i = 0; i < snapshot.Length; i++) if (IsCurrent(i)) snapshot[i].StartOrbit();
         }
         finally
         {
             _isRallying = false;
             if (beam != null && token.IsCancellationRequested) beam.Stop();
+            if (token.IsCancellationRequested)
+                for (int i = 0; i < snapshot.Length; i++) if (IsCurrent(i)) snapshot[i].ResumeHomeOrbit();
         }
     }
 
@@ -386,7 +390,7 @@ public class DroneManager : MonoBehaviour
         return center + Quaternion.Euler(0f, 0f, angle) * -dir * radius;
     }
 
-    private ChiefConvergeBeamFx PlayConvergeBeam(DroneUnit[] drones, Transform target)
+    private ChiefConvergeBeamFx PlayConvergeBeam(DroneUnit[] drones, Transform target, int[] lifetimes)
     {
         if (_convergeBeamPrefab == null) return null;
         if (_convergeBeam == null)
@@ -396,7 +400,9 @@ public class DroneManager : MonoBehaviour
             _convergeBeam.UseUnscaledTime = false; // 선택지·일시정지 중에는 함께 멈춘다
         }
         var muzzles = new List<Transform>(drones.Length);
-        foreach (var d in drones) if (d != null) muzzles.Add(d.transform);
+        for (int i = 0; i < drones.Length; i++)
+            if (drones[i] != null && drones[i].isActiveAndEnabled && drones[i].PlacementLifetime == lifetimes[i])
+                muzzles.Add(drones[i].transform);
         _convergeBeam.Play(muzzles, target);
         return _convergeBeam;
     }

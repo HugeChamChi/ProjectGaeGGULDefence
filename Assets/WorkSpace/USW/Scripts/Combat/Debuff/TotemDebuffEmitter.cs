@@ -32,13 +32,14 @@ public sealed class TotemDebuffEmitter : MonoBehaviour
         _elapsed %= _source.Data.DebuffFireInterval;
         if (!_source.TryGetDebuffBinding(out var binding) || binding.Trigger != DebuffTrigger.ProjectileHit) return;
         int sourceId = _source.GetInstanceID();
+        var sourceData = _source.DamageSourceData;
         decimal impact = _source.Data.DebuffImpactDamage * (decimal)DamageCalculator.Spread(_combatSettings?.DamageVariance ?? 0f);
         Vector3 hitPosition = target.transform.position;
         _projectiles.Launch(transform.position, hitPosition, _source.Data.DebuffProjectile, () =>
         {
             // 발사 당시 대상 유지. 제거된 보스/다음 웨이브로 피해를 넘기지 않는다.
             if (target != null && !target.IsDead)
-                target.ApplyProjectileImpact(() => target.ApplyDebuffImpact(binding, sourceId, impact, hitPosition));
+                target.ApplyProjectileImpact(() => target.ApplyDebuffImpact(binding, sourceId, impact, hitPosition, sourceData));
         });
     }
 }

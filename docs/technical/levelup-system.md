@@ -24,7 +24,7 @@ Composition.Feedback는 기능 소유자·행·부족·실제 소유 등급 조�
 
 [UI_Peekthrough](../../Assets/WorkSpace/HSD/Scripts/UI/Utils/UI_Peekthrough.cs)는 빈 곳/카드 홀드 시 필드를 보이게 하고 선택 입력을 잠근다. 복귀 페이드, 모든 터치 해제 및 해제 프레임이 지나야 새 선택을 받는다. 투명한 배경 Graphic의 raycast가 홀드 입력 경로이므로 등급 연출에서 오브젝트를 꺼 버리면 안 된다. 투명도만 바뀐 상태와 선택 가능 상태는 별개다.
 
-보스 처치 [TotemRewardUI](../../Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardUI.cs)는 독립 보상 화면이다. LevelUpUI/구 TotemSelectUI의 UI_Peekthrough와 동일한 기능이 있다고 가정하지 않는다. 세 화면의 실제 연결·상호작용을 구분한다. 보상 세션 취소는 큐·콜백·트윈을 함께 정리한다.
+보스 처치 [TotemRewardUI](../../Assets/WorkSpace/USW/Scripts/IngameUI/TotemReward/TotemRewardUI.cs)는 독립 보상 화면이다. LevelUpUI의 UI_Peekthrough와 동일한 기능이 있다고 가정하지 않는다. 두 화면의 실제 연결·상호작용을 구분한다. 보상 세션 취소는 큐·콜백·트윈을 함께 정리한다. 구형 TotemSelectUI 계열과 설치기 폴백은 2026-10-12 삭제했다.
 
 2026-10-11 토템 보상 등장에는 `FxLab_TotemChoice`의 **01 DIAGONAL SLASH**를 적용했다. 위·아래 띠는 왼쪽 아래에서, 가운데는 오른쪽 위에서 진입한다. 이동 0.19초·자리별 지연 0.095초와 짧은 반동·아이콘 확대·속도선은 게임 정지 중에도 실제 시간으로 재생된다. 모든 등장 동작이 끝난 뒤 선택을 받으며, 취소 시 해당 세션 트윈을 종료한다. 개요는 간단히만, 상세는 공용 `DescriptionToggleView` 스위치로 전환한다. 토템은 상세를 새로 열 때마다 간단히로 시작하며 레벨업 저장 설정과 공유하지 않는다. 긴 상세 문구는 범위 그림 위의 가용 높이에 맞춘다.
 

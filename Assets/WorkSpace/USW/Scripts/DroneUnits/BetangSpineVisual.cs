@@ -4,7 +4,7 @@ using Spine;
 using Spine.Unity;
 using UnityEngine;
 
-/// <summary>베탕의 등급별 팔 전개와 자폭 스킬 모션만 재생한다. 전투 효과와 발사 시점은 기존 유닛이 소유한다.</summary>
+/// <summary>베탕의 등급별 팔 전개와 스킬 모션을 재생하고 저작된 Spine 발사 신호를 유닛에 전달한다.</summary>
 [DefaultExecutionOrder(200)]
 public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
 {
@@ -13,6 +13,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
     [SerializeField] private DragHandler _drag;
     [SerializeField] private string _idle = "idle";
     [SerializeField] private string _skill = "skill";
+    [SerializeField] private SpineSkillLaunchEvent _skillLaunchEvent;
     [SerializeField, Min(0f)] private float _skillMixSeconds = 0.08f;
     [SerializeField] private string[] _tierAttacks = { "attack_01", "attack_02", "attack_03", "attack_04" };
     private Drone_Betan _unit;
@@ -25,6 +26,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
     private float _authoredTimeScale;
     private Spine.Skeleton _cachedSkeleton;
     private ArmSlot[] _armSlots;
+    private TrackEntry _activeSkillEntry;
 
     private sealed class ArmSlot
     {
@@ -36,6 +38,9 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
 
     /// <summary>외형 확인 및 미리보기에서 사용하는 Spine 인스턴스.</summary>
     public SkeletonAnimation Skeleton => _skeleton;
+    /// <summary>현재 스킬 트랙에 저작된 발사 신호가 있어 유닛이 발사를 예약할 수 있는지.</summary>
+    public bool HasSkillLaunchEvent => _activeSkillEntry != null && _skillLaunchEvent != null
+        && _skillLaunchEvent.ContainsEvent(_activeSkillEntry.Animation);
 
     private void Awake()
     {
@@ -171,7 +176,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         if (Has(_idle)) _skeleton.AnimationState.SetAnimation(0, _idle, true);
     }
 
-    /// <summary>원본 스킬의 팔 회수·버튼·재전개를 한 번 재생한 뒤 등급별 공격으로 복귀한다. 자폭 발사는 기존 유닛이 소유한다.</summary>
+    /// <summary>원본 스킬을 한 번 재생하고 등급별 공격으로 복귀한다. 저작된 버튼 이벤트가 유닛의 자폭 발사를 요청한다.</summary>
     public void PlaySkill()
     {
         if (_skeleton == null || _skeleton.AnimationState == null || !Has(_skill) || (_drag != null && _drag.IsDragging)) return;
@@ -179,6 +184,10 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         string attack = AttackName(_tierIndex);
         var state = _skeleton.AnimationState;
         var skill = state.SetAnimation(0, _skill, false);
+        _activeSkillEntry = skill;
+        skill.Event += OnSkillEvent;
+        skill.Interrupt += OnSkillInterrupted;
+        skill.End += OnSkillInterrupted;
         skill.MixDuration = _skillMixSeconds;
         // skill already folds and deploys the arms. Repeating end/start reverses
         // that motion. Finish its full timeline, then blend directly to the loop.
@@ -189,6 +198,22 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
             loop.MixDuration = _skillMixSeconds;
         }
         _skillSequence = true;
+    }
+
+    private void OnSkillEvent(TrackEntry entry, Spine.Event signal)
+    {
+        if (entry != _activeSkillEntry || _skillLaunchEvent == null || signal.Data.Name != _skillLaunchEvent.EventName) return;
+        _unit?.LaunchPendingSkillBombs();
+    }
+
+    private void OnSkillInterrupted(TrackEntry entry)
+    {
+        entry.Event -= OnSkillEvent;
+        entry.Interrupt -= OnSkillInterrupted;
+        entry.End -= OnSkillInterrupted;
+        if (entry != _activeSkillEntry) return;
+        _activeSkillEntry = null;
+        _unit?.CancelPendingSkillBombs();
     }
 
     /// <inheritdoc />

@@ -15,6 +15,10 @@ public class GridCellView : MonoBehaviour
     [SerializeField] private SpriteRenderer cellRenderer;
     [Header("Totem Range Preview")]
     [SerializeField] private Material _effectPreviewMaterial;
+    [Header("Sealed Grid — B color / D density")]
+    [SerializeField] private Material _sealedMaterial;
+    [SerializeField] private SealedGridShaderVariant _sealedStyle;
+    private SealedGridVisual _sealedVisual;
     [Header("Unit Drop Preview")]
     [SerializeField] private Material _unitDropPreviewMaterial;
     [SerializeField] private Color _unitDropPreviewColor = new Color(0.2f, 0.9f, 1f, 0.85f);
@@ -85,6 +89,7 @@ public class GridCellView : MonoBehaviour
             _model.OnStateChanged -= RefreshColor;
 
         _model = model;
+        _sealedVisual = GetComponent<SealedGridVisual>() ?? gameObject.AddComponent<SealedGridVisual>();
         _model.OnStateChanged += RefreshColor;
 
         RefreshColor();
@@ -100,6 +105,15 @@ public class GridCellView : MonoBehaviour
     private void RefreshColor()
     {
         if (cellRenderer == null || _model == null) return;
+
+        _sealedVisual?.Refresh(cellRenderer, _sealedStyle, _model.IsSealed && _sealedMaterial != null);
+        if (_model.IsSealed && _sealedMaterial != null)
+        {
+            cellRenderer.sharedMaterial = _sealedMaterial;
+            cellRenderer.SetPropertyBlock(_originalProperties);
+            cellRenderer.color = Color.white;
+            return;
+        }
 
         if (_model.IsUnitDropPreviewed && _model.IsAvailable)
         {

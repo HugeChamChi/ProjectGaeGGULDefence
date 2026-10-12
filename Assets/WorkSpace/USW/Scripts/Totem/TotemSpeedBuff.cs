@@ -23,14 +23,14 @@ public class TotemSpeedBuff : TotemBase
             Debug.LogWarning($"TotemSpeedBuff({name}): speedBuffAmount = 0. TotemData를 확인하세요.");
             return;
         }
-        _totemBuffManager.AddSpeedBuff(amount);
+        _totemBuffManager.AddSpeedBuff(amount, this);
     }
 
     protected override void RemoveBuff()
     {
         float amount = totemData.GetSimpleAmount(StatKind.Speed);
         if (amount <= 0f) return;
-        _totemBuffManager.RemoveSpeedBuff(amount);
+        _totemBuffManager.RemoveSpeedBuff(amount, this);
     }
 
     public override List<GridCell> GetAffectedCells()

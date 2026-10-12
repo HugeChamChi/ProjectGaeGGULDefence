@@ -55,6 +55,7 @@ public class SelfDestructDrone : MonoBehaviour
     private Tween _tintTween;
     private Vector3? _previewTarget;
     private GameObject _previewExplosion;
+    private UnitData _damageSource;
 
     private void Awake()
     {
@@ -66,12 +67,13 @@ public class SelfDestructDrone : MonoBehaviour
     }
 
     /// <summary>Drone_Betan.SpawnSelfDestructDrones() 에서 호출 — 차징 후 보스를 향해 돌진한다.</summary>
-    public void Initialize(int damage, bool critical, BossBase target)
+    public void Initialize(int damage, bool critical, BossBase target, UnitData source = null)
     {
         StopSequence();
         _cts = new CancellationTokenSource();
         _previewTarget = null;
         _previewExplosion = null;
+        _damageSource = source;
         SequenceAsync(new Shot(damage, critical, target), _cts.Token).Forget();
     }
 
@@ -247,7 +249,7 @@ public class SelfDestructDrone : MonoBehaviour
         }
         if (boss != null && !boss.IsDead)
             boss.ApplyProjectileImpact(() => boss.TakeDamage(shot.Damage, target,
-                shot.Critical ? BossDamageKind.Critical : BossDamageKind.Normal));
+                shot.Critical ? BossDamageKind.Critical : BossDamageKind.Normal, _damageSource));
 
         var explosionPrefab = _previewExplosion != null ? _previewExplosion : _explosionPrefab;
         if (explosionPrefab != null)

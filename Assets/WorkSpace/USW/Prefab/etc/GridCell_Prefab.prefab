@@ -120,6 +120,11 @@ MonoBehaviour:
   cellRenderer: {fileID: 8616679984627637759}
   _effectPreviewMaterial: {fileID: 2100000, guid: 03f24346d089d074c835ee0808243de1,
     type: 2}
+  _sealedMaterial: {fileID: 2100000, guid: 1838dc3e4509a5f4f974bad10ffb00ad, type: 2}
+  _sealedStyle: {fileID: 11400000, guid: 7a3530a2db45add48a38937c994c2710, type: 2}
   _unitDropPreviewMaterial: {fileID: 2100000, guid: 0676dd65a61f90840b9a539a408ab8cb,
     type: 2}
   _unitDropPreviewColor: {r: 0.2, g: 0.9, b: 1, a: 0.85}
+  _unitDropMergeFrameColor: {r: 1, g: 0.8, b: 0.15, a: 1}
+  _unitDropMergeCornerColor: {r: 1, g: 0.95, b: 0.6, a: 1}
+  _bossTelegraphColor: {r: 1, g: 0, b: 0, a: 1}

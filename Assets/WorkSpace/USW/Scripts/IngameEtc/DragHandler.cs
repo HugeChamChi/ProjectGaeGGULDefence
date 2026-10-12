@@ -340,7 +340,7 @@ public class DragHandler : MonoBehaviour, IDraggable
             
             _originCell = cell;
 
-            _unit.OnRemoved();
+            _unit.OnRemoved(preserveBuffVisual: true);
             _unit.OnPlaced(_currencyManager, _bossManager?.CurrentBoss, cell);
         }
 

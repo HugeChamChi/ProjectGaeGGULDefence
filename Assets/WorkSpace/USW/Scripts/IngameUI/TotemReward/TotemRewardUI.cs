@@ -11,13 +11,13 @@ using GaeGGUL.UI;
 using GaeGGUL.UI.Totem;
 
 /// <summary>
-/// 보스 처치 토템 보상 화면 (design/test_1~4 스케치 기반, TotemSelectUI 대체 후보).
+/// 보스 처치 토템 보상 화면 (design/test_1~4 스케치 기반).
 ///
 /// 흐름: 화면 어두워짐 → 사선 띠 3개가 좌우에서 번갈아 등장(개요) → 띠 터치 → 상세
 ///       (큰 아이콘 · 이름 · 설명 · 미니 그리드 범위 · 확정) → 확정 시 인벤토리에 넣고 닫힘.
 ///       상세에서 확정 버튼이 아닌 곳을 누르면 개요로 돌아간다. 시간 제한과 자동 선택은 없다.
 ///
-/// 열려 있는 동안 게임 속도 0 · 보스 타이머 정지 · 유닛 루프 정지 (TotemSelectUI와 동일).
+/// 열려 있는 동안 게임 속도 0 · 보스 타이머 정지 · 유닛 루프 정지.
 /// 인벤토리가 가득 차면 fallbackFood 만큼 식량으로 바뀐다 (안내는 튜토리얼 담당).
 /// 화면 요소는 처음 열 때 코드로 만든다 — 이 컴포넌트가 붙은 오브젝트에 Canvas가 있어야 한다.
 /// 모든 연출은 실제 시간(SetUpdate(true))으로 재생된다.
@@ -68,6 +68,8 @@ public class TotemRewardUI : MonoBehaviour
     [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] _totemPool;
+    /// <summary>Authored reward pool, also used by the debug menu's totem catalog.</summary>
+    public IReadOnlyList<TotemData> TotemPool => _totemPool;
     [Header("인벤토리 가득 찼을 때 대체 식량")]
     [SerializeField] private float _fallbackFood = 500f;
 
@@ -79,6 +81,8 @@ public class TotemRewardUI : MonoBehaviour
     public bool UseTierColors { get; set; }
     /// <summary>보상 화면이 열려 있는지.</summary>
     public bool IsOpen => _isOpen;
+    /// <summary>Raised for every reward opening, including queued and tutorial rewards.</summary>
+    public event Action Opening;
     /// <summary>True when the overview has finished its entrance.</summary>
     public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeSelf;
     /// <summary>Overview target for a non-interactive tutorial highlight.</summary>
@@ -95,6 +99,7 @@ public class TotemRewardUI : MonoBehaviour
         public RectTransform Root;
         public UIPolygonGraphic Shape;
         public Image Icon;
+        public TotemRotateBadgeView RotateBadge;
         public TextMeshProUGUI Name;
         public GameObject DescriptionPanel;
         public TextMeshProUGUI Description;
@@ -189,6 +194,7 @@ public class TotemRewardUI : MonoBehaviour
         _isOpen = true;
         _busy = true;
         _onChoiceMade = onChoiceMade;
+        Opening?.Invoke();
         PauseGame(token);
 
         try
@@ -280,6 +286,7 @@ public class TotemRewardUI : MonoBehaviour
             band.Shape.color = BandColor(i);
             band.Icon.sprite = data.icon;
             band.Icon.enabled = data.icon != null;
+            band.RotateBadge?.SetData(data);
             band.Name.text = data.totemName;
             band.Description.text = data.GetDisplayDescription(detailed: false);
             band.DescriptionPanel.SetActive(ShowDescriptionOnOverview && !string.IsNullOrWhiteSpace(band.Description.text));
@@ -657,6 +664,8 @@ public class TotemRewardUI : MonoBehaviour
         band.Icon = NewImage("Icon", band.Root, Color.white);
         band.Icon.preserveAspect = true;
         band.Icon.raycastTarget = false;
+        band.RotateBadge = TotemRotateBadgeView.Create(band.Icon.rectTransform, _settings.RotateBadge,
+            _settings.RotateBadge != null ? _settings.RotateBadge.OverviewDiameter : 0f);
         PlaceAt(band.Icon.rectTransform, new Vector2(iconX * size.x, BandMidY(points, iconX) * size.y),
             Vector2.one * _settings.OverviewIconSize);
 
@@ -874,6 +883,7 @@ public class TotemRewardUI : MonoBehaviour
 
         _rangeGrid = holder.gameObject.AddComponent<UI_TotemRangeGrid>();
         _rangeGrid.Configure(_settings.RangeDisplaySettings, _settings.RangeCellPrefab, layout);
+        _rangeGrid.ConfigureRotateBadge(_settings.RotateBadge, holder, detail: true);
         _rangeGrid.BlinkRangeCells = true; // 적용 범위 칸 깜빡임으로 범위 강조
     }
 

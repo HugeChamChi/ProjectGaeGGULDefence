@@ -594,17 +594,17 @@ MonoBehaviour:
     Accent: {r: 1, g: 0.78, b: 0.7, a: 1}
     Backdrop: {r: 0.14, g: 0.02, b: 0.04, a: 1}
     BackdropAlpha: 1
-    GlowPeak: 1
-    GlowRest: 0.5
-    RayPeak: 1
-    RayRest: 0.55
-    FlashScale: 1.3
+    GlowPeak: 0.8
+    GlowRest: 0.4
+    RayPeak: 0.9
+    RayRest: 0.45
+    FlashScale: 1
     Bubble: 1
-    Bokeh: 4
-    GatherRate: 120
-    Columns: 1
+    Bokeh: 3
+    GatherRate: 90
+    Columns: 0
     UpgradeFromEpic: 0
-    UpgradeChance: 0.1
+    UpgradeChance: 0
     CardsDelayAfterBurst: 0.1
   _gatherDuration: 0.3
   _upgradeDelay: 0.2

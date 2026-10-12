@@ -94,6 +94,9 @@ public class ResultScreenView : MonoBehaviour
     /// <summary>광고를 보고 2배 보상을 받는 요청. 실제 광고 시청과 지급은 호출자가 처리한다.</summary>
     public event Action AdRewardRequested;
 
+    /// <summary>DealGraphIcon에서 이번 런의 최종 딜표를 요청한다.</summary>
+    public event Action DamageChartRequested;
+
     /// <summary>timeScale 무시 여부. 실험실 고정 프레임 캡처 중에만 false.</summary>
     public bool UseUnscaledTime
     {
@@ -273,6 +276,13 @@ public class ResultScreenView : MonoBehaviour
     private void ShowRunStats()
     {
         if (_data == null || _statsButton == null) return;
+        if (DamageChartRequested != null)
+        {
+            HideBuildPopupImmediately();
+            DamageChartRequested.Invoke();
+            return;
+        }
+        // 독립 결과창 실험실에는 전투 집계가 없으므로 기존 샘플 기록을 표시한다.
         int seconds = Mathf.Max(0, Mathf.FloorToInt(_data.SurvivalSeconds));
         ShowBuildPopup(new ResultBuildChoice
         {

@@ -271,7 +271,8 @@ public static class StatBuffShapes
             }
         }
         tex.SetPixels32(px);
-        tex.Apply(false, true);
+        // 씬 공용 아틀라스가 원본 픽셀을 그대로 묶을 수 있도록 작은 도형 캐시는 읽기 가능하게 둔다.
+        tex.Apply(false, false);
         var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, pivotY), Mathf.Max(w, h));
         sprite.hideFlags = HideFlags.HideAndDontSave;
         return sprite;

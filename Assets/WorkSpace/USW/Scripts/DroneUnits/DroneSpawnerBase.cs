@@ -4,7 +4,7 @@ using VContainer;
 
 /// <summary>
 /// 드론을 소환하는 유닛들의 공통 부모 클래스.
-/// 드론 소환, SO 슬롯 배치(미지정 시 V자 대형), 회수(풀링) 로직을 통합 관리합니다.
+/// 드론 소환, SO 궤도/슬롯 배치(미지정 시 V자 대형), 회수(풀링) 로직을 통합 관리합니다.
 /// </summary>
 public abstract class DroneSpawnerBase : UnitBase
 {
@@ -107,6 +107,9 @@ public abstract class DroneSpawnerBase : UnitBase
         {
             SpawnOneDrone();
         }
+        float orbitSeconds = _ownedDrones.Count > 0 ? _ownedDrones[0].OrbitSeconds : 0f;
+        for (int i = 0; i < _ownedDrones.Count; i++)
+            _ownedDrones[i]?.ConfigureOrbitSlot(i, _ownedDrones.Count, orbitSeconds);
     }
 
     protected void SpawnOneDrone()
@@ -115,12 +118,13 @@ public abstract class DroneSpawnerBase : UnitBase
         if (_ownedDrones.Count >= CombatDroneCapacity) return;
 
         var slots  = SlotOffsets;
-        var offset = _ownedDrones.Count < slots.Length ? slots[_ownedDrones.Count] : slots[0];
+        var offset = slots.Length > 0 ? slots[_ownedDrones.Count < slots.Length ? _ownedDrones.Count : 0] : Vector2.zero;
         
         var drone = CreateCombatDrone();
         if (drone != null)
         {
-            drone.Initialize(this, offset);
+            float orbitSeconds = _ownedDrones.Count > 0 ? _ownedDrones[0].OrbitSeconds : 0f;
+            drone.Initialize(this, offset, _formation, _ownedDrones.Count, CombatDroneCapacity, orbitSeconds);
 
             _ownedDrones.Add(drone);
         }

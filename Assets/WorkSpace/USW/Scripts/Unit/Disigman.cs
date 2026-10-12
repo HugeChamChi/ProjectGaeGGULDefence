@@ -64,7 +64,7 @@ public sealed class Disigman : UnitBase
         if (!CanUseSkill || !CanAct || !IsSkillChargeReady(0f, 0f)
             || target == null || target.IsDead || _dependencies?.Timer == null) return false;
         _chargedAttacks = 0;
-        // Tagged as a hack so the timer shows the glitch presentation (signal leaves from this unit).
+        // Commit immediately. The scene presentation follows the skill's actual impact and shard arrival.
         _dependencies.Timer.AddTime(SecondsRecovered, TimeAddSource.Hack, transform.position);
         return true;
     }

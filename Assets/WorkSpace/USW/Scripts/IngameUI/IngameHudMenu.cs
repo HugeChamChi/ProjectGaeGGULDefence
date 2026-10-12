@@ -35,7 +35,7 @@ public sealed class IngameHudMenu : MonoBehaviour
     public bool IsExpanded => _expanded;
     /// <summary>Connection point for the future acquired-selection list.</summary>
     public UnityEvent SelectionListRequested => _onSelectionListRequested;
-    /// <summary>Connection point for the future damage chart.</summary>
+    /// <summary>실제 누적 피해 딜표를 여는 연결점.</summary>
     public UnityEvent DamageChartRequested => _onDamageChartRequested;
 
     private void Awake()

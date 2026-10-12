@@ -42,20 +42,20 @@ MonoBehaviour:
   totemType: 0
   tier: 0
   totemName: "TD1011(\uBBF8\uC815)"
-  iconAddress: TD_1009
+  iconAddress: SPR_TD1011
   prefabAddress: TD1011
   rotationSpriteAddresses:
-  - TD_1009
-  - TD_1009
-  - TD_1009
-  - TD_1009
-  icon: {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  - SPR_TD1011
+  - SPR_TD1011
+  - SPR_TD1011
+  - SPR_TD1011
+  icon: {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
   prefab: {fileID: 4482161701608774424, guid: 3c27ce4f4c7a6cf418d3da3e87e41ba0, type: 3}
   rotationSprites:
-  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
-  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
-  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
-  - {fileID: 21300000, guid: 0d15eeda8f5179e4899772cf440c6ca2, type: 3}
+  - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
+  - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
+  - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
+  - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
   description: "\uC704 3\uCE78\uC740 \uACF5\uACA9\uD560 \uC218 \uC5C6\uACE0, \uC544\uB798
     1\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 40% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
   DetailedDescription: "\uC704 3\uCE78\uC740 \uACF5\uACA9\uD560 \uC218 \uC5C6\uACE0,

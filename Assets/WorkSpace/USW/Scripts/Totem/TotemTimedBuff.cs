@@ -68,8 +68,8 @@ public class TotemTimedBuff : TotemBase
         _burstActive = true;
         float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
         float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
-        if (attackAmount > 0f) _totemBuffManager.AddAttackBuff(attackAmount);
-        if (speedAmount  > 0f) _totemBuffManager.AddSpeedBuff(speedAmount);
+        if (attackAmount > 0f) _totemBuffManager.AddAttackBuff(attackAmount, this);
+        if (speedAmount  > 0f) _totemBuffManager.AddSpeedBuff(speedAmount, this);
     }
 
     private void EndBurst()
@@ -78,8 +78,8 @@ public class TotemTimedBuff : TotemBase
         _burstActive = false;
         float attackAmount = totemData.GetSimpleAmount(StatKind.AttackPercent);
         float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
-        if (attackAmount > 0f) _totemBuffManager.RemoveAttackBuff(attackAmount);
-        if (speedAmount  > 0f) _totemBuffManager.RemoveSpeedBuff(speedAmount);
+        if (attackAmount > 0f) _totemBuffManager.RemoveAttackBuff(attackAmount, this);
+        if (speedAmount  > 0f) _totemBuffManager.RemoveSpeedBuff(speedAmount, this);
     }
 
     public override List<GridCell> GetAffectedCells()

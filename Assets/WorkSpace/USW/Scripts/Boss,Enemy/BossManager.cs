@@ -27,6 +27,7 @@ public class BossManager : MonoBehaviour
     [Inject] private TimerController _combatTimer;
     [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private ResearchRunBonuses _research;
+    [Inject] private DamageContributionLedger _damageLedger;
 
     [SerializeField] private GameObject bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]
@@ -90,6 +91,7 @@ public class BossManager : MonoBehaviour
         double defense = runtime?.Defense ?? (useSheet ? _gameDataManager.GetBossDefense(100 + _waveManager.CurrentWave, entry.BaseDefense) : entry.BaseDefense);
         float expMultiplier = useSheet ? _gameDataManager.GetExpMultiplierForRound(100 + _waveManager.CurrentWave) : entry.ExpMultiplier;
         boss.ConfigureDebuffs(_debuffCatalog, _debuffSettings, _gameManager, defense, _combatTimer, _fieldPause, _research);
+        boss.ConfigureDamageLedger(_damageLedger);
         boss.Init(hp);
         // MaxHp has now been quantized by CombatHealth. Total EXP is independent of HP growth.
         boss.ExpMultiplier = runtime.HasValue ? runtime.Value.ExpReward / (float)boss.MaxHp : expMultiplier;

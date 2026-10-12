@@ -19,6 +19,8 @@ MonoBehaviour:
   _bossClearNoticeDelaySeconds: 0.4
   bossSpawnDelaySeconds: 0
   cellSize: 1.5
+  _totemRewardCycleLength: 10
+  _totemRewardPositions: 03000000060000000a000000
   startingFood: 10000
   placeCost: 10
   baseCritChance: 0

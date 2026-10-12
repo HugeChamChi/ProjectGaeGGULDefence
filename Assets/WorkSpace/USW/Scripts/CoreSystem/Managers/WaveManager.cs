@@ -242,9 +242,29 @@ public class WaveManager : MonoBehaviour
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         _phase = EncounterPhase.AwaitingReward;
+        if (!GrantsTotemReward(round, bossIndex))
+        {
+            OnRewardDone(runId, round, bossIndex);
+            return;
+        }
         if (OnTotemSelectionRequested == null)
         { _run.Fail("WaveManager: no totem reward UI is connected."); return; }
         OnTotemSelectionRequested.Invoke(() => OnRewardDone(runId, round, bossIndex));
+    }
+
+    /// <summary>어려운 보스 구간 완료 시 한 번만 토템을 지급한다. 일반 구간도 패널티/다음 웨이브 처리는 유지한다.</summary>
+    public bool GrantsTotemReward(int round, int bossIndex)
+    {
+        if (round < 1 || bossIndex != _pendingBosses.Count - 1) return false;
+        if (_endlessMode != null)
+        {
+            int position = (round - 1) % _endlessMode.CycleLength + 1;
+            foreach (var slot in _endlessMode.Slots)
+                if (slot.Position == position) return slot.Role == EndlessBossRole.Hard;
+            return false;
+        }
+        var gameConfig = config != null ? config : _gameManager?.Config;
+        return gameConfig != null && gameConfig.GrantsFiniteTotemReward(round);
     }
 
     private void OnRewardDone(long runId, int round, int bossIndex)

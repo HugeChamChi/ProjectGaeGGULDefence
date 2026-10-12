@@ -16,4 +16,12 @@ public sealed class DamageChartLabSettings : ScriptableObject
     [Min(0f)] public float WarmupSeconds = 12f;
     /// <summary>순위 역전을 보여 주기 위한 추가 예시 피해량.</summary>
     [Min(1f)] public float BurstDamage = 42000f;
+    /// <summary>실제 딜표 패널의 화면 기준 최소 앵커.</summary>
+    public Vector2 RuntimePanelMin = new Vector2(.03f, .18f);
+    /// <summary>실제 딜표 패널의 화면 기준 최대 앵커.</summary>
+    public Vector2 RuntimePanelMax = new Vector2(.97f, .78f);
+    /// <summary>스크롤 없이 표시할 행 수.</summary>
+    [Min(1)] public int VisibleRows = 6;
+    /// <summary>실험실 행 대비 실게임 글자 배율.</summary>
+    [Min(.1f)] public float RuntimeTextScale = 1.08f;
 }

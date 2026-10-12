@@ -16,7 +16,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         if (!TryGetDebuffBinding(out var binding) || binding.Trigger != DebuffTrigger.SkillActivated) return false;
         var target = _deps?.BossManager?.CurrentBoss;
-        return target != null && target.TryApplyDebuff(binding, GetInstanceID());
+        return target != null && target.TryApplyDebuff(binding, GetInstanceID(), source: unitData);
     }
     /// <summary>스킬 디버프가 적용될 현재 보스.</summary>
     protected BossBase SkillDebuffTarget => _deps?.BossManager?.CurrentBoss;
@@ -130,6 +130,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void ClearStun() => _stun?.Clear();
     private BuffController _buff;
     private UnitDependencies _deps;
+    private UnitBuffVisualController _buffVisual;
     /// <summary>팩토리가 주입한 런별 드론 선택지 상태.</summary>
     public IDroneEffectReader DroneEffects => _deps?.DroneEffects;
     /// <summary>현재 팩토리가 연결한 효과 변경 알림.</summary>
@@ -181,6 +182,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _buff.Init(this, deps);
         deps.BuffManager?.ApplyActiveGlobalBuffsTo(this);
         deps.GridManager?.RegisterUnitStatus(this);
+        _buffVisual = gameObject.GetComponent<UnitBuffVisualController>() ?? gameObject.AddComponent<UnitBuffVisualController>();
+        _buffVisual.Init(this, deps);
         OnInitialized(deps);
     }
 
@@ -202,6 +205,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
         Boss = boss;
         currentCell = cell;
+        _buffVisual?.Placed();
         // 첫 공격/스킬 전에 새 셀의 토템 효과와 공격 구독을 확정한다.
         _deps?.TotemBuffManager?.RebuildCellBuffFlags();
         ApplyFacingByCell();
@@ -220,8 +224,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public void OnPlaced(CurrencyManager currency, BossBase boss) => OnPlaced(currency, boss, null);
 
-    public void OnRemoved(bool preserveStun = false)
+    public void OnRemoved(bool preserveStun = false, bool preserveBuffVisual = false)
     {
+        _buffVisual?.Removed(preserveBuffVisual);
         if (!preserveStun) ClearStun();
         OnUnitRemoved();
         _combat.StopLoops();

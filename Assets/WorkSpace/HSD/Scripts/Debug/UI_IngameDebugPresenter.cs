@@ -73,11 +73,13 @@ namespace HSD.InGameDebug
             }
         }
 
-        public async void OpenAddView()
+        /// <summary>Loads the current reward catalog and populates the debug add menu.</summary>
+        public async UniTaskVoid OpenAddView()
         {
+            if (_view == null) return;
             _addViewCts?.Cancel();
             _addViewCts?.Dispose();
-            _addViewCts = new CancellationTokenSource();
+            _addViewCts = CancellationTokenSource.CreateLinkedTokenSource(_view.GetCancellationTokenOnDestroy());
             var token = _addViewCts.Token;
 
             if (_view == null) return;
@@ -87,13 +89,15 @@ namespace HSD.InGameDebug
 
             if (_currentTab == DebugTabType.Totem)
             {
-                var pool = UnityEngine.Object.FindFirstObjectByType<TotemSelectUI>(FindObjectsInactive.Include)?.TotemPool;
+                var pool = UnityEngine.Object.FindFirstObjectByType<TotemRewardUI>(FindObjectsInactive.Include)?.TotemPool;
                 if (pool != null)
                 {
                     foreach (var data in pool)
                     {
                         if (data == null) continue;
                         if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
+                        bool loadCanceled = await data.LoadAssetsAsync().AttachExternalCancellation(token).SuppressCancellationThrow();
+                        if (loadCanceled || _view == null || _view.gameObject == null) break;
                         _view.AddAddItem(data, data.totemName, data.description, data.icon, "+", OnAddTotem);
                         // 최적화: 매 프레임마다 일정 개수만 생성하여 렉 방지
                         bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();

@@ -72,4 +72,28 @@ public sealed class DroneHackingData : ScriptableObject
     [Min(.01f)] public float MarkGlowSize = .75f;
     /// <summary>후광 중심의 흰 코어 지름(월드 단위).</summary>
     [Min(.01f)] public float MarkCoreSize = .22f;
+    /// <summary>스프라이트 표식의 삼각형 중심 방향 여유 비율. 투명 실루엣 경계에서 코어를 안쪽으로 둔다.</summary>
+    [Range(0f, 1f)] public float SpriteMarkSurfaceInset = .2f;
+    [System.Serializable]
+    private struct SpriteMarkAnchors
+    {
+        public Sprite Sprite;
+        public Vector2[] Points;
+    }
+    [SerializeField] private SpriteMarkAnchors[] _spriteMarkAnchors = System.Array.Empty<SpriteMarkAnchors>();
+
+    /// <summary>저작된 스프라이트 몸 표식 좌표를 로컬 좌표로 반환한다. UV는 Sprite rect 기준이다.</summary>
+    public bool TryGetSpriteMarkPoint(Sprite sprite, int index, out Vector2 point)
+    {
+        point = Vector2.zero;
+        if (sprite == null || _spriteMarkAnchors == null) return false;
+        foreach (var anchors in _spriteMarkAnchors)
+        {
+            if (anchors.Sprite != sprite || anchors.Points == null || index < 0 || index >= anchors.Points.Length) continue;
+            Vector2 pixel = Vector2.Scale(anchors.Points[index], sprite.rect.size);
+            point = (pixel - sprite.pivot) / sprite.pixelsPerUnit;
+            return true;
+        }
+        return false;
+    }
 }

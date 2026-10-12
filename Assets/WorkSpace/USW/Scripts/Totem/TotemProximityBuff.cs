@@ -27,7 +27,7 @@ public class TotemProximityBuff : TotemBase
         UnitBase.OnAnyUnitChanged -= Recalculate;
 
         if (_appliedAmount > 0f)
-            _totemBuffManager.RemoveAttackBuff(_appliedAmount);
+            _totemBuffManager.RemoveAttackBuff(_appliedAmount, this);
 
         _appliedAmount = 0f;
     }
@@ -44,9 +44,9 @@ public class TotemProximityBuff : TotemBase
         if (Mathf.Approximately(delta, 0f)) return;
 
         if (delta > 0f)
-            _totemBuffManager.AddAttackBuff(delta);
+            _totemBuffManager.AddAttackBuff(delta, this);
         else
-            _totemBuffManager.RemoveAttackBuff(-delta);
+            _totemBuffManager.RemoveAttackBuff(-delta, this);
 
         _appliedAmount = newAmount;
     }

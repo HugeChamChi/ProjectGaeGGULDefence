@@ -53,6 +53,9 @@ public class ExpManager : MonoBehaviour
     /// <summary>Accumulates experience without interrupting a scene-owned guided interaction.</summary>
     public bool DeferLevelUps { get; set; }
 
+    /// <summary>Discards a deferred choice when a scene-owned tutorial or run has ended.</summary>
+    public void CancelPendingLevelUp() => _pendingLevelUp = false;
+
     /// <summary>보스 데미지로부터 획득할 EXP 양 계산. 배율은 현재 보스의 BossData(SO)가 정본이다.</summary>
     public float CalculateExpFromDamage(float damage)
     {

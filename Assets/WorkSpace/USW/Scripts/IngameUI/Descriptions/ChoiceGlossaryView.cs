@@ -29,7 +29,7 @@ public sealed class ChoiceGlossaryView : MonoBehaviour
 
     /// <summary>Creates a safe-area sheet with an edge-to-edge modal shield.</summary>
     public static ChoiceGlossaryView Create(Transform parent, TMP_Text font, RectTransform cards,
-        TermGlossary glossary, Shader blur, DescriptionDisplaySettings settings)
+        TermGlossary glossary, Shader blur, DescriptionDisplaySettings settings, TermLinker linker = null)
     {
         var root = new GameObject("ChoiceGlossary", typeof(RectTransform));
         root.transform.SetParent(parent, false);
@@ -41,6 +41,7 @@ public sealed class ChoiceGlossaryView : MonoBehaviour
         view._glossary = glossary;
         view._settings = settings;
         view._popup = TermPopup.Create(view._frame, font, DescriptionToggleView.TrackSprite, blur);
+        view._popup.ConfigureLinks(linker);
         view._mode.Set(settings.Detailed ? DescriptionMode.Detailed : DescriptionMode.Brief);
         view._popup.ConfigureDescriptionMode(view._mode);
         view._mode.OnChanged += view.ChangeMode;

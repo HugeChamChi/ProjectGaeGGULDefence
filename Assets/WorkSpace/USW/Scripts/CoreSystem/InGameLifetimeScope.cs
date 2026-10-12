@@ -35,6 +35,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<WaveManager>();
         builder.RegisterComponentInHierarchy<TimerController>();
+        SceneComponentRegistration.RegisterOptional<DisigmanGlitchLinkPresentation>(builder, gameObject.scene);
 
         builder.RegisterComponentInHierarchy<CurrencyManager>();
         builder.RegisterComponentInHierarchy<ExpManager>();
@@ -57,6 +58,10 @@ public class InGameLifetimeScope : LifetimeScope
         builder.Register<TotemDragRangePreview>(Lifetime.Scoped); // 토템 이동 중 범위 미리보기
         builder.RegisterComponentInHierarchy<TotemInventoryUI>();
         builder.RegisterComponentInHierarchy<TotemBuffManager>();
+        var buffVisualSettings = Resources.Load<UnitBuffVisualSettings>("UnitBuffVisualSettings");
+        if (buffVisualSettings == null) throw new System.InvalidOperationException("UnitBuffVisualSettings is required.");
+        builder.RegisterInstance(buffVisualSettings);
+        builder.Register<StatBuffFxPool>(Lifetime.Scoped);
         builder.RegisterComponentInHierarchy<BuffManager>();
 
         builder.RegisterComponentInHierarchy<ChieftainSelection>();
@@ -78,6 +83,16 @@ public class InGameLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_DebugChoiceInfoPopup>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_DebugTotemPopup>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<UIManager>();
+        var damageChartSettings = Resources.Load<DamageChartLabSettings>("DamageChartSettings");
+        bool isDamageChartLab = false;
+        foreach (var sceneRoot in gameObject.scene.GetRootGameObjects())
+        foreach (var lab in sceneRoot.GetComponentsInChildren<DamageChartLab>(true))
+        { damageChartSettings = lab.Settings; isDamageChartLab = true; }
+        if (damageChartSettings == null) throw new System.InvalidOperationException("DamageChartSettings is required.");
+        builder.RegisterInstance(damageChartSettings);
+        builder.Register<DamageContributionLedger>(Lifetime.Scoped);
+        if (!isDamageChartLab) builder.RegisterEntryPoint<DamageContributionBinding>();
+        SceneComponentRegistration.RegisterOptional<IngameDamageChart>(builder, gameObject.scene);
         DamageChartLab.RegisterServices(builder, gameObject.scene); // 독립 딜표 비교 씬에서만 등록
         SceneComponentRegistration.RegisterOptional<SealedGridShaderLab>(builder, gameObject.scene); // 독립 봉인 셰이더 실험실에서만 존재
         SceneComponentRegistration.RegisterOptional<CenterToast>(builder, gameObject.scene);

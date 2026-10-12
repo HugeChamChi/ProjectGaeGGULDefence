@@ -87,7 +87,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
             _drones.RallyBeamPrefab = _data.BeamFx;
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
             await _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
-                new ChiefVolleySettings(_effects?.ChiefVolleyCount ?? 0, _effects?.ChiefVolleyDelay ?? 0f, _effects?.ChiefVolleyDamageRatio ?? 0f));
+                new ChiefVolleySettings(_effects?.ChiefVolleyCount ?? 0, _effects?.ChiefVolleyDelay ?? 0f, _effects?.ChiefVolleyDamageRatio ?? 0f), _selector?.SelectedChieftain);
         }
         finally
         {

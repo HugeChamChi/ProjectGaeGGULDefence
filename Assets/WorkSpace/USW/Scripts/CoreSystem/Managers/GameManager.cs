@@ -131,6 +131,7 @@ public class GameManager : MonoBehaviour
 
     private void EndGame(bool isWin)
     {
+        if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
         _uiManager?.BlockGameplayInput();
         _waveManager.StopRun();

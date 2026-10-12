@@ -209,7 +209,11 @@ namespace GaeGGUL.UI.Unit
         {
             if (txt_SkillNameText != null)    txt_SkillNameText.text = skillName;
             if (txt_SkillDescription != null) txt_SkillDescription.text = _effectLink != null ? _effectLink.SetDescription(skillDescription, binding) : skillDescription;
-            if (txt_SkillCooldown != null) txt_SkillCooldown.text = cooldownText;
+            if (txt_SkillCooldown != null)
+            {
+                txt_SkillCooldown.textWrappingMode = TextWrappingModes.NoWrap;
+                txt_SkillCooldown.text = cooldownText;
+            }
         }
 
         /// <summary>현재 합산 공격력과 공격간격만 표시한다. 별도 강화/식량 표시는 사용하지 않는다.</summary>

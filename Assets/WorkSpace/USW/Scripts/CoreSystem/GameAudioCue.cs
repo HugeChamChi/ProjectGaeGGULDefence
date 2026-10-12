@@ -1,4 +1,4 @@
-/// <summary>Information carried by the seven approved StudioDart effects.</summary>
+/// <summary>Information carried by the approved StudioDart effects and authored Disigman derivatives.</summary>
 public enum GameAudioCue
 {
     StackExplosion,
@@ -7,5 +7,9 @@ public enum GameAudioCue
     HudButton,
     UnitSummon,
     UpgradeAttempt,
-    BossTimeSettlement
+    BossTimeSettlement,
+    DisigmanBasicCharge,
+    DisigmanBasicShot,
+    DisigmanSkillCharge,
+    DisigmanSkillShot
 }

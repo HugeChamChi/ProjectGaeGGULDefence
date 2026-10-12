@@ -158,6 +158,7 @@ public class UIManager : MonoBehaviour
             _resultScreen.gameObject.SetActive(false);
             _resultScreen.RetryRequested += OnRetryButtonPressed;
             _resultScreen.HomeRequested += OnHomeButtonPressed;
+            _resultScreen.DamageChartRequested += OnResultDamageChartRequested;
         }
     }
 
@@ -415,6 +416,12 @@ public class UIManager : MonoBehaviour
         if (startPanel  != null) startPanel.SetActive(false);
     }
 
+    private void OnResultDamageChartRequested()
+    {
+        if (VContainer.IObjectResolverExtensions.TryResolve(_resolver, out IngameDamageChart chart))
+            chart.OpenFinal(_resultScreen.GetComponentInParent<Canvas>(true));
+    }
+
     private void OnRetryButtonPressed()
     {
         if (_navigationStarted) return;
@@ -439,6 +446,7 @@ public class UIManager : MonoBehaviour
         {
             _resultScreen.RetryRequested -= OnRetryButtonPressed;
             _resultScreen.HomeRequested -= OnHomeButtonPressed;
+            _resultScreen.DamageChartRequested -= OnResultDamageChartRequested;
         }
         if (_endInputShield != null) Destroy(_endInputShield);
         _timeScale?.Release(this);

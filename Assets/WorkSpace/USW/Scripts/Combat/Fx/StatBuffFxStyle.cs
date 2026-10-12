@@ -23,6 +23,12 @@ public sealed class StatBuffFxStyle : ScriptableObject
     public bool AutoOutlineColor = true;
     public Color OutlineColor = new Color(0.1f, 0.1f, 0.15f, 0.9f);
 
+    [Header("조각 색 변화")]
+    [Tooltip("조각의 수명에 따라 색을 바꾼다. 꺼두면 기존 Primary/Secondary를 유지한다")]
+    public bool AnimateRiserColor;
+    [Tooltip("0 = 생성, 1 = 소멸. 알파는 기존 등장/퇴장 연출과 함께 적용된다")]
+    public Gradient RiserColorOverLife = new Gradient();
+
     [Header("떠오르는 조각")]
     public StatBuffShape Shape = StatBuffShape.Triangle;
     public bool Outline;

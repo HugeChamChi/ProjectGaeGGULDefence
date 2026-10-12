@@ -38,6 +38,13 @@ public class UI_BossHpBar : MonoBehaviour
     [Tooltip("실제 HP 색상을 담당")]
     [SerializeField] private Image _hpColor;
 
+    [Tooltip("채움의 좌/우 표시 여백 (그림 원본 픽셀 기준). 투명 끝부분과 보스 아이콘 뒤에 가려진 부분을 제외한다")]
+    [SerializeField] private Vector2 _fillSpriteHorizontalPadding;
+    [Tooltip("왼쪽을 가리는 보스 아이콘. 화면비가 달라져도 이 영역 오른쪽부터 채움을 표시한다")]
+    [SerializeField] private RectTransform _fillStartAfter;
+    [SerializeField, Min(0f)] private float _fillStartGap = 1f;
+    private readonly Vector3[] _fillStartCorners = new Vector3[4];
+
 
     [Header("Texts")]
     [SerializeField] private TextMeshProUGUI _hpLineText;
@@ -214,6 +221,24 @@ public class UI_BossHpBar : MonoBehaviour
         // 앵커 기반이라 Pivot 설정과 무관하게 왼쪽 정렬 + 부모 폭 상대.
         if (_hpFillMask != null)
         {
+            var fullBar = _hpFillMask.parent as RectTransform;
+            Vector2 padding = Vector2.zero;
+            if (fullBar != null && _hpColor != null && _hpColor.sprite != null)
+            {
+                float pixels = _hpColor.sprite.rect.width;
+                if (pixels > 0f)
+                    padding = _fillSpriteHorizontalPadding * (fullBar.rect.width / pixels);
+            }
+            if (fullBar != null && _fillStartAfter != null)
+            {
+                _fillStartAfter.GetWorldCorners(_fillStartCorners);
+                float right = float.NegativeInfinity;
+                foreach (var corner in _fillStartCorners)
+                    right = Mathf.Max(right, fullBar.InverseTransformPoint(corner).x);
+                padding.x = Mathf.Max(padding.x, right - fullBar.rect.xMin + _fillStartGap);
+            }
+            if (fullBar != null)
+                padding.x = Mathf.Clamp(padding.x, 0f, Mathf.Max(0f, fullBar.rect.width - padding.y));
             Vector2 anchorMin = _hpFillMask.anchorMin;
             Vector2 anchorMax = _hpFillMask.anchorMax;
             anchorMin.x = 0f;
@@ -223,16 +248,16 @@ public class UI_BossHpBar : MonoBehaviour
 
             Vector2 offsetMin = _hpFillMask.offsetMin;
             Vector2 offsetMax = _hpFillMask.offsetMax;
-            offsetMin.x = 0f;
-            offsetMax.x = 0f;
+            offsetMin.x = padding.x;
+            offsetMax.x = Mathf.Lerp(padding.x, -padding.y, shownRatio);
             _hpFillMask.offsetMin = offsetMin;
             _hpFillMask.offsetMax = offsetMax;
 
             // Keep the artwork at the full bar width while the mask clips it.
             // A percentage anchor plus fixed pixels only matched one screen size.
-            if (_hpColor != null && _hpColor.rectTransform.parent == _hpFillMask &&
-                _hpFillMask.parent is RectTransform fullBar)
-                _hpColor.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fullBar.rect.width);
+            if (_hpColor != null && _hpColor.rectTransform.parent == _hpFillMask && fullBar != null)
+                _hpColor.rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left,
+                    -padding.x, fullBar.rect.width);
         }
 
         int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :

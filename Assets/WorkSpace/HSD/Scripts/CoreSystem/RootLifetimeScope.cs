@@ -9,6 +9,7 @@ public class RootLifetimeScope : LifetimeScope
     [Header("UI Settings")]
     [Tooltip("IFadeScreen을 상속받은 페이드 화면 프리팹 (지정하지 않으면 런타임에 기본 검은 화면을 자동 생성합니다)")]
     [SerializeField] private FadeScreen fadeScreenPrefab;
+    [SerializeField] private AppLoadingScreen _loadingScreenPrefab;
 
     [Header("Managers")]
     [SerializeField] private AudioManager audioManager;
@@ -57,6 +58,11 @@ public class RootLifetimeScope : LifetimeScope
         
         builder.Register<AssetLifecycleManager>(Lifetime.Singleton);
         builder.Register<SceneChangeManager>(Lifetime.Singleton);
+        if (_loadingScreenPrefab != null)
+        {
+            builder.RegisterComponentInNewPrefab(_loadingScreenPrefab, Lifetime.Singleton).UnderTransform(transform);
+            builder.RegisterBuildCallback(resolver => resolver.Resolve<AppLoadingScreen>());
+        }
         var debuffSettings = Resources.Load<DebuffSettings>("DebuffSettings");
         if (debuffSettings == null) throw new System.InvalidOperationException("Resources/DebuffSettings is required.");
         builder.RegisterInstance(debuffSettings);

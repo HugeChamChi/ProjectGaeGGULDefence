@@ -154,6 +154,8 @@ MonoBehaviour:
   autoInjectGameObjects: []
   fadeScreenPrefab: {fileID: 1077133573436768632, guid: bbd3c16e777f8944b8cebd97886bf39e,
     type: 3}
+  _loadingScreenPrefab: {fileID: 5428541792974131467, guid: 8311de9c4263fa04f93abdc0db1ee236,
+    type: 3}
   audioManager: {fileID: 4628953675001813478}
   _researchTree: {fileID: 11400000, guid: bb904a80c853fa44e9350607dcb7b5ff, type: 2}
   _tutorialManagerPrefab: {fileID: 0}

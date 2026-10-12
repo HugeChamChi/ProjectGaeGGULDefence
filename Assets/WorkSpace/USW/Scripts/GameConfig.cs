@@ -16,6 +16,17 @@ public class GameConfig : ScriptableObject
     public float bossSpawnDelaySeconds = 5f;
     public float cellSize          = 1.5f;
 
+    [Header("Totem Rewards (finite stages)")]
+    [SerializeField, Min(1)] private int _totemRewardCycleLength = 10;
+    [SerializeField] private int[] _totemRewardPositions = { 3, 6, 10 };
+    /// <summary>유한 스테이지의 토템 보상 구간. 무한 모드는 해당 모드 SO의 어려운 보스 역할을 사용한다.</summary>
+    public bool GrantsFiniteTotemReward(int round)
+    {
+        if (round < 1 || _totemRewardCycleLength < 1 || _totemRewardPositions == null) return false;
+        int position = (round - 1) % _totemRewardCycleLength + 1;
+        return System.Array.IndexOf(_totemRewardPositions, position) >= 0;
+    }
+
     [Header("Economy")]
     public float startingFood = 20f;   // food given at game start
     public float placeCost    = 10f;   // cost to place one unit

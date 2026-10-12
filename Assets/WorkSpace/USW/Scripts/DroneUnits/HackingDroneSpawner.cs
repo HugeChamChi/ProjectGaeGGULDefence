@@ -67,7 +67,7 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
             else if (runtime.Commit(target, reservation))
             {
                 committed = true;
-                target.TakeDamage(damage, target.transform.position, critical ? BossDamageKind.Critical : BossDamageKind.Normal);
+                target.TakeDamage(damage, target.transform.position, critical ? BossDamageKind.Critical : BossDamageKind.Normal, unitData);
             }
             _castVisual.Draw(1f);
             elapsed = 0;

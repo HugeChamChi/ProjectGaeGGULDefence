@@ -32,8 +32,8 @@ public class TotemBossKillStack : TotemBase
     {
         BossBase.OnAnyBossDied -= OnBossKilled;
 
-        if (_appliedAttack > 0f) _totemBuffManager.RemoveAttackBuff(_appliedAttack);
-        if (_appliedSpeed  > 0f) _totemBuffManager.RemoveSpeedBuff(_appliedSpeed);
+        if (_appliedAttack > 0f) _totemBuffManager.RemoveAttackBuff(_appliedAttack, this);
+        if (_appliedSpeed  > 0f) _totemBuffManager.RemoveSpeedBuff(_appliedSpeed, this);
 
         _killCount     = 0;
         _appliedAttack = 0f;
@@ -51,12 +51,12 @@ public class TotemBossKillStack : TotemBase
 
         if (attackAmount > 0f)
         {
-            _totemBuffManager.AddAttackBuff(attackAmount);
+            _totemBuffManager.AddAttackBuff(attackAmount, this);
             _appliedAttack += attackAmount;
         }
         if (speedAmount > 0f)
         {
-            _totemBuffManager.AddSpeedBuff(speedAmount);
+            _totemBuffManager.AddSpeedBuff(speedAmount, this);
             _appliedSpeed += speedAmount;
         }
 

@@ -439,7 +439,10 @@ public sealed class ResearchInfoPanel
         label.fontSize = visible ? 44f : ButtonFont;
         if (!visible) return;
         int cost = _progress.GetUpgradeCost(node);
-        price.text = cost.ToString("N0");
+        price.text = cost == 0 ? "무료" : cost.ToString("N0");
+        var icon = price.transform.parent.Find("CurrencyIcon");
+        if (icon != null) icon.gameObject.SetActive(cost > 0);
+        ResearchUi.Stretch(price.rectTransform, cost > 0 ? 64f : 0f, 0f, cost > 0 ? 12f : 0f, 0f);
         price.color = _gold >= cost ? Highlight : new Color32(255, 105, 170, 255);
     }
 

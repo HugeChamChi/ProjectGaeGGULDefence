@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5386253c5d45d744fa5c71dd185bfb4d, type: 3}
+  m_Name: TutorialThirdWave
+  m_EditorClassIdentifier: 
+  waveName: Wave 4
+  bosses:
+  - Data: {fileID: 11400000, guid: 0c736944cb216664daa6fe0b66984f40, type: 2}
+    bossIcon: {fileID: 21300000, guid: 04dbe245063dec24a90a2afd5e1d66fb, type: 3}
+    prefab: {fileID: 3523614666774652447, guid: 0d424e95097eabf4c9c7d8d41ee0cf12,
+      type: 3}
+    hp: 56000
+    Defense: 0
+    ExpReward: 100

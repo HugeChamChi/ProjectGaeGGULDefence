@@ -89,9 +89,10 @@ public sealed class TotemBonusProjectile : RangedBuffTotemBase
 
         int damage = unit.ComputeAttackDamageFrom(unit.GetUpgradedAtk() * settings.AttackCoefficient);
         Vector3 position = boss.transform.position;
+        var source = DamageSourceData;
         _projectiles.Launch(unit.transform.position, position, settings.Projectile, () =>
         {
-            if (boss != null && !boss.IsDead) boss.TakeDamage(damage);
+            if (boss != null && !boss.IsDead) boss.TakeDamage(damage, source: source);
         });
     }
 }

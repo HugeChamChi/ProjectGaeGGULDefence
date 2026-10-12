@@ -6,7 +6,7 @@ using UnityEngine;
 
 /// <summary>
 /// 영구 잔존 드론.
-/// 배치 시 오너 유닛 근처에 작은 오프셋으로 위치를 고정하고 DroneHoverAnimation이 부유 연출을 담당한다.
+/// SO 설정의 H 궤도로 오너를 돌며, 궤도를 끄면 기존 고정 슬롯/호버를 사용한다.
 /// 족장 집결 시 DroneManager.ExecuteRallyAsync가 MoveToAsync/ReturnToHomeAsync를 직접 호출한다.
 /// </summary>
 public class DroneUnit : MonoBehaviour
@@ -28,13 +28,34 @@ public class DroneUnit : MonoBehaviour
         ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격.</summary>
     public float EffectiveAttackInterval => AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
-    public Vector3 HomePosition   => (_owner != null ? _owner.transform.position : _homePositionFallback)
-                                     + (Vector3)_spawnOffset;
+    /// <summary>오너 위치와 현재 위상을 반영한 귀환/드래그 기준점.</summary>
+    public Vector3 HomePosition => (_owner != null ? _owner.transform.position : _homePositionFallback)
+        + (UsesOrbit ? OrbitOffset : (Vector3)_spawnOffset);
+    /// <summary>대형 드론들의 위상 시계를 동기화할 전투/선택 정지 시간.</summary>
+    public float OrbitSeconds => _orbitSeconds;
+    /// <summary>풀 재사용 이전의 집결 이동을 구분하는 배치 수명.</summary>
+    public int PlacementLifetime => _attackLifetime;
 
     private UnitBase _owner;
     private Vector3   _homePositionFallback;
 
     private Vector2   _spawnOffset;
+    private DroneFormationSettings _formation;
+    private float _orbitSeconds;
+    private int _orbitSlot, _orbitCount = 1;
+    private bool _orbitRunning, _usingOrbit;
+    private float _facingSign = 1f;
+    private float _punchFactor = 1f;
+    private Quaternion _authoredRotation;
+    private CancellationTokenSource _moveCts;
+    private bool UsesOrbit => _formation != null && _formation.Orbit != null
+        && _formation.Orbit.Enabled && _formation.Orbit.PeriodSeconds > 0f;
+    private float OrbitAngle => (_orbitSeconds / _formation.Orbit.PeriodSeconds
+        + _orbitSlot / (float)_orbitCount) * (Mathf.PI * 2f);
+    private Vector3 OrbitOffset => new Vector3(
+        Mathf.Cos(OrbitAngle) * (_formation.OwnerHalfWidth + _formation.Orbit.HorizontalPadding),
+        _formation.OwnerHeadHeight * _formation.Orbit.CenterHeightRatio
+            + Mathf.Sin(OrbitAngle) * _formation.Orbit.VerticalRadius, 0f);
 
     [Header("오너 드래그 추적")]
     [Tooltip("오너 유닛을 드래그하는 동안 드론이 따라붙는 민첩도 (클수록 바짝 붙음).")]
@@ -63,7 +84,7 @@ public class DroneUnit : MonoBehaviour
     [SerializeField, Min(0.01f)] private float _attackPunchDuration = 0.2f;
 
     [Header("정렬")]
-    [Tooltip("오너 유닛의 DragHandler와 동일한 Y기반 정렬 공식을 따라가되, 항상 이 값만큼 앞에 그립니다.")]
+    [Tooltip("고정 슬롯 모드의 Y기반 정렬 차이. 궤도 모드는 SO의 앞/뒤 차이를 사용합니다.")]
     [SerializeField] private int _sortingOrderOffset = 1;
 
     private SpriteRenderer           _spriteRenderer;
@@ -92,6 +113,7 @@ public class DroneUnit : MonoBehaviour
         _spriteRenderer = GetComponent<SpriteRenderer>();
         if (_spriteRenderer != null) _normalSprite = _spriteRenderer.sprite;
         _authoredScale = _baseScale = transform.localScale;
+        _authoredRotation = transform.rotation;
     }
 
     private AnimatorUpdateMode _updateModeBeforePause;
@@ -115,9 +137,16 @@ public class DroneUnit : MonoBehaviour
     }
 
     /// <summary>DroneSpawnerBase.SpawnOneDrone() 에서 호출 — 스탯 주입 후 공격 루프 시작</summary>
-    /// <param name="slotOffset">오너 기준 고정 대형 슬롯 오프셋 (드론 간 겹침 방지용)</param>
-    public void Initialize(UnitBase owner, Vector2 slotOffset)
+    /// <param name="owner">스탯과 홈 위치를 제공하는 배치 유닛.</param>
+    /// <param name="slotOffset">궤도가 꺼졌을 때 사용할 오너 기준 기존 슬롯.</param>
+    /// <param name="formation">저작된 오너 치수와 공통 궤도 설정.</param>
+    /// <param name="slotIndex">실제 소유 드론 목록의 순서.</param>
+    /// <param name="slotCount">실제 대형의 드론 수.</param>
+    /// <param name="orbitSeconds">기존 드론과 공유할 위상 시계.</param>
+    public void Initialize(UnitBase owner, Vector2 slotOffset, DroneFormationSettings formation = null,
+        int slotIndex = 0, int slotCount = 1, float orbitSeconds = 0f)
     {
+        StopAll();
         if (_animator == null)
         {
             _animator = GetComponent<Animator>();
@@ -127,11 +156,17 @@ public class DroneUnit : MonoBehaviour
         _owner                = owner;
         _homePositionFallback = transform.position;
         _spawnOffset          = slotOffset;
+        _formation = formation;
+        _usingOrbit = UsesOrbit;
+        ConfigureOrbitSlot(slotIndex, slotCount, orbitSeconds);
         _ownerDrag            = owner != null ? owner.GetComponent<DragHandler>() : null;
         _followingOwnerDrag   = false;
 
-        StopAll();
+        transform.rotation = _authoredRotation;
         ApplyFacingByCell();
+        if (UsesOrbit && _formation.Orbit.FaceMotion)
+            _facingSign = Mathf.Sin(OrbitAngle) < 0f ? -1f : 1f;
+        ApplyVisualScale();
         transform.position = HomePosition;
 
         _droneManager?.RegisterDrone(this);
@@ -142,33 +177,84 @@ public class DroneUnit : MonoBehaviour
         StartOrbit();
     }
 
+    /// <summary>추가/회수 후 실제 드론 수로 균등 배치하며 기존 위상 시계를 보존한다.</summary>
+    public void ConfigureOrbitSlot(int index, int count, float orbitSeconds)
+    {
+        _orbitSlot = Mathf.Max(0, index); _orbitCount = Mathf.Max(1, count);
+        _orbitSeconds = orbitSeconds;
+    }
+
     // Match UnitBase's cell-facing rule on the whole rig so Spine and its muzzle mirror together.
     private void ApplyFacingByCell()
     {
         _baseScale = _authoredScale;
+        if (UsesOrbit)
+            _baseScale = Vector3.Scale(_baseScale, new Vector3(_formation.Orbit.DroneScale, _formation.Orbit.DroneScale, 1f));
         if (_owner?.currentCell != null && _owner._gridManager != null)
         {
             int halfColumn = _owner._gridManager.Columns / 2;
             bool faceLeft = _owner.currentCell.GridPosition.x >= halfColumn;
-            float x = Mathf.Abs(_authoredScale.x);
+            float x = Mathf.Abs(_baseScale.x);
             if (x <= 0f) x = 1f;
             _baseScale.x = faceLeft ? x : -x;
         }
-        transform.localScale = _baseScale;
+        _facingSign = Mathf.Sign(_baseScale.x);
+        ApplyVisualScale();
     }
 
-    // ── 렌더 정렬 (오너보다 항상 앞) ──────────────────────────────────
+    private void ApplyVisualScale()
+    {
+        var scale = _baseScale;
+        if (UsesOrbit && _formation.Orbit.FaceMotion) scale.x = Mathf.Abs(scale.x) * _facingSign;
+        transform.localScale = scale * _punchFactor;
+    }
+
+    // ── 궤도/정렬 (위쪽 반은 뒤, 아래쪽 반은 앞) ──────────────────────
 
     private void LateUpdate()
     {
+        if (_owner != null) UpdateOrbit();
         if (_spriteRenderer != null && _owner != null)
-            _spriteRenderer.sortingOrder = Mathf.RoundToInt(-_owner.transform.position.y * 100f) + _sortingOrderOffset;
+        {
+            int offset = UsesOrbit ? (Mathf.Sin(OrbitAngle) > 0f
+                ? _formation.Orbit.BackSortingOffset : _formation.Orbit.FrontSortingOffset) : _sortingOrderOffset;
+            _spriteRenderer.sortingOrder = Mathf.RoundToInt(-_owner.transform.position.y * 100f) + offset;
+        }
         FollowOwnerDrag();
     }
 
+    private void UpdateOrbit()
+    {
+        if (_usingOrbit != UsesOrbit)
+        {
+            bool resume = _orbitRunning;
+            StopOrbit(); _usingOrbit = UsesOrbit;
+            ApplyFacingByCell(); transform.rotation = _authoredRotation;
+            if (!_moving && !_followingOwnerDrag) transform.position = HomePosition;
+            if (resume) StartOrbit();
+        }
+        if (!UsesOrbit) return;
+        if (_hoverAnim != null && _hoverAnim.enabled) _hoverAnim.enabled = false;
+        float delta = _inPauseIdle ? Time.unscaledDeltaTime : Time.deltaTime;
+        if (_orbitRunning && !_moving && !_followingOwnerDrag && _ownerDrag?.IsDragging != true)
+        {
+            _orbitSeconds = Mathf.Repeat(_orbitSeconds + delta, _formation.Orbit.PeriodSeconds);
+            transform.position = HomePosition;
+            if (_formation.Orbit.FaceMotion)
+            {
+                float targetSign = Mathf.Sin(OrbitAngle) < 0f ? -1f : 1f;
+                _facingSign = _formation.Orbit.TurnSeconds > 0f
+                    ? Mathf.MoveTowards(_facingSign, targetSign, 2f * delta / _formation.Orbit.TurnSeconds)
+                    : targetSign;
+            }
+        }
+        if (!_formation.Orbit.FaceMotion) ApplyFacingByCell();
+        else ApplyVisualScale();
+    }
+
     /// <summary>
-    /// 오너를 드래그하는 동안 호버를 멈추고 오너 쪽 슬롯으로 부드럽게 따라간다.
-    /// 드래그가 끝나면 홈 위치에 붙은 뒤 호버를 재개한다 (배치가 바뀌면 오너가 드론을 새로 소환한다).
+    /// 오너를 드래그하는 동안 위상/호버를 멈추고 현재 홈 오프셋으로 부드럽게 따라간다.
+    /// 드래그가 끝나면 홈 위치에 붙은 뒤 궤도/호버를 재개한다.
     /// </summary>
     private void FollowOwnerDrag()
     {
@@ -194,35 +280,65 @@ public class DroneUnit : MonoBehaviour
         }
     }
 
-    // ── 호버 제어 (DroneManager.ExecuteRallyAsync 에서도 호출) ──────
+    // ── 궤도/호버 제어 (DroneManager.ExecuteRallyAsync에서도 호출) ──
 
+    /// <summary>현재 홈에서 SO 궤도를 재개한다. 궤도 비활성 시 기존 호버를 사용한다.</summary>
     public void StartOrbit()
     {
+        if (!isActiveAndEnabled) return;
+        _orbitRunning = true;
+        _usingOrbit = UsesOrbit;
+        if (UsesOrbit)
+        {
+            if (_hoverAnim != null) _hoverAnim.enabled = false;
+            if (!_moving && !_followingOwnerDrag) transform.position = HomePosition;
+            return;
+        }
         if (_hoverAnim == null) return;
         _hoverAnim.enabled = false;
         _hoverAnim.enabled = true; // OnEnable → basePos 현재 위치로 리셋
         if (_inPauseIdle) _hoverAnim.SetForceUnscaled(true);
     }
 
+    /// <summary>집결·드래그·반환 중 다른 위치 작성자가 움직일 수 있도록 위상과 호버를 멈춘다.</summary>
     public void StopOrbit()
     {
+        _orbitRunning = false;
         if (_hoverAnim != null) _hoverAnim.enabled = false;
+    }
+
+    /// <summary>취소된 집결에서 현재 오너의 홈으로 복원하고 외형 궤도를 재개한다.</summary>
+    public void ResumeHomeOrbit()
+    {
+        if (!isActiveAndEnabled) return;
+        _moveCts?.Cancel();
+        _moving = false; _followingOwnerDrag = false;
+        transform.position = HomePosition;
+        StartOrbit();
     }
 
     // ── 이동 (집결/귀환) ────────────────────────────────────────────
 
-    /// <summary>SmoothStep 보간으로 target 까지 이동. 호버는 자동 중단.</summary>
+    /// <summary>SmoothStep으로 이동하며 궤도/호버를 중단한다. 외부 취소와 개체 생명주기를 함께 따른다.</summary>
     public async UniTask MoveToAsync(Vector3 target, float duration, CancellationToken token)
     {
         StopOrbit();
         _followingOwnerDrag = false;
+        _moveCts?.Cancel();
+        var source = CancellationTokenSource.CreateLinkedTokenSource(token, this.GetCancellationTokenOnDestroy());
+        _moveCts = source;
         _moving = true;
-        try { await MoveToCoreAsync(target, duration, token); }
-        finally { _moving = false; }
+        try { await MoveToCoreAsync(target, duration, source.Token); }
+        finally
+        {
+            if (_moveCts == source) { _moveCts = null; _moving = false; }
+            source.Dispose();
+        }
     }
 
     private async UniTask MoveToCoreAsync(Vector3 target, float duration, CancellationToken token)
     {
+        if (token.IsCancellationRequested || !isActiveAndEnabled) return;
         Vector3 start   = transform.position;
         float   elapsed = 0f;
 
@@ -236,9 +352,10 @@ public class DroneUnit : MonoBehaviour
             transform.position = Vector3.Lerp(start, target, t);
         }
 
-        transform.position = target;
+        if (!token.IsCancellationRequested && isActiveAndEnabled) transform.position = target;
     }
 
+    /// <summary>집결 동안 멈춘 위상과 현재 오너 위치로 계산한 홈에 귀환한다.</summary>
     public UniTask ReturnToHomeAsync(float duration, CancellationToken token)
         => MoveToAsync(HomePosition, duration, token);
 
@@ -269,8 +386,10 @@ public class DroneUnit : MonoBehaviour
 
         if (_attackPunchScale <= 0f) return;
         _punchTween?.Kill();
-        transform.localScale = _baseScale;
-        _punchTween = transform.DOPunchScale(_baseScale * _attackPunchScale, _attackPunchDuration, 1, 0.5f)
+        _punchFactor = 1f; ApplyVisualScale();
+        _punchTween = DOTween.Punch(() => Vector3.one * _punchFactor,
+            value => { _punchFactor = value.x; ApplyVisualScale(); },
+            Vector3.one * _attackPunchScale, _attackPunchDuration, 1, 0.5f)
             .SetLink(gameObject);
     }
 
@@ -324,7 +443,10 @@ public class DroneUnit : MonoBehaviour
         if (_spriteRenderer != null) _spriteRenderer.sprite = _normalSprite;
         _punchTween?.Kill();
         _punchTween = null;
-        transform.localScale = _baseScale;
+        _punchFactor = 1f; ApplyVisualScale();
+        var move = _moveCts; _moveCts = null;
+        move?.Cancel(); // 이동 작업이 finally에서 Dispose한다.
+        _moving = false; _followingOwnerDrag = false;
         StopOrbit();
     }
 
@@ -371,7 +493,8 @@ public class DroneUnit : MonoBehaviour
         Vector3 origin = MuzzlePosition;
         var replay = owner.Combat?.BeginDroneBasicAttack(boss, transform,
             () => this != null && _attackLifetime == lifetime && _owner == owner && owner.currentCell != null);
-        var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage, kind) : null;
+        var source = owner.unitData;
+        var recorded = replay?.IsEnabled == true ? new RecordedDamage(damage, kind, source) : null;
         bool originalHit = false;
         bool shadowArrivedEarly = false;
         
@@ -383,7 +506,7 @@ public class DroneUnit : MonoBehaviour
                 boss.ApplyProjectileImpact(() =>
                 {
                     if (recorded != null) recorded.Apply(boss, targetPos);
-                    else boss.TakeDamage(damage, targetPos, kind);
+                    else boss.TakeDamage(damage, targetPos, kind, source);
                 });
             }
         };

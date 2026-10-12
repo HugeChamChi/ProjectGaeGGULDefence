@@ -9,6 +9,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "TotemRewardSettings", menuName = "USW/Totem Reward Settings")]
 public class TotemRewardSettings : ScriptableObject
 {
+    /// <summary>Shared rotation badge appearance and visibility.</summary>
+    public TotemRotateBadgeSettings RotateBadge;
     [Header("정지")]
     [Tooltip("화면이 열린 뒤 게임을 멈추기 전 1배속 유예 — 이미 날아가던 투사체가 보스에 닿을 시간 (투사체 비행 0.2~0.35초). "
              + "새 공격·보스 패턴·타이머는 열리는 즉시 멈춘다. 0이면 즉시 정지.")]

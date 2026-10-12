@@ -16,14 +16,14 @@ public class AtkCoefficientDamage : IReplayableEffect
     public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
     {
         int damage = CalculateDamage(caster, out bool critical);
-        target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal);
+        target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData);
     }
 
     /// <inheritdoc />
     public Action<BossBase, Vector3> Capture(UnitBase caster)
     {
         int damage = CalculateDamage(caster, out bool critical);
-        return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal).Apply;
+        return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData).Apply;
     }
 
     private int CalculateDamage(UnitBase caster, out bool critical)

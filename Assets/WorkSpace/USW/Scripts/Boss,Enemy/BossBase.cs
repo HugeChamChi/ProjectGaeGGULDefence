@@ -36,6 +36,11 @@ public abstract class BossBase : MonoBehaviour
     private double _defense;
     private double _debuffTime;
     private bool _deathStarted;
+    private DamageContributionLedger _damageLedger;
+    private readonly System.Collections.Generic.Dictionary<int, UnityEngine.Object> _damageSources =
+        new System.Collections.Generic.Dictionary<int, UnityEngine.Object>();
+    /// <summary>씬 스폰 경로가 피해 집계 서비스를 연결한다.</summary>
+    public void ConfigureDamageLedger(DamageContributionLedger ledger) => _damageLedger = ledger;
     /// <summary>대상 소유 디버프 상태. 드론 매니저와 독립이다.</summary>
     public DebuffController Debuffs { get; private set; }
     /// <summary>명시적 보스 스폰 경로에서 루트 정의/씬 전투 상태를 전달한다.</summary>
@@ -87,23 +92,25 @@ public abstract class BossBase : MonoBehaviour
         Debuffs?.Advance(_debuffTime);
     }
     /// <summary>스킬/아머 부여. 화염구는 ApplyDebuffImpact로 피해 전 스냅샷을 전달한다.</summary>
-    public bool TryApplyDebuff(DebuffBinding binding, int sourceId, decimal damageTakenBonus = 0, double defenseReduction = 0)
+    public bool TryApplyDebuff(DebuffBinding binding, int sourceId, decimal damageTakenBonus = 0, double defenseReduction = 0, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || Debuffs == null || _debuffCatalog == null) return false;
         if (!_debuffCatalog.TryGet(binding.DebuffId, out var definition))
         { Debug.LogError($"Unknown debuff_id: {binding.DebuffId}"); return false; }
+        if (source != null) _damageSources[sourceId] = source;
         return Debuffs.Apply(definition, new DebuffApplyContext(sourceId, binding.StacksPerApply, _health.CurrentUnits, damageTakenBonus, defenseReduction));
     }
     /// <summary>실제 적중 대상에서 기존 틱 → 스냅샷 → 즉발 피해 → 생존 시 디버프 순서를 보장한다.</summary>
-    public void ApplyDebuffImpact(DebuffBinding binding, int sourceId, decimal impactDamage, Vector3? hitPos = null)
+    public void ApplyDebuffImpact(DebuffBinding binding, int sourceId, decimal impactDamage, Vector3? hitPos = null, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || _debuffCatalog == null || Debuffs == null) return;
         if (!_debuffCatalog.TryGet(binding.DebuffId, out var definition))
         { Debug.LogError($"Unknown debuff_id: {binding.DebuffId}"); return; }
         long snapshot = _health.CurrentUnits;
-        TakeDamage(impactDamage, hitPos);
+        if (source != null) _damageSources[sourceId] = source;
+        TakeDamage(impactDamage, hitPos, source: source);
         if (!IsDead) Debuffs.Apply(definition, new DebuffApplyContext(sourceId, binding.StacksPerApply, snapshot));
     }
 
@@ -186,7 +193,12 @@ public abstract class BossBase : MonoBehaviour
     {
         _health.Reset(hp);
         Debuffs?.Clear();
-        Debuffs = new DebuffController(units => ApplyFinalDamage(ScaleBurnDamage(units), null, BossDamageKind.Burn), () => !IsDead);
+        _damageSources.Clear();
+        Debuffs = new DebuffController(null, () => !IsDead, (units, sourceId) =>
+        {
+            _damageSources.TryGetValue(sourceId, out var source);
+            ApplyFinalDamage(ScaleBurnDamage(units), null, BossDamageKind.Burn, source);
+        });
         _debuffTime = 0; _combatTimeOrigin = _combatTimer != null ? _combatTimer.ElapsedCombatTime : 0; _deathStarted = false;
 
         if (_animator != null)
@@ -197,11 +209,11 @@ public abstract class BossBase : MonoBehaviour
 
     // ── 데미지 처리 ─────────────────────────────────────────────────
     /// <summary>최종 경계에서만 4자리로 반올림하는 일반 피해 경로.</summary>
-    public void TakeDamage(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
-        => TakeDamageAndRecord(amount, hitPos, kind);
+    public void TakeDamage(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal, UnityEngine.Object source = null)
+        => TakeDamageAndRecord(amount, hitPos, kind, source);
 
     /// <summary>일반 피해를 적용하고 그림자 재현용 최종 피해 단위를 반환한다.</summary>
-    public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
+    public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
         if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
@@ -209,7 +221,7 @@ public abstract class BossBase : MonoBehaviour
         amount *= 1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f);
         long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
-        ApplyFinalDamage(units, hitPos, kind);
+        ApplyFinalDamage(units, hitPos, kind, source);
         return units;
     }
 
@@ -224,10 +236,10 @@ public abstract class BossBase : MonoBehaviour
     }
 
     /// <summary>이미 계산된 원본 피해를 방어력/치명타 재계산 없이 재현한다. 무적/전투 상태/남은 체력은 존중한다.</summary>
-    public void ApplyRecordedDamage(long units, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal)
+    public void ApplyRecordedDamage(long units, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
-        ApplyFinalDamage(units, hitPos, kind);
+        ApplyFinalDamage(units, hitPos, kind, source);
     }
 
     private long ScaleBurnDamage(long units)
@@ -237,7 +249,7 @@ public abstract class BossBase : MonoBehaviour
         return scaled >= long.MaxValue ? long.MaxValue : (long)decimal.Round(scaled, 0, MidpointRounding.AwayFromZero);
     }
 
-    private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind)
+    private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind, UnityEngine.Object source = null)
     {
         if (IsDead || Invincible || !CombatAllowsDamage || units <= 0) return;
         if (PreventDeath) units = Math.Min(units, Math.Max(0, _health.CurrentUnits - CombatHealth.Scale));
@@ -247,6 +259,7 @@ public abstract class BossBase : MonoBehaviour
 
         OnHpChanged?.Invoke(CurrentHp, MaxHp);
         decimal dealt = (decimal)actual / CombatHealth.Scale;
+        _damageLedger?.RecordDamage(source, dealt);
         OnDamaged?.Invoke(dealt, hitPos);
         OnDamageDealt?.Invoke(dealt, hitPos, kind);
 

@@ -322,7 +322,7 @@ public class UnitSpawner : MonoBehaviour
             if (lu != null && lu.HasSummonDealsDamage && unit.unitData != null)
             {
                 int dmg = DamageCalculator.ApplyRounding(unit.GetAttackDamage() * lu.SummonDamagePct);
-                _bossManager?.CurrentBoss?.TakeDamage(dmg);
+                _bossManager?.CurrentBoss?.TakeDamage(dmg, source: unit.unitData);
             }
         }
     }
@@ -373,7 +373,7 @@ public class UnitSpawner : MonoBehaviour
 
         if (sellDmg > 0)
         {
-            _bossManager?.CurrentBoss?.TakeDamage(sellDmg);
+            _bossManager?.CurrentBoss?.TakeDamage(sellDmg, source: unit.unitData);
         }
 
         // 판매 시 확률로 노말 기물 획득 (비상 탈출 레벨업 효과)

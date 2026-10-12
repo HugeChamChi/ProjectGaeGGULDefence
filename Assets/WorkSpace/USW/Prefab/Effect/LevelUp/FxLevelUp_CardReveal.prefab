@@ -142,8 +142,8 @@ MonoBehaviour:
     Flare: 0
   _legend:
     Color: {r: 1, g: 0.25, b: 0.28, a: 1}
-    Intensity: 1.3
-    Flare: 1
+    Intensity: 1
+    Flare: 0
   _rectShape: 1
   _glowRadius: 40
   _padding: 140

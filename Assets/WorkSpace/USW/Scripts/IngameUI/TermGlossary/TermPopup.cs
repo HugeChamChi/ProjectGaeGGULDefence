@@ -83,6 +83,29 @@ public sealed class TermPopup : MonoBehaviour
     private DescriptionModeState _descriptionMode;
     private DescriptionModeToggle _descriptionToggle;
     private TermEntry _entry;
+    private TermLinker _linker;
+    private TermLinkTapTarget _bodyLinks;
+
+    /// <summary>Reuses the owner's glossary link styling for authored related explanations.</summary>
+    public void ConfigureLinks(TermLinker linker)
+    {
+        _linker = linker;
+        if (linker == null) return;
+        _bodyLinks = _body.GetComponent<TermLinkTapTarget>() ?? _body.gameObject.AddComponent<TermLinkTapTarget>();
+        _bodyLinks.Configure(null, (_, key) =>
+        {
+            if (IsOpen && key.StartsWith(TermLinker.LinkPrefix, StringComparison.Ordinal))
+                SiblingTapped?.Invoke(key.Substring(TermLinker.LinkPrefix.Length));
+        }, 0f);
+    }
+
+    private void UpdateBody(DescriptionMode mode)
+    {
+        string body = _descriptionMode == null ? _entry.Body : _entry.GetBody(mode);
+        _body.text = _linker != null && _entry.RelatedTerms?.Length > 0
+            ? _linker.AddLinks(body, _entry.RelatedTerms) : body;
+        _bodyLinks?.RefreshHitArea();
+    }
 
     /// <summary>Connects an optional externally owned preference; existing callers keep their original display.</summary>
     public void ConfigureDescriptionMode(DescriptionModeState state)
@@ -106,7 +129,7 @@ public sealed class TermPopup : MonoBehaviour
     private void RefreshDescription(DescriptionMode mode)
     {
         if (_entry == null || !IsOpen) return;
-        _body.text = _descriptionMode == null ? _entry.Body : _entry.GetBody(mode);
+        UpdateBody(mode);
         LayoutRebuilder.ForceRebuildLayoutImmediate(_sheet);
         float max = _root.rect.height * _sheetMaxRatio;
         _sheetHeight = Mathf.Clamp(LayoutUtility.GetPreferredHeight(_sheet) - SheetOverscan, Mathf.Min(_sheetMinHeight, max), max);
@@ -188,7 +211,7 @@ public sealed class TermPopup : MonoBehaviour
         _kind.text = entry.Kind;
         _title.text = entry.DisplayName;
         _entry = entry;
-        _body.text = _descriptionMode == null ? entry.Body : entry.GetBody(_descriptionMode.Current);
+        UpdateBody(_descriptionMode?.Current ?? DescriptionMode.Brief);
         string facts = entry.BuildFacts();
         _facts.gameObject.SetActive(!string.IsNullOrEmpty(facts));
         _facts.text = facts;

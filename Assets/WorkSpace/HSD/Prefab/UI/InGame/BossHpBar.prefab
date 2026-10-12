@@ -561,6 +561,9 @@ MonoBehaviour:
   _debuffBar: {fileID: 3883780975066100047}
   _hpFillMask: {fileID: 5229864193566837784}
   _hpColor: {fileID: 694432296968566792}
+  _fillSpriteHorizontalPadding: {x: 10, y: 9}
+  _fillStartAfter: {fileID: 0}
+  _fillStartGap: 1
   _hpLineText: {fileID: 5755081976586158926}
   _lineCount: 200
   _colorMode: 2

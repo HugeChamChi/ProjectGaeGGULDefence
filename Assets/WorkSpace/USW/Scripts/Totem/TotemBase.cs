@@ -30,14 +30,18 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     [SerializeField] private   SpriteRenderer _spriteRenderer;
 
     private bool _isDataCloned = false;
+    private TotemData _authoredData;
 
     public TotemData Data        => totemData;
+    /// <summary>개체 제거 뒤에도 투사체·화상 집계가 유지할 원본 SO. 런타임 수치는 Data에서 읽는다.</summary>
+    public TotemData DamageSourceData => _authoredData != null ? _authoredData : totemData;
 
     /// <summary>소환 직후 SO 데이터를 주입한다. TotemSpawner에서 호출.</summary>
     public void SetTotemData(TotemData data) 
     {
         if (data != null)
         {
+            _authoredData = data;
             totemData = Instantiate(data);
             totemData.name = data.name + "_Runtime";
             _isDataCloned = true;
@@ -56,6 +60,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
 
     protected virtual void Awake()
     {
+        if (_authoredData == null && !_isDataCloned) _authoredData = totemData;
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
@@ -228,6 +233,7 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         // 원본 ScriptableObject가 오염되는 것을 방지하기 위해 런타임 인스턴스로 복제
         if (!_isDataCloned)
         {
+            _authoredData = totemData;
             totemData = Instantiate(totemData);
             totemData.name = totemData.name + "_Runtime";
             _isDataCloned = true;

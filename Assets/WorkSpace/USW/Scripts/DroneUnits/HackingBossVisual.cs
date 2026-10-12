@@ -4,6 +4,7 @@ using Spine;
 using Spine.Unity;
 
 /// <summary>5스택마다 FXLab의 후광·코어 표식을 보스 뼈에 붙이는 고정 시각 풀.</summary>
+[DefaultExecutionOrder(300)]
 public sealed class HackingBossVisual : MonoBehaviour
 {
     private const float PopSpacing = .035f, PopDuration = .28f, AttachDuration = .2f, GoldenAngle = 137.508f;
@@ -22,6 +23,8 @@ public sealed class HackingBossVisual : MonoBehaviour
     private BossBase _boss;
     private DroneHackingData _data;
     private SkeletonAnimation _skeleton;
+    private SpriteRenderer _spriteBody;
+    private Sprite _spriteFrame;
     private int _setupFrame, _visible;
     private float _ratio;
 
@@ -42,6 +45,7 @@ public sealed class HackingBossVisual : MonoBehaviour
     /// <summary>소비로 사라진 묶음만 차례로 터뜨리고 나머지 빛점은 유지한다.</summary>
     public void Detonate(int remaining, int capacity, int consumed)
     {
+        RefreshSpriteFrame();
         int before = _visible;
         SetStacks(remaining, capacity);
         if (_marks == null || consumed <= 0) return;
@@ -58,7 +62,8 @@ public sealed class HackingBossVisual : MonoBehaviour
     private void BuildMarks()
     {
         _skeleton = _boss.GetComponentInChildren<SkeletonAnimation>();
-        Renderer renderer = _skeleton != null ? _skeleton.GetComponent<MeshRenderer>() : _boss.GetComponentInChildren<SpriteRenderer>();
+        _spriteBody = _skeleton == null ? FindSpriteBody() : null;
+        Renderer renderer = _skeleton != null ? _skeleton.GetComponent<MeshRenderer>() : _spriteBody;
         if (renderer == null || renderer.bounds.size.sqrMagnitude < .0001f) return;
         Bounds bounds = renderer.bounds;
         var centerBone = _skeleton != null ? _skeleton.Skeleton?.FindBone("body2") : null;
@@ -100,6 +105,7 @@ public sealed class HackingBossVisual : MonoBehaviour
             }
             _marks[i] = mark;
         }
+        RefreshSpriteFrame();
     }
 
     private static bool IsBodyBone(string name)
@@ -107,9 +113,39 @@ public sealed class HackingBossVisual : MonoBehaviour
         || name == "armL" || name == "armR" || name == "soulderL" || name == "soulderR"
         || name == "guntletL" || name == "guntletR" || name == "handL" || name == "handR";
 
+    private SpriteRenderer FindSpriteBody()
+    {
+        foreach (var renderer in _boss.GetComponentsInChildren<SpriteRenderer>())
+            if (renderer.enabled && renderer.sprite != null && renderer.color.a > 0f) return renderer;
+        return null;
+    }
+
+    private void RefreshSpriteFrame()
+    {
+        if (_marks == null || _spriteBody == null || _spriteBody.sprite == null || _spriteBody.sprite == _spriteFrame) return;
+        _spriteFrame = _spriteBody.sprite;
+        HackingSpriteSurface surface = null;
+        for (int i = 0; i < _marks.Length; i++)
+        {
+            if (!_data.TryGetSpriteMarkPoint(_spriteFrame, i, out Vector2 local))
+            {
+                surface ??= new HackingSpriteSurface(_spriteFrame);
+                if (!surface.TryGetPoint(i, _marks.Length, _data.SpriteMarkSurfaceInset, out local)) local = _spriteFrame.bounds.center;
+            }
+            _marks[i].Local = local;
+        }
+    }
+
     private Vector3 Position(Mark mark)
     {
         Vector3 position = _boss.transform.TransformPoint(mark.FallbackLocal);
+        if (_spriteBody != null)
+        {
+            Vector2 local = mark.Local;
+            if (_spriteBody.flipX) local.x = -local.x;
+            if (_spriteBody.flipY) local.y = -local.y;
+            position = _spriteBody.transform.TransformPoint(local);
+        }
         if (_skeleton != null && mark.Bone != null)
         {
             mark.Bone.AppliedPose.LocalToWorld(mark.Local.x, mark.Local.y, out float x, out float y);
@@ -128,6 +164,7 @@ public sealed class HackingBossVisual : MonoBehaviour
             BuildMarks();
             if (_marks == null) return;
         }
+        RefreshSpriteFrame();
         float now = Time.time;
         Color tint = _ratio < .5f ? _data.HackColor
             : Color.Lerp(new Color(.3f, .62f, 1f), new Color(.6f, .48f, 1f), (_ratio - .5f) * 2);

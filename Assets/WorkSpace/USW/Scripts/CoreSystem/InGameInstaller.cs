@@ -60,7 +60,7 @@ public class InGameInstaller : MonoBehaviour
         WireBossEncounter();
         WireWaveUI();
         WireLevelUpUI();
-        WireTotemSelectUI();
+        WireTotemRewardUI();
     }
 
     
@@ -68,30 +68,35 @@ public class InGameInstaller : MonoBehaviour
 
     [Header("Level Up & Totem UI")]
     [SerializeField] private LevelUpUI _levelUpUI;
-    [SerializeField] private TotemSelectUI _totemSelectUI;
-    [Tooltip("연결하면 보스 처치 토템 선택을 새 사선 띠 화면으로 연다 (TotemSelectTest 씬). 비우면 기존 TotemSelectUI.")]
+    [Tooltip("보스 처치와 레벨업의 토템 보상 선택 화면.")]
     [SerializeField] private TotemRewardUI _totemRewardUI;
     [Inject] private LevelUpManager _levelUpManager;
 
     private void WireLevelUpUI()
     {
         if (_levelUpUI == null) return;
+        _levelUpUI.Opening += DismissInformationForSelection;
         if (_gameManager == null) return;
         _gameManager.OnLevelUpStateEntered += _levelUpUI.Show;
         if (_waveManager != null) _waveManager.OnRunStopped += _levelUpUI.CancelPendingSelection;
     }
 
-    private void WireTotemSelectUI()
+    private void WireTotemRewardUI()
     {
-        if (_totemRewardUI != null)
-        {
-            if (_waveManager != null) _waveManager.OnTotemSelectionRequested += cb => _totemRewardUI.Show(cb);
-            if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested += cb => _totemRewardUI.Show(cb);
-            return;
-        }
-        if (_totemSelectUI == null) return;
-        if (_waveManager != null) _waveManager.OnTotemSelectionRequested += cb => _totemSelectUI.Show(cb);
-        if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested += cb => _totemSelectUI.Show(cb);
+        if (_totemRewardUI == null) return;
+        _totemRewardUI.Opening += DismissInformationForSelection;
+        if (_waveManager != null) _waveManager.OnTotemSelectionRequested += _totemRewardUI.Show;
+        if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested += _totemRewardUI.Show;
+    }
+
+    private void DismissInformationForSelection()
+    {
+        _mergeManager?.ClearSelection();
+        _totemActionPopup?.Hide();
+        _gridManager?.ClearTotemRangePreview();
+        // OnDisable also clears each panel's tracking and nested explanation popup.
+        if (_unitInfoPanel != null) _unitInfoPanel.gameObject.SetActive(false);
+        if (_totemInfoPanel != null) _totemInfoPanel.gameObject.SetActive(false);
     }
 
     // ── Wave UI ────────────────────────────────────────────────
@@ -188,6 +193,13 @@ public class InGameInstaller : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_levelUpUI != null) _levelUpUI.Opening -= DismissInformationForSelection;
+        if (_totemRewardUI != null)
+        {
+            _totemRewardUI.Opening -= DismissInformationForSelection;
+            if (_waveManager != null) _waveManager.OnTotemSelectionRequested -= _totemRewardUI.Show;
+            if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested -= _totemRewardUI.Show;
+        }
         if (_spawnerManager != null) _spawnerManager.OnSpawnRejected -= ShowSpawnWarning;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         if (_waveManager != null)

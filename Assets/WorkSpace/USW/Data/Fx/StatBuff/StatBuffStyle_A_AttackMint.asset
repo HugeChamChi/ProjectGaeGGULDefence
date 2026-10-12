@@ -15,9 +15,9 @@ MonoBehaviour:
   DisplayName: "\uACF5\uACA9\uB825 \xB7 \uBBFC\uD2B8 \uC138\uBAA8"
   Usage: "\uACF5\uACA9\uB825 \uC0C1\uC2B9 \uAE30\uBCF8 (\uBC84\uD504\uC608\uC2DC2).
     TD1013 \uAC19\uC740 \uC904 \xB7 TD1008 \uC548\uCABD \xB7 TD1002 \uC131\uC7A5"
-  Primary: {r: 0.36, g: 0.92, b: 0.68, a: 1}
-  Secondary: {r: 0.36, g: 0.92, b: 0.68, a: 1}
-  BadgeColor: {r: 0.36, g: 0.92, b: 0.68, a: 1}
+  Primary: {r: 1, g: 0.28, b: 0.22, a: 1}
+  Secondary: {r: 1, g: 0.55, b: 0.38, a: 1}
+  BadgeColor: {r: 1, g: 0.28, b: 0.22, a: 1}
   AutoOutlineColor: 1
   OutlineColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.9}
   Shape: 1

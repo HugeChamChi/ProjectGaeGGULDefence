@@ -27,6 +27,10 @@ namespace GaeGGUL.UI.Totem
         [SerializeField] private TotemDisplaySettings settings;
         [SerializeField] private UI_TotemRangeCell cellPrefab;
         [SerializeField] private UIGridLayout gridLayout;
+        [SerializeField] private TotemRotateBadgeSettings _rotateBadgeSettings;
+        [SerializeField] private RectTransform _rotateBadgeAnchor;
+        private TotemRotateBadgeView _rotateBadge;
+        private bool _detailBadge;
 
         [Header("Legend Settings")]
         [SerializeField] private UI_TotemLegendSlot legendSlotPrefab;
@@ -71,6 +75,23 @@ namespace GaeGGUL.UI.Totem
         /// <summary>켜면 적용 범위 칸들이 부드럽게 깜빡인다 (토템 보상 상세에서 사용, 정보창은 기본 꺼짐).</summary>
         public bool BlinkRangeCells { get; set; }
 
+        /// <summary>Supplies the actual box corner for code-built reward detail screens.</summary>
+        public void ConfigureRotateBadge(TotemRotateBadgeSettings badgeSettings, RectTransform anchor, bool detail)
+        {
+            _rotateBadgeSettings = badgeSettings;
+            _rotateBadgeAnchor = anchor;
+            _detailBadge = detail;
+            RefreshRotateBadge(null);
+        }
+
+        private void RefreshRotateBadge(TotemData data)
+        {
+            if (_rotateBadge == null && _rotateBadgeSettings != null && _rotateBadgeAnchor != null)
+                _rotateBadge = TotemRotateBadgeView.Create(_rotateBadgeAnchor, _rotateBadgeSettings,
+                    _detailBadge ? _rotateBadgeSettings.DetailDiameter : _rotateBadgeSettings.InfoDiameter);
+            _rotateBadge?.SetData(data);
+        }
+
         private static void SetBlink(UI_TotemRangeCell cell, bool on)
         {
             var blink = cell.GetComponent<UI_TotemCellBlink>();
@@ -81,6 +102,7 @@ namespace GaeGGUL.UI.Totem
         /// <summary>데이터 없이 토템 칸만 보여주는 미리보기 상태로 준비합니다.</summary>
         public void Initialize()
         {
+            RefreshRotateBadge(null);
             if (settings == null)
             {
                 Debug.LogError("[TotemUI] TotemDisplaySettings is missing.");
@@ -95,6 +117,7 @@ namespace GaeGGUL.UI.Totem
         /// <summary>효과/디버프 오프셋만으로 범위를 표시합니다 (그룹 색 없음).</summary>
         public void SetRange(List<Vector2Int> effectRange, List<Vector2Int> debuffRange)
         {
+            RefreshRotateBadge(null);
             var map = new Dictionary<Vector2Int, Color>();
             if (settings != null)
             {
@@ -107,6 +130,7 @@ namespace GaeGGUL.UI.Totem
         /// <summary>Shows effect-specific colors from the same SO used by gameplay.</summary>
         public void SetData(TotemData data)
         {
+            RefreshRotateBadge(data);
             if (data == null || settings == null) { ShowRange(null); return; }
 
             var map = new Dictionary<Vector2Int, Color>();
@@ -127,6 +151,7 @@ namespace GaeGGUL.UI.Totem
         /// <summary>Shows a placed totem's actual cells, including rotation, growth and board boundaries.</summary>
         public void SetData(TotemBase totem, GridManager grid)
         {
+            RefreshRotateBadge(totem != null && totem.IsPlaced ? totem.Data : null);
             if (totem == null || !totem.IsActive || totem.CurrentCell == null ||
                 totem.Data == null || grid == null || settings == null)
             {

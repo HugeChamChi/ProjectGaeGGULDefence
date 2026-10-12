@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 보스 처치 보상 토템 선택지 뽑기 (TotemSelectUI · TotemRewardUI 공용).
+/// 보스 처치 보상 토템 선택지 뽑기 (TotemRewardUI).
 /// 등급 하나를 후보 수에 비례해 고른 뒤 그 등급에서 먼저 뽑고, 모자라면 나머지 후보에서 채운다.
 /// 이미 고른 토템(exclude)은 다시 나오지 않는다.
 /// </summary>

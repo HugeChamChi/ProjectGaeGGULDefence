@@ -12,6 +12,8 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         internal AudioLowPassFilter Filter;
         internal AudioCueDefinition Cue;
         internal float EndsAt;
+        internal float ClipSeconds;
+        internal UnityEngine.Object Owner;
     }
 
     private readonly AudioMixer _mainMixer;
@@ -26,6 +28,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
     private AudioSource _music, _laser;
     private float _musicEnvelope, _laserEnvelope, _duck;
     private float _musicSpeed = 1f;
+    private float _combatSpeed = 1f;
     private bool _musicRequested, _combatActive;
 
     /// <summary>Uses the app-owned host, existing user-volume mixer and authored palette.</summary>
@@ -97,14 +100,14 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
     }
 
     /// <summary>Admits only an authored one-shot and never steals a more important voice.</summary>
-    public void PlayCue(AudioCueDefinition cue, float pitchRandomness = .1f)
+    public void PlayCue(AudioCueDefinition cue, float pitchRandomness = .1f, UnityEngine.Object owner = null)
     {
         if (cue == null || cue.Clip == null || _palette.Find(cue.Cue) != cue
-            || cue.Cue == GameAudioCue.SustainedLaser || (cue.Repeated && !_combatActive)) return;
+            || cue.Cue == GameAudioCue.SustainedLaser || ((cue.Repeated || cue.CombatOnly) && !_combatActive)) return;
         float now = Time.unscaledTime;
         if (_lastPlayedTime.TryGetValue(cue.Cue, out float last) && now - last < cue.MinimumInterval) return;
         int same = 0, repeated = 0;
-        Voice available = null, weakest = null, oldestSame = null;
+        Voice available = null, weakest = null, oldestSame = null, weakestRepeated = null;
         foreach (var voice in _voices)
         {
             if (voice.Cue != null && (!voice.Source.isPlaying || now >= voice.EndsAt)) Stop(voice);
@@ -114,7 +117,11 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
                 same++;
                 if (oldestSame == null || voice.EndsAt < oldestSame.EndsAt) oldestSame = voice;
             }
-            if (voice.Cue.Repeated) repeated++;
+            if (voice.Cue.Repeated)
+            {
+                repeated++;
+                if (weakestRepeated == null || voice.Cue.Priority < weakestRepeated.Cue.Priority) weakestRepeated = voice;
+            }
             if (weakest == null || voice.Cue.Priority < weakest.Cue.Priority) weakest = voice;
         }
         if (same >= cue.MaximumVoices)
@@ -125,7 +132,12 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
             available = oldestSame;
             Stop(available);
         }
-        if (cue.Repeated && repeated >= _palette.RepeatedVoiceBudget) return;
+        if (cue.Repeated && repeated >= _palette.RepeatedVoiceBudget)
+        {
+            if (weakestRepeated == null || weakestRepeated.Cue.Priority >= cue.Priority) return;
+            available = weakestRepeated;
+            Stop(available);
+        }
         if (available == null)
         {
             if (weakest == null || weakest.Cue.Priority >= cue.Priority) return;
@@ -134,6 +146,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         }
         _lastPlayedTime[cue.Cue] = now;
         available.Cue = cue;
+        available.Owner = owner;
         available.Filter.enabled = cue.Repeated;
         available.Filter.cutoffFrequency = _palette.RepeatedLowPassHz;
         available.Source.clip = cue.Clip;
@@ -142,10 +155,32 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         available.Source.pitch = 1f + (float)(_presentationRandom.NextDouble() * 2d - 1d) * variation;
         float duration = cue.Clip.length / available.Source.pitch;
         if (cue.MaximumSeconds > 0f) duration = Mathf.Min(duration, cue.MaximumSeconds);
-        available.EndsAt = now + duration;
+        available.ClipSeconds = duration;
+        if (cue.CombatOnly) available.Source.pitch = _combatSpeed;
+        available.EndsAt = now + duration / (cue.CombatOnly ? _combatSpeed : 1f);
         available.Source.volume = 0f;
         available.Source.Play();
         UpdateGains(now);
+    }
+
+    /// <summary>Stops only cues associated with this charging projectile or preview effect.</summary>
+    public void StopOwnedCue(UnityEngine.Object owner)
+    {
+        if (ReferenceEquals(owner, null)) return;
+        foreach (var voice in _voices) if (ReferenceEquals(voice.Owner, owner)) Stop(voice);
+    }
+
+    /// <summary>Follows the gameplay clock for authored combat cues without changing user volume.</summary>
+    public void SetCombatSpeed(float speed)
+    {
+        _combatSpeed = Mathf.Clamp(speed, .01f, 3f);
+        float now = Time.unscaledTime;
+        foreach (var voice in _voices)
+        {
+            if (voice.Cue?.CombatOnly != true) continue;
+            voice.Source.pitch = _combatSpeed;
+            voice.EndsAt = now + Mathf.Max(0f, voice.ClipSeconds - voice.Source.time) / _combatSpeed;
+        }
     }
 
     /// <summary>Many simultaneous laser emitters share one continuous texture.</summary>
@@ -159,7 +194,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
     public void SetCombatActive(bool active)
     {
         _combatActive = active;
-        if (!active) foreach (var voice in _voices) if (voice.Cue?.Repeated == true) Stop(voice);
+        if (!active) foreach (var voice in _voices) if (voice.Cue?.Repeated == true || voice.Cue?.CombatOnly == true) Stop(voice);
     }
 
     /// <summary>Clears emitter ownership on scene exit.</summary>
@@ -182,6 +217,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         foreach (var voice in _voices)
         {
             if (voice.Cue == null) continue;
+            if (!ReferenceEquals(voice.Owner, null) && voice.Owner == null) { Stop(voice); continue; }
             if (!voice.Source.isPlaying || now >= voice.EndsAt) { Stop(voice); continue; }
             important |= voice.Cue.DucksBackground;
         }
@@ -227,6 +263,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
     {
         if (voice.Source != null) { voice.Source.Stop(); voice.Source.clip = null; }
         voice.Cue = null;
+        voice.Owner = null;
     }
 
     /// <inheritdoc />

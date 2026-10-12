@@ -17,10 +17,8 @@ public class MailManager : Global.IClearable
         await UniTask.CompletedTask;
     }
 
-    public async UniTask InitalizeAsync()
-    {
-        await UniTask.WaitForSeconds(0.5f);
-    }
+    /// <summary>Mail is fetched on demand; app initialization needs no gameplay-time delay.</summary>
+    public UniTask InitalizeAsync() => UniTask.CompletedTask;
 
     public void Clear()
     {

@@ -15,6 +15,8 @@ public sealed class TermEntry
     public string DisplayName;
     [Tooltip("카드 설명에서 이 용어로 인식할 표기들. 긴 표기가 먼저 맞는다")]
     public string[] Aliases = Array.Empty<string>();
+    /// <summary>Other glossary entries linked from this explanation's body.</summary>
+    public string[] RelatedTerms = Array.Empty<string>();
     [Tooltip("분류 배지 글자 (족장 / 유닛 / 자원 / 규칙 …)")]
     public string Kind;
     public Color KindColor = new Color(0.42f, 0.44f, 0.53f);

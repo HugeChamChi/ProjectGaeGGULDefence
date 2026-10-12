@@ -120,7 +120,7 @@ MonoBehaviour:
   animator: {fileID: 0}
   dronePrefab: {fileID: -1013402522113950437, guid: a4025e71c5f72a74990214ef5483059f,
     type: 3}
-  _formation: {fileID: 11400000, guid: 12cfa7153de3ed14fac882de19ec5bc6, type: 2}
+  _formation: {fileID: 11400000, guid: 5a5055d318bc40d4ea09ea2c2957be1a, type: 2}
 --- !u!114 &337719129048064945
 MonoBehaviour:
   m_ObjectHideFlags: 0

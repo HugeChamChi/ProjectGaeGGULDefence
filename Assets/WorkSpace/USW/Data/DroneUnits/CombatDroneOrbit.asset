@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4d618e54083a154db4d99bf237c1040, type: 3}
+  m_Name: CombatDroneOrbit
+  m_EditorClassIdentifier: Assembly-CSharp::DroneOrbitSettings
+  _enabled: 1
+  _droneScale: 0.7
+  _periodSeconds: 6
+  _horizontalPadding: 0.1
+  _verticalRadius: 0.16
+  _centerHeightRatio: 0.45
+  _backSortingOffset: -1
+  _frontSortingOffset: 1
+  _faceMotion: 1
+  _turnSeconds: 0.15

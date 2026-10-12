@@ -173,8 +173,44 @@ public static class DisigmanGlitchLinkLabBuilder
         for (int i = 0; i < variantImages.Length; i++) buttons.GetArrayElementAtIndex(i).objectReferenceValue = variantImages[i];
         so.ApplyModifiedPropertiesWithoutUndo();
 
+        WireAudio(lab, canvasRt, font);
         EditorSceneManager.SaveScene(scene, ScenePath);
         Debug.Log($"[DisigmanGlitchLinkLab] 씬 생성: {ScenePath}");
+    }
+
+    /// <summary>기존 실험실에 공용 팔레트 오디오와 일반공격·음소거 조작을 연결한다.</summary>
+    public static void WireAudio(DisigmanGlitchLinkLab lab, RectTransform canvas, TMP_FontAsset font)
+    {
+        var audio = lab.GetComponent<DisigmanGlitchLinkAudio>();
+        if (audio == null) audio = lab.gameObject.AddComponent<DisigmanGlitchLinkAudio>();
+        var so = new SerializedObject(lab);
+        so.FindProperty("_audio").objectReferenceValue = audio;
+        if (so.FindProperty("_basicFx").objectReferenceValue == null)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/WorkSpace/USW/Prefab/Effect/DisigmanRailgun/RailgunProjectile_Basic.prefab");
+            var basic = Object.Instantiate(prefab.GetComponentInChildren<RailgunBeamFx>(true), lab.transform);
+            basic.name = "Fx_Basic_AudioPreview";
+            basic.gameObject.SetActive(false);
+            so.FindProperty("_basicFx").objectReferenceValue = basic;
+        }
+        var status = (TMP_Text)so.FindProperty("_status").objectReferenceValue;
+        if (status != null) status.rectTransform.anchoredPosition = new Vector2(0f, RowBottom + RowStep * 3f);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        var row = canvas.Find("AudioControls") as RectTransform;
+        if (row == null)
+        {
+            row = BottomRow(canvas, "AudioControls", RowBottom + RowStep * 2f);
+            UnityEventTools.AddVoidPersistentListener(TimerBonusFxLabBuilder.NewButton(row, "일반공격", font).onClick, lab.FireBasic);
+            var toggle = TimerBonusFxLabBuilder.NewButton(row, "소리 켜짐", font);
+            UnityEventTools.AddVoidPersistentListener(toggle.onClick, audio.ToggleSound);
+            var audioSo = new SerializedObject(audio);
+            audioSo.FindProperty("_toggleLabel").objectReferenceValue = toggle.GetComponentInChildren<TMP_Text>();
+            audioSo.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var settings = new SerializedObject(audio);
+        settings.FindProperty("_palette").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameAudioPalette>("Assets/WorkSpace/USW/Data/Audio/StudioDartPalette.asset");
+        settings.FindProperty("_mixer").objectReferenceValue = AssetDatabase.LoadAssetAtPath<UnityEngine.Audio.AudioMixer>("Assets/WorkSpace/HSD/Resources_moved/Master.mixer");
+        settings.ApplyModifiedPropertiesWithoutUndo();
     }
 
     /// <summary>플레이 중 실험실의 시안 5개를 차례로 캡처한다 (Temp/FxCapture/DisigmanGlitchLink).</summary>

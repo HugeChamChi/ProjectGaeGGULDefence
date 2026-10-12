@@ -56,7 +56,11 @@ namespace GaeGGUL.Tutorial
         [Inject] private FieldPauseVisuals _fieldPause;
         [Inject] private IngameTutorialProgress _progress;
         [Inject] private SceneChangeManager _scenes;
+        [Inject] private AppInitialization _appInitialization;
+        [Inject] private AppLoadingScreen _loadingScreen;
+        [Inject] private TimerController _timer;
         [SerializeField] private Button _completeButton;
+        [SerializeField] private GameObject _completionPanel;
         private bool _returning;
         private BossBase _guidedBoss;
         private CancellationTokenSource _cts;
@@ -81,6 +85,7 @@ namespace GaeGGUL.Tutorial
 
         private void Start()
         {
+            if (_completionPanel != null) _completionPanel.SetActive(false);
             if (_completeButton != null)
             {
                 _completeButton.gameObject.SetActive(false);
@@ -110,6 +115,7 @@ namespace GaeGGUL.Tutorial
                 foreach (var data in _settings.SpawnUnits.Append(_settings.MergeUnit).Distinct())
                     await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 _game.StartGame(false);
+                _loadingScreen?.Hide();
                 var lessons = _plan.Lessons;
                 _lessonCount = lessons.Count;
                 foreach (var asset in lessons)
@@ -156,21 +162,67 @@ namespace GaeGGUL.Tutorial
             }
             if (IsComplete)
             {
+                HoldCompletionScreen();
                 _progress.Complete();
                 if (_completeButton != null) _completeButton.gameObject.SetActive(true);
             }
         }
 
-        /// <summary>완료 안내 버튼에서 로비로 복귀한다. 다시 배우기는 로비에서 선택한다.</summary>
+        private void HoldCompletionScreen()
+        {
+            // Keep the finished lesson stable: no further bosses, cards or rewards behind the return button.
+            _exp.DeferLevelUps = true;
+            _exp.CancelPendingLevelUp();
+            _time.Pause(this);
+            _fieldPause.HoldAttacks(this);
+            _timer.StopTimer();
+            _wave.StopRun();
+            _levelUpUI?.CancelPendingSelection();
+            _rewardUI?.CancelPendingRewards();
+            _input.AllowPointerClicks = false;
+            _input.CanBeginInteraction = _ => false;
+            _input.CanEndInteraction = null;
+            if (_completionPanel != null)
+            {
+                _completionPanel.transform.SetAsLastSibling();
+                _completionPanel.SetActive(true);
+            }
+            if (_completeButton != null) _completeButton.transform.SetAsLastSibling();
+        }
+
+        /// <summary>타이틀에서 하던 앱 초기화를 마친 뒤 완료 안내 버튼에서 로비로 이동한다.</summary>
         public void ReturnToLobby() => ReturnToLobbyAsync().Forget();
 
         private async UniTask ReturnToLobbyAsync()
         {
             if (!IsComplete || _returning) return;
             _returning = true;
-            try { await _scenes.TransitionToSceneAsync("LobbyScene"); }
-            catch (Exception error) { Debug.LogWarning("튜토리얼 로비 복귀 실패: " + error.Message); }
-            finally { _returning = false; }
+            var label = _completeButton != null ? _completeButton.GetComponentInChildren<TMPro.TMP_Text>(true) : null;
+            string originalLabel = label != null ? label.text : string.Empty;
+            if (_completeButton != null) _completeButton.interactable = false;
+            if (label != null) label.text = "로비 준비 중…";
+            var token = this.GetCancellationTokenOnDestroy();
+            bool failed = false;
+            try
+            {
+                _time.Pause(this);
+                _loadingScreen?.Show("로비 준비 중…");
+                await _scenes.TransitionToSceneAsync("LobbyScene",
+                    beforeLoad: () => _appInitialization.InitializeAsync(token));
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception error)
+            {
+                failed = true;
+                Debug.LogWarning("튜토리얼 로비 복귀 실패: " + error.Message);
+            }
+            finally
+            {
+                _returning = false;
+                _loadingScreen?.Hide();
+                if (_completeButton != null) _completeButton.interactable = true;
+                if (label != null) label.text = failed ? "로비 연결 실패 · 다시 시도" : originalLabel;
+            }
         }
 
         private void ValidateConfiguration()
@@ -785,7 +837,7 @@ namespace GaeGGUL.Tutorial
             _time?.Release(_customPauseOwner);
             _fieldPause?.Exit(this);
             if (_dialogue != null) _dialogue.Hide();
-            if (_exp != null) _exp.DeferLevelUps = false;
+            if (_exp != null) _exp.DeferLevelUps = IsComplete;
             if (_levelUpUI != null) _levelUpUI.RequireUnitPreview = false;
             if (_input != null) { _input.CanBeginInteraction = null; _input.CanEndInteraction = null; _input.AllowPointerClicks = true; }
             if (_boss != null && _boss.CurrentBoss != null) _boss.CurrentBoss.Invincible = false;
@@ -794,12 +846,17 @@ namespace GaeGGUL.Tutorial
                 _guidedBoss.PreventDeath = false;
                 _guidedBoss.ExpMultiplier = _bossExpMultiplier;
             }
-            if (_guidedBoss != null && !_guidedBoss.IsDead && _patterns != null) _patterns.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
+            if (!IsComplete && _guidedBoss != null && !_guidedBoss.IsDead && _patterns != null) _patterns.RegisterBoss(_guidedBoss, _guidedBoss.Patterns);
             foreach (var group in _bossHud) SetVisible(group, true);
             SetVisible(_upgradeGroup,true); SetVisible(_chiefGroup,true); SetVisible(_inventoryGroup,true);
             SetVisible(_summonGroup, true); SetVisible(_currencyGroup, true);
             if (_hasCameraPose && _camera != null) { _camera.transform.position = _cameraPosition; _camera.orthographicSize = _cameraSize; _camera.fieldOfView = _cameraFov; }
         }
-        private void OnDisable() { _cts?.Cancel(); Restore(); }
+        private void OnDisable()
+        {
+            _cts?.Cancel(); Restore();
+            _time?.Release(this);
+            _fieldPause?.Exit(this, false);
+        }
     }
 }

@@ -7,6 +7,9 @@ public sealed class DebuffController
     private readonly List<DebuffInstance> _instances = new List<DebuffInstance>();
     private readonly System.Collections.ObjectModel.ReadOnlyCollection<DebuffInstance> _view;
     private readonly Action<long> _burnDamage;
+    private readonly Action<long, int> _attributedBurnDamage;
+    private readonly Action<long> _applyBurnDamage;
+    private int _burnSourceId;
     private readonly Func<bool> _alive;
     private bool _advancing;
     private double _now;
@@ -15,8 +18,16 @@ public sealed class DebuffController
     /// <summary>디버그용 읽기 전용 활성 상태 목록.</summary>
     public IReadOnlyList<DebuffInstance> Active => _view;
     /// <summary>공통 피해 차감과 대상 생존 검사를 주입한다.</summary>
-    public DebuffController(Action<long> burnDamage, Func<bool> alive)
-    { _burnDamage = burnDamage; _alive = alive; _view = _instances.AsReadOnly(); }
+    public DebuffController(Action<long> burnDamage, Func<bool> alive, Action<long, int> attributedBurnDamage = null)
+    {
+        _burnDamage = burnDamage; _alive = alive; _view = _instances.AsReadOnly();
+        _attributedBurnDamage = attributedBurnDamage; _applyBurnDamage = ApplyBurnDamage;
+    }
+    private void ApplyBurnDamage(long damage)
+    {
+        if (_attributedBurnDamage != null) _attributedBurnDamage(damage, _burnSourceId);
+        else _burnDamage?.Invoke(damage);
+    }
     /// <summary>다음 부여/스냅샷 전에 기존 도래 틱을 처리한다.</summary>
     public void Advance(double now)
     {
@@ -30,7 +41,8 @@ public sealed class DebuffController
             {
                 if (i >= _instances.Count) continue;
                 var instance = _instances[i];
-                instance.Advance(now, _burnDamage, _alive);
+                _burnSourceId = instance.SourceId;
+                instance.Advance(now, _applyBurnDamage, _alive);
                 if (!_alive()) { Clear(); break; }
                 if (instance.IsExpired(now)) _instances.Remove(instance);
             }

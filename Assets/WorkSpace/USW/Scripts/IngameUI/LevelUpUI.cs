@@ -72,6 +72,8 @@ public class LevelUpUI : MonoBehaviour
     private bool _closingNormally;
     /// <summary>True after the choice entrance animation permits selection.</summary>
     public bool IsReadyForSelection { get; private set; }
+    /// <summary>Raised before showing choices so scene-owned information can be dismissed.</summary>
+    public event Action Opening;
     /// <summary>Choice area used by scene-owned interaction guides.</summary>
     public RectTransform ChoiceArea => cardContainer as RectTransform;
     /// <summary>Tutorials need one applicable unit card to teach hold-to-preview.</summary>
@@ -95,6 +97,7 @@ public class LevelUpUI : MonoBehaviour
     public void Show()
     {
         if (_gameManager?.IsFinished == true) return;
+        Opening?.Invoke();
         IsReadyForSelection = false;
         StopSelectionTimer();
         var layout = cardContainer.GetComponent<LayoutGroup>();
@@ -390,7 +393,7 @@ public class LevelUpUI : MonoBehaviour
         {
             _termLinker = new TermLinker(_termGlossary, new Color(0.18f, 0.6f, 0.8f), new Color(1f, 0.62f, 0.1f));
             _glossaryView = ChoiceGlossaryView.Create(obj.transform, source, cardContainer as RectTransform,
-                _termGlossary, _descriptionBlurShader, _descriptionSettings);
+                _termGlossary, _descriptionBlurShader, _descriptionSettings, _termLinker);
         }
         if (_descriptionToggle == null) _descriptionToggle = DescriptionToggleView.Create(obj.transform, source, value =>
         {

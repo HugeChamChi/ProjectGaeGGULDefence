@@ -26,9 +26,9 @@ public class TotemPositionBuff : TotemBase
         _isFront = CurrentCell.GridPosition.y < _frontRowThreshold;
 
         if (_isFront)
-            _totemBuffManager.AddAttackBuff(totemData.GetSimpleAmount(StatKind.AttackPercent));
+            _totemBuffManager.AddAttackBuff(totemData.GetSimpleAmount(StatKind.AttackPercent), this);
         else
-            _totemBuffManager.AddSpeedBuff(totemData.GetSimpleAmount(StatKind.Speed));
+            _totemBuffManager.AddSpeedBuff(totemData.GetSimpleAmount(StatKind.Speed), this);
     }
 
     protected override void RemoveBuff()
@@ -36,9 +36,9 @@ public class TotemPositionBuff : TotemBase
         if (totemData == null) return;
 
         if (_isFront)
-            _totemBuffManager.RemoveAttackBuff(totemData.GetSimpleAmount(StatKind.AttackPercent));
+            _totemBuffManager.RemoveAttackBuff(totemData.GetSimpleAmount(StatKind.AttackPercent), this);
         else
-            _totemBuffManager.RemoveSpeedBuff(totemData.GetSimpleAmount(StatKind.Speed));
+            _totemBuffManager.RemoveSpeedBuff(totemData.GetSimpleAmount(StatKind.Speed), this);
     }
 
     public override List<GridCell> GetAffectedCells()

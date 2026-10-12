@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc60b1b7c5c12cc4089eada71c932b72, type: 3}
+  m_Name: UnitBuffVisualSettings
+  m_EditorClassIdentifier: Assembly-CSharp::UnitBuffVisualSettings
+  Attack: {fileID: 11400000, guid: 38cd821945628124ba1b3420a7b06cc0, type: 2}
+  Speed: {fileID: 11400000, guid: af96ca4e6c04dff48af65644f0b0e5e5, type: 2}
+  Mixed: {fileID: 11400000, guid: 7a305d28854e2fd44b7e332569c5b6c2, type: 2}
+  Disabled: {fileID: 11400000, guid: 1fca5b9a255ba054abc41a7d1025117d, type: 2}
+  AdditiveMaterial: {fileID: 2100000, guid: 260f23e2645fb5d4ea147c72dd0d7479, type: 2}
+  PermanentSeconds: 1.5
+  Scale: 0.55
+  FrontOffset: 3
+  BehindOffset: -3

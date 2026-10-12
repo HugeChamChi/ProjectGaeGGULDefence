@@ -44,12 +44,12 @@ public sealed class AppInitialization : IDisposable
             var login = new UniTaskCompletionSource<BackendReturnObject>();
             Backend.BMember.GuestLogin(result => login.TrySetResult(result));
             var response = await login.Task.AttachExternalCancellation(token);
-            if (!response.IsSuccess()) throw new InvalidOperationException("게스트 로그인 실패: " + response.GetStatusCode());
+            if (!response.IsSuccess()) throw new InvalidOperationException(DescribeLoginFailure(response));
             // Editor 직접 진입에서 사용했던 계정의 메모리 데이터도 새 게스트에게 넘기지 않는다.
             Player.ClearAll();
             Player.Inject(_backendData);
             await Table.InitializeAsync().AttachExternalCancellation(token);
-            await _gameData.LoadAllAsync().AttachExternalCancellation(token);
+            await _gameData.LoadAllAsync(token);
             await Player.InitializeAsync().AttachExternalCancellation(token);
             if (Player.PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
             IsReady = true;
@@ -57,6 +57,17 @@ public sealed class AppInitialization : IDisposable
         }
         catch (Exception error) { completion.TrySetException(error); }
         finally { _operation = null; }
+    }
+
+    /// <summary>뒤끝 401 등의 사유(해시키·게스트 계정 등)를 구분할 수 있게 오류 코드와 메시지를 함께 남긴다.</summary>
+    private static string DescribeLoginFailure(BackendReturnObject response)
+    {
+        var text = $"게스트 로그인 실패: {response.GetStatusCode()} / {response.GetErrorCode()} / {response.GetMessage()}";
+#if DEVELOPMENT_BUILD && UNITY_ANDROID && !UNITY_EDITOR
+        // 뒤끝 콘솔에 등록된 구글 해시키와 비교하기 위한 개발 빌드 전용 진단.
+        text += " / googleHash=" + Backend.Utils.GetGoogleHash();
+#endif
+        return text;
     }
 
     /// <summary>앱 종료에서만 진행 중인 부팅 작업을 취소한다.</summary>

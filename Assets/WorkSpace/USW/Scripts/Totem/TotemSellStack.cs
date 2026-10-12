@@ -28,7 +28,7 @@ public class TotemSellStack : TotemBase
         UnitSpawner.OnAnyUnitSold -= OnUnitSold;
 
         if (_appliedAmount > 0f)
-            _totemBuffManager.RemoveAttackBuff(_appliedAmount);
+            _totemBuffManager.RemoveAttackBuff(_appliedAmount, this);
 
         _stackCount    = 0;
         _appliedAmount = 0f;
@@ -41,7 +41,7 @@ public class TotemSellStack : TotemBase
         float increment = totemData.GetSimpleAmount(StatKind.AttackPercent);
         _stackCount++;
         _appliedAmount += increment;
-        _totemBuffManager.AddAttackBuff(increment);
+        _totemBuffManager.AddAttackBuff(increment, this);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[TotemSellStack] 판매 누적 x{_stackCount} → 공격력 +{_appliedAmount * 100f:F2}%");

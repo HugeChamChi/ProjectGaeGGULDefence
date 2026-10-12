@@ -31,16 +31,16 @@ public sealed class DamageContributionRowView : IDisposable
     public DamageContributionRowView(Transform parent, DamageChartSample sample, DamageContributionEntry entry, DamageChartUiFactory ui)
     {
         _sample=sample; Entry=entry;
-        Rect=ui.Rect("DamageRow_"+entry.Unit.name,parent,Vector2.zero,Vector2.one);
+        Rect=ui.Rect("DamageRow_"+entry.Source.name,parent,Vector2.zero,Vector2.one);
         _background=Rect.gameObject.AddComponent<Image>(); _background.raycastTarget=false;
         _skin=new DamageChartSkinView(_background,ui);
         _portraitFrame=ui.Image("PortraitFrame",Rect,Vector2.zero,Vector2.one,Color.white);
         _portraitSkin=new DamageChartSkinView(_portraitFrame,ui);
         _portrait=ui.Image("Portrait",Rect,Vector2.zero,Vector2.one,Color.white);
-        _portrait.sprite=sample.Portrait!=null?sample.Portrait:sample.Unit.icon; _portrait.preserveAspect=true;
+        _portrait.sprite=sample.Portrait!=null?sample.Portrait:entry.Portrait; _portrait.preserveAspect=true;
         _portrait.enabled=_portrait.sprite!=null;
         _rank=ui.Text("Rank",Rect,"1",Vector2.zero,Vector2.one,17f,Color.white);
-        _name=ui.Text("UnitName",Rect,string.IsNullOrEmpty(sample.DisplayNameOverride)?entry.Unit.unitName:sample.DisplayNameOverride,Vector2.zero,Vector2.one,20f,Color.white);
+        _name=ui.Text("UnitName",Rect,string.IsNullOrEmpty(sample.DisplayNameOverride)?entry.DisplayName:sample.DisplayNameOverride,Vector2.zero,Vector2.one,20f,Color.white);
         _count=ui.Text("Count",Rect,"",Vector2.zero,Vector2.one,14f,Color.white);
         _damage=ui.Text("Damage",Rect,"0",Vector2.zero,Vector2.one,22f,Color.white,TextAlignmentOptions.Right);
         _share=ui.Text("Share",Rect,"0%",Vector2.zero,Vector2.one,15f,Color.white,TextAlignmentOptions.Right);
@@ -129,11 +129,11 @@ public sealed class DamageContributionRowView : IDisposable
     }
 
     /// <summary>순위 변화만 부드럽게 이동하며 행을 다시 생성하지 않는다.</summary>
-    public void MoveTo(int rank, RectTransform host)
+    public void MoveTo(int rank, RectTransform host, int visibleSlots = 6)
     {
         bool card=_style.Layout==DamageChartLayoutKind.ContributionCards;
         float height=host.rect.height;
-        float step=card?height/3f:height/6f;
+        float step=card?height/3f:height/Mathf.Max(1,visibleSlots);
         Rect.anchorMin=Rect.anchorMax=new Vector2(0f,1f); Rect.pivot=new Vector2(0f,1f);
         Rect.sizeDelta=new Vector2(card?host.rect.width*.487f:host.rect.width,step-(_style.RefinedWideLayout?9f:6f));
         Vector2 target=new Vector2(card?(rank%2)*host.rect.width*.513f:0f,-(card?rank/2:rank)*step);
@@ -143,11 +143,30 @@ public sealed class DamageContributionRowView : IDisposable
         _positionTween=Rect.DOAnchorPos(target,_style.RankSeconds).SetEase(Ease.OutCubic).SetUpdate(true);
     }
 
+    /// <summary>시안 대비 글자 크기를 조정한다.</summary>
+    public void ScaleText(float scale)
+    {
+        foreach (var text in Rect.GetComponentsInChildren<TMP_Text>(true)) Font(text, text.fontSize * scale);
+    }
+
     /// <summary>정확한 집계값을 표시 보간의 목표로 전달한다.</summary>
     public void SetTargets(decimal damage,decimal dps,float share,float barRatio)
     {
         _targetDamage=(double)damage; _targetDps=(double)dps; _targetShare=share; _barTarget=barRatio;
         _count.text=Entry.UnitCount+"개체 합산";
+    }
+
+    /// <summary>종료 딜표의 숫자·비중·막대를 보간 중간값 없이 최종 목표로 표시한다.</summary>
+    public void Settle()
+    {
+        _shownDamage=_targetDamage; _shownDps=_targetDps;
+        _shownShare=_targetShare; _shownBar=_barTarget;
+        _bar.anchorMax=new Vector2(_shownBar,1f);
+        _damage.text=Format(_shownDamage);
+        _share.text=(_shownShare*100f).ToString("0.0")+"%";
+        _dps.text="DPS "+Format(_shownDps);
+        _textWait=0f;
+        _positionTween?.Complete();
     }
 
     /// <summary>숫자, 비중과 막대를 비스케일 시간으로 부드럽게 갱신한다.</summary>

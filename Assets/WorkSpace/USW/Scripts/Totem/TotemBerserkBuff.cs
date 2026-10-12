@@ -19,12 +19,12 @@ public class TotemBerserkBuff : TotemBase
         float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
-            _totemBuffManager.AddAttackBuff(attackAmount);
+            _totemBuffManager.AddAttackBuff(attackAmount, this);
         else
             Debug.LogWarning($"TotemBerserkBuff({name}): attackBuffAmount = 0.");
 
         if (speedAmount > 0f)
-            _totemBuffManager.AddSpeedBuff(speedAmount);
+            _totemBuffManager.AddSpeedBuff(speedAmount, this);
         else
             Debug.LogWarning($"TotemBerserkBuff({name}): speedBuffAmount = 0.");
     }
@@ -35,9 +35,9 @@ public class TotemBerserkBuff : TotemBase
         float speedAmount  = totemData.GetSimpleAmount(StatKind.Speed);
 
         if (attackAmount > 0f)
-            _totemBuffManager.RemoveAttackBuff(attackAmount);
+            _totemBuffManager.RemoveAttackBuff(attackAmount, this);
         if (speedAmount > 0f)
-            _totemBuffManager.RemoveSpeedBuff(speedAmount);
+            _totemBuffManager.RemoveSpeedBuff(speedAmount, this);
     }
 
     public override List<GridCell> GetAffectedCells()

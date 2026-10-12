@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7609eac6928357a4e9ba8e8a4edac487, type: 3}
   m_Name: TotemRewardSettings
   m_EditorClassIdentifier: Assembly-CSharp::TotemRewardSettings
+  RotateBadge: {fileID: 11400000, guid: 24345bbef5ea64742aea81059cdf93b2, type: 2}
   _projectileGraceSeconds: 0.4
   _showDescriptionOnOverview: 1
   _allowDetailSwipe: 1

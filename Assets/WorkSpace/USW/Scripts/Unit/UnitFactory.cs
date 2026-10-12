@@ -24,6 +24,8 @@ public class UnitFactory : MonoBehaviour
     {
         _deps = new UnitDependencies
         {
+            BuffVisualSettings = _resolver.Resolve<UnitBuffVisualSettings>(),
+            BuffFxPool = _resolver.Resolve<StatBuffFxPool>(),
             Timer = _resolver.Resolve<TimerController>(),
             Research = _resolver.Resolve<ResearchRunBonuses>(),
             GameManager = _resolver.Resolve<GameManager>(),

@@ -115,13 +115,13 @@ MonoBehaviour:
   - SPR_TD1002
   - SPR_TD1002
   - SPR_TD1002
-  icon: {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  icon: {fileID: 21300000, guid: 1a1767c949f9c5142b30d85e17785f73, type: 3}
   prefab: {fileID: 8956907479240940453, guid: 8926cd92b8ab6c143b24f5f241947ffa, type: 3}
   rotationSprites:
-  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
-  - {fileID: 21300000, guid: 6c0b4318f27060d49b2356a144aad1f7, type: 3}
+  - {fileID: 21300000, guid: 1a1767c949f9c5142b30d85e17785f73, type: 3}
+  - {fileID: 21300000, guid: 1a1767c949f9c5142b30d85e17785f73, type: 3}
+  - {fileID: 21300000, guid: 1a1767c949f9c5142b30d85e17785f73, type: 3}
+  - {fileID: 21300000, guid: 1a1767c949f9c5142b30d85e17785f73, type: 3}
   description: "\uBC30\uCE58 \uD6C4 \uC81C\uC790\uB9AC\uC5D0\uC11C \uC2DC\uAC04\uC774
     \uC9C0\uB0A0\uC218\uB85D \uD6A8\uACFC\uAC00 \uAC15\uD654\uB429\uB2C8\uB2E4."
   DetailedDescription: "\uBC30\uCE58 \uD6C4 \uC2DC\uAC04\uC774 \uC9C0\uB0A0\uC218\uB85D

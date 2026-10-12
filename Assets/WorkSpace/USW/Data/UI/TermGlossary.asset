@@ -21,12 +21,15 @@ MonoBehaviour:
     - "\uC54C\uD321 \uC561\uD2F0\uBE0C"
     - "\uC9D1\uACB0 \uC0AC\uACA9"
     - "\uC871\uC7A5 \uC2A4\uD0AC\uC0AC\uC6A9"
+    RelatedTerms: []
     Kind: "\uC871\uC7A5"
     KindColor: {r: 0.62, g: 0.38, b: 0.95, a: 1}
     Body: "\uBC84\uD2BC\uC744 \uB20C\uB7EC \uB4DC\uB860\uC744 \uBAA8\uC544 \uC77C\uC81C
-      \uC0AC\uACA9\uD569\uB2C8\uB2E4."
+      \uC0AC\uACA9\uD569\uB2C8\uB2E4. \uBCF4\uC2A4\uC758 \uD328\uD134\uC744 \uB04A\uC744\uC218
+      \uC788\uC2B5\uB2C8\uB2E4."
     BriefBody: "\uBC84\uD2BC\uC744 \uB20C\uB7EC \uB4DC\uB860\uC744 \uBAA8\uC544 \uC77C\uC81C
-      \uC0AC\uACA9\uD569\uB2C8\uB2E4."
+      \uC0AC\uACA9\uD569\uB2C8\uB2E4. \uBCF4\uC2A4\uC758 \uD328\uD134\uC744 \uB04A\uC744\uC218
+      \uC788\uC2B5\uB2C8\uB2E4."
     DetailedBody: "\uCC38\uC5EC \uB4DC\uB860\uC774 \uB9CE\uC744\uC218\uB85D \uD53C\uD574\uAC00
       \uCEE4\uC9D1\uB2C8\uB2E4. \uBCF4\uC2A4\uC758 \uD328\uD134\uC744 \uB04A\uC744
       \uC218 \uC788\uC2B5\uB2C8\uB2E4."
@@ -40,6 +43,7 @@ MonoBehaviour:
     Aliases:
     - "\uC790\uD3ED \uB4DC\uB860"
     - "\uC790\uD3ED\uB4DC\uB860"
+    RelatedTerms: []
     Kind: "\uC720\uB2DB"
     KindColor: {r: 0.3, g: 0.55, b: 0.94, a: 1}
     Body: "\uBCF4\uC2A4\uC5D0\uAC8C \uB3CC\uC9C4\uD574 \uD3ED\uBC1C\uD558\uB294 \uB4DC\uB860\uC785\uB2C8\uB2E4."
@@ -61,6 +65,8 @@ MonoBehaviour:
     - "\uD574\uD0B9"
     - "\uD574\uD0B9 \uC2A4\uD0AC"
     - "\uD574\uD0B9\uC2A4\uD0AC"
+    RelatedTerms:
+    - detonation
     Kind: "\uC790\uC6D0"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uBCF4\uC2A4\uC5D0\uAC8C \uC2A4\uD0DD\uC744 \uC313\uC544 \uAE30\uD3ED
@@ -83,6 +89,7 @@ MonoBehaviour:
     - "\uC2DC\uAC04 \uC18C\uBE44"
     - "\uC2DC\uAC04 \uD68C\uBCF5"
     - "\uAE00\uB9AC\uCE58"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.85, g: 0.55, b: 0.2, a: 1}
     Body: "\uC2DC\uAC04\uC744 \uD68C\uBCF5\uD558\uAC70\uB098 \uC18C\uBAA8\uD574 \uCD94\uAC00
@@ -103,6 +110,7 @@ MonoBehaviour:
     Aliases:
     - "\uC804\uD22C \uB4DC\uB860"
     - "\uC804\uD22C\uB4DC\uB860"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uC720\uB2DB \uACC1\uC5D0\uC11C \uBCF4\uC2A4\uB97C \uACF5\uACA9\uD558\uB294
@@ -120,6 +128,7 @@ MonoBehaviour:
     DisplayName: "\uB9C8\uB098"
     Aliases:
     - "\uB9C8\uB098"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uC2A4\uD0AC \uC0AC\uC6A9\uC5D0 \uD544\uC694\uD55C \uCDA9\uC804\uB7C9\uC785\uB2C8\uB2E4."
@@ -134,6 +143,7 @@ MonoBehaviour:
     DisplayName: "\uAE30\uD3ED"
     Aliases:
     - "\uAE30\uD3ED"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uD574\uD0B9 \uC2A4\uD0DD\uC744 \uC18C\uBE44\uD574 \uD53C\uD574\uB97C
@@ -148,9 +158,11 @@ MonoBehaviour:
     Clip: {fileID: 0}
     ClipCaption: 
   - Id: skill_charge
-    DisplayName: "\uC2A4\uD0AC \uCDA9\uC804"
+    DisplayName: "\uC2A4\uD0AC \uCFE8\uD0C0\uC784"
     Aliases:
+    - "\uC2A4\uD0AC \uCFE8\uD0C0\uC784"
     - "\uC2A4\uD0AC \uCDA9\uC804"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uB2E4\uC74C \uC2A4\uD0AC\uC744 \uC4F8 \uB54C\uAE4C\uC9C0 \uCC44\uC6B0\uB294
@@ -167,6 +179,7 @@ MonoBehaviour:
     DisplayName: "\uC2DD\uB7C9"
     Aliases:
     - "\uC2DD\uB7C9"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uC720\uB2DB \uCD9C\uACA9\uACFC \uAC15\uD654\uC5D0 \uC4F0\uB294 \uC7AC\uD654\uC785\uB2C8\uB2E4."
@@ -181,6 +194,7 @@ MonoBehaviour:
     DisplayName: "\uD569\uC131"
     Aliases:
     - "\uD569\uC131"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uB450 \uC720\uB2DB\uC744 \uD569\uCCD0 \uC0C1\uC704 \uB4F1\uAE09\uC744
@@ -198,6 +212,7 @@ MonoBehaviour:
     DisplayName: "\uAC15\uD654"
     Aliases:
     - "\uAC15\uD654"
+    RelatedTerms: []
     Kind: "\uADDC\uCE59"
     KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
     Body: "\uC2DD\uB7C9\uC73C\uB85C \uD574\uB2F9 \uC720\uB2DB \uC885\uB958\uB97C

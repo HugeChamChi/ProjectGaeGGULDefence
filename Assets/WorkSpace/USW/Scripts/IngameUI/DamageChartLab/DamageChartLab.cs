@@ -60,7 +60,7 @@ public sealed class DamageChartLab : MonoBehaviour
     /// <summary>현재 레이아웃.</summary>
     public DamageChartLayoutKind CurrentLayout => _styles[_styleIndex].Layout;
 
-    /// <summary>실험실이 있는 씬에서만 데이터와 집계 서비스를 DI 등록한다.</summary>
+    /// <summary>실험실이 있는 씬에서 비교 뷰를 등록한다. 공통 집계 서비스는 씬 스코프가 등록한다.</summary>
     public static void RegisterServices(IContainerBuilder builder, Scene scene)
     {
         foreach(var root in scene.GetRootGameObjects())
@@ -68,8 +68,6 @@ public sealed class DamageChartLab : MonoBehaviour
             var labs=root.GetComponentsInChildren<DamageChartLab>(true);
             if(labs.Length==0) continue;
             if(labs.Length!=1 || labs[0]._settings==null) throw new InvalidOperationException("Damage chart lab requires one authored settings asset.");
-            builder.RegisterInstance(labs[0]._settings);
-            builder.Register<DamageContributionLedger>(Lifetime.Scoped);
             SceneComponentRegistration.RegisterOptional<DamageChartLab>(builder,scene);
             return;
         }
@@ -182,7 +180,8 @@ public sealed class DamageChartLab : MonoBehaviour
 
     private void ApplyPanelLayout(bool refined,bool ring)
     {
-        Place(_chart,new Vector2(.055f,refined?.196f:.181f),new Vector2(.945f,refined?.74f:.728f));
+        bool wide = CurrentLayout == DamageChartLayoutKind.WideBars;
+        Place(_chart,new Vector2(wide?.03f:.055f,refined?.196f:.181f),new Vector2(wide?.97f:.945f,wide?.74f:refined?.74f:.728f));
         Place(_body,new Vector2(refined?.045f:.035f,refined?.03f:ring?.045f:.055f),
             new Vector2(refined?.955f:.965f,refined?.79f:ring?.45f:.73f));
         Place(_header.rectTransform,new Vector2(.045f,refined?.929f:.92f),new Vector2(.65f,.98f));
@@ -203,9 +202,13 @@ public sealed class DamageChartLab : MonoBehaviour
             return order!=0?order:a.Entry.Unit.unitName.CompareTo(b.Entry.Unit.unitName);
         });
         decimal max=0m;foreach(var entry in _ledger.Entries) if(entry.TotalDamage>max) max=entry.TotalDamage;
+        int visibleRank = 0;
         for(int rank=0;rank<_sorted.Count;rank++)
         {
-            var row=_sorted[rank];row.MoveTo(rank,_body);
+            var row=_sorted[rank];
+            row.Rect.gameObject.SetActive(row.Entry.TotalDamage > 0m);
+            if (row.Entry.TotalDamage <= 0m) continue;
+            row.MoveTo(visibleRank++,_body);
             float share=(float)_ledger.Share(row.Entry);
             float bar=CurrentLayout==DamageChartLayoutKind.WideBars && max>0m?(float)(row.Entry.TotalDamage/max):share;
             row.SetTargets(row.Entry.TotalDamage,_ledger.RecentDpsFor(row.Entry),share,bar);

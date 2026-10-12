@@ -28,6 +28,9 @@ public class TotemBuffManager : MonoBehaviour
     private BossManager _bossManager;
     private GameManager _gameManager;
     private FieldPauseVisuals _fieldPause;
+    /// <summary>최종 셀 적용 상태와 유닛 획득 연출의 읽기 전용 연결점.</summary>
+    public TotemBuffVisualState VisualState { get; } = new();
+    private bool _rebuilding, _rebuildRequested;
 
     // ── 보스 등장 경과 시간 (BossEncounterWindowCondition) ──────
     private float _bossEncounterSeconds = -1f;
@@ -42,6 +45,7 @@ public class TotemBuffManager : MonoBehaviour
     private void OnBossEntered(BossEntry previous, BossEntry current)
     {
         _bossEncounterSeconds = 0f;
+        VisualState.BeginEncounter();
         RebuildCellBuffFlags();
     }
 
@@ -99,7 +103,7 @@ public class TotemBuffManager : MonoBehaviour
     public void ApplyAttackDebuff(GridCell cell, BossBase boss)
     {
         if (cell == null || boss == null || !_attackDebuffSources.TryGetValue(cell, out var source) || source == null || !source.IsActive) return;
-        if (source.TryGetDebuffBinding(out var binding)) boss.TryApplyDebuff(binding, source.GetInstanceID());
+        if (source.TryGetDebuffBinding(out var binding)) boss.TryApplyDebuff(binding, source.GetInstanceID(), source: source.DamageSourceData);
     }
 
     public event System.Action OnTotemBuffChanged;
@@ -199,16 +203,20 @@ public class TotemBuffManager : MonoBehaviour
     }
 
     // ── 공격력 버프 (토템 전용) ───────────────
-    public void AddAttackBuff(float amount)
+    public void AddAttackBuff(float amount, TotemBase source = null)
     {
         _totemAttackBonus += amount;
+        VisualState.RecordGlobal(source, StatKind.AttackPercent, amount);
         OnTotemBuffChanged?.Invoke();
+        RebuildCellBuffFlags();
     }
 
-    public void RemoveAttackBuff(float amount)
+    public void RemoveAttackBuff(float amount, TotemBase source = null)
     {
         _totemAttackBonus = Mathf.Max(0f, _totemAttackBonus - amount);
+        VisualState.RecordGlobal(source, StatKind.AttackPercent, -amount);
         OnTotemBuffChanged?.Invoke();
+        RebuildCellBuffFlags();
     }
 
     // ── 공격력 버프 (레벨업/판매 전용) ──────
@@ -219,16 +227,20 @@ public class TotemBuffManager : MonoBehaviour
     }
 
     // ── 속도 버프 (토템 전용) ─────────────────
-    public void AddSpeedBuff(float amount)
+    public void AddSpeedBuff(float amount, TotemBase source = null)
     {
         _totemSpeedBonus += amount;
+        VisualState.RecordGlobal(source, StatKind.Speed, amount);
         OnTotemBuffChanged?.Invoke();
+        RebuildCellBuffFlags();
     }
 
-    public void RemoveSpeedBuff(float amount)
+    public void RemoveSpeedBuff(float amount, TotemBase source = null)
     {
         _totemSpeedBonus = Mathf.Max(0f, _totemSpeedBonus - amount);
+        VisualState.RecordGlobal(source, StatKind.Speed, -amount);
         OnTotemBuffChanged?.Invoke();
+        RebuildCellBuffFlags();
     }
 
     // ── 속도 버프 (레벨업 전용) ─────────────
@@ -330,6 +342,22 @@ public class TotemBuffManager : MonoBehaviour
     // ── 전체 셀 버프 색상 플래그 재계산 ───────────────────────
     public void RebuildCellBuffFlags()
     {
+        if (_rebuilding) { _rebuildRequested = true; return; }
+        if (_gridManager == null) return;
+        _rebuilding = true;
+        try
+        {
+            do
+            {
+                _rebuildRequested = false;
+                RebuildFinalCellBuffs();
+            } while (_rebuildRequested);
+        }
+        finally { _rebuilding = false; }
+    }
+
+    private void RebuildFinalCellBuffs()
+    {
         _attackDebuffSources.Clear();
         if (_gridManager == null) return;
 
@@ -343,10 +371,15 @@ public class TotemBuffManager : MonoBehaviour
             }
         }
 
+        VisualState.Begin(_gridManager.AllCells(), 1f + TotemEfficiencyBonus);
+        bool completed = false;
+        try
+        {
         // 2) 등록된 토템만 순회
         foreach (var totem in _activeTotem)
         {
             if (totem == null || !totem.IsActive) continue;
+            VisualState.SetSource(totem);
             totem.PaintAffectedCells();
             if (totem.TryGetDebuffBinding(out var binding) && binding.Trigger == DebuffTrigger.AffectedUnitBasicAttackAttempt)
                 foreach (var cell in totem.GetAffectedCells())
@@ -355,6 +388,9 @@ public class TotemBuffManager : MonoBehaviour
 
         // 3) 보스 등장 조건이 끝나는 다음 시점에 다시 계산하도록 예약
         _nextEncounterThreshold = FindNextEncounterThreshold();
+        completed = !_rebuildRequested;
+        }
+        finally { VisualState.End(completed); }
     }
 }
 

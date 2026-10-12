@@ -13,33 +13,59 @@ public class Drone_Betan : DroneSpawnerBase
     [Header("Drone Producer Settings")]
     [SerializeField] private SelfDestructDrone selfDestructPrefab;
     [SerializeField] private int selfDestructCount = 1;
+    [SerializeField] private BetangSpineVisual _skillVisual;
+    [SerializeField] private SelfDestructDrone _skillSelfDestructPrefab;
     [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private GameManager _gameManager;
     private int _bombRequestLifetime;
+    private int _pendingSkillBombs;
+    private BossBase _pendingSkillBoss;
 
     protected override void OnSkillFull()
     {
         SpawnOneDrone();
-        SpawnSelfDestructDrones(selfDestructCount);
+        if (_skillVisual != null && _skillVisual.HasSkillLaunchEvent)
+        {
+            _pendingSkillBombs = selfDestructCount;
+            _pendingSkillBoss = SkillDebuffTarget;
+        }
+        else SpawnSelfDestructDrones(selfDestructCount);
         FlashOwnedDrones();
     }
 
     /// <summary>기본 스킬 및 선택지 주기에서 요청한 자폭 드론을 생성한다.</summary>
     public virtual void SpawnSelfDestructDrones(int count)
+        => SpawnBombs(count, selfDestructPrefab, null);
+
+    /// <summary>Spine 버튼 누름 이벤트에서 예약된 스킬 자폭을 한 번 발사한다.</summary>
+    public void LaunchPendingSkillBombs()
     {
-        if (count <= 0 || !isActiveAndEnabled || currentCell == null || IsStunned || IsCellSealed || unitData == null || selfDestructPrefab == null)
+        int count = _pendingSkillBombs;
+        var target = _pendingSkillBoss;
+        CancelPendingSkillBombs();
+        if (count <= 0 || target == null || target.IsDead || target != SkillDebuffTarget) return;
+        SpawnBombs(count, _skillSelfDestructPrefab != null ? _skillSelfDestructPrefab : selfDestructPrefab, target);
+    }
+
+    /// <summary>스킬 모션 중단·유닛 제거·풀 반환 때 아직 발사하지 않은 요청을 폐기한다.</summary>
+    public void CancelPendingSkillBombs()
+    { _pendingSkillBombs = 0; _pendingSkillBoss = null; }
+
+    private void SpawnBombs(int count, SelfDestructDrone prefab, BossBase expectedTarget)
+    {
+        if (count <= 0 || !isActiveAndEnabled || currentCell == null || IsStunned || IsCellSealed || unitData == null || prefab == null)
         {
             return;
         }
 
         if (_fieldPause?.AttacksHeld == true)
         {
-            SpawnAfterHoldAsync(count, _bombRequestLifetime).Forget();
+            SpawnAfterHoldAsync(count, _bombRequestLifetime, prefab, expectedTarget).Forget();
             return;
         }
         if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return;
         var target = SkillDebuffTarget;
-        if (target == null || target.IsDead) return;
+        if (target == null || target.IsDead || expectedTarget is not null && target != expectedTarget) return;
         float coefficient = unitData.SelfDestructAttackCoefficient;
         if (!(coefficient > 0f) || float.IsInfinity(coefficient))
         {
@@ -50,7 +76,7 @@ public class Drone_Betan : DroneSpawnerBase
         for (int i = 0; i < count; i++)
         {
             // Flight owns its world pose; the producer's breathing/flip must not distort it.
-            var bombObj = RM.Instantiate(selfDestructPrefab.gameObject, transform.position, Quaternion.identity, null, true);
+            var bombObj = RM.Instantiate(prefab.gameObject, transform.position, Quaternion.identity, null, true);
             if (bombObj != null)
             {
                 var bomb = bombObj.GetComponent<SelfDestructDrone>();
@@ -66,7 +92,7 @@ public class Drone_Betan : DroneSpawnerBase
                     else
                     {
                         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-                        bomb.Initialize(damage, critical, target);
+                        bomb.Initialize(damage, critical, target, unitData);
                     }
                 }
                 else RM.Destroy(bombObj);
@@ -78,16 +104,24 @@ public class Drone_Betan : DroneSpawnerBase
         }
     }
 
-    private async UniTaskVoid SpawnAfterHoldAsync(int count, int lifetime)
+    private async UniTaskVoid SpawnAfterHoldAsync(int count, int lifetime, SelfDestructDrone prefab, BossBase expectedTarget)
     {
         if (await _fieldPause.WaitForAttacksAsync(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
         if (_bombRequestLifetime != lifetime || !isActiveAndEnabled || currentCell == null) return;
-        SpawnSelfDestructDrones(count);
+        SpawnBombs(count, prefab, expectedTarget);
     }
 
     protected override void OnUnitRemoved()
     {
         _bombRequestLifetime++;
+        CancelPendingSkillBombs();
         base.OnUnitRemoved();
+    }
+
+    protected override void OnDisable()
+    {
+        _bombRequestLifetime++;
+        CancelPendingSkillBombs();
+        base.OnDisable();
     }
 }

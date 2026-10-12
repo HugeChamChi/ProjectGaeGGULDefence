@@ -96,7 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e075b9a3e08e2f74fbd651c858ab16ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: spine-unity::Spine.Unity.SkeletonRenderer
-  skeletonDataAsset: {fileID: 11400000, guid: e205eccf3d56e33499ffed081dc718f4, type: 2}
+  skeletonDataAsset: {fileID: 11400000, guid: 41516c19c1eec5d41853ee54ed13ec6d, type: 2}
   initialSkinName: 
   initialFlipX: 0
   initialFlipY: 0
@@ -307,6 +307,9 @@ MonoBehaviour:
   selfDestructPrefab: {fileID: -2181070433245593686, guid: ffc761a047444e446a97aebc507137a9,
     type: 3}
   selfDestructCount: 1
+  _skillVisual: {fileID: 3574841914434652362}
+  _skillSelfDestructPrefab: {fileID: 4888026699415289340, guid: a6c813113d30974479b11e944215cd0c,
+    type: 3}
 --- !u!114 &8868742873359336193
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -404,6 +407,8 @@ MonoBehaviour:
   _drag: {fileID: 8868742873359336193}
   _idle: idle
   _skill: skill
+  _skillLaunchEvent: {fileID: 11400000, guid: 748e55edc2fc3d542b58e156d3d701df, type: 2}
+  _skillMixSeconds: 0.08
   _tierAttacks:
   - attack_01
   - attack_02

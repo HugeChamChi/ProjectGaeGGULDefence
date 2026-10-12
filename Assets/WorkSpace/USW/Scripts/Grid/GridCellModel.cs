@@ -18,6 +18,8 @@ public class GridCellModel
     // ── 이벤트 ─────────────────────────────────────────────────
     /// <summary>상태 변경 시 — GridCellView가 구독하여 색상/UI 갱신</summary>
     public event Action OnStateChanged;
+    /// <summary>실제 토템 효과 적용 기록 전용. 셀 초기화나 미리보기는 발행하지 않는다.</summary>
+    public event Action<StatKind, float, bool, bool> OnTotemEffectApplied;
 
     // ── 토템 버프 플래그 (기존 유지) ───────────────────────────
     public bool HasAttackBuff { get; private set; }
@@ -92,18 +94,21 @@ public class GridCellModel
     public void SetTotemAttackDisabled(bool value)
     {
         TotemAttackDisabled = value;
+        if (value) OnTotemEffectApplied?.Invoke(StatKind.AttackPercent, 0f, true, false);
         OnStateChanged?.Invoke();
     }
 
     public void SetTotemAttackModifier(float value)
     {
         TotemAttackModifier = Mathf.Max(0f, value);
+        OnTotemEffectApplied?.Invoke(StatKind.AttackPercent, TotemAttackModifier - 1f, false, true);
         OnStateChanged?.Invoke();
     }
 
     public void SetTotemSpeedModifier(float value)
     {
         TotemSpeedModifier = Mathf.Max(0.1f, value);
+        OnTotemEffectApplied?.Invoke(StatKind.Speed, 1f / TotemSpeedModifier - 1f, false, true);
         OnStateChanged?.Invoke();
     }
 
@@ -119,6 +124,7 @@ public class GridCellModel
     {
         _totemCellBonuses.TryGetValue(kind, out var cur);
         _totemCellBonuses[kind] = cur + v;
+        OnTotemEffectApplied?.Invoke(kind, v, false, false);
     }
 
     /// <summary>토템 제거 시 RebuildCellBuffFlags()에서 호출 — 토템 전용 효과 초기화</summary>

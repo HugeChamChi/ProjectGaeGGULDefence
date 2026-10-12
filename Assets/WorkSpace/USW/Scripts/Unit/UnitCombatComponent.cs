@@ -306,9 +306,10 @@ public class UnitCombatComponent : MonoBehaviour
     {
         var replay = CurrentBasicAttack;
         var kind = critical ? BossDamageKind.Critical : BossDamageKind.Normal;
+        var source = _unit.unitData;
         Action<BossBase, Vector3> hit = replay?.IsEnabled == true
-            ? new RecordedDamage(damage, kind).Apply
-            : (boss, targetPos) => boss.TakeDamage(damage, targetPos, kind);
+            ? new RecordedDamage(damage, kind, source).Apply
+            : (boss, targetPos) => boss.TakeDamage(damage, targetPos, kind, source);
         LaunchProjectileInternal(sizeMultiplier, projectileData, hit, replay);
     }
 

@@ -298,6 +298,9 @@ MonoBehaviour:
   cellPrefab: {fileID: 7661997699564753732, guid: 54f6bff9ebd0bae439fc326706930116,
     type: 3}
   gridLayout: {fileID: 4605168618344427892}
+  _rotateBadgeSettings: {fileID: 11400000, guid: 24345bbef5ea64742aea81059cdf93b2,
+    type: 2}
+  _rotateBadgeAnchor: {fileID: 7283412660672393929}
   legendSlotPrefab: {fileID: 2939324190633695965, guid: ab8d3cba2a327e74a8afcfeded67d390,
     type: 3}
   tr_LegendParent: {fileID: 3797253809916457035}

@@ -87,7 +87,7 @@ public class GameDataManager
                 if (spawnCsv == null || bossCsv == null || totemCsv == null)
                 {
                     Debug.LogWarning("[GameDataManager] 시트 다운로드 일부 실패. 3초 후 전체 재시도합니다...");
-                    await UniTask.Delay(3000, cancellationToken: token);
+                    await UniTask.Delay(3000, DelayType.Realtime, cancellationToken: token);
                     continue;
                 }
 
@@ -109,10 +109,11 @@ public class GameDataManager
                 Debug.Log("[GameDataManager] 모든 시트 로드 및 파싱 완료");
                 break; // 성공 시 무한루프 탈출
             }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
                 Debug.LogError($"[GameDataManager] 파싱 중 에러 발생: {ex.Message}\n3초 후 전체 재시도합니다...");
-                await UniTask.Delay(3000, cancellationToken: token);
+                await UniTask.Delay(3000, DelayType.Realtime, cancellationToken: token);
             }
         }
     }

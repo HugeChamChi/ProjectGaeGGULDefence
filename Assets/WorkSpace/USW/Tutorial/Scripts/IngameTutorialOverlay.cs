@@ -22,6 +22,8 @@ namespace GaeGGUL.Tutorial
         private float _started;
         private readonly Vector3[] _corners = new Vector3[4];
         private IngameTutorialDialogue _dialogue;
+        private const float HandReferenceWidth = 1080f;
+        private Image _handImage;
 
         /// <summary>Number of taps consumed by the overlay; taps never also select underlying UI.</summary>
         public int TapCount { get; private set; }
@@ -44,6 +46,7 @@ namespace GaeGGUL.Tutorial
             raycastTarget = true;
             gameObject.SetActive(true);
             RefreshHoles();
+            UpdateHand();
             SetVerticesDirty();
         }
 
@@ -95,6 +98,7 @@ namespace GaeGGUL.Tutorial
         private void Update()
         {
             RefreshHoles();
+            UpdateHand();
             SetVerticesDirty();
         }
 
@@ -152,11 +156,26 @@ namespace GaeGGUL.Tutorial
             }
             // Even an invisible input blocker needs geometry for GraphicRaycaster.
             if (!_dim) Quad(vh, bounds, Color.clear);
-            if (_hand && _holes.Count > 0 && !IsTransitioning) DrawHand(vh);
         }
 
-        private void DrawHand(VertexHelper vh)
+        private void UpdateHand()
         {
+            bool visible = _settings != null && _hand && _holes.Count > 0 && !IsTransitioning
+                && _settings.HandIdleSprite != null && _settings.HandPressedSprite != null;
+            if (!visible)
+            {
+                if (_handImage != null) _handImage.gameObject.SetActive(false);
+                return;
+            }
+            if (_handImage == null)
+            {
+                var hand = new GameObject("TutorialHand", typeof(RectTransform), typeof(Image));
+                hand.transform.SetParent(transform, false);
+                _handImage = hand.GetComponent<Image>();
+                _handImage.raycastTarget = false;
+                _handImage.preserveAspect = true;
+            }
+            _handImage.gameObject.SetActive(true);
             float elapsed = (Time.unscaledTime - _started) % _settings.GestureSeconds;
             float hold = _gesture == Gesture.Hold || _gesture == Gesture.HoldDrag ? _settings.HoldGestureSeconds : 0f;
             float t = Mathf.Clamp01((elapsed - hold) / Mathf.Max(0.1f, _settings.GestureSeconds - hold));
@@ -164,21 +183,15 @@ namespace GaeGGUL.Tutorial
             Vector2 to = _gesture == Gesture.Drag && _holes.Count > 1 ? _holes[1].center : from;
             if (_gesture == Gesture.HoldDrag) to += Vector2.right * _holes[0].width;
             Vector2 tip = Vector2.Lerp(from, to, Mathf.SmoothStep(0, 1, t));
-            float scale = Mathf.Clamp(rectTransform.rect.width / 1080f, 0.5f, 2f);
-            // Pointing index, palm, curled fingers and thumb: geometric hand icon, no font dependency.
-            HandPart(vh, tip, new Rect(-8, -48, 16, 48), scale);
-            HandPart(vh, tip, new Rect(-8, -89, 54, 47), scale);
-            HandPart(vh, tip, new Rect(10, -49, 12, 18), scale);
-            HandPart(vh, tip, new Rect(23, -52, 12, 16), scale);
-            HandPart(vh, tip, new Rect(36, -58, 12, 15), scale);
-            HandPart(vh, tip, new Rect(-23, -71, 19, 25), scale);
-        }
-
-        private static void HandPart(VertexHelper vh, Vector2 tip, Rect r, float scale)
-        {
-            var part = new Rect(tip + r.position * scale, r.size * scale);
-            Quad(vh, new Rect(part.position - Vector2.one * 2 * scale, part.size + Vector2.one * 4 * scale), Color.black);
-            Quad(vh, part, Color.white);
+            bool pressed = _gesture == Gesture.Tap
+                ? elapsed < _settings.GestureSeconds * _settings.HandTapPressedFraction
+                : elapsed < hold || t < 1f;
+            _handImage.sprite = pressed ? _settings.HandPressedSprite : _settings.HandIdleSprite;
+            var rect = _handImage.rectTransform;
+            rect.anchorMin = rect.anchorMax = rectTransform.pivot;
+            rect.pivot = pressed ? _settings.HandPressedTip : _settings.HandIdleTip;
+            rect.sizeDelta = _settings.HandSize * (rectTransform.rect.width / HandReferenceWidth);
+            rect.anchoredPosition = tip;
         }
 
         private static void Quad(VertexHelper vh, Rect r, Color color)

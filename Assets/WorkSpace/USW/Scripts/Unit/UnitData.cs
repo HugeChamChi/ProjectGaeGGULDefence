@@ -33,6 +33,11 @@ public class UnitData : ScriptableObject, ILoadableAsset
 
     [Header("Skill")]
     public SkillData skillData;
+    [SerializeField, Tooltip("정보창의 스킬 이름. 비워두면 SkillData의 이름을 사용합니다.")]
+    private string _skillDisplayName;
+    /// <summary>Authored display name, including skills implemented by lifecycle hooks.</summary>
+    public string SkillDisplayName => !string.IsNullOrWhiteSpace(_skillDisplayName)
+        ? _skillDisplayName : skillData?.skillName ?? string.Empty;
     /// <summary>델탕·감망 전용 충전/생산/소비 설정. 다른 유닛은 비워 둔다.</summary>
     public DroneHackingData Hacking;
     /// <summary>Disigman's own attack-count charge and immediate time recovery.</summary>
