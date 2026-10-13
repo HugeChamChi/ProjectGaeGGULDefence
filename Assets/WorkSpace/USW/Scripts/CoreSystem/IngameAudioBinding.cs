@@ -18,6 +18,7 @@ public sealed class IngameAudioBinding : ITickable, IDisposable
     public void Tick()
     {
         _audio.SetMusicSpeed(_game.CurrentState == GameManager.GameState.Playing ? _time.Current : 1f);
+        _audio.SetCombatSpeed(_time.Current);
         bool audible = _game.CurrentState == GameManager.GameState.Playing && !_time.IsPaused && !_field.AttacksHeld;
         if (_audible == audible) return;
         _audible = audible;

@@ -35,6 +35,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<WaveManager>();
         builder.RegisterComponentInHierarchy<TimerController>();
+        SceneComponentRegistration.RegisterOptional<DisigmanGlitchLinkPresentation>(builder, gameObject.scene);
 
         builder.RegisterComponentInHierarchy<CurrencyManager>();
         builder.RegisterComponentInHierarchy<ExpManager>();

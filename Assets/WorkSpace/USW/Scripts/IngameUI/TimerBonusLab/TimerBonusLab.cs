@@ -333,7 +333,8 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     {
         if (!_ready) return;
         if (IsRuntime && !_running) return;
-        float dt = Mathf.Min(_useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime, MaxStep) * Speed;
+        bool unscaled = _useUnscaledTime && !(IsRuntime && _hackActive);
+        float dt = Mathf.Min(unscaled ? Time.unscaledDeltaTime : Time.deltaTime, MaxStep) * Speed;
         // 히트스톱: 시계·파티클이 같이 멈추고, 플래시·줌만 계속 줄어든다.
         bool frozen = _running && _hold > 0f;
         if (frozen) _hold -= dt;

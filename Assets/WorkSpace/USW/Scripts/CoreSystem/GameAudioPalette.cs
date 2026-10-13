@@ -32,7 +32,7 @@ public sealed class GameAudioPalette : ScriptableObject
     [Min(.005f)] public float TailFadeSeconds = .035f;
     /// <summary>Shared continuous laser fades, independent of emitter count.</summary>
     [Min(.01f)] public float LaserFadeSeconds = .08f;
-    /// <summary>Seven event definitions; missing or unknown sounds are silent.</summary>
+    /// <summary>Authored event definitions; missing or unknown sounds are silent.</summary>
     public AudioCueDefinition[] Cues = new AudioCueDefinition[0];
 
     /// <summary>Looks up authored event data without loading an arbitrary resource address.</summary>

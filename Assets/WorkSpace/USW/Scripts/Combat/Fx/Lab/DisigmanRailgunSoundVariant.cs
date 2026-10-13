@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>디시그망 사운드 비교 시안. 승인 원본에서 가공한 실험실 전용 클립.</summary>
+/// <summary>디시그망 사운드 비교 시안. A는 본게임에 채택된 편집본, B~E는 비교용 클립.</summary>
 [CreateAssetMenu(menuName = "USW/Fx Lab/Disigman Sound Variant")]
 public sealed class DisigmanRailgunSoundVariant : ScriptableObject
 {

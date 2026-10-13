@@ -45,6 +45,12 @@ public static class DisigmanRailgunSoundLabBuilder
             variant.DisplayName = Names[i]; variant.Description = Descriptions[i];
             variant.Charge = Clip(Keys[i==4?0:i], "Charge"); variant.Basic = Clip(Keys[i==4?0:i], "Basic"); variant.Skill = Clip(Keys[i], "Skill");
             variant.SkillCharge = i==4 ? Clip(Keys[1], "Charge") : null;
+            if (i == 0)
+            {
+                variant.Charge = RefinedA("Charge"); variant.SkillCharge = RefinedA("SkillCharge");
+                variant.Basic = RefinedA("Basic"); variant.Skill = RefinedA("Skill");
+                variant.Description = "전자기 A · 짧은 디지털 발사 / 패킷 충전과 절제된 글리치 착탄";
+            }
             if (Mathf.Abs(variant.Charge.length - settings.ChargeSeconds) > .001f) throw new Exception("Charge length mismatch.");
             EditorUtility.SetDirty(variant); variants[i] = variant;
         }
@@ -92,7 +98,7 @@ public static class DisigmanRailgunSoundLabBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
         EnableAudio(); AssetDatabase.SaveAssets();
         if (!EditorSceneManager.SaveScene(scene)) throw new Exception("Scene save failed.");
-        return "Saved railgun sound lab: A-D preserved, E skill B start/A tail; normal attack stays A. 13 PCM clips.";
+        return "Saved railgun sound lab: A uses the approved refined combat clips; B-E preserve their audition clips.";
     }
 
     /// <summary>저장된 사운드 실험실을 연다.</summary>
@@ -101,6 +107,12 @@ public static class DisigmanRailgunSoundLabBuilder
     {
         if (!EditorApplication.isPlaying && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             EditorSceneManager.OpenScene(ScenePath);
+    }
+
+    private static AudioClip RefinedA(string kind)
+    {
+        string path = "Assets/WorkSpace/USW/Audio/StudioDartEdited/Disigman_A_Hack_" + kind + ".wav";
+        return AssetDatabase.LoadAssetAtPath<AudioClip>(path) ?? throw new Exception("Missing refined A WAV " + path);
     }
 
     private static AudioClip Clip(string key, string kind)

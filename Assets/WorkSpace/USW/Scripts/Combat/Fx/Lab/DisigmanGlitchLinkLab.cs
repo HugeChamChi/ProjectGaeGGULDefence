@@ -41,6 +41,8 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
     private sealed class Shot
     {
         public int Unit;
+        public bool Skill;
+        public RailgunBeamFx Fx;
         public DisigmanGlitchLinkVariant Variant;
         public Vector3 From;
         public Vector3 To;
@@ -62,6 +64,8 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
     [SerializeField] private Vector2 _targetSpread = new Vector2(0.5f, 0.35f);
     [Tooltip("스킬 레일건 템플릿 (비활성, 발사마다 복제)")]
     [SerializeField] private RailgunBeamFx _skillFx;
+    [SerializeField] private RailgunBeamFx _basicFx;
+    [SerializeField] private DisigmanGlitchLinkAudio _audio;
 
     [Header("타이머 (빌더가 연결)")]
     [SerializeField] private TimerController _timer;
@@ -135,6 +139,7 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
     [SerializeField] private int _tearLines = 3;
     [SerializeField] private int _blockSortingOrder = 38;
 
+    private readonly List<RailgunBeamFx> _liveFx = new List<RailgunBeamFx>();
     private readonly List<Shot> _shots = new List<Shot>();
     private readonly List<(float At, int Unit)> _queued = new List<(float, int)>();
     private WorldGlitchBlocks _blocks;
@@ -184,6 +189,15 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
         Play();
     }
 
+    private void OnDisable()
+    {
+        _audio?.CancelAll();
+        foreach (var fx in _liveFx) if (fx != null) Destroy(fx.gameObject);
+        _liveFx.Clear();
+        _shots.Clear();
+        _queued.Clear();
+    }
+
     private void OnDestroy()
     {
         Time.timeScale = 1f;
@@ -198,6 +212,16 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
     /// <summary>타이머·연출을 비우고 지금 시안으로 스킬 한 발부터 다시.</summary>
     public void Play()
     {
+        ResetPresentation();
+        FireSkill(0);
+        _nextAuto = _autoInterval;
+    }
+
+    private void ResetPresentation()
+    {
+        _audio?.CancelAll();
+        foreach (var fx in _liveFx) if (fx != null) Destroy(fx.gameObject);
+        _liveFx.Clear();
         _shots.Clear();
         _queued.Clear();
         _blocks?.Clear();
@@ -209,8 +233,6 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
         _shakeAt = -999f;
         _lastGlitchDelay = -1f;
         if (_fireAt != null) for (int i = 0; i < _fireAt.Length; i++) _fireAt[i] = _chargeFrom[i] = -999f;
-        FireSkill(0);
-        _nextAuto = _autoInterval;
     }
 
     /// <summary>시안 선택 (DisigmanGlitchLinkVariant 순서) 후 처음부터.</summary>
@@ -223,6 +245,15 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
 
     /// <summary>기본 유닛 스킬 한 발.</summary>
     public void FireOne() => FireSkill(0);
+
+    /// <summary>일반 공격을 같은 장면에서 듣는다. 시간 회복·스킬 글리치는 발생시키지 않는다.</summary>
+    public void FireBasic()
+    {
+        _auto = false;
+        ResetPresentation();
+        Fire(0, false);
+        UpdateStatus();
+    }
 
     /// <summary>세 마리가 _volleyGap 간격으로 연달아 스킬 — J 중첩(합산·이어 붙임)과 겹쳐 보기.</summary>
     public void FireVolley()
@@ -259,22 +290,28 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
 
     // ── 발사·연결 ─────────────────────────────────────────────
 
-    private void FireSkill(int unit)
+    private void FireSkill(int unit) => Fire(unit, true);
+
+    private void Fire(int unit, bool skill)
     {
         if (_units == null || unit < 0 || unit >= _units.Length || _units[unit] == null || _skillFx == null || _target == null) return;
         Vector3 from = _unitHome[unit] + (Vector3)_muzzleOffset;
         Vector3 to = _target.position + new Vector3(Random.Range(-_targetSpread.x, _targetSpread.x),
             Random.Range(-_targetSpread.y, _targetSpread.y), 0f);
-        var fx = Instantiate(_skillFx);
+        var template = skill ? _skillFx : _basicFx;
+        if (template == null) return;
+        var fx = Instantiate(template);
+        _liveFx.Add(fx);
         fx.gameObject.SetActive(true);
-        fx.Play(transform, from, to, _skillCharge, _skillScale);
+        fx.Play(transform, from, to, _skillCharge, skill ? _skillScale : 1f);
+        _audio?.Charge(fx, skill);
 
-        var shot = new Shot { Unit = unit, Variant = _variant, From = from, To = to, CastAt = _clock, ImpactAt = _clock + _skillCharge };
+        var shot = new Shot { Unit = unit, Skill = skill, Fx = fx, Variant = _variant, From = from, To = to, CastAt = _clock, ImpactAt = _clock + _skillCharge };
         _shots.Add(shot);
         _chargeFrom[unit] = _clock;
         _fireAt[unit] = shot.ImpactAt;
         // 지금 인게임: 스킬이 받아들여지는 순간(TryCast) 시간 추가 → 바로 글리치, 신호는 유닛 위치에서 출발.
-        if (_variant == DisigmanGlitchLinkVariant.Current) Glitch(shot, _units[unit].transform.position, ToStage(_units[unit].transform.position));
+        if (skill && _variant == DisigmanGlitchLinkVariant.Current) Glitch(shot, _units[unit].transform.position, ToStage(_units[unit].transform.position));
     }
 
     private void TickShots()
@@ -282,7 +319,7 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
         for (int i = _shots.Count - 1; i >= 0; i--)
         {
             var s = _shots[i];
-            if (s.Variant == DisigmanGlitchLinkVariant.Combo && !s.ChargeFx && _clock >= s.CastAt + _skillCharge * ChargeBlockStart)
+            if (s.Skill && s.Variant == DisigmanGlitchLinkVariant.Combo && !s.ChargeFx && _clock >= s.CastAt + _skillCharge * ChargeBlockStart)
             {
                 s.ChargeFx = true;
                 ChargeBlocks(s.From, s.ImpactAt - _clock);
@@ -296,6 +333,8 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
 
     private void OnImpact(Shot s)
     {
+        _audio?.Fire(s.Fx, s.Skill);
+        if (!s.Skill) return;
         _shakeAt = _clock;
         switch (s.Variant)
         {
@@ -411,6 +450,7 @@ public sealed class DisigmanGlitchLinkLab : MonoBehaviour
 
     private void Update()
     {
+        _liveFx.RemoveAll(fx => fx == null);
         float dt = Time.deltaTime;
         _clock += dt;
         if (_auto && !_capturing && _clock >= _nextAuto) { FireSkill(0); _nextAuto = _clock + _autoInterval; }

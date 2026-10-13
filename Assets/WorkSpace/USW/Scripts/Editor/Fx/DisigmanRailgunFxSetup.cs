@@ -85,6 +85,9 @@ public static class DisigmanRailgunFxSetup
         var pSo = new SerializedObject(projectile);
         pSo.FindProperty("_chargeSeconds").floatValue = v.Charge;
         pSo.FindProperty("_fx").objectReferenceValue = fx;
+        pSo.FindProperty("_chargeCue").intValue = (int)(v.Heavy ? GameAudioCue.DisigmanSkillCharge : GameAudioCue.DisigmanBasicCharge);
+        pSo.FindProperty("_shotCue").intValue = (int)(v.Heavy ? GameAudioCue.DisigmanSkillShot : GameAudioCue.DisigmanBasicShot);
+        pSo.FindProperty("_showHackLink").boolValue = v.Heavy;
         pSo.ApplyModifiedPropertiesWithoutUndo();
 
         string path = $"{OutRoot}/{root.name}.prefab";

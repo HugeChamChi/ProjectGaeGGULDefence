@@ -9,6 +9,7 @@ public sealed class BossClearPresentation : MonoBehaviour
 {
     [SerializeField] private TimerBonusLab _fusion;
     [SerializeField] private RectTransform _stage;
+    [SerializeField] private DisigmanGlitchLinkPresentation _hackLink;
     private TimerController _timer;
     private WaveManager _waves;
     private BossManager _bosses;
@@ -35,7 +36,12 @@ public sealed class BossClearPresentation : MonoBehaviour
     {
         // The committed addition inside PresentAsync must not start a second sequence.
         if (_presentationCts != null || seconds <= 0f || !isActiveAndEnabled) return;
-        if (source == TimeAddSource.Hack) { PresentHack(seconds, origin); return; }
+        if (source == TimeAddSource.Hack)
+        {
+            // Recommended combo owns the delayed display at actual shard arrival; AddTime remains immediate.
+            if (_hackLink == null || !_hackLink.IsConfigured) PresentHack(seconds, origin);
+            return;
+        }
         PresentAdditionalAsync(seconds).Forget();
     }
 

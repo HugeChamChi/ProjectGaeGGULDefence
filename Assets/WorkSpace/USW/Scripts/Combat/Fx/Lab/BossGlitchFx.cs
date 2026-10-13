@@ -115,6 +115,8 @@ public sealed class BossGlitchFx : IDisposable
     {
         Restore();
         if (_glitch != null) Object.Destroy(_glitch);
+        if (_ghostCyan != null) Object.Destroy(_ghostCyan.gameObject);
+        if (_ghostHot != null) Object.Destroy(_ghostHot.gameObject);
     }
 
     private SpriteRenderer Ghost(string name)

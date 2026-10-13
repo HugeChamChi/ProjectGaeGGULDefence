@@ -37,6 +37,7 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 0
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 1
     Clip: {fileID: 8300000, guid: 8c1b1a7bfe2eae048850831f53a86d29, type: 3}
     Gain: 0.09
@@ -47,6 +48,7 @@ MonoBehaviour:
     PitchVariation: 0.025
     Repeated: 1
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 2
     Clip: {fileID: 8300000, guid: cf9bea450473722409c48ebe7bf071e5, type: 3}
     Gain: 0.14
@@ -57,6 +59,7 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 1
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 3
     Clip: {fileID: 8300000, guid: 9c2a8bd8ad57d7b4892cc1bfdc18c410, type: 3}
     Gain: 0.4
@@ -67,6 +70,7 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 0
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 4
     Clip: {fileID: 8300000, guid: 1542c07472527b1469358fe723b21b30, type: 3}
     Gain: 0.5
@@ -77,6 +81,7 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 0
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 5
     Clip: {fileID: 8300000, guid: 02c87ff7882690b4985eeacaf3e0b2f9, type: 3}
     Gain: 0.65
@@ -87,6 +92,7 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 0
     DucksBackground: 0
+    CombatOnly: 0
   - Cue: 6
     Clip: {fileID: 8300000, guid: 586d751f988b139439a0608c34f256ad, type: 3}
     Gain: 0.38
@@ -97,3 +103,48 @@ MonoBehaviour:
     PitchVariation: 0
     Repeated: 0
     DucksBackground: 1
+    CombatOnly: 0
+  - Cue: 7
+    Clip: {fileID: 8300000, guid: c02cfd0e780da4047b5b4abba44f543a, type: 3}
+    Gain: 0.4
+    Priority: 20
+    MinimumInterval: 0.2
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 1
+    DucksBackground: 0
+    CombatOnly: 1
+  - Cue: 8
+    Clip: {fileID: 8300000, guid: ea0ee7280c3df58489a8412f52d03ee8, type: 3}
+    Gain: 0.42
+    Priority: 65
+    MinimumInterval: 0.2
+    MaximumVoices: 1
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 1
+    DucksBackground: 0
+    CombatOnly: 1
+  - Cue: 9
+    Clip: {fileID: 8300000, guid: 774fa29884d228a4da85387dc8f7118b, type: 3}
+    Gain: 0.42
+    Priority: 85
+    MinimumInterval: 0.12
+    MaximumVoices: 2
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+    CombatOnly: 1
+  - Cue: 10
+    Clip: {fileID: 8300000, guid: 4a133248d76e528439c385bbbe196f69, type: 3}
+    Gain: 0.5
+    Priority: 110
+    MinimumInterval: 0.12
+    MaximumVoices: 2
+    MaximumSeconds: 0
+    PitchVariation: 0
+    Repeated: 0
+    DucksBackground: 0
+    CombatOnly: 1

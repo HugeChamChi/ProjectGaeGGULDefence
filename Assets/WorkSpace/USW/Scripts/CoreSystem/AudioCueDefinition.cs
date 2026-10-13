@@ -25,4 +25,6 @@ public sealed class AudioCueDefinition
     public bool Repeated;
     /// <summary>Important information ducks music and repeated combat textures.</summary>
     public bool DucksBackground;
+    /// <summary>Bound to active combat and its scaled clock, including cancellation on pause.</summary>
+    public bool CombatOnly;
 }

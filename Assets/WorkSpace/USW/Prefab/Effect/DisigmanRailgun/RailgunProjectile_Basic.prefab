@@ -49,6 +49,9 @@ MonoBehaviour:
   _chargeSeconds: 0.4
   _muzzleOffset: {x: 0, y: 0}
   _fx: {fileID: 3462621789370033431}
+  _chargeCue: 7
+  _shotCue: 8
+  _showHackLink: 0
 --- !u!1 &8865411905411245464
 GameObject:
   m_ObjectHideFlags: 0

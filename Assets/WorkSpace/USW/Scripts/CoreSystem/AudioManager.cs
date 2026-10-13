@@ -97,6 +97,12 @@ public class AudioManager : MonoBehaviour
 
     /// <summary>Plays the authored cue under its global cooldown, voice cap and priority.</summary>
     public void PlayCue(GameAudioCue cue) => _unityProvider?.PlayCue(_palette?.Find(cue));
+    /// <summary>Starts an authored charge owned by a projectile so interruption can cancel it.</summary>
+    public void PlayOwnedCue(GameAudioCue cue, UnityEngine.Object owner) => _unityProvider?.PlayCue(_palette?.Find(cue), 0f, owner);
+    /// <summary>Cancels only the given owner's charge, preserving already-fired shot tails.</summary>
+    public void StopOwnedCue(UnityEngine.Object owner) => _unityProvider?.StopOwnedCue(owner);
+    /// <summary>Updates the authored combat cues' playback clock.</summary>
+    public void SetCombatSpeed(float speed) => _unityProvider?.SetCombatSpeed(speed);
     /// <summary>Shares one sustained laser texture between all live emitters.</summary>
     public void SetLaserActive(UnityEngine.Object owner, bool active) => _unityProvider?.SetLaserActive(owner, active);
     /// <summary>Scene binding permits combat textures only while the battlefield is running.</summary>
