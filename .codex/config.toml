@@ -1,6 +1,0 @@
-[mcp_servers.unityMCP]
-cwd = "E:/ProjectGaeGGULDefence"
-command = "C:/Users/shinw/AppData/Local/Unity/bin/unity.exe"
-args = ["mcp", "--project-path", "E:/ProjectGaeGGULDefence"]
-startup_timeout_sec = 60
-tool_timeout_sec = 120

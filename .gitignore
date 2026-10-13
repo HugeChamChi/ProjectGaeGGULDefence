@@ -120,3 +120,9 @@ Assets/outputs.meta
 
 # Windows cache written by tools that left %SystemDrive% unexpanded
 /%SystemDrive%/
+
+# 작업 폴더(루트 Develop / 실험실 work/unity-ui)마다 경로·포트가 다른 로컬 설정 — git 추적 안 함
+# 루트: E:/ProjectGaeGGULDefence, 8090 / 실험실: E:/ProjectGaeGGULDefence/outputs/workspaces/unity-ui, 8091
+/.codex/config.toml
+/.mcp.json
+/ProjectSettings/McpUnitySettings.json
