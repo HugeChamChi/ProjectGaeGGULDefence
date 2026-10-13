@@ -114,3 +114,9 @@ production/session-state/active.md
 /Assets/AddressableAssetsData
 Assets/outputs.meta
 /apk파일모음
+
+# Burst build debug symbols (generated per build, never ship/commit)
+*_BurstDebugInformation_DoNotShip/
+
+# Windows cache written by tools that left %SystemDrive% unexpanded
+/%SystemDrive%/
