@@ -433,12 +433,20 @@ namespace GaeGGUL.Tutorial
                     await PreviewChoiceAsync(token);
                     var choices = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
                     var requiredChoice = choices.First(c => c.GetData() == _settings.LevelUpChoices[0]);
-                    foreach (var choice in choices) choice.AllowSelection = choice == requiredChoice;
+                    foreach (var choice in choices)
+                    {
+                        choice.SetTermLinksEnabled(false);
+                        choice.AllowSelection = choice == requiredChoice;
+                    }
                     _dialogue.ShowText(_settings.ChoiceSelectInstruction, _lessonIndex, _lessonCount, false);
                     _overlay.Show(_settings, true, false, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)requiredChoice.transform));
                     _time.Release(this);
                     try { await Until(() => _game.CurrentState == GameManager.GameState.Playing && !_levelUpUI.IsReadyForSelection, token); }
-                    finally { foreach (var choice in choices) if (choice != null) choice.AllowSelection = true; }
+                    finally
+                    {
+                        foreach (var choice in choices)
+                            if (choice != null) { choice.AllowSelection = true; choice.SetTermLinksEnabled(true); }
+                    }
                     _exp.DeferLevelUps = true;
                     _levelUpUI.RequireUnitPreview = false;
                     GrantTutorialChoices();
@@ -465,12 +473,8 @@ namespace GaeGGUL.Tutorial
                     await Until(() => item.CurrentLevel > level, token);
                     Block();
                     _dialogue.ShowText("좋아요! 유닛이 더 강해졌어요!", _lessonIndex, _lessonCount, false);
-                    // 정보창 루트는 위쪽 빈 여백까지 포함하므로 실제 판(Background)만 비춘다.
-                    var feedback = _upgradePanel.StatFeedbackArea;
-                    var feedbackPanel = feedback != null ? feedback.Find("Background") as RectTransform : null;
-                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(feedbackPanel != null ? feedbackPanel : feedback));
+                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)item.transform));
                     await AcknowledgeAsync(token);
-                    _upgradePanel.CloseStatFeedback();
                     await _upgradePanel.CloseAsync().AttachExternalCancellation(token);
                     _income = false;
                     break;

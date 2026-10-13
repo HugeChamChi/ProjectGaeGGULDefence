@@ -31,6 +31,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private DamageFloaterManager _damageFloaterManager;
     [Inject] private CurrencyFloaterManager _currencyFloaterManager;
     [Inject] private ResearchRunBonuses _research;
+    [Inject] private EndlessBalanceService _endlessBalance;
 
     public void Initialize()
     {
@@ -61,6 +62,8 @@ public class GameInitializer : IInitializable, IAsyncStartable
         // Direct in-game/tutorial entry can skip the title's Table initialization.
         await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
         await _research.LoadAsync(cancellation);
+        if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.Key == "NORMAL")
+            await _endlessBalance.RefreshAsync(cancellation);
         // Prepare only the app-owned approved palette; scene cancellation owns this wait.
         if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
 

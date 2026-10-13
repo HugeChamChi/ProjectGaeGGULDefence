@@ -11,8 +11,21 @@ namespace HSD.UI.Setting
     public class UI_SettingPanel_InGame : UI_SettingPanel_Base
     {
         [Header("InGame Specific")]
+        [SerializeField] private bool _allowOpening = true;
         [SerializeField] private Button btn_Restart;
         [SerializeField] private Button btn_GoToLobby;
+
+        /// <summary>Whether this scene permits opening settings, including direct UI calls.</summary>
+        public bool AllowOpening => _allowOpening;
+
+        /// <summary>Opens settings only when permitted by the scene.</summary>
+        public override void Open()
+        {
+            if (_allowOpening) base.Open();
+        }
+
+        /// <summary>Blocks every asynchronous settings entry point during the tutorial.</summary>
+        public override UniTask OpenAsync() => _allowOpening ? base.OpenAsync() : UniTask.CompletedTask;
 
         protected override void Awake()
         {

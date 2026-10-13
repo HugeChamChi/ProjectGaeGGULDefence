@@ -570,15 +570,16 @@ MonoBehaviour:
   _hpBackground: {fileID: 2503550705461959490}
   _colorMode: 2
   _lineColors:
-  - {r: 0.3, g: 0.85, b: 0.35, a: 1}
-  - {r: 0.95, g: 0.85, b: 0.25, a: 1}
-  - {r: 0.95, g: 0.55, b: 0.15, a: 1}
-  - {r: 0.9, g: 0.25, b: 0.25, a: 1}
-  - {r: 0.65, g: 0.3, b: 0.85, a: 1}
+  - {r: 0.36, g: 0.62, b: 0.38, a: 1}
+  - {r: 0.78, g: 0.65, b: 0.32, a: 1}
+  - {r: 0.78, g: 0.48, b: 0.3, a: 1}
+  - {r: 0.7, g: 0.3, b: 0.32, a: 1}
+  - {r: 0.52, g: 0.39, b: 0.72, a: 1}
   _linePrefix: x
   _hpPerLine: 500
   _smooth: 1
-  _tweenDuration: 0.3
+  _tweenDuration: 0.32
+  _damageEase: 9
 --- !u!114 &8460799706081594953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -594,7 +595,7 @@ MonoBehaviour:
   _hpBar: {fileID: 2570151168194308403}
   _shakeTarget: {fileID: 2109350906414057211}
   _lineInterval: 10
-  _duration: 0.4
-  _strength: 24
-  _vibrato: 18
-  _randomness: 90
+  _duration: 0.26
+  _strength: 16
+  _vibrato: 10
+  _randomness: 25

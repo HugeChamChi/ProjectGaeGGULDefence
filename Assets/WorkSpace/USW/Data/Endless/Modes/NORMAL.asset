@@ -63,7 +63,7 @@ MonoBehaviour:
     _isConfigured: 1
     _firstGrowthRound: 11
     _intervalRounds: 1
-    _hpPercentPerStep: 10
+    _hpPercentPerStep: 13
     _defenseAddedPerStep: 0
     _expPercentPerStep: 0
   _penaltyPool: {fileID: 11400000, guid: a183bee2c19efc94d883c08f605b016f, type: 2}

@@ -15,6 +15,8 @@ public class WaveManager : MonoBehaviour
     [Inject] private EndlessRunService _run;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private FieldPauseVisuals _fieldPause;
+    [Inject] private EndlessBalanceService _balanceService;
+    private EndlessBalanceSnapshot _balanceSnapshot;
     private BossClearPresentation _clearPresentation;
 
     /// <summary>Uses the scene installer's existing presentation reference, preserving finite/tutorial fallback.</summary>
@@ -88,7 +90,11 @@ public class WaveManager : MonoBehaviour
     /// <summary>Validates and resets run state before GameManager enters Playing, including delayed tutorial waves.</summary>
     public bool TryPrepareRun(out string error)
     {
-        if (!_run.TryStart(_endlessMode, out error)) return false;
+        if (_endlessMode != null && _endlessMode.Key == "NORMAL" && _balanceService?.IsRefreshing == true)
+        { error = "Balance settings are still loading."; return false; }
+        var balance = _endlessMode != null && _endlessMode.Key == "NORMAL" ? _balanceService?.Current : null;
+        if (!_run.TryStart(_endlessMode, out error, balance)) return false;
+        _balanceSnapshot = balance;
         CancelFlow();
         _waveCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         _sealApplied = false;
@@ -96,7 +102,11 @@ public class WaveManager : MonoBehaviour
         _waveStarted = false;
         _timerStarted = false;
         SyncWaveIndex();
-        if (_run.IsEndless) _log.BeginRun(_run.RunId, _endlessMode.Key);
+        if (_run.IsEndless)
+        {
+            _log.BeginRun(_run.RunId, _endlessMode.Key);
+            LogBalanceSettings();
+        }
         return true;
     }
 
@@ -163,7 +173,7 @@ public class WaveManager : MonoBehaviour
         if (gameConfig == null) { _run.Fail("WaveManager: GameConfig is missing."); return; }
         if (!_timerStarted)
         {
-            _timerManager?.StartTimer(gameConfig.countdownSeconds);
+            _timerManager?.StartTimer(_balanceSnapshot?.StartSeconds ?? gameConfig.countdownSeconds);
             _timerStarted = true;
         }
         _timerManager?.StopTimer();
@@ -207,14 +217,23 @@ public class WaveManager : MonoBehaviour
         _timerManager?.StopTimer();
         var gameConfig = config != null ? config : _gameManager.Config;
 
+        if (gameConfig == null)
+        { _run.Fail("WaveManager: GameConfig is missing at boss defeat."); return; }
+        if (!gameConfig.TryGetBossKillBonusSeconds(_run.IsEndless ? _endlessMode : null, round,
+            out var role, out float bonusSeconds, out string rewardError))
+        { _run.Fail("WaveManager: " + rewardError); return; }
+        if (_balanceSnapshot != null)
+            bonusSeconds = role == EndlessBossRole.Hard ? _balanceSnapshot.HardSeconds : _balanceSnapshot.BreatherSeconds;
+
         OnBossDefeated?.Invoke();
+        if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         if (_run.IsEndless) _log.BossDefeated(round, CurrentLevel, _run.AttackMultiplier, _run.AttackFrequencyMultiplier);
         // Reserve at combat completion, activate after the reward when entering the next round.
         if (bossIndex == _pendingBosses.Count - 1 && !_run.TryCompleteRound(runId, round)) return;
-        WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, _waveCts.Token).Forget();
+        WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, role, bonusSeconds, _waveCts.Token).Forget();
     }
 
-    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, CancellationToken token)
+    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, EndlessBossRole role, float bonusSeconds, CancellationToken token)
     {
         try
         {
@@ -225,9 +244,13 @@ public class WaveManager : MonoBehaviour
             _fieldPause.HoldAttacks(this);
             try
             {
+                float before = _timerManager != null ? _timerManager.RemainingTime : 0f;
                 if (gameConfig != null && _clearPresentation != null && _clearPresentation.isActiveAndEnabled)
-                    await _clearPresentation.PlayBossClearAsync(gameConfig.BossKillBonusSeconds, bossPosition, gameConfig, token);
-                else if (gameConfig != null) _timerManager?.AddTime(gameConfig.BossKillBonusSeconds);
+                    await _clearPresentation.PlayBossClearAsync(bonusSeconds, bossPosition, gameConfig, token);
+                else if (gameConfig != null) _timerManager?.AddTime(bonusSeconds);
+                if (EndlessRunLog.Enabled && _run.IsEndless && OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay))
+                    Debug.Log($"[EndlessBalance] run={_log.RunLabel} service_run={runId} round={round} role={role} " +
+                        $"bonus={bonusSeconds} timer_before={before:R} timer_after={_timerManager?.RemainingTime:R}");
             }
             finally { _fieldPause.Exit(this, _run.IsActive && !_gameManager.IsFinished); }
             if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
@@ -349,6 +372,27 @@ public class WaveManager : MonoBehaviour
     {
         LogRunEnd("Faulted: " + error);
         CancelFlow();
+    }
+
+    private void LogBalanceSettings()
+    {
+        var gameConfig = config != null ? config : _gameManager?.Config;
+        if (!EndlessRunLog.Enabled || gameConfig == null || _endlessMode == null) return;
+        var growth = _endlessMode.Growth;
+        float start = _balanceSnapshot?.StartSeconds ?? gameConfig.countdownSeconds;
+        float breather = _balanceSnapshot?.BreatherSeconds ?? gameConfig.BreatherBossKillBonusSeconds;
+        float hard = _balanceSnapshot?.HardSeconds ?? gameConfig.HardBossKillBonusSeconds;
+        double hp = _balanceSnapshot?.HpGrowthPercent ?? growth.HpPercentPerStep;
+        string snapshot = FormattableString.Invariant($"config={gameConfig.name};mode={_endlessMode.Key};start={start:R};finite={gameConfig.BossKillBonusSeconds:R};breather={breather:R};hard={hard:R};cycle={_endlessMode.CycleLength};selection={_endlessMode.BossSelection};first_growth={growth.FirstGrowthRound};interval={growth.IntervalRounds};hp_pct={hp:R};defense_step={growth.DefenseAddedPerStep:R};exp_pct={growth.ExpPercentPerStep:R}");
+        foreach (var slot in _endlessMode.Slots)
+            snapshot += FormattableString.Invariant($";slot={slot.Position}:{slot.Role}:{slot.BossKey}");
+        Debug.Log($"[EndlessBalance] run={_log.RunLabel} service_run={_run.RunId} version={Application.version} " +
+            $"build={Application.buildGUID} mode={_endlessMode.Key} policy={(_balanceSnapshot != null ? "backend" : "SO")} config={gameConfig.name} " +
+            $"source={(config != null ? "WaveManager.config" : "GameManager.Config")} " +
+            $"config_hash={Hash128.Compute(snapshot)} snapshot={snapshot} " +
+            $"start_seconds={start} breather_bonus={breather} " +
+            $"hard_bonus={hard} first_growth={_endlessMode.Growth.FirstGrowthRound} " +
+            $"growth_interval={_endlessMode.Growth.IntervalRounds} hp_growth_pct={hp}");
     }
 
     private int CurrentLevel => _expManager != null ? _expManager.CurrentLevel : 0;

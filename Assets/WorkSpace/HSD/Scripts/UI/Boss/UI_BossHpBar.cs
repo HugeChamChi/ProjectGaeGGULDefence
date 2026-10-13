@@ -76,11 +76,11 @@ public class UI_BossHpBar : MonoBehaviour
     [Tooltip("줄 색상 팔레트. 줄 수에 순서대로 분배됨. index 0 = 1줄쪽, 마지막 index = 최고줄쪽")]
     [SerializeField] private Color[] _lineColors =
     {
-        new Color(0.30f, 0.85f, 0.35f), // Green
-        new Color(0.95f, 0.85f, 0.25f), // Yellow
-        new Color(0.95f, 0.55f, 0.15f), // Orange
-        new Color(0.90f, 0.25f, 0.25f), // Red
-        new Color(0.65f, 0.30f, 0.85f), // Purple
+        new Color(0.36f, 0.62f, 0.38f), // Green (채도·밝기를 낮춘 눈부심 완화 팔레트)
+        new Color(0.78f, 0.65f, 0.32f), // Yellow
+        new Color(0.78f, 0.48f, 0.30f), // Orange
+        new Color(0.70f, 0.30f, 0.32f), // Red
+        new Color(0.52f, 0.39f, 0.72f), // Purple
     };
     
 
@@ -98,6 +98,8 @@ public class UI_BossHpBar : MonoBehaviour
     [Tooltip("피해 시 바/퍼센트를 부드럽게 보간")]
     [SerializeField] private bool _smooth = true;
     [SerializeField] private float _tweenDuration = 0.3f;
+    [Tooltip("피격 직후 빠르게 감소하고 끝에서 부드럽게 멈추는 보간 곡선")]
+    [SerializeField] private Ease _damageEase = Ease.OutCubic;
 
     private float _shownRatio;
     private bool _initialized;
@@ -146,8 +148,12 @@ public class UI_BossHpBar : MonoBehaviour
     /// <summary>실제 전투의 decimal HP로 줄 수를 계산하고 표시 단계에서만 float로 변환한다.</summary>
     public void SetHpExact(decimal currentHp, decimal maxHp)
     {
-        _maxHp = maxHp > 0m ? maxHp : 1m;
-        _currentHp = Math.Min(_maxHp, Math.Max(0m, currentHp));
+        decimal nextMaxHp = maxHp > 0m ? maxHp : 1m;
+        decimal nextHp = Math.Min(nextMaxHp, Math.Max(0m, currentHp));
+        // 동일 HP 알림이 보간을 매번 다시 시작해 끝까지 도달하지 못하는 것을 막는다.
+        if (_initialized && nextHp == _currentHp && nextMaxHp == _maxHp) return;
+        _maxHp = nextMaxHp;
+        _currentHp = nextHp;
         decimal exactRatio = _currentHp / _maxHp;
         float ratio = (float)exactRatio;
         _targetRatio = ratio;
@@ -175,7 +181,7 @@ public class UI_BossHpBar : MonoBehaviour
                     ratio,
                     _tweenDuration)
                 .SetUpdate(true)
-                .SetEase(Ease.OutQuad);
+                .SetEase(_damageEase);
         }
         else
         {
@@ -225,8 +231,10 @@ public class UI_BossHpBar : MonoBehaviour
         int lineCount = LineCount;
         int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :
             shownRatio <= 0f ? 0 : Mathf.Clamp(Mathf.CeilToInt(shownRatio * lineCount), 1, lineCount);
+        // 줄 단위 채움은 3겹이다: 몸통 배경(전체 폭) > 다음 줄(전체 HP 비율 폭) > 현재 줄.
+        // 현재 줄은 전체 HP 비율 구간 안에서 남은 한 줄 비율만큼 그려, 깎인 오른쪽에 배경이 드러난다.
         float fillRatio = _fillCurrentLine && shownLine > 0
-            ? Mathf.Clamp01(shownRatio * lineCount - (shownLine - 1)) : shownRatio;
+            ? shownRatio * Mathf.Clamp01(shownRatio * lineCount - (shownLine - 1)) : shownRatio;
 
         // 표시 비율만큼 Mask 가로 길이 (왼쪽 고정, 오른쪽이 줄어듦).
         // 앵커 기반이라 Pivot 설정과 무관하게 왼쪽 정렬 + 부모 폭 상대.
@@ -300,7 +308,7 @@ public class UI_BossHpBar : MonoBehaviour
 
         if (_hpColor != null && shownLine >= 1)
             _hpColor.color = EvaluateLineColor(shownLine, lineCount);
-        ApplyNextLine(shownLine, lineCount, padding, coverStart, artLeft, artWidth);
+        ApplyNextLine(shownLine, lineCount, shownRatio, padding, coverStart, artLeft, artWidth);
 
         if (_hpLineText != null)
             _hpLineText.text = _linePrefix + shownLine;
@@ -308,9 +316,9 @@ public class UI_BossHpBar : MonoBehaviour
 
 
     // 줄 단위 채움에서 깎인 자리에 다음 줄 색을 보여 준다. 마지막 줄이면 배경이 드러난다.
-    // 다음 줄 층은 현재 줄이 가득 찼을 때의 채움과 같은 마스크·그림 배치를 그대로 쓴다.
+    // 다음 줄 층은 전체 HP 비율 폭까지만 채움과 같은 마스크·그림 배치로 그린다.
     // 그래서 현재 줄이 꽉 차 있으면 다음 줄 색이 가장자리로 한 픽셀도 새지 않는다.
-    private void ApplyNextLine(int shownLine, int lineCount, Vector2 padding, float coverStart, float artLeft, float artWidth)
+    private void ApplyNextLine(int shownLine, int lineCount, float totalRatio, Vector2 padding, float coverStart, float artLeft, float artWidth)
     {
         var fullBar = _hpFillMask != null ? _hpFillMask.parent as RectTransform : null;
         bool visible = _fillCurrentLine && shownLine > 1 && _hpColor != null && fullBar != null;
@@ -335,12 +343,12 @@ public class UI_BossHpBar : MonoBehaviour
         _nextLineFill.pixelsPerUnitMultiplier = _hpColor.pixelsPerUnitMultiplier;
         _nextLineFill.material = _hpColor.material;
 
-        // 채움 마스크의 fillRatio = 1 상태와 같은 영역.
+        // 채움 마스크의 fillRatio = 전체 HP 비율 상태와 같은 영역.
         _nextLineMask.pivot = _hpFillMask.pivot;
         _nextLineMask.anchorMin = new Vector2(0f, _hpFillMask.anchorMin.y);
-        _nextLineMask.anchorMax = new Vector2(1f, _hpFillMask.anchorMax.y);
+        _nextLineMask.anchorMax = new Vector2(totalRatio, _hpFillMask.anchorMax.y);
         _nextLineMask.offsetMin = new Vector2(coverStart, _hpFillMask.offsetMin.y);
-        _nextLineMask.offsetMax = new Vector2(-padding.y, _hpFillMask.offsetMax.y);
+        _nextLineMask.offsetMax = new Vector2(Mathf.Lerp(padding.x, -padding.y, totalRatio), _hpFillMask.offsetMax.y);
         _nextLineMask.localScale = _hpFillMask.localScale;
 
         // 채움 그림과 같은 배치(전체 바 폭, 왼쪽 여백만큼 당김).

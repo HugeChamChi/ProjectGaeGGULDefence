@@ -24,4 +24,12 @@ public sealed class EndlessGrowthSettings
     public double DefenseAddedPerStep => _defenseAddedPerStep;
     /// <summary>성장 1회당 총 EXP 증가율. HP 증가와 독립적이며 0도 명시적 설정이다.</summary>
     public double ExpPercentPerStep => _expPercentPerStep;
+
+    /// <summary>Copies growth for one run, preserving authored assets and all unrelated growth fields.</summary>
+    public EndlessGrowthSettings WithHpPercent(double hpPercent) => new EndlessGrowthSettings
+    {
+        _isConfigured = _isConfigured, _firstGrowthRound = _firstGrowthRound,
+        _intervalRounds = _intervalRounds, _hpPercentPerStep = hpPercent,
+        _defenseAddedPerStep = _defenseAddedPerStep, _expPercentPerStep = _expPercentPerStep
+    };
 }

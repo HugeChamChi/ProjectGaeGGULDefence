@@ -50,6 +50,12 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private Action<string> _onTerm;
     private Func<bool> _descriptionBlocked;
     public bool TutorialPreviewOnly { get; private set; }
+    /// <summary>Whether description terms can open their explanation instead of selecting this card.</summary>
+    public bool TermLinksEnabled { get; private set; } = true;
+
+    /// <summary>Changes term input for a guided selection and cancels any pending press.</summary>
+    public void SetTermLinksEnabled(bool enabled) { CancelPress(); TermLinksEnabled = enabled; }
+
     public bool HasActivePress => _pointerId.HasValue || _termInteraction.HasPress;
     public TMP_Text DescriptionText => descriptionText;
     public void SetTutorialPreviewOnly(bool value) { CancelPress(); TutorialPreviewOnly = value; }
@@ -88,7 +94,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         _releasedPointerId = null;
         _pressedAt = Time.unscaledTime;
         _suppressClick = false;
-        _termPress = !TutorialPreviewOnly && _termInteraction.TryBegin(descriptionText, eventData);
+        _termPress = TermLinksEnabled && !TutorialPreviewOnly && _termInteraction.TryBegin(descriptionText, eventData);
         if (_termPress) _suppressClick = true;
     }
 

@@ -7,6 +7,7 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     private readonly IEndlessRandom _random;
     private EndlessBossSchedule _bossSchedule;
     private EndlessModeData _mode;
+    private EndlessGrowthSettings _growth;
     private bool _roundCompleted;
 
     /// <summary>Constructs scene-owned state using an injectable random stream.</summary>
@@ -56,20 +57,23 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     public event Action<string> OnFailed;
 
     /// <summary>Starts a fresh run. Invalid linked settings fail explicitly without finite fallback.</summary>
-    public bool TryStart(EndlessModeData mode, out string error)
+    public bool TryStart(EndlessModeData mode, out string error, EndlessBalanceSnapshot balance = null)
     {
         error = "A run is already active.";
         if (IsActive) return false;
         RuntimeBossStats stats = default;
         if (mode != null && !EndlessConfigurationValidator.TryValidateForRun(mode, out error))
         { LastError = error; return false; }
+        var growth = mode != null ? mode.Growth.WithHpPercent(
+            mode.Key == "NORMAL" && balance != null ? balance.HpGrowthPercent : mode.Growth.HpPercentPerStep) : null;
         var schedule = mode != null ? new EndlessBossSchedule(mode, _random) : null;
         if (schedule != null && (!schedule.TrySelect(1, out var firstBoss, out error)
-            || !RuntimeBossStatsCalculator.TryCalculate(firstBoss, mode.Growth, 1, out stats, out error)))
+            || !RuntimeBossStatsCalculator.TryCalculate(firstBoss, growth, 1, out stats, out error)))
         { LastError = error; return false; }
         if (RunId == long.MaxValue) { error = LastError = "Run identity exhausted."; return false; }
         _penalties.Reset(mode != null ? mode.PenaltyPool : null);
         _mode = mode;
+        _growth = growth;
         _bossSchedule = schedule;
         RunId++;
         long startedRunId = RunId;
@@ -104,7 +108,7 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
         if (IsEndless)
         {
             if (!_bossSchedule.TrySelect(completedRound + 1, out var boss, out string statsError)
-                || !RuntimeBossStatsCalculator.TryCalculate(boss, _mode.Growth, completedRound + 1, out stats, out statsError))
+                || !RuntimeBossStatsCalculator.TryCalculate(boss, _growth, completedRound + 1, out stats, out statsError))
             { Fail(statsError); return false; }
         }
         if (!_penalties.TryActivate(out bool changed, out string error)) { Fail(error); return false; }

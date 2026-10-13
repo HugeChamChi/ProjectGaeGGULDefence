@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 037ecaa321443e446ad9d352e78d2d92
+    m_Address: SPR_TD1006
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 03a37c429b69a83428e7fd8bf0333297
     m_Address: TD1013
     m_ReadOnly: 0
@@ -123,6 +128,11 @@ MonoBehaviour:
     - UI2000_BattleHud
     - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a1767c949f9c5142b30d85e17785f73
+    m_Address: SPR_TD1002
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1d0c195f567973e4e9f7bebf02dfacf0
     m_Address: TD1008
     m_ReadOnly: 0
@@ -209,6 +219,11 @@ MonoBehaviour:
     - UI2000_BattleHud
     - UI_InGame
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 38e23c062c6a1f941bbab5990d8e16a1
+    m_Address: SPR_TD1014
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 39c5b4c3a353c1d4ebd6494a5b17d10b
     m_Address: Frog_Mage
     m_ReadOnly: 0
@@ -238,11 +253,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 47610902b826b9c408aaf4c22db9c43a
     m_Address: Alphang_2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4767cf3a0adf01f42abec193bff0ab47
-    m_Address: TotemIcon1004
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -315,6 +325,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2000_BattleHud
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e12ae110bc308142b5d0dd2cdf1812d
+    m_Address: SPR_TD1001
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5fc5c720520d48c468f93a3b20d84404
     m_Address: Master
@@ -447,6 +462,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2000_BattleHud
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8594e1a949effe24d8d790325d592db8
+    m_Address: SPR_TD1013
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 875376496d093484f8a5fd2aca2c2789
     m_Address: DroneUnit_Deltan
@@ -706,6 +726,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df995e9da052c4949a8e1368cbfb55ff
+    m_Address: SPR_TD1012
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e190dd662cd974341bc3488c9459c6a5
     m_Address: SPR_UI2400_RangeGridBg
     m_ReadOnly: 0
@@ -736,6 +761,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - UI2500_UnitInfo
     - UI_InGame
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e74c51402090cd64cba773f5a5d93d67
+    m_Address: SPR_TD1011
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef6fbe690a123ff4d83afe9f84b829a6
     m_Address: 05.Drone_Debuff
@@ -771,57 +801,17 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fda0ecd24fbd9694cb600487668ec261
+    m_Address: SPR_TD1003
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff244a879a2d82747bcc489929625fa5
     m_Address: SPR_UI2600_DefeatBanner
     m_ReadOnly: 0
     m_SerializedLabels:
     - UI2600_BattleResult
     - UI_InGame
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5e12ae110bc308142b5d0dd2cdf1812d
-    m_Address: SPR_TD1001
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1a1767c949f9c5142b30d85e17785f73
-    m_Address: SPR_TD1002
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fda0ecd24fbd9694cb600487668ec261
-    m_Address: SPR_TD1003
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 21bde0120b8386b4aa9e07fd5a755496
-    m_Address: SPR_TD1004
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 037ecaa321443e446ad9d352e78d2d92
-    m_Address: SPR_TD1006
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e74c51402090cd64cba773f5a5d93d67
-    m_Address: SPR_TD1011
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: df995e9da052c4949a8e1368cbfb55ff
-    m_Address: SPR_TD1012
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8594e1a949effe24d8d790325d592db8
-    m_Address: SPR_TD1013
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 38e23c062c6a1f941bbab5990d8e16a1
-    m_Address: SPR_TD1014
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 62ecb7143346cd947a725445b3886c08, type: 2}

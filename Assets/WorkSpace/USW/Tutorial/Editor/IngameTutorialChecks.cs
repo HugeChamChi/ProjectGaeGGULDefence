@@ -188,13 +188,12 @@ public static class IngameTutorialChecks
             var upgradeBuy=(Button)new SerializedObject(item).FindProperty("btn_Upgrade").objectReferenceValue;
             ClickButton(upgradeBuy);
             await Frames();
-            Check(Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").StatFeedbackArea != null,"Upgrade opens the unit stat feedback panel");
             var statPanel = Object.FindFirstObjectByType<GaeGGUL.UI.Unit.UI_UnitInfoPanel>();
-            Check(statPanel != null && Get<bool>(statPanel,"_upgradeFeedback") && statPanel.GetComponentsInChildren<TMPro.TMP_Text>().Count(t=>t.text.Contains("→")) == 2,
-                "Upgrade feedback displays both before/after stat values");
+            Check(statPanel == null || !Get<bool>(statPanel,"_isShowing"),
+                "Paid upgrade does not open the unit information panel");
             dialogue.CompleteTyping();
             await UniTask.Delay(450,DelayType.Realtime,cancellationToken:token);
-            await Snapshot("07-upgrade-stat-feedback");
+            await Snapshot("07-upgrade-card-feedback");
             await Acknowledge();
             await Stage(IngameTutorialStage.ExperienceGauge);
             Check(item.CurrentLevel>previousLevel,"Paid upgrade actually increases its level");
@@ -292,13 +291,20 @@ public static class IngameTutorialChecks
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Closing the tooltip returns to the choices without selecting one");
             Check(card.GetData().chooseName == "넹?" && cards.Count(c=>c.AllowSelection) == 1,
                 "Tutorial selection permits only the Neng-question card");
+            Check(cards.All(c=>!c.TermLinksEnabled),"Term links stay disabled during the required card selection");
             var otherChoice = cards.First(c=>c != card);
             otherChoice.OnPointerDown(pointer);otherChoice.OnPointerUp(pointer);otherChoice.OnPointerClick(pointer);
             await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Other choice clicks cannot bypass the required tutorial reward");
             await FocusReady(overlay);
-            pointer.position = overlay.ScreenRect((RectTransform)card.transform).center + Vector2.up * 150f;
-            card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);
+            termHits.Clear();EventSystem.current.RaycastAll(pointer,termHits);
+            termTarget=termHits.Count>0?ExecuteEvents.GetEventHandler<IPointerClickHandler>(termHits[0].gameObject):null;
+            Check(termTarget==card.gameObject,"The final term tap reaches the required card");
+            pointer.pointerCurrentRaycast=pointer.pointerPressRaycast=termHits[0];
+            ExecuteEvents.Execute(termTarget,pointer,ExecuteEvents.pointerDownHandler);
+            ExecuteEvents.Execute(termTarget,pointer,ExecuteEvents.pointerUpHandler);
+            ExecuteEvents.Execute(termTarget,pointer,ExecuteEvents.pointerClickHandler);
+            Check(!level.DescriptionBlocksInput,"Tapping a term selects the required card without reopening its explanation");
             await Stage(IngameTutorialStage.ChiefSkill);
             Check(Get<GameObject>(director,"_optionsButton").activeSelf,"Options appear after reaching the level-up choices");
             Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
@@ -449,6 +455,7 @@ public static class IngameTutorialChecks
             var tutorialMenu=Object.FindFirstObjectByType<IngameHudMenu>();
             var tutorialChart=Object.FindFirstObjectByType<IngameDamageChart>();
             var tutorialInventory=Object.FindFirstObjectByType<SelectionInventoryUI>();
+            var tutorialSettings=Object.FindFirstObjectByType<HSD.UI.Setting.UI_SettingPanel_InGame>(FindObjectsInactive.Include);
             async UniTask Instruction(string text) { await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==text,cancellationToken:token); await FocusReady(overlay); await Frames(); }
             async UniTask OpenMenu() { await Instruction(settings.MenuReopenInstruction); ClickButton(tutorialMenu.MenuButton); await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token); }
             await Stage(IngameTutorialStage.OptionsMenu);
@@ -474,6 +481,7 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>!tutorialInventory.IsOpen,cancellationToken:token);
             await OpenMenu();
             await Instruction(settings.MenuSettingsExplanation);
+            Check(!tutorialSettings.AllowOpening && settings.MenuSettingsExplanation.Contains("튜토리얼 중에는 잠시 이용할 수 없어요."),"Settings lesson explains the scene-wide settings lock");
             await UniTask.WaitUntil(()=>!dialogue.IsTyping,cancellationToken:token);await FocusReady(overlay);
             await Snapshot("08c-menu-settings");
             await Acknowledge();
@@ -501,6 +509,11 @@ public static class IngameTutorialChecks
                 ClickButton(Get<Button>(acquired,"_closeButton"));
                 await UniTask.Delay(250,DelayType.Realtime,cancellationToken:token);
                 Check(!acquired.IsOpen && time.Current==1 && input.AllowPointerClicks,"Closing tutorial selection inventory resumes practice combat");
+                ClickButton(optionsMenu.MenuButton);
+                await UniTask.WaitUntil(()=>optionsMenu.IsExpanded && optionsMenu.IsSettled,cancellationToken:token);
+                ClickButton(optionsMenu.SettingsButton);
+                await tutorialSettings.OpenAsync();
+                Check(!tutorialSettings.gameObject.activeInHierarchy && time.Current==1 && input.AllowPointerClicks,"Practice combat blocks menu and direct settings entry without interrupting the battle");
             }
             finally { time.Release(optionsFixture); }
             await UniTask.WaitUntil(()=>director.IsComplete,cancellationToken:token);

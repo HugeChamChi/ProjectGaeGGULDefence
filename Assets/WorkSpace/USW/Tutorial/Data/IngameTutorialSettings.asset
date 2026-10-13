@@ -68,7 +68,7 @@ MonoBehaviour:
     \uC5EC\uAE30\uC5D0 \uBAA8\uC5EC\uC694.\n\uBAA8\uC11C\uB9AC\uC758 \uC5BC\uAD74\uC774
     \uD6A8\uACFC\uB97C \uBC1B\uB294 \uC720\uB2DB\uC774\uC5D0\uC694."
   MenuSettingsExplanation: "\uC18C\uB9AC\uC640 \uC9C4\uB3D9\uC740 \uC5EC\uAE30 \uC124\uC815\uC5D0\uC11C
-    \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
+    \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694.\n\uD29C\uD1A0\uB9AC\uC5BC \uC911\uC5D0\uB294 \uC7A0\uC2DC \uC774\uC6A9\uD560 \uC218 \uC5C6\uC5B4\uC694."
   InitialCost: 20
   CostIncrease: 20
   TrainingFoodPerSecond: 20
@@ -79,9 +79,7 @@ MonoBehaviour:
   HandIdleTip: {x: 0.23, y: 0.86}
   HandPressedTip: {x: 0.18, y: 0.76}
   HandTapPressedFraction: 0.5
-  ChoicePreviewInstruction: "<b><color=#FF9D32>\uC120\uD0DD\uC9C0\uB97C \uAFB9 \uB204\uB974\uACE0
-    \uC788\uC5B4 \uBCF4\uC138\uC694.</color></b>\n\uC601\uD5A5\uC744 \uBC1B\uB294
-    \uC720\uB2DB\uC744 \uD655\uC778\uD55C \uB4A4 \uC190\uC744 \uB5BC\uC5B4 \uC8FC\uC138\uC694."
+  ChoicePreviewInstruction: "<b><color=#FF9D32>선택지를 꾹 누르고 있어 보세요.</color></b>\n영향을 받는 유닛이 강조돼요.\n필드에 해당 유닛이 없으면 강조 표시가 나타나지 않아요.\n확인한 뒤 손을 떼어 주세요."
   ChoiceTermInstruction: "\uAC15\uC870\uB41C \u300C\uC6A9\uC5B4\u300D\uB97C \uB20C\uB7EC
     \uC124\uBA85\uC744 \uD655\uC778\uD574 \uBCF4\uC138\uC694.\n\uD655\uC778\uC774
     \uB05D\uB098\uBA74 \uC124\uBA85 \uCC3D\uC744 \uB2EB\uC544 \uC8FC\uC138\uC694."

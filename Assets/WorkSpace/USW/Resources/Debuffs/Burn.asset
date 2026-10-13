@@ -27,7 +27,7 @@ MonoBehaviour:
   _duration: 5
   _maxStacks: 1
   _tickInterval: 1
-  _snapshotPercent: 1
+  _snapshotPercent: 0.25
   _minTickDamage: 1
   _armorStrength: 0
   _damageMultiplier: 1

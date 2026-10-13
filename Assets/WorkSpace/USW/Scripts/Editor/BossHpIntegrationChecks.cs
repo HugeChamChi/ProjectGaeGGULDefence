@@ -47,7 +47,9 @@ public static class BossHpIntegrationChecks
             ui.UpdateBossHp(900, 1000);
             Check(bar.CurrentLine == 90 && Get(shake, "_shakeTween") != null, "Ten lost lines trigger shake effect");
             var mask = (RectTransform)Get(bar, "_hpFillMask");
-            Check(Mathf.Abs(mask.anchorMax.x - .9f) < .00001f, "Fill remains total HP ratio");
+            Check(Mathf.Abs(mask.anchorMax.x - .9f) < .00001f, "Full current line spans the total HP ratio");
+            var nextMask = (RectTransform)Get(bar, "_nextLineMask");
+            Check(nextMask != null && Mathf.Abs(nextMask.anchorMax.x - .9f) < .00001f, "Next line layer spans the total HP ratio");
             ui.BeginBossHp(5000, 5000, 7);
             Check(bar.CurrentLine == 7 && Get(shake, "_shakeTween") == null, "Boss swap clears effects and resets line count");
             var tester = root.AddComponent<BossHpDamageTester>();
@@ -84,7 +86,10 @@ public static class BossHpIntegrationChecks
             boss.TakeDamage(200);
             // 로그 방어: 200 / (1 + ln(2)) = 118.1232 (고정소수 4자리 반올림).
             Check(boss.CurrentHp == 881.8768m && bar.CurrentLine == 45, $"Actual defense-adjusted damage updates bar through BossManager (HP={boss.CurrentHp}, line={bar.CurrentLine})");
-            Check(Mathf.Abs(mask.anchorMax.x - .8818768f) < .00001f, "Real damage updates fill");
+            // 3겹: 다음 줄 층 = 전체 HP 비율, 현재 줄 = 전체 HP 비율 × 남은 한 줄 비율. 나머지는 배경.
+            float total = .8818768f;
+            Check(Mathf.Abs(mask.anchorMax.x - total * (total * 50f - 44f)) < .00001f, "Real damage scales current line inside total HP span");
+            Check(Mathf.Abs(((RectTransform)Get(bar, "_nextLineMask")).anchorMax.x - total) < .00001f, "Real damage shrinks next line layer to total HP ratio");
             boss.ClearListeners();
 
             var stage = AssetDatabase.LoadAssetAtPath<StageData>("Assets/WorkSpace/USW/Data/WaveData/StageData.asset");

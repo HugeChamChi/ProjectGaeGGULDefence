@@ -39,7 +39,7 @@ namespace GaeGGUL.Tutorial
         [TextArea] public string MenuReopenInstruction = "메뉴를 다시 열어 보세요.";
         [TextArea] public string MenuSelectionInstruction = "이번엔 선택지를 눌러 보세요.";
         [TextArea] public string MenuSelectionExplanation = "레벨업에서 얻은 선택지는 여기에 모여요.\n모서리의 얼굴이 효과를 받는 유닛이에요.";
-        [TextArea] public string MenuSettingsExplanation = "소리와 진동은 여기 설정에서 바꿀 수 있어요.";
+        [TextArea] public string MenuSettingsExplanation = "소리와 진동은 여기 설정에서 바꿀 수 있어요.\n튜토리얼 중에는 잠시 이용할 수 없어요.";
         [Min(0)] public float InitialCost = 20f;
         [Min(0)] public float CostIncrease = 20f;
         [Tooltip("Tutorial-only food income until the upgrade introduction finishes.")]
@@ -58,7 +58,7 @@ namespace GaeGGUL.Tutorial
         public Vector2 HandPressedTip = new Vector2(0.18f, 0.76f);
         /// <summary>End of the pressed phase for a repeating tap gesture.</summary>
         [Range(0f, 1f)] public float HandTapPressedFraction = 0.5f;
-        [TextArea] public string ChoicePreviewInstruction = "선택지를 길게 누르면 영향을 받는 유닛이 강조돼요.\n확인한 뒤 손을 떼어 돌아와 보세요.";
+        [TextArea] public string ChoicePreviewInstruction = "<b><color=#FF9D32>선택지를 꾹 누르고 있어 보세요.</color></b>\n영향을 받는 유닛이 강조돼요.\n필드에 해당 유닛이 없으면 강조 표시가 나타나지 않아요.\n확인한 뒤 손을 떼어 주세요.";
         [TextArea] public string ChoiceTermInstruction = "강조된 「용어」를 눌러 설명을 확인해 보세요.\n확인이 끝나면 설명 창을 닫아 주세요.";
         /// <summary>Instruction shown when the term lesson returns to the required choice.</summary>
         [TextArea] public string ChoiceSelectInstruction = "이제 <color=#FF9D32>「넹?」 선택지</color>를 눌러 선택해 주세요.";

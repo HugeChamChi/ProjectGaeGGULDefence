@@ -42,6 +42,8 @@ IngameScene을 실행하고 보스를 처치하면 토템 보상 후보가 나�
 
 ## 외형 바꾸기
 
+TD1004 본체는 `TD1004.prefab/SpineVisual`의 SkeletonAnimation을 사용합니다. `TD1004Spine/SPN_TD1004_SkeletonData.asset`은 JSY 원본 `SPN_TD1004.skel.bytes`를 참조하고, `animation`(1.6초)을 반복합니다. 원본 PMA 텍스처는 별도 Straight Alpha 텍스처·URP 재질로 보정했습니다. 숨긴 `Visual`의 SpriteRenderer는 드래그 정렬·색상 전달용이므로 유지합니다. 보상·인벤토리 아이콘은 기존 `SPR_TD1004` 주소(JSY_Artwork/Totem의 그림)를 사용합니다. 소환 골렘의 외형은 별도 프리팹입니다.
+
 프리팹을 열고 자식 `Visual`의 SpriteRenderer를 편집하세요. 크기는 `Visual`의 Scale로 조정합니다. 루트 Scale은 배치 시 TotemSpawner가 설정하므로 Visual 쪽을 조정해야 합니다. 루트 BoxCollider2D는 터치 영역입니다.
 
 실행 시에는 SO의 아이콘/회전 스프라이트 주소가 최종 그림을 결정합니다. 프리팹 Sprite만 바꾸면 실행 시 기존 그림으로 돌아올 수 있으므로, 새 그림을 Addressables에 등록하고 SO의 iconAddress와 rotationSpriteAddresses도 바꿔주세요.

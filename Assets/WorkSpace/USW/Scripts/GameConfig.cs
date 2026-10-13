@@ -9,6 +9,39 @@ public class GameConfig : ScriptableObject
     [SerializeField, Min(0f)] private float _bossKillBonusSeconds = 30f;
     /// <summary>Seconds added once for each accepted boss defeat; subsequent bosses keep the remaining time.</summary>
     public float BossKillBonusSeconds => Mathf.Max(0f, _bossKillBonusSeconds);
+
+    [Header("Endless Boss Time Rewards")]
+    [SerializeField, Min(0f)] private float _breatherBossKillBonusSeconds = 10f;
+    [SerializeField, Min(0f)] private float _hardBossKillBonusSeconds = 30f;
+    /// <summary>Seconds added for an endless Breather boss defeat.</summary>
+    public float BreatherBossKillBonusSeconds => Mathf.Max(0f, _breatherBossKillBonusSeconds);
+    /// <summary>Seconds added for an endless Hard boss defeat.</summary>
+    public float HardBossKillBonusSeconds => Mathf.Max(0f, _hardBossKillBonusSeconds);
+
+    /// <summary>Captures the completed round's authored role and time reward; null mode preserves finite/tutorial rewards.</summary>
+    public bool TryGetBossKillBonusSeconds(EndlessModeData mode, int round, out EndlessBossRole role, out float seconds, out string error)
+    {
+        role = EndlessBossRole.Unspecified;
+        seconds = 0f;
+        error = "";
+        if (mode == null) { seconds = BossKillBonusSeconds; return true; }
+        if (round < 1 || mode.CycleLength < 1 || mode.Slots == null)
+        { error = "Invalid endless reward round or cycle."; return false; }
+        int position = (round - 1) % mode.CycleLength + 1;
+        foreach (var slot in mode.Slots)
+        {
+            if (slot == null || slot.Position != position) continue;
+            role = slot.Role;
+            switch (role)
+            {
+                case EndlessBossRole.Breather: seconds = BreatherBossKillBonusSeconds; return true;
+                case EndlessBossRole.Hard: seconds = HardBossKillBonusSeconds; return true;
+                default: error = $"Round {round}: unspecified endless boss reward role."; return false;
+            }
+        }
+        error = $"Round {round}: no endless boss reward slot at position {position}.";
+        return false;
+    }
     [Tooltip("타이머 보너스 카운트업 완료 후 처치 공지까지의 실제 시간")]
     [SerializeField, Min(0f)] private float _bossClearNoticeDelaySeconds = 0.4f;
     /// <summary>Unscaled delay between the completed timer addition and the clear notice.</summary>
