@@ -43,6 +43,12 @@ namespace HSD.InGameDebug
         {
             if (targetObject != null)
             {
+                var debugButton = targetObject.GetComponentInChildren<UI_OpenDebugButton>(true);
+                if (debugButton != null)
+                {
+                    debugButton.OpenDebugPanel();
+                    return;
+                }
                 targetObject.SetActive(true);
                 
                 // UI_Base를 상속받은 경우 Open() 메서드 호출 시도

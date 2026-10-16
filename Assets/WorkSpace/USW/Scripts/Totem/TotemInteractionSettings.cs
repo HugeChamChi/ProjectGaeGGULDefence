@@ -8,7 +8,10 @@ public sealed class TotemInteractionSettings : ScriptableObject
     [SerializeField, Range(1, 5)] private int _capacity = 5;
     [Tooltip("회전 가능 토템을 이 시간(실제 초)만큼 누른 뒤 끌면 회전한다. 그 전에 끌면 이동.")]
     [SerializeField, Min(0.1f), FormerlySerializedAs("_moveHoldSeconds")] private float _rotateHoldSeconds = 0.45f;
-    [SerializeField, Min(1f)] private float _rotationDeadZonePixels = 24f;
+    [Tooltip("기준 Canvas에서 회전을 취소하는 가운데 영역의 반지름. 화면의 Canvas 배율을 곱해 사용한다.")]
+    [SerializeField, Min(1f)] private float _rotationDeadZonePixels = 66f;
+    [Tooltip("회전 방향을 고르기 전이나 가운데로 돌아와 취소할 때 범위 표시의 불투명도.")]
+    [SerializeField, Range(0f, 1f)] private float _rotationCancelPreviewOpacity = 0.4f;
 
     [Header("Hold Feedback (누르고 있을 때 원형 게이지 + 슬로우)")]
     [Tooltip("누른 뒤 이 시간(실제 초)이 지나야 게이지와 슬로우가 시작된다. 짧은 탭에서 깜빡이지 않게 한다.")]
@@ -26,8 +29,10 @@ public sealed class TotemInteractionSettings : ScriptableObject
     public int Capacity => Mathf.Clamp(_capacity, 1, 5);
     /// <summary>Hold duration before a drag rotates (instead of moves) a rotatable totem.</summary>
     public float RotateHoldSeconds => _rotateHoldSeconds;
-    /// <summary>Release inside this screen-space radius to cancel rotation.</summary>
+    /// <summary>Cancellation radius in reference Canvas pixels; the rotation UI applies the Canvas scale.</summary>
     public float RotationDeadZonePixels => _rotationDeadZonePixels;
+    /// <summary>Range opacity while no direction is selected or the pointer returns to the cancellation zone.</summary>
+    public float RotationCancelPreviewOpacity => Mathf.Clamp01(_rotationCancelPreviewOpacity);
     /// <summary>Unscaled seconds after press before the hold gauge and slow motion begin (kept below RotateHoldSeconds).</summary>
     public float HoldFeedbackDelaySeconds => Mathf.Clamp(_holdFeedbackDelaySeconds, 0f, _rotateHoldSeconds * 0.9f);
     /// <summary>Game time scale requested while a rotatable totem is held or rotated.</summary>

@@ -239,7 +239,8 @@ public class GridManager : MonoBehaviour
         return _previewedTotem == totem;
     }
 
-    public void ShowTotemRangePreview(TotemBase totem)
+    /// <summary>Shows the totem's current range, optionally faded, without changing actual buffs.</summary>
+    public void ShowTotemRangePreview(TotemBase totem, float opacity = 1f)
     {
         ClearTotemRangePreview();
 
@@ -247,7 +248,7 @@ public class GridManager : MonoBehaviour
             return;
 
         _previewedTotem = totem;
-        PaintTotemPreview(totem);
+        PaintTotemPreview(totem, opacity);
     }
 
     /// <summary>Paints an inactive placement preview without registering a live totem.</summary>
@@ -258,13 +259,13 @@ public class GridManager : MonoBehaviour
         PaintTotemPreview(preview);
     }
 
-    private void PaintTotemPreview(TotemBase totem)
+    private void PaintTotemPreview(TotemBase totem, float opacity = 1f)
     {
         if (totem.Data.HasEffectGroups)
         {
             foreach (var group in totem.Data.EffectGroups)
                 if (group != null) foreach (var cell in group.GetCells(totem, this))
-                    cell.Model.SetTotemRangePreview(true, false, group.Color);
+                    cell.Model.SetTotemRangePreview(true, false, group.Color, opacity);
             return;
         }
 
@@ -273,7 +274,7 @@ public class GridManager : MonoBehaviour
         foreach (var cell in totem.GetAffectedCells())
         {
             if (cell == null) continue;
-            cell.Model.SetTotemRangePreview(effectRange: true, disabledRange: false);
+            cell.Model.SetTotemRangePreview(effectRange: true, disabledRange: false, opacity: opacity);
         }
 
     }

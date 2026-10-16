@@ -23,7 +23,8 @@ namespace HSD.InGameDebug
             btn.onClick.AddListener(OpenDebugPanel);
         }
 
-        private void OpenDebugPanel()
+        /// <summary>Opens the injected workspace, including from the hidden gesture without the legacy toolbar.</summary>
+        public void OpenDebugPanel()
         {
             if (_panel != null)
             {

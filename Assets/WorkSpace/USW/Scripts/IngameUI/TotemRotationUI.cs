@@ -1,20 +1,19 @@
 using UnityEngine;
 using VContainer;
 
-/// <summary>Four-direction rotation gesture with a central cancellation zone.</summary>
+/// <summary>Four-direction rotation shown only through striped range cells, with a faded central cancellation zone.</summary>
 public sealed class TotemRotationUI : MonoBehaviour
 {
     [Inject] private TotemInteractionSettings _settings;
     [Inject] private GridManager _gridManager;
     [SerializeField] private RectTransform _root;
-    [SerializeField] private RectTransform _indicator;
-    [SerializeField] private float _indicatorDistance = 54f;
     private TotemBase _totem;
     private Camera _camera;
     private Vector2 _center;
+    private float _canvasScale = 1f;
     private int _candidate = -1;
 
-    private void Start() { _camera = Camera.main; _root.gameObject.SetActive(false); }
+    private void Start() { _camera = Camera.main; HideDirectionUi(); }
     /// <summary>Returns clockwise steps from up, or -1 for the cancellation zone.</summary>
     public static int ResolveDirection(Vector2 delta, float deadZone)
     {
@@ -26,30 +25,25 @@ public sealed class TotemRotationUI : MonoBehaviour
     public void Begin(TotemBase totem)
     {
         Cancel();
-        if (totem == null || !totem.IsActive || totem.Data == null || !totem.Data.isRotatable) return;
+        if (totem == null || !totem.IsActive || totem.Data == null || !totem.Data.isRotatable || _settings == null || _gridManager == null) return;
         if (_camera == null) _camera = Camera.main;
         if (_camera == null) return;
         _totem = totem; _candidate = -1;
         _center = _camera.WorldToScreenPoint(totem.transform.position);
-        var canvas = _root.GetComponentInParent<Canvas>();
-        Camera uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)_root.parent, _center, uiCamera, out var point))
-            _root.anchoredPosition = point;
-        _indicator.anchoredPosition = Vector2.zero;
-        _root.gameObject.SetActive(true);
-        totem.RestoreRotationPreview();
+        var canvas = _root != null ? _root.GetComponentInParent<Canvas>() : GetComponentInParent<Canvas>();
+        _canvasScale = canvas != null ? canvas.scaleFactor : 1f;
+        HideDirectionUi();
+        _gridManager.ShowTotemRangePreview(totem, _settings.RotationCancelPreviewOpacity);
     }
     /// <summary>Updates only the range preview, never the applied buffs.</summary>
     public void Drag(Vector2 worldPosition)
     {
         if (_totem == null || !_totem.IsActive) { Cancel(); return; }
         Vector2 pointer = _camera.WorldToScreenPoint(worldPosition);
-        int candidate = ResolveDirection(pointer - _center, _settings.RotationDeadZonePixels);
+        int candidate = ResolveDirection(pointer - _center, _settings.RotationDeadZonePixels * _canvasScale);
         if (candidate == _candidate) return;
         _candidate = candidate;
-        var direction = candidate < 0 ? Vector2.zero : candidate == 0 ? Vector2.up : candidate == 1 ? Vector2.right : candidate == 2 ? Vector2.down : Vector2.left;
-        _indicator.anchoredPosition = direction * _indicatorDistance;
-        if (candidate < 0) _totem.RestoreRotationPreview();
+        if (candidate < 0) _gridManager.ShowTotemRangePreview(_totem, _settings.RotationCancelPreviewOpacity);
         else _totem.PreviewRotation(candidate);
     }
     /// <summary>Releasing in the center cancels; otherwise commits the preview direction.</summary>
@@ -64,6 +58,10 @@ public sealed class TotemRotationUI : MonoBehaviour
     {
         if (_totem != null) _gridManager?.ClearTotemRangePreview();
         _totem = null; _candidate = -1;
+        HideDirectionUi();
+    }
+    private void HideDirectionUi()
+    {
         if (_root != null) _root.gameObject.SetActive(false);
     }
     private void OnDisable() => Cancel();

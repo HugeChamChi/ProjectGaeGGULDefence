@@ -174,7 +174,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: spine-unity::Spine.Unity.SkeletonAnimation
   updateTiming: 1
   threadedAnimation: 2
-  animationName: idle_1
+  animationName: idle_0
   loop: 1
   timeScale: 1
   unscaledTime: 0

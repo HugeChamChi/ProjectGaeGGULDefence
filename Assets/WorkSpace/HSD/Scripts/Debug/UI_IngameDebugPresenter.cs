@@ -1,313 +1,242 @@
-using System.Collections.Generic;
-using UnityEngine;
+using System;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace HSD.InGameDebug
 {
-    public class UI_IngameDebugPresenter
+    /// <summary>Connects the debug workspace to scene services and the actual authored catalogs.</summary>
+    public sealed class UI_IngameDebugPresenter : IDisposable
     {
-        private UI_IngameDebugPanel _view;
-        private DebugTabType _currentTab;
-        private CancellationTokenSource _addViewCts;
+        private readonly UI_IngameDebugPanel _view;
+        private readonly GridManager _grid;
+        private readonly UnitFactory _factory;
+        private readonly UnitSpawner _units;
+        private readonly TotemSpawner _totems;
+        private readonly LevelUpManager _choices;
+        private readonly LevelUpRunState _state;
+        private readonly GameManager _game;
+        private readonly GameInitializer _initializer;
+        private DebugTabType _tab;
+        private bool _catalog = true;
+        private Tier _tier;
+        private CancellationTokenSource _listCts;
+        private CancellationTokenSource _commandCts;
+        private bool _adding;
 
-        private TotemData[] _allTotemData;
-
-        public UI_IngameDebugPresenter(UI_IngameDebugPanel view)
+        /// <summary>Receives the same scoped services that gameplay uses.</summary>
+        public UI_IngameDebugPresenter(UI_IngameDebugPanel view, GridManager grid, UnitFactory factory,
+            UnitSpawner units, TotemSpawner totems, LevelUpManager choices,
+            LevelUpRunState state, GameManager game, GameInitializer initializer)
         {
-            _view = view;
+            _view = view; _grid = grid; _factory = factory; _units = units; _totems = totems;
+            _choices = choices; _state = state; _game = game; _initializer = initializer;
         }
 
-        public void Dispose()
-        {
-            _addViewCts?.Cancel();
-            _addViewCts?.Dispose();
-            _addViewCts = null;
-            _view = null;
-        }
+        /// <summary>Opens on the last category and mode, refreshing external changes.</summary>
+        public void Init() { Refresh(); _view.Notify("카탈로그에서 추가하거나 현재 배치에서 관리하세요"); }
+        /// <summary>Changes category and clears a category-specific search.</summary>
+        public void ChangeTab(DebugTabType tab) { if (tab < DebugTabType.Unit || tab > DebugTabType.LevelUp) return; _tab = tab; _view.ResetSearch(); _view.CloseAllInfoPopups(); Refresh(); }
+        /// <summary>Switches between the available catalog and live objects/effects.</summary>
+        public void SetCatalog(bool catalog) { _catalog = catalog; _view.ResetSearch(); Refresh(); }
+        /// <summary>Selects a combat tier for debug unit spawning.</summary>
+        public void SetTier(Tier tier) { if (tier < Tier.Normal || tier > Tier.Legend) return; _tier = tier; Refresh(); }
 
-        public void Init()
+        /// <summary>Refreshes from current scene state and cancels any stale progressive load.</summary>
+        public void Refresh()
         {
-            ChangeTab(0);
-        }
-
-        public void ChangeTab(DebugTabType tab)
-        {
-            _currentTab = tab;
-            _view.HideAddView();
-            _view.CloseAllInfoPopups();
-            
-            _view.UpdateInfoButtonVisibility(tab);
-            
-            RefreshList();
-        }
-
-        public void OpenInfoView()
-        {
-            _view.ShowInfoPopup(_currentTab);
-        }
-
-        private void RefreshList()
-        {
-            _view.ClearList();
-            
-            switch (_currentTab)
+            CancelSource(ref _listCts);
+            bool ready = _initializer?.IsReady == true;
+            _view.BeginList(_tab, _catalog, _tier, ready && _catalog);
+            if (!ready) { _view.FinishList(); _view.Notify("게임 준비 중입니다 · 잠시 후 새로고침하세요", true); return; }
+            if (_catalog)
             {
+                _listCts = CancellationTokenSource.CreateLinkedTokenSource(_view.GetCancellationTokenOnDestroy());
+                LoadCatalogAsync(_listCts.Token).Forget();
+            }
+            else { RefreshCurrent(); _view.FinishList(); }
+        }
+
+        private async UniTask LoadCatalogAsync(CancellationToken token)
+        {
+            try
+            {
+                switch (_tab)
+                {
+                    case DebugTabType.Unit:
+                        foreach (var data in _factory.UnitDataList.Where(d => d != null).OrderBy(d => d.unitName))
+                        {
+                            await data.LoadAssetsAsync().AttachExternalCancellation(token);
+                            token.ThrowIfCancellationRequested();
+                            _view.AddItem(data, data.unitName, data.GetFormattedDescription(_tier),
+                                data.icon, "소환", Add, searchKeywords: data.characterId.Get(_tier).ToString());
+                            await UniTask.Yield(PlayerLoopTiming.Update, token);
+                        }
+                        break;
+                    case DebugTabType.Totem:
+                        var reward = UnityEngine.Object.FindObjectsByType<TotemRewardUI>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                            .FirstOrDefault(ui => ui.gameObject.scene == _view.gameObject.scene);
+                        if (reward?.TotemPool != null)
+                        foreach (var data in reward.TotemPool.Where(d => d != null).OrderBy(d => d.totemId))
+                        {
+                            await data.LoadAssetsAsync().AttachExternalCancellation(token);
+                            token.ThrowIfCancellationRequested();
+                            _view.AddItem(data, TotemLabel(data), $"{(data.isRotatable ? "회전 O" : "회전 X")}\n{data.GetDisplayDescription()}",
+                                data.icon, "배치", Add, searchKeywords: data.totemName + " TD" + data.totemId);
+                            await UniTask.Yield(PlayerLoopTiming.Update, token);
+                        }
+                        break;
+                    case DebugTabType.LevelUp:
+                        foreach (var data in _choices.LevelUpPool.Where(d => d != null).OrderBy(d => d.chooseId))
+                        {
+                            bool acquired = _state.HasEverAcquired(data.chooseId);
+                            _view.AddItem(data, data.chooseName, _choices.GetChoiceDescription(data), data.icon,
+                                acquired ? "획득함" : "적용", Add, !acquired, data.chooseId.ToString());
+                            await UniTask.Yield(PlayerLoopTiming.Update, token);
+                        }
+                        break;
+                }
+                token.ThrowIfCancellationRequested();
+                _view.FinishList();
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+            catch (Exception e)
+            {
+                if (!token.IsCancellationRequested) { _view.FinishList(); _view.Notify("목록을 불러오지 못했습니다 · 새로고침을 눌러주세요", true); Debug.LogException(e); }
+            }
+        }
+
+        private void RefreshCurrent()
+        {
+            switch (_tab)
+            {
+                case DebugTabType.Unit:
+                    foreach (var cell in _grid.GetOccupiedCells())
+                    {
+                        var unit = cell.OccupyingUnit;
+                        if (unit?.unitData == null) continue;
+                        _view.AddItem(unit, unit.unitData.unitName, $"{TierLabel(unit.currentTier)} · 칸 {cell.GridPosition}",
+                            unit.unitData.icon, "제거", Remove, searchKeywords: unit.unitData.characterId.Get(unit.currentTier).ToString());
+                    }
+                    break;
                 case DebugTabType.Totem:
-                    _view.ShowAddButton(true);
-                    RefreshTotemList();
+                    foreach (var cell in _grid.AllCells())
+                    {
+                        var totem = cell.OccupyingTotem;
+                        if (totem?.Data == null) continue;
+                        _view.AddItem(totem, TotemLabel(totem.Data),
+                            $"칸 {cell.GridPosition} · {(totem.Data.isRotatable ? "회전 O" : "회전 X")}\n{totem.Data.GetDisplayDescription()}",
+                            totem.Data.icon, "제거", Remove, searchKeywords: totem.Data.totemName + " TD" + totem.Data.totemId);
+                    }
                     break;
                 case DebugTabType.LevelUp:
-                    _view.ShowAddButton(true);
-                    RefreshLevelUpList();
-                    break;
-                case DebugTabType.Chief:
-                    _view.ShowAddButton(false);
-                    RefreshChiefList();
-                    break;
-                case DebugTabType.Unit:
-                    _view.ShowAddButton(true);
-                    RefreshUnitList();
+                    var pool = _choices.LevelUpPool;
+                    foreach (var card in _state.Active)
+                    {
+                        var data = pool.FirstOrDefault(d => d != null && d.chooseId == card.CardId);
+                        if (data == null) continue;
+                        _view.AddItem(data, data.chooseName, _choices.GetChoiceDescription(data), data.icon, "제거", Remove,
+                            searchKeywords: data.chooseId.ToString());
+                    }
                     break;
             }
         }
 
-        /// <summary>Loads the current reward catalog and populates the debug add menu.</summary>
-        public async UniTaskVoid OpenAddView()
+        private bool CanCommand()
         {
-            if (_view == null) return;
-            _addViewCts?.Cancel();
-            _addViewCts?.Dispose();
-            _addViewCts = CancellationTokenSource.CreateLinkedTokenSource(_view.GetCancellationTokenOnDestroy());
-            var token = _addViewCts.Token;
+            if (_initializer?.IsReady != true) { _view.Notify("게임 준비가 끝난 뒤 다시 시도하세요", true); return false; }
+            if (_game.IsFinished) { _view.Notify("종료된 게임에서는 변경할 수 없습니다", true); return false; }
+            return true;
+        }
 
-            if (_view == null) return;
-
-            _view.ClearAddList();
-            _view.ShowAddView();
-
-            if (_currentTab == DebugTabType.Totem)
+        private void Add(object data)
+        {
+            if (!CanCommand()) return;
+            if (data is LevelUpData choice)
             {
-                var pool = UnityEngine.Object.FindFirstObjectByType<TotemRewardUI>(FindObjectsInactive.Include)?.TotemPool;
-                if (pool != null)
+                var result = _choices.TryApplyChoice(choice);
+                bool success = result != SelectionApplyResult.Rejected;
+                _view.Notify(success ? choice.chooseName + " 적용 요청을 처리했습니다" : "이미 획득했거나 적용할 수 없는 선택지입니다", !success);
+                Refresh(); return;
+            }
+            if (_adding) { _view.Notify("앞선 배치를 처리하고 있습니다", true); return; }
+            _commandCts = CancellationTokenSource.CreateLinkedTokenSource(_view.GetCancellationTokenOnDestroy());
+            AddObjectAsync(data, _commandCts.Token).Forget();
+        }
+
+        private async UniTask AddObjectAsync(object data, CancellationToken token)
+        {
+            _adding = true;
+            Tier requestedTier = _tier;
+            try
+            {
+                var cells = _grid.GetEmptyCells();
+                if (cells.Count == 0) { _view.Notify("빈 칸이 없습니다 · 현재 배치에서 대상을 제거하세요", true); return; }
+                var cell = cells[UnityEngine.Random.Range(0, cells.Count)];
+                if (data is TotemData totem)
                 {
-                    foreach (var data in pool)
-                    {
-                        if (data == null) continue;
-                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
-                        bool loadCanceled = await data.LoadAssetsAsync().AttachExternalCancellation(token).SuppressCancellationThrow();
-                        if (loadCanceled || _view == null || _view.gameObject == null) break;
-                        _view.AddAddItem(data, data.totemName, data.description, data.icon, "+", OnAddTotem);
-                        // 최적화: 매 프레임마다 일정 개수만 생성하여 렉 방지
-                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
-                        if (canceled) break;
-                    }
+                    _view.Notify(TotemLabel(totem) + " 배치 중…");
+                    bool placed = await _totems.PlaceTotemAtCellAsync(totem, cell, token);
+                    token.ThrowIfCancellationRequested();
+                    _view.Notify(placed ? TotemLabel(totem) + " 배치 완료 · " + cell.GridPosition : "배치하지 못했습니다 · 빈 칸을 확인하세요", !placed);
                 }
-            }
-            else if (_currentTab == DebugTabType.LevelUp)
-            {
-                var levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
-                var pool = levelUpManager?.LevelUpPool;
-                if (pool != null)
+                else if (data is UnitData unitData)
                 {
-                    foreach (var data in pool)
-                    {
-                        if (data == null) continue;
-                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
-                        
-                        string statDesc = $"{data.description}\n";
-                        if (data.primaryValue != 0) statDesc += $"[{data.primaryEffect}] {data.primaryValue:+#;-#;0} ";
-                        if (data.secondaryValue != 0) statDesc += $"[{data.secondaryEffect}] {data.secondaryValue:+#;-#;0} ";
-                        if (data.specialValue != 0) statDesc += $"[{data.specialEffect}] {data.specialValue:+#;-#;0}";
-
-                        _view.AddAddItem(data, data.chooseName, statDesc.Trim(), data.icon, "+", OnAddLevelUp);
-                        // 최적화: 매 프레임마다 일정 개수만 생성하여 렉 방지
-                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
-                        if (canceled) break;
-                    }
+                    await unitData.LoadAssetsAsync().AttachExternalCancellation(token);
+                    token.ThrowIfCancellationRequested();
+                    if (!cell.IsAvailable) { _view.Notify("선택한 칸이 사용 중입니다 · 다시 시도하세요", true); return; }
+                    var unit = _factory.CreateUnitFromData(unitData, requestedTier);
+                    if (unit == null) { _view.Notify("유닛을 생성하지 못했습니다", true); return; }
+                    _units.PlaceUnitWithEffect(unit, cell);
+                    _view.Notify(unitData.unitName + " 소환 완료 · " + TierLabel(requestedTier) + " · " + cell.GridPosition);
                 }
+                if (_view.isActiveAndEnabled) Refresh();
             }
-            else if (_currentTab == DebugTabType.Unit)
-            {
-                var pool = UnityEngine.Object.FindFirstObjectByType<UnitFactory>(FindObjectsInactive.Include)?.UnitDataList;
-                if (pool != null)
-                {
-                    foreach (var data in pool)
-                    {
-                        if (data == null) continue;
-                        if (token.IsCancellationRequested || _view == null || _view.gameObject == null) break;
-                        _view.AddAddItem(data, data.unitName, data.description, data.icon, "+", OnAddUnit);
-                        bool canceled = await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow();
-                        if (canceled) break;
-                    }
-                }
-            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+            catch (Exception e) { if (!token.IsCancellationRequested) _view.Notify("배치에 실패했습니다", true); Debug.LogException(e); }
+            finally { _adding = false; CancelSource(ref _commandCts); }
         }
 
-        // --- Totem Logic ---
-        private void RefreshTotemList()
+        private void Remove(object data)
         {
-            var activeTotems = Object.FindObjectsByType<TotemBase>(FindObjectsSortMode.None);
-            foreach (var totem in activeTotems)
+            if (!CanCommand()) return;
+            string name;
+            if (data is UnitBase unit && unit != null)
             {
-                var data = totem.Data;
-                
-                string name = totem.name;
-                string desc = "배치된 토템";
-                Sprite icon = null;
-                
-                if (data != null)
-                {
-                    name = data.totemName;
-                    desc = data.description;
-                    icon = data.icon;
-                }
-
-                _view.AddListItem(totem, name, desc, icon, "X", OnRemoveTotem);
-            }
-        }
-
-        private void OnRemoveTotem(object obj)
-        {
-            if (obj is TotemBase totem)
-            {
-                var spawner = UnityEngine.Object.FindFirstObjectByType<TotemSpawner>(FindObjectsInactive.Include);
-                spawner?.SellTotem(totem);
-                RefreshList();
-            }
-        }
-
-        private void OnAddTotem(object obj)
-        {
-            if (obj is TotemData data)
-            {
-                var spawner = UnityEngine.Object.FindFirstObjectByType<TotemSpawner>(FindObjectsInactive.Include);
-                spawner?.SpawnTotemByData(data).Forget();
-                _view.HideAddView();
-                RefreshList();
-            }
-        }
-
-        // --- LevelUp Logic ---
-        private void RefreshLevelUpList()
-        {
-            var levelUpManager = UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include);
-            if (levelUpManager == null) return;
-
-            var chosenIds = levelUpManager.ChosenIds.ToList();
-            var pool = levelUpManager.LevelUpPool;
-
-            foreach (var id in chosenIds)
-            {
-                var data = pool?.FirstOrDefault(d => d != null && d.chooseId == id);
-                if (data != null)
-                {
-                    string statDesc = $"{data.description}\n";
-                    if (data.primaryValue != 0) statDesc += $"[{data.primaryEffect}] {data.primaryValue:+#;-#;0} ";
-                    if (data.secondaryValue != 0) statDesc += $"[{data.secondaryEffect}] {data.secondaryValue:+#;-#;0} ";
-                    if (data.specialValue != 0) statDesc += $"[{data.specialEffect}] {data.specialValue:+#;-#;0}";
-
-                    _view.AddListItem(data, data.chooseName, statDesc.Trim(), data.icon, "X", OnRemoveLevelUp);
-                }
-            }
-        }
-
-        private void OnRemoveLevelUp(object obj)
-        {
-            if (obj is LevelUpData data)
-            {
-                UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include)?.RemoveEffect(data);
-                RefreshList();
-            }
-        }
-
-        private void OnAddLevelUp(object obj)
-        {
-            if (obj is LevelUpData data)
-            {
-                UnityEngine.Object.FindFirstObjectByType<LevelUpManager>(FindObjectsInactive.Include)?.ApplyEffect(data);
-                _view.HideAddView();
-                RefreshList();
-            }
-        }
-
-        // --- Chief Logic ---
-        private void RefreshChiefList()
-        {
-            var selection = UnityEngine.Object.FindFirstObjectByType<ChieftainSelection>(FindObjectsInactive.Include);
-            if (selection == null) return;
-            foreach (var chief in selection.AvailableSelections)
-            {
-                if (chief == null) continue;
-                bool isCurrent = chief == selection.SelectedChieftain;
-                string btnText = isCurrent ? "선택됨" : "교체";
-                _view.AddListItem(chief, chief.DisplayName, "액티브 스킬 선택", chief.Icon, btnText, OnChangeChief);
-            }
-        }
-
-        private void OnChangeChief(object obj)
-        {
-            if (obj is ChieftainData data)
-            {
-                UnityEngine.Object.FindFirstObjectByType<ChieftainSelection>(FindObjectsInactive.Include)?.Select(data);
-                RefreshList();
-            }
-        }
-
-        // --- Unit Logic ---
-        private void RefreshUnitList()
-        {
-            var cells = UnityEngine.Object.FindFirstObjectByType<GridManager>(FindObjectsInactive.Include)?.GetOccupiedCells();
-            if (cells == null) return;
-
-            foreach (var cell in cells)
-            {
-                var unit = cell.OccupyingUnit;
-                if (unit == null || unit.unitData == null) continue;
-
-                _view.AddListItem(unit, unit.unitData.unitName, $"", unit.unitData.icon, "X", OnRemoveUnit);
-            }
-        }
-
-        private void OnRemoveUnit(object obj)
-        {
-            if (obj is UnitBase unit)
-            {
+                name = unit.unitData.unitName;
                 var cell = unit.currentCell;
-                if (cell != null) cell.RemoveUnit();
-                Object.Destroy(unit.gameObject);
-                RefreshList();
+                // A spawn animation may not have called OnPlaced yet; occupancy still owns the unit.
+                if (cell == null) cell = _grid.AllCells().FirstOrDefault(c => c.OccupyingUnit == unit);
+                unit.OnRemoved(); cell?.RemoveUnit(); UnityEngine.Object.Destroy(unit.gameObject);
             }
+            else if (data is TotemBase totem && totem != null) { name = TotemLabel(totem.Data); _totems.SellTotem(totem); }
+            else if (data is LevelUpData choice) { name = choice.chooseName; _choices.RemoveEffect(choice); }
+            else return;
+            _view.Notify(name + " 제거 완료"); Refresh();
         }
 
-        private void OnAddUnit(object obj)
+        private static string TierLabel(Tier tier) => tier == Tier.Legend ? "Legendary" : tier.ToString();
+
+        // Debug-only labels for authored placeholder names; never changes TotemData or gameplay text.
+        private static string TotemLabel(TotemData data)
         {
-            if (obj is UnitData data)
+            if (!string.IsNullOrWhiteSpace(data.totemName) && !data.totemName.StartsWith("TD" + data.totemId, StringComparison.Ordinal))
+                return data.totemName;
+            return data.totemId switch
             {
-                var emptyCells = UnityEngine.Object.FindFirstObjectByType<GridManager>(FindObjectsInactive.Include)?.GetEmptyCells();
-                if (emptyCells == null || emptyCells.Count == 0)
-                {
-                    Debug.LogWarning("[Debug] 빈 셀 없음 — 유닛 생성 취소");
-                    return;
-                }
-
-                var cell = emptyCells[Random.Range(0, emptyCells.Count)];
-                var factory = UnityEngine.Object.FindFirstObjectByType<UnitFactory>(FindObjectsInactive.Include);
-                var spawner = UnityEngine.Object.FindFirstObjectByType<UnitSpawner>(FindObjectsInactive.Include);
-                
-                if (factory != null && spawner != null)
-                {
-                    var unit = factory.CreateUnitFromData(data, Tier.Normal);
-                    if (unit != null)
-                    {
-                        spawner.PlaceUnitWithEffect(unit, cell);
-                    }
-                }
-
-                _view.HideAddView();
-                RefreshList();
-            }
+                1001 => "보조 투사체", 1002 => "성장 뿌리", 1003 => "화염구", 1004 => "골렘 소환",
+                1005 => "일시 승급", 1006 => "아머브레이크", 1007 => "그림자 공격", 1008 => "이중 강화",
+                1009 => "공격 집중", 1010 => "식량 생산", 1011 => "전후방 지원", 1012 => "치명타 공명",
+                1013 => "가로줄 강화", 1014 => "보스 맞이", _ => "토템"
+            };
         }
+
+        private static void CancelSource(ref CancellationTokenSource source)
+        { var current = source; source = null; if (current == null) return; current.Cancel(); current.Dispose(); }
+        /// <summary>Cancels pending list/placement work when the panel closes.</summary>
+        public void Cancel() { CancelSource(ref _listCts); CancelSource(ref _commandCts); }
+        /// <summary>Ends all operations owned by this presenter.</summary>
+        public void Dispose() => Cancel();
     }
 }

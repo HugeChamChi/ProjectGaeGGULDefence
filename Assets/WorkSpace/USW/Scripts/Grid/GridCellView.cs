@@ -129,7 +129,7 @@ public class GridCellView : MonoBehaviour
 
         if (_model.IsTotemRangePreviewed)
         {
-            ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect, _model.TotemPreviewColor);
+            ApplyPreview(_effectPreviewMaterial, ColorTotemPreviewEffect, _model.TotemPreviewColor, _model.TotemPreviewOpacity);
             return;
         }
 
@@ -157,11 +157,14 @@ public class GridCellView : MonoBehaviour
         cellRenderer.color = _originalColor;
     }
 
-    private void ApplyPreview(Material material, Color fallback, Color? previewColor)
+    private void ApplyPreview(Material material, Color fallback, Color? previewColor, float opacity = 1f)
     {
         // Shared materials keep all cells in phase without allocating material instances.
         cellRenderer.sharedMaterial = material != null ? material : _originalMaterial;
         cellRenderer.color = material != null ? Color.white : fallback;
+        var rendererColor = cellRenderer.color;
+        rendererColor.a *= opacity;
+        cellRenderer.color = rendererColor;
         if (material != null && previewColor.HasValue)
         {
             var tint = previewColor.Value;

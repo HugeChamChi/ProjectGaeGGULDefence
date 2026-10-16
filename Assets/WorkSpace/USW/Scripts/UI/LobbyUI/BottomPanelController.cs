@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using DG.Tweening;
 
+/// <summary>하단 메뉴와 방향성 있는 로비 페이지 전환을 함께 재생한다.</summary>
 public class BottomPanelController : MonoBehaviour
 {
     [System.Serializable]
@@ -14,112 +16,130 @@ public class BottomPanelController : MonoBehaviour
         public Image _innerShadow;
         public GameObject _panel;
         public Image _buttonImage;
-
-        [Header("Sprite")] public Sprite _activeSprite;
+        public Sprite _activeSprite;
         public Sprite _inactiveSprite;
+        public Image _selectionFill;
+        public CanvasGroup _label;
+        [System.NonSerialized] internal RectTransform Rect;
+        [System.NonSerialized] internal CanvasGroup Group;
+        [System.NonSerialized] internal Vector2 Origin;
+        [System.NonSerialized] internal Vector2 IconOrigin;
+        [System.NonSerialized] internal Vector3 IconScale;
+        [System.NonSerialized] internal UnityAction Click;
     }
 
-    [Header("Panel Buttons (5개)")] public PanelButton[] panelButtons = new PanelButton[5];
+    [SerializeField] private float _slideSeconds = 0.32f;
+    /// <summary>왼쪽에서 오른쪽으로 정렬된 페이지와 버튼.</summary>
+    public PanelButton[] panelButtons = new PanelButton[5];
+    private int _currentIndex = 2;
+    private int _pendingIndex = -1;
+    private Sequence _transition;
+    private bool _initialized;
+    private LobbyBottomMotion _bottomMotion;
+    /// <summary>현재 선택한 페이지 번호.</summary>
+    public int CurrentIndex => _currentIndex;
+    /// <summary>화면 이동 진행 여부.</summary>
+    public bool IsTransitioning => _transition != null && _transition.IsActive();
 
-    private static readonly Color selectedBg = ColorHex.Hex("7550D2");
-    private static readonly Color selectedLight = ColorHex.Hex("8F8FFF");
-    private static readonly Color selectedAdditional = ColorHex.Hex("593DA1");
-
-    private static readonly Color deselectedBg = ColorHex.Hex("3B324D");
-    private static readonly Color deselectedLight = ColorHex.Hex("565076");
-    private static readonly Color deselectedAdditional = ColorHex.Hex("332B47");
-
-    private int currentIndex = 2;
-
-    void Start()
+    private void Start()
     {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < panelButtons.Length; i++)
         {
+            var item = panelButtons[i];
+            if (item._button == null || item._panel == null || !(item._panel.transform is RectTransform))
+            { Debug.LogError("로비 탭 참조가 연결되지 않았습니다.", this); enabled = false; return; }
+            item.Rect = (RectTransform)item._panel.transform;
+            item.Origin = item.Rect.anchoredPosition;
+            item.Group = item._panel.GetComponent<CanvasGroup>();
+            if (item.Group == null) item.Group = item._panel.AddComponent<CanvasGroup>();
+            if (item._buttonImage != null)
+            {
+                item.IconOrigin = item._buttonImage.rectTransform.anchoredPosition;
+                item.IconScale = item._buttonImage.rectTransform.localScale;
+            }
             int index = i;
-            panelButtons[i]._button.onClick.AddListener(() => SelectButton(index));
+            item.Click = () => SelectButton(index);
+            item._button.onClick.AddListener(item.Click);
         }
-
-        for (int i = 0; i < 5; i++)
-        {
-            if (i == currentIndex)
-            {
-                SetSelected(i, true);
-                panelButtons[i]._panel.SetActive(true);
-            }
-            else
-            {
-                SetSelected(i, false);
-                panelButtons[i]._panel.SetActive(false);
-            }
-        }
+        RenameGuildTab();
+        _bottomMotion = new LobbyBottomMotion(panelButtons, _currentIndex);
+        _initialized = true;
+        Settle();
     }
 
+    /// <summary>클릭한 탭 방향으로 페이지를 이동한다. 연속 입력은 마지막 요청으로 이어진다.</summary>
     public void SelectButton(int index)
     {
-        if (index == currentIndex) return;
-
-        // 이전 버튼 deselect
-        AnimateDeselect(currentIndex);
-        panelButtons[currentIndex]._panel.SetActive(false);
-
-        // 새 버튼 select
-        AnimateSelect(index);
-        panelButtons[index]._panel.SetActive(true);
-
-        currentIndex = index;
-    }
-
-    void AnimateSelect(int index)
-    {
-        var btn = panelButtons[index];
-
-
-        btn._mainRect.DOSizeDelta(new Vector2(btn._mainRect.sizeDelta.x, 238f), 0.15f).SetEase(Ease.Linear);
-
-
-        btn._background.DOColor(selectedBg, 0.15f).SetEase(Ease.Linear);
-
-
-        btn._light.DOColor(selectedLight, 0.05f).SetEase(Ease.Linear);
-        btn._innerShadow.DOColor(selectedAdditional, 0.05f).SetEase(Ease.Linear);
-        
-        btn._buttonImage.sprite = btn._activeSprite;
-    }
-
-    void AnimateDeselect(int index)
-    {
-        var btn = panelButtons[index];
-
-
-        btn._mainRect.DOSizeDelta(new Vector2(btn._mainRect.sizeDelta.x, 200f), 0.05f).SetEase(Ease.Linear);
-
-
-        btn._background.DOColor(deselectedBg, 0.05f).SetEase(Ease.Linear);
-        btn._light.DOColor(deselectedLight, 0.05f).SetEase(Ease.Linear);
-        btn._innerShadow.DOColor(deselectedAdditional, 0.05f).SetEase(Ease.Linear);
-        
-        btn._buttonImage.sprite = btn._inactiveSprite;
-    }
-
-    void SetSelected(int index, bool selected)
-    {
-        var btn = panelButtons[index];
-
-        if (selected)
+        if (!_initialized || !isActiveAndEnabled || index < 0 || index >= panelButtons.Length) return;
+        _bottomMotion.Select(index);
+        if (IsTransitioning) { _pendingIndex = index; return; }
+        if (index == _currentIndex) return;
+        var previous = panelButtons[_currentIndex];
+        var next = panelButtons[index];
+        float direction = index > _currentIndex ? 1f : -1f;
+        float width = ((RectTransform)next.Rect.parent).rect.width;
+        previous.Group.blocksRaycasts = previous.Group.interactable = false;
+        next.Group.blocksRaycasts = next.Group.interactable = false;
+        next.Rect.anchoredPosition = next.Origin + Vector2.right * (direction * width);
+        next.Group.alpha = 1f;
+        next._panel.SetActive(true);
+        _currentIndex = index;
+        _transition = DOTween.Sequence().SetUpdate(true);
+        _transition.Join(previous.Rect.DOAnchorPos(previous.Origin - Vector2.right * (direction * width), _slideSeconds).SetEase(Ease.OutCubic));
+        _transition.Join(next.Rect.DOAnchorPos(next.Origin, _slideSeconds).SetEase(Ease.OutCubic));
+        _transition.OnComplete(() =>
         {
-            btn._mainRect.sizeDelta = new Vector2(btn._mainRect.sizeDelta.x, 238f);
-            btn._background.color = selectedBg;
-            btn._light.color = selectedLight;
-            btn._innerShadow.color = selectedAdditional;
-            btn._buttonImage.sprite = btn._activeSprite;
+            _transition = null;
+            previous._panel.SetActive(false);
+            previous.Rect.anchoredPosition = previous.Origin;
+            next.Group.blocksRaycasts = next.Group.interactable = true;
+            int pending = _pendingIndex;
+            _pendingIndex = -1;
+            if (pending >= 0) SelectButton(pending);
+        });
+    }
+
+    private void RenameGuildTab()
+    {
+        // Preserve scene wiring while updating the former farm placeholder copy.
+        const int guildIndex = 4;
+        if (panelButtons.Length <= guildIndex) return;
+        var tab = panelButtons[guildIndex];
+        foreach (var text in tab._button.GetComponentsInChildren<TMPro.TMP_Text>(true))
+            text.text = text.text.Replace("농장", "길드");
+        foreach (var text in tab._panel.GetComponentsInChildren<TMPro.TMP_Text>(true))
+            text.text = text.text.Replace("농장", "길드")
+                .Replace("전투가 끝나면 돌아올 우리의 밭", "동료들과 함께하는 우리의 길드");
+    }
+
+    private void Settle()
+    {
+        _bottomMotion?.Settle(_currentIndex);
+        for (int i = 0; i < panelButtons.Length; i++)
+        {
+            var item = panelButtons[i];
+            bool selected = i == _currentIndex;
+            item.Rect.anchoredPosition = item.Origin;
+            item.Group.alpha = 1f;
+            item.Group.blocksRaycasts = item.Group.interactable = selected;
+            item._panel.SetActive(selected);
         }
-        else
+    }
+
+    private void OnDisable()
+    {
+        _transition?.Kill();
+        _transition = null;
+        _pendingIndex = -1;
+        if (_initialized) Settle();
+    }
+
+    private void OnDestroy()
+    {
+        _bottomMotion?.Dispose();
+        foreach (var item in panelButtons)
         {
-            btn._mainRect.sizeDelta = new Vector2(btn._mainRect.sizeDelta.x, 200f);
-            btn._background.color = deselectedBg;
-            btn._light.color = deselectedLight;
-            btn._innerShadow.color = deselectedAdditional;
-            btn._buttonImage.sprite = btn._inactiveSprite;
+            if (item._button != null && item.Click != null) item._button.onClick.RemoveListener(item.Click);
         }
     }
 }
