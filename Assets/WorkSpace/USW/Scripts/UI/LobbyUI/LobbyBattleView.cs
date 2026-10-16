@@ -22,6 +22,22 @@ public sealed class LobbyBattleView : MonoBehaviour
     [SerializeField] private Sprite _circleSprite;
     [SerializeField] private Sprite _chiefSprite;
     [SerializeField] private Sprite[] _bossSprites;
+    [SerializeField] private Sprite _goldIcon;
+    [SerializeField] private Sprite _diamondIcon;
+    [Tooltip("Placeholder reach rewards shown on the track (gold/diamond only). Claiming is not implemented.")]
+    [SerializeField] private List<LobbyBattleMilestone> _milestoneRewards = new List<LobbyBattleMilestone>
+    {
+        new LobbyBattleMilestone(10, LobbyBattleRewardKind.Gold, 1000),
+        new LobbyBattleMilestone(20, LobbyBattleRewardKind.Diamond, 50),
+        new LobbyBattleMilestone(30, LobbyBattleRewardKind.Gold, 3000),
+        new LobbyBattleMilestone(40, LobbyBattleRewardKind.Diamond, 100),
+        new LobbyBattleMilestone(50, LobbyBattleRewardKind.Gold, 5000),
+        new LobbyBattleMilestone(60, LobbyBattleRewardKind.Diamond, 200),
+        new LobbyBattleMilestone(70, LobbyBattleRewardKind.Gold, 10000),
+        new LobbyBattleMilestone(80, LobbyBattleRewardKind.Diamond, 300),
+        new LobbyBattleMilestone(90, LobbyBattleRewardKind.Gold, 20000),
+        new LobbyBattleMilestone(100, LobbyBattleRewardKind.Diamond, 500),
+    };
     [SerializeField] private Button _bestButton;
     [SerializeField] private TMP_Text _bestValue;
     [SerializeField] private Button _startButton;
@@ -49,6 +65,12 @@ public sealed class LobbyBattleView : MonoBehaviour
     private Vector2 _viewportSize;
     private readonly List<RoundMarker> _roundMarkers = new List<RoundMarker>();
     private const float GoalTopSpace = 220f;
+    private static readonly Vector2 BubbleOffset = new Vector2(170f, 196f);
+    private static readonly Vector2 BubbleSize = new Vector2(140f, 128f);
+    private const float BubbleBorder = 4f;
+    private const float BubbleCornerScale = 0.4f; // < 1 widens the sliced corner radius.
+    private static readonly Color BubbleFill = new Color(1f, 0.80f, 0.29f);
+    private static readonly Color BubbleOutline = new Color(0.36f, 0.21f, 0.11f);
     // Production IngameScene currently authors NORMAL; HARD is an inactive draft, not a lobby selection.
     private const string RecordMode = "NORMAL";
     private float _nextRecordRetry;
@@ -126,7 +148,7 @@ public sealed class LobbyBattleView : MonoBehaviour
         _bestRound = bestRound.HasValue ? Mathf.Max(0, bestRound.Value) : (int?)null;
         if (!_built) return;
         _bestValue.text = _bestRound.HasValue ? _bestRound.Value.ToString() : "—";
-        _positionLabel.text = _bestRound.HasValue ? $"최고 {_bestRound.Value} 라운드" : "도전 준비";
+        _positionLabel.text = _bestRound.HasValue ? $"{_bestRound.Value} 라운드" : "도전 준비";
         _chief.anchoredPosition = new Vector2(0f, RoundY(TrackRound));
         Canvas.ForceUpdateCanvases();
         FocusImmediately();
@@ -139,7 +161,7 @@ public sealed class LobbyBattleView : MonoBehaviour
         int? best = Player.RoundRecords.GetBest(RecordMode);
         if (!_built || best != _bestRound) ShowBestRound(best);
         if (!_built) return;
-        _positionLabel.text = best.HasValue ? $"최고 {best.Value} 라운드" : "도전 준비";
+        _positionLabel.text = best.HasValue ? $"{best.Value} 라운드" : "도전 준비";
         if (!string.IsNullOrEmpty(Player.RoundRecords.Status))
             _positionLabel.text += "\n<size=65%>" + Player.RoundRecords.Status + "</size>";
         ((RectTransform)_positionLabel.transform.parent).sizeDelta = new Vector2(340f,
@@ -276,14 +298,32 @@ public sealed class LobbyBattleView : MonoBehaviour
         var boss = Image("Boss" + round, _content, sprite, index == 0 ? Color.white : new Color(0.09f, 0.07f, 0.15f, 0.7f));
         boss.preserveAspect = true;
         PlaceRound(boss.rectTransform, round, new Vector2(0f, 118f), new Vector2(174f, 174f));
-        var bubble = Image("Milestone" + round, _content, _roundedSprite, new Color(0.94f, 0.92f, 1f, index == 0 ? 1f : 0.72f));
-        bubble.type = UnityEngine.UI.Image.Type.Sliced;
-        PlaceRound(bubble.rectTransform, round, new Vector2(0f, 118f), new Vector2(260f, 96f));
-        bubble.rectTransform.anchorMin = bubble.rectTransform.anchorMax = new Vector2(0.74f, 0f);
-        var title = Text("Title", bubble.transform, $"{round} 라운드", _labelFont, 28f, new Color(0.22f, 0.18f, 0.34f));
-        Center(title.rectTransform, new Vector2(0f, 20f), new Vector2(244f, 38f));
-        var subtitle = Text("RewardState", bubble.transform, "도달 보상 · 준비 중", _labelFont, 20f, new Color(0.43f, 0.37f, 0.54f));
-        Center(subtitle.rectTransform, new Vector2(0f, -22f), new Vector2(244f, 32f));
+        BuildRewardBubble(round);
+    }
+
+    // Reward card at the boss's upper right, between this round's dashes and the next marker.
+    private void BuildRewardBubble(int round)
+    {
+        LobbyBattleMilestone reward = _milestoneRewards.Find(m => m.Round == round);
+        if (reward == null) return;
+        var bubble = new GameObject("Milestone" + round, typeof(RectTransform)).GetComponent<RectTransform>();
+        bubble.SetParent(_content, false);
+        PlaceRound(bubble, round, BubbleOffset, BubbleSize);
+        BubblePart("BodyOutline", bubble, BubbleOutline, BubbleSize + Vector2.one * BubbleBorder * 2f);
+        BubblePart("BodyFill", bubble, BubbleFill, BubbleSize);
+        var icon = Image("RewardIcon", bubble, reward.Kind == LobbyBattleRewardKind.Diamond ? _diamondIcon : _goldIcon, Color.white);
+        icon.preserveAspect = true;
+        Center(icon.rectTransform, new Vector2(0f, 16f), new Vector2(76f, 76f));
+        var amount = Text("Amount", bubble, reward.Amount.ToString("N0"), _labelFont, 26f, BubbleOutline);
+        Center(amount.rectTransform, new Vector2(0f, -38f), new Vector2(BubbleSize.x, 32f));
+    }
+
+    private void BubblePart(string name, RectTransform parent, Color color, Vector2 size)
+    {
+        var part = Image(name, parent, _roundedSprite, color);
+        part.type = UnityEngine.UI.Image.Type.Sliced;
+        part.pixelsPerUnitMultiplier = BubbleCornerScale;
+        Center(part.rectTransform, Vector2.zero, size);
     }
 
     private void BuildChief()
