@@ -1,8 +1,12 @@
 using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 
 // 플레이어와 관련된 플레이어 데이터, 프로필 Unlock여부, 우편 등을 관리하는 클래스
 public static class Player
 {
+    /// <summary>Account-owned reached-round records, including durable unsent maxima.</summary>
+    public static RoundRecordManager RoundRecords { get; } = new(new RoundRecordBackendStore(), () => BackEnd.Backend.UserInDate);
     public static PlayerDataController PlayerData   { get; private set; } = new();
     public static ProfileDataManager Profile        { get; private set; } = new();
     public static MailManager Mail                  { get; private set; } = new();
@@ -13,6 +17,9 @@ public static class Player
     public static GaeGGUL.Tutorial.PlayerTutorialManager Tutorial { get; private set; } = new();
 
     private static BackendGameData _backendData;
+    private static UniTaskCompletionSource _initialization;
+    private static int _initializationGeneration;
+    private static string _initializingOwner;
 
     public static void Inject(BackendGameData backendData)
     {
@@ -20,13 +27,32 @@ public static class Player
         PlayerData.Inject(backendData);
     }
 
-    public async static UniTask InitializeAsync()
+    /// <summary>Coalesces overlapping initialization for the same account without clearing loaded balances twice.</summary>
+    public static UniTask InitializeAsync()
     {
+        string owner = BackEnd.Backend.UserInDate;
+        if (_initialization != null && _initializingOwner == owner) return _initialization.Task;
+        if (_initialization != null) ClearAll();
+        var completion = _initialization = new UniTaskCompletionSource();
+        _initializingOwner = owner;
+        InitializeCoreAsync(completion, owner, _initializationGeneration).Forget();
+        return completion.Task;
+    }
+
+    private static async UniTaskVoid InitializeCoreAsync(UniTaskCompletionSource completion, string owner, int generation)
+    {
+        try
+        {
         // 1. 핵심 데이터(플레이어 정보) 먼저 초기화
         await PlayerData.InitalizeAsync();
+        RequireCurrentInitialization(owner, generation);
+        if (PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
+        await RoundRecords.InitializeAsync();
+        RequireCurrentInitialization(owner, generation);
 
         // 2. 서버 시간과 비교하여 새로운 날인지 판단
         await Daily.InitializeAsync();
+        RequireCurrentInitialization(owner, generation);
 
         // 3. 나머지는 병렬로 초기화하되, IsNewDay 상태를 참조함
         await UniTask.WhenAll(
@@ -37,19 +63,34 @@ public static class Player
             Shop.InitializeAsync(),
             Tutorial.InitializeAsync()
         );
+        RequireCurrentInitialization(owner, generation);
 
         // 4. 새로운 날이었다면 갱신된 LastResetDate를 포함해 서버에 저장
         if (Daily.IsNewDay && _backendData != null)
         {
-            var tcs = new UniTaskCompletionSource();
-            _backendData.GameDataUpdate(PlayerData.Data, () => tcs.TrySetResult());
-            await tcs.Task;
+            PlayerData.MarkDirty();
+            await PlayerData.TrySaveAsync();
         }
+        RequireCurrentInitialization(owner, generation);
+        completion.TrySetResult();
+        }
+        catch (OperationCanceledException) { completion.TrySetCanceled(); }
+        catch (Exception error) { completion.TrySetException(error); }
+        finally { if (ReferenceEquals(_initialization, completion)) { _initialization = null; _initializingOwner = null; } }
     }
+
+    private static void RequireCurrentInitialization(string owner, int generation)
+    { if (generation != _initializationGeneration || owner != BackEnd.Backend.UserInDate) throw new OperationCanceledException(); }
 
     // 모든 하위 매니저들의 데이터를 초기화합니다. (로그아웃, 계정 변경 시 호출)
     public static void ClearAll()
     {
+        _initializationGeneration++;
+        _initialization?.TrySetCanceled(); _initialization = null; _initializingOwner = null;
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = null;
+        RoundRecords.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();
@@ -69,7 +110,7 @@ public static class Player
         var tasks = new System.Collections.Generic.List<UniTask>();
 
         Global.IClearable[] managers = {
-            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial
+            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords
         };
 
         foreach (var manager in managers)
@@ -83,7 +124,7 @@ public static class Player
         if (tasks.Count > 0)
         {
             await UniTask.WhenAll(tasks);
-            UnityEngine.Debug.Log($"[Backend DB] Delta Update 완료. 저장된 매니저 수: {tasks.Count}");
+            UnityEngine.Debug.Log($"[Backend DB] 저장 요청 처리. 미확인 변경은 각 매니저에 보관됩니다. 요청 수: {tasks.Count}");
         }
     }
 
@@ -97,6 +138,7 @@ public static class Player
     public static void RequestDebouncedSave()
     {
         _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
         _debounceCts = new System.Threading.CancellationTokenSource();
 
         DebouncedSaveTask(_debounceCts.Token).Forget();

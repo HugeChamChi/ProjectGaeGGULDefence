@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
+using Cysharp.Threading.Tasks;
 
 public class StaminaInsufficientPopup : MonoBehaviour
 {
@@ -17,7 +18,9 @@ public class StaminaInsufficientPopup : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _refillButtonText;
     [SerializeField] private StaminaConfig _staminaConfig;
 
-    private void Start()
+    private Tween _visibilityTween;
+
+    private void Awake()
     {
         if (_closeButton != null)
             _closeButton.onClick.AddListener(Hide);
@@ -36,6 +39,7 @@ public class StaminaInsufficientPopup : MonoBehaviour
 
     private void OnDestroy()
     {
+        _visibilityTween?.Kill();
         if (_closeButton != null)
             _closeButton.onClick.RemoveListener(Hide);
 
@@ -62,43 +66,58 @@ public class StaminaInsufficientPopup : MonoBehaviour
     /// </summary>
     public void ShowStatus()
     {
+        gameObject.SetActive(true);
         RefreshStatusMessage();
         Open();
     }
 
     private void RefreshStatusMessage()
     {
-        if (_messageText == null || Player.PlayerData?.Data == null) return;
+        if (_messageText == null) return;
+        if (Player.PlayerData?.Data == null) { _messageText.text = "스태미나 정보를 불러오는 중입니다."; return; }
         _messageText.text = $"스태미나\n{Player.PlayerData.Data.Stamina} / {Player.PlayerData.Data.MaxStamina}";
     }
 
     private void Open()
     {
+        gameObject.SetActive(true);
+        _visibilityTween?.Kill();
         _popupPanel.SetActive(true);
         _panelTransform.localScale = Vector3.zero;
-        _panelTransform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack);
+        _visibilityTween = _panelTransform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack).SetUpdate(true);
     }
 
     public void Hide()
     {
-        _panelTransform.DOScale(Vector3.zero, 0.2f)
+        _visibilityTween?.Kill();
+        _visibilityTween = _panelTransform.DOScale(Vector3.zero, 0.2f).SetUpdate(true)
             .SetEase(Ease.InBack)
             .OnComplete(() => _popupPanel.SetActive(false));
     }
 
     private void OnRefillClicked()
     {
-        if (Player.PlayerData?.Data == null || _staminaConfig == null) return;
-
-        bool success = Player.PlayerData.SpendDiamond(_staminaConfig.diamondCostForRefill);
-        if (success)
-        {
-            Player.PlayerData.AddStamina(_staminaConfig.refillAmount);
-            RefreshStatusMessage();
-        }
-        else if (_messageText != null)
-        {
-            _messageText.text = "다이아가 부족합니다.";
-        }
+        RefillAsync().Forget();
     }
+    private bool _refilling;
+    private async UniTaskVoid RefillAsync()
+    {
+        if (_refilling || _staminaConfig == null) return;
+        _refilling = true;
+        if (_refillButton != null) _refillButton.interactable = false;
+        try
+        {
+            var player = Player.PlayerData;
+            // A retry confirms the previous snapshot; it must not charge for another refill.
+            bool retry = player.IsDirty;
+            if (!retry && !player.TryRefillStamina(_staminaConfig))
+            { ShowMessage(player.IsReady ? "다이아가 부족하거나 충전할 수 없습니다." : player.SaveStatus); return; }
+            bool saved = await player.TrySaveAsync();
+            if (this == null) return;
+            if (saved) RefreshStatusMessage(); else ShowMessage(player.SaveStatus + "\n다시 누르면 저장만 재시도합니다.");
+        }
+        finally { _refilling = false; if (this != null && _refillButton != null) _refillButton.interactable = true; }
+    }
+    /// <summary>Displays a recoverable loading/save/entry failure through the existing popup.</summary>
+    public void ShowMessage(string message) { if (_messageText != null) _messageText.text = message; Open(); }
 }

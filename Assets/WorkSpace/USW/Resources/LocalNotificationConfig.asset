@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dd81431ba5d4c05b7d141cb8e778417, type: 3}
+  m_Name: LocalNotificationConfig
+  m_EditorClassIdentifier: Assembly-CSharp::LocalNotificationConfig
+  Title: 개꿀 디펜스
+  StaminaMessage: 스테미나 가득참
+  AttendanceMessage: 일일출석보상 미수령
+  AttendanceHourKst: 0
+  AttendanceMinute: 0

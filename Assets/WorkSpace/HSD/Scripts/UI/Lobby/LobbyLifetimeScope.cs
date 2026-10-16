@@ -19,6 +19,9 @@ public class LobbyLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<StaminaInsufficientPopup>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<BackendManager>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyFeatureNavigation>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<LobbyPopupHost>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<LobbyPopupAction>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<LobbyWebCouponAction>(builder, gameObject.scene);
         // 명시적 할당을 우선하고, 없으면 이 씬의 비활성 View까지 등록한다.
         if (partySelectView != null) 
         {

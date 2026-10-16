@@ -25,6 +25,8 @@ public class GameManager : MonoBehaviour
     private ResultScreenData _resultSnapshot;
     private float _survivalSeconds;
     private int _bossKills;
+    private string _recordAccount;
+    private string _recordMode;
     /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
     public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
     /// <summary>Snapshot captured before StopRun resets progression values.</summary>
@@ -82,6 +84,10 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentState = GameState.Playing;
+        if (gameObject.scene.name == "IngameScene") Player.PlayerData.ConsumeEntryReservation();
+        // Only production endless battles contribute. Capture ownership before callbacks can outlive login.
+        _recordAccount = Player.RoundRecords.OwnsAccount ? Player.RoundRecords.Account : null;
+        _recordMode = gameObject.scene.name == "IngameScene" ? _waveManager.EndlessMode?.Key : null;
 
         _uiManager.HideStartButton();
 
@@ -133,6 +139,8 @@ public class GameManager : MonoBehaviour
     {
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
+        if (Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round))
+            Player.RoundRecords.SaveAsync().Forget();
         _uiManager?.BlockGameplayInput();
         _waveManager.StopRun();
         UnsubscribeGameplay();
@@ -169,9 +177,11 @@ public class GameManager : MonoBehaviour
         _resolver.TryResolve<LevelUpManager>(out var choices);
         var boss = bosses?.CurrentBoss;
         int round = Mathf.Max(1, _waveManager.CurrentWave + 1);
+        int? previousBest = _recordAccount == Player.RoundRecords.Account
+            ? Player.RoundRecords.GetBest(_recordMode) : null;
         return new ResultScreenData
         {
-            Round = round, BestRound = round, BossKills = _bossKills, SurvivalSeconds = _survivalSeconds,
+            Round = round, BestRound = previousBest ?? round, BossKills = _bossKills, SurvivalSeconds = _survivalSeconds,
             LastBossDamageRatio = boss != null && boss.MaxHp > 0 ? (float)(1m - boss.CurrentHp / boss.MaxHp) : -1f,
             BuildChoices = choices?.GetResultChoices(), Rewards = Array.Empty<ResultReward>(),
             BossProgressStyle = ResultBossProgressStyle.HpSettlement

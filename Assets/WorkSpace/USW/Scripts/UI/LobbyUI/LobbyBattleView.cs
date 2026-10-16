@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 /// <summary>Production battle-tab presentation. Persistent records and rewards are supplied separately.</summary>
 public sealed class LobbyBattleView : MonoBehaviour
@@ -48,26 +49,52 @@ public sealed class LobbyBattleView : MonoBehaviour
     private Vector2 _viewportSize;
     private readonly List<RoundMarker> _roundMarkers = new List<RoundMarker>();
     private const float GoalTopSpace = 220f;
+    // Production IngameScene currently authors NORMAL; HARD is an inactive draft, not a lobby selection.
+    private const string RecordMode = "NORMAL";
+    private float _nextRecordRetry;
+    private const float RecordRetrySeconds = 30f;
 
     private void Awake()
     {
         _bestButton.onClick.AddListener(FocusCurrent);
+        _bestButton.onClick.AddListener(RetryRecords);
         _partyButton.onClick.AddListener(OpenParty);
         _startButton.onClick.AddListener(OpenParty);
     }
 
     private void Start()
     {
+        BuildOfferContainer();
         Canvas.ForceUpdateCanvases();
         BuildTrack();
         _built = true;
-        ShowBestRound(null);
+        ShowBestRound(Player.RoundRecords.GetBest(RecordMode));
+        RefreshRecord();
         RefreshStamina(_playerData?.Data);
         StartHover();
     }
 
+    /// <summary>Dedicated icon/banner parent. Content stays empty until real offers and eligibility are configured.</summary>
+    public RectTransform OfferContainer { get; private set; }
+
+    private void BuildOfferContainer()
+    {
+        OfferContainer = new GameObject("BattleOfferIcons", typeof(RectTransform)).GetComponent<RectTransform>();
+        OfferContainer.SetParent(transform, false);
+        OfferContainer.anchorMin = OfferContainer.anchorMax = Vector2.one;
+        OfferContainer.pivot = Vector2.one; OfferContainer.anchoredPosition = new Vector2(-24, -100);
+        OfferContainer.sizeDelta = new Vector2(160, 320);
+        BottomPanelController tabs = null;
+        foreach (var root in gameObject.scene.GetRootGameObjects())
+        { tabs = root.GetComponentInChildren<BottomPanelController>(true); if (tabs != null) break; }
+        OfferContainer.gameObject.AddComponent<LobbyOfferVisibility>().Configure(tabs);
+    }
+
     private void OnEnable()
     {
+        Player.RoundRecords.OnChanged += RefreshRecord;
+        RefreshRecord();
+        RetryRecords();
         _playerData = Player.PlayerData;
         if (_playerData != null) _playerData.OnUpdateUI += RefreshStamina;
         RefreshStamina(_playerData?.Data);
@@ -76,6 +103,7 @@ public sealed class LobbyBattleView : MonoBehaviour
 
     private void OnDisable()
     {
+        Player.RoundRecords.OnChanged -= RefreshRecord;
         if (_playerData != null) _playerData.OnUpdateUI -= RefreshStamina;
         _playerData = null;
         _hover?.Kill(); _hover = null;
@@ -87,6 +115,7 @@ public sealed class LobbyBattleView : MonoBehaviour
     private void OnDestroy()
     {
         _bestButton.onClick.RemoveListener(FocusCurrent);
+        _bestButton.onClick.RemoveListener(RetryRecords);
         _partyButton.onClick.RemoveListener(OpenParty);
         _startButton.onClick.RemoveListener(OpenParty);
     }
@@ -94,13 +123,38 @@ public sealed class LobbyBattleView : MonoBehaviour
     /// <summary>Displays a supplied record; null is unknown, never a fabricated sample record.</summary>
     public void ShowBestRound(int? bestRound)
     {
-        _bestRound = bestRound.HasValue ? Mathf.Clamp(bestRound.Value, 0, _maxRound) : (int?)null;
+        _bestRound = bestRound.HasValue ? Mathf.Max(0, bestRound.Value) : (int?)null;
         if (!_built) return;
         _bestValue.text = _bestRound.HasValue ? _bestRound.Value.ToString() : "—";
         _positionLabel.text = _bestRound.HasValue ? $"최고 {_bestRound.Value} 라운드" : "도전 준비";
-        _chief.anchoredPosition = new Vector2(0f, RoundY(_bestRound ?? 0));
+        _chief.anchoredPosition = new Vector2(0f, RoundY(TrackRound));
         Canvas.ForceUpdateCanvases();
         FocusImmediately();
+    }
+
+    private int TrackRound => Mathf.Min(_bestRound ?? 0, _maxRound);
+
+    private void RefreshRecord()
+    {
+        int? best = Player.RoundRecords.GetBest(RecordMode);
+        if (!_built || best != _bestRound) ShowBestRound(best);
+        if (!_built) return;
+        _positionLabel.text = best.HasValue ? $"최고 {best.Value} 라운드" : "도전 준비";
+        if (!string.IsNullOrEmpty(Player.RoundRecords.Status))
+            _positionLabel.text += "\n<size=65%>" + Player.RoundRecords.Status + "</size>";
+        ((RectTransform)_positionLabel.transform.parent).sizeDelta = new Vector2(340f,
+            string.IsNullOrEmpty(Player.RoundRecords.Status) ? 58f : 88f);
+    }
+
+    private void RetryRecords()
+    {
+        _nextRecordRetry = Time.unscaledTime + RecordRetrySeconds;
+        Player.RoundRecords.RefreshAsync().Forget();
+    }
+
+    private void OnApplicationPause(bool paused)
+    {
+        if (!paused) RetryRecords();
     }
 
     private void OpenParty()
@@ -123,6 +177,7 @@ public sealed class LobbyBattleView : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (Time.unscaledTime >= _nextRecordRetry && !string.IsNullOrEmpty(Player.RoundRecords.Status)) RetryRecords();
         if (!_built || _scroll.viewport.rect.size == _viewportSize) return;
         // Respond to safe-area/aspect changes without overriding normal user dragging.
         _focus?.Kill(); _focus = null;
@@ -143,7 +198,7 @@ public sealed class LobbyBattleView : MonoBehaviour
         _content.sizeDelta = new Vector2(_content.sizeDelta.x, height);
         foreach (var marker in _roundMarkers)
             marker.Rect.anchoredPosition = new Vector2(marker.Rect.anchoredPosition.x, RoundY(marker.Round) + marker.Offset);
-        _chief.anchoredPosition = new Vector2(0f, RoundY(_bestRound ?? 0));
+        _chief.anchoredPosition = new Vector2(0f, RoundY(TrackRound));
     }
 
     private void PlaceRound(RectTransform rect, int round, Vector2 offset, Vector2 size)
@@ -156,7 +211,7 @@ public sealed class LobbyBattleView : MonoBehaviour
     {
         float height = _scroll.viewport.rect.height;
         float range = _content.rect.height - height;
-        return range <= 0f ? 0f : Mathf.Clamp01((RoundY(_bestRound ?? 0) - height * _focusRatio) / range);
+        return range <= 0f ? 0f : Mathf.Clamp01((RoundY(TrackRound) - height * _focusRatio) / range);
     }
 
     private void FocusImmediately()

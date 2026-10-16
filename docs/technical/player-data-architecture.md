@@ -6,7 +6,9 @@ PlayerDataController가 런타임 PlayerData를 소유하고 BackendGameData는 
 
 골드/다이아/스태미나는 AddGold/SpendGold/AddDiamond/SpendDiamond/UseStamina 등 컨트롤러 API로 변경한다. SaveAndRefresh는 **Dirty 표시와 UI 갱신**을 수행하며 매 호출마다 즉시 서버 저장하는 메서드가 아니다. 실제 저장은 SaveAsync 또는 Player.UpdateDirtyDataAsync/RequestDebouncedSave 경계를 사용한다. UI는 OnUpdateUI와 현재 Data를 읽는다.
 
-BackendGameData.GameDataGet은 콜백으로 PlayerData를 전달하고, GameDataUpdate는 저장할 PlayerData를 인자로 받는다. 스태미나 계산은 현재량·마지막 시각·최대량을 입력으로 받고 StaminaConfig를 사용한다. 종료/백그라운드 저장 요청은 성공 보장과 같지 않다.
+BackendGameData.GameDataGet은 콜백으로 PlayerData를 전달하고, GameDataUpdate는 저장할 PlayerData를 인자로 받는다. 스태미나 계산은 현재량·마지막 시각·최대량·현재 시각을 입력으로 받고 StaminaConfig를 사용한다. 종료/백그라운드 저장 요청은 성공 보장과 같지 않다.
+
+**스태미나 시간은 서버 기준(2026-10-17)**: 자연 회복과 회복 타이머는 기기 시계가 아니라 `ServerClock`(뒤끝 서버 시간 + 실행 중 경과 시간)을 쓴다. 로드 직후와 앱 복귀(`ResumeAsync`) 때 다시 맞추고, 서버 시간을 모르는 동안에는 회복을 멈췄다가 30초마다 재시도한다. 그래서 휴대폰 시계를 앞으로 돌려도 회복되지 않는다. 테스트에서 시계 함수를 넘기면 그 시계를 신뢰한다. 실제 서버(에디터 testuser) 검사 22개: `outputs/stamina-20261017/server-checks.txt`(소비→회복 시작, 2주기 회복, 시간 미확인 시 정지, 복귀 재동기화, 다이아 충전, 출격 중복 요청 1회 차감, 다른 기기 저장 반영, 원래 값 복구). 남은 경계: 여러 기기 동시 저장의 서버 원자성은 없음, Android 실기기 미검증.
 
 게임플레이의 CurrencyManager 식량과 ExpManager 레벨은 계정 재화/레벨과 별개다. 영구 강화의 IResearchSaveStore/PlayerPrefs 및 계정 전환 계획은 [강화 저장](outgame-upgrade-save-and-import.md)에 있다.
 

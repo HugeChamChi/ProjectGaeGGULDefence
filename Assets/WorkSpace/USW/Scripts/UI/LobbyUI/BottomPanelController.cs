@@ -26,6 +26,7 @@ public class BottomPanelController : MonoBehaviour
         [System.NonSerialized] internal Vector2 IconOrigin;
         [System.NonSerialized] internal Vector3 IconScale;
         [System.NonSerialized] internal UnityAction Click;
+        [System.NonSerialized] internal LobbyLockedTab Lock;
     }
 
     [SerializeField] private float _slideSeconds = 0.32f;
@@ -57,11 +58,11 @@ public class BottomPanelController : MonoBehaviour
                 item.IconOrigin = item._buttonImage.rectTransform.anchoredPosition;
                 item.IconScale = item._buttonImage.rectTransform.localScale;
             }
+            item.Lock = item._button.GetComponent<LobbyLockedTab>();
             int index = i;
             item.Click = () => SelectButton(index);
             item._button.onClick.AddListener(item.Click);
         }
-        RenameGuildTab();
         _bottomMotion = new LobbyBottomMotion(panelButtons, _currentIndex);
         _initialized = true;
         Settle();
@@ -71,6 +72,8 @@ public class BottomPanelController : MonoBehaviour
     public void SelectButton(int index)
     {
         if (!_initialized || !isActiveAndEnabled || index < 0 || index >= panelButtons.Length) return;
+        var locked = panelButtons[index].Lock;
+        if (locked != null && locked.IsLocked) { locked.PlayDenied(); return; }
         _bottomMotion.Select(index);
         if (IsTransitioning) { _pendingIndex = index; return; }
         if (index == _currentIndex) return;
@@ -97,19 +100,6 @@ public class BottomPanelController : MonoBehaviour
             _pendingIndex = -1;
             if (pending >= 0) SelectButton(pending);
         });
-    }
-
-    private void RenameGuildTab()
-    {
-        // Preserve scene wiring while updating the former farm placeholder copy.
-        const int guildIndex = 4;
-        if (panelButtons.Length <= guildIndex) return;
-        var tab = panelButtons[guildIndex];
-        foreach (var text in tab._button.GetComponentsInChildren<TMPro.TMP_Text>(true))
-            text.text = text.text.Replace("농장", "길드");
-        foreach (var text in tab._panel.GetComponentsInChildren<TMPro.TMP_Text>(true))
-            text.text = text.text.Replace("농장", "길드")
-                .Replace("전투가 끝나면 돌아올 우리의 밭", "동료들과 함께하는 우리의 길드");
     }
 
     private void Settle()

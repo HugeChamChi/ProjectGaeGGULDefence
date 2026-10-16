@@ -199,7 +199,7 @@ public class ResultScreenView : MonoBehaviour
         RefreshGraphics();
         bool hasBuild = showBuild && data.BuildChoices != null && data.BuildChoices.Length > 0;
         ResetVisuals(data, showBuild);
-        _headerTitle.text = isWin ? "전투 승리!" : "전투 종료";
+        _headerTitle.text = data.IsNewRecord ? "최고 기록 갱신!" : isWin ? "전투 승리!" : "전투 종료";
         if (_emptyBuildLabel != null) _emptyBuildLabel.gameObject.SetActive(showBuild && !hasBuild);
 
         var s = DOTween.Sequence().SetUpdate(_useUnscaledTime).SetLink(gameObject);
