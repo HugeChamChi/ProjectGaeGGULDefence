@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a609066e0f6121f4ea33068ed776e04f, type: 3}
+  m_Name: FxLab_BossHitReactionSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BossHitReactionSettings
+  AttackSeconds: 0.075
+  HoldSeconds: 0.09
+  RecoverSeconds: 0.42
+  BodyCompression: 0.15
+  BodyExpansion: 0.035
+  BodyTilt: 3
+  HeadTilt: 9
+  ArmBrace: 15
+  ManualShotInterval: 1.1
+  ChiefAttackSeconds: 0.1
+  ChiefSettleSeconds: 0.22
+  ChiefSustainIntensity: 0.85
+  ChiefFallbackHoldSeconds: 0.75
+  ChiefRecoverSeconds: 0.75
+  ChiefBodyCompression: 0.2
+  ChiefBodyExpansion: 0.045
+  ChiefBodyTilt: 4
+  ChiefHeadTilt: 13
+  ChiefArmBrace: 20
+  ChiefStrainDegrees: 0.65
+  ChiefStrainFrequency: 7

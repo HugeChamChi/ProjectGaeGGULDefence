@@ -179,6 +179,9 @@ public class DroneManager : MonoBehaviour
     /// <summary>액티브 버튼의 중복 실행 방지에 사용한다.</summary>
     public bool IsRallying => _isRallying;
 
+    /// <summary>집결 사격 한 발이 실제 보스 체력을 감소시킨 직후 알린다. 충전·빗나감·무적에는 발행하지 않는다.</summary>
+    public event System.Action<BossBase> OnRallyImpact;
+
     [Header("드론 스폰 배치 간격 (늘어진 V자)")]
     [Tooltip("하단 드론의 X 간격 (좁게)")]
     public float droneSpreadXLower = 0.25f; 
@@ -326,19 +329,28 @@ public class DroneManager : MonoBehaviour
                 if (boss != null && !boss.IsDead)
                 {
                     decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
-                    if (doubleShot.Count == 0) boss.TakeDamage(baseDamage, source: source);
+                    if (doubleShot.Count == 0)
+                    {
+                        decimal previousHp = boss.CurrentHp;
+                        boss.TakeDamage(baseDamage, source: source);
+                        NotifyRallyImpact(boss, previousHp);
+                    }
                     else
                     {
                         long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
                         long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
+                        decimal previousHp = boss.CurrentHp;
                         boss.ApplyRecordedDamage(shotUnits, source: source);
+                        NotifyRallyImpact(boss, previousHp);
                         for (int shot = 1; shot < doubleShot.Count; shot++)
                         {
                             if (await UniTask.Delay(System.TimeSpan.FromSeconds(doubleShot.Interval), cancellationToken: token).SuppressCancellationThrow()) return;
                             if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
                             if (boss == null || boss.IsDead) break;
                             if (beam != null) beam.Pulse();
+                            previousHp = boss.CurrentHp;
                             boss.ApplyRecordedDamage(shotUnits, source: source);
+                            NotifyRallyImpact(boss, previousHp);
                         }
                     }
                 }
@@ -371,6 +383,11 @@ public class DroneManager : MonoBehaviour
             if (token.IsCancellationRequested)
                 for (int i = 0; i < snapshot.Length; i++) if (IsCurrent(i)) snapshot[i].ResumeHomeOrbit();
         }
+    }
+
+    private void NotifyRallyImpact(BossBase boss, decimal previousHp)
+    {
+        if (boss != null && boss.CurrentHp < previousHp) OnRallyImpact?.Invoke(boss);
     }
 
     // 보스 반대쪽으로 열린 부채꼴 — 드론이 합류점 뒤에서 앞으로 빔을 모은다.

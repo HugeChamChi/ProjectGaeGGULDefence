@@ -119,6 +119,8 @@ public sealed class ChiefConvergeBeamFx : MonoBehaviour
     public float ChargeSeconds => _charge;
     /// <summary>처음부터 끝까지 걸리는 시간.</summary>
     public float TotalSeconds => _charge + _hold + _holdExtra + _fade;
+    /// <summary>굵은 빔이 실제로 발사된 뒤 소멸까지 남은 시간. 충전 중이거나 정지 상태면 0이다.</summary>
+    public float FiringRemainingSeconds => IsPlaying && _fired ? Mathf.Max(0f, TotalSeconds - _t) : 0f;
     /// <summary>scaled/unscaled 시계 선택 (실험실 고정 프레임 캡처용).</summary>
     public bool UseUnscaledTime { get => _useUnscaledTime; set => _useUnscaledTime = value; }
     /// <summary>굵은 빔이 터지는 순간 (피해 적용 시점으로 쓸 수 있다).</summary>
