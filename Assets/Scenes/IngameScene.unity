@@ -4677,18 +4677,8 @@ MonoBehaviour:
   btn_Close: {fileID: 569940358}
   btn_BackgroundClose: {fileID: 1038922086}
   targetAnim: {fileID: 338745200}
-  btn_TabUnit: {fileID: 344256563}
-  btn_TabTotem: {fileID: 930181009}
-  btn_TabLevelUp: {fileID: 2026350442}
-  btn_TabChief: {fileID: 1641859942}
-  listContentParent: {fileID: 94264818}
   slotPrefab: {fileID: 6299702935701553061, guid: 8dd1fbeda83ef0c4d80c1e1381a11000,
     type: 3}
-  addViewGroup: {fileID: 1956820263}
-  addListContentParent: {fileID: 843492097}
-  btn_ShowAddView: {fileID: 1799461487}
-  btn_CloseAddView: {fileID: 2133426320}
-  btn_ShowInfoView: {fileID: 514447782}
 --- !u!114 &338745200
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19431,18 +19421,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1799461485}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1799461487 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3231242459247076546, guid: 1a483fb5d7386564786aeb60ec0bb3af,
-    type: 3}
-  m_PrefabInstance: {fileID: 1799461485}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1849081431
 GameObject:
   m_ObjectHideFlags: 0
@@ -22737,18 +22715,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2133426318}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2133426320 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3231242459247076546, guid: 1a483fb5d7386564786aeb60ec0bb3af,
-    type: 3}
-  m_PrefabInstance: {fileID: 2133426318}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2139580104
 GameObject:
   m_ObjectHideFlags: 0
