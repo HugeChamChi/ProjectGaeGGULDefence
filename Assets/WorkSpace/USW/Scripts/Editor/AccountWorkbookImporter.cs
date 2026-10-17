@@ -14,7 +14,7 @@ using UnityEngine;
 public static class AccountWorkbookImporter
 {
     /// <summary>Maintained authoring source; never opened by a player build.</summary>
-    public const string SourcePath = "Data/Balance/Account.xlsx";
+    public const string SourcePath = "Data/Balance/AccountProgression.xlsx";
     /// <summary>Stable imported build asset.</summary>
     public const string AssetPath = "Assets/WorkSpace/USW/Resources/AccountProgressionConfig.asset";
     private const string Settings = "안내_계정설정";
@@ -23,7 +23,7 @@ public static class AccountWorkbookImporter
     private const string Examples = "획득량_예시";
 
     /// <summary>Imports only after the entire workbook has passed validation. Failure leaves the existing asset untouched.</summary>
-    [MenuItem("Tools/Balance/Import Account.xlsx")]
+    [MenuItem("Tools/Balance/Import AccountProgression.xlsx")]
     public static void ImportMenu() => Debug.Log(Import(SourcePath));
 
     /// <summary>Validates and updates the stable SO/GUID; the workbook is never modified.</summary>

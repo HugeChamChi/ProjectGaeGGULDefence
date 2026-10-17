@@ -62,7 +62,7 @@ public class RootLifetimeScope : LifetimeScope
         builder.RegisterInstance(_researchTree);
         builder.RegisterInstance(Player.PlayerData);
         var accountProgression = Resources.Load<AccountProgressionConfig>("AccountProgressionConfig");
-        if (accountProgression == null) throw new System.InvalidOperationException("AccountProgressionConfig is required. Import Data/Balance/Account.xlsx.");
+        if (accountProgression == null) throw new System.InvalidOperationException("AccountProgressionConfig is required. Import Data/Balance/AccountProgression.xlsx.");
         accountProgression.Validate();
         builder.RegisterInstance(accountProgression);
         var localNotifications = Resources.Load<LocalNotificationConfig>("LocalNotificationConfig");
