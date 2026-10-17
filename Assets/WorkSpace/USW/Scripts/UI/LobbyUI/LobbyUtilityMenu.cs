@@ -19,8 +19,16 @@ public sealed class LobbyUtilityMenu : UI_Base
     private Sequence _tween;
     private bool _open;
     private bool _initialized;
+    private bool _available = true;
     /// <summary>Whether the utility grid currently blocks the lobby (false as soon as closing starts).</summary>
     public bool IsOpen => _open;
+    /// <summary>Shows the trigger only on the battle page and closes the sheet immediately when leaving it.</summary>
+    public void SetAvailable(bool available)
+    {
+        _available = available;
+        if (_trigger != null) _trigger.gameObject.SetActive(available);
+        if (!available) HideImmediately();
+    }
     /// <summary>Binds only menu visibility controls, once.</summary>
     public void Initialize()
     {
@@ -40,7 +48,7 @@ public sealed class LobbyUtilityMenu : UI_Base
     /// <inheritdoc />
     public override UniTask OpenAsync()
     {
-        if (_overlay == null) return UniTask.CompletedTask;
+        if (_overlay == null || !_available) return UniTask.CompletedTask;
         _open = true;
         _tween?.Kill();
         _overlay.SetActive(true);

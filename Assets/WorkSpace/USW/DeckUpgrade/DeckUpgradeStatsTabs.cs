@@ -12,6 +12,7 @@ namespace GaeGGUL.DeckUpgrade
         private RectTransform track;
         private readonly RectTransform[] pages = new RectTransform[3];
         private readonly Image[] faces = new Image[3];
+        private readonly TMP_Text[] _faceLabels = new TMP_Text[3];
         private TMP_Text sourceAttack, sourceSpeed, attackValue, speedValue, sourceTitle;
         private Transform skillContent, bonusContent;
         private Coroutine motion;
@@ -22,6 +23,7 @@ namespace GaeGGUL.DeckUpgrade
         public bool Sliding => motion != null;
         private DroneUpgradeConceptScreen screen;
         private ResearchViewSettings style;
+        private bool _useLobbyStyle;
         public void Build(DeckSelectorConcept selector)
         {
             screen = selector.screen; style = screen.style;
@@ -30,7 +32,7 @@ namespace GaeGGUL.DeckUpgrade
             var rows = stats.Find("UpgradeStatRows");
             sourceAttack = rows.Find("AttackRow/Stat").GetComponent<TMP_Text>();
             sourceSpeed = rows.Find("AttackSpeedRow/SpeedStat").GetComponent<TMP_Text>();
-            var bindings = dialog.parent.Find("RuntimeBindings");
+            var bindings = dialog.parent.parent.Find("RuntimeBindings");
             sourceAttack.transform.SetParent(bindings, false); sourceSpeed.transform.SetParent(bindings, false);
             Remove(rows.gameObject);
             foreach (string frameName in new[] { "ChiefSlotFrame", "UnitSlotFrame" })
@@ -84,6 +86,7 @@ namespace GaeGGUL.DeckUpgrade
                 int index = i; var rt = faces[i].rectTransform; rt.anchorMin = rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1);
                 rt.anchoredPosition = new Vector2(48 + i * 291, -562); rt.sizeDelta = new Vector2(278, 56);
                 var label = (RectTransform)faces[i].transform.Find("TabLabel"); label.sizeDelta = new Vector2(278, 56);
+                _faceLabels[i] = label.GetComponent<TMP_Text>();
                 var button = faces[i].GetComponent<Button>() ?? faces[i].gameObject.AddComponent<Button>();
                 faces[i].raycastTarget = true; button.onClick.RemoveAllListeners(); button.onClick.AddListener(() => Select(index, true));
             }
@@ -110,9 +113,14 @@ namespace GaeGGUL.DeckUpgrade
             skillContent.gameObject.SetActive(true); bonusContent.gameObject.SetActive(true);
             attackValue.text = CurrentOnly(sourceAttack.text);
             speedValue.text = CurrentOnly(sourceSpeed.text) + (sourceSpeed.text.StartsWith("\uACF5\uACA9\uC18D\uB3C4") ? " \uD68C/\uCD08" : "");
-            for (int i = 0; i < 3; i++) faces[i].color = i == SelectedTab ? new Color32(0, 148, 166, 255) : new Color32(38, 57, 71, 255);
-            upgradePrice.text = sourcePrice.text;
+            for (int i = 0; i < 3; i++)
+            {
+                faces[i].color = _useLobbyStyle ? (i == SelectedTab ? LobbyUtilityVisuals.CardFeatured : LobbyUtilityVisuals.Sheet)
+                    : i == SelectedTab ? new Color32(0, 148, 166, 255) : new Color32(38, 57, 71, 255);
+                if (_useLobbyStyle) _faceLabels[i].color = i == SelectedTab ? LobbyUtilityVisuals.Accent : LobbyUtilityVisuals.Muted;
+            }
             int slash = sourcePrice.text.IndexOf('/');
+            upgradePrice.text = _useLobbyStyle && slash >= 0 ? sourcePrice.text.Substring(slash + 1).Trim() : sourcePrice.text;
             if (slash >= 0 && int.TryParse(sourcePrice.text.Substring(0, slash).Trim().Replace(",", ""), out int available) && int.TryParse(sourcePrice.text.Substring(slash + 1).Trim().Replace(",", ""), out int required))
                 upgradeGauge.SetAmount(available, required, sourceGauge.Ready);
             else upgradeGauge.SetAmount(0, 1, false);
@@ -124,6 +132,19 @@ namespace GaeGGUL.DeckUpgrade
             SelectedTab = index;
             if (animate && Application.isPlaying && gameObject.activeInHierarchy) motion = StartCoroutine(Slide(-index * 828));
             else { track.anchoredPosition = new Vector2(-index * 828, 0); motion = null; }
+        }
+
+        /// <summary>Uses the shared lobby tab palette and gives each content page the taller viewport.</summary>
+        public void UseLobbyStyle(float viewportHeight)
+        {
+            _useLobbyStyle = true;
+            track.sizeDelta = new Vector2(track.sizeDelta.x, viewportHeight);
+            foreach (var item in pages) item.sizeDelta = new Vector2(item.sizeDelta.x, viewportHeight);
+            for (int i = 0; i < 3; i++)
+            {
+                faces[i].color = i == SelectedTab ? LobbyUtilityVisuals.CardFeatured : LobbyUtilityVisuals.Sheet;
+                _faceLabels[i].color = i == SelectedTab ? LobbyUtilityVisuals.Accent : LobbyUtilityVisuals.Muted;
+            }
         }
         private IEnumerator Slide(float target)
         {

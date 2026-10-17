@@ -9,6 +9,11 @@ namespace GaeGGUL.DeckUpgrade
 {
     public sealed class DroneUpgradeConceptScreen : MonoBehaviour
     {
+        [SerializeField] private bool _embeddedInLobby;
+
+        /// <summary>Whether the screen uses the lobby canvas and its safe area.</summary>
+        public bool IsEmbeddedInLobby => _embeddedInLobby;
+
         public ResearchViewSettings style;
         public UnitData[] units;
         public Sprite[] combatDroneSprites;
@@ -58,6 +63,11 @@ namespace GaeGGUL.DeckUpgrade
         private int selected;
         private Rect lastSafeArea;
         private Vector2Int lastScreen;
+        private bool _fitPopup;
+        private float _popupFitScale = 1f;
+        private float _popupTopOverhang;
+        private Vector2 _popupAreaSize;
+        private RectTransform _popupArea;
 
         public bool Expanded => expanded;
         public int Selected => selected;
@@ -73,6 +83,7 @@ namespace GaeGGUL.DeckUpgrade
 
         public void BuildView()
         {
+            _fitPopup = false; _popupFitScale = 1f; _popupTopOverhang = 0f;
             StopAllCoroutines(); motion = popupMotion = punchMotion = null;
             if (progress == null) progress = DeckUpgradeProgress.Load();
             for (int i = transform.childCount - 1; i >= 0; i--)
@@ -83,10 +94,14 @@ namespace GaeGGUL.DeckUpgrade
             cards.Clear(); positions.Clear(); levels.Clear(); prices.Clear(); moneyGauges.Clear(); selected = 0;
             bonusCovers.Clear(); bonusLocks.Clear(); abilityTab = 0;
             var root = Box("DroneUpgradeCanvas", transform, Background);
-            root.gameObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = root.gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1080, 1920);
-            root.gameObject.AddComponent<GraphicRaycaster>();
+            Stretch(root);
+            if (!_embeddedInLobby)
+            {
+                root.gameObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                var scaler = root.gameObject.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1080, 1920);
+                root.gameObject.AddComponent<GraphicRaycaster>();
+            }
             safe = Box("SafeArea", root, Color.clear); Stretch(safe); ApplySafeArea();
             var page = Box("Page", safe, Background);
             page.anchorMin = new Vector2(.5f, 0); page.anchorMax = new Vector2(.5f, 1); page.sizeDelta = new Vector2(1080, 0);
@@ -206,6 +221,7 @@ namespace GaeGGUL.DeckUpgrade
         {
             var overlay = Box("UnitDetailsPopup", page, new Color(.05f, .025f, .07f, .8f)); Stretch(overlay);
             popup = overlay.gameObject; popupGroup = popup.AddComponent<CanvasGroup>();
+            _popupArea = overlay;
             overlay.GetComponent<Image>().raycastTarget = true; popup.AddComponent<Button>().onClick.AddListener(CloseDetails);
             detail = Box("UnitInfoDialog", overlay, Ink, style.RoundedFill);
             detail.anchorMin = detail.anchorMax = new Vector2(.5f, .5f); detail.sizeDelta = new Vector2(956, 1220);
@@ -283,7 +299,7 @@ namespace GaeGGUL.DeckUpgrade
         {
             if (popupMotion != null) { StopCoroutine(popupMotion); popupMotion = null; }
             if (punchMotion != null) { StopCoroutine(punchMotion); punchMotion = null; }
-            popup.SetActive(false); detail.localScale = Vector3.one;
+            popup.SetActive(false); detail.localScale = Vector3.one * _popupFitScale;
             upgradeRect.localScale = Vector3.one; upgradeRect.anchoredPosition = upgradeRestPosition;
         }
 
@@ -300,7 +316,28 @@ namespace GaeGGUL.DeckUpgrade
         // Fast impact, visible overshoot, squash, then a short second rebound.
         public void SamplePopup(float t)
         {
-            detail.localScale = Vector3.one * KeyBounce(t, .12f);
+            detail.localScale = Vector3.one * (_popupFitScale * KeyBounce(t, .12f));
+        }
+
+        /// <summary>Fits the authored detail panel inside its page and captures the action button's new resting position.</summary>
+        public void RefreshPopupLayout()
+        {
+            _fitPopup = true;
+            Canvas.ForceUpdateCanvases();
+            _popupAreaSize = _popupArea.rect.size;
+            const float edgeMargin = 48f;
+            _popupFitScale = Mathf.Min(1f, Mathf.Max(1f, _popupAreaSize.x - edgeMargin) / detail.rect.width,
+                Mathf.Max(1f, _popupAreaSize.y - edgeMargin) / (detail.rect.height + _popupTopOverhang));
+            detail.anchoredPosition = new Vector2(0, -_popupTopOverhang * _popupFitScale * .5f);
+            if (popupMotion == null) detail.localScale = Vector3.one * _popupFitScale;
+            upgradeRestPosition = upgradeRect.anchoredPosition;
+        }
+
+        /// <summary>Includes artwork extending above the panel when fitting and centering the complete popup.</summary>
+        public void RefreshPopupLayout(float topOverhang)
+        {
+            _popupTopOverhang = Mathf.Max(0, topOverhang);
+            RefreshPopupLayout();
         }
 
         private static float KeyBounce(float t, float start)
@@ -485,11 +522,13 @@ namespace GaeGGUL.DeckUpgrade
         private void Update()
         {
             if (lastSafeArea != Screen.safeArea || lastScreen != new Vector2Int(Screen.width, Screen.height)) ApplySafeArea();
+            if (_fitPopup && _popupArea != null && _popupArea.rect.size != _popupAreaSize) RefreshPopupLayout();
         }
         private void ApplySafeArea()
         {
             if (safe == null || Screen.width == 0 || Screen.height == 0) return;
             lastSafeArea = Screen.safeArea; lastScreen = new Vector2Int(Screen.width, Screen.height);
+            if (_embeddedInLobby) { Stretch(safe); return; }
             safe.GetComponentInParent<CanvasScaler>().matchWidthOrHeight = Screen.width / (float)Screen.height > 1080f / 1920 ? 1 : 0;
             safe.anchorMin = new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height);
             safe.anchorMax = new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height);

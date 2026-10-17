@@ -10,6 +10,20 @@ public sealed class LobbyUtilityVisuals : IDisposable
     public static readonly Color Surface = new(.17f, .14f, .29f, 1);
     /// <summary>Muted label color.</summary>
     public static readonly Color Muted = new(.73f, .70f, .86f, 1);
+    /// <summary>Shared lobby popup background.</summary>
+    public static readonly Color Sheet = new(.12f, .10f, .21f, 1);
+    /// <summary>Shared lobby section and card background.</summary>
+    public static readonly Color Card = new(.20f, .16f, .33f, 1);
+    /// <summary>Selected or featured lobby card.</summary>
+    public static readonly Color CardFeatured = new(.27f, .19f, .42f, 1);
+    /// <summary>Primary action and progression accent.</summary>
+    public static readonly Color Accent = new(1f, .78f, .30f, 1);
+    /// <summary>Warm secondary status text.</summary>
+    public static readonly Color Status = new(1f, .86f, .48f, 1);
+    /// <summary>Thin separators and panel borders.</summary>
+    public static readonly Color Line = new(.32f, .27f, .48f, 1);
+    /// <summary>Positive completion state.</summary>
+    public static readonly Color Check = new(.55f, 1f, .78f, 1);
     private readonly Texture2D _texture;
     private readonly Sprite _rounded;
     private readonly TMP_FontAsset _font;
