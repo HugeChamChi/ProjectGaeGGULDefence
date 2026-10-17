@@ -1,12 +1,12 @@
 using UnityEngine;
 
+/// <summary>Disables Unity's on-screen developer console while preserving normal diagnostic logging.</summary>
 public static class DebugManager
 {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void EnableDeveloperConsole()
+    private static void DisableDeveloperConsole()
     {
-        Debug.developerConsoleVisible = true;
+        Debug.developerConsoleVisible = false;
+        Debug.developerConsoleEnabled = false;
     }
-#endif
 }

@@ -14,15 +14,15 @@ public static class LobbyPopupAuthoring
     public const string RpgIconRoot = "Assets/Imports/Layer Lab/GUI Pro-FantasyRPG/ResourcesData/Sprites/Component/";
     public const int SortingOrder = 120;
 
-    public static readonly Color Sheet = new(.12f, .10f, .21f, 1);
-    public static readonly Color Header = new(.20f, .16f, .33f, 1);
-    public static readonly Color Card = new(.20f, .16f, .33f, 1);
-    public static readonly Color CardFeatured = new(.27f, .19f, .42f, 1);
-    public static readonly Color Accent = new(1f, .78f, .30f, 1);
-    public static readonly Color StatusColor = new(1f, .86f, .48f, 1);
-    public static readonly Color Muted = new(.73f, .70f, .86f, 1);
-    public static readonly Color Check = new(.55f, 1f, .78f, 1);
-    public static readonly Color Line = new(.32f, .27f, .48f, 1);
+    public static readonly Color Sheet = LobbyUtilityVisuals.Sheet;
+    public static readonly Color Header = LobbyUtilityVisuals.Card;
+    public static readonly Color Card = LobbyUtilityVisuals.Card;
+    public static readonly Color CardFeatured = LobbyUtilityVisuals.CardFeatured;
+    public static readonly Color Accent = LobbyUtilityVisuals.Accent;
+    public static readonly Color StatusColor = LobbyUtilityVisuals.Status;
+    public static readonly Color Muted = LobbyUtilityVisuals.Muted;
+    public static readonly Color Check = LobbyUtilityVisuals.Check;
+    public static readonly Color Line = LobbyUtilityVisuals.Line;
 
     private static Sprite _round;
     private static TMP_FontAsset _font;
