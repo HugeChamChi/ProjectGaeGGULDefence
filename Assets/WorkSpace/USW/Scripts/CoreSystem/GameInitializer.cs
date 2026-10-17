@@ -74,5 +74,14 @@ public class GameInitializer : IInitializable, IAsyncStartable
         }
         cancellation.ThrowIfCancellationRequested();
         IsReady = true;
+
+        // Lobby departure already confirms entry. The production scene needs no second start button.
+        // Wait for scene components' Start callbacks even when every preload completed synchronously.
+        // Tutorials and isolated labs retain their own controlled start sequence.
+        if (_gameManager.gameObject.scene.name == "IngameScene")
+        {
+            await UniTask.NextFrame(cancellationToken: cancellation);
+            _gameManager.StartGame(true);
+        }
     }
 }
