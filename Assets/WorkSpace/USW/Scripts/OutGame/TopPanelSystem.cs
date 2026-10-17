@@ -56,6 +56,8 @@ public class TopPanelSystem : MonoBehaviour
             _playerNicknameText.text = playerData == null ? "—" : string.IsNullOrWhiteSpace(playerData.PlayerName) ? "플레이어" : playerData.PlayerName;
         if (playerData == null)
         {
+            if (_playerLevelText != null) _playerLevelText.text = "—";
+            if (_expBar != null) _expBar.fillAmount = 0f;
             if (_goldText != null) _goldText.text = "—";
             if (_diamondText != null) _diamondText.text = "—";
             if (_staminaText != null) _staminaText.text = "—";
@@ -76,8 +78,7 @@ public class TopPanelSystem : MonoBehaviour
 
         if (_expBar != null)
         {
-            int maxExp = playerData.MaxExp > 0 ? playerData.MaxExp : 500;
-            _expBar.fillAmount = Mathf.Clamp01((float)playerData.PlayerExp / maxExp);
+            _expBar.fillAmount = playerData.MaxExp <= 0 ? 1f : Mathf.Clamp01((float)playerData.PlayerExp / playerData.MaxExp);
         }
     }
 

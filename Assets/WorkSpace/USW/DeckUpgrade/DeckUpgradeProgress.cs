@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace GaeGGUL.DeckUpgrade
 {
@@ -11,6 +10,10 @@ namespace GaeGGUL.DeckUpgrade
         public const string SaveKey = "DeckUpgradePreview.v1";
         public const int MaxLevel = 20;
         public const string ChiefId = "AlphanChief";
+        /// <summary>Existing preview-only growth per character level.</summary>
+        public const float MultiplierPerLevel = .1f;
+        /// <summary>Existing preview-only global bonus per chief level.</summary>
+        public const float ChiefBonusPerLevel = .02f;
         public int money = 12000;
         public List<Entry> units = new List<Entry>();
 
@@ -23,8 +26,8 @@ namespace GaeGGUL.DeckUpgrade
 
         public int Level(string id) => units.Find(x => x.id == id)?.level ?? 1;
         public int Cost(string id) => 150 * Level(id);
-        public float Multiplier(string id) => 1f + (Level(id) - 1) * .1f;
-        public float ChiefBonus => (Level(ChiefId) - 1) * .02f;
+        public float Multiplier(string id) => 1f + (Level(id) - 1) * MultiplierPerLevel;
+        public float ChiefBonus => (Level(ChiefId) - 1) * ChiefBonusPerLevel;
         public float UnitMultiplier(string id) => Multiplier(id) * (1 + ChiefBonus);
 
         public bool TryUpgrade(string id)
@@ -42,14 +45,5 @@ namespace GaeGGUL.DeckUpgrade
             return true;
         }
 
-        public static DeckUpgradeProgress Load() => PlayerPrefs.HasKey(SaveKey)
-            ? JsonUtility.FromJson<DeckUpgradeProgress>(PlayerPrefs.GetString(SaveKey))
-            : new DeckUpgradeProgress();
-
-        public void Save()
-        {
-            PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(this));
-            PlayerPrefs.Save();
-        }
     }
 }

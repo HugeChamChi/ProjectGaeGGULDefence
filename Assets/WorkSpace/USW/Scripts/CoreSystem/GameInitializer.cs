@@ -8,6 +8,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
     /// <summary>True after scene initialization, preload and the entry fade have finished.</summary>
     public bool IsReady { get; private set; }
     private readonly UniTaskCompletionSource _preparation = new();
+    /// <summary>Completes when combat data is ready, or faults when preparation fails.</summary>
     public UniTask Preparation => _preparation.Task;
     [Inject] private SceneChangeManager _sceneChangeManager;
     [Inject] private GlobalUIManager _globalUIManager;
@@ -70,6 +71,9 @@ public class GameInitializer : IInitializable, IAsyncStartable
         catch (System.Exception error)
         {
             _preparation.TrySetException(error);
+            // The VContainer Awaitable entry point is fire-and-forget; keep failures visible in device logs.
+            if (error is not System.OperationCanceledException)
+                Debug.LogError($"[GameInitializer] Battle preparation failed: {error}");
             throw;
         }
 

@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     [Inject] private TimeScaleService _timeScale;
     [Inject] private DefeatPresentation _defeat;
     [Inject] private ResearchRunBonuses _research;
+    [Inject] private AccountExperienceRun _accountExperience;
     private CancellationTokenSource _endingCts;
     private ResultScreenData _resultSnapshot;
     private float _survivalSeconds;
@@ -49,6 +50,7 @@ public class GameManager : MonoBehaviour
         _gridManager = _resolver.Resolve<GridManager>();
         _run.OnFailed += HandleRunFailed;
         _waveManager.OnBossDefeated += HandleBossKilled;
+        _waveManager.OnRunStopped += _accountExperience.Cancel;
     }
 
     public event Action OnLevelUpStateEntered;
@@ -88,6 +90,7 @@ public class GameManager : MonoBehaviour
         // Only production endless battles contribute. Capture ownership before callbacks can outlive login.
         _recordAccount = Player.RoundRecords.OwnsAccount ? Player.RoundRecords.Account : null;
         _recordMode = gameObject.scene.name == "IngameScene" ? _waveManager.EndlessMode?.Key : null;
+        _accountExperience.Begin(gameObject.scene.name == "IngameScene");
 
         _uiManager.HideStartButton();
 
@@ -139,6 +142,10 @@ public class GameManager : MonoBehaviour
     {
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
+        var accountReceipt = _accountExperience.Finish(isWin);
+        _resultSnapshot.AccountExperience = accountReceipt?.Experience ?? 0;
+        _resultSnapshot.HasAccountExperience = accountReceipt != null;
+        if (accountReceipt != null) _accountExperience.SaveAsync().Forget();
         if (Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round))
             Player.RoundRecords.SaveAsync().Forget();
         _uiManager?.BlockGameplayInput();
@@ -189,7 +196,11 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>Scene navigation cancels the pending result before releasing time owners.</summary>
-    public void CancelEndPresentation() => _endingCts?.Cancel();
+    public void CancelEndPresentation()
+    {
+        _endingCts?.Cancel();
+        if (!IsFinished) _accountExperience?.Cancel();
+    }
     private void OnDisable() => CancelEndPresentation();
     private void Update()
     {
@@ -200,6 +211,7 @@ public class GameManager : MonoBehaviour
     {
         if (IsFinished) return;
         CurrentState = GameState.Faulted;
+        _accountExperience.Cancel();
         _waveManager.StopRun();
         UnsubscribeGameplay();
         _timerManager?.StopTimer();
@@ -217,8 +229,10 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        _accountExperience?.Cancel();
         if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
         if (_waveManager != null) _waveManager.OnBossDefeated -= HandleBossKilled;
+        if (_waveManager != null) _waveManager.OnRunStopped -= _accountExperience.Cancel;
         CancelEndPresentation();
         UnsubscribeGameplay();
         _timeScale?.Release(this);

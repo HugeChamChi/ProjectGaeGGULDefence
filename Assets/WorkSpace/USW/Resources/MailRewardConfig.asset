@@ -12,4 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 182f9506cffa0534487898cd36f27e16, type: 3}
   m_Name: MailRewardConfig
   m_EditorClassIdentifier:
-  Entries: []
+  Entries:
+  - ChartName: RewardItems
+    IdColumn: itemID
+    ItemId: Gold
+    Currency: 0
+  - ChartName: RewardItems
+    IdColumn: itemID
+    ItemId: Diamond
+    Currency: 1
+  - ChartName: RewardItems
+    IdColumn: itemID
+    ItemId: Stamina
+    Currency: 2

@@ -12,4 +12,6 @@ BackendGameData.GameDataGet은 콜백으로 PlayerData를 전달하고, GameData
 
 게임플레이의 CurrencyManager 식량과 ExpManager 레벨은 계정 재화/레벨과 별개다. 영구 강화의 IResearchSaveStore/PlayerPrefs 및 계정 전환 계획은 [강화 저장](outgame-upgrade-save-and-import.md)에 있다.
 
+2026-10-18 계정 경험치: [계정 성장](account-progression.md)의 Excel 검증 Importer→설정 SO→보스별 최고 HP 감소 비율→승패 결과 지급을 연결했다. PlayerLevel/PlayerExp/MaxExp와 마지막 AccountExperienceReceipt·단조 AccountExperienceSequence·현재 예약 AccountExperienceRunId를 같은 PlayerData 스냅샷/계정별 저널에 보존한다. 재시도는 델타를 재적용하지 않고 이미 확정한 절대값을 저장한다. 구형 영수증 없는 행도 읽으며 Root는 로드 시 SO 곡선에 맞춰 기존 경험치/필요량을 정규화한다. 결과·로비 상단·프로필은 같은 값을 읽는다. 세부 수치와 종료 정책은 시험값이다. 격리 저장 복구와 실제 Editor 이벤트/표시 검증은 통과했으며 실제 서버 지급 E2E·Android는 미검증이다.
+
 과거 개선 후보였던 PlayerDataView의 표시 구조와 TopPanel 초기 구독 동선은 해당 UI를 바꿀 때 실제 코드를 대조한다. 이 문서는 전면 저장 구조 변경이나 새 서버 검증의 구현 완료를 선언하지 않는다.

@@ -22,7 +22,14 @@ public class LobbyLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<ResearchScreen>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyPopupHost>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyPopupAction>(builder, gameObject.scene);
+        builder.RegisterInstance(Resources.Load<ProfilePopupConfig>("ProfilePopupConfig"));
+        builder.Register<ProfileNicknameGateway>(Lifetime.Scoped);
+        builder.Register<ProfileNicknameService>(Lifetime.Scoped);
         SceneComponentRegistration.RegisterOptional<LobbyWebCouponAction>(builder, gameObject.scene);
+        builder.Register<GaeGGUL.DeckUpgrade.DeckUpgradePreviewStore>(Lifetime.Scoped)
+            .As<GaeGGUL.DeckUpgrade.IDeckUpgradeStore>();
+        builder.Register<GaeGGUL.DeckUpgrade.DeckUpgradeService>(Lifetime.Scoped);
+        SceneComponentRegistration.RegisterOptional<GaeGGUL.DeckUpgrade.DroneUpgradeConceptScreen>(builder, gameObject.scene);
         // 명시적 할당을 우선하고, 없으면 이 씬의 비활성 View까지 등록한다.
         if (partySelectView != null) 
         {

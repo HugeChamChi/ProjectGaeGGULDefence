@@ -61,6 +61,10 @@ public class RootLifetimeScope : LifetimeScope
         if (_researchTree == null) throw new System.InvalidOperationException("Root research tree is required.");
         builder.RegisterInstance(_researchTree);
         builder.RegisterInstance(Player.PlayerData);
+        var accountProgression = Resources.Load<AccountProgressionConfig>("AccountProgressionConfig");
+        if (accountProgression == null) throw new System.InvalidOperationException("AccountProgressionConfig is required. Import Data/Balance/Account.xlsx.");
+        accountProgression.Validate();
+        builder.RegisterInstance(accountProgression);
         var localNotifications = Resources.Load<LocalNotificationConfig>("LocalNotificationConfig");
         var attendance = Resources.Load<AttendanceConfig>("AttendanceConfig");
         if (localNotifications == null || attendance == null) throw new System.InvalidOperationException("Local notification and attendance configs are required.");
@@ -98,6 +102,7 @@ public class RootLifetimeScope : LifetimeScope
             resolver.Inject(Player.Mail);
             resolver.Inject(Table.Coupon);
             Player.Inject(resolver.Resolve<BackendGameData>());
+            Player.PlayerData.ConfigureAccountProgression(accountProgression);
         });
     }
 }

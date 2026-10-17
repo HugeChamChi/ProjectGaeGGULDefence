@@ -13,18 +13,16 @@ namespace GaeGGUL.DeckUpgrade
         private RectTransform unownedHeader;
         private RectTransform detailChiefFrame, detailUnitFrame;
         private Image detailChiefPortrait, detailUnitPortrait;
-        private TMP_Text sourceDetailName, sourceDetailCost, detailName, detailLevel, requiredCost;
+        private TMP_Text detailName, detailLevel, requiredCost;
         private Image detailSkillTab, detailBonusTab;
-        private GameObject detailSkillContent;
-        private TMP_Text[] detailValues;
-        private TMP_Text sourceChiefLevel, chiefCardLevel;
+        private TMP_Text chiefCardLevel;
         private readonly System.Collections.Generic.List<RectTransform> unitCards = new System.Collections.Generic.List<RectTransform>();
         private ResearchViewSettings Style => screen.style;
         private static Color C(string value) { ColorUtility.TryParseHtmlString("#" + value, out var color); return color; }
-        private void Start()
-        {
-            screen.StopAllCoroutines(); screen.SetReveal(1); BuildView();
-        }
+        /// <summary>Raised after the ownership filter has changed the collection layout.</summary>
+        public event System.Action OnFilterChanged;
+
+        /// <summary>Builds the collection after the screen has created its base layout.</summary>
         public void BuildView()
         {
             page = (RectTransform)screen.transform.Find("DroneUpgradeCanvas/SafeArea/Page");
@@ -76,8 +74,6 @@ namespace GaeGGUL.DeckUpgrade
             Box("ChiefInset", chiefCard, C("D9950D"), 12, 12, 208, 268);
             var host = Box("ChiefPortrait", chiefCard, Color.clear, 14, 10, 204, 215);
             host.gameObject.AddComponent<DroneSpinePreview>().Show(screen.chiefSpine, screen.chiefIdle, screen.spineMaterial, screen.spineBlendMaterials, screen.chief.Icon);
-            Move((RectTransform)body.Find("ChiefLevel"), chiefCard, 0, 302, 232, 64);
-            sourceChiefLevel = chiefCard.Find("ChiefLevel").GetComponent<TMP_Text>(); sourceChiefLevel.gameObject.SetActive(false);
             chiefCardLevel = Label("Level", "Lv.1", chiefCard, 7, 204, 218, 42, 30, C("FFF3E4"), TextAlignmentOptions.Center);
             Box("SlotNamePlate", chiefCard, C("222836"), 5, 296, 222, 73);
             Label("Name", screen.chief.DisplayName, chiefCard, 0, 310, 232, 48, 32, C("FFF3E4"), TextAlignmentOptions.Center);
@@ -102,7 +98,6 @@ namespace GaeGGUL.DeckUpgrade
                 gauge.anchoredPosition = new Vector2(0, -241); gauge.sizeDelta = new Vector2(180, 34);
                 var price = (RectTransform)gauge.Find(i == 0 ? "ChiefCost" : "Cost");
                 CenterGaugeText(price, 180, 34);
-                if (i == 0) card.Find("ChiefLevel").GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
                 DecorateDroneFrame(card);
                 if (i == 0) DecorateChiefFrame(card);
             }
@@ -135,26 +130,19 @@ namespace GaeGGUL.DeckUpgrade
         }
         private void SelectFromGrid(int index)
         {
-            detailChiefFrame.gameObject.SetActive(index < 0); detailUnitFrame.gameObject.SetActive(index >= 0);
-            if (index >= 0) detailUnitPortrait.sprite = screen.units[index].icon;
             screen.SelectUnit(index);
-            SyncDetailLabels();
         }
-        private void LateUpdate() { if (sourceDetailName != null) SyncDetailLabels(); }
-        private void SyncDetailLabels()
+
+        /// <summary>Displays typed state supplied by the screen's presenter.</summary>
+        public void Render(DeckUpgradeItemViewData chief, DeckUpgradeItemViewData selected)
         {
-            int chiefSplit = sourceChiefLevel.text.LastIndexOf("Lv.", System.StringComparison.Ordinal);
-            chiefCardLevel.text = chiefSplit >= 0 ? sourceChiefLevel.text.Substring(chiefSplit) : "Lv.1";
-            string title = sourceDetailName.text; int split = title.LastIndexOf("Lv.", System.StringComparison.Ordinal);
-            detailName.text = split >= 0 ? title.Substring(0, split).Trim() : title;
-            detailLevel.text = split >= 0 ? title.Substring(split) + "/" + DeckUpgradeProgress.MaxLevel : "";
-            string price = sourceDetailCost.text; int slash = price.LastIndexOf('/');
-            requiredCost.text = slash >= 0 ? price.Substring(slash + 1).Trim() : price;
-            bool skill = detailSkillContent.activeSelf;
-            detailSkillTab.color = C(skill ? "0094A6" : "263947");
-            detailBonusTab.color = C(skill ? "263947" : "0094A6");
-            foreach (var value in detailValues)
-                if (value.text.Contains("#258438")) value.text = value.text.Replace("#258438", "#91E6A6");
+            chiefCardLevel.text = "Lv." + chief.Level;
+            detailName.text = selected.Name;
+            detailLevel.text = "Lv." + selected.Level + "/" + DeckUpgradeProgress.MaxLevel;
+            requiredCost.text = selected.IsMaxLevel ? "MAX" : selected.Cost.ToString("N0");
+            detailChiefFrame.gameObject.SetActive(selected.IsChief);
+            detailUnitFrame.gameObject.SetActive(!selected.IsChief);
+            if (!selected.IsChief) detailUnitPortrait.sprite = screen.units[selected.Index].icon;
         }
         private void ConfigureDetails()
         {
@@ -172,13 +160,12 @@ namespace GaeGGUL.DeckUpgrade
             detailUnitFrame = BuildDetailFrame(slot, false, out detailUnitPortrait);
             detailUnitFrame.gameObject.SetActive(false);
             foreach (var frame in new[] { detailChiefFrame, detailUnitFrame }) { frame.localScale = Vector3.one * .95f; frame.anchoredPosition = new Vector2(0, -4); }
-            sourceDetailName = dialog.Find("SelectedName").GetComponent<TMP_Text>(); sourceDetailName.gameObject.SetActive(false);
+            Remove(dialog.Find("SelectedName").gameObject);
             detailName = Label("DetailUnitName", "", stats, 250, 10, 584, 55, 38, C("FFF3E4"));
             detailLevel = Label("DetailUnitLevel", "", stats, 250, 74, 164, 42, 29, C("FFF3E4"));
             var rows = Box("UpgradeStatRows", stats, Color.clear, 250, 134, 586, 144);
             string[] icons = { "AttackIcon", "AttackSpeedIcon" };
             string[] values = { "Stat", "SpeedStat" };
-            detailValues = new TMP_Text[2];
             for (int i = 0; i < 2; i++)
             {
                 var row = Box(i == 0 ? "AttackRow" : "AttackSpeedRow", rows, C("31505D"), 0, i * 74, 586, 70);
@@ -189,7 +176,6 @@ namespace GaeGGUL.DeckUpgrade
                 foreach (Transform child in icon.transform) child.gameObject.SetActive(false);
                 var value = (RectTransform)stats.Find(values[i]); Move(value, row, 78, 5, 494, 60);
                 var label = value.GetComponent<TMP_Text>(); label.alignment = TextAlignmentOptions.MidlineRight; label.fontSize = 27; label.color = C("FFF3E4");
-                detailValues[i] = label;
             }
             var button = (RectTransform)dialog.Find("UpgradeButton"); button.sizeDelta = new Vector2(680, 128);
             Move((RectTransform)dialog.Find("ButtonShadow"), dialog, 138, 1008, 680, 128);
@@ -197,14 +183,13 @@ namespace GaeGGUL.DeckUpgrade
             button.Find("UpgradeLabel").GetComponent<TMP_Text>().fontSize = 37;
             var gauge = (RectTransform)dialog.Find("PopupGoldGauge"); Move(gauge, stats, 430, 80, 384, 36);
             CenterGaugeText((RectTransform)gauge.Find("UpgradeCost"), 384, 36);
-            sourceDetailCost = gauge.Find("UpgradeCost").GetComponent<TMP_Text>(); sourceDetailCost.fontSize = 24;
+            gauge.Find("UpgradeCost").GetComponent<TMP_Text>().fontSize = 24;
             var coin = (RectTransform)gauge.Find("GoldIcon"); coin.sizeDelta = new Vector2(44, 44);
             gauge.GetComponent<UpgradeCostGauge>().Arrow.sizeDelta = new Vector2(70, 90);
             var costPlate = Box("RequiredGoldCost", button, C("483328"), 170, 72, 340, 40);
             var gold = Box("GoldIcon", costPlate, Color.white, 26, 0, 40, 40, Style.GoldIcon); gold.GetComponent<Image>().preserveAspect = true;
             requiredCost = Label("RequiredCost", "", costPlate, 76, 0, 238, 40, 30, Color.white, TextAlignmentOptions.Center);
             var ability = dialog.Find("SpecialAbilityScroll"); ability.GetComponent<Image>().color = C("00434C");
-            detailSkillContent = ability.Find("AbilityViewport/AbilityContent").gameObject;
             detailSkillTab = dialog.Find("SkillTab").GetComponent<Image>(); detailBonusTab = dialog.Find("LevelBonusTab").GetComponent<Image>();
             detailSkillTab.GetComponentInChildren<TMP_Text>().color = C("FFF3E4"); detailBonusTab.GetComponentInChildren<TMP_Text>().color = C("FFF3E4");
             ability.Find("AbilityViewport/AbilityContent/Description").GetComponent<TMP_Text>().color = C("FFF3E4");
@@ -271,6 +256,7 @@ namespace GaeGGUL.DeckUpgrade
             }
             float bottom = ownedOnly ? headerY + 20 : headerY + 104 + Mathf.CeilToInt((unitCards.Count - ownedCount) / 3f) * 490 + 20;
             grid.sizeDelta = new Vector2(1032, bottom);
+            OnFilterChanged?.Invoke();
         }
         private static void Move(RectTransform item, Transform parent, float x, float y, float width, float height)
         {

@@ -62,10 +62,18 @@ public sealed class ResearchScreen : MonoBehaviour
     private bool _returning;
     private Button _back;
     private TextMeshProUGUI _goldBalance;
-    /// <summary>루트에 등록된 저장 서비스와 계정 경계를 주입한다.</summary>
+    /// <summary>루트에 등록된 저장 서비스·계정·전투와 공유하는 트리를 사용한다.</summary>
     [Inject]
-    public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes)
-    { _saveService = saveService; _account = account; _scenes = scenes; }
+    public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes,
+        ResearchTreeData runTree = null)
+    {
+        _saveService = saveService; _account = account; _scenes = scenes;
+        // Player builds can include a separate copy in the lobby bundle and the root prefab.
+        // The save session and battle bonuses must use the same app-owned definition.
+        if (runTree == null || _trees == null) return;
+        for (int i = 0; i < _trees.Length; i++)
+            if (_trees[i] != null && _trees[i].TreeKey == runTree.TreeKey) _trees[i] = runTree;
+    }
 
     /// <summary>지금 보이는 구성의 진행 상황 (검증·연동용).</summary>
     public ResearchProgress Progress => _progresses?[_current];
