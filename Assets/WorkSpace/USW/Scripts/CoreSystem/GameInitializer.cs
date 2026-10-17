@@ -7,6 +7,9 @@ public class GameInitializer : IInitializable, IAsyncStartable
 {
     /// <summary>True after scene initialization, preload and the entry fade have finished.</summary>
     public bool IsReady { get; private set; }
+    private readonly UniTaskCompletionSource _preparation = new();
+    public UniTask Preparation => _preparation.Task;
+    [Inject] private SceneChangeManager _sceneChangeManager;
     [Inject] private GlobalUIManager _globalUIManager;
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
@@ -59,6 +62,30 @@ public class GameInitializer : IInitializable, IAsyncStartable
 
     public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
+        try
+        {
+            await PrepareAsync(cancellation);
+            _preparation.TrySetResult();
+        }
+        catch (System.Exception error)
+        {
+            _preparation.TrySetException(error);
+            throw;
+        }
+
+        // A scene transition owns the reveal. Direct Editor entry reveals itself.
+        if (_sceneChangeManager.IsTransitioning)
+            await UniTask.WaitUntil(() => !_sceneChangeManager.IsTransitioning, cancellationToken: cancellation);
+        else if (_globalUIManager != null)
+            await _globalUIManager.FadeOutAsync();
+        cancellation.ThrowIfCancellationRequested();
+        IsReady = true;
+        if (_gameManager.gameObject.scene.name == "IngameScene")
+            _gameManager.StartGame(true);
+    }
+
+    private async UniTask PrepareAsync(System.Threading.CancellationToken cancellation)
+    {
         // Direct in-game/tutorial entry can skip the title's Table initialization.
         await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
         await _research.LoadAsync(cancellation);
@@ -67,12 +94,8 @@ public class GameInitializer : IInitializable, IAsyncStartable
         // Prepare only the app-owned approved palette; scene cancellation owns this wait.
         if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
 
-        // 3. 로딩이 모두 끝나면 페이드아웃 후 게임 진입
-        if (_globalUIManager != null)
-        {
-            await _globalUIManager.FadeOutAsync();
-        }
-        cancellation.ThrowIfCancellationRequested();
-        IsReady = true;
+        // Finish scene Start callbacks before starting combat and publishing initial HUD events.
+        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation);
+
     }
 }

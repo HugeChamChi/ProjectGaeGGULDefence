@@ -40,6 +40,8 @@ public class UI_PartySelectView : UI_Base
 
     protected override void Awake() => base.Awake();
 
+    public void StartDefaultGame() => _presenter?.StartDefaultGame(_lobbyData);
+
     private void Start()
     {
         // 독립 테스트 씬의 기존 수동 전환 경로만 유지한다.

@@ -21,6 +21,9 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
+        // Tutorial overlays use orders up to 32000; the transition must cover them too.
+        var canvas = GetComponent<Canvas>();
+        if (canvas != null) canvas.sortingOrder = short.MaxValue;
 
         if (fadeImage != null && useMaterialTransition && fadeImage.material != null)
         {

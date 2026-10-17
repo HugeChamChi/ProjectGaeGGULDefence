@@ -80,8 +80,8 @@ public sealed class LobbyBattleView : MonoBehaviour
     {
         _bestButton.onClick.AddListener(FocusCurrent);
         _bestButton.onClick.AddListener(RetryRecords);
-        _partyButton.onClick.AddListener(OpenParty);
-        _startButton.onClick.AddListener(OpenParty);
+        _partyButton.gameObject.SetActive(false);
+        _startButton.onClick.AddListener(StartBattle);
     }
 
     private void Start()
@@ -138,8 +138,7 @@ public sealed class LobbyBattleView : MonoBehaviour
     {
         _bestButton.onClick.RemoveListener(FocusCurrent);
         _bestButton.onClick.RemoveListener(RetryRecords);
-        _partyButton.onClick.RemoveListener(OpenParty);
-        _startButton.onClick.RemoveListener(OpenParty);
+        _startButton.onClick.RemoveListener(StartBattle);
     }
 
     /// <summary>Displays a supplied record; null is unknown, never a fabricated sample record.</summary>
@@ -179,11 +178,9 @@ public sealed class LobbyBattleView : MonoBehaviour
         if (!paused) RetryRecords();
     }
 
-    private void OpenParty()
+    private void StartBattle()
     {
-        // Keep the existing selection -> stamina/tutorial -> scene entry contract.
-        // No stamina is spent by this presentation component.
-        _partyView?.Open();
+        _partyView?.StartDefaultGame();
     }
 
     private void RefreshStamina(PlayerData data)
