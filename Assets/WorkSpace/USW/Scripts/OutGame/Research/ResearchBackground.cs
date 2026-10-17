@@ -4,12 +4,12 @@ using UnityEngine.UI;
 
 public enum ResearchBackgroundDesign { Original, ReferenceBlue, CyanBand, VioletBand, DeepBlueBand }
 
-public enum ResearchBackgroundPattern { Still, AlternatingUp, StaggeredDiagonal, OpposingDiagonals, RowCrossUp, SmoothFrogs }
+public enum ResearchBackgroundPattern { Still, AlternatingUp, StaggeredDiagonal, OpposingDiagonals, RowCrossUp, SmoothFrogs, SilhouetteDiagonal }
 
-/// <summary>뷰포트 배경을 MAX 높이에서 자르고, 두 아이콘의 스크롤 시안을 표시한다. 저장값은 변경하지 않는다.</summary>
+/// <summary>뷰포트 배경을 MAX 높이에서 자르고, 그 안에서 아이콘 패턴을 흘린다. 저장값은 변경하지 않는다.</summary>
 public sealed class ResearchBackground : MonoBehaviour
 {
-    private readonly List<Graphic> _icons = new();
+    private readonly List<Image> _icons = new();
     private RectTransform _viewport, _content, _reveal, _art;
     private Image _backgroundArt;
     private ResearchViewSettings _settings;
@@ -40,7 +40,9 @@ public sealed class ResearchBackground : MonoBehaviour
         _reveal.anchorMax = new Vector2(1f, 0f);
         _reveal.pivot = new Vector2(0.5f, 0f);
         _reveal.gameObject.AddComponent<RectMask2D>();
-        var background = ResearchUi.NewImage(_reveal, "Art", settings.BackgroundDesign == ResearchBackgroundDesign.Original || Pattern == ResearchBackgroundPattern.SmoothFrogs ? settings.PanelBackground : null, Vector2.zero, Vector2.zero);
+        bool silhouette = Pattern == ResearchBackgroundPattern.SilhouetteDiagonal;
+        bool useArt = !silhouette && (settings.BackgroundDesign == ResearchBackgroundDesign.Original || Pattern == ResearchBackgroundPattern.SmoothFrogs);
+        var background = ResearchUi.NewImage(_reveal, "Art", useArt ? settings.PanelBackground : null, Vector2.zero, Vector2.zero);
         background.color = background.sprite != null ? Color.white : settings.Background;
         if (Pattern == ResearchBackgroundPattern.SmoothFrogs) background.color = new Color(0.55f, 1f, 0.88f, 1f);
         _art = background.rectTransform;
@@ -85,6 +87,7 @@ public sealed class ResearchBackground : MonoBehaviour
         ResearchBackgroundPattern.StaggeredDiagonal => "엇갈린 대각선",
         ResearchBackgroundPattern.OpposingDiagonals => "양방향 대각선",
         ResearchBackgroundPattern.RowCrossUp => "줄마다 좌우 교차 상승",
+        ResearchBackgroundPattern.SilhouetteDiagonal => "개구리 실루엣 대각선",
         _ => string.Empty
     };
 
@@ -112,10 +115,13 @@ public sealed class ResearchBackground : MonoBehaviour
             fill = _viewport.InverseTransformPoint(_content.TransformPoint(new Vector3(0f, top))).y - _viewport.rect.yMin;
         }
         _reveal.sizeDelta = new Vector2(0f, Preview ? height : maxRow < 0 ? 0f : Mathf.Clamp(fill, 0f, height));
-        float contentHeight = Mathf.Max(height, _content.rect.height);
+        bool silhouette = Pattern == ResearchBackgroundPattern.SilhouetteDiagonal;
+        float spacing = Mathf.Max(80f, _settings.BackgroundIconRowSpacing);
+        // 실루엣은 보이는 영역만 채운다. 긴 트리 전체에 장식 오브젝트를 만들지 않는다.
+        float contentHeight = silhouette ? height + spacing * 2f : Mathf.Max(height, _content.rect.height);
         float contentBottom = _viewport.InverseTransformPoint(_content.TransformPoint(new Vector3(0f, _content.rect.yMin))).y - _viewport.rect.yMin;
         _art.sizeDelta = new Vector2(width, contentHeight);
-        _art.anchoredPosition = new Vector2(0f, contentBottom);
+        _art.anchoredPosition = new Vector2(0f, silhouette ? -spacing : contentBottom);
         if (_backgroundArt.sprite != null && width > 0f)
             _backgroundArt.pixelsPerUnitMultiplier = _backgroundArt.sprite.rect.width / (width * _backgroundArt.pixelsPerUnit);
         if (_bottomFade != null)
@@ -125,12 +131,11 @@ public sealed class ResearchBackground : MonoBehaviour
             _frontier.gameObject.SetActive(RevealHeight > 0f);
         }
 
-        float spacing = Mathf.Max(80f, _settings.BackgroundIconRowSpacing);
         int rows = Mathf.CeilToInt((contentHeight + _settings.BackgroundIconSize * 2f) / spacing) + 1;
         if ((rows & 1) != 0) rows++; // 반복 경계에서도 A/B 행 교차를 유지한다.
         bool rowCross = Pattern == ResearchBackgroundPattern.RowCrossUp;
         bool frogs = Pattern == ResearchBackgroundPattern.SmoothFrogs;
-        int columns = rowCross || frogs ? 3 : 2;
+        int columns = rowCross || frogs || silhouette ? 3 : 2;
         int count = rows * columns;
         while (_icons.Count < count)
         {
@@ -147,19 +152,24 @@ public sealed class ResearchBackground : MonoBehaviour
         {
             var icon = _icons[i];
             bool visible = i < count && Pattern != ResearchBackgroundPattern.Still;
-            icon.gameObject.SetActive(visible);
+            if (icon.gameObject.activeSelf != visible) icon.gameObject.SetActive(visible);
             if (!visible) continue;
             int row = i / columns, column = i % columns;
             int kind = rowCross ? row % 2 : (row + column) % 2;
-            if (icon is Image image)
-            {
-                image.sprite = kind == 0 ? _settings.BackgroundIconA : _settings.BackgroundIconB;
-                if (image.sprite == null) image.sprite = kind == 0 ? _settings.UpgradeArrow : _settings.GoldIcon;
-            }
+            Sprite sprite = kind == 0 ? _settings.BackgroundIconA : _settings.BackgroundIconB;
+            if (sprite == null) sprite = silhouette ? _settings.BackgroundIconA : kind == 0 ? _settings.UpgradeArrow : _settings.GoldIcon;
+            if (icon.sprite != sprite) icon.sprite = sprite;
             icon.color = _settings.BackgroundIconTint;
             float x = (column == 0 ? -0.27f : 0.27f) * width;
             float y = Mathf.Repeat(row * spacing + travel, periodY) - spacing;
-            if (frogs)
+            if (silhouette)
+            {
+                float cellWidth = periodX / columns;
+                x = ((column + 0.5f) / columns - 0.5f) * periodX + (row % 2) * cellWidth * 0.5f + travel * 0.55f;
+                y = Mathf.Repeat(row * spacing + contentBottom + travel, periodY) - spacing;
+                icon.rectTransform.localRotation = Quaternion.identity;
+            }
+            else if (frogs)
             {
                 float phase = i * 2.39996f;
                 float speed = 0.7f + Mathf.Repeat(i * 0.37f, 0.6f);

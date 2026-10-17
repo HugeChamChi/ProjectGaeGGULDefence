@@ -49,7 +49,9 @@ MonoBehaviour:
   _message: {fileID: 1141577291213492342}
   _retryButton: {fileID: 8548232949832164305}
   _tutorialScene: TutorialScene
+  _lobbyScene: LobbyScene
   _startupMessage: "\uD29C\uD1A0\uB9AC\uC5BC \uC900\uBE44 \uC911\u2026"
+  _returningMessage: "\uB85C\uBE44 \uC900\uBE44 \uC911\u2026"
   _failureMessage: "\uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694. \uB2E4\uC2DC
     \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694."
 --- !u!1 &941644044378772771

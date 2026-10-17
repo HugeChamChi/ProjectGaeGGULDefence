@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using GaeGGUL.Tutorial;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,15 +16,19 @@ public sealed class AppLoadingScreen : MonoBehaviour
     [SerializeField] private TMP_Text _message;
     [SerializeField] private Button _retryButton;
     [SerializeField] private string _tutorialScene = "TutorialScene";
+    [SerializeField] private string _lobbyScene = "LobbyScene";
     [SerializeField] private string _startupMessage = "튜토리얼 준비 중…";
+    [SerializeField] private string _returningMessage = "로비 준비 중…";
     [SerializeField] private string _failureMessage = "불러오지 못했어요. 다시 시도해 주세요.";
     [Inject] private SceneChangeManager _scenes;
+    [Inject] private AppInitialization _initialization;
+    [Inject] private IngameTutorialProgress _tutorialProgress;
     private bool _loading;
 
     private void Awake()
     {
         if (_retryButton != null) _retryButton.onClick.AddListener(BeginStartup);
-        if (SceneManager.GetActiveScene().name == BootSceneName) Show(_startupMessage);
+        if (SceneManager.GetActiveScene().name == BootSceneName) Show(StartupMessage);
         else Hide();
     }
 
@@ -32,27 +37,39 @@ public sealed class AppLoadingScreen : MonoBehaviour
         if (SceneManager.GetActiveScene().name == BootSceneName) BeginStartup();
     }
 
-    private void BeginStartup() => LoadTutorialAsync().Forget();
+    private string StartupMessage => _tutorialProgress != null && _tutorialProgress.IsCompleted ? _returningMessage : _startupMessage;
 
-    private async UniTask LoadTutorialAsync()
+    private void BeginStartup() => LoadStartupAsync().Forget();
+
+    private async UniTask LoadStartupAsync()
     {
         if (_loading) return;
         _loading = true;
         var token = this.GetCancellationTokenOnDestroy();
         try
         {
-            Show(_startupMessage);
+            Show(StartupMessage);
             // Render the small boot cover before loading/activating the battle scene.
             await UniTask.NextFrame(cancellationToken: token);
-            await _scenes.TransitionToSceneAsync(_tutorialScene);
-            // The tutorial releases the cover only after its initializer and unit preloads finish.
+            if (_tutorialProgress.IsCompleted)
+            {
+                // Restore the existing guest/linked session and Player before any lobby view binds.
+                await _initialization.InitializeAsync(token);
+                await _scenes.TransitionToSceneAsync(_lobbyScene).AttachExternalCancellation(token);
+                Hide();
+            }
+            else
+            {
+                await _scenes.TransitionToSceneAsync(_tutorialScene).AttachExternalCancellation(token);
+                // The tutorial releases the cover after its initializer and unit preloads finish.
+            }
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
         {
             Show(_failureMessage);
             if (_retryButton != null) _retryButton.gameObject.SetActive(true);
-            Debug.LogWarning("[AppLoadingScreen] Tutorial load failed: " + error.Message);
+            Debug.LogWarning("[AppLoadingScreen] Startup preparation failed: " + error.Message);
         }
         finally { _loading = false; }
     }

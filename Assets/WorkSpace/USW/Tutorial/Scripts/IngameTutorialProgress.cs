@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GaeGGUL.Tutorial
 {
-    /// <summary>내부 테스트용 기기 저장. 서버의 로비 튜토리얼 진행과 별도로 관리한다.</summary>
+    /// <summary>기기에 보존하는 첫 전투 튜토리얼 완료 기록. 앱 재실행의 튜토리얼 생략에 사용한다.</summary>
     public sealed class IngameTutorialProgress
     {
         private const string CompletedKey = "IngameTutorial.Completed.v1";

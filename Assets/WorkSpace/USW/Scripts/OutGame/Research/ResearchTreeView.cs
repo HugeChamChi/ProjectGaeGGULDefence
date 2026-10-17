@@ -199,7 +199,7 @@ public sealed class ResearchTreeView : IDisposable
             string name = _tree.LaneNames != null && lane < _tree.LaneNames.Length ? _tree.LaneNames[lane] : string.Empty;
             var labelRect = ResearchUi.Place(ResearchUi.NewRect(layer, "LaneName" + lane), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f),
                 new Vector2(x, _s.ContentPadding * 0.4f), new Vector2(ColumnOffset, LaneNameFont * 1.5f));
-            var label = ResearchUi.NewText(labelRect, "Text", name, LaneNameFont, _s.FontBold, TextAlignmentOptions.Center);
+            var label = ResearchUi.NewText(labelRect, "Text", name, LaneNameFont, _s.FontBold, TextAlignmentOptions.Center, _s.FontMaterial);
             label.color = _s.Muted;
         }
     }
@@ -222,7 +222,7 @@ public sealed class ResearchTreeView : IDisposable
 
             var labelRect = ResearchUi.Place(ResearchUi.NewRect(over, "GateLabel"), new Vector2(0.5f, 0f), new Vector2(0.5f, 1f),
                 new Vector2(pos.x, pos.y - VisualHalf(node) - GateLabelGap * 0.5f), new Vector2(ColumnOffset * 3f, GateLabelFont * 1.4f));
-            var label = ResearchUi.NewText(labelRect, "Text", string.Empty, GateLabelFont, _s.FontRegular, TextAlignmentOptions.Center);
+            var label = ResearchUi.NewText(labelRect, "Text", string.Empty, GateLabelFont, _s.FontRegular, TextAlignmentOptions.Center, _s.FontMaterial);
             _gates.Add((label, node, stage));
         }
     }

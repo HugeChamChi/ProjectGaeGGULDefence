@@ -276,19 +276,9 @@ public static class ResearchSetup
     [MenuItem("Tools/USW/Research/Click Recommend Button")]
     public static void ClickRecommend() => ClickButton("RecommendButton");
 
-    [MenuItem("Tools/USW/Research/Swipe Mode Next")]
-    public static void SwipeNext() => WithScreen(s => { s.SwipeMode(1); Log(s, "방식 다음"); });
-
-    [MenuItem("Tools/USW/Research/Swipe Mode Prev")]
-    public static void SwipePrev() => WithScreen(s => { s.SwipeMode(-1); Log(s, "방식 이전"); });
-
-    /// <summary>검증용: 토글형의 [추천 따라가기] 토글을 누른다 (실제 onClick 경로).</summary>
-    [MenuItem("Tools/USW/Research/Click Follow Toggle")]
-    public static void ClickFollow() => ClickButton("FollowToggle");
-
     /// <summary>검증용: 하단 가운데 버튼([강화] / [선택 바꾸기])을 누른다.</summary>
     [MenuItem("Tools/USW/Research/Click Main Button")]
-    public static void ClickMain() => WithScreen(s => ClickButton("MainButton" + s.RecommendMode));
+    public static void ClickMain() => ClickButton("MainButton0");
 
     private static void ClickButton(string name) => WithScreen(s =>
     {
@@ -310,7 +300,7 @@ public static class ResearchSetup
     {
         var node = s.Selected;
         Debug.Log($"[Research] {what} → 선택 {node?.Id} Lv.{s.Progress.GetLevel(node)}/{node?.MaxLevel} {s.Progress.GetState(node)}, " +
-                  $"전체 {s.Progress.TotalLevel}, 추천 {s.Progress.GetRecommended()?.Id}, 방식 {s.RecommendMode}");
+                  $"전체 {s.Progress.TotalLevel}, 추천 {s.Progress.GetRecommended()?.Id}");
     }
 
     private static void WithScreen(System.Action<ResearchScreen> action)

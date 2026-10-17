@@ -36,11 +36,12 @@ public static class ResearchUi
     }
 
     /// <summary>부모를 꽉 채우는 글자. raycast는 꺼져 있다.</summary>
-    public static TextMeshProUGUI NewText(Transform parent, string name, string text, float fontSize, TMP_FontAsset font, TextAlignmentOptions alignment)
+    public static TextMeshProUGUI NewText(Transform parent, string name, string text, float fontSize, TMP_FontAsset font, TextAlignmentOptions alignment, Material material = null)
     {
         var rect = Stretch(NewRect(parent, name));
         var tmp = rect.gameObject.AddComponent<TextMeshProUGUI>();
         if (font != null) tmp.font = font;
+        if (material != null) tmp.fontSharedMaterial = material;
         tmp.text = text;
         tmp.fontSize = fontSize;
         tmp.alignment = alignment;
@@ -50,7 +51,7 @@ public static class ResearchUi
     }
 
     /// <summary>글자가 들어간 버튼 (9-slice 바탕).</summary>
-    public static Button NewButton(Transform parent, string name, Sprite sprite, Color color, string label, float fontSize, TMP_FontAsset font, out Image background, out TextMeshProUGUI text)
+    public static Button NewButton(Transform parent, string name, Sprite sprite, Color color, string label, float fontSize, TMP_FontAsset font, out Image background, out TextMeshProUGUI text, Material textMaterial = null)
     {
         var rect = NewRect(parent, name);
         background = rect.gameObject.AddComponent<Image>();
@@ -59,7 +60,7 @@ public static class ResearchUi
         background.color = color;
         var button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = background;
-        text = NewText(rect, "Label", label, fontSize, font, TextAlignmentOptions.Center);
+        text = NewText(rect, "Label", label, fontSize, font, TextAlignmentOptions.Center, textMaterial);
         return button;
     }
 

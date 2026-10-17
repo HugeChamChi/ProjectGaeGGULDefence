@@ -19,6 +19,7 @@ public class LobbyLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<StaminaInsufficientPopup>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<BackendManager>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyFeatureNavigation>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<ResearchScreen>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyPopupHost>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyPopupAction>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<LobbyWebCouponAction>(builder, gameObject.scene);

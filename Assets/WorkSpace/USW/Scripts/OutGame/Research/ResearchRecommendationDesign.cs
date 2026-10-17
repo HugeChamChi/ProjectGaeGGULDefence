@@ -25,7 +25,7 @@ public static class ResearchRecommendationDesign
         Plate(badge, "BrightEdge", badge.sizeDelta, Vector2.zero, Color.Lerp(fill, Color.white, 0.55f), radius);
         Plate(badge, "Fill", badge.sizeDelta - new Vector2(4f, 4f), Vector2.zero, fill, radius - 2f);
         Plate(badge, "Highlight", new Vector2(86f, 2f), new Vector2(0f, 16f), new Color(1f, 1f, 1f, 0.55f), 1f);
-        var label = ResearchUi.NewText(badge, "Label", "추천", 29f, settings.FontBold, TextAlignmentOptions.Center);
+        var label = ResearchUi.NewText(badge, "Label", "추천", 29f, settings.FontBold, TextAlignmentOptions.Center, settings.FontMaterial);
         label.color = Color.white;
         label.outlineColor = ink;
         label.outlineWidth = 0.3f;

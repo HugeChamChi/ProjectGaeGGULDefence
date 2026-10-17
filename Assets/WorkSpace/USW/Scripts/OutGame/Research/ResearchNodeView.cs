@@ -108,7 +108,7 @@ public sealed class ResearchNodeView : MonoBehaviour
             float y = diamond ? -size * DiamondLevelGap : circle ? -size * 0.3f : -size * 0.36f;
             var levelRect = ResearchUi.Place(ResearchUi.NewRect(rect, "Level"), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0f, y), new Vector2(size, size * 0.2f));
-            _levelText = ResearchUi.NewText(levelRect, "Text", "", size * LevelFontRatio, s.FontBold, TextAlignmentOptions.Center);
+            _levelText = ResearchUi.NewText(levelRect, "Text", "", size * LevelFontRatio, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
             if (circle) _icon.rectTransform.anchoredPosition = new Vector2(0f, size * 0.06f);
         }
         else BuildPips(rect, size);
@@ -169,7 +169,7 @@ public sealed class ResearchNodeView : MonoBehaviour
         {
             var levelRect = ResearchUi.NewRect(rect, "Level");
             ResearchUi.Place(levelRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -size * 0.29f), new Vector2(size, size * 0.2f));
-            _levelText = ResearchUi.NewText(levelRect, "Text", string.Empty, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center);
+            _levelText = ResearchUi.NewText(levelRect, "Text", string.Empty, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center, _s.FontMaterial);
         }
         _blocked = ResearchUi.NewImage(rect, "Blocked", _s.BlockedIcon, Vector2.one * size * 0.2f, new Vector2(size * 0.36f, size * 0.36f));
         _blocked.preserveAspect = true;
