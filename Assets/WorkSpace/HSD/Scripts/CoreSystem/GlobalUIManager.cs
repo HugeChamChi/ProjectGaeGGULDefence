@@ -44,7 +44,7 @@ public class DefaultFadeScreen : IFadeScreen, IInitializable
         
         var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 999;
+        canvas.sortingOrder = short.MaxValue;
         
         var canvasScaler = canvasGO.AddComponent<CanvasScaler>();
         canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

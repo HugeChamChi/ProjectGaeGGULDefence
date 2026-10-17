@@ -41,6 +41,15 @@ public class UI_PartySelectPresenter
 
     private bool _isProcessing = false;
 
+    public void StartDefaultGame(PartyLobbyDataSO lobbyData)
+    {
+        if (_isProcessing) return;
+        _selectedParty = GlobalData.SelectedParty;
+        if (_selectedParty == null && lobbyData != null && lobbyData.partyList.Count > 0)
+            _selectedParty = lobbyData.partyList[0];
+        OnStartGameClicked();
+    }
+
     private void OnStartGameClicked()
     {
         if (_isProcessing || _selectedParty == null) return;

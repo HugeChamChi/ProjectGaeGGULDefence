@@ -19,8 +19,10 @@ namespace GaeGGUL.DeckUpgrade
             gauge.height = parent.sizeDelta.y;
             gauge.clock = parent.anchoredPosition.y * .002f;
             var mask = NewImage("GaugeClip", parent, Color.white, rounded); Stretch(mask.rectTransform);
+            mask.pixelsPerUnitMultiplier = parent.GetComponent<Image>().pixelsPerUnitMultiplier;
             mask.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            gauge.Fill = NewImage("GreenFill", mask.transform, new Color32(69, 184, 104, 255), null);
+            gauge.Fill = NewImage("GreenFill", mask.transform, new Color32(69, 184, 104, 255), rounded);
+            gauge.Fill.pixelsPerUnitMultiplier = mask.pixelsPerUnitMultiplier;
             gauge.fillRect = gauge.Fill.rectTransform; Stretch(gauge.fillRect);
             var arrow = NewImage("UpgradeReadyArrow", parent, new Color32(108, 255, 112, 255), arrowSprite);
             arrow.type = Image.Type.Simple; arrow.preserveAspect = true;
@@ -50,8 +52,8 @@ namespace GaeGGUL.DeckUpgrade
             if (!Ready) return;
             clock += Time.unscaledDeltaTime;
             float bounce = Mathf.Sin(clock * 6);
-            Arrow.anchoredPosition = new Vector2(8, Mathf.Max(0, bounce) * height * .08f);
-            Arrow.localScale = new Vector3(1 - bounce * .025f, 1 + bounce * .08f, 1);
+            Arrow.anchoredPosition = new Vector2(8, Mathf.Max(0, bounce) * height * .22f);
+            Arrow.localScale = new Vector3(1 - bounce * .04f, 1 + bounce * .12f, 1);
             float arrowSweep = Mathf.Repeat(clock + .25f, 1.2f) / .6f;
             arrowReflection.anchoredPosition = new Vector2(0, Mathf.LerpUnclamped(-height, height * 3, arrowSweep));
         }

@@ -93,6 +93,7 @@ public class UIManager : MonoBehaviour
     protected void Awake()
     {
         _bossHpBar?.UseRuntimeData();
+        if (gameObject.scene.name == "IngameScene") HideStartButton();
     }
 
     /// <summary>Wires the boss status HUD after container injection has completed.</summary>
