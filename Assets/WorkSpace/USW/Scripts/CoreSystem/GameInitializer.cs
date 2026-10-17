@@ -88,11 +88,15 @@ public class GameInitializer : IInitializable, IAsyncStartable
     {
         // Direct in-game/tutorial entry can skip the title's Table initialization.
         await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.65f, "전투 데이터 준비 중");
         await _research.LoadAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.75f, "전투 설정 확인 중");
         if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.Key == "NORMAL")
             await _endlessBalance.RefreshAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.85f, "사운드 준비 중");
         // Prepare only the app-owned approved palette; scene cancellation owns this wait.
         if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.95f, "출격 준비 중");
 
         // Finish scene Start callbacks before starting combat and publishing initial HUD events.
         await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation);

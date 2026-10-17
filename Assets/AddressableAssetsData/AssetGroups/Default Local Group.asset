@@ -636,6 +636,11 @@ MonoBehaviour:
     - UI1000_Common
     - UI_Shared
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bce5e43d2ced3cb4d8a7836e6dd8654d
+    m_Address: Assets/WorkSpace/HSD/NewShaderVariants.shadervariants
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bcf35cd7fa1a78e41b3ff06985ef98e8
     m_Address: SPR_UI2000_MenuIcon
     m_ReadOnly: 0

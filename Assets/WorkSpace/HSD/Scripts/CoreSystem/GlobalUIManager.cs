@@ -23,6 +23,11 @@ public class GlobalUIManager
         }
     }
 
+    public void ReportLoadingProgress(float progress, string message)
+    {
+        if (_fadeScreen is FadeScreen screen) screen.ReportLoadingProgress(progress, message);
+    }
+
     public async UniTask FadeOutAsync(float duration = 0.8f)
     {
         if (_fadeScreen != null)
