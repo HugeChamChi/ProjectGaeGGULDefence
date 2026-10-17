@@ -37,15 +37,6 @@
       },
       "hash": "dc862cfbf53923fc04f6410fd04e7c2b2b366819"
     },
-    "com.singularitygroup.hotreload": {
-      "version": "file:com.singularitygroup.hotreload",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0",
-        "com.unity.modules.unitywebrequest": "1.0.0"
-      }
-    },
     "com.unity.2d.animation": {
       "version": "13.0.4",
       "depth": 1,
