@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +11,7 @@ namespace GaeGGUL.DeckUpgrade
         public GameObject lobbyTopTemplate;
         private Transform page, grid;
         private bool lastOwnedOnly;
-        private IEnumerator Start() { yield return null; yield return null; Apply(); }
+        private void Start() { Apply(); }
         public void Apply()
         {
             page = transform.Find("DroneUpgradeCanvas/SafeArea/Page");

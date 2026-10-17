@@ -69,7 +69,11 @@ namespace GaeGGUL.DeckUpgrade
         private static Color C(string hex) { ColorUtility.TryParseHtmlString("#" + hex, out var value); return value; }
         private string Id(int i) => i < 0 ? DeckUpgradeProgress.ChiefId : units[i].name;
         private void Awake() { progress = DeckUpgradeProgress.Load(); BuildView(); }
-        private void Start() { expanded = false; SetReveal(0); ToggleDeck(); }
+        private void Start()
+        {
+            if (GetComponent<DeckSelectorConcept>() != null) return;
+            expanded = false; SetReveal(0); ToggleDeck();
+        }
 
         public void BuildView()
         {
@@ -78,6 +82,7 @@ namespace GaeGGUL.DeckUpgrade
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var child = transform.GetChild(i).gameObject; child.SetActive(false);
+                child.name = "ReplacedUpgradeView";
                 if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
             }
             cards.Clear(); positions.Clear(); levels.Clear(); prices.Clear(); moneyGauges.Clear(); selected = 0;
@@ -167,8 +172,8 @@ namespace GaeGGUL.DeckUpgrade
             OutlineText(level, 1.5f); levels.Add(level);
             var strip = Box("CostStrip", frame, C("301B2B"), style.RoundedFill); Place(strip, 22, 248, 180, 34);
             moneyGauges.Add(UpgradeCostGauge.Create(strip, style.RoundedFill, style.UpgradeArrow));
-            AddGoldIcon(strip, 42);
             var price = Text("Cost", "", strip, 26, -2, 128, 37, 23, Color.white, TextAlignmentOptions.Center);
+            price.enableAutoSizing = true; price.fontSizeMin = 15; price.fontSizeMax = 23;
             OutlineText(price, 1); prices.Add(price);
             var name = Text("Name", units[index].unitName, card, 0, 310, 232, 48, 32, Foreground, TextAlignmentOptions.Center);
             OutlineText(name, 1);
@@ -191,8 +196,8 @@ namespace GaeGGUL.DeckUpgrade
             chiefBonus = Text("ChiefBonus", "", body, 150, 382, 712, 38, 25, C("8AE69A"), TextAlignmentOptions.Center);
             var gauge = Box("ChiefGoldGauge", body, C("301B2B"), style.RoundedFill); Place(gauge, 391, 424, 230, 34);
             chiefGauge = UpgradeCostGauge.Create(gauge, style.RoundedFill, style.UpgradeArrow);
-            AddGoldIcon(gauge, 46);
             chiefCost = Text("ChiefCost", "", gauge, 48, -2, 138, 37, 23, Color.white, TextAlignmentOptions.Center);
+            chiefCost.enableAutoSizing = true; chiefCost.fontSizeMin = 15; chiefCost.fontSizeMax = 23;
         }
 
         private void LayoutDeckSections(bool open)
@@ -254,6 +259,7 @@ namespace GaeGGUL.DeckUpgrade
                 var lockBody = Box("LockBody", lockRoot, C("FFF2D4"), style.RoundedFill); Place(lockBody, 3, 23, 46, 32);
                 var hole = Box("Keyhole", lockBody, Ink, style.CircleFill); Place(hole, 18, 8, 10, 14);
             }
+            bonusContent.gameObject.AddComponent<DeckUpgradeBonusView>().Build(style, detail);
             var buttonBase = Box("ButtonShadow", detail, C("D9883F"), style.RoundedFill); Place(buttonBase, 48, 1005, 860, 151);
             var button = Box("UpgradeButton", detail, Gold, style.RoundedFill); Place(button, 48, 990, 860, 151);
             upgradeRect = button;
@@ -339,14 +345,14 @@ namespace GaeGGUL.DeckUpgrade
             for (int i = 0; i < units.Length; i++)
             {
                 levels[i].text = "Lv." + progress.Level(Id(i));
-                prices[i].text = progress.Level(Id(i)) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.Cost(Id(i)).ToString("N0");
+                prices[i].text = progress.Level(Id(i)) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.money + "/" + progress.Cost(Id(i));
                 moneyGauges[i].SetAmount(progress.money, progress.Cost(Id(i)), progress.Level(Id(i)) < DeckUpgradeProgress.MaxLevel);
             }
             string id = Id(selected); int level = progress.Level(id);
             bool max = level >= DeckUpgradeProgress.MaxLevel;
             chiefLevel.text = chief.DisplayName + "  Lv." + progress.Level(DeckUpgradeProgress.ChiefId);
             chiefBonus.text = $"전체 유닛 능력치 +{progress.ChiefBonus * 100:0}%";
-            chiefCost.text = progress.Level(DeckUpgradeProgress.ChiefId) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.Cost(DeckUpgradeProgress.ChiefId).ToString("N0");
+            chiefCost.text = progress.Level(DeckUpgradeProgress.ChiefId) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.money + "/" + progress.Cost(DeckUpgradeProgress.ChiefId);
             chiefGauge.SetAmount(progress.money, progress.Cost(DeckUpgradeProgress.ChiefId), progress.Level(DeckUpgradeProgress.ChiefId) < DeckUpgradeProgress.MaxLevel);
             upgrade.interactable = !max && progress.money >= progress.Cost(id);
             cost.text = max ? "MAX" : progress.money.ToString("N0") + " / " + progress.Cost(id).ToString("N0");
@@ -403,6 +409,7 @@ namespace GaeGGUL.DeckUpgrade
             skillTabFace.color = index == 0 ? C("0094A6") : C("003B44");
             bonusTabFace.color = index == 1 ? C("0094A6") : C("003B44");
             int level = progress.Level(Id(selected));
+            bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName);
             for (int i = 0; i < BonusLevels.Length; i++)
             {
                 bool locked = level < BonusLevels[i];

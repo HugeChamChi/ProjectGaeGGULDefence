@@ -1,4 +1,3 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,9 +21,8 @@ namespace GaeGGUL.DeckUpgrade
         private readonly System.Collections.Generic.List<RectTransform> unitCards = new System.Collections.Generic.List<RectTransform>();
         private ResearchViewSettings Style => screen.style;
         private static Color C(string value) { ColorUtility.TryParseHtmlString("#" + value, out var color); return color; }
-        private IEnumerator Start()
+        private void Start()
         {
-            yield return null;
             screen.StopAllCoroutines(); screen.SetReveal(1); BuildView();
         }
         public void BuildView()
@@ -99,7 +97,9 @@ namespace GaeGGUL.DeckUpgrade
                     card.Find("UnitFrame/ColoredEdge").GetComponent<Image>().color = C("50A6F1");
                 }
                 var gauge = (RectTransform)(i == 0 ? card.Find("ChiefGoldGauge") : card.Find("UnitFrame/CostStrip"));
-                gauge.anchoredPosition = new Vector2(26, -249);
+                gauge.anchorMin = gauge.anchorMax = new Vector2(.5f, 1);
+                gauge.pivot = new Vector2(.5f, 1);
+                gauge.anchoredPosition = new Vector2(0, -241); gauge.sizeDelta = new Vector2(180, 34);
                 var price = (RectTransform)gauge.Find(i == 0 ? "ChiefCost" : "Cost");
                 CenterGaugeText(price, 180, 34);
                 if (i == 0) card.Find("ChiefLevel").GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
