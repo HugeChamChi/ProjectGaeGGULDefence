@@ -93,6 +93,9 @@ public class BackendGameData
         int session = _session;
         var economy = Resources.Load<PlayerEconomyConfig>("PlayerEconomyConfig");
         if (economy == null) { Debug.LogError("PlayerEconomyConfig is missing."); onComplete?.Invoke(null); return; }
+        var progression = Resources.Load<AccountProgressionConfig>("AccountProgressionConfig");
+        if (progression == null) { Debug.LogError("AccountProgressionConfig is missing."); onComplete?.Invoke(null); return; }
+        progression.Validate();
         var newData = new PlayerData
         {
             PlayerName = Backend.UserNickName ?? "유저",
@@ -101,9 +104,9 @@ public class BackendGameData
             Stamina = DefaultMaxStamina,
             MaxStamina = DefaultMaxStamina,
             LastStaminaRecoveryTime = ServerClock.UtcNowSeconds,
-            PlayerLevel = 1,
-            PlayerExp = 0,
-            MaxExp = 500
+            PlayerLevel = progression.InitialLevel,
+            PlayerExp = progression.InitialExperience,
+            MaxExp = progression.RequiredExperience[progression.InitialLevel - 1]
         };
 
         Param param = PlayerDataToParam(newData);
@@ -166,6 +169,9 @@ public class BackendGameData
         {
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            AccountExperienceSequence = data.GetLong("AccountExperienceSequence", 0),
+            AccountExperienceRunId = data.GetString("AccountExperienceRunId", string.Empty),
+            AccountExperienceReceipt = ParseAccountExperienceReceipt(data.GetString("AccountExperienceReceipt", string.Empty)),
             PendingEntryId = data.GetString("PendingEntryId", string.Empty),
             PendingEntryCost = data.GetInt("PendingEntryCost", 0),
             CouponHistory = JsonMapper.ToObject<System.Collections.Generic.List<CouponReceipt>>(data.GetString("CouponHistory", "[]")),
@@ -190,6 +196,9 @@ public class BackendGameData
     {
         Param param = new Param();
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("AccountExperienceSequence", data.AccountExperienceSequence);
+        param.Add("AccountExperienceRunId", data.AccountExperienceRunId ?? string.Empty);
+        param.Add("AccountExperienceReceipt", data.AccountExperienceReceipt == null ? string.Empty : JsonMapper.ToJson(data.AccountExperienceReceipt));
         param.Add("PendingEntryId", data.PendingEntryId ?? string.Empty);
         param.Add("PendingEntryCost", data.PendingEntryCost);
         param.Add("CouponHistory", JsonMapper.ToJson(data.CouponHistory ?? new System.Collections.Generic.List<CouponReceipt>()));
@@ -208,6 +217,16 @@ public class BackendGameData
         param.Add(COLUMN_SHOW_DAMAGE_NUMBERS, data.ShowDamageNumbers ? 1 : 0);
         param.Add(COLUMN_VIBRATION_ENABLED, data.VibrationEnabled ? 1 : 0);
         return param;
+    }
+
+    // Installed LitJson cannot deserialize a top-level null token. Missing/empty legacy columns are an absent receipt.
+    private static AccountExperienceReceipt ParseAccountExperienceReceipt(string json)
+    {
+        if (string.IsNullOrEmpty(json) || json == "null") return null;
+        var receipt = JsonMapper.ToObject<AccountExperienceReceipt>(json);
+        if (receipt == null || string.IsNullOrEmpty(receipt.RunId) || receipt.Sequence <= 0 || receipt.Experience < 0)
+            throw new FormatException("Invalid account experience receipt.");
+        return receipt;
     }
 
     // -------------------------

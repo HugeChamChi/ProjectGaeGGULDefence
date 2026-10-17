@@ -157,8 +157,8 @@ public class CurrencyFloaterManager : MonoBehaviour, ILoadableAsset
             }
 
             // 3. 스타일 적용 및 재생
-            // 소수점 아래 값이 있으면 1자리까지 표시, 딱 떨어지는 정수면 정수로 표시
-            string text = (floatAmount % 1 == 0) ? $"+{Mathf.FloorToInt(floatAmount)}" : $"+{floatAmount:F1}";
+            // 초당 식량은 정수 생산량도 소수점 한 자리까지 표시한다.
+            string text = "+" + floatAmount.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
             floater.SetupAndPlay(text, currencyStyle, false);
             }
         }

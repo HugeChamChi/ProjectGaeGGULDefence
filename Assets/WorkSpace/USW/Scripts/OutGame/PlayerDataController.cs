@@ -20,6 +20,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private string _confirmedSaveId = "";
     private int _generation;
     private long _revision;
+    private AccountProgressionConfig _accountProgression;
     private const int SaveTimeoutSeconds = 15;
     private const int RetryDelaySeconds = 30;
     private const int ClockRetrySeconds = 30;
@@ -64,6 +65,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public static bool DebugSkipStaminaCost = false;
     /// <summary>Existing Player.Inject boundary.</summary>
     public void Inject(BackendGameData backendData) => _backendData = backendData;
+    /// <summary>Root supplies the build-time account curve before loading. Test controllers may supply their own config.</summary>
+    public void ConfigureAccountProgression(AccountProgressionConfig config)
+    { config.Validate(); _accountProgression = config; }
     /// <summary>Loads the account, reconciles its journal and starts real-time recovery/retry.</summary>
     public async UniTask InitalizeAsync()
     {
@@ -116,6 +120,11 @@ public class PlayerDataController : IDisposable, Global.IClearable
                 else if ((pending.BaseSaveId ?? "") == _confirmedSaveId) { _data = pending.Data; IsDirty = true; }
                 else HasSaveConflict = true;
             }
+            if (!HasSaveConflict && _accountProgression != null)
+            {
+                try { NormalizeAccountProgression(); }
+                catch { _data = null; throw; }
+            }
             SetStatus(HasSaveConflict ? "저장 충돌 · 서버 기록 확인 필요" : IsDirty ? "저장 재시도 대기" : "");
             RefreshUI(_data);
             RecoveryLoopAsync(generation, token).Forget();
@@ -130,7 +139,20 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public void AcceptServerAfterConflict()
     {
         if (!HasSaveConflict || _account != _accountProvider()) return;
-        DeleteJournal(); HasSaveConflict = false; IsDirty = false; SetStatus(""); RefreshUI(_data); RecoverStamina();
+        _accountProgression?.Apply(_data.PlayerLevel, _data.PlayerExp, 0, out _, out _);
+        DeleteJournal(); HasSaveConflict = false; IsDirty = false;
+        NormalizeAccountProgression();
+        SetStatus(IsDirty ? "저장 대기" : ""); RefreshUI(_data); RecoverStamina();
+    }
+    private void NormalizeAccountProgression()
+    {
+        if (_accountProgression == null || _data == null) return;
+        // Preserve saved EXP through curve changes, without issuing new EXP or level-up rewards.
+        _accountProgression.Apply(_data.PlayerLevel, _data.PlayerExp, 0, out int level, out int experience);
+        int requirement = _accountProgression.RequiredExperience[level - 1];
+        if (_data.PlayerLevel == level && _data.PlayerExp == experience && _data.MaxExp == requirement) return;
+        _data.PlayerLevel = level; _data.PlayerExp = experience; _data.MaxExp = requirement;
+        SaveAndRefresh();
     }
     /// <summary>Publishes current state without changing amounts.</summary>
     public void RefreshUI(PlayerData data)
@@ -236,6 +258,42 @@ public class PlayerDataController : IDisposable, Global.IClearable
     /// <summary>Actual production battle start consumes a prepaid reservation.</summary>
     public void ConsumeEntryReservation()
     { if (!IsReady || string.IsNullOrEmpty(_data.PendingEntryId)) return; _data.PendingEntryId = ""; _data.PendingEntryCost = 0; SaveAndRefresh(); }
+
+    /// <summary>Reserves a monotonic run in the existing account journal; old runs cannot replace it.</summary>
+    public AccountExperienceTicket BeginAccountExperienceRun()
+    {
+        if (!IsReady || _data.AccountExperienceSequence < 0 || _data.AccountExperienceSequence == long.MaxValue) return null;
+        _data.AccountExperienceSequence++;
+        _data.AccountExperienceRunId = Guid.NewGuid().ToString("N");
+        SaveAndRefresh();
+        return new AccountExperienceTicket(_account, _generation, _data.AccountExperienceRunId, _data.AccountExperienceSequence);
+    }
+
+    /// <summary>Rejects callbacks from previous battles, logout/relogin and other accounts.</summary>
+    public bool OwnsAccountExperienceRun(AccountExperienceTicket ticket) => IsReady && ticket != null
+        && ticket.Account == _account && ticket.Generation == _generation
+        && ticket.Sequence == _data.AccountExperienceSequence && ticket.RunId == _data.AccountExperienceRunId;
+
+    /// <summary>Commits progression and its receipt together; saving/replaying never reapplies the delta.</summary>
+    public bool TryApplyAccountExperience(AccountExperienceTicket ticket, AccountProgressionConfig config, int experience,
+        out AccountExperienceReceipt receipt)
+    {
+        receipt = null;
+        if (ticket == null || !IsReady || ticket.Account != _account || ticket.Generation != _generation || config == null || experience < 0) return false;
+        var previous = _data.AccountExperienceReceipt;
+        if (previous != null && previous.RunId == ticket.RunId && previous.Sequence == ticket.Sequence)
+        { receipt = previous; return true; }
+        if (!OwnsAccountExperienceRun(ticket) || (previous != null && previous.Sequence >= ticket.Sequence)) return false;
+        int actual = config.Apply(_data.PlayerLevel, _data.PlayerExp, experience, out int level, out int remaining);
+        receipt = new AccountExperienceReceipt
+        { RunId = ticket.RunId, Sequence = ticket.Sequence, Experience = actual, LevelBefore = _data.PlayerLevel, LevelAfter = level };
+        _data.PlayerLevel = level; _data.PlayerExp = remaining;
+        _data.MaxExp = config.RequiredExperience[level - 1];
+        _data.AccountExperienceReceipt = receipt;
+        _data.AccountExperienceRunId = string.Empty;
+        SaveAndRefresh();
+        return true;
+    }
     /// <summary>Updates the authenticated nickname's PlayerData mirror.</summary>
     public void SetNickname(string name) { if (!IsReady || _data.PlayerName == name) return; _data.PlayerName = name; SaveAndRefresh(); }
     /// <summary>Persists damage-number preference.</summary>
@@ -303,7 +361,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
             var value = await completion.Task.AttachExternalCancellation(timeout.Token);
             if (!Matches(generation) || IsDirty || revision != _revision) return;
             if (value == null) { SetStatus("재조회 실패 · 마지막 확인 값 표시 중"); return; }
-            _confirmedSaveId = value.SaveId ?? ""; RefreshUI(value); SetStatus("");
+            _accountProgression?.Apply(value.PlayerLevel, value.PlayerExp, 0, out _, out _);
+            _confirmedSaveId = value.SaveId ?? ""; _data = value;
+            NormalizeAccountProgression();
+            RefreshUI(_data); SetStatus(IsDirty ? "저장 대기" : "");
             RecoverStamina(); if (IsDirty) await TrySaveAsync();
         }
         catch (Exception) { if (Matches(generation)) SetStatus("재조회 실패 · 마지막 확인 값 표시 중"); }

@@ -13,11 +13,13 @@ namespace GaeGGUL.DeckUpgrade
         private readonly RectTransform[] _shades = new RectTransform[5];
         private readonly Vector3[] _corners = new Vector3[4];
         private Vector2 _lastSize;
+        private DroneUpgradeConceptScreen _screen;
 
         private void Start()
         {
             if (_goldCard == null || _lobbyTabs == null) return;
-            _popup = (RectTransform)transform.Find("DroneUpgradeCanvas/SafeArea/Page/UnitDetailsPopup");
+            _screen = GetComponent<DroneUpgradeConceptScreen>();
+            if (_screen == null) return;
             var canvas = _goldCard.GetComponentInParent<Canvas>().rootCanvas;
             _root = new GameObject("UnitUpgradeGoldFocus", typeof(RectTransform)).GetComponent<RectTransform>();
             _root.gameObject.hideFlags = HideFlags.DontSave;
@@ -40,8 +42,8 @@ namespace GaeGGUL.DeckUpgrade
         private void LateUpdate()
         {
             if (_root == null) return;
-            if (_popup == null) _popup = (RectTransform)transform.Find("DroneUpgradeCanvas/SafeArea/Page/UnitDetailsPopup");
-            bool visible = _popup != null && _popup.gameObject.activeInHierarchy && _lobbyTabs.CurrentIndex == 1 && !_lobbyTabs.IsTransitioning;
+            _popup = _screen.DetailsPopup;
+            bool visible = _screen.isActiveAndEnabled && _popup != null && _popup.gameObject.activeInHierarchy && !_lobbyTabs.IsTransitioning;
             bool changed = _root.gameObject.activeSelf != visible;
             _root.gameObject.SetActive(visible);
             if (!visible || (!changed && _lastSize == _root.rect.size)) return;

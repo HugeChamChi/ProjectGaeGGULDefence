@@ -4,6 +4,7 @@ using Spine.Unity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace GaeGGUL.DeckUpgrade
 {
@@ -56,7 +57,11 @@ namespace GaeGGUL.DeckUpgrade
         private TMP_Text toggleText, wallet, title, skillName, description, stat, speedStat, cost, chiefLevel, chiefCost, chiefBonus;
         private UpgradeCostGauge chiefGauge;
         private Button upgrade;
-        private DeckUpgradeProgress progress;
+        private DeckUpgradeService _service;
+        private DeckUpgradePresenter _presenter;
+        private IObjectResolver _previewScope;
+        private DeckSelectorConcept _selector;
+        private DeckUpgradeStatsTabs _statsTabs;
         private Coroutine motion, popupMotion, punchMotion;
         private bool expanded = true;
         private float bodyHeight;
@@ -76,20 +81,31 @@ namespace GaeGGUL.DeckUpgrade
         public float PopupScale => detail.localScale.x;
         public DroneSpinePreview PopupPreview => popupPreview;
         public DroneSpinePreview ChiefPreview => chiefPreview;
+        /// <summary>Current detail overlay for lobby decoration, without hierarchy-path lookup.</summary>
+        public RectTransform DetailsPopup => _popupArea;
         private static Color C(string hex) { ColorUtility.TryParseHtmlString("#" + hex, out var value); return value; }
-        private string Id(int i) => i < 0 ? DeckUpgradeProgress.ChiefId : units[i].name;
-        private void Awake() { progress = DeckUpgradeProgress.Load(); BuildView(); }
+        /// <summary>Receives the lobby-owned preview service before the screen starts.</summary>
+        [Inject]
+        public void Construct(DeckUpgradeService service) => _service = service;
+
         private void Start()
         {
-            if (GetComponent<DeckSelectorConcept>() != null) return;
+            BuildView();
+            if (_selector != null) return;
             expanded = false; SetReveal(0); ToggleDeck();
         }
 
+        /// <summary>Builds the base view and composes optional collection styling in an explicit order.</summary>
         public void BuildView()
         {
+            if (_presenter != null) { _presenter.OnChanged -= Refresh; _presenter.Dispose(); }
+            var design = GetComponent<DeckUpgradeDesignVariant>();
+            if (design != null) design.ReleaseView();
+            EnsureService();
+            _presenter = new DeckUpgradePresenter(_service, units, chief);
+            _selector = null; _statsTabs = null;
             _fitPopup = false; _popupFitScale = 1f; _popupTopOverhang = 0f;
             StopAllCoroutines(); motion = popupMotion = punchMotion = null;
-            if (progress == null) progress = DeckUpgradeProgress.Load();
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var child = transform.GetChild(i).gameObject; child.SetActive(false);
@@ -153,8 +169,34 @@ namespace GaeGGUL.DeckUpgrade
             chiefTravelIcon.SetAsLastSibling();
             Canvas.ForceUpdateCanvases();
             ShowPreview(chiefPreview, -1);
-            Refresh();
-            expanded = true; SetReveal(1); ForceText();
+            expanded = true; SetReveal(1);
+            _selector = GetComponent<DeckSelectorConcept>();
+            if (_selector != null)
+            {
+                _selector.BuildView();
+                if (design != null) { design.Apply(); _statsTabs = design.Tabs; }
+            }
+            _presenter.OnChanged += Refresh;
+            Refresh(); ForceText();
+        }
+
+        private void EnsureService()
+        {
+            if (_service != null) return;
+            if (Application.isPlaying && _embeddedInLobby)
+                throw new System.InvalidOperationException("The lobby must inject DeckUpgradeService before building its character screen.");
+            // Standalone concepts and Edit-mode authoring use an explicitly owned preview container.
+            var builder = new ContainerBuilder();
+            builder.Register<DeckUpgradePreviewStore>(Lifetime.Scoped).As<IDeckUpgradeStore>();
+            builder.Register<DeckUpgradeService>(Lifetime.Scoped);
+            _previewScope = builder.Build();
+            _service = _previewScope.Resolve<DeckUpgradeService>();
+        }
+
+        private void OnDestroy()
+        {
+            if (_presenter != null) { _presenter.OnChanged -= Refresh; _presenter.Dispose(); }
+            _previewScope?.Dispose();
         }
 
         private void BuildHeader(RectTransform page)
@@ -355,8 +397,8 @@ namespace GaeGGUL.DeckUpgrade
 
         public void UpgradeSelected()
         {
-            if (!progress.TryUpgrade(Id(selected))) return;
-            progress.Save(); Refresh();
+            if (!_presenter.TryUpgrade(selected)) return;
+            _statsTabs?.ShowUpgradeResult();
             if (selected >= 0) popupPreview.PlayAction(attackAnimations[selected]);
 
             if (punchMotion != null) StopCoroutine(punchMotion);
@@ -378,45 +420,31 @@ namespace GaeGGUL.DeckUpgrade
 
         private void Refresh()
         {
-            wallet.text = progress.money.ToString("N0");
             for (int i = 0; i < units.Length; i++)
             {
-                levels[i].text = "Lv." + progress.Level(Id(i));
-                prices[i].text = progress.Level(Id(i)) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.money + "/" + progress.Cost(Id(i));
-                moneyGauges[i].SetAmount(progress.money, progress.Cost(Id(i)), progress.Level(Id(i)) < DeckUpgradeProgress.MaxLevel);
+                var item = _presenter.GetItem(i);
+                levels[i].text = "Lv." + item.Level;
+                if (prices[i] != null) prices[i].text = item.IsMaxLevel ? "MAX" : item.Gold + "/" + item.Cost;
+                if (moneyGauges[i] != null) moneyGauges[i].SetAmount(item.Gold, item.Cost, !item.IsMaxLevel);
             }
-            string id = Id(selected); int level = progress.Level(id);
-            bool max = level >= DeckUpgradeProgress.MaxLevel;
-            chiefLevel.text = chief.DisplayName + "  Lv." + progress.Level(DeckUpgradeProgress.ChiefId);
-            chiefBonus.text = $"전체 유닛 능력치 +{progress.ChiefBonus * 100:0}%";
-            chiefCost.text = progress.Level(DeckUpgradeProgress.ChiefId) >= DeckUpgradeProgress.MaxLevel ? "MAX" : progress.money + "/" + progress.Cost(DeckUpgradeProgress.ChiefId);
-            chiefGauge.SetAmount(progress.money, progress.Cost(DeckUpgradeProgress.ChiefId), progress.Level(DeckUpgradeProgress.ChiefId) < DeckUpgradeProgress.MaxLevel);
-            upgrade.interactable = !max && progress.money >= progress.Cost(id);
-            cost.text = max ? "MAX" : progress.money.ToString("N0") + " / " + progress.Cost(id).ToString("N0");
-            popupGauge.SetAmount(progress.money, progress.Cost(id), !max);
-            if (selected < 0)
-            {
-                title.text = chief.DisplayName + "  Lv." + level;
-                skillName.text = "집결 사격";
-                description.text = $"전투 드론들을 중앙에 집결시켜 보스에게 집중 사격합니다.\n\n기본 피해: 전투 드론 수 × {chief.AlphanSkill.DamagePerDrone:0.#}\n기본 재사용 대기시간: {chief.AlphanSkill.CooldownSeconds:0.#}초";
-                stat.text = $"전체 공격력   +{progress.ChiefBonus * 100:0}% → <color=#91E6A6>{(max ? "MAX" : "+" + ((progress.ChiefBonus + .02f) * 100).ToString("0") + "%")}</color>";
-                speedStat.text = $"전체 능력치   +{progress.ChiefBonus * 100:0}% → <color=#91E6A6>{(max ? "MAX" : "+" + ((progress.ChiefBonus + .02f) * 100).ToString("0") + "%")}</color>";
-                ResizeAbility();
-                return;
-            }
-            var unit = units[selected];
-            title.text = unit.unitName + "  Lv." + level;
-            skillName.text = string.IsNullOrWhiteSpace(unit.SkillDisplayName) ? "유닛 특수 능력" : unit.SkillDisplayName;
-            description.text = unit.GetFormattedDescription(Tier.Normal);
+            var chiefData = _presenter.GetItem(-1);
+            var data = _presenter.GetItem(selected);
+            if (wallet != null) wallet.text = data.Gold.ToString("N0");
+            if (chiefLevel != null) chiefLevel.text = chiefData.Name + "  Lv." + chiefData.Level;
+            if (chiefBonus != null) chiefBonus.text = $"전체 유닛 능력치 +{chiefData.ChiefBonus * 100:0}%";
+            if (chiefCost != null) chiefCost.text = chiefData.IsMaxLevel ? "MAX" : chiefData.Gold + "/" + chiefData.Cost;
+            if (chiefGauge != null) chiefGauge.SetAmount(chiefData.Gold, chiefData.Cost, !chiefData.IsMaxLevel);
+            upgrade.interactable = data.CanUpgrade;
+            if (cost != null) cost.text = data.IsMaxLevel ? "MAX" : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
+            if (popupGauge != null) popupGauge.SetAmount(data.Gold, data.Cost, !data.IsMaxLevel);
+            if (title != null) title.text = data.Name + "  Lv." + data.Level;
+            skillName.text = data.SkillName;
+            description.text = data.Description;
+            if (stat != null) stat.text = data.StatComparison;
+            if (speedStat != null) speedStat.text = data.SpeedComparison;
             ResizeAbility();
-            bool producer = selected == 2;
-            float basis = producer ? unit.foodProduction.Get(Tier.Normal) : unit.atk.Get(Tier.Normal);
-            string next = max ? "MAX" : (basis * (progress.Multiplier(id) + .1f) * (1 + progress.ChiefBonus)).ToString("0.#");
-            stat.text = (producer ? "식량 생산   " : "공격력   ") + $"{basis * progress.UnitMultiplier(id):0.#}  ›  <color=#91E6A6>{next}</color>";
-            float interval = unit.attackSpeed.Get(Tier.Normal);
-            float rate = interval > 0 ? progress.UnitMultiplier(id) / interval : 0;
-            string nextRate = max ? "MAX" : (interval > 0 ? (progress.Multiplier(id) + .1f) * (1 + progress.ChiefBonus) / interval : 0).ToString("0.0");
-            speedStat.text = $"공격속도   {rate:0.0} → <color=#91E6A6>{nextRate}</color> <size=23>회/초</size>";
+            _selector?.Render(chiefData, data);
+            _statsTabs?.Render(data);
         }
 
         private void ResizeAbility()
@@ -440,12 +468,16 @@ namespace GaeGGUL.DeckUpgrade
         public void SetAbilityTab(int index)
         {
             abilityTab = index;
-            abilityContent.gameObject.SetActive(index == 0); bonusContent.gameObject.SetActive(index == 1);
-            abilityScroll.content = index == 0 ? abilityContent : bonusContent;
-            abilityScroll.StopMovement(); abilityScroll.content.anchoredPosition = Vector2.zero;
+            bool paged = _statsTabs != null;
+            abilityContent.gameObject.SetActive(paged || index == 0); bonusContent.gameObject.SetActive(paged || index == 1);
+            if (!paged)
+            {
+                abilityScroll.content = index == 0 ? abilityContent : bonusContent;
+                abilityScroll.StopMovement(); abilityScroll.content.anchoredPosition = Vector2.zero;
+            }
             skillTabFace.color = index == 0 ? C("0094A6") : C("003B44");
             bonusTabFace.color = index == 1 ? C("0094A6") : C("003B44");
-            int level = progress.Level(Id(selected));
+            int level = _presenter.GetItem(selected).Level;
             bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName);
             for (int i = 0; i < BonusLevels.Length; i++)
             {

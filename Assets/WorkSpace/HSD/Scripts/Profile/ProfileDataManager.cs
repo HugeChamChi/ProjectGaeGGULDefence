@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
 using LitJson;
@@ -10,6 +11,15 @@ public class ProfileDataManager : Global.IClearable
 
     public PlayerProfileData Data { get; private set; } = new();
     public bool IsDirty { get; set; }
+    private string _owner;
+    private int _generation;
+    private int _revision;
+    private bool _loaded;
+    private UniTaskCompletionSource<bool> _save;
+    /// <summary>Current account profile has been read successfully.</summary>
+    public bool IsReady => _loaded && !string.IsNullOrEmpty(_owner) && _owner == Backend.UserInDate;
+    /// <summary>Selection changes, including account clear/load.</summary>
+    public event Action OnChanged;
 
     public Sprite CurrentIconSprite
     {
@@ -52,75 +62,99 @@ public class ProfileDataManager : Global.IClearable
 
     public void Clear()
     {
+        _generation++; _owner = null; _loaded = false; _revision = 0;
+        _save?.TrySetResult(false); _save = null; IsDirty = false;
         Data = new();
         rowInDate = string.Empty;
+        OnChanged?.Invoke();
     }
 
-    public async UniTask SaveAsync()
+    /// <summary>Stages only owned catalog choices; SO default grants are never modified.</summary>
+    public bool TrySelect(int iconId, int frameId)
     {
-        if (!IsDirty) return;
-
-        Param param = Data.ToParam();
-        var tcs = new UniTaskCompletionSource();
-
-        if (string.IsNullOrEmpty(rowInDate))
+        if (!IsReady || !Owned(Table.Profile.GetIcon(iconId), Data.iconStatusMap) || !Owned(Table.Profile.GetFrame(frameId), Data.frameStatusMap)) return false;
+        if (Data.CurrentIconId != iconId || Data.CurrentFrameId != frameId)
         {
-            // 데이터가 없는 경우 최초 생성 (Insert)
-            Backend.GameData.Insert(TABLE_NAME, param, callback =>
-            {
-                if (callback.IsSuccess())
-                {
-                    rowInDate = callback.GetInDate();
-                    Debug.Log("프로필 데이터 최초 저장 성공");
-                    IsDirty = false;
-                }
-                else
-                {
-                    Debug.LogError($"프로필 데이터 최초 저장 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
-                tcs.TrySetResult();
-            });
+            Data.CurrentIconId = iconId; Data.CurrentFrameId = frameId; _revision++; IsDirty = true;
+            OnChanged?.Invoke();
         }
-        else
+        return true;
+    }
+
+    private static bool Owned(IProfileItem item, System.Collections.Generic.Dictionary<string, bool> map) =>
+        item != null && (item.IsUnlocked || (map.TryGetValue(item.Id.ToString(), out bool unlocked) && unlocked));
+
+    /// <inheritdoc />
+    public async UniTask SaveAsync() => await TrySaveAsync(CancellationToken.None);
+
+    /// <summary>Coalesces writes and keeps newer edits dirty. Late callbacks cannot affect another session.</summary>
+    public async UniTask<bool> TrySaveAsync(CancellationToken token)
+    {
+        if (!IsReady) return false;
+        if (!IsDirty) return true;
+        token.ThrowIfCancellationRequested();
+        if (_save == null)
         {
-            // 기존 데이터 업데이트 (Update)
-            Backend.GameData.UpdateV2(TABLE_NAME, rowInDate, Backend.UserInDate, param, callback =>
+            int generation = _generation, revision = _revision;
+            string owner = _owner;
+            var completion = _save = new UniTaskCompletionSource<bool>();
+            var param = Data.ToParam();
+            bool insert = string.IsNullOrEmpty(rowInDate);
+            void Complete(BackendReturnObject callback)
             {
-                if (callback.IsSuccess())
+                bool current = generation == _generation && owner == Backend.UserInDate;
+                if (current && callback.IsSuccess())
                 {
-                    Debug.Log("프로필 데이터 업데이트 성공");
-                    IsDirty = false;
+                    if (insert) rowInDate = callback.GetInDate();
+                    if (revision == _revision) IsDirty = false;
                 }
-                else
-                {
-                    Debug.LogError($"프로필 데이터 업데이트 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
-                tcs.TrySetResult();
-            });
+                else if (current && insert) _loaded = false; // Re-query before another insert after an uncertain failure.
+                if (ReferenceEquals(_save, completion)) _save = null;
+                completion.TrySetResult(current && callback.IsSuccess() && !IsDirty);
+            }
+            try
+            {
+                if (insert) Backend.GameData.Insert(TABLE_NAME, param, Complete);
+                else Backend.GameData.UpdateV2(TABLE_NAME, rowInDate, owner, param, Complete);
+            }
+            catch { if (insert) _loaded = false; if (ReferenceEquals(_save, completion)) _save = null; completion.TrySetResult(false); }
+            // Some transports can invoke callbacks immediately.
+            if (_save == null) return await completion.Task;
         }
-        
-        await tcs.Task;
+        var pending = _save;
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+        using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(15), DelayType.Realtime);
+        try { return await pending.Task.AttachExternalCancellation(timeout.Token); }
+        catch (OperationCanceledException) { return false; }
     }
 
     public void Load(Action onCompleted = null)
     {
+        int generation = ++_generation;
+        string owner = Backend.UserInDate;
+        _owner = owner; _loaded = false;
         Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback =>
         {
             try
             {
+                if (generation != _generation || owner != Backend.UserInDate) return;
                 if (callback.IsSuccess())
                 {
                     JsonData rows = callback.FlattenRows();
+                    if (rows.Count > 1) { Debug.LogWarning("[Profile] Multiple account rows; selection disabled."); return; }
 
                     if (rows.Count > 0)
                     {
                         // 데이터가 존재하는 경우 복구
                         rowInDate = rows[0]["inDate"].ToString();
                         Data.FromData(rows[0]);
+                        _loaded = true;
+                        OnChanged?.Invoke();
                         Debug.Log($"프로필 데이터 로드 성공: IconId={Data.CurrentIconId}, FrameId={Data.CurrentFrameId}");
                     }
                     else
                     {
+                        Data = new(); rowInDate = string.Empty; IsDirty = false; _loaded = true;
                         // 데이터가 없는 경우 (신규 유저)
                         Debug.Log("저장된 프로필 데이터가 없습니다. 신규 유저로 처리합니다.");
                     }

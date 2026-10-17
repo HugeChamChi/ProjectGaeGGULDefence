@@ -38,7 +38,9 @@ namespace GaeGGUL.DeckUpgrade
             Graphic.additiveMaterial = blendMaterials[0];
             Graphic.multiplyMaterial = blendMaterials[1];
             Graphic.screenMaterial = blendMaterials[2];
-            Graphic.raycastTarget = false; Graphic.maskable = false;
+            // Follow the collection viewport's mask; popup previews have no such ancestor.
+            Graphic.raycastTarget = false; Graphic.maskable = true;
+            Graphic.RecalculateClipping();
             Animation.unscaledTime = true;
             Animation.AnimationState.SetAnimation(0, idle, true);
             Animation.UpdateComplete += HideGroundEffects;

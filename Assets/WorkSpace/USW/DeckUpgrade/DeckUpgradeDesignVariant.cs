@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 namespace GaeGGUL.DeckUpgrade
 {
-    [DefaultExecutionOrder(1000)]
     public sealed class DeckUpgradeDesignVariant : MonoBehaviour
     {
         [Range(1, 3)] public int variant = 1;
@@ -14,9 +13,15 @@ namespace GaeGGUL.DeckUpgrade
         [SerializeField] private Sprite _upgradeButtonSprite;
         private Transform page, grid;
         private bool lastOwnedOnly;
-        private void Start() { Apply(); }
+        private DeckSelectorConcept _selector;
+        /// <summary>Detail tabs created during explicit layout composition.</summary>
+        public DeckUpgradeStatsTabs Tabs { get; private set; }
+
+        /// <summary>Applies the selected design after the collection layout has been built.</summary>
         public void Apply()
         {
+            if (_selector != null) _selector.OnFilterChanged -= Arrange;
+            _selector = GetComponent<DeckSelectorConcept>();
             page = transform.Find("DroneUpgradeCanvas/SafeArea/Page");
             page.Find("Header").gameObject.SetActive(false);
             var banner = page.Find("CollectionBanner").GetComponent<Image>();
@@ -58,13 +63,14 @@ namespace GaeGGUL.DeckUpgrade
             RemoveUnusedViews();
             var dialog = page.Find("UnitDetailsPopup/UnitInfoDialog");
             var tabs = dialog.gameObject.AddComponent<DeckUpgradeStatsTabs>();
-            tabs.Build(GetComponent<DeckSelectorConcept>());
+            Tabs = tabs;
+            tabs.Build(GetComponent<DeckSelectorConcept>(), variant != 1);
             if (variant == 1) ApplyCleanLayout((RectTransform)dialog, tabs);
+            _selector.OnFilterChanged += Arrange;
         }
 
         private void ApplyCleanLayout(RectTransform dialog, DeckUpgradeStatsTabs tabs)
         {
-            var bindings = page.Find("RuntimeBindings");
             var banner = page.Find("CollectionBanner");
             for (int i = banner.childCount - 1; i >= 0; i--)
             {
@@ -82,7 +88,7 @@ namespace GaeGGUL.DeckUpgrade
                 bool chief = card.name == "ChiefUnit";
                 if (!chief && !card.name.StartsWith("Unit_")) continue;
                 var cost = card.Find(chief ? "ChiefGoldGauge" : "UnitFrame/CostStrip");
-                if (cost != null) cost.SetParent(bindings, false);
+                if (cost != null) RemoveView(cost.gameObject);
                 var level = (RectTransform)card.Find(chief ? "Level" : "UnitFrame/Level");
                 Place(level, 7, 246, 218, 42);
                 level.GetComponent<TMP_Text>().color = Color.white;
@@ -113,7 +119,7 @@ namespace GaeGGUL.DeckUpgrade
             Place((RectTransform)stage.Find("PreviewShadow"), 282, 310, 284, 26);
             stage.SetAsLastSibling(); close.SetAsLastSibling();
             var stats = (RectTransform)dialog.Find("StatsPanel"); Place(stats, 48, 224, 860, 264); Paint(stats, LobbyUtilityVisuals.Card);
-            stats.Find("PopupGoldGauge").SetParent(bindings, false);
+            RemoveView(stats.Find("PopupGoldGauge").gameObject);
             Place((RectTransform)stats.Find("DetailUnitName"), 252, 48, 576, 62);
             Place((RectTransform)stats.Find("DetailUnitLevel"), 252, 128, 576, 48);
             stats.Find("DetailUnitLevel").GetComponent<TMP_Text>().color = LobbyUtilityVisuals.Muted;
@@ -139,8 +145,6 @@ namespace GaeGGUL.DeckUpgrade
             var price = (RectTransform)button.Find("RequiredGoldCost"); Place(price, 198, 82, 364, 44);
             var priceBackground = price.GetComponent<Image>(); priceBackground.color = new Color32(68, 47, 14, 255); priceBackground.sprite = _popupRound;
             priceBackground.type = Image.Type.Sliced; priceBackground.pixelsPerUnitMultiplier = 1f;
-            var priceGauge = price.GetComponent<UpgradeCostGauge>(); priceGauge.enabled = false;
-            price.Find("GaugeClip").gameObject.SetActive(false); priceGauge.Arrow.SetParent(bindings, false);
             var coin = NewBox("GoldIcon", price, Color.white); Place(coin, 105, 6, 32, 32);
             coin.GetComponent<Image>().sprite = GetComponent<DroneUpgradeConceptScreen>().style.GoldIcon;
             coin.GetComponent<Image>().type = Image.Type.Simple; coin.GetComponent<Image>().preserveAspect = true;
@@ -182,12 +186,6 @@ namespace GaeGGUL.DeckUpgrade
         }
         private void RemoveUnusedViews()
         {
-            var bindings = new GameObject("RuntimeBindings", typeof(RectTransform)).transform;
-            bindings.SetParent(page, false); bindings.gameObject.SetActive(false);
-            foreach (string path in new[] { "Header/Wallet/Amount", "DeckScroll/Viewport/DeckContent/UnfoldingUnitList/ChiefBonus", "DeckCollection/UnitListPanel/UnitViewport/UnitGrid/ChiefUnit/ChiefLevel" })
-            {
-                var value = page.Find(path); if (value != null) value.SetParent(bindings, false);
-            }
             foreach (string path in new[] { "Header", "DeckScroll" })
             {
                 var old = page.Find(path); if (old != null) RemoveView(old.gameObject);
@@ -214,10 +212,14 @@ namespace GaeGGUL.DeckUpgrade
             motes.sizeDelta = new Vector2(232, 292); motes.anchoredPosition = new Vector2(116, -146); motes.localScale = Vector3.one * .45f;
             motes.gameObject.AddComponent<RisingUpgradeMotes>().Build(GetComponent<DeckSelectorConcept>().screen.style.CircleFill);
         }
-        private void LateUpdate()
+        /// <summary>Detaches layout callbacks before the screen replaces its generated hierarchy.</summary>
+        internal void ReleaseView()
         {
-            if (grid != null && lastOwnedOnly != !grid.Find("UnownedHeader").gameObject.activeSelf) Arrange();
+            if (_selector != null) _selector.OnFilterChanged -= Arrange;
+            _selector = null; grid = null; Tabs = null;
         }
+
+        private void OnDestroy() => ReleaseView();
         private void Arrange()
         {
             var divider = (RectTransform)grid.Find("UnownedHeader"); lastOwnedOnly = !divider.gameObject.activeSelf;

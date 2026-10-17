@@ -24,6 +24,13 @@ public class PlayerData
     public int PlayerExp;
     public int MaxExp = 500;
 
+    /// <summary>Monotonic battle reservation number; never reset when abandoning a run.</summary>
+    public long AccountExperienceSequence;
+    /// <summary>Current reserved battle ID, journaled before boss callbacks.</summary>
+    public string AccountExperienceRunId = string.Empty;
+    /// <summary>Experience, level changes and this receipt are one absolute PlayerData snapshot.</summary>
+    public AccountExperienceReceipt AccountExperienceReceipt;
+
     public string LastResetDate;
 
     /// <summary>Days claimed in the current 7-day attendance cycle (0-7).</summary>

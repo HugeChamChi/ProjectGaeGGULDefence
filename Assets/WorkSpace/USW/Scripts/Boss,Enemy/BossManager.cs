@@ -28,6 +28,7 @@ public class BossManager : MonoBehaviour
     [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private ResearchRunBonuses _research;
     [Inject] private DamageContributionLedger _damageLedger;
+    [Inject] private AccountExperienceRun _accountExperience;
 
     [SerializeField] private GameObject bossSpawnPoint;
     [Tooltip("보스 표시 크기 (px) — 1080×2340 기준 300 권장")]
@@ -97,6 +98,7 @@ public class BossManager : MonoBehaviour
         boss.ExpMultiplier = runtime.HasValue ? runtime.Value.ExpReward / (float)boss.MaxHp : expMultiplier;
 
         _currentBosses.Add(boss);
+        _accountExperience.Track(boss);
 
         boss.OnHpChanged += (cur, max) =>
         {

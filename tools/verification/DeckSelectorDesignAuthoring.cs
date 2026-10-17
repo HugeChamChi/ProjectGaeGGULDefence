@@ -25,8 +25,8 @@ public static class DeckSelectorDesignAuthoring
             scene = EditorSceneManager.OpenScene(Root + "/Concepts/" + Names[i] + ".unity");
             var selector = UnityEngine.Object.FindFirstObjectByType<DeckSelectorConcept>();
             PrefabUtility.UnpackPrefabInstance(selector.gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-            selector.screen.BuildView(); selector.BuildView();
-            var design = selector.gameObject.AddComponent<DeckUpgradeDesignVariant>(); design.variant = i + 1; design.lobbyTopTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Concepts/LobbyTopPreview.prefab"); design.Apply();
+            var design = selector.gameObject.AddComponent<DeckUpgradeDesignVariant>(); design.variant = i + 1; design.lobbyTopTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Concepts/LobbyTopPreview.prefab");
+            selector.screen.BuildView();
             EditorSceneManager.SaveScene(scene);
         }
         if (!AssetDatabase.IsValidFolder(Root + "/Legacy/DesignTrials")) AssetDatabase.CreateFolder(Root + "/Legacy", "DesignTrials");
