@@ -22,6 +22,11 @@ namespace GaeGGUL.DeckUpgrade
         private DroneUpgradeConceptScreen screen;
         private ResearchViewSettings style;
         private bool _useLobbyStyle;
+        private const float PageWidth = 828f;
+        private bool dragging;
+        private int dragOriginTab;
+        private float dragStartTrack;
+        internal RectTransform SwipeViewport => (RectTransform)track.parent;
         /// <summary>Builds the final detail tabs; Clean uses a price label without an animated gauge.</summary>
         public void Build(DeckSelectorConcept selector, bool showUpgradeGauge = true)
         {
@@ -95,7 +100,7 @@ namespace GaeGGUL.DeckUpgrade
             return Label("CurrentValue", "", row.transform, 98, 0, 676, 102, 34);
         }
         private void OnEnable() { if (track != null) Select(0, false); }
-        private void OnDisable() { if (motion != null) StopCoroutine(motion); motion = null; }
+        private void OnDisable() { if (motion != null) StopCoroutine(motion); motion = null; dragging = false; }
         /// <summary>Shows the stats page only after a successful upgrade command.</summary>
         public void ShowUpgradeResult() => Select(2, true);
 
@@ -123,11 +128,43 @@ namespace GaeGGUL.DeckUpgrade
         }
         public void Select(int index, bool animate)
         {
+            dragging = false;
             if (motion != null) StopCoroutine(motion);
             SelectedTab = index;
             RefreshTabColors();
             if (animate && Application.isPlaying && gameObject.activeInHierarchy) motion = StartCoroutine(Slide(-index * 828));
             else { track.anchoredPosition = new Vector2(-index * 828, 0); motion = null; }
+        }
+
+        internal void BeginPageDrag()
+        {
+            if (motion != null) StopCoroutine(motion);
+            motion = null;
+            dragging = true;
+            dragStartTrack = track.anchoredPosition.x;
+            dragOriginTab = Mathf.Clamp(Mathf.RoundToInt(-dragStartTrack / PageWidth), 0, pages.Length - 1);
+            SelectedTab = dragOriginTab;
+            RefreshTabColors();
+        }
+
+        internal void DragPage(float offset)
+        {
+            if (!dragging) return;
+            float min = -Mathf.Min(dragOriginTab + 1, pages.Length - 1) * PageWidth;
+            float max = -Mathf.Max(dragOriginTab - 1, 0) * PageWidth;
+            track.anchoredPosition = new Vector2(Mathf.Clamp(dragStartTrack + offset, min, max), 0);
+        }
+
+        internal void EndPageDrag(float velocity)
+        {
+            if (!dragging) return;
+            float distance = track.anchoredPosition.x - dragStartTrack;
+            int target = dragOriginTab;
+            if (Mathf.Abs(distance) >= 12f && Mathf.Abs(velocity) >= 600f)
+                target += velocity < 0 ? 1 : -1;
+            else if (Mathf.Abs(distance) >= PageWidth * .25f)
+                target += distance < 0 ? 1 : -1;
+            Select(Mathf.Clamp(target, 0, pages.Length - 1), true);
         }
 
         /// <summary>Uses the shared lobby tab palette and gives each content page the taller viewport.</summary>
@@ -177,32 +214,59 @@ namespace GaeGGUL.DeckUpgrade
         public DeckUpgradeStatsTabs Tabs { get; set; }
         private bool horizontalGesture;
         private Vector2 start;
+        private Vector2 lastPoint;
+        private float lastSampleTime, lastMovementTime, releaseVelocity;
 
         public override void OnBeginDrag(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left) return;
-            start = eventData.pressPosition;
-            Vector2 delta = eventData.position - start;
+            Vector2 delta = eventData.position - eventData.pressPosition;
             horizontalGesture = Mathf.Abs(delta.x) > Mathf.Abs(delta.y);
-            if (horizontalGesture) eventData.eligibleForClick = false;
-            else base.OnBeginDrag(eventData);
+            if (!horizontalGesture) { base.OnBeginDrag(eventData); return; }
+            eventData.eligibleForClick = false;
+            StopMovement();
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(Tabs.SwipeViewport, eventData.pressPosition, eventData.pressEventCamera, out start);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(Tabs.SwipeViewport, eventData.position, eventData.pressEventCamera, out lastPoint);
+            lastSampleTime = lastMovementTime = Time.unscaledTime;
+            releaseVelocity = 0;
+            Tabs.BeginPageDrag();
+            Tabs.DragPage(lastPoint.x - start.x);
         }
 
         public override void OnDrag(PointerEventData eventData)
         {
-            if (!horizontalGesture) base.OnDrag(eventData);
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (horizontalGesture) TrackPointer(eventData);
+            else base.OnDrag(eventData);
         }
 
         public override void OnEndDrag(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left) return;
             if (!horizontalGesture) { base.OnEndDrag(eventData); return; }
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, start, eventData.pressEventCamera, out var from);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, eventData.position, eventData.pressEventCamera, out var to);
-            float distance = to.x - from.x;
-            if (Mathf.Abs(distance) >= 60)
-                Tabs.Select(Mathf.Clamp(Tabs.SelectedTab + (distance < 0 ? 1 : -1), 0, 2), true);
+            TrackPointer(eventData);
+            Tabs.EndPageDrag(Time.unscaledTime - lastMovementTime <= .12f ? releaseVelocity : 0);
             horizontalGesture = false;
+        }
+
+        private void TrackPointer(PointerEventData eventData)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(Tabs.SwipeViewport, eventData.position, eventData.pressEventCamera, out var point);
+            float delta = point.x - lastPoint.x;
+            float now = Time.unscaledTime;
+            if (Mathf.Abs(delta) > .01f)
+            {
+                if (now - lastSampleTime > .001f) releaseVelocity = delta / (now - lastSampleTime);
+                lastMovementTime = now;
+            }
+            lastPoint = point; lastSampleTime = now;
+            Tabs.DragPage(point.x - start.x);
+        }
+
+        protected override void OnDisable()
+        {
+            horizontalGesture = false;
+            base.OnDisable();
         }
     }
 }
