@@ -43,6 +43,7 @@ public sealed class ResearchNodeView : MonoBehaviour
     private Image _dotsFill;
     private bool _art;
     private Sprite _frameOverride;
+    private ResearchCompletionImpact _completion;
 
     /// <summary>이 뷰가 보여주는 노드.</summary>
     public ResearchNodeData Node { get; private set; }
@@ -271,11 +272,21 @@ public sealed class ResearchNodeView : MonoBehaviour
     public void SetFrameSprite(Sprite frame) => _frameOverride = frame;
 
     /// <summary>강화했을 때 톡 튀는 연출.</summary>
-    public void Punch()
+    public void Punch(bool completed = false)
     {
+        if (_completion != null) _completion.Stop();
         transform.DOKill(true);
         transform.localScale = Vector3.one;
-        transform.DOPunchScale(Vector3.one * PunchScale, PunchSeconds, 6, 0.6f).SetLink(gameObject);
+        if (completed)
+        {
+            if (_completion == null)
+            {
+                _completion = gameObject.AddComponent<ResearchCompletionImpact>();
+                _completion.Initialize(_s);
+            }
+            _completion.Play();
+        }
+        else transform.DOPunchScale(Vector3.one * PunchScale, PunchSeconds, 6, 0.6f).SetUpdate(true).SetLink(gameObject);
     }
 
     private void OnDestroy() => transform.DOKill();

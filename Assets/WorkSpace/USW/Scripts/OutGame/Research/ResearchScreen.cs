@@ -317,8 +317,9 @@ public sealed class ResearchScreen : MonoBehaviour
             RefreshAll();
             return;
         }
-        View.Punch(node);
-        _info.Punch();
+        bool completed = Progress.GetState(node) == ResearchNodeState.Maxed;
+        View.Punch(node, completed);
+        _info.Punch(completed);
         ShowToast(node);
     }
 

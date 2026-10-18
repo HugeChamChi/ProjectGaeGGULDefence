@@ -163,10 +163,27 @@ public sealed class ResearchInfoPanel
     }
 
     /// <summary>실제 누른 버튼과 선택 아이콘에 강화 완료 탄력을 적용한다.</summary>
-    public void Punch()
+    public void Punch(bool completed = false)
     {
-        Bounce(_iconSlot);
-        if (_pressedButton != null) { Bounce(_pressedButton); _pressedButton = null; }
+        if (completed)
+        {
+            Complete(_iconSlot);
+            Complete(_pressedButton != null ? _pressedButton : (RectTransform)_main.transform);
+        }
+        else
+        {
+            Bounce(_iconSlot);
+            if (_pressedButton != null) Bounce(_pressedButton);
+        }
+        _pressedButton = null;
+    }
+
+    private void Complete(RectTransform rect)
+    {
+        rect.DOKill(); rect.localScale = Vector3.one;
+        var impact = rect.GetComponent<ResearchCompletionImpact>();
+        if (impact == null) { impact = rect.gameObject.AddComponent<ResearchCompletionImpact>(); impact.Initialize(_s); }
+        impact.Play();
     }
 
     private void OnMainClicked()

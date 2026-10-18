@@ -147,9 +147,9 @@ public sealed class ResearchTreeView : IDisposable
     }
 
     /// <summary>노드 강화 연출.</summary>
-    public void Punch(ResearchNodeData node)
+    public void Punch(ResearchNodeData node, bool completed = false)
     {
-        if (node != null && _views.TryGetValue(node.Id, out var view)) view.Punch();
+        if (node != null && _views.TryGetValue(node.Id, out var view)) view.Punch(completed);
     }
 
     public void SetBackgroundSettings(ResearchViewSettings settings)
