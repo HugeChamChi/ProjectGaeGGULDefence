@@ -19,6 +19,9 @@ public sealed class ResearchBackground : MonoBehaviour
     private float _displayRow, _rowFrom, _rowElapsed = 0.35f;
     private int _targetRow;
     private const float RiseSeconds = 0.35f;
+    private ResearchCompletionImpact _completion;
+    private RectTransform _completionRect;
+    private bool _pendingCompletion, _frontierVisible;
     public ResearchBackgroundPattern Pattern { get; private set; }
     public bool Preview { get; set; }
     public float RevealHeight => _reveal.sizeDelta.y;
@@ -72,6 +75,11 @@ public sealed class ResearchBackground : MonoBehaviour
             _frontier.pivot = new Vector2(0.5f, 1f);
             _frontier.sizeDelta = new Vector2(0f, 4f);
         }
+        _completionRect = ResearchUi.NewRect(viewport, "MaxFrontierCompletion");
+        _completionRect.anchorMin = _completionRect.anchorMax = new Vector2(.5f, 0);
+        _completionRect.sizeDelta = new Vector2(viewport.rect.width, 1);
+        _completion = _completionRect.gameObject.AddComponent<ResearchCompletionImpact>();
+        _completion.Initialize(settings, true);
     }
 
     public void SetPattern(ResearchBackgroundPattern pattern)
@@ -101,6 +109,11 @@ public sealed class ResearchBackground : MonoBehaviour
             _displayRow = Mathf.Lerp(_rowFrom, _targetRow, Mathf.SmoothStep(0f, 1f, _rowElapsed / RiseSeconds));
         }
         RefreshVisuals();
+        if (_pendingCompletion && _rowElapsed >= RiseSeconds)
+        {
+            _pendingCompletion = false;
+            if (_frontierVisible && !Preview) { _completionRect.SetAsLastSibling(); _completion.Play(); }
+        }
     }
 
     /// <summary>스크롤·화면 크기·강화·초기화 변경을 같은 좌표계로 반영한다.</summary>
@@ -115,6 +128,9 @@ public sealed class ResearchBackground : MonoBehaviour
             fill = _viewport.InverseTransformPoint(_content.TransformPoint(new Vector3(0f, top))).y - _viewport.rect.yMin;
         }
         _reveal.sizeDelta = new Vector2(0f, Preview ? height : maxRow < 0 ? 0f : Mathf.Clamp(fill, 0f, height));
+        _frontierVisible = maxRow >= 0 && fill > 0f && fill < height;
+        _completionRect.sizeDelta = new Vector2(width, 1);
+        _completionRect.anchoredPosition = new Vector2(0, _reveal.sizeDelta.y);
         bool silhouette = Pattern == ResearchBackgroundPattern.SilhouetteDiagonal;
         float spacing = Mathf.Max(80f, _settings.BackgroundIconRowSpacing);
         // 실루엣은 보이는 영역만 채운다. 긴 트리 전체에 장식 오브젝트를 만들지 않는다.
@@ -194,6 +210,8 @@ public sealed class ResearchBackground : MonoBehaviour
         int next = _progress.HighestMaxedRow;
         if (next == _targetRow) return;
         bool rise = _settings.BackgroundDesign != ResearchBackgroundDesign.Original && next > _targetRow;
+        _pendingCompletion = next > _targetRow;
+        _completion.Stop();
         _rowFrom = _targetRow < 0 ? -_settings.ContentPadding / _settings.RowSpacing : _displayRow;
         _targetRow = next;
         _rowElapsed = rise ? 0f : RiseSeconds;
@@ -207,11 +225,18 @@ public sealed class ResearchBackground : MonoBehaviour
 
     private void OnDisable()
     {
+        _pendingCompletion = false;
+        if (_completion != null) _completion.Stop();
         if (_bottomFade != null) _bottomFade.gameObject.SetActive(false);
     }
 
     private void OnDestroy()
     {
+        if (_completionRect != null)
+        {
+            if (Application.isPlaying) Destroy(_completionRect.gameObject);
+            else DestroyImmediate(_completionRect.gameObject);
+        }
         if (_bottomFade != null)
         {
             if (Application.isPlaying) Destroy(_bottomFade.gameObject);
