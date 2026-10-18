@@ -111,10 +111,9 @@ namespace GaeGGUL.DeckUpgrade
             close.GetComponentInChildren<TMP_Text>().color = LobbyUtilityVisuals.Muted;
 
             var stage = (RectTransform)dialog.Find("PreviewStage"); Place(stage, 54, -180, 848, 356);
-            var motes = stage.GetComponent<RisingUpgradeMotes>();
-            if (motes != null) motes.enabled = false;
             for (int i = stage.childCount - 1; i >= 0; i--)
-                if (stage.GetChild(i).name != "PopupSpinePreview" && stage.GetChild(i).name != "PreviewShadow") RemoveView(stage.GetChild(i).gameObject);
+                if (stage.GetChild(i).name != "PopupSpinePreview" && stage.GetChild(i).name != "PreviewShadow" &&
+                    !stage.GetChild(i).name.StartsWith("RisingMote_")) RemoveView(stage.GetChild(i).gameObject);
             Place((RectTransform)stage.Find("PopupSpinePreview"), 216, 0, 416, 328);
             Place((RectTransform)stage.Find("PreviewShadow"), 282, 310, 284, 26);
             stage.SetAsLastSibling(); close.SetAsLastSibling();

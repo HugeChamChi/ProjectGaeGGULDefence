@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace GaeGGUL.DeckUpgrade
 {
@@ -68,7 +69,8 @@ namespace GaeGGUL.DeckUpgrade
             var contents = new[] { (RectTransform)skillContent, (RectTransform)bonusContent, statsContent };
             for (int i = 0; i < 3; i++)
             {
-                var scroll = pages[i].gameObject.AddComponent<ScrollRect>(); scroll.viewport = pages[i]; scroll.content = contents[i];
+                var scroll = pages[i].gameObject.AddComponent<DeckUpgradeTabScroll>(); scroll.Tabs = this;
+                scroll.viewport = pages[i]; scroll.content = contents[i];
                 scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
             }
             faces[2] = Box("StatsTab", dialog, 48, 562, 278, 56, new Color32(0, 148, 166, 255));
@@ -167,5 +169,40 @@ namespace GaeGGUL.DeckUpgrade
             if (name == "TabLabel") label.alignment = TextAlignmentOptions.Center; return label;
         }
         private static void Remove(GameObject old) { old.name = "RemovedUnusedView"; old.SetActive(false); if (Application.isPlaying) Destroy(old); else DestroyImmediate(old); }
+    }
+
+    /// <summary>Routes horizontal gestures to tabs while preserving vertical content scrolling.</summary>
+    public sealed class DeckUpgradeTabScroll : ScrollRect
+    {
+        public DeckUpgradeStatsTabs Tabs { get; set; }
+        private bool horizontalGesture;
+        private Vector2 start;
+
+        public override void OnBeginDrag(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            start = eventData.pressPosition;
+            Vector2 delta = eventData.position - start;
+            horizontalGesture = Mathf.Abs(delta.x) > Mathf.Abs(delta.y);
+            if (horizontalGesture) eventData.eligibleForClick = false;
+            else base.OnBeginDrag(eventData);
+        }
+
+        public override void OnDrag(PointerEventData eventData)
+        {
+            if (!horizontalGesture) base.OnDrag(eventData);
+        }
+
+        public override void OnEndDrag(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (!horizontalGesture) { base.OnEndDrag(eventData); return; }
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, start, eventData.pressEventCamera, out var from);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, eventData.position, eventData.pressEventCamera, out var to);
+            float distance = to.x - from.x;
+            if (Mathf.Abs(distance) >= 60)
+                Tabs.Select(Mathf.Clamp(Tabs.SelectedTab + (distance < 0 ? 1 : -1), 0, 2), true);
+            horizontalGesture = false;
+        }
     }
 }
