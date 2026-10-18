@@ -26,7 +26,12 @@ namespace GaeGGUL.DeckUpgrade
             _root.SetParent(canvas.transform, false);
             _root.anchorMin = Vector2.zero; _root.anchorMax = Vector2.one; _root.offsetMin = _root.offsetMax = Vector2.zero;
             for (int i = 0; i < _shades.Length; i++)
+            {
                 _shades[i] = Box("ChromeDim_" + i, new Color(0, 0, 0, .62f));
+                var button = _shades[i].gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(_screen.CloseDetails);
+            }
             _highlight = Box("GoldHighlight", new Color(1f, .78f, .30f, .55f));
             var image = _highlight.GetComponent<Image>(); image.sprite = _rounded; image.type = Image.Type.Sliced; image.fillCenter = false;
             _root.gameObject.SetActive(false);
