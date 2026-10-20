@@ -12,10 +12,10 @@ public sealed class TotemInventorySlotUI : MonoBehaviour, IBeginDragHandler, IDr
     private bool _dragging;
     private int _pointerId;
     /// <summary>Binds one stored item.</summary>
-    public void Bind(TotemInventoryUI owner, int index, TotemData data)
+    public void Bind(TotemInventoryUI owner, int index, TotemData data, Sprite displaySprite = null)
     {
         _owner = owner; _index = index;
-        _icon.sprite = data != null ? data.DisplaySprite : null;
+        _icon.sprite = displaySprite != null ? displaySprite : data != null ? data.DisplaySprite : null;
         _icon.color = Color.white;
     }
     /// <inheritdoc />

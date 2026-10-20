@@ -201,15 +201,17 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
     }
 
     /// <summary>Evaluates a disabled preview clone at a candidate cell without placement or buffs.</summary>
-    public void PreviewPlacement(TotemData data, GridCell cell, GridManager grid)
+    public void PreviewPlacement(TotemData data, GridCell cell, GridManager grid, int rotationStep = 0)
     {
         if (IsActive || cell == null || grid == null) return;
         var oldData = totemData;
         var oldCell = CurrentCell;
         var oldGrid = _gridManager;
+        var oldPreviewRotation = _previewRotationStep;
         totemData = data; CurrentCell = cell; _gridManager = grid;
+        _previewRotationStep = ((rotationStep % 4) + 4) % 4;
         try { grid.ShowTotemPlacementPreview(this); }
-        finally { totemData = oldData; CurrentCell = oldCell; _gridManager = oldGrid; }
+        finally { totemData = oldData; CurrentCell = oldCell; _gridManager = oldGrid; _previewRotationStep = oldPreviewRotation; }
     }
 
     /// <summary>실제 배치 시작. 봉인 해제와 구분되는 생명주기 훅.</summary>

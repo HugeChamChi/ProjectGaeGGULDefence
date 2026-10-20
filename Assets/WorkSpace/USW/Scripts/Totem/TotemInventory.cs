@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 public sealed class TotemInventory
 {
     private readonly List<TotemData> _items = new List<TotemData>();
+    private readonly List<int> _rotations = new List<int>();
     private readonly IReadOnlyList<TotemData> _view;
     private readonly TotemSpawner _spawner;
     private readonly TotemInteractionSettings _settings;
@@ -27,19 +28,56 @@ public sealed class TotemInventory
     {
         if (data == null || _items.Count >= Capacity) return false;
         _items.Add(data);
+        _rotations.Add(0);
         OnChanged?.Invoke();
         return true;
     }
-    /// <summary>Serializes placements and preserves the entry on cancellation or invalid cells.</summary>
+    /// <summary>Stored orientation, retained when a field totem is recalled.</summary>
+    public int GetRotationStep(int index) => index >= 0 && index < _rotations.Count ? _rotations[index] : 0;
+
+    /// <summary>Accepts an empty usable cell or an existing totem, never a unit or sealed cell.</summary>
+    public bool CanPlaceAt(int index, GridCell cell)
+        => index >= 0 && index < _items.Count && cell != null && cell.Model != null && cell.Model.IsAvailable
+            && cell.OccupyingUnit == null && (cell.OccupyingTotem == null ||
+                cell.OccupyingTotem.IsPlaced && cell.OccupyingTotem.CurrentCell == cell)
+            && (CanPlace == null || CanPlace(index, cell));
+
+    /// <summary>Recalls to storage without currency. Full storage and guided placement leave the field unchanged.</summary>
+    public bool TryRecall(TotemBase totem)
+    {
+        if (_placing || CanPlace != null || _items.Count >= Capacity || totem == null || !totem.IsPlaced
+            || totem.CurrentCell == null || totem.CurrentCell.OccupyingTotem != totem || totem.DamageSourceData == null) return false;
+        var data = totem.DamageSourceData;
+        int rotation = totem.RotationStep;
+        if (!_spawner.RemoveTotemFromField(totem)) return false;
+        _items.Add(data);
+        _rotations.Add(rotation);
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    /// <summary>Places or exchanges atomically, preserving storage on cancellation, load failure or invalid targets.</summary>
     public async UniTask<bool> TryPlaceAsync(int index, GridCell cell, CancellationToken token)
     {
-        if (_placing || index < 0 || index >= _items.Count || cell == null || !cell.IsAvailable) return false;
-        if (CanPlace != null && !CanPlace(index, cell)) return false;
+        if (_placing || !CanPlaceAt(index, cell)) return false;
+        var outgoing = cell.OccupyingTotem;
+        var outgoingData = outgoing != null ? outgoing.DamageSourceData : null;
+        if (outgoing != null && outgoingData == null) return false;
         _placing = true;
         try
         {
-            if (!await _spawner.PlaceTotemAtCellAsync(_items[index], cell, token)) return false;
-            _items.RemoveAt(index);
+            if (!await _spawner.PlaceOrExchangeTotemAsync(_items[index], _rotations[index], cell, outgoing,
+                () => CanPlaceAt(index, cell), token)) return false;
+            if (outgoingData != null)
+            {
+                _items[index] = outgoingData;
+                _rotations[index] = outgoing.RotationStep;
+            }
+            else
+            {
+                _items.RemoveAt(index);
+                _rotations.RemoveAt(index);
+            }
             OnChanged?.Invoke();
             return true;
         }

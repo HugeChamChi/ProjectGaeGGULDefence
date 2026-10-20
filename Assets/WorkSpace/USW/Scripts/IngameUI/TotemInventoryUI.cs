@@ -33,10 +33,13 @@ public sealed class TotemInventoryUI : MonoBehaviour
     private int _pointerId;
     private bool _placing;
     private bool _closing;
+    private int _panelTransitionVersion;
+    private TotemBase _fieldDragTotem;
+    private bool _openedForFieldDrag;
     /// <summary>Whether the inventory drawer is visible.</summary>
     public bool IsOpen => _panel != null && _panel.activeSelf;
     /// <summary>Whether the drawer is processing a drag or its asynchronous placement.</summary>
-    public bool IsDraggingOrPlacing => _dragIndex >= 0 || _placing;
+    public bool IsDraggingOrPlacing => _dragIndex >= 0 || _placing || _fieldDragTotem != null;
     /// <summary>Guided placement keeps the drawer open until an actual item drag.</summary>
     public bool AllowClose { get; set; } = true;
     /// <summary>Reopens an idle drawer after a rejected guided placement.</summary>
@@ -81,7 +84,11 @@ public sealed class TotemInventoryUI : MonoBehaviour
         if (_closeButton != null) _closeButton.onClick.RemoveListener(CloseInventory);
         if (_backgroundCloseButton != null) _backgroundCloseButton.onClick.RemoveListener(CloseInventory);
     }
-    private void OnDisable() => CancelDrag();
+    private void OnDisable()
+    {
+        CancelDrag();
+        EndFieldDrag(_fieldDragTotem);
+    }
     private void OnApplicationFocus(bool focused) { if (!focused) CancelDrag(); }
     private void OnApplicationPause(bool paused) { if (paused) CancelDrag(); }
     private void Update()
@@ -95,6 +102,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void Toggle()
     {
+        if (_fieldDragTotem != null) return;
         if (IsOpen && !AllowClose) return;
         if (_placing || _closing) return;
         if (_dragIndex >= 0) { CancelDrag(); return; }
@@ -104,6 +112,9 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void OpenInventory()
     {
+        _panelTransitionVersion++;
+        _closing = false;
+        _panelAnim?.Stop();
         _panel.SetActive(true);
         PositionAtBottom();
         if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(true);
@@ -156,20 +167,23 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void CloseInventory()
     {
+        if (_fieldDragTotem != null) return;
         if (!AllowClose) return;
         if (_closing || !_panel.activeSelf) return;
         CloseAnimatedAsync().Forget();
     }
     private async UniTaskVoid CloseAnimatedAsync()
     {
+        int version = ++_panelTransitionVersion;
         _closing = true;
         try
         {
             if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(false);
-            if (_panelAnim != null) await _panelAnim.PlayOut();
-            _panel.SetActive(false);
+            if (_panelAnim != null) await _panelAnim.PlayOut().AttachExternalCancellation(this.GetCancellationTokenOnDestroy());
+            if (version == _panelTransitionVersion) _panel.SetActive(false);
         }
-        finally { _closing = false; }
+        catch (OperationCanceledException) { }
+        finally { if (version == _panelTransitionVersion) _closing = false; }
     }
     private void Refresh()
     {
@@ -178,14 +192,22 @@ public sealed class TotemInventoryUI : MonoBehaviour
         {
             bool used = i < _inventory.Items.Count;
             _slots[i].gameObject.SetActive(used);
-            if (used) _slots[i].Bind(this, i, _inventory.Items[i]);
+            if (used)
+            {
+                var data = _inventory.Items[i];
+                int rotation = _inventory.GetRotationStep(i);
+                var sprites = data.rotationSprites;
+                var sprite = sprites != null && rotation < sprites.Length && sprites[rotation] != null
+                    ? sprites[rotation] : data.DisplaySprite;
+                _slots[i].Bind(this, i, data, sprite);
+            }
         }
         if (_countText != null) _countText.text = $"{_inventory.Items.Count}/{_inventory.Capacity}";
     }
     /// <summary>Starts a UI drag without removing the stored item.</summary>
     public void BeginDrag(int index, Sprite sprite, PointerEventData pointer)
     {
-        if (_placing || _dragIndex >= 0 || index < 0 || index >= _inventory.Items.Count) return;
+        if (_placing || _closing || _fieldDragTotem != null || _dragIndex >= 0 || index < 0 || index >= _inventory.Items.Count) return;
         _dragIndex = index; _pointerId = pointer.pointerId;
         // Keep the slot active until EndDrag so UGUI retains the initiating pointer.
         // Hide its panel and remove UI raycasts immediately; the drag ghost is a sibling.
@@ -217,16 +239,16 @@ public sealed class TotemInventoryUI : MonoBehaviour
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, pointer.position, uiCamera, out var point))
             _dragImage.rectTransform.anchoredPosition = point;
         var cell = GetDropCell(pointer);
-        if (cell != null && !cell.IsAvailable) cell = null;
+        if (cell != null && !_inventory.CanPlaceAt(_dragIndex, cell)) cell = null;
         if (cell != _hoverCell)
         {
             _hoverCell = cell;
             if (cell != null && _placementPreview != null)
-                _placementPreview.PreviewPlacement(_inventory.Items[_dragIndex], cell, _gridManager);
+                _placementPreview.PreviewPlacement(_inventory.Items[_dragIndex], cell, _gridManager, _inventory.GetRotationStep(_dragIndex));
             else _gridManager.ClearTotemRangePreview();
         }
     }
-    /// <summary>Drops only onto an available grid cell.</summary>
+    /// <summary>Places into an empty cell or exchanges with its totem; units and sealed cells remain blocked.</summary>
     public void EndDrag(PointerEventData pointer)
     {
         if (_dragIndex < 0 || pointer.pointerId != _pointerId) return;
@@ -235,7 +257,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
         int index = _dragIndex;
         CancelDrag();
         var target = GetDropCell(pointer);
-        if (target == null || !target.IsAvailable) return;
+        if (!_inventory.CanPlaceAt(index, target)) return;
         PlaceAsync(index, target).Forget();
     }
 
@@ -244,7 +266,8 @@ public sealed class TotemInventoryUI : MonoBehaviour
         // UI over the board must not receive a placement through it.
         _raycastResults.Clear();
         EventSystem.current?.RaycastAll(pointer, _raycastResults);
-        if (_raycastResults.Count > 0) return null;
+        foreach (var result in _raycastResults)
+            if (result.module is GraphicRaycaster) return null;
         if (_camera == null) _camera = Camera.main;
         if (_camera == null) return null;
         var ray = _camera.ScreenPointToRay(pointer.position);
@@ -252,10 +275,63 @@ public sealed class TotemInventoryUI : MonoBehaviour
         GridCell target = null;
         foreach (var hit in Physics2D.RaycastAll(ray.GetPoint(distance), Vector2.zero))
         {
-            var cell = hit.collider.GetComponentInParent<GridCell>();
+            // Occupant colliders can extend into adjacent cells; only the cell's own collider owns the drop.
+            var cell = hit.collider.GetComponent<GridCell>();
             if (cell != null) { target = cell; break; }
         }
         return target;
+    }
+
+    /// <summary>Opens the existing drawer as a recall target while a placed totem is moved.</summary>
+    public bool BeginFieldDrag(TotemBase totem)
+    {
+        if (_inventory == null || _inventory.CanPlace != null || totem == null || !totem.IsPlaced
+            || !AllowClose || IsDraggingOrPlacing || !isActiveAndEnabled) return false;
+        _fieldDragTotem = totem;
+        _openedForFieldDrag = !IsOpen || _closing;
+        if (!IsOpen || _closing) OpenInventory();
+        return true;
+    }
+
+    /// <summary>Handles a release over the drawer or bag button. Rejected recalls leave the totem at its source.</summary>
+    public bool TryCompleteFieldDrag(TotemBase totem, Vector2 worldPosition, out bool recalled)
+    {
+        recalled = false;
+        if (_fieldDragTotem != totem || totem == null || _camera == null) return false;
+        Vector2 screen = _camera.WorldToScreenPoint(worldPosition);
+        if (screen.x < 0f || screen.x > Screen.width || screen.y < 0f || screen.y > Screen.height) return false;
+        var canvas = _panel.GetComponentInParent<Canvas>().rootCanvas;
+        var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        bool overDrawer = IsOpen && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_panel.transform, screen, uiCamera);
+        bool overToggle = _toggleButton != null && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_toggleButton.transform, screen, uiCamera);
+        if (!overDrawer && !overToggle) return false;
+        var pointer = new PointerEventData(EventSystem.current) { position = screen };
+        _raycastResults.Clear();
+        EventSystem.current?.RaycastAll(pointer, _raycastResults);
+        foreach (var hit in _raycastResults)
+        {
+            if (!(hit.module is GraphicRaycaster)) continue;
+            var target = hit.gameObject.transform;
+            if (!target.IsChildOf(_panel.transform) && target != _panel.transform
+                && (_toggleButton == null || !target.IsChildOf(_toggleButton.transform))
+                && (_backgroundCloseButton == null || !target.IsChildOf(_backgroundCloseButton.transform))) return false;
+            break;
+        }
+        _fieldDragTotem = null;
+        _openedForFieldDrag = false;
+        recalled = _inventory.TryRecall(totem);
+        // Keep the drawer visible after success or a full-storage rejection, so an exchange can follow.
+        return true;
+    }
+
+    /// <summary>Closes only a drawer opened for this field gesture; existing open drawers are preserved.</summary>
+    public void EndFieldDrag(TotemBase totem)
+    {
+        if (_fieldDragTotem == null || _fieldDragTotem != totem) return;
+        bool close = _openedForFieldDrag;
+        _fieldDragTotem = null;
+        _openedForFieldDrag = false;
+        if (close && IsOpen) CloseInventory();
     }
     private async UniTaskVoid PlaceAsync(int index, GridCell cell)
     {
