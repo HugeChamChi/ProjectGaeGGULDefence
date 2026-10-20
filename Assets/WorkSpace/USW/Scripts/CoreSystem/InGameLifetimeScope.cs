@@ -116,6 +116,9 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterInstance(upgradeSettings);
         builder.RegisterComponentInHierarchy<UpgradeManager>();
         builder.RegisterComponentInHierarchy<InputManager>();
+        var worldInteraction = Resources.Load<WorldInteractionSettings>("WorldInteractionSettings");
+        if (worldInteraction == null) throw new System.InvalidOperationException("WorldInteractionSettings is required.");
+        builder.RegisterInstance(worldInteraction);
 
         if (isDron)
         {

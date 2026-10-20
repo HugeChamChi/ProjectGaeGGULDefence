@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using GaeGGUL.UI.Common;
+using GaeGGUL.Extension;
 
 namespace GaeGGUL.UI.Unit
 {
@@ -52,6 +53,9 @@ namespace GaeGGUL.UI.Unit
         private int _previousSortingOrder;
         private bool _previousOverrideSorting;
         private Canvas _feedbackCanvas;
+        private bool? _foodStatMode;
+        private Image _firstStatIcon, _secondStatIcon;
+        private Sprite _attackIcon, _speedIcon;
 
         public void ShowUpgradeFeedback(UnitBase unit, float attack, float interval)
         {
@@ -67,7 +71,7 @@ namespace GaeGGUL.UI.Unit
             _upgradeFeedback = true;
             _previousAttack = attack;
             _previousInterval = interval;
-            UpdateStats(unit.GetDisplayAttackDamage().ToString("0.##"), $"{unit.GetDisplayAttackInterval():F2}초");
+            _presenter.SetDescriptionMode(false);
             if (sellButton != null) sellButton.gameObject.SetActive(false);
         }
 
@@ -214,13 +218,52 @@ namespace GaeGGUL.UI.Unit
             }
         }
 
-        /// <summary>현재 합산 공격력과 공격간격만 표시한다. 별도 강화/식량 표시는 사용하지 않는다.</summary>
+        /// <summary>젤탕의 기존 두 칸을 드론 현황과 식량으로 바꾸고 다른 유닛에서 원래 아이콘을 복원한다.</summary>
+        public void SetFoodStatMode(bool food)
+        {
+            if (_foodStatMode == food) return;
+            if (_foodStatMode == null)
+            {
+                _firstStatIcon = FindStatIcon(statSlot_Atk);
+                _secondStatIcon = FindStatIcon(statSlot_AtkSpeed);
+                _attackIcon = _firstStatIcon != null ? _firstStatIcon.sprite : null;
+                _speedIcon = _secondStatIcon != null ? _secondStatIcon.sprite : null;
+                ConfigureStatText(statSlot_Atk);
+                ConfigureStatText(statSlot_AtkSpeed);
+            }
+            _foodStatMode = food;
+            if (_firstStatIcon != null) _firstStatIcon.sprite = food ? UnitStatType.DroneCount.GetVisual()?.icon : _attackIcon;
+            if (_secondStatIcon != null) _secondStatIcon.sprite = food ? UnitStatType.FoodPerSecond.GetVisual()?.icon : _speedIcon;
+        }
+
+        private static void ConfigureStatText(UI_StatSlot slot)
+        {
+            if (slot == null) return;
+            foreach (var text in slot.GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                text.richText = true;
+                text.textWrappingMode = TextWrappingModes.NoWrap;
+                text.fontSizeMax = Mathf.Max(40f, text.fontSize);
+                text.fontSizeMin = Mathf.Max(28f, text.fontSizeMin);
+                text.enableAutoSizing = true;
+            }
+        }
+
+        private static Image FindStatIcon(UI_StatSlot slot)
+        {
+            if (slot == null) return null;
+            foreach (var image in slot.GetComponentsInChildren<Image>(true))
+                if (image.name == "Icon") return image;
+            return null;
+        }
+
+        /// <summary>런타임 기본값과 초록색 강화 증가분을 표시한다. 공격 빈도는 초당 횟수다.</summary>
         public void UpdateStats(string atkValue, string atkSpeedValue)
         {
-            if (_upgradeFeedback)
+            if (_upgradeFeedback && _foodStatMode != true)
             {
                 atkValue = $"{_previousAttack:0.##} → <color=#69C875>{atkValue}</color>";
-                atkSpeedValue = $"{_previousInterval:F2}초 → <color=#69C875>{atkSpeedValue}</color>";
+                atkSpeedValue = $"{(_previousInterval > 0f ? 1f / _previousInterval : 0f):0.##}/초 → <color=#69C875>{atkSpeedValue}</color>";
             }
             if (statSlot_Atk != null)      statSlot_Atk.Setup(atkValue);
             if (statSlot_AtkSpeed != null) statSlot_AtkSpeed.Setup(atkSpeedValue);

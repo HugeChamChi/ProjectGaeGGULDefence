@@ -16,6 +16,7 @@ public interface IDraggable
 public class InputManager : MonoBehaviour
 {
     [Inject] private GameManager _gameManager;
+    [Inject] private WorldInteractionSettings _interactionSettings;
     /// <summary>Optional scene-owned restriction for guided world interactions.</summary>
     public Func<IDraggable, bool> CanBeginInteraction { get; set; }
     /// <summary>Optional restriction evaluated before a world drag commits.</summary>
@@ -25,7 +26,6 @@ public class InputManager : MonoBehaviour
     private Camera _mainCamera;
     private IDraggable _currentDraggable;
     private bool _isDragging = false;
-    private const float DragThresholdPixels = 20f;
     private const int MousePointerId = -1;
     private int? _activeFingerId;
     private EventSystem _pointerEventSystem;
@@ -166,7 +166,7 @@ public class InputManager : MonoBehaviour
             _pointerDown = false;
             return;
         }
-        if (_currentDraggable is DragHandler handler) handler.BeginPress();
+        if (_currentDraggable is DragHandler handler) handler.BeginPress(_pointerDownPos);
     }
 
     // 유닛 콜라이더는 위 칸까지, 토템 콜라이더는 옆 칸까지 겹칠 수 있고 RaycastAll의 겹침 순서는 보장되지 않는다.
@@ -179,6 +179,14 @@ public class InputManager : MonoBehaviour
             if (h.collider == null) continue;
             pointerCell = h.collider.GetComponent<GridCell>();
             if (pointerCell != null) break;
+        }
+
+        // 타일 전체를 잡기 영역으로 사용한다. 발밑처럼 유닛 콜라이더 밖을 눌러도 같은 칸의 점유자를 잡는다.
+        if (pointerCell != null)
+        {
+            var occupant = pointerCell.OccupyingUnit != null ? pointerCell.OccupyingUnit.gameObject
+                : pointerCell.OccupyingTotem != null ? pointerCell.OccupyingTotem.gameObject : null;
+            if (occupant != null && occupant.TryGetComponent<DragHandler>(out var occupiedDrag)) return occupiedDrag;
         }
 
         IDraggable nearest = null;
@@ -199,7 +207,8 @@ public class InputManager : MonoBehaviour
     {
         Vector2 currentPos = GetWorldPos(screenPos);
 
-        if (!_isDragging && Vector2.Distance(_pointerDownScreenPos, screenPos) > DragThresholdPixels)
+        if (!_isDragging && _interactionSettings != null
+            && Vector2.Distance(_pointerDownScreenPos, screenPos) >= _interactionSettings.DragThresholdForScreen)
         {
             _isDragging = true;
             if (_currentDraggable != null)
@@ -216,7 +225,8 @@ public class InputManager : MonoBehaviour
 
     private void ProcessPointerUp(Vector2 screenPos)
     {
-
+        // 한 프레임 안에 Began→Ended가 와도 마지막 위치로 이동 의도를 판별한다.
+        ProcessPointerMove(screenPos);
         Vector2 currentPos = GetWorldPos(screenPos);
 
         if (_isDragging)

@@ -23,3 +23,5 @@ View는 Unity 참조와 화면 갱신/입력을 제공하고 Presenter가 데이
 `SelectionInventoryUI`는 씬 스코프에서 선택지·시간·설명 설정·족장 의존성을 주입받는다. `LevelUpManager.ChosenIds` 순서와 기존 확정 설명을 사용하며 LevelUpManager를 변경하지 않는다. 열기/닫기/비활성화 때 자기 소유의 TimeScaleService 요청만 관리한다. 보관함 정렬25 → 유닛 정보창30 → 용어 시트40, 설정층4를 사용한다. 카탈로그 유닛 정보창은 판매 버튼을 숨기며 기존 전투 유닛 참조를 지운다. 9121·9124는 SO Feedback의 델탕, 9122·9123은 공용 표시다.
 
 처음 설치용 `IngameOptionsPrefabBuilder`는 기존 프리팹 덮어쓰기를 거부한다. 완성 후 수정은 프리팹에서 한다. 씬 참조 교체는 노출된 직렬화 참조만 대상으로 하며 Unity 소유권 필드(`m_GameObject` 등)는 변경하지 않는다. 중첩 Canvas는 부모 Canvas가 있는 상태에서 배치·정렬을 기록해야 한다. `Build Selection Inventory Prefabs` 메뉴는 선택지 창/칸을 덮어쓰므로 수동 수정 뒤 재실행하지 않는다. [통합 검증과 크래시 원인/수정](../../../../outputs/ingame-options-20261013/RESULT.md).
+
+2026-10-20 글씨 기준: 1080 기준 본문·설명32, 핵심 수치40, 자동 크기 최소28을 사용한다(`UiTypography`). 기존 큰 글씨는 줄이지 않는다. 정보창/강화/토템/설명/연구·해킹 HUD의 런타임 지정도 같은 기준을 따른다. 강화 카드는 가격·레벨 자동 크기 하한을 유지하고 아이콘/설명 영역을 분리한다. 로비 이름·레벨·추가 표시의 칸은 커진 글씨가 잘리지 않게 확대했다. CanvasScaler Match=0은 유지한다. [변경 및 세 화면비 검증](../../../../outputs/touch-typography-20261020/RESULT.md).

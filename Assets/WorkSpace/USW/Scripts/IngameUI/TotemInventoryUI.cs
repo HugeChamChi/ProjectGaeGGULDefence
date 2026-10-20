@@ -11,6 +11,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
 {
     [Inject] private TotemInventory _inventory;
     [Inject] private GridManager _gridManager;
+    [Inject] private WorldInteractionSettings _interactionSettings;
     [SerializeField] private GameObject _panel;
     [SerializeField] private Button _toggleButton;
     [SerializeField] private TotemInventorySlotUI[] _slots;
@@ -279,7 +280,8 @@ public sealed class TotemInventoryUI : MonoBehaviour
             var cell = hit.collider.GetComponent<GridCell>();
             if (cell != null) { target = cell; break; }
         }
-        return target;
+        return target != null ? target : _gridManager != null && _interactionSettings != null
+            ? _gridManager.FindInteractionCell(ray.GetPoint(distance), _interactionSettings.DropToleranceWorld(_camera)) : null;
     }
 
     /// <summary>Opens the existing drawer as a recall target while a placed totem is moved.</summary>

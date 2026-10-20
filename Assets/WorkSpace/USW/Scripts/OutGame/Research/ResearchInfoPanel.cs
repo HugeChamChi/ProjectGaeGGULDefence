@@ -215,7 +215,7 @@ public sealed class ResearchInfoPanel
         rect.pivot = new Vector2(0.5f, 1f);
         rect.offsetMin = new Vector2(left, -bottom); rect.offsetMax = new Vector2(-right, -top);
         var text = ResearchUi.NewText(rect, "Text", string.Empty, size, _s.FontBold, alignment, _s.FontMaterial);
-        text.enableAutoSizing = true; text.fontSizeMin = 26f; text.fontSizeMax = size;
+        text.enableAutoSizing = true; text.fontSizeMin = UiTypography.AutoSizeMinimum; text.fontSizeMax = Mathf.Max(UiTypography.BodySize, size);
         return text;
     }
 
@@ -227,7 +227,7 @@ public sealed class ResearchInfoPanel
         rect.anchorMin = new Vector2(index * 0.5f, 0f); rect.anchorMax = new Vector2((index + 1) * 0.5f, 1f);
         rect.offsetMin = new Vector2(index == 0 ? 0f : ButtonGap * 0.5f, 0f);
         rect.offsetMax = new Vector2(index == 0 ? -ButtonGap * 0.5f : 0f, 0f);
-        text.enableAutoSizing = true; text.fontSizeMin = 26f; text.fontSizeMax = ButtonFont;
+        text.enableAutoSizing = true; text.fontSizeMin = UiTypography.AutoSizeMinimum; text.fontSizeMax = ButtonFont;
         button.transition = Selectable.Transition.None;
         return button;
     }

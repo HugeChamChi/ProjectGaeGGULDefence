@@ -50,7 +50,7 @@ namespace HSD.UI.Upgrade
         }
 
         /// <summary>강화 성공 연출. spentCost가 0 이하이면 비용 숫자는 띄우지 않는다.</summary>
-        public void PlaySuccess(int spentCost)
+        public void PlaySuccess(float spentCost)
         {
             if (_card != null)
             {
@@ -90,14 +90,14 @@ namespace HSD.UI.Upgrade
             }
         }
 
-        private void SpawnCostFloater(int spentCost)
+        private void SpawnCostFloater(float spentCost)
         {
             if (_cost == null || _card == null) return;
             var floater = Instantiate(_cost, _card, true);
             floater.name = "SpentCostFloater";
             floater.DOKill();
             floater.raycastTarget = false;
-            floater.text = "-" + spentCost.ToString("N0");
+            floater.text = "-" + UI_UpgradeItem.FormatCost(spentCost);
             floater.color = _costFloatColor;
             floater.enableAutoSizing = false;
             floater.fontSize = _cost.fontSize * _costFloatScale;

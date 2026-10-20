@@ -28,6 +28,13 @@ public class DroneUnit : MonoBehaviour
         ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격.</summary>
     public float EffectiveAttackInterval => AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
+    /// <summary>강화만 제외하고 소유자 보정과 군단 버프를 반영한 비치명타 공격력.</summary>
+    public int NonCriticalAttackDamageBeforeUpgrade => _owner != null
+        ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamageBeforeUpgrade() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
+    /// <summary>강화만 제외하고 전용 선택지와 군단 버프를 반영한 공격 간격.</summary>
+    public float EffectiveAttackIntervalBeforeUpgrade => _owner != null ? _owner.GetAttackIntervalBeforeUpgrade()
+        / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f)
+        / (_droneManager?.DroneSpeedMultiplier ?? 1f) : 0f;
     /// <summary>오너 위치와 현재 위상을 반영한 귀환/드래그 기준점.</summary>
     public Vector3 HomePosition => (_owner != null ? _owner.transform.position : _homePositionFallback)
         + (UsesOrbit ? OrbitOffset : (Vector3)_spawnOffset);

@@ -43,7 +43,7 @@ public static class ResearchUi
         if (font != null) tmp.font = font;
         if (material != null) tmp.fontSharedMaterial = material;
         tmp.text = text;
-        tmp.fontSize = fontSize;
+        tmp.fontSize = Mathf.Max(UiTypography.BodySize, fontSize);
         tmp.alignment = alignment;
         tmp.textWrappingMode = TextWrappingModes.NoWrap;
         tmp.raycastTarget = false;

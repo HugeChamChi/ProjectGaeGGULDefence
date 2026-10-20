@@ -13,6 +13,14 @@ MonoBehaviour:
   m_Name: UpgradeKeyOverrides
   m_EditorClassIdentifier:
   overrides:
+  - characterId: 1004
+    upgradeKey: Zeltan
+  - characterId: 1005
+    upgradeKey: Zeltan
+  - characterId: 1006
+    upgradeKey: Zeltan
+  - characterId: 1007
+    upgradeKey: Zeltan
   - characterId: 1000
     upgradeKey: Deltan
   - characterId: 1001

@@ -35,6 +35,25 @@ public class GridManager : MonoBehaviour
     public int Columns => config != null ? config.gridColumns : 0;
     public int Rows    => config != null ? config.gridRows    : 0;
 
+    /// <summary>타일 시각 경계 기준으로 가장 가까운 칸을 찾는다. 경계 허용 거리 밖으로는 스냅하지 않는다.</summary>
+    public GridCell FindInteractionCell(Vector2 worldPosition, float edgeTolerance)
+    {
+        if (_grid == null) return null;
+        GridCell nearest = null;
+        float nearestDistance = float.PositiveInfinity;
+        foreach (var cell in _grid)
+        {
+            if (cell == null || !cell.TryGetVisualBounds(out var bounds)) continue;
+            float dx = Mathf.Max(0f, Mathf.Abs(worldPosition.x - bounds.center.x) - bounds.extents.x);
+            float dy = Mathf.Max(0f, Mathf.Abs(worldPosition.y - bounds.center.y) - bounds.extents.y);
+            if (dx * dx + dy * dy > edgeTolerance * edgeTolerance) continue;
+            float distance = ((Vector2)bounds.center - worldPosition).sqrMagnitude;
+            if (distance >= nearestDistance) continue;
+            nearest = cell; nearestDistance = distance;
+        }
+        return nearest;
+    }
+
     public void Init()
     {
         if (_grid != null) return; // Already initialized

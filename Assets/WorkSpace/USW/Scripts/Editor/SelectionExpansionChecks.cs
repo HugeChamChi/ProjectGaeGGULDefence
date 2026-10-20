@@ -16,7 +16,16 @@ public static class SelectionExpansionChecks
 
     /// <summary>임시 씬에서 검증하며 사용자 씬과 SO는 저장하지 않는다.</summary>
     [MenuItem("Tools/Selections/Run Seven Selection Checks")]
-    public static void Run()
+    public static void Run() => RunCore(true);
+
+    /// <summary>강화 환급·할인과 젤탕 자체/군단 선택지 보정의 독립 회귀. UI fixture는 실행하지 않는다.</summary>
+    public static int RunUpgradeAndFood()
+    {
+        RunCore(false);
+        return _passed;
+    }
+
+    private static void RunCore(bool includeUi)
     {
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play Mode first.");
         var random = UnityEngine.Random.state;
@@ -39,7 +48,7 @@ public static class SelectionExpansionChecks
             CheckRarity(manager, cards[4]);
             CheckRefund(manager, cards[5]);
             CheckDrones(manager, cards);
-            CheckReroll(cards[6]);
+            if (includeUi) CheckReroll(cards[6]);
             Debug.Log($"[SelectionExpansionChecks] PASS {_passed} assertions.");
         }
         finally
@@ -101,7 +110,7 @@ public static class SelectionExpansionChecks
         var currency = Component<CurrencyManager>(); currency.AddCurrency(1000);
         var upgrade = Component<UpgradeManager>(); var data = Asset<UpgradeSettings>();
         data.TargetKeys = new[] { "test" };
-        data.Steps = new[] { new UpgradeSettings.Step { Cost = 100 }, new UpgradeSettings.Step { Cost = 200 }, new UpgradeSettings.Step { Cost = 300 } };
+        data.InitialCost = 100; data.CostMultiplier = 2;
         Set(upgrade, "_currencyManager", currency); Set(upgrade, "_settings", data);
         Set(manager, "_upgradeManager", upgrade);
         Check(!upgrade.TryUpgrade("unknown") && currency.Currency == 1000, "Unknown upgrade does not spend");
@@ -109,16 +118,16 @@ public static class SelectionExpansionChecks
             "Successful payments accumulated");
         currency.Spend(50); currency.AddCurrency(5);
         manager.ApplyEffect(discount);
-        Check(currency.Currency == 685 && upgrade.GetUpgradeCost("test") == 270,
+        Check(currency.Currency == 685 && upgrade.GetUpgradeCost("test") == 360,
             "Refund only actual upgrade spend and discount future cost");
         manager.ApplyEffect(discount);
         Check(currency.Currency == 685, "Duplicate card cannot refund twice");
-        Check(upgrade.TryUpgrade("test") && upgrade.TotalSpent == 570, "Discounted actual charge recorded");
+        Check(upgrade.TryUpgrade("test") && upgrade.TotalSpent == 660, "Discounted actual charge recorded");
         manager.RemoveEffect(discount); manager.ApplyEffect(discount);
-        Check(currency.Currency == 415, "Removal and reapply cannot repeat refund");
+        Check(currency.Currency == 325, "Removal and reapply cannot repeat refund");
         ((Dictionary<string, int>)Get(upgrade, "_jobLevel"))["test"] = 0;
         currency.Spend(currency.Currency);
-        Check(!upgrade.TryUpgrade("test") && upgrade.TotalSpent == 570, "Failed payment excluded");
+        Check(!upgrade.TryUpgrade("test") && upgrade.TotalSpent == 660, "Failed payment excluded");
         Check(Component<UpgradeManager>().TotalSpent == 0, "New run starts with zero spend");
     }
 
@@ -126,20 +135,22 @@ public static class SelectionExpansionChecks
     {
         var drones = Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
         var zelta = Component<Drone_Zeltan>(); zelta.unitData = Asset<UnitData>();
+        var upgrade = Component<UpgradeManager>(); var settings = Asset<UpgradeSettings>();
+        Set(upgrade, "_settings", settings); Set(zelta, "_upgradeManager", upgrade);
         zelta.unitData.foodProduction.normal = 4;
         zelta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
         var cell = Component<GridCell>(); Set(cell, "<Model>k__BackingField", new GridCellModel());
         Set(zelta, "<currentCell>k__BackingField", cell); zelta.gameObject.SetActive(true);
         drones.SetPerDroneFood(0.15f); drones.RegisterFoodProducer(zelta);
         manager.ApplyEffect(cards[0]);
-        Check(Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f) && drones.BaseFoodPerDrone == 1f,
+        Check(Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f) && Mathf.Approximately(drones.BaseFoodPerDrone, .55f),
             "Cold storage affects own production only");
         manager.ApplyEffect(cards[1]);
-        Check(Mathf.Approximately(drones.BaseFoodPerDrone, 1.1f) && Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f),
+        Check(Mathf.Approximately(drones.BaseFoodPerDrone, .605f) && Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f),
             "Maintenance affects legion production only");
-        manager.RemoveEffect(cards[1]); Check(drones.BaseFoodPerDrone == 1f, "Maintenance removal updates immediately");
+        manager.RemoveEffect(cards[1]); Check(Mathf.Approximately(drones.BaseFoodPerDrone, .55f), "Maintenance removal updates immediately");
         manager.ApplyEffect(cards[1]);
-        Check(drones.BaseFoodPerDrone == 1f, "Removed card cannot be reacquired in same run");
+        Check(Mathf.Approximately(drones.BaseFoodPerDrone, .55f), "Removed card cannot be reacquired in same run");
         drones.UnregisterFoodProducer(zelta);
         Check(Mathf.Approximately(drones.BaseFoodPerDrone, 0.15f), "No Zeltan means no maintenance bonus");
         Check(drones.GetRallyDamage(10, 80) == 800m, "Unmodified rally damage");

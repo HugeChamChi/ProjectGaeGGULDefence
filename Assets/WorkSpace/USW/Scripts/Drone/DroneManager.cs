@@ -113,6 +113,19 @@ public class DroneManager : MonoBehaviour
     public event System.Action OnDroneCountChanged;
 
     public int DroneCount => _drones.Count;
+    /// <summary>현재 실제 생산 가능한 전투 드론들의 초당 식량 합계. 식량 지급과 같은 필터·보정을 사용한다.</summary>
+    public float CurrentFoodProductionPerSecond
+    {
+        get
+        {
+            int count = 0;
+            foreach (var drone in _drones) if (CanProduceFood(drone)) count++;
+            return count * BaseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
+        }
+    }
+
+    private static bool CanProduceFood(DroneUnit drone) => drone != null && drone.isActiveAndEnabled
+        && drone.Owner != null && drone.Owner.currentCell != null && !drone.Owner.IsStunned && !drone.Owner.IsCellSealed;
     /// <summary>새 집결 사격에 참가 가능한 드론 수. 이미 진행 중인 집결은 다시 필터링하지 않는다.</summary>
     public int RallyAvailableDroneCount
     {
@@ -453,8 +466,7 @@ public class DroneManager : MonoBehaviour
         // 개별 드론의 생산 진행도를 보존한다. 스턴 중 시간은 지급 주기에 포함하지 않는다.
         foreach (var drone in _drones)
         {
-            if (drone == null || !drone.isActiveAndEnabled || drone.Owner == null
-                || drone.Owner.currentCell == null || drone.Owner.IsStunned || drone.Owner.IsCellSealed) continue;
+            if (!CanProduceFood(drone)) continue;
             _foodProgress.TryGetValue(drone, out float progress);
             progress += deltaTime;
             int ticks = Mathf.FloorToInt(progress);

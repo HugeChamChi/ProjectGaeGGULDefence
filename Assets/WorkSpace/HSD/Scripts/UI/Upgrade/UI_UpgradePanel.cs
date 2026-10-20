@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HSD.UI.Upgrade
 {
@@ -20,6 +21,10 @@ namespace HSD.UI.Upgrade
         private Dictionary<string, UI_UpgradeItem> _items = new();
         private UpgradePresenter _presenter;
         private GaeGGUL.UI.Unit.UI_UnitInfoPanel _statFeedback;
+        private HorizontalLayoutGroup _itemLayout;
+        private Vector2 _lastItemAreaSize;
+        private Vector2 _itemVisualSize;
+        private bool _layoutPending;
 
         public RectTransform StatFeedbackArea => _statFeedback != null ? (RectTransform)_statFeedback.transform : null;
 
@@ -37,6 +42,22 @@ namespace HSD.UI.Upgrade
         protected override void Awake()
         {
             base.Awake();
+            if (itemContainer != null)
+            {
+                _itemLayout = itemContainer.GetComponent<HorizontalLayoutGroup>();
+                if (_itemLayout == null)
+                {
+                    _itemLayout = itemContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+                    _itemLayout.spacing = 16f;
+                }
+                _itemLayout.childAlignment = TextAnchor.MiddleCenter;
+                _itemLayout.childControlWidth = false;
+                _itemLayout.childControlHeight = false;
+                _itemLayout.childForceExpandWidth = true;
+                _itemLayout.childForceExpandHeight = false;
+                _itemLayout.childScaleWidth = true;
+                _itemLayout.childScaleHeight = true;
+            }
             
             if (upgradeModel != null)
             {
@@ -89,6 +110,39 @@ namespace HSD.UI.Upgrade
                 item.Init(data, onUpgradeClicked);
                 _items.Add(data.UpgradeTarget, item);
             }
+            _itemVisualSize = Vector2.zero;
+            foreach (var item in _items.Values)
+                if (item != null)
+                {
+                    var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(item.transform);
+                    _itemVisualSize = Vector2.Max(_itemVisualSize, bounds.size);
+                    if (_itemLayout == null) continue;
+                    var rect = ((RectTransform)item.transform).rect;
+                    // The authored level badge and price text extend beyond the card root.
+                    var padding = _itemLayout.padding;
+                    padding.left = Mathf.Max(padding.left, Mathf.CeilToInt(rect.xMin - bounds.min.x));
+                    padding.right = Mathf.Max(padding.right, Mathf.CeilToInt(bounds.max.x - rect.xMax));
+                    padding.top = Mathf.Max(padding.top, Mathf.CeilToInt(bounds.max.y - rect.yMax));
+                    padding.bottom = Mathf.Max(padding.bottom, Mathf.CeilToInt(rect.yMin - bounds.min.y));
+                }
+            _layoutPending = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (_itemLayout == null || itemPrefab == null || _items.Count == 0) return;
+            var area = (RectTransform)itemContainer;
+            if (!_layoutPending && area.rect.size == _lastItemAreaSize) return;
+            _layoutPending = false;
+            _lastItemAreaSize = area.rect.size;
+            var size = _itemVisualSize;
+            if (size.x <= 0f || size.y <= 0f) return;
+            float width = area.rect.width - _itemLayout.padding.horizontal - _itemLayout.spacing * (_items.Count - 1);
+            float height = area.rect.height - _itemLayout.padding.vertical;
+            float scale = Mathf.Clamp01(Mathf.Min(width / (_items.Count * size.x), height / size.y));
+            foreach (var item in _items.Values)
+                if (item != null) item.transform.localScale = Vector3.one * scale;
+            LayoutRebuilder.MarkLayoutForRebuild(area);
         }
 
         public void UpdateItem(UpgradeModel.UpgradeItemData data)

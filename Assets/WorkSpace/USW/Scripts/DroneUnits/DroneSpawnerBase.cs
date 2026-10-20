@@ -72,6 +72,25 @@ public abstract class DroneSpawnerBase : UnitBase
         return base.GetDisplayAttackInterval();
     }
 
+    /// <inheritdoc />
+    public override float GetDisplayAttackDamageBeforeUpgrade()
+    {
+        float total = 0f;
+        foreach (var drone in _ownedDrones)
+            if (drone != null && drone.isActiveAndEnabled && drone.Owner == this)
+                total += drone.NonCriticalAttackDamageBeforeUpgrade;
+        return total;
+    }
+
+    /// <inheritdoc />
+    public override float GetDisplayAttackIntervalBeforeUpgrade()
+    {
+        foreach (var drone in _ownedDrones)
+            if (drone != null && drone.isActiveAndEnabled && drone.Owner == this)
+                return drone.EffectiveAttackIntervalBeforeUpgrade;
+        return base.GetDisplayAttackIntervalBeforeUpgrade();
+    }
+
     // 하위 클래스에서 추가 검증이 필요하면 재정의
     protected virtual bool HasValidData() => unitData != null && dronePrefab != null;
 

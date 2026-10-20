@@ -22,6 +22,9 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private TotemDragRangePreview _dragRangePreview;
     [Inject] private DragSellService _sellService;
     [Inject] private TotemInventoryUI _totemInventoryUI;
+    [Inject] private WorldInteractionSettings _interactionSettings;
+    private Camera _worldCamera;
+    private Vector2 _grabOffset;
     private float _pressStartedAt;
     private bool _rotating;
     private bool _isDragging;
@@ -39,7 +42,12 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     /// <summary>Records hold time without changing unit drag behavior.</summary>
     public void BeginPress()
+        => BeginPress(transform.position);
+
+    /// <summary>실제 누른 지점을 보존해 드래그 시작 시 오브젝트의 피벗이 손가락으로 튀지 않게 한다.</summary>
+    public void BeginPress(Vector2 pointerWorldPosition)
     {
+        _grabOffset = (Vector2)transform.position - pointerWorldPosition;
         _pressStartedAt = Time.unscaledTime;
         if (_totem != null)
         {
@@ -154,11 +162,13 @@ public class DragHandler : MonoBehaviour, IDraggable
             }
             if (cell != null) return cell;
         }
-        return null;
+        return _gridManager != null && _interactionSettings != null
+            ? _gridManager.FindInteractionCell(worldPosition, _interactionSettings.DropToleranceWorld(_worldCamera)) : null;
     }
 
     private void Awake()
     {
+        _worldCamera = Camera.main;
         _unit  = GetComponent<UnitBase>();
         _totem = GetComponent<TotemBase>();
         _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -242,7 +252,8 @@ public class DragHandler : MonoBehaviour, IDraggable
         if (_unit != null && _unit.IsStunned) { CancelPointerDrag(); return; }
         if (_rotating) { _rotationUI?.Drag(worldPosition); return; }
         if (!_isDragging) return;
-        transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+        Vector2 position = worldPosition + _grabOffset;
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
         if ((_unit != null || _totem != null) && _originCell != null)
         {
             var hoverCell = FindDropCell(worldPosition);
