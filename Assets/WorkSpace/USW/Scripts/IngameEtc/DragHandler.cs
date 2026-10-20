@@ -21,9 +21,11 @@ public class DragHandler : MonoBehaviour, IDraggable
     [Inject] private TotemHoldFeedback _holdFeedback;
     [Inject] private TotemDragRangePreview _dragRangePreview;
     [Inject] private DragSellService _sellService;
+    [Inject] private TotemInventoryUI _totemInventoryUI;
     private float _pressStartedAt;
     private bool _rotating;
     private bool _isDragging;
+    private bool _usesRecallDrawer;
 
     /// <summary>드래그 시작 위치에서의 이동량입니다. 발밑 상태 표시가 같은 간격으로 따라갑니다.</summary>
     public Vector3 DragOffset => _isDragging ? transform.position - _originPos : Vector3.zero;
@@ -59,8 +61,10 @@ public class DragHandler : MonoBehaviour, IDraggable
     public void EndPress()
     {
         _isDragging = false;
+        _usesRecallDrawer = false;
         _mergeDimmer.RestoreAll(); // 합성 연출이 재료 색을 복사하기 전에 복원
         _sellService?.EndMove(this);
+        if (_totem != null) _totemInventoryUI?.EndFieldDrag(_totem);
         SetDropPreview(null);
         if (_totem != null)
         {
@@ -216,7 +220,11 @@ public class DragHandler : MonoBehaviour, IDraggable
 
         _originPos = transform.position;
         _isDragging = true;
-        _sellService?.BeginMove(this); // 이동 드래그만 (회전은 위에서 이미 반환)
+        // Totems use the existing drawer as a recall target; unit drags retain the sale strip.
+        _usesRecallDrawer = _totem != null && _totemInventoryUI != null;
+        if (_usesRecallDrawer) _totemInventoryUI.BeginFieldDrag(_totem);
+        if (!_usesRecallDrawer)
+            _sellService?.BeginMove(this);
         if (_unit != null || _totem != null) SetDropPreview(_originCell);
         if (_unit != null) DimNonMergeCandidates();
         if (_totem != null) _dragRangePreview?.Begin(_totem, _originCell);
@@ -248,6 +256,11 @@ public class DragHandler : MonoBehaviour, IDraggable
     {
         if (_unit != null && _unit.IsStunned) { CancelPointerDrag(); return; }
         if (!_isDragging && !_rotating) { EndPress(); return; }
+        bool recallDrop = false;
+        bool recalled = false;
+        bool usedRecallDrawer = _usesRecallDrawer;
+        if (!_rotating && _totem != null && _totemInventoryUI != null)
+            recallDrop = _totemInventoryUI.TryCompleteFieldDrag(_totem, worldPosition, out recalled);
         EndPress();
         if (_rotating) { _rotationUI?.End(worldPosition); _rotating = false; return; }
         if (_spriteRenderer != null)
@@ -256,8 +269,14 @@ public class DragHandler : MonoBehaviour, IDraggable
             _spriteRenderer.sortingOrder = _originSortingOrder;
         }
 
+        if (recallDrop)
+        {
+            if (!recalled) ReturnToOrigin();
+            return;
+        }
+
         // 판매 띠 위에서 놓으면 판매 (띠가 없는 씬에서는 항상 false)
-        if (_sellService != null && _sellService.TrySell(_unit, _totem, worldPosition)) return;
+        if (!usedRecallDrawer && _sellService != null && _sellService.TrySell(_unit, _totem, worldPosition)) return;
 
         GridCell targetCell = FindDropCell(worldPosition);
 

@@ -75,6 +75,55 @@ public class TotemSpawner : MonoBehaviour
         return PlaceLoadedTotem(data, prefab, cell);
     }
 
+    /// <summary>Loads and validates the incoming object before removing the expected occupant. No await occurs after removal.</summary>
+    public async UniTask<bool> PlaceOrExchangeTotemAsync(TotemData data, int rotation, GridCell cell,
+        TotemBase expected, System.Func<bool> canCommit, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (data == null || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
+        await data.LoadAssetsAsync().AttachExternalCancellation(token);
+        token.ThrowIfCancellationRequested();
+        if (!CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
+        var prefab = data.prefab != null ? data.prefab : genericPrefab;
+        if (prefab == null) return false;
+        var go = RM.Instantiate(prefab, transform);
+        if (go == null) return false;
+        var incoming = go.GetComponent<TotemBase>();
+        if (incoming == null) { Destroy(go); return false; }
+        incoming.SetTotemData(data);
+        if (token.IsCancellationRequested || !CanExchange(cell, expected) || canCommit?.Invoke() == false)
+        { Destroy(go); token.ThrowIfCancellationRequested(); return false; }
+
+        if (expected != null) { cell.RemoveTotem(); expected.OnRemoved(); }
+        if (!cell.TryPlaceTotem(incoming))
+        {
+            if (expected != null && cell.TryPlaceTotem(expected)) expected.OnPlaced(cell);
+            Destroy(go);
+            return false;
+        }
+        go.transform.SetParent(cell.transform, false);
+        FinishPlacement(incoming, cell, rotation);
+        if (expected != null) { expected.gameObject.SetActive(false); Destroy(expected.gameObject); }
+        return true;
+    }
+
+    private static bool CanExchange(GridCell cell, TotemBase expected)
+        => cell != null && cell.Model != null && cell.Model.IsAvailable && cell.OccupyingUnit == null
+            && ReferenceEquals(cell.OccupyingTotem, expected)
+            && (ReferenceEquals(expected, null) || expected != null && expected.IsPlaced && expected.CurrentCell == cell);
+
+    /// <summary>Removes field occupancy and effects without a sale; the caller retains the authored data first.</summary>
+    public bool RemoveTotemFromField(TotemBase totem)
+    {
+        if (totem == null || !totem.IsPlaced || totem.CurrentCell == null || totem.CurrentCell.OccupyingTotem != totem) return false;
+        var cell = totem.CurrentCell;
+        cell.RemoveTotem();
+        totem.OnRemoved();
+        totem.gameObject.SetActive(false);
+        Destroy(totem.gameObject);
+        return true;
+    }
+
     private bool PlaceLoadedTotem(TotemData data, GameObject prefab, GridCell cell)
     {
         var go    = RM.Instantiate(prefab, cell.transform);
@@ -95,13 +144,19 @@ public class TotemSpawner : MonoBehaviour
             return false;
         }
 
+        FinishPlacement(totem, cell, 0);
+        return true;
+    }
+
+    private void FinishPlacement(TotemBase totem, GridCell cell, int rotation)
+    {
         // 최초 설치와 이동(DragHandler.PlaceSelfAt) 양쪽 모두 UnitFactory.InitTotemTransform()
         // 하나로 통일한다. 유닛 전용 스폰 Y보정은 여기서 적용하지 않는다.
-        var t = go.transform;
+        var t = totem.transform;
         _unitFactory.InitTotemTransform(t);
         t.localScale = spawnScale;
 
-        var drag = go.GetComponent<DragHandler>();
+        var drag = totem.GetComponent<DragHandler>();
         if (drag != null) 
         {
             drag.SetOriginCell(cell);
@@ -109,7 +164,7 @@ public class TotemSpawner : MonoBehaviour
         }
 
         totem.OnPlaced(cell);
-        return true;
+        totem.SetRotationStep(rotation);
     }
 
     /// <summary>
