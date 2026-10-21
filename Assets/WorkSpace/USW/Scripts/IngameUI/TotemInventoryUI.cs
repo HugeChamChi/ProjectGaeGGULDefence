@@ -335,58 +335,6 @@ public sealed class TotemInventoryUI : MonoBehaviour
         _openedForFieldDrag = false;
         if (close && IsOpen) CloseInventory();
     }
-
-    /// <summary>Opens the existing drawer as a recall target while a placed totem is moved.</summary>
-    public bool BeginFieldDrag(TotemBase totem)
-    {
-        if (_inventory == null || _inventory.CanPlace != null || totem == null || !totem.IsPlaced
-            || !AllowClose || IsDraggingOrPlacing || !isActiveAndEnabled) return false;
-        _fieldDragTotem = totem;
-        _openedForFieldDrag = !IsOpen || _closing;
-        if (!IsOpen || _closing) OpenInventory();
-        return true;
-    }
-
-    /// <summary>Handles a release over the drawer or bag button. Rejected recalls leave the totem at its source.</summary>
-    public bool TryCompleteFieldDrag(TotemBase totem, Vector2 worldPosition, out bool recalled)
-    {
-        recalled = false;
-        if (_fieldDragTotem != totem || totem == null || _camera == null) return false;
-        Vector2 screen = _camera.WorldToScreenPoint(worldPosition);
-        if (screen.x < 0f || screen.x > Screen.width || screen.y < 0f || screen.y > Screen.height) return false;
-        var canvas = _panel.GetComponentInParent<Canvas>().rootCanvas;
-        var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        bool overDrawer = IsOpen && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_panel.transform, screen, uiCamera);
-        bool overToggle = _toggleButton != null && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_toggleButton.transform, screen, uiCamera);
-        if (!overDrawer && !overToggle) return false;
-        var pointer = new PointerEventData(EventSystem.current) { position = screen };
-        _raycastResults.Clear();
-        EventSystem.current?.RaycastAll(pointer, _raycastResults);
-        foreach (var hit in _raycastResults)
-        {
-            if (!(hit.module is GraphicRaycaster)) continue;
-            var target = hit.gameObject.transform;
-            if (!target.IsChildOf(_panel.transform) && target != _panel.transform
-                && (_toggleButton == null || !target.IsChildOf(_toggleButton.transform))
-                && (_backgroundCloseButton == null || !target.IsChildOf(_backgroundCloseButton.transform))) return false;
-            break;
-        }
-        _fieldDragTotem = null;
-        _openedForFieldDrag = false;
-        recalled = _inventory.TryRecall(totem);
-        // Keep the drawer visible after success or a full-storage rejection, so an exchange can follow.
-        return true;
-    }
-
-    /// <summary>Closes only a drawer opened for this field gesture; existing open drawers are preserved.</summary>
-    public void EndFieldDrag(TotemBase totem)
-    {
-        if (_fieldDragTotem == null || _fieldDragTotem != totem) return;
-        bool close = _openedForFieldDrag;
-        _fieldDragTotem = null;
-        _openedForFieldDrag = false;
-        if (close && IsOpen) CloseInventory();
-    }
     private async UniTaskVoid PlaceAsync(int index, GridCell cell)
     {
         _placing = true;
