@@ -371,7 +371,8 @@ public class DroneUnit : MonoBehaviour
     public void FireRallyShot()
     {
         if (_attackHeld) return;
-        var bossArea = _bossManager?.CurrentBoss?.GetComponent<BossAreaTarget>();
+        var target = _bossManager?.CurrentBoss;
+        var bossArea = target != null && target.IsTargetable ? target.GetComponent<BossAreaTarget>() : null;
         if (bossArea == null) return;
         ShootProjectile(bossArea.GetRandomWorldPosition());
     }
@@ -478,7 +479,7 @@ public class DroneUnit : MonoBehaviour
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
 
             var boss = _bossManager?.CurrentBoss;
-            if (boss == null || boss.IsDead) continue;
+            if (boss == null || !boss.IsTargetable) continue;
             bool critical = false;
             int ownerDamage = _owner != null ? _owner.GetAttackDamage(out critical) : 0;
             float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
@@ -492,7 +493,7 @@ public class DroneUnit : MonoBehaviour
         var kind = critical ? BossDamageKind.Critical : BossDamageKind.Normal;
         var boss = _bossManager?.CurrentBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
-        if (bossArea == null || boss.IsDead || _owner == null || _owner.IsStunned || _owner.currentCell == null) return;
+        if (bossArea == null || !boss.IsTargetable || _owner == null || _owner.IsStunned || _owner.currentCell == null) return;
         var cell = _owner.currentCell.Model;
         if (cell.IsSealed || cell.IsAttackDisabled || cell.TotemAttackDisabled) return;
         var owner = _owner;

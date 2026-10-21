@@ -231,6 +231,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _patterns:
   - {fileID: 11400000, guid: 82238d5a538520946a12f233c183e5ac, type: 2}
+  - {fileID: 11400000, guid: d5cf7f28275928d40ac7ed9a0ff96bbf, type: 2}
+  - {fileID: 11400000, guid: 4069b5cde1ef471488a165d99a559c80, type: 2}
+  - {fileID: 11400000, guid: 6550d12db3579304289df92f2a60a5a9, type: 2}
+  - {fileID: 11400000, guid: cf278a97f392fc449bf9079bfd787bc8, type: 2}
+  - {fileID: 11400000, guid: 39e1e2fe03bee944b91df9b69d365592, type: 2}
   _animator: {fileID: 0}
 --- !u!114 &6680876592214183138
 MonoBehaviour:
@@ -249,3 +254,13 @@ MonoBehaviour:
   _patternAnimations:
   - Trigger: Earthquake
     Animation: skill_1
+  - Trigger: CrocusSkill2
+    Animation: skill_2
+  - Trigger: CrocusSkill3
+    Animation: skill_3
+  - Trigger: CrocusSkill4
+    Animation: skill_4
+  - Trigger: CrocusSkill5
+    Animation: skill_5
+  - Trigger: CrocusSkill6
+    Animation: skill_6

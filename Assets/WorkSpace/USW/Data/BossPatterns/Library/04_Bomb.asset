@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56148fb378d0b7c41935666d00d5dc13, type: 3}
+  m_Name: 04_Bomb
+  m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
+  Mechanic: 3
+  DisplayName: "\uC774\uB3D9 \uD3ED\uD0C4"
+  Instruction: "\uB9C8\uB984\uBAA8 \uD45C\uC2DD \uC720\uB2DB\uC744 \uC678\uACFD\uC5D0
+    \uACA9\uB9AC \xB7 \uC8FC\uBCC0 \uC544\uAD70\uB9CC \uD3ED\uBC1C\uC5D0 \uC801\uC911"
+  Windup: 3.6
+  ActiveDuration: 2.5
+  Recovery: 0.8
+  StunDuration: 1.2
+  EffectDuration: 4
+  SlowRate: 0.45
+  TetherDistance: 3.2
+  BlastRadius: 1
+  SafeColumns: 3
+  MemorySafeCount: 10
+  LockTime: 1.5
+  BeamWidthCells: 0.62
+  AllowChiefCounter: 0
+  Accent: {r: 1, g: 0.35, b: 0.13, a: 1}
+  StunVisual: {fileID: 11400000, guid: 2ab425e3b1c5ad04f8812519ca16abd3, type: 2}

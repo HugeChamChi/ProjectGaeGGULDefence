@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a334aa51f4b43fd4bb005eb1c94d1e25, type: 3}
+  m_Name: HardIngameMode
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessModeData
+  _key: HARD_INGAME
+  _enabled: 1
+  _cycleLength: 2
+  _penaltyInterval: 10
+  _penaltyFirstApplyRound: 11
+  _penaltyDrawCount: 2
+  _slots:
+  - _position: 1
+    _role: 2
+    _bossKey: CrocodilePrototypeData
+    _boss: {fileID: 11400000, guid: 18634ca64d018ba47909d8bb1dbe8482, type: 2}
+  - _position: 2
+    _role: 2
+    _bossKey: LizardBossData
+    _boss: {fileID: 11400000, guid: 26f320298edc16b43ab3207e4d1b6d6f, type: 2}
+  _growth:
+    _isConfigured: 1
+    _firstGrowthRound: 11
+    _intervalRounds: 1
+    _hpPercentPerStep: 13
+    _defenseAddedPerStep: 0
+    _expPercentPerStep: 0
+  _penaltyPool: {fileID: 11400000, guid: a183bee2c19efc94d883c08f605b016f, type: 2}
+  _bossSelection: 0
+  _breatherBossPool: {fileID: 11400000, guid: c458fd73aef909045ab50d61747d5f69, type: 2}
+  _hardBossPool: {fileID: 11400000, guid: 98a6b1033865eae43a68a47082845923, type: 2}
+  _bossProgression: {fileID: 0}

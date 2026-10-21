@@ -11,6 +11,10 @@ public enum BossPatternType
     DestroyUnit,       // 범위 내 기물 파괴
     SealCell,          // 범위 내 셀 봉인 (배치 불가)
     Earthquake,        // 필드 유닛 스턴 (토템 제외)
+    LizardThreat,      // Lizard-owned unit attack-frequency debuff
+    LizardThornBarrier,// Lizard-owned incoming-damage reduction
+    LizardBurrow,      // Lizard-owned untargetability and recovery
+    PlacementMechanic,// Crocus HP-phase placement mechanic
 }
 
 /// <summary>
@@ -78,6 +82,8 @@ public class BossPatternData : ScriptableObject
     [Header("시전 관리")]
     public int Priority;
     [Min(0f)] public float SkillDuration;
+    /// <summary>Total cast occupancy. Specialized patterns can derive this from effect duration and native exit frames.</summary>
+    public virtual float CastDuration => SkillDuration;
     [Header("지진")]
     [Min(0f)] public float ImpactTimeSec = 0.5f;
     [Min(0.01f)] public float RetryDelay = 0.25f;

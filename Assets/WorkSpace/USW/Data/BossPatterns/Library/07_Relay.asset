@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56148fb378d0b7c41935666d00d5dc13, type: 3}
+  m_Name: 07_Relay
+  m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
+  Mechanic: 6
+  DisplayName: "\uBD09\uC778\uC11D \uC810\uB839"
+  Instruction: "\uBE48 \uCCAD\uB85D \uB9C8\uB984\uBAA8 \uCE78\uC5D0 \uC720\uB2DB\uC744
+    \uBCF4\uB0B4 \uC804\uCCB4 \uC2DC\uC804\uC744 \uCC28\uB2E8"
+  Windup: 4.5
+  ActiveDuration: 2.5
+  Recovery: 0.8
+  StunDuration: 1.2
+  EffectDuration: 4
+  SlowRate: 0.45
+  TetherDistance: 3.2
+  BlastRadius: 1
+  SafeColumns: 3
+  MemorySafeCount: 10
+  LockTime: 1.5
+  BeamWidthCells: 0.62
+  AllowChiefCounter: 0
+  Accent: {r: 1, g: 0.63, b: 0.16, a: 1}
+  StunVisual: {fileID: 11400000, guid: 2ab425e3b1c5ad04f8812519ca16abd3, type: 2}

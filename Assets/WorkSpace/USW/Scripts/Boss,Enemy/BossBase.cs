@@ -95,7 +95,7 @@ public abstract class BossBase : MonoBehaviour
     public bool TryApplyDebuff(DebuffBinding binding, int sourceId, decimal damageTakenBonus = 0, double defenseReduction = 0, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
-        if (IsDead || Invincible || !CombatAllowsDamage || Debuffs == null || _debuffCatalog == null) return false;
+        if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || Debuffs == null || _debuffCatalog == null) return false;
         if (!_debuffCatalog.TryGet(binding.DebuffId, out var definition))
         { Debug.LogError($"Unknown debuff_id: {binding.DebuffId}"); return false; }
         if (source != null) _damageSources[sourceId] = source;
@@ -105,7 +105,7 @@ public abstract class BossBase : MonoBehaviour
     public void ApplyDebuffImpact(DebuffBinding binding, int sourceId, decimal impactDamage, Vector3? hitPos = null, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
-        if (IsDead || Invincible || !CombatAllowsDamage || _debuffCatalog == null || Debuffs == null) return;
+        if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || _debuffCatalog == null || Debuffs == null) return;
         if (!_debuffCatalog.TryGet(binding.DebuffId, out var definition))
         { Debug.LogError($"Unknown debuff_id: {binding.DebuffId}"); return; }
         long snapshot = _health.CurrentUnits;
@@ -177,6 +177,19 @@ public abstract class BossBase : MonoBehaviour
     public decimal CurrentHp => _health.Current;
     /// <summary>고정소수 정수 0에서 사망.</summary>
     public bool IsDead => _health.IsDead;
+    /// <summary>Whether a new attack may select this boss. Damage immunity alone need not hide a target.</summary>
+    public virtual bool IsTargetable => !IsDead;
+    /// <summary>Boss-owned damage reduction. The default preserves every existing boss.</summary>
+    protected virtual decimal PatternDamageMultiplier => 1m;
+
+    /// <summary>Restores living HP through the same HP event as damage, without granting damage EXP.</summary>
+    public decimal Heal(decimal amount)
+    {
+        if (IsDead || !CombatIsPlaying || _fieldPause?.AttacksHeld == true || amount <= 0) return 0;
+        long actual = _health.Heal(CombatHealth.ToUnits(Math.Min(amount, MaxHp)));
+        if (actual > 0) OnHpChanged?.Invoke(CurrentHp, MaxHp);
+        return (decimal)actual / CombatHealth.Scale;
+    }
 
     /// <summary>true면 TakeDamage가 무시된다(체력 무한). 스킬 테스트 씬처럼 보스가 죽지 않아야
     /// 하는 특수 상황에서만 코드로 켠다 — 기본값 false로 일반 게임플레이엔 영향 없다.</summary>
@@ -216,9 +229,9 @@ public abstract class BossBase : MonoBehaviour
     public long TakeDamageAndRecord(decimal amount, Vector3? hitPos = null, BossDamageKind kind = BossDamageKind.Normal, UnityEngine.Object source = null)
     {
         AdvanceDebuffs();
-        if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
+        if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || amount <= 0) return 0;
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
-        amount *= 1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f);
+        amount *= PatternDamageMultiplier * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f));
         long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
         ApplyFinalDamage(units, hitPos, kind, source);
@@ -229,8 +242,8 @@ public abstract class BossBase : MonoBehaviour
     public long CalculateFinalDamageUnits(decimal amount)
     {
         AdvanceDebuffs();
-        if (IsDead || Invincible || !CombatAllowsDamage || amount <= 0) return 0;
-        amount *= 1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f);
+        if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || amount <= 0) return 0;
+        amount *= PatternDamageMultiplier * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f));
         return DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
             Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, long.MaxValue);
     }
@@ -245,13 +258,13 @@ public abstract class BossBase : MonoBehaviour
     private long ScaleBurnDamage(long units)
     {
         decimal scaled = units * (1m + (decimal)(_research?.Get(ResearchStat.BurnDamage) ?? 0f))
-            * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f));
+            * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f)) * PatternDamageMultiplier;
         return scaled >= long.MaxValue ? long.MaxValue : (long)decimal.Round(scaled, 0, MidpointRounding.AwayFromZero);
     }
 
     private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind, UnityEngine.Object source = null)
     {
-        if (IsDead || Invincible || !CombatAllowsDamage || units <= 0) return;
+        if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || units <= 0) return;
         if (PreventDeath) units = Math.Min(units, Math.Max(0, _health.CurrentUnits - CombatHealth.Scale));
         long actual = _health.ApplyDamage(units);
         bool died = IsDead;
@@ -306,6 +319,7 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>보스 교체/웨이브 종료 시 이벤트 구독 해제용</summary>
     public void ClearListeners()
     {
+        (this as IBossPatternRuntime)?.ClearPatternEffects();
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced -= OnCombatTimeAdvanced;
         Debuffs?.Clear();
         OnHpChanged = null;
@@ -316,6 +330,7 @@ public abstract class BossBase : MonoBehaviour
 
     private void OnDestroy()
     {
+        (this as IBossPatternRuntime)?.ClearPatternEffects();
         if (_combatTimer != null) _combatTimer.OnCombatTimeAdvanced -= OnCombatTimeAdvanced;
         Debuffs?.Clear();
     }

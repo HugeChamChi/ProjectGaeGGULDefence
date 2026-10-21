@@ -28,6 +28,19 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public GridCell currentCell { get; private set; }
     public BossBase Boss { get; private set; }
+    private readonly System.Collections.Generic.Dictionary<UnityEngine.Object, float> _patternAttackSpeed = new();
+    /// <summary>Multiplicative attack frequency from boss patterns; skill charge and food production are separate.</summary>
+    public float PatternAttackSpeedMultiplier { get; private set; } = 1f;
+
+    /// <summary>Sets or releases one boss-owned attack-speed modifier without clearing other sources.</summary>
+    public void SetPatternAttackSpeed(UnityEngine.Object source, float multiplier)
+    {
+        if (ReferenceEquals(source, null)) return;
+        if (multiplier >= 1f) _patternAttackSpeed.Remove(source);
+        else _patternAttackSpeed[source] = Mathf.Clamp(multiplier, 0.01f, 1f);
+        PatternAttackSpeedMultiplier = 1f;
+        foreach (var factor in _patternAttackSpeed.Values) PatternAttackSpeedMultiplier *= factor;
+    }
     
     public UnitAnimator animator;
     protected UnitSoundController _sound;

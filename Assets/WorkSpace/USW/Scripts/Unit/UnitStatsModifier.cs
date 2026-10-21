@@ -144,7 +144,8 @@ public class UnitStatsModifier : MonoBehaviour
                        / rowSpeedMult;
         interval /= 1f + (_deps?.Research?.Get(ResearchStat.AttackSpeedPercent) ?? 0f);
         float baseline = Mathf.Max(interval, 0.05f);
-        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d); }
+        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d)
+            / Mathf.Max(0.01f, _unit.PatternAttackSpeedMultiplier); }
         catch (System.OverflowException error)
         {
             _deps?.ReportRunStatFailure?.Invoke(error.Message);
