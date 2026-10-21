@@ -149,6 +149,23 @@ public sealed class DamageContributionRowView : IDisposable
         foreach (var text in Rect.GetComponentsInChildren<TMP_Text>(true)) Font(text, text.fontSize * scale);
     }
 
+    /// <summary>하단 HUD에서는 이름·순위를 빼고 큰 초상과 피해 막대를 우선한다.</summary>
+    public void SetPortraitOnly(bool compact)
+    {
+        ApplyStyle(_style);
+        _name.gameObject.SetActive(!compact); _rank.gameObject.SetActive(!compact);
+        _damage.alignment = TextAlignmentOptions.Right;
+        if (!compact) return;
+        _name.gameObject.SetActive(false); _rank.gameObject.SetActive(false); _count.gameObject.SetActive(false);
+        Place(_portrait.rectTransform, new Vector2(.012f, .06f), new Vector2(.125f, .94f));
+        Place(_portraitFrame.rectTransform, _portrait.rectTransform.anchorMin, _portrait.rectTransform.anchorMax);
+        Place(_damage.rectTransform, new Vector2(.14f, .40f), new Vector2(.82f, .96f));
+        _damage.alignment = TextAlignmentOptions.Left;
+        Place(_share.rectTransform, new Vector2(.83f, .40f), new Vector2(.99f, .96f));
+        Place(_track.rectTransform, new Vector2(.14f, .08f), new Vector2(.99f, .34f));
+        _dps.gameObject.SetActive(false);
+    }
+
     /// <summary>정확한 집계값을 표시 보간의 목표로 전달한다.</summary>
     public void SetTargets(decimal damage,decimal dps,float share,float barRatio)
     {

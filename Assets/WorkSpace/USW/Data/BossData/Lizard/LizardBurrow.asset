@@ -36,7 +36,10 @@ MonoBehaviour:
   SpineAnimation: skill_03
   NativeDuration: 2.5
   HoldAt: 1
-  ResumeAt: 1.8333334
-  HideWhileHeld: 1
+  ResumeAt: 1.6666666
+  HideWhileHeld: 0
+  AnimateHold: 1
+  LayerIdleWhileHeld: 0
+  ShieldFraction: 0
   HealDelay: 1
   HealFraction: 0.1

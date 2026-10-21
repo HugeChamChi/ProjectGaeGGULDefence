@@ -198,7 +198,7 @@ public class MailManager : Global.IClearable
             }
             if (Current(owner, generation)) Publish(count > 0 ? $"우편 {count}개 수령 완료" : "수령 가능한 우편이 없습니다.");
         }
-        catch (Exception error) { if (Current(owner, generation)) { Debug.LogWarning("[Mail] " + error.GetType().Name); Publish($"{count}개 완료 · 남은 수령 결과 확인 필요"); } }
+        catch (Exception error) { if (Current(owner, generation)) { Debug.LogWarning("[Mail] " + error.GetType().Name); Publish($"{count}개 완료, 남은 수령 결과 확인 필요"); } }
         finally { if (Current(owner, generation)) { _busy = false; OnChanged?.Invoke(); } }
     }
     /// <summary>Retries captured reward saving without resubmitting an uncertain claim.</summary>
@@ -207,7 +207,7 @@ public class MailManager : Global.IClearable
         if (_busy || !EnsureOwner()) return;
         string owner = _owner; int generation = _generation; _busy = true; OnChanged?.Invoke();
         try { await RecoverCoreAsync(owner, generation); }
-        catch (Exception error) { if (Current(owner, generation)) { Debug.LogWarning("[Mail] " + error.GetType().Name); Publish("이전 수령 기록 확인 필요 · 고객지원에 문의해 주세요."); } }
+        catch (Exception error) { if (Current(owner, generation)) { Debug.LogWarning("[Mail] " + error.GetType().Name); Publish("이전 수령 기록 확인 필요, 고객지원에 문의해 주세요."); } }
         finally { if (Current(owner, generation)) { _busy = false; OnChanged?.Invoke(); } }
     }
     private async UniTask<bool> RecoverCoreAsync(string owner, int generation)
@@ -217,13 +217,13 @@ public class MailManager : Global.IClearable
         if (!PlayerPrefs.HasKey(key)) { IsDirty = false; return true; }
         IsDirty = true;
         var journal = JsonUtility.FromJson<MailClaimJournal>(PlayerPrefs.GetString(key));
-        if (journal == null || string.IsNullOrEmpty(journal.Response)) { Publish("수령 결과 확인 필요 · 고객지원에 문의해 주세요. 자동으로 다시 지급하지 않습니다."); return false; }
+        if (journal == null || string.IsNullOrEmpty(journal.Response)) { Publish("수령 결과 확인 필요, 고객지원에 문의해 주세요. 자동으로 다시 지급하지 않습니다."); return false; }
         var json = JsonMapper.ToObject(journal.Response);
         if (!json.ContainsKey("postItems") || !MailParser.TryRewards(json["postItems"], journal.Id, _config, out var receipt, out _))
-        { Publish("보상 설정 확인 필요 · 수령 응답은 보관 중입니다."); return false; }
+        { Publish("보상 설정 확인 필요, 수령 응답은 보관 중입니다."); return false; }
         receipt.Title = journal.Title;
         // Existing balance+receipt snapshot is shared with coupons; mail IDs are explicitly namespaced.
-        if (!_gateway.Balances.TryApplyCoupon(receipt)) { Publish("보상 적용 대기 · 계정과 보유 한도 확인 필요"); return false; }
+        if (!_gateway.Balances.TryApplyCoupon(receipt)) { Publish("보상 적용 대기, 계정과 보유 한도 확인 필요"); return false; }
         if (!await _gateway.Balances.TrySaveAsync() || !Current(owner, generation)) { if (Current(owner, generation)) Publish("보상 저장을 기다리고 있어요. 연결되면 자동으로 이어집니다."); return false; }
         PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); IsDirty = false;
         _posts.RemoveAll(post => post.Key == journal.Id); Publish("보상 수령 완료"); return true;

@@ -34,9 +34,11 @@ MonoBehaviour:
   ShakeIntensity: 0.08
   AnimationTrigger: LizardThreat
   SpineAnimation: skill_01
-  NativeDuration: 1.0666667
+  NativeDuration: 1.1333333
   HoldAt: 0
   ResumeAt: 0
   HideWhileHeld: 0
+  AnimateHold: 0
+  ShieldFraction: 0
   HealDelay: 0
   HealFraction: 0

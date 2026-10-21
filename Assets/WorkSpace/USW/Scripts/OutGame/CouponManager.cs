@@ -81,7 +81,7 @@ public sealed class CouponManager
         if (!await Player.PlayerData.TrySaveAsync()) return (false, "쿠폰은 사용되었습니다. 보상 저장 대기 중이며 다시 누르면 저장만 재시도합니다.");
         if (Backend.UserInDate != owner) return (false, "원래 계정에서 지급 상태를 확인해 주세요.");
         PlayerPrefs.DeleteKey(key); PlayerPrefs.Save();
-        return (true, $"쿠폰 지급 완료 · Gold +{receipt.Gold}, Dia +{receipt.Diamond}, 스태미나 +{receipt.Stamina}");
+        return (true, $"쿠폰 지급 완료, Gold +{receipt.Gold}, Dia +{receipt.Diamond}, 스태미나 +{receipt.Stamina}");
     }
     /// <summary>Backend 404 combines expiry/invalid/used cases; do not invent a more precise reason.</summary>
     public static string FailureMessage(int status, string message)
@@ -92,7 +92,7 @@ public sealed class CouponManager
         {
             400 => "쿠폰 입력값 또는 사용 조건을 확인해 주세요.",
             401 or 403 => "로그인 상태 또는 쿠폰 사용 권한을 확인해 주세요.",
-            404 => "사용할 수 없는 쿠폰입니다. 코드·사용 기간·사용 여부를 확인해 주세요.",
+            404 => "사용할 수 없는 쿠폰입니다. 코드, 사용 기간, 사용 여부를 확인해 주세요.",
             409 => "이미 사용했거나 중복 요청된 쿠폰입니다.",
             429 => "요청이 많습니다. 잠시 후 사용 결과를 확인해 주세요.",
             _ => "서버에서 사용 결과를 확인하지 못했습니다. 잠시 후 지급 상태를 확인해 주세요."

@@ -92,7 +92,7 @@ MonoBehaviour:
   RecommendButtonLabel: "\uCD94\uCC9C \uAC15\uD654"
   FollowLabel: "\uCD94\uCC9C \uB530\uB77C\uAC00\uAE30"
   ToastFormat: '{0} Lv.{1}   {2}'
-  GateLabelFormat: "{0}\uB2E8\uACC4 \xB7 \uC804\uCCB4 \uAC15\uD654 {1}/{2}"
+  GateLabelFormat: "{0}단계, 전체 강화 {1}/{2}"
   GateOpenFormat: "{0}\uB2E8\uACC4 \uC5F4\uB9BC"
   LayoutButtonFormat: "\uAD6C\uC131: {0}"
   ResetLabel: "\uCD08\uAE30\uD654"

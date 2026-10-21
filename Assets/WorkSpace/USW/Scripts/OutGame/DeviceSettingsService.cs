@@ -87,7 +87,7 @@ public sealed class DeviceSettingsService : IStartable, IDisposable
         get
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            return NotificationPermissionGranted ? (PushConsent ? "휴대폰 알림 허용됨 · 스태미나·출석 알림 ON" : "휴대폰 알림 허용됨 · 게임 알림 OFF") : "휴대폰 설정에서 이 앱 알림이 꺼져 있어요";
+            return NotificationPermissionGranted ? (PushConsent ? "휴대폰 알림 허용됨, 스태미나와 출석 알림 ON" : "휴대폰 알림 허용됨, 게임 알림 OFF") : "휴대폰 설정에서 이 앱 알림이 꺼져 있어요";
 #else
             return "";
 #endif

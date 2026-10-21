@@ -36,7 +36,7 @@ public class UI_MailItem : MonoBehaviour
     public void RefreshAvailability(bool busy)
     {
         if (_post == null) return;
-        _expiryText.text = _post.ExpiryLabel + (_post.IsRead ? " · 읽음" : "");
+        _expiryText.text = _post.ExpiryLabel + (_post.IsRead ? ", 읽음" : "");
         receiveButton.interactable = !busy && _post.isCanReceive && !_post.IsExpired;
         _claimText.text = _post.IsExpired ? "만료" : !string.IsNullOrEmpty(_post.ValidationError) ? "확인 필요" : _post.postReward.Count > 0 ? "받기" : "확인";
     }

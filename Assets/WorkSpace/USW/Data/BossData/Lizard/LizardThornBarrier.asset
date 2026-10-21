@@ -38,5 +38,8 @@ MonoBehaviour:
   HoldAt: 0.7
   ResumeAt: 1.3
   HideWhileHeld: 0
+  AnimateHold: 1
+  LayerIdleWhileHeld: 1
+  ShieldFraction: 0.1
   HealDelay: 0
   HealFraction: 0

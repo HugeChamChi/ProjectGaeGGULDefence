@@ -20,7 +20,7 @@ public static class TermFacts
         switch (kind)
         {
             case TermFactKind.ChiefSkill when source is AlphanSkillData chief:
-                return $"기본 집결 피해 = 참가 드론 공격력 합 ×{Number(chief.RallyAttackCoefficient)} · 기본 쿨타임 {Number(chief.CooldownSeconds)}초";
+                return $"기본 집결 피해 = 참가 드론 공격력 합 ×{Number(chief.RallyAttackCoefficient)}, 기본 쿨타임 {Number(chief.CooldownSeconds)}초";
             case TermFactKind.SelfDestruct when source is UnitData betan:
                 return $"기본 폭발 피해 = 베탕 공격력 ×{Number(betan.SelfDestructAttackCoefficient)}";
             case TermFactKind.HackStack when source is DroneHackingData hacking:

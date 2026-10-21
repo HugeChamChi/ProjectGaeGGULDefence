@@ -36,8 +36,7 @@ MonoBehaviour:
     FactKind: 1
     FactSource: {fileID: 11400000, guid: 9b14e4c5d103a3d4fb44aa5f049606bd, type: 2}
     Clip: {fileID: 32900000, guid: e9ee8c38ee860324196c70482ca9b805, type: 3}
-    ClipCaption: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC \u2014 \uC77C\uC81C \uC0AC\uACA9
-      \xB7 \uC608\uACE0 \uB04A\uAE30"
+    ClipCaption: "액티브 스킬 — 일제 사격과 예고 끊기"
   - Id: self_destruct_drone
     DisplayName: "\uC790\uD3ED \uB4DC\uB860"
     Aliases:
@@ -201,9 +200,7 @@ MonoBehaviour:
       \uC5BB\uC2B5\uB2C8\uB2E4."
     BriefBody: "\uB450 \uC720\uB2DB\uC744 \uD569\uCCD0 \uC0C1\uC704 \uB4F1\uAE09\uC744
       \uC5BB\uC2B5\uB2C8\uB2E4."
-    DetailedBody: "\uD569\uC131 \uAC00\uB2A5\uD55C \uAC19\uC740 \uC720\uB2DB\xB7\uC18C\uC720
-      \uB4F1\uAE09\uB07C\uB9AC \uD569\uCE69\uB2C8\uB2E4. \uB178\uB9D0 \uC870\uCEE4\uB294
-      \uC608\uC678\uC785\uB2C8\uB2E4."
+    DetailedBody: "합성 가능한 같은 유닛과 같은 소유 등급끼리 합칩니다. 노말 조커는 예외입니다."
     FactKind: 0
     FactSource: {fileID: 0}
     Clip: {fileID: 0}
@@ -219,9 +216,7 @@ MonoBehaviour:
       \uAC15\uD654\uD569\uB2C8\uB2E4."
     BriefBody: "\uC2DD\uB7C9\uC73C\uB85C \uD574\uB2F9 \uC720\uB2DB \uC885\uB958\uB97C
       \uAC15\uD654\uD569\uB2C8\uB2E4."
-    DetailedBody: "\uACF5\uACA9\uB825\xB7\uACF5\uACA9 \uC18D\uB3C4 \uB4F1\uC744 \uC62C\uB9AC\uBA70
-      \uB2E4\uC74C \uBE44\uC6A9\uC740 \uD604\uC7AC \uAC15\uD654 \uB2E8\uACC4\uC5D0
-      \uB530\uB985\uB2C8\uB2E4."
+    DetailedBody: "공격력과 공격 속도 등을 올리며 다음 비용은 현재 강화 단계에 따릅니다."
     FactKind: 0
     FactSource: {fileID: 0}
     Clip: {fileID: 0}

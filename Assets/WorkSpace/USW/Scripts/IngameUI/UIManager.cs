@@ -115,7 +115,12 @@ public class UIManager : MonoBehaviour
         }
 
         if (summonButton != null)
+        {
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
+            // 연타 체감을 위해 누르는 순간 소환한다. 씬 저작은 바꾸지 않는다.
+            if (summonButton.GetComponent<PressToClickButton>() == null)
+                summonButton.gameObject.AddComponent<PressToClickButton>();
+        }
 
         if (startButton != null)
             startButton.onClick.AddListener(_gameManager.OnStartButtonPressed);

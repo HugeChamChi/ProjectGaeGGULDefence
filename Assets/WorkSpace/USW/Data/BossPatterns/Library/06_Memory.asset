@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
   Mechanic: 5
   DisplayName: "\uAE30\uC5B5\uC758 \uBC1C\uD310"
-  Instruction: "\uCCAD\uB85D \uBC1C\uD310\uC744 \uAE30\uC5B5\uD558\uC138\uC694 \xB7
-    \uD45C\uC2DC\uAC00 \uC0AC\uB77C\uC9C4 \uB4A4\uC5D0\uB3C4 \uC548\uC804"
+  Instruction: "청록 발판을 기억하세요. 표시가 사라진 뒤에도 안전합니다"
   Windup: 4
   ActiveDuration: 2.5
   Recovery: 0.8

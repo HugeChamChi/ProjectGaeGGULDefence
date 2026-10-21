@@ -110,7 +110,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
             _backendData.GameDataGet(value => completion.TrySetResult(value));
             var value = await completion.Task.AttachExternalCancellation(timeout.Token);
             if (!Matches(generation)) return;
-            if (value == null) { SetStatus("재화 조회 실패 · 다시 시도해 주세요."); return; }
+            if (value == null) { SetStatus("재화 조회 실패, 다시 시도해 주세요."); return; }
             _data = value; _confirmedSaveId = value.SaveId ?? "";
             if (PlayerPrefs.HasKey(JournalKey))
             {
@@ -127,13 +127,13 @@ public class PlayerDataController : IDisposable, Global.IClearable
                 try { NormalizeAccountProgression(); }
                 catch { _data = null; throw; }
             }
-            SetStatus(HasSaveConflict ? "저장 충돌 · 서버 기록 확인 필요" : IsDirty ? "저장 재시도 대기" : "");
+            SetStatus(HasSaveConflict ? "저장 충돌, 서버 기록 확인 필요" : IsDirty ? "저장 재시도 대기" : "");
             RefreshUI(_data);
             RecoveryLoopAsync(generation, token).Forget();
         }
         catch (Exception error)
         {
-            if (Matches(generation)) { SetStatus("재화 조회 실패 · 다시 시도해 주세요."); Debug.LogWarning("[PlayerData] " + error.Message); }
+            if (Matches(generation)) { SetStatus("재화 조회 실패, 다시 시도해 주세요."); Debug.LogWarning("[PlayerData] " + error.Message); }
         }
         finally { done?.Invoke(); }
     }
@@ -339,10 +339,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
                 _confirmedSaveId = snapshot.SaveId;
                 if (revision == _revision) { IsDirty = false; DeleteJournal(); } else PersistJournal();
             }
-            success = !IsDirty; SetStatus(success ? "" : "저장 실패 · 변경 내용 보관 중");
+            success = !IsDirty; SetStatus(success ? "" : "저장 실패, 변경 내용 보관 중");
         }
         catch (Exception error)
-        { if (Matches(generation)) { SetStatus("저장 확인 대기 · 재연결 후 재시도"); Debug.LogWarning("[PlayerData] " + error.Message); } }
+        { if (Matches(generation)) { SetStatus("저장 확인 대기, 재연결 후 재시도"); Debug.LogWarning("[PlayerData] " + error.Message); } }
         finally { operation.TrySetResult(success); if (ReferenceEquals(_save, operation)) _save = null; }
         return success;
     }
@@ -362,14 +362,14 @@ public class PlayerDataController : IDisposable, Global.IClearable
             _backendData.GameDataGet(value => completion.TrySetResult(value));
             var value = await completion.Task.AttachExternalCancellation(timeout.Token);
             if (!Matches(generation) || IsDirty || revision != _revision) return;
-            if (value == null) { SetStatus("재조회 실패 · 마지막 확인 값 표시 중"); return; }
+            if (value == null) { SetStatus("재조회 실패, 마지막 확인 값 표시 중"); return; }
             _accountProgression?.Apply(value.PlayerLevel, value.PlayerExp, 0, out _, out _);
             _confirmedSaveId = value.SaveId ?? ""; _data = value;
             NormalizeAccountProgression();
             RefreshUI(_data); SetStatus(IsDirty ? "저장 대기" : "");
             RecoverStamina(); if (IsDirty) await TrySaveAsync();
         }
-        catch (Exception) { if (Matches(generation)) SetStatus("재조회 실패 · 마지막 확인 값 표시 중"); }
+        catch (Exception) { if (Matches(generation)) SetStatus("재조회 실패, 마지막 확인 값 표시 중"); }
     }
     private bool Matches(int generation) => generation == _generation && _account == _accountProvider();
     private string JournalKey => _journalPrefix + _account;

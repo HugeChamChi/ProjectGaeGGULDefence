@@ -16,11 +16,7 @@ MonoBehaviour:
   - Id: combat-drone
     DisplayName: "\uC804\uD22C \uB4DC\uB860"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}
-    Body: "\uBCA0\uD0D5\xB7\uAC10\uB9DD\xB7\uB378\uD0D5\uC774 \uC6B4\uC6A9\uD558\uB294
-      \uC77C\uBC18 \uACF5\uACA9\uC6A9 \uB4DC\uB860\uC785\uB2C8\uB2E4. \uC561\uD2F0\uBE0C
-      \uC2A4\uD0AC\uC758 \uACF5\uACA9\uC5D0\uB3C4 \uCC38\uC5EC\uD569\uB2C8\uB2E4.
-      \uCD94\uAC00 \uC804\uD22C \uB4DC\uB860\uC740 \uBCF8\uCCB4\uC758 \uC2A4\uD0AC\uC744
-      \uB300\uC2E0 \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+    Body: "베탕, 감망, 델탕이 운용하는 일반 공격용 드론입니다. 액티브 스킬의 공격에도 참여합니다. 추가 전투 드론은 본체의 스킬을 대신 사용하지 않습니다."
   - Id: bomb-drone
     DisplayName: "\uC790\uD3ED \uB4DC\uB860"
     Color: {r: 0.46, g: 0.26, b: 0.69, a: 1}

@@ -87,7 +87,7 @@ public sealed class AttendancePopup : UI_Base
             _notice = result switch
             {
                 AttendanceService.ClaimResult.Claimed => $"{day}일차 보상 {RewardText(day)} 지급 완료!",
-                AttendanceService.ClaimResult.ClaimedSavePending => $"{day}일차 보상 {RewardText(day)} 지급 · 서버 저장을 다시 시도하는 중",
+                AttendanceService.ClaimResult.ClaimedSavePending => $"{day}일차 보상 {RewardText(day)} 지급, 서버 저장을 다시 시도하는 중",
                 AttendanceService.ClaimResult.AlreadyClaimed => "오늘 출석 보상은 이미 받았어요.",
                 AttendanceService.ClaimResult.TimeUnavailable => "서버 시간을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.",
                 AttendanceService.ClaimResult.Invalid => "출석 보상 설정을 확인할 수 없어요.",

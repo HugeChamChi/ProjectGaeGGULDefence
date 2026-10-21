@@ -75,7 +75,7 @@ public class PopupManager : MonoBehaviour
             {
                 var history = Player.PlayerData.Data?.CouponHistory;
                 _couponText.text = string.IsNullOrEmpty(result.Message)
-                    ? $"계정 사용 이력: {history?.Count ?? 0}건\n쿠폰의 기간·대상·중복 사용 조건은 서버에서 확인합니다."
+                    ? $"계정 사용 이력: {history?.Count ?? 0}건\n쿠폰의 기간, 대상, 중복 사용 조건은 서버에서 확인합니다."
                     : result.Message;
             }
         }

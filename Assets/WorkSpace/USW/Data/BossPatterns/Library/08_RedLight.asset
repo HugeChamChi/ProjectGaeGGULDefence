@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
   Mechanic: 7
   DisplayName: "\uBD89\uC740 \uC2E0\uD638"
-  Instruction: "\uB178\uB780\uBD88\uC740 \uC900\uBE44 \xB7 \uBE68\uAC04\uBD88 \uB3D9\uC548
-    \uC790\uB9AC\uB97C \uBC14\uAFB8\uBA74 \uAE30\uC808"
+  Instruction: "노란불은 준비, 빨간불 동안 자리를 바꾸면 기절합니다"
   Windup: 1.8
   ActiveDuration: 2.5
   Recovery: 0.8

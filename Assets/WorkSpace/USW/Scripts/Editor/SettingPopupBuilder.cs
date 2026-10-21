@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// 인게임 설정창 프리팹(InGame_Setting_Popup)을 시안(design/설정창이렇게일단만들어주세요.png)대로 만든다.
+/// 인게임 설정창 프리팹(InGame_Setting_Popup)을 시안(design/설정창이렇게일단만들어주세요.png, 10-22 새 아트는 설정창1.png·설정창2.png)대로 만든다.
 /// 기존 UI_SettingPanel_InGame·UI_SoundSettingSlot·UI_SlidingToggle·UI_Popup_Confirm을 그대로 연결한다.
 /// 그림은 설정창 전용 아트 KHJ_Artwork/Setting(SPR_UI1100~1104)만 쓴다. 원본 메타(9-slice 등)는 건드리지 않는다.
 /// 좌표는 시안(1080×1920 기준) 실측값. 다시 실행하면 프리팹을 새로 만든다.
@@ -36,11 +36,22 @@ public static class SettingPopupBuilder
     private const float BoxX = 203f;
     private const float StateTextX = 282f;
     private const float LabelLeftX = -213f;
-    private const float ButtonsY = -546f;
-    private static readonly Vector2 ButtonSize = new Vector2(372f, 92f);
+    // 2026-10-22 새 아트(배경 855×1204·버튼 313×66·나가기 배경 933×557)와 시안 design/설정창1.png·설정창2.png 실측.
+    private const float ButtonsY = -547f;
+    private const float ButtonLabelSize = 46f;
+    private static readonly Vector2 ButtonSize = new Vector2(355f, 75f);
+    private static readonly Vector2 FramePos = new Vector2(-3f, -4f);
+    private static readonly Vector2 FrameVisible = new Vector2(958f, 1350f);
+    private static readonly Vector2 TitleTagPos = new Vector2(0f, 557f);
+    private static readonly Vector2 TitleTagVisible = new Vector2(237f, 50f);
+    private static readonly Vector2 ConfirmWindowPos = new Vector2(0f, 40f);
+    private static readonly Vector2 ConfirmWindowSize = new Vector2(840f, 502f);
+    private static readonly Vector2 ConfirmButtonSize = new Vector2(330f, 70f);
+    private const float ConfirmButtonsX = 206f;
+    private const float ConfirmButtonsY = -173f;
     // 그림마다 투명 여백이 달라서(예: 패널 845×1091만 보임/1031×1238), 아래 값은 "보이는 부분"의 시안 실측이다. Fit()이 여백을 보정한다.
-    private static readonly Vector2 GearPos = new Vector2(5f, 738f);
-    private static readonly Vector2 GearVisible = new Vector2(280f, 190f);
+    private static readonly Vector2 GearPos = new Vector2(-3f, 710f);
+    private static readonly Vector2 GearVisible = new Vector2(210f, 143f);
     private static readonly Vector2 TabVisible = new Vector2(225f, 82f);
     private const float IconVisible = 80f;
     private const float BoxVisible = 48f;
@@ -70,8 +81,8 @@ public static class SettingPopupBuilder
         dimButton.transition = Selectable.Transition.None;
 
         var window = Rect("Window", rootRt, WindowPos, WindowSize);
-        Fit(Img("Gear", window, Sprite(Art, "SPR_UI1100_GearDecoration"), Color.white, Vector2.zero, Vector2.zero), GearPos, GearVisible, true); // 창 뒤(먼저 그림)
-        Fit(Img("Frame", window, Sprite(Art, "SPR_UI1100_Background"), Color.white, Vector2.zero, Vector2.zero), Vector2.zero, WindowSize, false);
+        Img("Gear", window, Sprite(Art, "SPR_UI1100_GearDecoration"), Color.white, Vector2.zero, Vector2.zero); // 창 뒤(먼저 그림)
+        Img("Frame", window, Sprite(Art, "SPR_UI1100_Background"), Color.white, Vector2.zero, Vector2.zero);
         Txt("Title", window, font, "설정", 86f, new Vector2(0f, TitleY), new Vector2(500f, 110f));
 
         var innerImg = Img("Inner", window, Sprite(Art, "SPR_UI1100_interior"), Color.white, Vector2.zero, Vector2.zero);
@@ -87,6 +98,7 @@ public static class SettingPopupBuilder
 
         var back = BigButton(window, font, "Back_Button", "뒤로가기", "SPR_UI1100_BackButton", new Vector2(-216f, ButtonsY), ButtonSize);
         var lobby = BigButton(window, font, "Lobby_Button", "로비이동", "SPR_UI1100_LobbyButton", new Vector2(215f, ButtonsY), ButtonSize);
+        LayoutWindow(window, font);
 
         var anim = window.gameObject.AddComponent<Anim_UI_Scale>();
         Configure(anim, a =>
@@ -297,8 +309,9 @@ public static class SettingPopupBuilder
         var box = Img("TextBox", window, Sprite(Art, "SPR_UI1104_ExitPopupTextBox"), Color.white, new Vector2(0f, 20f), new Vector2(815f, 234f));
         box.preserveAspect = false;
         var desc = Txt("Description", box.rectTransform, font, "진행중인 게임이 종료되며\n로비로 돌아갑니다.", 40f, Vector2.zero, new Vector2(780f, 210f));
-        var no = BigButton(window, font, "No_Button", "아니오", "SPR_UI1100_BackButton", new Vector2(-200f, -190f), ButtonSize);
-        var yes = BigButton(window, font, "Yes_Button", "예", "SPR_UI1100_LobbyButton", new Vector2(200f, -190f), ButtonSize);
+        var no = BigButton(window, font, "No_Button", "취소", "SPR_UI1100_LobbyButton", new Vector2(ConfirmButtonsX, ConfirmButtonsY), ConfirmButtonSize);
+        var yes = BigButton(window, font, "Yes_Button", "확인", "SPR_UI1100_BackButton", new Vector2(-ConfirmButtonsX, ConfirmButtonsY), ConfirmButtonSize);
+        LayoutConfirm(window, font);
         var popup = popupRt.gameObject.AddComponent<UI_Popup_Confirm>();
         var anim = window.gameObject.AddComponent<Anim_UI_Scale>();
         Configure(anim, a =>
@@ -322,6 +335,97 @@ public static class SettingPopupBuilder
         });
         popupRt.gameObject.SetActive(false);
         return popup;
+    }
+
+    // ── 새 아트 배치 (생성·기존 프리팹 공용) ─────────────────────────
+
+    [MenuItem("Tools/USW/UI/Apply Setting Popup Layout (keep references)")]
+    public static void ApplyLayoutMenu() => Debug.Log(ApplyLayout());
+
+    /// <summary>
+    /// 기존 프리팹을 다시 만들지 않고 배경·버튼·나가기 팝업 배치만 갱신한다.
+    /// 로비/인게임 옵션 프리팹에 중첩된 인스턴스의 오브젝트 참조와 오버라이드를 보존한다.
+    /// </summary>
+    public static string ApplyLayout()
+    {
+        var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(FontGuid));
+        var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            var window = root.transform.Find("Window") as RectTransform;
+            var confirm = root.transform.Find("Confirm_Popup/Window") as RectTransform;
+            if (window == null || confirm == null) return "[SettingPopup] Window 또는 Confirm_Popup/Window 없음 — 중단";
+            LayoutWindow(window, font);
+            LayoutConfirm(confirm, font);
+            PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+        return $"[SettingPopup] 배치 갱신: {PrefabPath}";
+    }
+
+    private static void LayoutWindow(RectTransform window, TMP_FontAsset font)
+    {
+        Fit(Child<Image>(window, "Gear"), GearPos, GearVisible, true);
+        Fit(Child<Image>(window, "Frame"), FramePos, FrameVisible, false);
+        TitleTag(window, TitleTagPos, TitleTagVisible);
+        PlaceButton(Child<Button>(window, "Back_Button"), font, "SPR_UI1100_BackButton", null, new Vector2(-217f, ButtonsY), ButtonSize);
+        PlaceButton(Child<Button>(window, "Lobby_Button"), font, "SPR_UI1100_LobbyButton", null, new Vector2(216f, ButtonsY), ButtonSize);
+    }
+
+    private static void LayoutConfirm(RectTransform window, TMP_FontAsset font)
+    {
+        window.anchoredPosition = ConfirmWindowPos;
+        window.sizeDelta = ConfirmWindowSize;
+        var decoration = Child<Image>(window, "Decoration");
+        Fit(decoration, new Vector2(95f, 285f), Vector2.one * 185f, true);
+        decoration.transform.SetSiblingIndex(0); // 시안처럼 창 위쪽 뒤에서 살짝 보인다
+        var title = Child<TextMeshProUGUI>(window, "Title");
+        title.text = "알림";
+        title.fontSize = 60f;
+        title.rectTransform.anchoredPosition = new Vector2(0f, 174f);
+        title.rectTransform.sizeDelta = new Vector2(700f, 80f);
+        TitleTag(window, new Vector2(0f, 160f), new Vector2(192f, 40f));
+        var box = Child<Image>(window, "TextBox");
+        box.rectTransform.anchoredPosition = new Vector2(0f, 7f);
+        box.rectTransform.sizeDelta = new Vector2(752f, 214f);
+        Child<TextMeshProUGUI>(box.transform, "Description").rectTransform.sizeDelta = new Vector2(720f, 190f);
+        // 시안: 왼쪽 노란 확인, 오른쪽 회색 취소
+        PlaceButton(Child<Button>(window, "Yes_Button"), font, "SPR_UI1100_BackButton", "확인", new Vector2(-ConfirmButtonsX, ConfirmButtonsY), ConfirmButtonSize);
+        PlaceButton(Child<Button>(window, "No_Button"), font, "SPR_UI1100_LobbyButton", "취소", new Vector2(ConfirmButtonsX, ConfirmButtonsY), ConfirmButtonSize);
+    }
+
+    /// <summary>제목 아래 노란 띠. 별도 그림이 없어 시안과 같은 노란 버튼 그림을 쓴다. 제목 글자 바로 뒤에 둔다.</summary>
+    private static void TitleTag(RectTransform window, Vector2 pos, Vector2 visible)
+    {
+        var title = window.Find("Title");
+        var tag = window.Find("TitleTag")?.GetComponent<Image>()
+            ?? Img("TitleTag", window, Sprite(Art, "SPR_UI1100_BackButton_Nomal"), Color.white, Vector2.zero, Vector2.zero);
+        Fit(tag, pos, visible, false);
+        if (title != null) tag.transform.SetSiblingIndex(title.GetSiblingIndex());
+    }
+
+    private static void PlaceButton(Button button, TMP_FontAsset font, string spriteBase, string label, Vector2 pos, Vector2 size)
+    {
+        var img = (Image)button.targetGraphic;
+        img.sprite = Sprite(Art, spriteBase + "_Nomal");
+        var state = button.spriteState;
+        state.pressedSprite = Sprite(Art, spriteBase + "_Pressed");
+        button.spriteState = state;
+        var center = Fit(img, pos, size, false);
+        var text = Child<TextMeshProUGUI>(button.transform, "Label");
+        if (label != null) text.text = label;
+        text.font = font;
+        text.fontSize = ButtonLabelSize;
+        text.rectTransform.anchoredPosition = center + new Vector2(0f, 3f);
+        text.rectTransform.sizeDelta = size;
+    }
+
+    private static T Child<T>(Transform parent, string name) where T : Component
+    {
+        var child = parent.Find(name);
+        var component = child != null ? child.GetComponent<T>() : null;
+        if (component == null) throw new MissingReferenceException($"[SettingPopup] {parent.name}/{name}<{typeof(T).Name}> 없음");
+        return component;
     }
 
     // ── 스프라이트 ───────────────────────────────────────────────────

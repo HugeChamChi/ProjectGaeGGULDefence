@@ -172,7 +172,7 @@ public class ResearchViewSettings : ScriptableObject
     public string RecommendButtonLabel = "추천 강화";
     public string FollowLabel = "추천 따라가기";
     public string ToastFormat = "{0} Lv.{1}   {2}";
-    public string GateLabelFormat = "{0}단계 · 전체 강화 {1}/{2}";
+    public string GateLabelFormat = "{0}단계, 전체 강화 {1}/{2}";
     public string GateOpenFormat = "{0}단계 열림";
     public string LayoutButtonFormat = "구성: {0}";
     public string ResetLabel = "초기화";

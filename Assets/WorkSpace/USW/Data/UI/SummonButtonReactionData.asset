@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 548c8bb14cdf55644a673bca44a03212, type: 3}
   m_Name: SummonButtonReactionData
   m_EditorClassIdentifier:
-  shrinkScale: 0.95
-  duration: 0.1
+  shrinkScale: 0.9
+  duration: 0.05
   pressCurve:
     serializedVersion: 2
     m_Curve:

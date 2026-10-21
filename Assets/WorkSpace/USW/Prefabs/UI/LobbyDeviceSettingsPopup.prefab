@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uADF8\uB798\uD53D \xB7 \uC5B8\uC5B4"
+  m_text: "그래픽과 언어"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 34571da45f3f3d8419493b418172203f, type: 2}
   m_sharedMaterial: {fileID: 6630582401020830230, guid: 34571da45f3f3d8419493b418172203f,

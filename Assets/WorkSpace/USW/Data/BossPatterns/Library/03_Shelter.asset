@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
   Mechanic: 2
   DisplayName: "\uD3ED\uD48D \uD53C\uB09C\uCC98"
-  Instruction: "\uC0AC\uC120 \uCE78\uC740 \uC704\uD5D8\uD569\uB2C8\uB2E4 \xB7 \uC9C0\uBD95
-    \uD45C\uC2DC\uC758 \uCCAD\uB85D \uAD6C\uC5ED\uC73C\uB85C \uC774\uB3D9"
+  Instruction: "사선 칸은 위험합니다. 지붕 표시의 청록 구역으로 이동하세요"
   Windup: 4
   ActiveDuration: 2.5
   Recovery: 0.8

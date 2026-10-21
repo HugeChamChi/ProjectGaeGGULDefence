@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
   Mechanic: 3
   DisplayName: "\uC774\uB3D9 \uD3ED\uD0C4"
-  Instruction: "\uB9C8\uB984\uBAA8 \uD45C\uC2DD \uC720\uB2DB\uC744 \uC678\uACFD\uC5D0
-    \uACA9\uB9AC \xB7 \uC8FC\uBCC0 \uC544\uAD70\uB9CC \uD3ED\uBC1C\uC5D0 \uC801\uC911"
+  Instruction: "마름모 표식 유닛을 외곽에 격리하세요. 폭발은 주변 아군에게만 적중합니다"
   Windup: 3.6
   ActiveDuration: 2.5
   Recovery: 0.8

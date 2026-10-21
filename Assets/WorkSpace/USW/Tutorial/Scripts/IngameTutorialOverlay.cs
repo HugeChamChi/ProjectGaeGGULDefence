@@ -9,7 +9,7 @@ namespace GaeGGUL.Tutorial
     /// <summary>Multiple highlight holes with matching input filtering, in screen coordinates.</summary>
     public sealed class IngameTutorialOverlay : MaskableGraphic, ICanvasRaycastFilter, IPointerClickHandler
     {
-        public enum Gesture { Tap, Hold, Drag, HoldDrag, Swipe }
+        public enum Gesture { Tap, Hold, Drag, HoldDrag, Swipe, SwipeRight }
         private readonly List<Func<Rect>> _targets = new();
         private readonly List<Rect> _holes = new();
         private readonly List<float> _xs = new();
@@ -238,10 +238,11 @@ namespace GaeGGUL.Tutorial
             float t = Mathf.Clamp01((elapsed - hold) / Mathf.Max(0.1f, _settings.GestureSeconds - hold));
             Vector2 from = _holes[0].center;
             Vector2 to = _gesture == Gesture.Drag && _holes.Count > 1 ? _holes[1].center : from;
-            if (_gesture == Gesture.Swipe)
+            if (_gesture == Gesture.Swipe || _gesture == Gesture.SwipeRight)
             {
-                from.x += _holes[0].width * 0.3f;
-                to.x -= _holes[0].width * 0.3f;
+                float direction = _gesture == Gesture.SwipeRight ? -1f : 1f;
+                from.x += _holes[0].width * 0.3f * direction;
+                to.x -= _holes[0].width * 0.3f * direction;
             }
             if (_gesture == Gesture.HoldDrag) to += Vector2.right * _holes[0].width;
             Vector2 tip = Vector2.Lerp(from, to, Mathf.SmoothStep(0, 1, t));

@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
   Mechanic: 1
   DisplayName: "\uD2C8\uC0C8 \uC7A5\uBCBD"
-  Instruction: "\uC7A5\uBCBD\uC774 \uC67C\uCABD\uC5D0\uC11C \uBC00\uB824\uC635\uB2C8\uB2E4
-    \xB7 \uCCAD\uB85D\uC0C9 \uD2C8\uC73C\uB85C \uC774\uB3D9"
+  Instruction: "장벽이 왼쪽에서 밀려옵니다. 청록색 틈으로 이동하세요"
   Windup: 2.2
   ActiveDuration: 4.2
   Recovery: 0.8

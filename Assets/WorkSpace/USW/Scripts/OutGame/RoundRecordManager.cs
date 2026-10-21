@@ -98,7 +98,7 @@ public sealed class RoundRecordManager : Global.IClearable
         catch (Exception error)
         {
             if (!IsCurrent(generation)) return;
-            Status = IsDirty ? "기록 저장 대기 · 재연결 시 재시도" : "기록 조회 실패 · 재시도 가능";
+            Status = IsDirty ? "기록 저장 대기, 재연결 시 재시도" : "기록 조회 실패, 재시도 가능";
             Debug.LogWarning("[RoundRecords] " + error.Message);
         }
         finally

@@ -297,6 +297,10 @@ public static class IngameTutorialChecks
             await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Other choice clicks cannot bypass the required tutorial reward");
             await FocusReady(overlay);
+            // Closing the video moved this shared pointer to the video area; target the term again.
+            termText.ForceMeshUpdate();
+            character=termText.textInfo.characterInfo[termText.textInfo.linkInfo[0].linkTextfirstCharacterIndex];
+            pointer.position=RectTransformUtility.WorldToScreenPoint(termCamera,termText.transform.TransformPoint((character.bottomLeft+character.topRight)*0.5f));
             termHits.Clear();EventSystem.current.RaycastAll(pointer,termHits);
             termTarget=termHits.Count>0?ExecuteEvents.GetEventHandler<IPointerClickHandler>(termHits[0].gameObject):null;
             Check(termTarget==card.gameObject,"The final term tap reaches the required card");
@@ -451,26 +455,44 @@ public static class IngameTutorialChecks
             await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
             var end=(Vector2)Camera.main.WorldToScreenPoint(totem.transform.position)+Vector2.right*150;
             Call(input,"ProcessPointerMove",end);Call(input,"ProcessPointerUp",end);
-            // ≡ 메뉴 수업 (사용자 10-13): 메뉴 → 딜 기여도 → 메뉴 → 선택지 보관함 → 메뉴 → 설정 위치
+            // 하단 HUD 실제 왕복 스와이프 → 메뉴 → 선택지 보관함 → 설정 위치
             var tutorialMenu=Object.FindFirstObjectByType<IngameHudMenu>();
             var tutorialChart=Object.FindFirstObjectByType<IngameDamageChart>();
             var tutorialInventory=Object.FindFirstObjectByType<SelectionInventoryUI>();
             var tutorialSettings=Object.FindFirstObjectByType<HSD.UI.Setting.UI_SettingPanel_InGame>(FindObjectsInactive.Include);
             async UniTask Instruction(string text) { await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==text,cancellationToken:token); await FocusReady(overlay); await Frames(); }
             async UniTask OpenMenu() { await Instruction(settings.MenuReopenInstruction); ClickButton(tutorialMenu.MenuButton); await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token); }
+            void SwipeHud(bool open)
+            {
+                var area = overlay.ScreenRect(tutorialChart.HudPager.SwipeArea);
+                pointer.pressPosition = area.center;
+                pointer.position = area.center;
+                var hits = new System.Collections.Generic.List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointer, hits);
+                var target = hits.Count > 0 ? ExecuteEvents.GetEventHandler<IBeginDragHandler>(hits[0].gameObject) : null;
+                var inputArea = target != null ? target.GetComponent<HudDamageSwipeArea>() : null;
+                Check(inputArea != null && inputArea.Pager == tutorialChart.HudPager,"Actual tutorial raycast reaches HUD swipe " + (open ? "open" : "return"));
+                inputArea.OnInitializePotentialDrag(pointer);
+                pointer.position = area.center + Vector2.right * (open ? -8f : 8f);
+                inputArea.OnBeginDrag(pointer);
+                pointer.position = area.center + Vector2.right * area.width * (open ? -.3f : .3f);
+                inputArea.OnDrag(pointer); inputArea.OnEndDrag(pointer);
+            }
             await Stage(IngameTutorialStage.OptionsMenu);
-            await Instruction(settings.MenuOpenInstruction);
-            Check(Time.timeScale==0 && !input.AllowPointerClicks && tutorialMenu.gameObject.activeInHierarchy,"Menu lesson pauses the field before the final battle with the menu visible");
-            ClickButton(tutorialMenu.MenuButton);
-            await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token);
             await Instruction(settings.MenuDamageInstruction);
-            ClickButton(tutorialMenu.DamageButton);
+            Check(Time.timeScale==0 && !input.AllowPointerClicks && tutorialMenu.gameObject.activeInHierarchy,"HUD lesson pauses the field with the menu visible");
+            SwipeHud(true);
             await Instruction(settings.MenuDamageExplanation);
-            Check(tutorialChart.IsOpen && tutorialChart.VisibleRowCount>0,"Menu lesson opens the actual damage chart with tutorial damage");
+            Check(tutorialChart.IsOpen && tutorialChart.VisibleRowCount>0,"HUD swipe opens the actual damage chart with tutorial damage");
             await UniTask.WaitUntil(()=>!dialogue.IsTyping,cancellationToken:token);await FocusReady(overlay);
             await Snapshot("08a-menu-damage");
             await Acknowledge();
-            await OpenMenu();
+            await Instruction(settings.MenuDamageReturnInstruction);
+            SwipeHud(false);
+            await Instruction(settings.MenuOpenInstruction);
+            Check(!tutorialChart.IsOpen && tutorialChart.HudPager.IsSettled,"Reverse HUD swipe restores buttons before the menu lesson");
+            ClickButton(tutorialMenu.MenuButton);
+            await UniTask.WaitUntil(()=>tutorialMenu.IsExpanded && tutorialMenu.IsSettled,cancellationToken:token);
             await Instruction(settings.MenuSelectionInstruction);
             ClickButton(tutorialMenu.SelectionButton);
             await Instruction(settings.MenuSelectionExplanation);

@@ -103,6 +103,7 @@ public sealed class BossLizard : BossBase, IBossPatternRuntime
                     break;
                 case BossPatternType.LizardThornBarrier:
                     _damageFactor = 1m - (decimal)pattern.damageReductionRate;
+                    AddShield(MaxHp * (decimal)pattern.ShieldFraction);
                     break;
             }
         }
@@ -134,6 +135,7 @@ public sealed class BossLizard : BossBase, IBossPatternRuntime
     public void ClearPatternEffects()
     {
         ClearThreat();
+        ClearShield();
         _casting = null;
         _burrowed = false;
         _damageFactor = 1m;

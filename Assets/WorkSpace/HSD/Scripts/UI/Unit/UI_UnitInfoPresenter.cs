@@ -89,7 +89,7 @@ namespace GaeGGUL.UI.Unit
                 bool conversion = effects?.HasBombHacking == true;
                 _view.UpdateSkillInfo(data.SkillDisplayName,
                     conversion ? (_detailed
-                        ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬·추가 자폭 모두 전환되며 수리 키트가 발동합니다."
+                        ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬과 추가 자폭 모두 전환되며 수리 키트가 발동합니다."
                         : $"자폭 드론이 보스에게 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다.")
                     : GetAuthoredDescription(data, tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);

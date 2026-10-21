@@ -54,8 +54,8 @@ public static class ChoiceDescriptionContent
                 card.description = "{term:merge} 시 {ValuePercent}% 확률로 노말 랜덤 유닛을 생성합니다. 빈칸이 없으면 대기 후 자리가 생기면 생성합니다.";
                 card.simpleDescription = "{term:merge} 시 확률적으로 노말 랜덤 유닛을 생성합니다. 빈칸이 없으면 자리가 생길 때까지 대기합니다."; break;
             case DroneSelectionKind.ExtraCombatDrone:
-                card.description = "에픽 이상 베탕·감망·델탕의 {term:combat-drone}이 {Count}기 추가됩니다. 추가 드론은 일반 공격과 {term:alphan-active}에 참여하며, 본체 스킬은 사용하지 않습니다.";
-                card.simpleDescription = "에픽 이상 베탕·감망·델탕의 {term:combat-drone}을 추가합니다. 일반 공격과 {term:alphan-active}에 참여하며 본체 스킬은 사용하지 않습니다."; break;
+                card.description = "에픽 이상 베탕, 감망, 델탕의 {term:combat-drone}이 {Count}기 추가됩니다. 추가 드론은 일반 공격과 {term:alphan-active}에 참여하며, 본체 스킬은 사용하지 않습니다.";
+                card.simpleDescription = "에픽 이상 베탕, 감망, 델탕의 {term:combat-drone}을 추가합니다. 일반 공격과 {term:alphan-active}에 참여하며 본체 스킬은 사용하지 않습니다."; break;
             default:
                 switch (card.specialEffect)
                 {

@@ -77,7 +77,7 @@ namespace HSD.UI.Setting
         public void OnRestartClicked()
         {
             // View를 통해 로컬 확인 팝업 호출
-            _view.ShowConfirm("다시 시작", $"진행중인 게임이 종료되며\n게임이 {"다시 시작".ToColor(Color.yellow)}됩니다.", () =>
+            _view.ShowConfirm("알림", $"진행중인 게임이 종료되며\n게임이 {"다시 시작".ToColor(Color.yellow)}됩니다.", () =>
             {
                 NavigateAsync(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name).Forget();
             });
@@ -86,7 +86,7 @@ namespace HSD.UI.Setting
         public void OnGoToLobbyClicked()
         {
             // View를 통해 로컬 확인 팝업 호출
-            _view.ShowConfirm("로비로 이동", $"진행중인 게임이 종료되며\n{"로비".ToColor(Color.yellow)}로 돌아갑니다.", () =>
+            _view.ShowConfirm("알림", $"진행중인 게임이 종료되며\n{"로비".ToColor(Color.yellow)}로 돌아갑니다.", () =>
             {
                 NavigateAsync("LobbyScene").Forget();
             });

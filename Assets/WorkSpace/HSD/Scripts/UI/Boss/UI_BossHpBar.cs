@@ -289,7 +289,8 @@ public class UI_BossHpBar : MonoBehaviour
             // 비율은 아이콘 오른쪽부터 재되, 칠하기는 위에 그려지는 둥근 아이콘 중심부터 시작해
             // 원 테두리가 휘는 자리에 배경이 비치지 않게 한다.
             coverStart = padding.x;
-            if (fullBar != null && IconDrawsAboveBar())
+            // HP 0에서는 아이콘 밑 칠하기도 없앤다. 원형 아이콘이 직사각형 모서리를 다 덮지 못해 마지막 줄 색이 비친다.
+            if (fullBar != null && shownLine > 0 && IconDrawsAboveBar())
             {
                 float center = fullBar.InverseTransformPoint(_fillStartAfter.TransformPoint(_fillStartAfter.rect.center)).x;
                 coverStart = Mathf.Clamp(center - fullBar.rect.xMin, 0f, padding.x);

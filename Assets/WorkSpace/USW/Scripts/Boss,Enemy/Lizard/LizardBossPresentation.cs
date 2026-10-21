@@ -12,6 +12,13 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
     [SerializeField] private Material _effectsMaterial;
     [SerializeField] private Vector3 _groundOffset;
     [SerializeField] private string _idleAnimation = "idle";
+    [Tooltip("Bones whose idle motion is layered over an animated hold (name prefixes). Arms/body/spikes stay on the skill pose.")]
+    [SerializeField] private string[] _holdIdleBonePrefixes = { "tail_", "frill_", "pupil_" };
+    private const string BoardLayer = "Default";
+    private const string FrontLayer = "Unit";
+    private const int BurrowPartsOrder = -10;
+    private const int BarrierPartsOrder = -9; // In front of the body (-10), behind the battlefield (0) and grid (1)
+    private const float HoldOverlayFade = 0.25f;
     private const int RingSegments = 40;
     private const int HealingCrosses = 7;
     private const int DustPieces = 12;
@@ -25,6 +32,8 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
     private readonly List<int> _triangles = new(768);
     private readonly List<Vector2> _uv = new(512);
     private TrackEntry _track;
+    private TrackEntry _overlayTrack;
+    private Spine.Animation _holdOverlay;
     private LizardPatternData _pattern;
     private SkeletonRenderer _renderer;
     private Spine.Slot[] _spikeSlots;
@@ -47,6 +56,7 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
             _skeleton.Skeleton.FindSlot("groundspike_02_L"), _skeleton.Skeleton.FindSlot("groundspike_02_R"),
             _skeleton.Skeleton.FindSlot("groundspike_01_L"), _skeleton.Skeleton.FindSlot("groundspike_01_R"),
             _skeleton.Skeleton.FindSlot("groundspike_M") };
+        _holdOverlay = BuildHoldOverlay();
         var go = new GameObject("Lizard pattern feedback");
         go.transform.SetParent(transform, false);
         _mesh = new Mesh { name = "Lizard batched feedback" };
@@ -64,9 +74,69 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
     private void Play(string clip, bool loop)
     {
         _skeleton.AnimationState.ClearTracks();
+        _overlayTrack = null;
         _skeleton.Skeleton.SetupPose();
         _track = _skeleton.AnimationState.SetAnimation(0, clip, loop);
         _track.MixDuration = 0f;
+    }
+
+    /// <summary>Idle bone timelines for secondary motion (tail sway, frill, eyes) while a skill pose is held.</summary>
+    private Spine.Animation BuildHoldOverlay()
+    {
+        var data = _skeleton.Skeleton.Data;
+        var idle = data.FindAnimation(_idleAnimation);
+        if (idle == null || _holdIdleBonePrefixes == null || _holdIdleBonePrefixes.Length == 0) return null;
+        var timelines = new ExposedList<Timeline>();
+        var bones = new ExposedList<int>();
+        var seen = new HashSet<int>();
+        foreach (var timeline in idle.Timelines)
+        {
+            if (timeline is not IBoneTimeline boneTimeline) continue;
+            string bone = data.Bones.Items[boneTimeline.BoneIndex].Name;
+            bool layered = false;
+            foreach (var prefix in _holdIdleBonePrefixes)
+                if (!string.IsNullOrEmpty(prefix) && bone.StartsWith(prefix)) { layered = true; break; }
+            if (!layered) continue;
+            timelines.Add(timeline);
+            if (seen.Add(boneTimeline.BoneIndex)) bones.Add(boneTimeline.BoneIndex);
+        }
+        if (timelines.Count == 0) return null;
+        var overlay = new Spine.Animation(_idleAnimation + "_hold_overlay");
+        overlay.SetTimelines(timelines, bones);
+        overlay.Duration = idle.Duration;
+        return overlay;
+    }
+
+    /// <summary>
+    /// Native time inside an animated hold. The authored HoldAt~ResumeAt frames ping-pong an odd number of
+    /// half-cycles across the hold, so motion stays continuous and the release continues from ResumeAt.
+    /// </summary>
+    private static float HoldLoopTime(LizardPatternData pattern, float elapsed)
+    {
+        float segment = pattern.ResumeAt - pattern.HoldAt;
+        float hold = pattern.ReleaseAt - pattern.HoldAt;
+        if (segment <= 0f || hold <= 0f) return pattern.HoldAt;
+        int halves = Mathf.Max(1, Mathf.RoundToInt(hold / segment));
+        if (halves % 2 == 0) halves += hold / segment >= halves ? 1 : -1;
+        float half = hold / Mathf.Max(1, halves);
+        return pattern.HoldAt + Mathf.PingPong((elapsed - pattern.HoldAt) / half, 1f) * segment;
+    }
+
+    private void SetHoldOverlay(float weight, float time)
+    {
+        if (_holdOverlay == null) return;
+        if (weight <= 0f)
+        {
+            if (_overlayTrack != null) { _skeleton.AnimationState.ClearTrack(1); _overlayTrack = null; }
+            return;
+        }
+        if (_overlayTrack == null)
+        {
+            _overlayTrack = _skeleton.AnimationState.SetAnimation(1, _holdOverlay, true);
+            _overlayTrack.MixDuration = 0f;
+        }
+        _overlayTrack.TrackTime = time;
+        _overlayTrack.Alpha = weight;
     }
 
     /// <summary>Starts one authored Spine clip without an independent animation timer.</summary>
@@ -85,15 +155,24 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
         if (_skeleton == null || _track == null) return;
         float time = elapsed;
         bool holding = pattern.ReleaseAt > pattern.HoldAt && elapsed >= pattern.HoldAt && elapsed < pattern.ReleaseAt;
+        bool animated = holding && pattern.AnimateHold;
         if (pattern.ReleaseAt > pattern.HoldAt && elapsed >= pattern.HoldAt)
-            time = holding ? pattern.HoldAt : pattern.ResumeAt + elapsed - pattern.ReleaseAt;
+            time = animated ? HoldLoopTime(pattern, elapsed)
+                : holding ? pattern.HoldAt : pattern.ResumeAt + elapsed - pattern.ReleaseAt;
         _track.TrackTime = Mathf.Clamp(time, 0f, _track.Animation.Duration);
-        ApplyPose(pattern.HideWhileHeld && holding,
-            pattern.patternType == BossPatternType.LizardThornBarrier,
-            pattern.patternType == BossPatternType.LizardBurrow);
+        SetHoldOverlay(animated && pattern.LayerIdleWhileHeld ? Mathf.Clamp01(Mathf.Min(elapsed - pattern.HoldAt, pattern.ReleaseAt - elapsed) / HoldOverlayFade) : 0f,
+            elapsed - pattern.HoldAt);
+        bool barrier = pattern.patternType == BossPatternType.LizardThornBarrier;
+        bool burrow = pattern.patternType == BossPatternType.LizardBurrow;
+        ApplyPose(pattern.HideWhileHeld && holding, barrier,
+            burrow ? BurrowPartsOrder : barrier ? BarrierPartsOrder : (int?)null);
     }
 
-    private void ApplyPose(bool hidden, bool spikes, bool burrowing)
+    /// <param name="behindBoardOrder">
+    /// Moves hands/spikes behind the battlefield so the arena edge and grid cover their base:
+    /// burrow sinks with the body, the thorn barrier rises from under the board without covering cells.
+    /// </param>
+    private void ApplyPose(bool hidden, bool spikes, int? behindBoardOrder)
     {
         _skeleton.Update(0f);
         _skeleton.Skeleton.SetColor(1f, 1f, 1f, hidden ? 0f : 1f);
@@ -102,9 +181,10 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
                 if (slot != null) { slot.Pose.Attachment = null; slot.AppliedPose.Attachment = null; }
         if (_separator != null && _separator.partsRenderers.Count >= 2)
         {
-            // The body sinks behind the board; hands/spikes normally remain in front.
-            _separator.partsRenderers[1].MeshRenderer.sortingLayerName = burrowing ? "Default" : "Unit";
-            _separator.partsRenderers[1].MeshRenderer.sortingOrder = burrowing ? -10 : 0;
+            // The body stays behind the board; hands/spikes normally remain in front.
+            var parts = _separator.partsRenderers[1].MeshRenderer;
+            parts.sortingLayerName = behindBoardOrder.HasValue ? BoardLayer : FrontLayer;
+            parts.sortingOrder = behindBoardOrder ?? 0;
         }
         _renderer.UpdateMesh();
     }
@@ -116,7 +196,7 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
         if (_renderer == null) return;
         _idleTime = 0f;
         Play(_idleAnimation, true);
-        ApplyPose(false, false, false);
+        ApplyPose(false, false, null);
     }
 
     /// <inheritdoc/>
@@ -127,7 +207,7 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
         if (_renderer == null || _pattern != null || _track == null) return;
         _idleTime += _pauseIdle ? Time.unscaledDeltaTime : Time.deltaTime;
         _track.TrackTime = _idleTime;
-        ApplyPose(false, false, false);
+        ApplyPose(false, false, null);
     }
 
     /// <summary>Builds entry dust, a burrow opening, rising recovery crosses and persistent unit slow markers.</summary>

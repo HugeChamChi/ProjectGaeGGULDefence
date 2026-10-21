@@ -163,6 +163,9 @@ public abstract class BossBase : MonoBehaviour
     /// <summary>OnDamaged와 같은 시점에 피해 종류(일반/치명타/화상)까지 알린다 — 데미지 표시용.</summary>
     public event Action<decimal, Vector3?, BossDamageKind> OnDamageDealt;
 
+    /// <summary>(남은 보호막, 최대HP) — 보호막 부여·흡수·소멸 시. HP바 보호막 표시용.</summary>
+    public event Action<decimal, decimal> OnShieldChanged;
+
     /// <summary>사망 — WaveManager가 구독하여 다음 웨이브 처리</summary>
     public event Action           OnDeath;
 
@@ -181,6 +184,29 @@ public abstract class BossBase : MonoBehaviour
     public virtual bool IsTargetable => !IsDead;
     /// <summary>Boss-owned damage reduction. The default preserves every existing boss.</summary>
     protected virtual decimal PatternDamageMultiplier => 1m;
+    private long _shieldUnits;
+    /// <summary>HP보다 먼저 최종 피해를 흡수하는 보호막. 깨지거나 정리될 때까지 남는다.</summary>
+    public decimal Shield => (decimal)_shieldUnits / CombatHealth.Scale;
+
+    /// <summary>살아 있는 보스에 보호막을 더한다. 방어·감소 적용 후의 최종 피해를 흡수한다.</summary>
+    protected void AddShield(decimal amount)
+    {
+        if (IsDead || amount <= 0) return;
+        long units = CombatHealth.ToUnits(amount);
+        _shieldUnits = units > long.MaxValue - _shieldUnits ? long.MaxValue : _shieldUnits + units;
+        OnShieldChanged?.Invoke(Shield, MaxHp);
+    }
+
+    /// <summary>한 번에 받을 수 있는 최종 피해 상한: 남은 HP + 보호막.</summary>
+    private long RemainingDamageCapacity => _shieldUnits > long.MaxValue - _health.CurrentUnits ? long.MaxValue : _health.CurrentUnits + _shieldUnits;
+
+    /// <summary>남은 보호막을 즉시 없앤다(패턴 정리·사망).</summary>
+    protected void ClearShield()
+    {
+        if (_shieldUnits == 0) return;
+        _shieldUnits = 0;
+        OnShieldChanged?.Invoke(0, MaxHp);
+    }
 
     /// <summary>Restores living HP through the same HP event as damage, without granting damage EXP.</summary>
     public decimal Heal(decimal amount)
@@ -205,6 +231,7 @@ public abstract class BossBase : MonoBehaviour
     public void Init(decimal hp)
     {
         _health.Reset(hp);
+        _shieldUnits = 0;
         Debuffs?.Clear();
         _damageSources.Clear();
         Debuffs = new DebuffController(null, () => !IsDead, (units, sourceId) =>
@@ -233,7 +260,7 @@ public abstract class BossBase : MonoBehaviour
         if (_defenseScale <= 0) throw new InvalidOperationException("Boss debuff settings were not configured.");
         amount *= PatternDamageMultiplier * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f));
         long units = DamageCalculator.Calculate(amount, _defense * (1 - (Debuffs?.DefenseReduction ?? 0)), _defenseScale,
-            Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, _health.CurrentUnits);
+            Debuffs?.ArmorFactor ?? 1, Debuffs?.DamageTakenMultiplier ?? 1, RemainingDamageCapacity);
         ApplyFinalDamage(units, hitPos, kind, source);
         return units;
     }
@@ -265,16 +292,25 @@ public abstract class BossBase : MonoBehaviour
     private void ApplyFinalDamage(long units, Vector3? hitPos, BossDamageKind kind, UnityEngine.Object source = null)
     {
         if (IsDead || Invincible || !IsTargetable || !CombatAllowsDamage || units <= 0) return;
+        long absorbed = Math.Min(units, _shieldUnits);
+        if (absorbed > 0)
+        {
+            _shieldUnits -= absorbed;
+            units -= absorbed;
+            OnShieldChanged?.Invoke(Shield, MaxHp);
+        }
         if (PreventDeath) units = Math.Min(units, Math.Max(0, _health.CurrentUnits - CombatHealth.Scale));
-        long actual = _health.ApplyDamage(units);
+        long actual = units > 0 ? _health.ApplyDamage(units) : 0;
         bool died = IsDead;
-        if (died) { Debuffs?.Clear(); _deathStarted = true; }
+        if (died) { Debuffs?.Clear(); _shieldUnits = 0; _deathStarted = true; }
 
         OnHpChanged?.Invoke(CurrentHp, MaxHp);
         decimal dealt = (decimal)actual / CombatHealth.Scale;
-        _damageLedger?.RecordDamage(source, dealt);
+        // 보호막에 막힌 양도 맞힌 피해로 표시·집계한다. 전투 EXP(OnDamaged)는 실제 HP 감소만 받는다.
+        decimal hit = (decimal)(actual + absorbed) / CombatHealth.Scale;
+        _damageLedger?.RecordDamage(source, hit);
         OnDamaged?.Invoke(dealt, hitPos);
-        OnDamageDealt?.Invoke(dealt, hitPos, kind);
+        OnDamageDealt?.Invoke(hit, hitPos, kind);
 
         if (died && _deathStarted)
         {
@@ -325,6 +361,7 @@ public abstract class BossBase : MonoBehaviour
         OnHpChanged = null;
         OnDamaged   = null;
         OnDamageDealt = null;
+        OnShieldChanged = null;
         OnDeath     = null;
     }
 
