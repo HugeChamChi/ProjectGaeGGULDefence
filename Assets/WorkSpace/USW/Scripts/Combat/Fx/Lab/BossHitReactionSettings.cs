@@ -23,6 +23,18 @@ public sealed class BossHitReactionSettings : ScriptableObject
     /// <summary>수동 큰 공격 버튼의 최소 간격.</summary>
     public float ManualShotInterval = 1.1f;
 
+    [Header("일반 적중의 옅은 붉은 기")]
+    /// <summary>원래 색에 곱할 따뜻한 피격 색.</summary>
+    public Color HitTint = new Color(1f, .42f, .38f, 1f);
+    /// <summary>피격 색의 최대 혼합 비율. 연타해도 누적하지 않는다.</summary>
+    [Range(0f, 1f)] public float HitTintStrength = .22f;
+    /// <summary>적중 직후 색을 유지하는 시간.</summary>
+    [Min(0f)] public float HitTintHoldSeconds = .025f;
+    /// <summary>원래 색으로 돌아오는 시간.</summary>
+    [Min(.001f)] public float HitTintFadeSeconds = .135f;
+    /// <summary>촘촘한 연타 중에도 원래 색이 보이도록 하는 최소 재생 간격.</summary>
+    [Min(0f)] public float HitTintIntervalSeconds = .2f;
+
     [Header("족장 레이저 적중 후 버팀")]
     /// <summary>족장 적중 순간 최대 압박 자세까지 걸리는 시간.</summary>
     public float ChiefAttackSeconds = .1f;

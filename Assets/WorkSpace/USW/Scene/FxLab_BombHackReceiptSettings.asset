@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 168cdf8733a9b3a4d8c8a4854cb81aea, type: 3}
+  m_Name: FxLab_BombHackReceiptSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BombHackReceiptSettings
+  GlitchLeadSeconds: 0.04
+  GlitchTransferSeconds: 0.22
+  GlitchSettleSeconds: 0.1
+  ReceiptSpacingSeconds: 0.07
+  DataColor: {r: 0.38, g: 0.86, b: 1, a: 1}
+  GlitchColor: {r: 0.75, g: 0.34, b: 1, a: 1}
+  InkColor: {r: 0.05, g: 0.09, b: 0.16, a: 1}
+  RingRadius: 95
+  GlitchWidth: 62

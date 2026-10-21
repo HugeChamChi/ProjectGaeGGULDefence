@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-/// <summary>원래 거리의 동일 전투에서 큰 스킬 적중 시의 추가 Spine 피격 자세를 비교한다.</summary>
+/// <summary>동일 전투에서 일반 적중의 옅은 색 변화와 큰 스킬의 추가 Spine 피격 자세를 비교한다.</summary>
 public sealed class BossHitReactionLab : MonoBehaviour
 {
     [SerializeField] private CombatDistanceLab _combat;
@@ -35,6 +35,10 @@ public sealed class BossHitReactionLab : MonoBehaviour
     private float _chiefFallbackUntil;
     private float _chiefReleaseElapsed = -1f;
     private float _chiefReleaseFrom;
+    private BossBase _tintBoss;
+    private float _tintElapsed = float.PositiveInfinity;
+    private Color _tintOriginal;
+    private bool _tintApplied;
 
     private sealed class BoneState
     {
@@ -54,6 +58,8 @@ public sealed class BossHitReactionLab : MonoBehaviour
     public int ChiefImpactCount { get; private set; }
     /// <summary>현재 추가 자세의 강도.</summary>
     public float Intensity { get; private set; }
+    /// <summary>실제 피해로 시작한 옅은 색 반응 횟수. 연타는 최소 간격으로 묶는다.</summary>
+    public int TintCount { get; private set; }
 
     private void Start() => InitializeAsync().Forget();
 
@@ -76,6 +82,9 @@ public sealed class BossHitReactionLab : MonoBehaviour
             }
             _skeleton.BeforeApply+=BeforeApply;
             _skeleton.UpdateLocal+=ApplyPose;
+            _skeleton.UpdateLocal+=ApplyTint;
+            _tintBoss=_combat.Boss;
+            _tintBoss.OnDamageDealt+=OnDamageDealt;
             foreach(var unit in FindObjectsByType<Disigman>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {
                 if(unit.gameObject.scene != gameObject.scene)continue;
@@ -103,10 +112,51 @@ public sealed class BossHitReactionLab : MonoBehaviour
     {
         _mode=Mathf.Clamp(mode,0,1);
         RestorePose();_elapsed=float.PositiveInfinity;Intensity=0f;
+        ClearTint();
         _chiefReaction=false;_chiefBeam=null;_chiefReleaseElapsed=-1f;
         for(int i=0;i<_buttons.Length;i++)_buttons[i].color=i==_mode?new Color(.12f,.55f,.53f,.97f):new Color(.12f,.16f,.23f,.96f);
         if(_status != null)_status.text="피격 반응 비교 · "+(_mode==0?"현재":"충격을 받고 버티기");
     }
+
+    private void OnDamageDealt(decimal damage, Vector3? position, BossDamageKind kind)
+    {
+        if (!IsReady || !isActiveAndEnabled || _mode == 0 || damage <= 0m || kind == BossDamageKind.Burn) return;
+        float pulse = _settings.HitTintHoldSeconds + _settings.HitTintFadeSeconds;
+        if (_tintElapsed < Mathf.Max(pulse, _settings.HitTintIntervalSeconds)) return;
+        _tintElapsed = 0f;
+        TintCount++;
+    }
+
+    private void ApplyTint(ISkeletonRenderer _)
+    {
+        RestoreTint();
+        if (_mode == 0 || !isActiveAndEnabled || _tintBoss == null || _tintBoss.IsDead) return;
+        float fade = Mathf.Max(.001f, _settings.HitTintFadeSeconds);
+        float progress = Mathf.Clamp01((_tintElapsed - _settings.HitTintHoldSeconds) / fade);
+        if (progress >= 1f) return;
+        var skeleton = _skeleton.Skeleton;
+        _tintOriginal = skeleton.GetColor();
+        float strength = Mathf.Clamp01(_settings.HitTintStrength) * (1f - Mathf.SmoothStep(0f, 1f, progress));
+        Color multiplier = Color.Lerp(Color.white, _settings.HitTint, strength);
+        skeleton.SetColor(_tintOriginal.r * multiplier.r, _tintOriginal.g * multiplier.g,
+            _tintOriginal.b * multiplier.b, _tintOriginal.a);
+        _tintApplied = true;
+    }
+
+    private void RestoreTint()
+    {
+        if (!_tintApplied || _skeleton == null) return;
+        _skeleton.Skeleton.SetColor(_tintOriginal.r, _tintOriginal.g, _tintOriginal.b, _tintOriginal.a);
+        _tintApplied = false;
+    }
+
+    private void ClearTint()
+    {
+        RestoreTint();
+        _tintElapsed = float.PositiveInfinity;
+    }
+
+    private void OnDisable() => ClearTint();
 
     /// <summary>실제 스킬 투사체의 적중 효과에서만 받는 추가 자세 시작 요청.</summary>
     public void OnHeavyImpact(BossBase target,Vector3 hitPosition)
@@ -165,6 +215,7 @@ public sealed class BossHitReactionLab : MonoBehaviour
     private void Update()
     {
         if(!IsReady)return;
+        _tintElapsed+=Time.deltaTime;
         _elapsed+=Time.deltaTime;
         if(_chiefReaction){UpdateChiefReaction();return;}
         float attack=Mathf.Max(.001f,_settings.AttackSeconds);
@@ -202,7 +253,11 @@ public sealed class BossHitReactionLab : MonoBehaviour
         return name != null && name.StartsWith("skill_",StringComparison.Ordinal);
     }
 
-    private void BeforeApply(ISkeletonAnimation _) => RestorePose();
+    private void BeforeApply(ISkeletonAnimation _)
+    {
+        RestorePose();
+        RestoreTint();
+    }
 
     private void ApplyPose(ISkeletonRenderer _)
     {
@@ -237,8 +292,10 @@ public sealed class BossHitReactionLab : MonoBehaviour
     private void OnDestroy()
     {
         if(_drones != null)_drones.OnRallyImpact-=OnChiefImpact;
+        if(_tintBoss != null)_tintBoss.OnDamageDealt-=OnDamageDealt;
+        ClearTint();
         RestorePose();
-        if(_skeleton != null){_skeleton.BeforeApply-=BeforeApply;_skeleton.UpdateLocal-=ApplyPose;}
+        if(_skeleton != null){_skeleton.BeforeApply-=BeforeApply;_skeleton.UpdateLocal-=ApplyPose;_skeleton.UpdateLocal-=ApplyTint;}
         foreach(var data in _unitCopies)if(data != null)Destroy(data);
         foreach(var skill in _skillCopies)if(skill != null)Destroy(skill);
     }

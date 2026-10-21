@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 957a69c56d73da941ab9064d60f5ad5b, type: 3}
+  m_Name: FxLab_BombHackSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BombHackLabSettings
+  ChargeSeconds: 0.35
+  FlightSeconds: 0.4
+  FlightBend: 0.8
+  FirstLaunch: 1.1
+  RepeatSeconds: 3.2
+  RuptureSeconds: 0.32
+  UploadSeconds: 0.65
+  CompressionSeconds: 0.42
+  BrandSeconds: 0.75
+  HudPulseSeconds: 0.28
+  RuptureColor: {r: 0.75, g: 0.34, b: 1, a: 1}
+  DataColor: {r: 0.38, g: 0.86, b: 1, a: 1}
+  InkColor: {r: 0.13, g: 0.06, b: 0.24, a: 0.85}
+  ImpactSize: 62
+  PacketSize: 30
+  ArcPixels: 150
+  CircuitWidth: 5
+  ShotCapacity: 24
+  MaxHudRoutes: 3
+  DenseOwners: 12
+  DronesPerOwner: 4
+  AmbientBeamCount: 8
+  DenseDetailScale: 0.65
+  StartStacks: 12
+  PressureShotInterval: 0.1

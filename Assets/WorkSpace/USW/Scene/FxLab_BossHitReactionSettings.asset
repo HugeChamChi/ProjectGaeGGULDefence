@@ -21,6 +21,11 @@ MonoBehaviour:
   HeadTilt: 9
   ArmBrace: 15
   ManualShotInterval: 1.1
+  HitTint: {r: 1, g: 0.42, b: 0.38, a: 1}
+  HitTintStrength: 0.22
+  HitTintHoldSeconds: 0.025
+  HitTintFadeSeconds: 0.135
+  HitTintIntervalSeconds: 0.2
   ChiefAttackSeconds: 0.1
   ChiefSettleSeconds: 0.22
   ChiefSustainIntensity: 0.85
