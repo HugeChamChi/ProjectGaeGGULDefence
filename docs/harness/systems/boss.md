@@ -2,8 +2,8 @@
 system: boss
 title: 보스·디버프 (보스 스폰·피해 적용·패턴·디버프)
 keywords: 보스, boss, bossbase, bossdata, bossmanager, 보스 체력, 보스 hp, 보스 방어, 방어력, defense, 보스 패턴, 패턴, pattern, 지진, 예고, telegraph, 기절, stun, 디버프, debuff, 화상, burn, 아머, armor, 받피증, 받는 피해, 보스 등장, 도마뱀, lizard, 위협, 가시방벽, 잠복
-verified: 2026-10-21
-commit: 2e76748e
+verified: 2026-10-22
+commit: 610e8c7b
 ---
 # 보스·디버프 카드
 
@@ -96,6 +96,30 @@ commit: 2e76748e
 공통 `BossPatternController.AdvanceCombat`가 `IBossPatternRuntime.AdvancePatternEffects`를 같은 전투 시계로 호출한다. 우선순위는 방벽→잠복→위협, 진행 중 시전은 끊지 않는다. `LizardPatternData.CastDuration`은 효과 지속시간과 실제 Spine 복귀 길이로 계산해 중복 숫자 튜닝을 피한다. 도마뱀은 기존 `BossSpineAnimator`와 함께 붙이지 않는다(중복 시계 금지). `BossBase.IsTargetable`로 잠복 대상 선택/착탄을 차단하며 회복은 `BossBase.Heal`로 HP 이벤트만 보낸다. 이미 계산한 재현 피해에는 방어·방벽을 두 번 적용하지 않는다.
 
 프리팹은 `Spine_Boss_Lizard_SkeletonData`의 `skill_01/02/03`과 `idle`을 사용한다. 하늘 Default/-20, 몸통 Default/-10, 전장 Default/0, 손·가시 Unit 순서다. 설치 등록 키는 `LizardBossData`이며 DEFAULT_HARD에 추가했다. **NORMAL 실제 후보는 서버 HardBossKeys/CombatExpPerHp에 해당 키가 적용되어야 한다. 10-20 보스 구현 당시 서버/Excel 무변경 기록 이후 10-21 Excel만 갱신됐으며 서버 적용은 미확인이다.** 결과와 미검증 경계는 `outputs/lizard-patterns-20261020/RESULT.md`.
+
+## 악어 HP70/30 랜덤 패턴·HardIngameScene — Develop 적용 (2026-10-22)
+
+사용자 승인으로 실험실 공용8기믹을 Develop에 이관했다. 악어의 HP70%/30%에서 각1회 skill2~6 중 하나를 무작위 선택하고 기믹도8종에서 선택한다. skill1 지진/도마뱀 기존3패턴은 유지한다. 동시 구간 통과는 순차 대기, 회복/카운터 뒤 재발동 없음. 아래 실험실 미반영 기록은 이 후속 이전의 역사이며 종지기 자체는 이번 이관 대상이 아니다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/Scenes/HardIngameScene.unity` | 실제 인게임 복사 씬. 검사 UI 없이 악어·도마뱀만 무한 순환 |
+| `Assets/WorkSpace/USW/Scripts/Boss,Enemy/BossLogic/PlacementBossPhaseData.cs` | 여러 스킬이 공유하는 HP 구간 SO |
+| `Assets/WorkSpace/USW/Scripts/Boss,Enemy/BossLogic/PlacementBossPatternData.cs` | 스킬 후보 기믹 무작위 선택/Spine 길이 연결 |
+| `Assets/WorkSpace/USW/Scripts/Boss,Enemy/PatternLabDriver.cs` | 스케줄러가 전투 시계를 소유하는8종 판정/정리 |
+| `Assets/WorkSpace/USW/Scripts/Boss,Enemy/PatternLabData.cs` | 기믹별 예고·대응·페널티 SO 정의 |
+| `Assets/WorkSpace/USW/Scripts/Boss,Enemy/PatternLabGeometry.cs` | 선/사각/화살표/마름모 예고 메시 |
+| `Assets/WorkSpace/USW/Data/BossPatterns/Hard/*.asset` | HP70/30·skill2~6·전용씬 모드/예고 재질 |
+| `Assets/WorkSpace/USW/Data/BossPatterns/Library/*.asset` | 공용8기믹 수치·목록 |
+| `Assets/WorkSpace/USW/Scripts/VerificationHarnesses/HardIngameEntry.cs` | 별도 UI 없이 Editor 독립 진입의 연구 저장 준비 |
+| `Assets/WorkSpace/USW/Shaders/BossTelegraph.shader` | URP 예고 메시 셰이더 |
+| `tools/verification/HardIngameAuthoring.cs` | Root 최신 씬/프리팹에 저작 |
+| `tools/verification/HardIngameChecks.cs` | 실제 Play67·구간/무작위/보존 검사 |
+| `tools/verification/HardPatternLibraryChecks.cs` | 기존8기믹76 검사 |
+| `tools/verification/HardIngameReview.cs` | 씬/UI/스크립트 보존 확인 |
+| `docs/technical/hard-boss-patterns.md` | 확정 동작·이관/커밋 범위·검증 한계 원본 |
+
+Play67+76 PASS/Unity 컴파일0/인덱스1015소스 컴파일0. 전체 드론 회귀는 기존9109 기대값1건 실패이며 PASS로 간주하지 않는다. 새 씬 후보는 SO직접연결이며 NORMAL 서버 HardBossKeys/CombatExpPerHp 적용 상태와 별개다. 상세 근거/한계는 [구현 원본](../../technical/hard-boss-patterns.md).
 
 ## 실험실 unity-ui의 추가 구현 (2026-10-19, HEAD 61c52805 + 미커밋)
 
