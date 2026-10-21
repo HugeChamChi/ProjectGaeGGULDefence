@@ -202,6 +202,9 @@ public class UIManager : MonoBehaviour
         UpdateBossHp(current, max);
     }
 
+    /// <summary>실제 보스 보호막 변경을 현재 체력바에 반영한다.</summary>
+    public void UpdateBossShield(decimal shield, decimal max) => _bossHpBar?.SetShieldExact(shield, max);
+
     /// <summary>실제 보스 HP 변경을 현재 체력바에 반영한다.</summary>
     public void UpdateBossHp(decimal current, decimal max)
     {

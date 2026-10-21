@@ -107,6 +107,7 @@ public class BossManager : MonoBehaviour
             if (cur <= 0) _combatTimer?.StopTimer();
             _uiManager?.UpdateBossHp(cur, max);
         };
+        boss.OnShieldChanged += (shield, max) => _uiManager?.UpdateBossShield(shield, max);
         bool deathConsumed = false;
         boss.OnDeath     += () =>
         {

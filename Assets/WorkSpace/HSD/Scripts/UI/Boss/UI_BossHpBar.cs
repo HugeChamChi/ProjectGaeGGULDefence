@@ -58,6 +58,8 @@ public class UI_BossHpBar : MonoBehaviour
     [SerializeField] private bool _fillCurrentLine;
     [Tooltip("HP 몸통 배경. 채움·다음 줄 그림을 이 배경과 같은 가로 자리·폭에 그려 정확히 겹친다. 비우면 채움 부모 폭을 쓴다.")]
     [SerializeField] private Image _hpBackground;
+    [Tooltip("남은 보호막을 HP 위에 겹쳐 그리는 띠. 비우면 보호막을 표시하지 않는다")]
+    [SerializeField] private UI_BossHpShield _shield;
     private RectTransform _nextLineMask;
     private Image _nextLineFill;
     private readonly Vector3[] _backgroundCorners = new Vector3[4];
@@ -194,6 +196,14 @@ public class UI_BossHpBar : MonoBehaviour
         _initialized = true;
     }
 
+    /// <summary>보스의 남은 보호막을 표시한다. 늘면 차오름, 줄면 HP와 같은 보간, 0이면 깨짐 연출.</summary>
+    public void SetShieldExact(decimal shield, decimal maxHp)
+    {
+        if (_shield == null) return;
+        decimal perLine = _runtimeHpPerLine > 0m ? _runtimeHpPerLine : (maxHp > 0m ? maxHp : 1m) / LineCount;
+        _shield.SetShieldExact(shield, maxHp, perLine);
+    }
+
     /// <summary>독립 테스터보다 먼저 실제 보스용 표시로 지정한다.</summary>
     public void UseRuntimeData() => IsRuntimeControlled = true;
 
@@ -204,6 +214,8 @@ public class UI_BossHpBar : MonoBehaviour
         UseRuntimeData();
         _runtimeHpPerLine = Math.Max(0m, hpPerLine);
         ResetHp(currentHp, maxHp, ResolveLineCount(maxHp, lineCount));
+        // 이전 보스의 보호막은 연출 없이 지운다.
+        _shield?.ClearImmediate();
     }
 
     /// <summary>lineCount가 명시(1 이상)되면 그대로, 아니면 hpPerLine 기준으로 maxHp에서 계산한다.</summary>

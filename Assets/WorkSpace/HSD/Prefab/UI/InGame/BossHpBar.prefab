@@ -513,6 +513,7 @@ GameObject:
   - component: {fileID: 2109350906414057211}
   - component: {fileID: 2570151168194308403}
   - component: {fileID: 8460799706081594953}
+  - component: {fileID: 6706997823944771478}
   m_Layer: 0
   m_Name: BossHpBar
   m_TagString: Untagged
@@ -568,6 +569,7 @@ MonoBehaviour:
   _lineCount: 200
   _fillCurrentLine: 1
   _hpBackground: {fileID: 2503550705461959490}
+  _shield: {fileID: 6706997823944771478}
   _colorMode: 2
   _lineColors:
   - {r: 0.36, g: 0.62, b: 0.38, a: 1}
@@ -599,3 +601,43 @@ MonoBehaviour:
   _strength: 16
   _vibrato: 10
   _randomness: 25
+--- !u!114 &6706997823944771478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6875015097177740926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a80e3b68e2c37e546974a9781c0fbadc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_BossHpShield
+  _hpFillMask: {fileID: 5229864193566837784}
+  _hpColor: {fileID: 694432296968566792}
+  _hpBackground: {fileID: 2503550705461959490}
+  _fillSpriteHorizontalPadding: {x: 10, y: 9}
+  _span: 1
+  _seamSprite: {fileID: 21300000, guid: 0fac8405710446044942180ed3466a25, type: 3}
+  _bandColor: {r: 0.2, g: 0.62, b: 1, a: 0.85}
+  _seamColor: {r: 0.72, g: 0.97, b: 1, a: 1}
+  _flashColor: {r: 0.92, g: 1, b: 1, a: 0.95}
+  _seamWidth: 22
+  _seamHeight: 0.72
+  _pulseMinAlpha: 0.55
+  _pulsePeriod: 1.1
+  _bandMaterial: {fileID: 2100000, guid: 47ff4a5d924121140afe2a7c655ec166, type: 2}
+  _haloSprite: {fileID: 0}
+  _haloColor: {r: 0.2, g: 0.75, b: 1, a: 0.85}
+  _haloPadding: {x: 26, y: 1.05}
+  _iconSprite: {fileID: 0}
+  _iconColor: {r: 0.55, g: 0.93, b: 1, a: 1}
+  _iconSize: 58
+  _tweenDuration: 0.32
+  _damageEase: 9
+  _grantDuration: 0.25
+  _grantEase: 6
+  _hitFlashDuration: 0.14
+  _hitFlashStrength: 0.45
+  _breakDuration: 0.28
+  _breakScaleY: 1.35
