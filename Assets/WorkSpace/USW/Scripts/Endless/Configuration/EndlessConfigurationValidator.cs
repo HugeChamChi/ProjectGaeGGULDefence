@@ -9,7 +9,7 @@ public static class EndlessConfigurationValidator
     public static bool IsValidKey(string key) => key != null && Regex.IsMatch(key, "^[A-Za-z][A-Za-z0-9_]*$");
 
     /// <summary>활성화 가능 여부를 검사한다. 초안/비활성 설정은 오류 사유와 함께 false다.</summary>
-    public static bool TryValidateForRun(EndlessModeData mode, out string error)
+    public static bool TryValidateForRun(EndlessModeData mode, out string error, bool validateAuthoredBalance = true)
     {
         var errors = new List<string>();
         if (mode == null) { error = "무한 설정이 없습니다."; return false; }
@@ -26,22 +26,43 @@ public static class EndlessConfigurationValidator
                 if (slot == null || slot.Position < 1 || slot.Position > mode.CycleLength || !positions.Add(slot.Position))
                 { errors.Add("순환 위치 누락/중복/범위 오류"); continue; }
                 if (!Enum.IsDefined(typeof(EndlessBossRole), slot.Role) || slot.Role == EndlessBossRole.Unspecified) errors.Add($"{slot.Position}번 보스 역할 미정");
-                if (!IsValidKey(slot.BossKey) || slot.Boss == null || slot.Boss.Prefab == null) errors.Add($"{slot.Position}번 보스 연결 미정");
+                if (mode.BossSelection != EndlessBossSelection.ShuffleFromStart
+                    && (!IsValidKey(slot.BossKey) || slot.Boss == null || slot.Boss.Prefab == null)) errors.Add($"{slot.Position}번 보스 연결 미정");
             }
         var growth = mode.Growth;
-        if (growth == null || !growth.IsConfigured) errors.Add("성장 설정 미정");
-        else if (growth.FirstGrowthRound < 1 || growth.IntervalRounds < 1 || !NonnegativeFinite(growth.HpPercentPerStep) || !NonnegativeFinite(growth.DefenseAddedPerStep) || !NonnegativeFinite(growth.ExpPercentPerStep)) errors.Add("성장 간격/수치 오류");
+        if (validateAuthoredBalance)
+        {
+            if (growth == null || !growth.IsConfigured) errors.Add("성장 설정 미정");
+            else if (growth.FirstGrowthRound < 1 || growth.IntervalRounds < 1 || !NonnegativeFinite(growth.HpPercentPerStep) || !NonnegativeFinite(growth.DefenseAddedPerStep) || !NonnegativeFinite(growth.ExpPercentPerStep)) errors.Add("성장 간격/수치 오류");
+        }
         if (!TryValidatePool(mode.PenaltyPool, out string poolError)) errors.Add(poolError);
         if (!Enum.IsDefined(typeof(EndlessBossSelection), mode.BossSelection)) errors.Add("미지원 보스 선택 방식");
-        if (mode.BossSelection == EndlessBossSelection.ShuffleAfterOpening && mode.Slots != null)
+        if (validateAuthoredBalance && mode.BossProgression != null)
+        {
+            if (!mode.BossProgression.TryCapture(out _, out string progressionError)) errors.Add(progressionError);
+            if (mode.BossSelection != EndlessBossSelection.ShuffleFromStart) errors.Add("난도 공통 수치 프로필은 1라운드부터 보스 풀을 사용해야 합니다.");
+        }
+        if (mode.BossSelection != EndlessBossSelection.FixedCycle && mode.Slots != null)
         {
             var checkedRoles = new HashSet<EndlessBossRole>();
             foreach (var slot in mode.Slots)
             {
                 if (slot == null || slot.Role == EndlessBossRole.Unspecified || !checkedRoles.Add(slot.Role)) continue;
                 var pool = slot.Role == EndlessBossRole.Breather ? mode.BreatherBossPool : mode.HardBossPool;
-                if (!TryValidateBossPool(pool, slot.Role, out string bossPoolError)) errors.Add(bossPoolError);
+                if (!TryValidateBossPool(pool, slot.Role, out string bossPoolError, validateAuthoredBalance)) errors.Add(bossPoolError);
             }
+        }
+        if (validateAuthoredBalance && mode.BossSelection == EndlessBossSelection.ShuffleFromStart && mode.BreatherBossPool?.Entries != null && mode.HardBossPool?.Entries != null)
+        {
+            var breather = new HashSet<BossData>();
+            var breatherPrefabs = new HashSet<UnityEngine.GameObject>();
+            foreach (var entry in mode.BreatherBossPool.Entries)
+                if (entry != null && entry.Enabled && entry.Boss != null)
+                { breather.Add(entry.Boss); if (entry.Boss.Prefab != null) breatherPrefabs.Add(entry.Boss.Prefab); }
+            foreach (var entry in mode.HardBossPool.Entries)
+                if (entry != null && entry.Enabled && entry.Boss != null
+                    && (breather.Contains(entry.Boss) || breatherPrefabs.Contains(entry.Boss.Prefab)))
+                    errors.Add("같은 보스 정의/프리팹을 쉬움/어려움 양쪽 풀에 등록할 수 없습니다.");
         }
         error = string.Join("\n", errors);
         return errors.Count == 0;
@@ -88,7 +109,7 @@ public static class EndlessConfigurationValidator
     }
 
     /// <summary>Requires distinct registered definitions and at least one active candidate in the expected category.</summary>
-    public static bool TryValidateBossPool(EndlessBossPoolData pool, EndlessBossRole role, out string error)
+    public static bool TryValidateBossPool(EndlessBossPoolData pool, EndlessBossRole role, out string error, bool requireActive = true)
     {
         error = $"{role}: 보스 풀 미연결/잘못된 분류";
         if (pool == null || !IsValidKey(pool.Key) || pool.Role != role || pool.Entries == null
@@ -101,7 +122,7 @@ public static class EndlessConfigurationValidator
             if (entry == null || !IsValidKey(entry.BossKey) || entry.Boss == null
                 || !keys.Add(entry.BossKey) || !definitions.Add(entry.Boss))
             { error = $"{pool.Key}: 후보 연결 누락 또는 키/보스 정의 중복"; return false; }
-            if (!entry.Enabled) continue;
+            if (!entry.Enabled && requireActive) continue;
             if (entry.Boss.Prefab == null) { error = $"{pool.Key}/{entry.BossKey}: 프리팹 미연결"; return false; }
             any = true;
         }

@@ -63,6 +63,8 @@ public class BossManager : MonoBehaviour
     public bool TrySpawnSingleBoss(RuntimeBossStats stats, Action onDefeated, out string error)
     {
         if (!RuntimeBossStatsCalculator.TryValidate(stats, out error)) return false;
+        if (stats.DefenseScale.HasValue && (_debuffSettings == null || stats.DefenseScale.Value != _debuffSettings.DefenseScale))
+        { error = "[BossManager] Role defense settings differ from the active combat defense scale."; return false; }
         return TrySpawnSingleBossCore(new BossEntry { Data = stats.Source }, stats, onDefeated, out error);
     }
 
@@ -118,12 +120,14 @@ public class BossManager : MonoBehaviour
 
         boss.gameObject.AddComponent<BossAreaTarget>();
 
-        _patternController?.RegisterBoss(boss, boss.Patterns);
-        _uiManager?.BeginBossHp(boss.CurrentHp, boss.MaxHp, runtime?.HpLineCount ?? entry.HpLineCount);
+        if (!runtime.HasValue || runtime.Value.AllowsPatterns)
+            _patternController?.RegisterBoss(boss, boss.Patterns);
+        _uiManager?.BeginBossHp(boss.CurrentHp, boss.MaxHp, runtime?.HpLineCount ?? entry.HpLineCount,
+            runtime?.HpPerLine ?? 0m);
 
         OnBossEntryed?.Invoke(_prevBossEntry, entry);
         _prevBossEntry = entry;
-        Debug.Log($"[BossManager] 보스 소환: {entry.Prefab.name} (HP: {boss.MaxHp}, 줄 수: {entry.HpLineCount})");
+        Debug.Log($"[BossManager] 보스 소환: {entry.Prefab.name} (HP: {boss.MaxHp}, 줄 수: {runtime?.HpLineCount ?? entry.HpLineCount}, 역할: {runtime?.Role})");
         return true;
     }
 

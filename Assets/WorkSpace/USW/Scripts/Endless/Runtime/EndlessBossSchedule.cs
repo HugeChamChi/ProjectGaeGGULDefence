@@ -1,24 +1,40 @@
 using System;
 using System.Collections.Generic;
 
-/// <summary>Run-local boss selection. The first cycle is fixed; subsequent category turns consume independent pools.</summary>
+/// <summary>Run-local boss selection with explicit legacy opening and first-round shuffle policies.</summary>
 internal sealed class EndlessBossSchedule
 {
-    private readonly EndlessModeData _mode;
+    private readonly int _cycleLength;
+    private readonly EndlessBossSelection _selection;
     private readonly IEndlessRandom _random;
-    private readonly Dictionary<int, EndlessBossSlot> _slots = new Dictionary<int, EndlessBossSlot>();
+    private readonly Dictionary<int, (EndlessBossRole Role, BossData Boss)> _slots = new Dictionary<int, (EndlessBossRole, BossData)>();
     private readonly Dictionary<EndlessBossRole, BossData[]> _candidates = new Dictionary<EndlessBossRole, BossData[]>();
     private readonly Dictionary<EndlessBossRole, EndlessShuffleBag<BossData>> _bags = new Dictionary<EndlessBossRole, EndlessShuffleBag<BossData>>();
     private readonly Dictionary<EndlessBossRole, BossData> _previous = new Dictionary<EndlessBossRole, BossData>();
     private int _selectedRound;
     private BossData _selectedBoss;
+    internal EndlessBossRole CurrentRole { get; private set; }
 
-    internal EndlessBossSchedule(EndlessModeData mode, IEndlessRandom random)
+    internal EndlessBossSchedule(EndlessModeData mode, IEndlessRandom random, EndlessBalanceSnapshot balance = null)
     {
-        _mode = mode;
+        _cycleLength = mode.CycleLength;
+        _selection = mode.BossSelection;
         _random = random;
-        foreach (var slot in mode.Slots) _slots.Add(slot.Position, slot);
-        if (mode.BossSelection != EndlessBossSelection.ShuffleAfterOpening) return;
+        foreach (var slot in mode.Slots) _slots.Add(slot.Position, (slot.Role, slot.Boss));
+        if (balance != null)
+        {
+            var registry = new Dictionary<string, BossData>(StringComparer.Ordinal);
+            foreach (var pool in new[] { mode.BreatherBossPool, mode.HardBossPool })
+                foreach (var entry in pool.Entries) registry[entry.BossKey] = entry.Boss;
+            foreach (var role in new[] { EndlessBossRole.Breather, EndlessBossRole.Hard })
+            {
+                var candidates = new List<BossData>();
+                foreach (string key in balance.BossKeys(role)) candidates.Add(registry[key]);
+                _candidates.Add(role, candidates.ToArray());
+            }
+            return;
+        }
+        if (mode.BossSelection == EndlessBossSelection.FixedCycle) return;
         var roles = new HashSet<EndlessBossRole>();
         foreach (var slot in mode.Slots)
             if (roles.Add(slot.Role))
@@ -40,8 +56,9 @@ internal sealed class EndlessBossSchedule
         if (round == _selectedRound && round > 0) { boss = _selectedBoss; return true; }
         if (round < 1 || (long)round != (long)_selectedRound + 1)
         { error = "Boss selection must advance one round at a time."; return false; }
-        var slot = _slots[(round - 1) % _mode.CycleLength + 1];
-        if (_mode.BossSelection == EndlessBossSelection.FixedCycle || round <= _mode.CycleLength)
+        var slot = _slots[(round - 1) % _cycleLength + 1];
+        if (_selection == EndlessBossSelection.FixedCycle
+            || (_selection == EndlessBossSelection.ShuffleAfterOpening && round <= _cycleLength))
             boss = slot.Boss;
         else
         {
@@ -56,6 +73,7 @@ internal sealed class EndlessBossSchedule
         _previous[slot.Role] = boss;
         _selectedRound = round;
         _selectedBoss = boss;
+        CurrentRole = slot.Role;
         return true;
     }
 }

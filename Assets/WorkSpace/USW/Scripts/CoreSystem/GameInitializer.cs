@@ -40,6 +40,15 @@ public class GameInitializer : IInitializable, IAsyncStartable
     public void Initialize()
     {
         Debug.Log("[GameInitializer] 시작");
+#if UNITY_EDITOR
+        // Direct Play is an explicit development preview. Lobby transitions retain production preflight.
+        if (_gameManager.gameObject.scene.name == "IngameScene" && !_sceneChangeManager.IsTransitioning)
+        {
+            _gameManager.gameObject.AddComponent<IngameEditorPreview>().Configure(_waveManager);
+            _gameManager.EnableEditorPreview();
+            _research.PrepareEditorPreview();
+        }
+#endif
         if (_gameDataManager != null) _gameDataManager.Init();
         if (_currencyManager != null) _currencyManager.Init();
         if (_expManager != null) _expManager.Init();
@@ -73,7 +82,10 @@ public class GameInitializer : IInitializable, IAsyncStartable
             _preparation.TrySetException(error);
             // The VContainer Awaitable entry point is fire-and-forget; keep failures visible in device logs.
             if (error is not System.OperationCanceledException)
+            {
                 Debug.LogError($"[GameInitializer] Battle preparation failed: {error}");
+                _gameManager.FailPreparation("전투 준비에 실패했습니다. 로그인과 전투 설정을 확인한 뒤 다시 출격해 주세요.");
+            }
             throw;
         }
 
@@ -84,7 +96,7 @@ public class GameInitializer : IInitializable, IAsyncStartable
             await _globalUIManager.FadeOutAsync();
         cancellation.ThrowIfCancellationRequested();
         IsReady = true;
-        if (_gameManager.gameObject.scene.name == "IngameScene")
+        if (_gameManager.gameObject.scene.name == "IngameScene" || _gameManager.gameObject.scene.name == "HardIngameScene")
             _gameManager.StartGame(true);
     }
 
@@ -95,8 +107,8 @@ public class GameInitializer : IInitializable, IAsyncStartable
         _globalUIManager.ReportLoadingProgress(0.65f, "전투 데이터 준비 중");
         await _research.LoadAsync(cancellation);
         _globalUIManager.ReportLoadingProgress(0.75f, "전투 설정 확인 중");
-        if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.Key == "NORMAL")
-            await _endlessBalance.RefreshAsync(cancellation);
+        if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.RequiresRemoteBalance)
+            await _endlessBalance.PrepareSceneAsync(cancellation);
         _globalUIManager.ReportLoadingProgress(0.85f, "사운드 준비 중");
         // Prepare only the app-owned approved palette; scene cancellation owns this wait.
         if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);

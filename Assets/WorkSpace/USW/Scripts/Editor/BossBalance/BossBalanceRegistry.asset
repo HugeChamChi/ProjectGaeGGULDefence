@@ -33,6 +33,10 @@ MonoBehaviour:
     Data: {fileID: 11400000, guid: c74b78c573a712946bbb1ec8cce31ad0, type: 2}
   - Key: CrocodilePrototypeData
     Data: {fileID: 11400000, guid: 18634ca64d018ba47909d8bb1dbe8482, type: 2}
+  - Key: Breather_DummyBoss01
+    Data: {fileID: 11400000, guid: 6b69a7a275cd3204cb5799037ec07fc3, type: 2}
+  - Key: LizardBossData
+    Data: {fileID: 11400000, guid: 26f320298edc16b43ab3207e4d1b6d6f, type: 2}
   _prefabs:
   - Key: CrocodilePrototype
     Prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2,
@@ -63,4 +67,7 @@ MonoBehaviour:
       type: 3}
   - Key: DummyBoss08
     Prefab: {fileID: 5097534829583230306, guid: 1e468b56c2932ef48b215aae5876f532,
+      type: 3}
+  - Key: Lizard
+    Prefab: {fileID: 3647438387697009494, guid: ae729b82b2cc28d41b975fef23985247,
       type: 3}

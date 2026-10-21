@@ -42,7 +42,8 @@ public sealed class AccountSettingsService
             _federated = !string.IsNullOrEmpty(Read(row, "federationId"));
             _server = Read(row, "propertyGroup"); if (string.IsNullOrEmpty(_server)) _server = "기본 그룹 (미지정)";
             _owner = owner;
-            Player.PlayerData.SetNickname(_nickname);
+            // This account-status request can finish after a profile nickname change.
+            // ProfileNicknameGateway owns revision-checked reconciliation of the PlayerData mirror.
             return "";
         }
         catch (Exception) { return "계정 조회가 지연되고 있습니다. 다시 시도해 주세요."; }

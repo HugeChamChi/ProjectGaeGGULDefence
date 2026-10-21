@@ -11,14 +11,26 @@ public readonly struct RuntimeBossStats
     public float ExpReward { get; }
     /// <summary>화면에 사용할 1 이상의 체력줄 수.</summary>
     public int HpLineCount { get; }
+    /// <summary>Role selected by the round schedule; unspecified only on legacy/finite stats.</summary>
+    public EndlessBossRole Role { get; }
+    /// <summary>Frozen scale used to invert role defense; null for legacy raw-defense stats.</summary>
+    public double? DefenseScale { get; }
+    /// <summary>Explicit HP per visual line for role progression; zero retains legacy equal subdivisions.</summary>
+    public decimal HpPerLine { get; }
+    /// <summary>Role-based breather encounters do not register combat patterns.</summary>
+    public bool AllowsPatterns => !DefenseScale.HasValue || Role == EndlessBossRole.Hard;
 
     /// <summary>B의 성장 계산기가 검증한 소환 수치를 구성한다.</summary>
-    public RuntimeBossStats(BossData source, decimal maxHp, double defense, float expReward, int hpLineCount)
+    public RuntimeBossStats(BossData source, decimal maxHp, double defense, float expReward, int hpLineCount,
+        EndlessBossRole role = EndlessBossRole.Unspecified, double? defenseScale = null, decimal hpPerLine = 0m)
     {
         Source = source;
         MaxHp = maxHp;
         Defense = defense;
         ExpReward = expReward;
         HpLineCount = hpLineCount;
+        Role = role;
+        DefenseScale = defenseScale;
+        HpPerLine = hpPerLine;
     }
 }

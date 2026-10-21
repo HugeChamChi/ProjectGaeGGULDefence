@@ -38,6 +38,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 63c28fdeb4a06944ab91b51d6a936422, type: 2}
   - {fileID: 11400000, guid: fbab0d28e82772c48a9e00c97566992e, type: 2}
   - {fileID: 11400000, guid: 16550bf79b925db459607b9dc235e2d0, type: 2}
+  ConceptCatalog: {fileID: 11400000, guid: b6d9c40769bf3f348824139a8d758fc4, type: 2}
   RareWeight: 60
   EpicWeight: 30
   LegendWeight: 10

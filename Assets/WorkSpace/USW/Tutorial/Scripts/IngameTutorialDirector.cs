@@ -518,7 +518,7 @@ namespace GaeGGUL.Tutorial
                         _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)_chiefButton.transform));
                         await Until(() => countered, token);
                         Block();
-                        _dialogue.ShowText("좋아요! 족장 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
+                        _dialogue.ShowText("좋아요! 액티브 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
                         await Delay(1.5f, token);
                     }
                     finally

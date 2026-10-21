@@ -46,7 +46,7 @@ public static class DroneSelectionPresets
                 card.chooseName="주파수 동조"; card.description="필드 드론 1기당 감망의 스택 추가 피해가 0.3% 증가합니다. 최대 9%.";
                 card.tier=Tier.Epic; e.Value=0.003f; e.MaxValue=0.09f; break;
             case DroneSelectionKind.GammanEmergency:
-                card.chooseName="긴급 교신"; card.description="알팡 액티브 사용 시 배치된 감망이 추가 기폭합니다. 이미 기폭 중인 감망은 중복 발동하지 않습니다."; break;
+                card.chooseName="긴급 교신"; card.description="액티브 스킬 사용 시, 보스에게 쌓인 해킹 스택을 모두 소모해 기폭합니다."; break;
             case DroneSelectionKind.ZeltanAirFryer:
                 card.chooseName="에어프라이기"; card.description="젤탕의 자체 식량 생산량이 20% 증가하며 3초마다 모아서 지급됩니다.";
                 e.Interval=3; e.Value=0.2f; break;
@@ -54,17 +54,17 @@ public static class DroneSelectionPresets
                 card.chooseName="넹?"; card.description="델탕 해킹 스킬의 생산량이 1스택 증가합니다.";
                 card.tier=Tier.Epic; e.Count=1; break;
             case DroneSelectionKind.DeltanDamageTaken:
-                card.chooseName="넹 !"; card.description="델탕 해킹 생산량이 {value}% 증가합니다. 소수 생산분은 다음 시전으로 이월됩니다.";
-                card.tier=Tier.Epic; e.Value=0.01f; e.MaxValue=0.1f; break;
+                card.chooseName="넹 !"; card.description="델탕 해킹 시 {value}% 확률로 그 해킹의 스택 생산량이 {count}배가 됩니다.";
+                card.tier=Tier.Epic; e.Value=0.05f; e.Count=2; break;
             case DroneSelectionKind.DeltanCooldown:
-                card.chooseName="넹..."; card.description="델탕 완충에 필요한 공격 횟수가 10% 감소합니다 (최소 1회 감소).";
-                e.Value=0.1f; break;
+                card.chooseName="넹..."; card.description="감망 기폭 후 스택 추가 피해의 {value}%를 {seconds}초 동안 {count}회에 나눠 줍니다. 다시 기폭하면 남은 여운을 합칩니다.";
+                e.Value=0.2f; e.Interval=3f; e.Count=6; break;
             case DroneSelectionKind.AlphanCooldown:
                 card.chooseName="위대한 지도자"; card.description="알팡 액티브 스킬 쿨타임이 20% 감소합니다.";
                 e.Value=0.2f; break;
             case DroneSelectionKind.AlphanDoubleShot:
-                card.chooseName="전술적 프로토콜"; card.description="알팡 액티브 스킬이 2회 연속 발사됩니다. 각 피해는 원래 최종 피해의 60%입니다.";
-                card.tier=Tier.Legend; e.Value=0.6f; e.Count=2; e.Interval=0.2f; break;
+                card.chooseName="전술적 프로토콜"; card.description="액티브 스킬을 최대 {count}회까지 충전해 보관할 수 있습니다.";
+                card.tier=Tier.Legend; e.Count=2; break;
             case DroneSelectionKind.ZeltanColdStorage:
                 card.chooseName="냉동 보관"; card.description="젤탕의 자체 식량 생산량이 10% 증가합니다.";
                 e.Value=0.1f; break;
@@ -81,6 +81,10 @@ public static class DroneSelectionPresets
         }
         card.spawnRate = 1f;
         card.Composition = SelectionDefinitionReader.CopyLegacyForMigration(card);
+        if (kind == DroneSelectionKind.AlphanDoubleShot)
+            card.Composition.Effects[0] = new ChiefChargeCapacityDefinition { MaximumCharges = e.Count };
+        if (kind == DroneSelectionKind.GammanEmergency)
+            card.Composition.Effects[0] = new ChiefHackingDetonationDefinition { DamageRatioPerStack = 0.01f };
         card.EffectSchemaVersion = 1;
     }
 

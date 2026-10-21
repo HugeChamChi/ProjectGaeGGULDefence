@@ -108,8 +108,24 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public float ManaRequirementReduction { get; private set; } = 0f;
     /// <summary>마나 감소 기능의 활성 여부.</summary>
     public bool HasManaRequirementReduction { get; private set; }
+    /// <summary>델탕 해킹 생산량 배수 발동 확률.</summary>
+    public float HackingProductionProcChance { get; private set; } = 0f;
+    /// <summary>발동 시 생산량 배수.</summary>
+    public int HackingProductionProcMultiplier { get; private set; } = 1;
+    /// <summary>감망 기폭 여운 활성 여부.</summary>
+    public bool HasGammanResidue { get; private set; }
+    /// <summary>여운 총량 비율. 1=100%.</summary>
+    public float GammanResidueRatio { get; private set; } = 0f;
+    /// <summary>여운 지속 시간(초).</summary>
+    public float GammanResidueDuration { get; private set; } = 0f;
+    /// <summary>여운 틱 수.</summary>
+    public int GammanResidueTicks { get; private set; } = 0;
     /// <summary>ChiefCooldownReduction의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float ChiefCooldownReduction { get; private set; } = 0f;
+    /// <summary>족장 스킬의 최대 순차 충전 보관 횟수.</summary>
+    public int ChiefChargeCapacity { get; private set; } = 1;
+    /// <summary>긴급 교신의 소모 스택당 집결 추가 피해 비율.</summary>
+    public float ChiefHackingDamagePerStack { get; private set; }
     /// <summary>ChiefVolleyDelay의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float ChiefVolleyDelay { get; private set; } = 0f;
     /// <summary>ChiefVolleyDamageRatio의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
@@ -172,7 +188,11 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
                     case HackingProductionFlatDefinition d: HackingProductionFlat=checked(HackingProductionFlat+d.StackCount); break;
                     case HackingProductionRollDefinition d: if (d.MinimumRatio != d.MaximumRatio) throw new ArgumentException("Production roll must be resolved by Prepare."); HackingProductionBonus+=d.MinimumRatio; break;
                     case ManaRequirementDefinition d: Once(effect); HasManaRequirementReduction=true; ManaRequirementReduction=d.ReductionRatio; break;
+                    case HackingProductionProcDefinition d: Once(effect); HackingProductionProcChance=d.Chance; HackingProductionProcMultiplier=d.Multiplier; break;
+                    case GammanResidueDefinition d: Once(effect); HasGammanResidue=true; GammanResidueRatio=d.DamageRatio; GammanResidueDuration=d.DurationSeconds; GammanResidueTicks=d.TickCount; break;
                     case ChiefCooldownDefinition d: ChiefCooldownReduction+=d.ReductionRatio; break;
+                    case ChiefChargeCapacityDefinition d: Once(effect); ChiefChargeCapacity=d.MaximumCharges; break;
+                    case ChiefHackingDetonationDefinition d: Once(effect); ChiefHackingDamagePerStack=d.DamageRatioPerStack; break;
                     case ChiefVolleyDefinition d: Once(effect); ChiefVolleyDelay=d.ShotDelaySeconds; ChiefVolleyDamageRatio=d.DamageRatio; ChiefVolleyCount=d.ShotCount; break;
                     case FoodProductionDefinition d: FoodProductionBonus+=d.BonusRatio; break;
                     case FleetFoodProductionDefinition d: FleetFoodProductionBonus+=d.BonusRatio; break;
@@ -238,7 +258,11 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
         Finite(FleetFoodProductionBonus);
         Finite(HackingProductionBonus);
         Finite(ManaRequirementReduction);
+        Finite(HackingProductionProcChance);
+        Finite(GammanResidueRatio);
+        Finite(GammanResidueDuration);
         Finite(ChiefCooldownReduction);
+        Finite(ChiefHackingDamagePerStack);
         Finite(ChiefVolleyDelay);
         Finite(ChiefVolleyDamageRatio);
         Finite(RallyDamageBonus);

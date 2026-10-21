@@ -20,6 +20,7 @@ public class Drone_Betan : DroneSpawnerBase
     private int _bombRequestLifetime;
     private int _pendingSkillBombs;
     private BossBase _pendingSkillBoss;
+    private int _fleetVolleyIndex = -1;
 
     protected override void OnSkillFull()
     {
@@ -35,7 +36,15 @@ public class Drone_Betan : DroneSpawnerBase
 
     /// <summary>기본 스킬 및 선택지 주기에서 요청한 자폭 드론을 생성한다.</summary>
     public virtual void SpawnSelfDestructDrones(int count)
-        => SpawnBombs(count, selfDestructPrefab, null);
+        => SpawnBombs(count, selfDestructPrefab, null, _fleetVolleyIndex);
+
+    /// <summary>9103 일제 출격 한 기. 기존 생성 경로(SpawnSelfDestructDrones)를 그대로 쓰고 출격 순번만 붙인다.</summary>
+    public void SpawnFleetBomb(int volleyIndex)
+    {
+        _fleetVolleyIndex = volleyIndex;
+        try { SpawnSelfDestructDrones(1); }
+        finally { _fleetVolleyIndex = -1; }
+    }
 
     /// <summary>Spine 버튼 누름 이벤트에서 예약된 스킬 자폭을 한 번 발사한다.</summary>
     public void LaunchPendingSkillBombs()
@@ -51,7 +60,7 @@ public class Drone_Betan : DroneSpawnerBase
     public void CancelPendingSkillBombs()
     { _pendingSkillBombs = 0; _pendingSkillBoss = null; }
 
-    private void SpawnBombs(int count, SelfDestructDrone prefab, BossBase expectedTarget)
+    private void SpawnBombs(int count, SelfDestructDrone prefab, BossBase expectedTarget, int volleyIndex = -1)
     {
         if (count <= 0 || !isActiveAndEnabled || currentCell == null || IsStunned || IsCellSealed || unitData == null || prefab == null)
         {
@@ -60,7 +69,7 @@ public class Drone_Betan : DroneSpawnerBase
 
         if (_fieldPause?.AttacksHeld == true)
         {
-            SpawnAfterHoldAsync(count, _bombRequestLifetime, prefab, expectedTarget).Forget();
+            SpawnAfterHoldAsync(count, _bombRequestLifetime, prefab, expectedTarget, volleyIndex).Forget();
             return;
         }
         if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return;
@@ -87,12 +96,12 @@ public class Drone_Betan : DroneSpawnerBase
                     if (effects?.HasBombHacking == true && unitData.Hacking != null && _droneManager != null)
                     {
                         var runtime=_droneManager.Hacking;runtime.Configure(unitData.Hacking);
-                        bomb.InitializeHacking(target,runtime,effects.HackingStacksPerBomb);
+                        bomb.InitializeHacking(target,runtime,effects.HackingStacksPerBomb,volleyIndex);
                     }
                     else
                     {
                         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-                        bomb.Initialize(damage, critical, target, unitData);
+                        bomb.Initialize(damage, critical, target, unitData, volleyIndex);
                     }
                 }
                 else RM.Destroy(bombObj);
@@ -104,11 +113,11 @@ public class Drone_Betan : DroneSpawnerBase
         }
     }
 
-    private async UniTaskVoid SpawnAfterHoldAsync(int count, int lifetime, SelfDestructDrone prefab, BossBase expectedTarget)
+    private async UniTaskVoid SpawnAfterHoldAsync(int count, int lifetime, SelfDestructDrone prefab, BossBase expectedTarget, int volleyIndex)
     {
         if (await _fieldPause.WaitForAttacksAsync(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
         if (_bombRequestLifetime != lifetime || !isActiveAndEnabled || currentCell == null) return;
-        SpawnBombs(count, prefab, expectedTarget);
+        SpawnBombs(count, prefab, expectedTarget, volleyIndex);
     }
 
     protected override void OnUnitRemoved()

@@ -33,13 +33,12 @@ public static class DroneSelectionChecks
             Check(preview==manager.GetChoiceDescription(cards[8]),"Preview is stable");
             var ui=Component<LevelUpCardUI>(); var label=Component<TMPro.TextMeshProUGUI>();
             Set(ui,"descriptionText",label); ui.Setup(cards[8],null,preview);
-            Check(label.text==preview && !preview.Contains("{value}"),"TMP resolved description");
+            Check(label.text==preview && !preview.Contains("{value}") && preview.Contains("5%") && preview.Contains("2배"),"TMP resolved description");
             manager.ApplyEffect(cards[8]);
-            float roll=manager.Effects.HackingProductionBonus;
-            Check(roll>=0.01f && roll<=0.1f && preview.Contains(Mathf.RoundToInt(roll*100)+"%"),"Displayed value applied");
-            Check(cards[8].droneEffect.Value==0.01f && cards[8].description.Contains("{value}"),"SO untouched");
+            Check(Mathf.Approximately(manager.Effects.HackingProductionProcChance,.05f) && manager.Effects.HackingProductionProcMultiplier==2,"넹 ! proc chance and multiplier applied");
+            Check(cards[8].droneEffect.Value==0.05f && cards[8].description.Contains("{value}"),"SO untouched");
             manager.ApplyEffect(cards[8]);
-            Check(manager.Effects.HackingProductionBonus==roll,"Duplicate apply does not reroll");
+            Check(Mathf.Approximately(manager.Effects.HackingProductionProcChance,.05f),"Duplicate apply does not stack");
 
             var drones=Component<DroneManager>(); Set(drones, "_effects", manager.Effects); Set(drones, "_chiefEffects", manager.Effects);
             var beta=Component<DroneSelectionCheckBetan>(); beta.unitData=Asset<UnitData>();
@@ -73,7 +72,8 @@ public static class DroneSelectionChecks
             var delta=Component<Drone_Deltan>();delta.unitData=Asset<UnitData>();delta.unitData.skillCooldown.normal=20;
             delta.unitData.Hacking=Asset<DroneHackingData>();delta.unitData.Hacking.AttacksToCharge.normal=6;
             delta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });manager.ApplyEffect(cards[9]);
-            Check(delta.RequiredAttacks==5,"Deltan mana requirement reduction");
+            Check(delta.RequiredAttacks==6 && manager.Effects.HasGammanResidue && Mathf.Approximately(manager.Effects.GammanResidueRatio,.2f)
+                && Mathf.Approximately(manager.Effects.GammanResidueDuration,3f) && manager.Effects.GammanResidueTicks==6,"넹... residue settings, mana requirement unchanged");
             var alphaData=Asset<AlphanSkillData>(); alphaData.CooldownSeconds=20;
             using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager.Effects,null,null))
             {
@@ -91,6 +91,7 @@ public static class DroneSelectionChecks
             Set(drones,"_buffEndTime",-1f);manager.ApplyEffect(cards[5]);drones.ApplyEmergencyBuffs();
             Check(Mathf.Approximately(drones.DroneAtkMultiplier,1f) && !gamma.IsHacking,"Emergency without live boss does not buff or cast");
 
+            float roll=0.05f; // 받피증 가산 검사용 값(예전 9108 추첨값 자리)
             var debuffs=new DebuffController(_=>{},()=>true);
             var definition=new DebuffDefinition(1003,"test",DebuffKind.DamageTakenIncrease,"test",5,1,damageMultiplier:1.2m);
             debuffs.Apply(definition,new DebuffApplyContext(1,1,0,(decimal)roll,0.1));

@@ -14,7 +14,7 @@ namespace GaeGGUL.DeckUpgrade
             new[] { "공격력 10% 증가", "스킬 쿨타임 20% 감소", "스킬 피해 20% 증가", "스킬 사용 시 [해킹] 추가 소모 +1", "치명타 확률/피해 10% 증가." },
             new[] { "공격력 10% 증가", "스킬 충전 공격 횟수 -1", "공격속도 10% 증가", "일반공격 시 25% 확률로 추가 공격", "일반공격 피해 20% 증가" },
             new[] { "식량 생산 쿨타임 10% 감소", "등장 시 식량 즉시 2회 생산", "보스 처치 시 식량 즉시 3회 생산", "25% 확률로 식량 2배 생산", "자체 식량 생산량 20% 증가" },
-            new[] { "[족장 스킬] 쿨타임 10% 감소", "패턴 무효화 시 남은 쿨타임 15% 감소", "전체 유닛 공격력 5% 증가", "[족장 스킬] 사용 시 전체 유닛 공격속도 증가", "전체 유닛 스킬 쿨타임 10% 감소" }
+            new[] { "[액티브 스킬] 쿨타임 10% 감소", "패턴 무효화 시 남은 쿨타임 15% 감소", "전체 유닛 공격력 5% 증가", "[액티브 스킬] 사용 시 전체 유닛 공격속도 증가", "전체 유닛 스킬 쿨타임 10% 감소" }
         };
         private readonly TMP_Text[] descriptions = new TMP_Text[5];
         private readonly TermLinkTapTarget[] links = new TermLinkTapTarget[5];
@@ -59,7 +59,7 @@ namespace GaeGGUL.DeckUpgrade
             {
                 string text = HighlightNumbers(Labels[unit][i]).Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))
-                    .Replace("[족장 스킬]", Mark("족장 스킬", "chief_skill"));
+                    .Replace("[액티브 스킬]", Mark("액티브 스킬", "chief_skill"));
                 if (unit == 5 && i == 3)
                     text = text.Replace("공격속도 증가", "<link=\"" + AttackSpeedBuffId + "\"><color=#91E6A6>공격속도 증가</color></link>");
                 if (descriptions[i].text == text) continue;

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TermGlossary
   _entries:
   - Id: chief_skill
-    DisplayName: "\uC871\uC7A5 \uC2A4\uD0AC"
+    DisplayName: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC"
     Aliases:
-    - "\uC871\uC7A5 \uC2A4\uD0AC"
     - "\uC561\uD2F0\uBE0C \uC2A4\uD0AC"
+    - "\uC871\uC7A5 \uC2A4\uD0AC"
     - "\uC54C\uD321 \uC561\uD2F0\uBE0C"
     - "\uC9D1\uACB0 \uC0AC\uACA9"
     - "\uC871\uC7A5 \uC2A4\uD0AC\uC0AC\uC6A9"
@@ -36,8 +36,8 @@ MonoBehaviour:
     FactKind: 1
     FactSource: {fileID: 11400000, guid: 9b14e4c5d103a3d4fb44aa5f049606bd, type: 2}
     Clip: {fileID: 32900000, guid: e9ee8c38ee860324196c70482ca9b805, type: 3}
-    ClipCaption: "\uC871\uC7A5 \uC2A4\uD0AC \u2014 \uC77C\uC81C \uC0AC\uACA9 \xB7
-      \uC608\uACE0 \uB04A\uAE30"
+    ClipCaption: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC \u2014 \uC77C\uC81C \uC0AC\uACA9
+      \xB7 \uC608\uACE0 \uB04A\uAE30"
   - Id: self_destruct_drone
     DisplayName: "\uC790\uD3ED \uB4DC\uB860"
     Aliases:
@@ -117,9 +117,9 @@ MonoBehaviour:
       \uB4DC\uB860\uC785\uB2C8\uB2E4."
     BriefBody: "\uC720\uB2DB \uACC1\uC5D0\uC11C \uBCF4\uC2A4\uB97C \uACF5\uACA9\uD558\uB294
       \uB4DC\uB860\uC785\uB2C8\uB2E4."
-    DetailedBody: "\uC77C\uBC18 \uACF5\uACA9\uC744 \uBC18\uBCF5\uD558\uACE0 \uC871\uC7A5
-      \uC9D1\uACB0 \uC0AC\uACA9\uC5D0 \uCC38\uC5EC\uD569\uB2C8\uB2E4. \uC790\uD3ED
-      \uB4DC\uB860\uC740 \uAC1C\uC218\uC5D0 \uD3EC\uD568\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+    DetailedBody: "\uC77C\uBC18 \uACF5\uACA9\uC744 \uBC18\uBCF5\uD558\uACE0 \uC561\uD2F0\uBE0C
+      \uC2A4\uD0AC\uC5D0 \uCC38\uC5EC\uD569\uB2C8\uB2E4. \uC790\uD3ED \uB4DC\uB860\uC740
+      \uAC1C\uC218\uC5D0 \uD3EC\uD568\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
     FactKind: 0
     FactSource: {fileID: 0}
     Clip: {fileID: 0}

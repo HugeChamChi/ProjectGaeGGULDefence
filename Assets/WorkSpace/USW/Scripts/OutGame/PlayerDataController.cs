@@ -114,7 +114,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
             _data = value; _confirmedSaveId = value.SaveId ?? "";
             if (PlayerPrefs.HasKey(JournalKey))
             {
-                var pending = JsonUtility.FromJson<PlayerDataJournal>(PlayerPrefs.GetString(JournalKey));
+                PlayerDataJournal pending = null;
+                try { pending = JsonUtility.FromJson<PlayerDataJournal>(PlayerPrefs.GetString(JournalKey)); }
+                catch (ArgumentException) { HasSaveConflict = true; }
                 if (pending?.Data == null) HasSaveConflict = true;
                 else if (pending.Data.SaveId == _confirmedSaveId) DeleteJournal();
                 else if ((pending.BaseSaveId ?? "") == _confirmedSaveId) { _data = pending.Data; IsDirty = true; }

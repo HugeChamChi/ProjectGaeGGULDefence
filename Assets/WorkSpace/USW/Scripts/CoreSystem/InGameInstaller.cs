@@ -15,6 +15,7 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private TotemSpawner _totemManager;
     [Inject] private ChieftainSelection _chieftainSelection;
+    [Inject] private IChiefSelectionReader _chiefEffects;
     [Inject] private DebuffInfoPresenter _effectInfo;
     [Header("Center Toast")]
     [SerializeField] private CenterToast _centerToast;
@@ -49,12 +50,14 @@ public class InGameInstaller : MonoBehaviour
     private void Start()
     {
         if (_spawnerManager != null) _spawnerManager.OnSpawnRejected += ShowSpawnWarning;
+        _gameManager.OnRunFailed += ShowSpawnWarning;
+        if (_gameManager.CurrentState == GameManager.GameState.Faulted) ShowSpawnWarning(_gameManager.FailureReason);
         _bossClearPresentation?.Configure(_timerController, _waveManager, _bossManager, _uiManager, _gameManager.Config);
         _waveManager.ConfigureBossClearPresentation(_bossClearPresentation);
         _unitInfoPanel?.ConfigureEffectInfo(_effectInfo);
         _totemInfoPanel?.ConfigureEffectInfo(_effectInfo);
         if (_totemActionPopup != null) _totemActionPopup.SuppressDismiss = () => _totemInfoPanel != null && (_totemInfoPanel.IsEffectInfoOpen || _totemInfoPanel.ContainsScreenPoint(Input.mousePosition));
-        _chiefSkillButtonView?.Construct(_chieftainSelection);
+        _chiefSkillButtonView?.Construct(_chieftainSelection, _chiefEffects);
         WireUnitActionPopup();
         WireTotemActionPopup();
         WireBossEncounter();
@@ -201,6 +204,7 @@ public class InGameInstaller : MonoBehaviour
             if (_levelUpManager != null) _levelUpManager.OnTotemSelectionRequested -= _totemRewardUI.Show;
         }
         if (_spawnerManager != null) _spawnerManager.OnSpawnRejected -= ShowSpawnWarning;
+        if (_gameManager != null) _gameManager.OnRunFailed -= ShowSpawnWarning;
         DragHandler.OnTotemClickedGlobal -= HandleTotemClicked;
         if (_waveManager != null)
         {

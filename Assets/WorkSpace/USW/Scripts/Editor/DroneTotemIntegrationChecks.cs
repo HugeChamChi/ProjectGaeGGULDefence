@@ -27,7 +27,19 @@ System.Reflection.FieldInfo Field(object o, string name) {
     throw new System.Exception("No field " + name);
 }
 void Set(object o, string name, object value) => Field(o, name).SetValue(o, value);
-void Call(object o, string name, params object[] args) => o.GetType().GetMethod(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(o, args);
+void Call(object o, string name, params object[] args) {
+    var method = o.GetType().GetMethod(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+    if (method == null) throw new System.MissingMethodException(o.GetType().Name, name);
+    var parameters = method.GetParameters();
+    if (args.Length > parameters.Length) throw new System.Reflection.TargetParameterCountException(name);
+    var values = new object[parameters.Length];
+    System.Array.Copy(args, values, args.Length);
+    for (int i = args.Length; i < parameters.Length; i++) {
+        if (!parameters[i].HasDefaultValue) throw new System.Reflection.TargetParameterCountException(name);
+        values[i] = parameters[i].DefaultValue;
+    }
+    method.Invoke(o, values);
+}
 try {
     var grid = Comp<GridManager>(); var config = Data<GameConfig>(); config.gridColumns = config.gridRows = 5; Set(grid, "config", config);
     var cells = new GridCell[5,5];

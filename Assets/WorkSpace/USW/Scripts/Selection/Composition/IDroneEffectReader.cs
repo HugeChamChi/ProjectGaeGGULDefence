@@ -33,6 +33,18 @@ public interface IDroneEffectReader
     float ManaRequirementReduction { get; }
     /// <summary>마나 필요 횟수 감소 기능 존재 여부. 비율 0에도 기존 최소 1회 감소 규칙을 보존한다.</summary>
     bool HasManaRequirementReduction { get; }
+    /// <summary>델탕 해킹 1회가 생산량 배수를 얻을 확률(9108 넹 !).</summary>
+    float HackingProductionProcChance { get; }
+    /// <summary>발동 시 생산량 배수.</summary>
+    int HackingProductionProcMultiplier { get; }
+    /// <summary>감망 기폭 여운 보유 여부(9109 넹...).</summary>
+    bool HasGammanResidue { get; }
+    /// <summary>기폭 스택 추가 피해에 곱하는 여운 총량 비율.</summary>
+    float GammanResidueRatio { get; }
+    /// <summary>여운 지속 시간(초).</summary>
+    float GammanResidueDuration { get; }
+    /// <summary>여운 틱 수.</summary>
+    int GammanResidueTicks { get; }
     /// <summary>ExplosionSkillRecoverySeconds 선택지 기여.</summary>
     float ExplosionSkillRecoverySeconds { get; }
     /// <summary>ExtraCombatDroneCount 선택지 기여.</summary>

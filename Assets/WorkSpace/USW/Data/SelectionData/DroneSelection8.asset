@@ -28,9 +28,11 @@ MonoBehaviour:
   chooseName: "\uB139 !"
   tier: 2
   spawnRate: 1
-  description: "\uD574\uD0B9 \uC801\uC6A9 \uC2DC \uC2A4\uD0DD\uC774 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4.
-    (\uC18C\uC218 \uC2A4\uD0DD\uC740 \uB2E4\uC74C \uD574\uD0B9\uC5D0 \uD569\uC0B0)"
-  simpleDescription: "\uBD80\uC5EC\uD558\uB294 \uD574\uD0B9 \uC2A4\uD0DD\uC774 \uAC15\uD654\uB429\uB2C8\uB2E4."
+  description: "\uD574\uD0B9 \uC801\uC6A9 \uC2DC {value}% \uD655\uB960\uB85C \uADF8
+    \uD574\uD0B9\uC758 \uC2A4\uD0DD \uC0DD\uC0B0\uB7C9\uC774 {count}\uBC30\uAC00
+    \uB429\uB2C8\uB2E4."
+  simpleDescription: "\uD574\uD0B9 \uC2DC \uC77C\uC815 \uD655\uB960\uB85C \uC2A4\uD0DD
+    \uC0DD\uC0B0\uB7C9\uC774 2\uBC30\uAC00 \uB429\uB2C8\uB2E4."
   DescriptionTerms:
   - hack_stack
   applicableTribes: 
@@ -43,9 +45,9 @@ MonoBehaviour:
   droneEffect:
     Kind: 8
     Interval: 0
-    Value: 0.01
-    MaxValue: 0.1
-    Count: 0
+    Value: 0.05
+    MaxValue: 0
+    Count: 2
   icon: {fileID: 21300000, guid: 8e7f65239d442ae4b98d0bb5be9163ee, type: 3}
   animationFrames: []
   frameRate: 12
@@ -53,7 +55,7 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1000
-      type: {class: HackingProductionRollDefinition, ns: , asm: Assembly-CSharp}
+      type: {class: HackingProductionProcDefinition, ns: , asm: Assembly-CSharp}
       data:
-        MinimumRatio: 0.01
-        MaximumRatio: 0.1
+        Chance: 0.05
+        Multiplier: 2

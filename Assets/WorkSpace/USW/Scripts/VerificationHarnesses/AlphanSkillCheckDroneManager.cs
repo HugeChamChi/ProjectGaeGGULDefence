@@ -14,6 +14,9 @@ public sealed class AlphanSkillCheckDroneManager : DroneManager
     /// <inheritdoc />
     public override void ApplyEmergencyBuffs() => EmergencyCount++;
     /// <inheritdoc />
+    public override UniTask ExecuteChiefRallyAsync(AlphanSkillData data, CancellationToken token, ChieftainData source = null)
+        => ExecuteRallyAsync(data.RallyAttackCoefficient, token, default, source);
+    /// <inheritdoc />
     public override async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default, ChieftainData source = null)
     {
         CastCount++;Damage=damagePerDrone;Protocol=doubleShot;LastToken=token;

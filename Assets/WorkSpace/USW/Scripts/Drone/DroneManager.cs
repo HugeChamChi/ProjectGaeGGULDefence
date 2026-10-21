@@ -79,12 +79,13 @@ public class DroneManager : MonoBehaviour
             while (_betanEpicTimer >= epic.Interval)
             {
                 _betanEpicTimer -= epic.Interval;
-                int remaining = Mathf.Min(fleetCount, epic.Count);
+                int remaining = Mathf.Min(fleetCount, epic.Count), volley = 0;
                 foreach (var drone in _drones)
                 {
                     if (remaining == 0) break;
+                    // 9103 일제 출격: 순번을 붙여 한 기씩 이어 출발시킨다(FxLab_BombHack 다수 발사 표현).
                     if (drone != null && drone.isActiveAndEnabled && drone.Owner is Drone_Betan betan && _betanMembership.Contains(betan))
-                    { betan.SpawnSelfDestructDrones(1); remaining--; }
+                    { betan.SpawnFleetBomb(volley++); remaining--; }
                 }
             }
         }
@@ -175,6 +176,19 @@ public class DroneManager : MonoBehaviour
     public decimal GetRallyDamage(int droneCount, float damagePerDrone)
     {
         decimal damage = Mathf.RoundToInt(droneCount * damagePerDrone);
+        return _chiefEffects?.HasRallyDamage == true ? damage * (decimal)_chiefEffects.RallyDamageBonus : damage;
+    }
+
+    /// <summary>참가 드론의 현재 비치명 사격 공격력을 합산하고 집결 계수·황금 모노클을 한 번 적용한다.</summary>
+    public decimal GetChiefRallyDamage(IReadOnlyList<DroneUnit> drones, float attackCoefficient)
+    {
+        if (drones == null) throw new System.ArgumentNullException(nameof(drones));
+        if (float.IsNaN(attackCoefficient) || float.IsInfinity(attackCoefficient) || attackCoefficient < 0f)
+            throw new System.ArgumentOutOfRangeException(nameof(attackCoefficient));
+        decimal attack = 0m;
+        foreach (var drone in drones)
+            if (drone != null) attack += Mathf.Max(0, drone.NonCriticalAttackDamage);
+        decimal damage = attack * (decimal)attackCoefficient;
         return _chiefEffects?.HasRallyDamage == true ? damage * (decimal)_chiefEffects.RallyDamageBonus : damage;
     }
 
@@ -284,21 +298,61 @@ public class DroneManager : MonoBehaviour
     /// 3) 빔이 터지는 순간 전체 피해 (연속 사격은 빔 유지 중 Pulse와 함께 추가 피해)
     /// 4) 빔이 사그라든 뒤 원래 위치 귀환 후 궤도 재개
     /// </summary>
-    public virtual async UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default, ChieftainData source = null)
+    public virtual UniTask ExecuteRallyAsync(float damagePerDrone, CancellationToken token, ChiefVolleySettings doubleShot = default, ChieftainData source = null)
+        => ExecuteRallyCoreAsync(damagePerDrone, token, doubleShot, source, null);
+
+    /// <summary>족장 SO의 공격력 연동 집결과 공유 해킹 스택 전량소모를 같은 발사 수명으로 실행한다.</summary>
+    public virtual UniTask ExecuteChiefRallyAsync(AlphanSkillData data, CancellationToken token, ChieftainData source = null)
+    {
+        if (data == null) throw new System.ArgumentNullException(nameof(data));
+        if (_chiefEffects?.ChiefHackingDamagePerStack > 0f && data.Hacking == null)
+            throw new System.InvalidOperationException("Emergency detonation requires authored shared hacking settings on the chief skill.");
+        return ExecuteRallyCoreAsync(0f, token, default, source, data);
+    }
+
+    private async UniTask ExecuteRallyCoreAsync(float damagePerDrone, CancellationToken token,
+        ChiefVolleySettings doubleShot, ChieftainData source, AlphanSkillData chiefData)
     {
         if (_isRallying || RallyAvailableDroneCount == 0) return;
         _isRallying = true;
         ChiefConvergeBeamFx beam = null;
         DroneUnit[] snapshot = System.Array.Empty<DroneUnit>();
         int[] lifetimes = System.Array.Empty<int>();
+        BossBase chiefTarget = null;
+        DroneHackingRuntime chiefHacking = null;
+        HackingStackLedger.Reservation chiefReservation = null;
+        int chiefGeneration = 0;
+        bool chiefCommitted = false;
+        decimal chiefDamage = 0m;
+        float hackingDamageRatio = 0f;
         bool IsCurrent(int index) => snapshot[index] != null && snapshot[index].isActiveAndEnabled
             && snapshot[index].PlacementLifetime == lifetimes[index];
+        bool IsChiefTargetCurrent(BossBase boss) => chiefData == null ||
+            (boss != null && ReferenceEquals(boss, chiefTarget) && ReferenceEquals(_bossManager?.CurrentBoss, chiefTarget)
+                && (chiefHacking == null || ReferenceEquals(chiefHacking.Target, boss) && chiefHacking.Ledger.Generation == chiefGeneration));
 
         try
         {
             snapshot = _drones.FindAll(d => d != null && (d.Owner == null || (!d.Owner.IsStunned && !d.Owner.IsCellSealed))).ToArray();
             lifetimes = new int[snapshot.Length];
             for (int i = 0; i < snapshot.Length; i++) lifetimes[i] = snapshot[i].PlacementLifetime;
+            if (chiefData != null)
+            {
+                chiefTarget = _bossManager?.CurrentBoss;
+                chiefDamage = GetChiefRallyDamage(snapshot, chiefData.RallyAttackCoefficient);
+                hackingDamageRatio = _chiefEffects?.ChiefHackingDamagePerStack ?? 0f;
+                if (chiefData.Hacking != null)
+                {
+                    chiefHacking = Hacking;
+                    chiefHacking.Configure(chiefData.Hacking);
+                    if (ReferenceEquals(chiefHacking.Target, chiefTarget))
+                    {
+                        chiefGeneration = chiefHacking.Ledger.Generation;
+                        if (chiefTarget != null && chiefTarget.IsTargetable && hackingDamageRatio > 0f && chiefDamage > 0m)
+                            chiefReservation = chiefHacking.Reserve(chiefTarget, int.MaxValue);
+                    }
+                }
+            }
 
             // 집결 위치 — 그리드 기하학적 정중앙, 부채꼴은 보스 반대쪽으로 열린다
             Vector3 rallyCenter = _gridManager != null ? _gridManager.GetAbsoluteCenterPosition() : Vector3.zero;
@@ -324,8 +378,8 @@ public class DroneManager : MonoBehaviour
 
             // ③ 수렴 빔 충전 → 발사 순간 피해
             if (_fieldPause != null) await _fieldPause.WaitForAttacksAsync(token);
-            var boss = _bossManager?.CurrentBoss;
-            if (boss != null && !boss.IsDead)
+            var boss = chiefData != null ? chiefTarget : _bossManager?.CurrentBoss;
+            if (boss != null && !boss.IsDead && IsChiefTargetCurrent(boss))
             {
                 beam = PlayConvergeBeam(snapshot, boss.transform, lifetimes);
                 if (beam != null)
@@ -339,10 +393,27 @@ public class DroneManager : MonoBehaviour
                 }
                 for (int i = 0; i < snapshot.Length; i++) if (IsCurrent(i)) snapshot[i].PlayActionFlash();
 
-                if (boss != null && !boss.IsDead)
+                if (boss != null && !boss.IsDead && IsChiefTargetCurrent(boss))
                 {
-                    decimal baseDamage = GetRallyDamage(snapshot.Length, damagePerDrone);
-                    if (doubleShot.Count == 0)
+                    decimal baseDamage = chiefData != null ? chiefDamage : GetRallyDamage(snapshot.Length, damagePerDrone);
+                    if (chiefData != null)
+                    {
+                        decimal multiplier = 1m + (chiefReservation?.Amount ?? 0) * (decimal)hackingDamageRatio;
+                        long units = boss.CalculateFinalDamageUnits(baseDamage * multiplier);
+                        // Do not consume stacks if the original target cannot accept this impact.
+                        if (units > 0)
+                        {
+                            if (chiefReservation?.Amount > 0)
+                            {
+                                chiefCommitted = chiefHacking.Commit(boss, chiefReservation);
+                                if (!chiefCommitted) units = boss.CalculateFinalDamageUnits(baseDamage);
+                            }
+                            decimal previousHp = boss.CurrentHp;
+                            boss.ApplyRecordedDamage(units, source: source);
+                            NotifyRallyImpact(boss, previousHp);
+                        }
+                    }
+                    else if (doubleShot.Count == 0)
                     {
                         decimal previousHp = boss.CurrentHp;
                         boss.TakeDamage(baseDamage, source: source);
@@ -391,6 +462,8 @@ public class DroneManager : MonoBehaviour
         }
         finally
         {
+            if (chiefReservation != null && !chiefCommitted && chiefHacking != null)
+                chiefHacking.Refund(chiefTarget, chiefReservation);
             _isRallying = false;
             if (beam != null && token.IsCancellationRequested) beam.Stop();
             if (token.IsCancellationRequested)

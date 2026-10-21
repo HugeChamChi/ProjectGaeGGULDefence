@@ -19,7 +19,7 @@ MonoBehaviour:
     Effects:
     - rid: 1000
     Feedback:
-    - Target: 2
+    - Target: 6
       Row: 0
       Tribes: 
       RequiresHighOwnedTier: 0
@@ -28,9 +28,11 @@ MonoBehaviour:
   chooseName: "\uAE34\uAE09 \uAD50\uC2E0"
   tier: 1
   spawnRate: 1
-  description: "\uC871\uC7A5 \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC \uAE30\uD3ED\uD6A8\uACFC\uAC00
-    \uC801\uC6A9\uB429\uB2C8\uB2E4. "
-  simpleDescription: "\uC871\uC7A5 \uC2A4\uD0AC\uC0AC\uC6A9 \uC2DC \uAE30\uD3ED\uD569\uB2C8\uB2E4."
+  description: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC, \uBCF4\uC2A4\uC5D0\uAC8C
+    \uC313\uC778 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uBAA8\uB450 \uC18C\uBAA8\uD574
+    \uAE30\uD3ED\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uB85C \uBCF4\uC2A4\uC758 \uD574\uD0B9
+    \uC2A4\uD0DD\uC744 \uBAA8\uB450 \uC18C\uBAA8\uD574 \uAE30\uD3ED\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - chief_skill
   - detonation
@@ -54,5 +56,6 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1000
-      type: {class: EmptyStackDamageDefinition, ns: , asm: Assembly-CSharp}
-      data: 
+      type: {class: ChiefHackingDetonationDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        DamageRatioPerStack: 0.01

@@ -13,6 +13,9 @@ public class LevelUpPoolData : ScriptableObject
     /// <summary>여러 풀에서 같은 카드 SO를 공유할 수 있다. 중복 등록은 가중치가 아니다.</summary>
     public LevelUpData[] Cards = Array.Empty<LevelUpData>();
 
+    /// <summary>선택적인 분류 산출물. 추첨·효과 적용은 이 참조를 사용하지 않는다.</summary>
+    public DroneChoiceConceptCatalog ConceptCatalog;
+
     /// <summary>선택 화면의 등급 확률. 카드 수와 개별 등장 가중치와 독립적이다.</summary>
     [Min(0)] public float RareWeight = DefaultRareWeight;
     [Min(0)] public float EpicWeight = DefaultEpicWeight;

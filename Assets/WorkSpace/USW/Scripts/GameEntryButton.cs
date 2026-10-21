@@ -1,25 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class GameEntryButton : MonoBehaviour
 {
     [SerializeField] private Button _enterButton;
     [SerializeField] private string _targetSceneName = "InGameScene";
     [SerializeField] private StaminaInsufficientPopup _staminaInsufficientPopup;
-
-    private const int DEFAULT_STAMINA_COST = 5;
-    private int StaminaCost
-    {
-        get
-        {
-            var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
-            return config != null ? config.stageEntryCost : DEFAULT_STAMINA_COST;
-        }
-    }
+    [SerializeField] private UI_PartySelectView _partySelectView;
 
     private void Start()
     {
+        // Route old serialized entry buttons through the same remote preflight and stamina reservation path.
+        if (_partySelectView == null)
+            _partySelectView = GetComponentInParent<Canvas>()?.GetComponentInChildren<UI_PartySelectView>(true);
         if (_enterButton != null)
             _enterButton.onClick.AddListener(OnEnterButtonClicked);
     }
@@ -32,24 +25,11 @@ public class GameEntryButton : MonoBehaviour
 
     private void OnEnterButtonClicked()
     {
-        if (Player.PlayerData == null)
+        if (_partySelectView == null)
         {
-            Debug.LogError("PlayerDataController가 연결되지 않았습니다.");
+            _staminaInsufficientPopup?.ShowMessage("출격 화면을 준비하지 못했습니다.");
             return;
         }
-
-        int cost = StaminaCost;
-        bool success = Player.PlayerData.UseStamina(cost);
-
-        if (success)
-        {
-            Debug.Log($"스태미나 {cost} 소모 → {_targetSceneName} 입장");
-            SceneManager.LoadScene(_targetSceneName);
-        }
-        else
-        {
-            Debug.LogWarning($"스태미나 부족! 현재: {Player.PlayerData.Data.Stamina}, 필요: {cost}");
-            _staminaInsufficientPopup?.Show(Player.PlayerData.Data.Stamina, cost);
-        }
+        _partySelectView.StartDefaultGame();
     }
 }

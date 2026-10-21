@@ -56,6 +56,7 @@ public class RootLifetimeScope : LifetimeScope
         builder.Register<AccountDeletionService>(Lifetime.Singleton);
         builder.RegisterEntryPoint<DeviceSettingsService>().AsSelf();
         builder.Register<AppInitialization>(Lifetime.Singleton);
+        builder.Register<BackendEndlessBalanceGateway>(Lifetime.Singleton).As<IEndlessBalanceGateway>();
         builder.Register<EndlessBalanceService>(Lifetime.Singleton);
         builder.Register<GaeGGUL.Tutorial.IngameTutorialProgress>(Lifetime.Singleton);
         if (_researchTree == null) throw new System.InvalidOperationException("Root research tree is required.");

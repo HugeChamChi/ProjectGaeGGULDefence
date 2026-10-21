@@ -28,9 +28,10 @@ MonoBehaviour:
   chooseName: "\uC704\uB300\uD55C \uC9C0\uB3C4\uC790"
   tier: 1
   spawnRate: 1
-  description: "\uC871\uC7A5 \uC2A4\uD0AC\uC758 \uAE30\uBCF8 \uCFE8\uD0C0\uC784\uC774
+  description: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC758 \uAE30\uBCF8 \uCFE8\uD0C0\uC784\uC774
     {value}% \uAC10\uC18C\uD569\uB2C8\uB2E4."
-  simpleDescription: "\uC871\uC7A5 \uC2A4\uD0AC\uC758 \uCFE8\uD0C0\uC784\uC774 \uAC10\uC18C\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC758 \uCFE8\uD0C0\uC784\uC774
+    \uAC10\uC18C\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - chief_skill
   applicableTribes: 

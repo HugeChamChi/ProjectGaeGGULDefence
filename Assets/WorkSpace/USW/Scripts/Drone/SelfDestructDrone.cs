@@ -38,6 +38,10 @@ public class SelfDestructDrone : MonoBehaviour
     [Tooltip("돌진 중 진행 방향으로 기울이는 최대 각도(도).")]
     [SerializeField, Range(0f, 90f)] private float _dashTilt = 25f;
 
+    [Header("9103 일제 출격")]
+    [Tooltip("9103 「슈슝 콰광!!!!!」 일제 출격에서 한 기씩 출발을 늦추는 간격(초). FxLab_BombHack 연속 발사 기준.")]
+    [SerializeField, Min(0f)] private float _volleySpacing = 0.035f;
+
     [Header("폭발")]
     [Tooltip("착탄 지점에 생성할 폭발 이펙트 (비우면 이펙트 없음).")]
     [SerializeField] private GameObject _explosionPrefab;
@@ -56,6 +60,7 @@ public class SelfDestructDrone : MonoBehaviour
     private Vector3? _previewTarget;
     private GameObject _previewExplosion;
     private UnitData _damageSource;
+    private int _volleyIndex = -1;
 
     private void Awake()
     {
@@ -67,9 +72,11 @@ public class SelfDestructDrone : MonoBehaviour
     }
 
     /// <summary>Drone_Betan.SpawnSelfDestructDrones() 에서 호출 — 차징 후 보스를 향해 돌진한다.</summary>
-    public void Initialize(int damage, bool critical, BossBase target, UnitData source = null)
+    /// <param name="volleyIndex">0 이상이면 9103 일제 출격 순번. 순번만큼 출발을 늦추고 좌우 곡선을 번갈아 쓴다.</param>
+    public void Initialize(int damage, bool critical, BossBase target, UnitData source = null, int volleyIndex = -1)
     {
         StopSequence();
+        _volleyIndex = volleyIndex;
         _cts = new CancellationTokenSource();
         _previewTarget = null;
         _previewExplosion = null;
@@ -78,9 +85,9 @@ public class SelfDestructDrone : MonoBehaviour
     }
 
     /// <summary>폭발 피해 대신 원래 보스에 스택을 생산한다. 기본/선택지 자폭 생성 경로 모두 사용한다.</summary>
-    public void InitializeHacking(BossBase target, DroneHackingRuntime runtime, int stacks)
+    public void InitializeHacking(BossBase target, DroneHackingRuntime runtime, int stacks, int volleyIndex = -1)
     {
-        StopSequence(); _cts=new CancellationTokenSource(); _previewTarget=null; _previewExplosion=null;
+        StopSequence(); _volleyIndex = volleyIndex; _cts=new CancellationTokenSource(); _previewTarget=null; _previewExplosion=null;
         SequenceAsync(new Shot(target,runtime,stacks),_cts.Token).Forget();
     }
 
@@ -89,6 +96,7 @@ public class SelfDestructDrone : MonoBehaviour
     public void InitializePreview(Vector3 target, GameObject explosionOverride = null)
     {
         StopSequence();
+        _volleyIndex = -1;
         _cts = new CancellationTokenSource();
         target.z = 0f;
         _previewTarget = target;
@@ -121,6 +129,7 @@ public class SelfDestructDrone : MonoBehaviour
         }
 
         SetTrailEmitting(false);
+        if (await VolleyDelayAsync(token)) return;
         if (await ChargeAsync(target, token)) return;
 
         // Recheck the captured target; a new boss never inherits this shot.
@@ -157,12 +166,29 @@ public class SelfDestructDrone : MonoBehaviour
         return true;
     }
 
+    /// <summary>9103 일제 출격 순번만큼 보이지 않게 기다린다. 취소되면 true.</summary>
+    private async UniTask<bool> VolleyDelayAsync(CancellationToken token)
+    {
+        float delay = _volleyIndex > 0 ? _volleyIndex * _volleySpacing : 0f;
+        if (delay <= 0f) return false;
+        transform.localScale = Vector3.zero;
+        float elapsed = 0f;
+        while (elapsed < delay)
+        {
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow())
+                return true;
+            elapsed += Time.deltaTime;
+        }
+        return false;
+    }
+
     /// <summary>팝인 + 붉은 점멸 + 떨림 + 뒤로 살짝 물러나기. 취소되면 true.</summary>
     private async UniTask<bool> ChargeAsync(Vector3 target, CancellationToken token)
     {
         Vector3 start = transform.position;
         Vector3 away = (start - target).normalized;
-        float duration = _chargeDuration + Random.Range(0f, _launchJitter);
+        // 일제 출격은 순번 간격이 출발 박자를 만든다. 무작위 지연을 더하면 연속 발사가 뭉개진다.
+        float duration = _chargeDuration + (_volleyIndex >= 0 ? 0f : Random.Range(0f, _launchJitter));
 
         transform.localScale = Vector3.zero;
         transform.localRotation = _baseRotation;
@@ -206,7 +232,8 @@ public class SelfDestructDrone : MonoBehaviour
     {
         Vector3 start = transform.position;
         Vector3 dir = target - start;
-        Vector3 side = new Vector3(-dir.y, dir.x, 0f).normalized * (Random.Range(-1f, 1f) * _arcSideOffset);
+        float bend = _volleyIndex >= 0 ? (_volleyIndex % 2 == 0 ? 1f : -1f) : Random.Range(-1f, 1f);
+        Vector3 side = new Vector3(-dir.y, dir.x, 0f).normalized * (bend * _arcSideOffset);
         Vector3 control = start + dir * 0.4f + side;
 
         float elapsed = 0f;
@@ -242,7 +269,7 @@ public class SelfDestructDrone : MonoBehaviour
         {
             if(boss!=null && !boss.IsDead && shot.Hacking.Target==boss && shot.Hacking.Ledger.Generation==shot.Generation)
             {
-                shot.Hacking.Add(boss,shot.Stacks);
+                shot.Hacking.AddFromBomb(boss,shot.Stacks,target);
                 _droneManager?.NotifySelfDestructExplosion();
             }
             return;

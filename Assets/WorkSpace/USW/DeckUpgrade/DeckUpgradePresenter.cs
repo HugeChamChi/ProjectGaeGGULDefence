@@ -54,8 +54,8 @@ namespace GaeGGUL.DeckUpgrade
 
         private void PopulateChief(DeckUpgradeItemViewData data)
         {
-            data.SkillName = "집결 사격";
-            data.Description = $"전투 드론들을 중앙에 집결시켜 보스에게 집중 사격합니다.\n\n기본 피해: 전투 드론 수 × {_chief.AlphanSkill.DamagePerDrone:0.#}\n기본 재사용 대기시간: {_chief.AlphanSkill.CooldownSeconds:0.#}초";
+            data.SkillName = "액티브 스킬";
+            data.Description = $"버튼을 누르면 전투 드론들을 중앙에 모아 보스에게 일제 사격합니다.\n\n기본 피해: 참가 드론 공격력 합 × {_chief.AlphanSkill.RallyAttackCoefficient:0.##}\n기본 재사용 대기시간: {_chief.AlphanSkill.CooldownSeconds:0.#}초";
             string next = data.IsMaxLevel ? "MAX" : "+" + ((data.ChiefBonus + DeckUpgradeProgress.ChiefBonusPerLevel) * 100).ToString("0") + "%";
             data.CurrentStat = $"전체 공격력   +{data.ChiefBonus * 100:0}%";
             data.CurrentSpeed = $"전체 능력치   +{data.ChiefBonus * 100:0}%";

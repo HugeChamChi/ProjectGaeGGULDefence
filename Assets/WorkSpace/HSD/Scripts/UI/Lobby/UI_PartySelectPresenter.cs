@@ -9,16 +9,19 @@ public class UI_PartySelectPresenter
     private readonly SceneChangeManager _sceneChangeManager;
     private readonly StaminaInsufficientPopup _staminaPopup;
     private readonly GaeGGUL.Tutorial.IngameTutorialProgress _tutorial;
+    private readonly EndlessBalanceService _balance;
     
     private PartyDataSO _selectedParty;
 
     [Inject]
     public UI_PartySelectPresenter(SceneChangeManager sceneChangeManager,
         System.Collections.Generic.IEnumerable<StaminaInsufficientPopup> staminaPopups = null,
-        GaeGGUL.Tutorial.IngameTutorialProgress tutorial = null)
+        GaeGGUL.Tutorial.IngameTutorialProgress tutorial = null,
+        EndlessBalanceService balance = null)
     {
         _sceneChangeManager = sceneChangeManager;
         _tutorial = tutorial;
+        _balance = balance;
         if (staminaPopups != null)
             foreach (var popup in staminaPopups) { _staminaPopup = popup; break; }
     }
@@ -53,20 +56,37 @@ public class UI_PartySelectPresenter
     private void OnStartGameClicked()
     {
         if (_isProcessing || _selectedParty == null) return;
-        StartSelectedAsync().Forget();
+        _view.ChooseMode(test =>
+        {
+            if (!_isProcessing) StartSelectedAsync(test).Forget();
+        });
     }
 
-    private async UniTaskVoid StartSelectedAsync()
+    private async UniTaskVoid StartSelectedAsync(bool test)
     {
         _isProcessing = true;
         try
         {
             if (_sceneChangeManager == null) { _staminaPopup?.ShowMessage("씬 이동을 준비하지 못했습니다."); return; }
             GlobalData.SelectedParty = _selectedParty;
-            if (_tutorial != null && !_tutorial.IsCompleted)
+            if (!test && _tutorial != null && !_tutorial.IsCompleted)
             { await _sceneChangeManager.TransitionToSceneAsync("TutorialScene"); return; }
             var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
             if (config == null || config.stageEntryCost <= 0) { _staminaPopup?.ShowMessage("출격 비용 설정을 확인해 주세요."); return; }
+            try
+            {
+                if (_balance == null) throw new System.InvalidOperationException("전투 설정 서비스를 준비하지 못했습니다.");
+                var mode = _view.GetBattleMode(test);
+                if (mode == null) throw new System.InvalidOperationException("전투 모드가 연결되지 않았습니다.");
+                await _balance.PrepareEntryAsync(_view.GetCancellationTokenOnDestroy(), mode);
+            }
+            catch (System.OperationCanceledException) { return; }
+            catch (System.Exception error)
+            {
+                Debug.LogWarning("전투 설정 확인 실패: " + error.Message);
+                _staminaPopup?.ShowMessage("전투 설정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+                return;
+            }
             var player = Player.PlayerData;
             if (!await player.ReserveEntryAsync(config.stageEntryCost))
             {
@@ -75,7 +95,7 @@ public class UI_PartySelectPresenter
                 else _staminaPopup?.ShowMessage(player.SaveStatus + "\n저장 확인 후 출격할 수 있습니다.");
                 return;
             }
-            await _sceneChangeManager.TransitionToSceneAsync("IngameScene");
+            await _sceneChangeManager.TransitionToSceneAsync(test ? "HardIngameScene" : "IngameScene");
         }
         catch (System.Exception error)
         {

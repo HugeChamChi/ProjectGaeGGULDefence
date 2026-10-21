@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using GaeGGUL.Core;
@@ -22,7 +23,9 @@ public class DailyManager : Global.IClearable
     public async UniTask InitializeAsync()
     {
         // 한국 표준시(KST, UTC+9) 기준으로 초기화 시간을 설정합니다.
-        DateTime nowUtc = Server.GetServerTime();
+        if (!ServerClock.IsSynced && !await ServerClock.SyncAsync(CancellationToken.None))
+            throw new InvalidOperationException("일일 초기화에 필요한 서버 시간을 확인하지 못했습니다.");
+        DateTime nowUtc = ServerClock.UtcNow;
         DateTime nowKst = Server.ToKST(nowUtc);
         string currentDate = nowKst.AddHours(-RESET_HOUR).ToString("yyyy-MM-dd");
 

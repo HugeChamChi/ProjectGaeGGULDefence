@@ -1,7 +1,7 @@
 using UnityEngine;
 using VContainer;
 
-/// <summary>Starts the standalone hard-boss scene without requiring a signed-in research save in Editor.</summary>
+/// <summary>Keeps direct Editor Play isolated; lobby entry uses real research, stamina and rewards.</summary>
 [DefaultExecutionOrder(-7900)]
 public sealed class HardIngameEntry : MonoBehaviour
 {
@@ -9,7 +9,12 @@ public sealed class HardIngameEntry : MonoBehaviour
     private void Awake()
     {
 #if UNITY_EDITOR
-        _scope.Container.Resolve<ResearchRunBonuses>().PrepareEditorPreview();
+        if (!_scope.Container.Resolve<SceneChangeManager>().IsTransitioning)
+        {
+            gameObject.AddComponent<IngameEditorPreview>().Configure(_scope.Container.Resolve<WaveManager>());
+            _scope.Container.Resolve<ResearchRunBonuses>().PrepareEditorPreview();
+            _scope.Container.Resolve<GameManager>().EnableEditorPreview();
+        }
 #endif
     }
 }

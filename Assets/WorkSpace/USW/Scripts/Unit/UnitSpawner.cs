@@ -131,8 +131,15 @@ public class UnitSpawner : MonoBehaviour
         if (CanPlayerSummon != null && !CanPlayerSummon()) return;
         if (_gameManager.CurrentState != GameManager.GameState.Playing)
         {
-            Debug.Log("게임 시작 후 배치 가능합니다.");
-            OnSpawnRejected?.Invoke("게임 시작 후 배치 가능합니다.");
+            string reason = _gameManager.CurrentState switch
+            {
+                GameManager.GameState.Faulted => _gameManager.FailureReason ?? "전투를 시작하지 못했습니다. 다시 출격해 주세요.",
+                GameManager.GameState.LevelUp => "선택을 완료한 뒤 배치해 주세요.",
+                GameManager.GameState.Win or GameManager.GameState.Lose => "전투가 종료되었습니다.",
+                _ => gameObject.scene.name == "IngameScene" ? "전투를 준비하고 있습니다." : "게임 시작 후 배치 가능합니다."
+            };
+            Debug.Log(reason);
+            OnSpawnRejected?.Invoke(reason);
             return;
         }
 

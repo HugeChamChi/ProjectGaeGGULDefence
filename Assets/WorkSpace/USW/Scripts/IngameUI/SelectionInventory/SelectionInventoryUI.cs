@@ -358,7 +358,7 @@ public sealed class SelectionInventoryUI : MonoBehaviour
         var skill = data != null ? data.AlphanSkill : null;
         string name = data != null ? data.DisplayName : "족장";
         _chiefText.text = skill != null
-            ? $"<size=140%>{name}</size>  <color=#B8B5E6>족장</color>\n족장 스킬 쿨타임 {skill.CooldownSeconds:0.#}초\n드론 1기당 피해 {skill.DamagePerDrone:0.#}"
+            ? $"<size=140%>{name}</size>  <color=#B8B5E6>족장</color>\n기본 쿨타임 {skill.CooldownSeconds:0.#}초\n기본 피해: 참가 드론 공격력 합 ×{skill.RallyAttackCoefficient:0.##}"
             : $"<size=140%>{name}</size>  <color=#B8B5E6>족장</color>";
         _chiefCard.SetActive(true);
         _chiefCard.transform.localScale = Vector3.one * 0.85f;

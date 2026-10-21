@@ -186,6 +186,13 @@ public static class SelectionExpansionChecks
         }
         Set(manager, "_poolInitialized", true); Set(manager, "_effectivePool", candidates); Set(manager, "_selectedPool", pool);
         var ui = Component<LevelUpUI>(); var prefab = Component<LevelUpCardUI>();
+        // Show() builds the description popup from the card's authored TMP style.
+        // Parent the label to the template so instantiated cards receive their own label.
+        var description = Component<TMPro.TextMeshProUGUI>();
+        description.transform.SetParent(prefab.transform, false);
+        description.font = TMPro.TMP_Settings.defaultFontAsset;
+        Set(prefab, "descriptionText", description);
+        Set(ui, "_descriptionSettings", new DescriptionDisplaySettings());
         var timer = Component<TimerController>(); var grid = Component<GridManager>();
         Set(grid, "_grid", new GridCell[0, 0]);
         var game = Component<GameManager>(); Set(game, "<CurrentState>k__BackingField", GameManager.GameState.LevelUp);

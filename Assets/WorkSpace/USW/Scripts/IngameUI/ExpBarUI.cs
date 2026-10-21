@@ -140,7 +140,8 @@ public class ExpBarUI : MonoBehaviour
             DOTween.To(() => _currentProgress, SetProgress, target, tweenDuration)
                    .SetTarget(maskRect)
                    .SetLink(gameObject)
-                   .SetEase(Ease.OutCubic);
+                   .SetEase(Ease.OutCubic)
+                   .SetUpdate(true);
         }
     }
 

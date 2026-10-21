@@ -55,6 +55,10 @@ public sealed class SelectionDescriptionFormatter
                     values["value"] = Percent(d.MinimumRatio); break;
                 case HackingProductionFlatDefinition d: values["Count"] = d.StackCount.ToString(CultureInfo.InvariantCulture); break;
                 case ManaRequirementDefinition d: values["ValuePercent"] = Percent(d.ReductionRatio); break;
+                case HackingProductionProcDefinition d:
+                    values["value"] = Percent(d.Chance); values["count"] = d.Multiplier.ToString(CultureInfo.InvariantCulture); break;
+                case GammanResidueDefinition d:
+                    values["value"] = Percent(d.DamageRatio); values["seconds"] = Number(d.DurationSeconds); values["count"] = d.TickCount.ToString(CultureInfo.InvariantCulture); break;
                 case PeriodicBombDefinition d:
                     values["seconds"] = Number(d.PeriodSeconds); values["count"] = Number(d.BombCount); break;
                 case DroneAttackSpeedDefinition d: values["value"] = Percent(d.BonusRatio); break;
@@ -65,6 +69,8 @@ public sealed class SelectionDescriptionFormatter
                 case FoodPayoutDefinition d:
                     values["value"] = Percent(d.BonusRatio); values["seconds"] = Number(d.PeriodSeconds); break;
                 case ChiefCooldownDefinition d: values["value"] = Percent(d.ReductionRatio); break;
+                case ChiefChargeCapacityDefinition d: values["count"] = Number(d.MaximumCharges); break;
+                case ChiefHackingDetonationDefinition d: values["value"] = Percent(d.DamageRatioPerStack); break;
                 case ChiefVolleyDefinition d:
                     values["value"] = Percent(d.DamageRatio); values["count"] = Number(d.ShotCount); values["seconds"] = Number(d.ShotDelaySeconds); break;
                 case FoodProductionDefinition d: values["value"] = Percent(d.BonusRatio); break;

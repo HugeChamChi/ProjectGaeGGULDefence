@@ -18,9 +18,13 @@ public sealed class EndlessModeData : ScriptableObject
     [SerializeField] private EndlessBossSelection _bossSelection;
     [SerializeField] private EndlessBossPoolData _breatherBossPool;
     [SerializeField] private EndlessBossPoolData _hardBossPool;
+    [SerializeField, Tooltip("Offline preview/legacy authoring only. Production NORMAL ignores these numeric values and requires the backend snapshot.")]
+    private EndlessBossProgressionData _bossProgression;
 
     /// <summary>난이도 고정 키. 기본 제작 프로필은 NORMAL/HARD.</summary>
     public string Key => _key;
+    /// <summary>Normal and the paid boss-test scene share the required NORMAL backend snapshot.</summary>
+    public bool RequiresRemoteBalance => _key == "NORMAL" || _key == "HARD_INGAME";
     /// <summary>제작 활성 요청 여부. true여도 검증 실패 시 시작하지 않는다.</summary>
     public bool Enabled => _enabled;
     /// <summary>보스 순환 라운드 수.</summary>
@@ -37,10 +41,12 @@ public sealed class EndlessModeData : ScriptableObject
     public EndlessGrowthSettings Growth => _growth;
     /// <summary>사용할 패널티 풀.</summary>
     public RunPenaltyPoolData PenaltyPool => _penaltyPool;
-    /// <summary>Explicit fixed-cycle compatibility or shuffled pools after the first authored cycle.</summary>
+    /// <summary>Explicit fixed-cycle, legacy fixed-opening, or first-round shuffle policy.</summary>
     public EndlessBossSelection BossSelection => _bossSelection;
-    /// <summary>Ordinary boss candidates after the fixed opening.</summary>
+    /// <summary>Ordinary boss candidates; role-only profiles use this pool starting at round one.</summary>
     public EndlessBossPoolData BreatherBossPool => _breatherBossPool;
-    /// <summary>Difficult boss candidates after the fixed opening.</summary>
+    /// <summary>Difficult boss candidates for the role schedule.</summary>
     public EndlessBossPoolData HardBossPool => _hardBossPool;
+    /// <summary>Endless-only HP/defense/bar rules; fixed stages and tutorials retain their BossData values.</summary>
+    public EndlessBossProgressionData BossProgression => _bossProgression;
 }

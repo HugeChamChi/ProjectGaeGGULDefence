@@ -13,14 +13,14 @@ public class AtkCoefficientDamage : IReplayableEffect
     /// <summary>"훈련의 성과" 등 패시브의 데미지 증가 항목에만 곱해지는 배율. 기본 1(증폭 없음).</summary>
     protected virtual float PassiveBonusMultiplier => 1f;
 
-    public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
+    public virtual void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
     {
         int damage = CalculateDamage(caster, out bool critical);
         target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData);
     }
 
     /// <inheritdoc />
-    public Action<BossBase, Vector3> Capture(UnitBase caster)
+    public virtual Action<BossBase, Vector3> Capture(UnitBase caster)
     {
         int damage = CalculateDamage(caster, out bool critical);
         return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData).Apply;

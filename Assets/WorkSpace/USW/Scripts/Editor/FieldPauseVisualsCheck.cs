@@ -165,7 +165,7 @@ public static class FieldPauseVisualsCheck
             Check(pause.IsActive && Time.timeScale == 0f, "single reward freezes after unchanged grace");
             // Reward selections keep GameState.Playing, so EXP must explicitly defer through the owner.
             exp.TryFireLevelUp();
-            Check(Get<bool>(exp, "_pendingLevelUp") && game.CurrentState == GameManager.GameState.Playing
+            Check(Get<int>(exp, "_pendingLevelUps") == 1 && game.CurrentState == GameManager.GameState.Playing
                 && !level.gameObject.activeInHierarchy, "EXP level is deferred during a reward-only selection");
             CloseReward(reward);
             await Real(.6f, token);

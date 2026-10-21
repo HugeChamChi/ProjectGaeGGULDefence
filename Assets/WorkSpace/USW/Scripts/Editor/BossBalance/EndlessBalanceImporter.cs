@@ -142,7 +142,7 @@ public static class EndlessBalanceImporter
             var selection = EndlessBossSelection.FixedCycle;
             if (rules.TryGetValue("BossSelection", out string selectionText) &&
                 (!Enum.TryParse(selectionText, false, out selection) || !Enum.IsDefined(typeof(EndlessBossSelection), selection)))
-                throw new FormatException("Stage_무한 BossSelection: FixedCycle 또는 ShuffleAfterOpening을 입력하세요.");
+                throw new FormatException("Stage_무한 BossSelection: FixedCycle, ShuffleAfterOpening 또는 ShuffleFromStart를 입력하세요.");
             var bossPools = new Dictionary<string, EndlessBossPoolData>(StringComparer.Ordinal);
             if (rules.ContainsKey("BossSelection"))
             {
@@ -237,6 +237,10 @@ public static class EndlessBalanceImporter
                 string key = Key(row, "난이도 키");
                 if (!modes.Add(key)) throw row.Error("난이도 키", "중복 키");
                 var data = Add<EndlessModeData>(graph, "Modes", key);
+                // The legacy workbook has no authoring columns for the new role HP/defense profile.
+                // Preserve its explicit reference; incompatible old selection policies then fail validation.
+                var existingMode = graph.Items.First(item => item.Desired == data).Existing as EndlessModeData;
+                var progression = existingMode != null ? existingMode.BossProgression : null;
                 if (!pools.TryGetValue(Key(row, "패널티 풀"), out var pool)) throw row.Error("패널티 풀", "미등록 풀");
                 EndlessBossPoolData BossPool(string field, EndlessBossRole role)
                 {
@@ -261,6 +265,7 @@ public static class EndlessBalanceImporter
                 Edit(data, s =>
                 {
                     Set(s, "_key", key);Set(s, "_enabled", Yes(row, "활성"));
+                    Set(s, "_bossProgression", progression);
                     Set(s, "_cycleLength", Rule("CycleLength"));Set(s, "_penaltyInterval", Rule("PenaltyInterval"));
                     Set(s, "_penaltyFirstApplyRound", Rule("PenaltyStart"));Set(s, "_penaltyDrawCount", Rule("PenaltyCount"));
                     Set(s, "_penaltyPool", pool);

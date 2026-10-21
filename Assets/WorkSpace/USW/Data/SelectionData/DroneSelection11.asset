@@ -28,11 +28,10 @@ MonoBehaviour:
   chooseName: "\uC804\uC220\uC801 \uD504\uB85C\uD1A0\uCF5C"
   tier: 3
   spawnRate: 1
-  description: "\uC9D1\uACB0 \uC0AC\uACA9\uC758 \uD53C\uD574\uB7C9\uC774 {value}%\uB85C
-    \uAC10\uC18C\uD558\uC9C0\uB9CC, {seconds}\uCD08 \uAC04\uACA9\uC73C\uB85C {count}\uD68C
-    \uC801\uC6A9\uB429\uB2C8\uB2E4."
-  simpleDescription: "\uC871\uC7A5 \uC2A4\uD0AC\uC758 \uB370\uBBF8\uC9C0\uAC00 \uAC10\uC18C\uD558\uC9C0\uB9CC
-    {count}\uD68C \uC801\uC6A9\uB429\uB2C8\uB2E4."
+  description: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC744 \uCD5C\uB300 {count}\uD68C\uAE4C\uC9C0
+    \uCDA9\uC804\uD574 \uBCF4\uAD00\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  simpleDescription: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC744 \uCD5C\uB300 {count}\uD68C\uAE4C\uC9C0
+    \uCDA9\uC804\uD574 \uBCF4\uAD00\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - chief_skill
   applicableTribes: 
@@ -44,8 +43,8 @@ MonoBehaviour:
   specialValue: 0
   droneEffect:
     Kind: 11
-    Interval: 0.2
-    Value: 0.6
+    Interval: 0
+    Value: 0
     MaxValue: 0
     Count: 2
   icon: {fileID: 21300000, guid: dfde7336d93ebd74195d92785efb5647, type: 3}
@@ -55,8 +54,6 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1000
-      type: {class: ChiefVolleyDefinition, ns: , asm: Assembly-CSharp}
+      type: {class: ChiefChargeCapacityDefinition, ns: , asm: Assembly-CSharp}
       data:
-        ShotDelaySeconds: 0.2
-        DamageRatio: 0.6
-        ShotCount: 2
+        MaximumCharges: 2

@@ -10,6 +10,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     [SerializeField] private Button btn_Skill;
     [SerializeField] private Slider slider_Cooldown;
     [SerializeField] private TMP_Text txt_Cooldown;
+    [SerializeField] private TMP_Text _chargeCount;
     [SerializeField] private Image img_Icon;
     [SerializeField] private ChiefSkillReadyBanner _readyBanner;
     [Tooltip("충전 완료 시 틀 위로 솟아오르고 쿨타임 중 가라앉는 초상화 연출 (선택). 비우면 자식에서 찾음")]
@@ -30,6 +31,10 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
     private Color _normalIconColor = Color.white;
     private Color _normalButtonColor = Color.white;
     private Sprite _defaultIcon;
+    private Material _normalFrameMaterial;
+    private Material _monocleFrameMaterial;
+    private IChiefSelectionReader _chiefEffects;
+    private bool _hasMonocleFrame;
 
     private UI_ChiefSkillPresenter _presenter;
 
@@ -44,14 +49,20 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
             _normalIconColor = img_Icon.color;
             _defaultIcon = img_Icon.sprite;
         }
-        if (btn_Skill != null && btn_Skill.targetGraphic != null) _normalButtonColor = btn_Skill.targetGraphic.color;
+        if (btn_Skill != null && btn_Skill.targetGraphic != null)
+        {
+            _normalButtonColor = btn_Skill.targetGraphic.color;
+            _normalFrameMaterial = btn_Skill.targetGraphic.material;
+        }
     }
 
+    /// <summary>족장 선택과 현재 선택지 효과를 연결한다.</summary>
     [Inject]
-    public void Construct(ChieftainSelection chieftainSelection)
+    public void Construct(ChieftainSelection chieftainSelection, IChiefSelectionReader chiefEffects)
     {
         if (_presenter != null) return;
         _selection = chieftainSelection;
+        _chiefEffects = chiefEffects;
         _presenter = new UI_ChiefSkillPresenter(this);
         if (isActiveAndEnabled) Subscribe();
     }
@@ -68,6 +79,7 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     private void OnDisable()
     {
+        SetMonocleFrame(false);
         if (_selection != null) _selection.OnActiveSkillChanged -= OnActiveSkillChanged;
         _presenter?.SetActiveSkill(null);
     }
@@ -106,7 +118,18 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
 
     private void Update()
     {
+        SetMonocleFrame(_chiefEffects?.HasRallyDamage == true);
         _presenter?.OnUpdate(Time.deltaTime);
+    }
+
+    private void SetMonocleFrame(bool enabled)
+    {
+        if (_hasMonocleFrame == enabled || btn_Skill == null || btn_Skill.targetGraphic == null) return;
+        if (enabled && _monocleFrameMaterial == null)
+            _monocleFrameMaterial = Resources.Load<Material>("ChiefMonocleFrame");
+        if (enabled && _monocleFrameMaterial == null) return;
+        btn_Skill.targetGraphic.material = enabled ? _monocleFrameMaterial : _normalFrameMaterial;
+        _hasMonocleFrame = enabled;
     }
 
     public void SetButtonInteractable(bool isInteractable)
@@ -131,6 +154,30 @@ public class UI_ChiefSkillButtonView : MonoBehaviour
         {
             txt_Cooldown.text = text;
         }
+    }
+
+    /// <summary>복수 보관 선택지일 때 완료 횟수를 표시하고 다음 회분 쿨다운은 별도로 유지한다.</summary>
+    public void SetChargeCount(int count, int capacity)
+    {
+        if (capacity > 1 && _chargeCount == null && btn_Skill != null)
+        {
+            var badge = new GameObject("ChargeCount", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rect = (RectTransform)badge.transform;
+            rect.SetParent(btn_Skill.transform, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
+            rect.anchoredPosition = new Vector2(-6f, -6f);
+            rect.sizeDelta = new Vector2(72f, 36f);
+            _chargeCount = badge.GetComponent<TextMeshProUGUI>();
+            if (txt_Cooldown != null) _chargeCount.font = txt_Cooldown.font;
+            _chargeCount.fontSize = 24f;
+            _chargeCount.fontStyle = FontStyles.Bold;
+            _chargeCount.color = new Color(1f, 0.88f, 0.4f);
+            _chargeCount.alignment = TextAlignmentOptions.TopRight;
+            _chargeCount.raycastTarget = false;
+        }
+        if (_chargeCount == null) return;
+        _chargeCount.gameObject.SetActive(capacity > 1);
+        if (capacity > 1) _chargeCount.SetText("{0}/{1}", count, capacity);
     }
 
     public void SetIcon(Sprite icon)

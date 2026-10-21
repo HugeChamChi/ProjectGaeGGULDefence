@@ -71,7 +71,7 @@ public class BackendGameData
                 if (rows.Count != 1) { Debug.LogWarning("PlayerData duplicate rows require repair."); onComplete?.Invoke(null); return; }
                 PlayerData data;
                 try { data = ParsePlayerData(rows[0]); }
-                catch (Exception error) { Debug.LogWarning("PlayerData format: " + error.GetType().Name); onComplete?.Invoke(null); return; }
+                catch (Exception error) { Debug.LogWarning("PlayerData format: " + error.GetType().Name + ": " + error.Message); onComplete?.Invoke(null); return; }
                 _inDate = rows[0]["inDate"].ToString();
                 _owner = owner;
                 onComplete?.Invoke(data);
@@ -174,7 +174,7 @@ public class BackendGameData
             AccountExperienceReceipt = ParseAccountExperienceReceipt(data.GetString("AccountExperienceReceipt", string.Empty)),
             PendingEntryId = data.GetString("PendingEntryId", string.Empty),
             PendingEntryCost = data.GetInt("PendingEntryCost", 0),
-            CouponHistory = JsonMapper.ToObject<System.Collections.Generic.List<CouponReceipt>>(data.GetString("CouponHistory", "[]")),
+            CouponHistory = ParseCouponHistory(data.GetString("CouponHistory", "[]")),
             PlayerName = data.GetString(COLUMN_PLAYER_NAME, "유저"),
             Gold       = data.GetInt(COLUMN_GOLD, 0),
             Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
@@ -198,7 +198,7 @@ public class BackendGameData
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
         param.Add("AccountExperienceSequence", data.AccountExperienceSequence);
         param.Add("AccountExperienceRunId", data.AccountExperienceRunId ?? string.Empty);
-        param.Add("AccountExperienceReceipt", data.AccountExperienceReceipt == null ? string.Empty : JsonMapper.ToJson(data.AccountExperienceReceipt));
+        param.Add("AccountExperienceReceipt", IsEmptyExperienceReceipt(data.AccountExperienceReceipt) ? string.Empty : JsonMapper.ToJson(data.AccountExperienceReceipt));
         param.Add("PendingEntryId", data.PendingEntryId ?? string.Empty);
         param.Add("PendingEntryCost", data.PendingEntryCost);
         param.Add("CouponHistory", JsonMapper.ToJson(data.CouponHistory ?? new System.Collections.Generic.List<CouponReceipt>()));
@@ -222,11 +222,30 @@ public class BackendGameData
     // Installed LitJson cannot deserialize a top-level null token. Missing/empty legacy columns are an absent receipt.
     private static AccountExperienceReceipt ParseAccountExperienceReceipt(string json)
     {
+        json = json?.Trim();
         if (string.IsNullOrEmpty(json) || json == "null") return null;
         var receipt = JsonMapper.ToObject<AccountExperienceReceipt>(json);
-        if (receipt == null || string.IsNullOrEmpty(receipt.RunId) || receipt.Sequence <= 0 || receipt.Experience < 0)
+        // JsonUtility materializes null inline classes as all-default objects when cloning save snapshots.
+        // Treat only that exact empty shape as absent; retain validation for partially populated receipts.
+        if (IsEmptyExperienceReceipt(receipt)) return null;
+        if (string.IsNullOrEmpty(receipt.RunId) || receipt.Sequence <= 0 || receipt.Experience < 0)
             throw new FormatException("Invalid account experience receipt.");
         return receipt;
+    }
+
+    private static bool IsEmptyExperienceReceipt(AccountExperienceReceipt receipt) => receipt == null ||
+        (string.IsNullOrEmpty(receipt.RunId) && receipt.Sequence == 0 && receipt.Experience == 0 && receipt.LevelBefore == 0 && receipt.LevelAfter == 0);
+
+    private static System.Collections.Generic.List<CouponReceipt> ParseCouponHistory(string json)
+    {
+        json = json?.Trim();
+        if (string.IsNullOrEmpty(json) || json == "null") return new System.Collections.Generic.List<CouponReceipt>();
+        var history = JsonMapper.ToObject<System.Collections.Generic.List<CouponReceipt>>(json);
+        if (history == null) throw new FormatException("Invalid coupon history.");
+        foreach (var receipt in history)
+            if (receipt == null || string.IsNullOrEmpty(receipt.Id) || receipt.Gold < 0 || receipt.Diamond < 0 || receipt.Stamina < 0)
+                throw new FormatException("Invalid coupon history entry; existing deduplication history must be repaired.");
+        return history;
     }
 
     // -------------------------
