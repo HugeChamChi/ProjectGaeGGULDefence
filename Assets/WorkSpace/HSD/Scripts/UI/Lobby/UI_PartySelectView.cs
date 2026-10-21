@@ -9,6 +9,12 @@ public class UI_PartySelectView : UI_Base
     [SerializeField] private RectTransform contentTransform;
     [SerializeField] private UI_PartyItem partyItemPrefab;
     [SerializeField] private Button startGameButton;
+    [SerializeField] private LobbyModeSelectView _modeSelectView;
+    [SerializeField] private EndlessModeData _normalMode;
+    [SerializeField] private EndlessModeData _testMode;
+
+    /// <summary>Authored content references used to validate the shared remote snapshot before charging stamina.</summary>
+    public EndlessModeData GetBattleMode(bool test) => test ? _testMode : _normalMode;
 
     private List<UI_PartyItem> _spawnedItems = new List<UI_PartyItem>();
     private Action<PartyDataSO> _onPartySelected;
@@ -39,6 +45,15 @@ public class UI_PartySelectView : UI_Base
     }
 
     protected override void Awake() => base.Awake();
+
+    public void StartDefaultGame() => _presenter?.StartDefaultGame(_lobbyData);
+
+    /// <summary>Chooses Normal or the paid test battle before starting preflight.</summary>
+    public void ChooseMode(Action<bool> selected)
+    {
+        if (_modeSelectView != null) _modeSelectView.Show(selected);
+        else selected(false);
+    }
 
     private void Start()
     {

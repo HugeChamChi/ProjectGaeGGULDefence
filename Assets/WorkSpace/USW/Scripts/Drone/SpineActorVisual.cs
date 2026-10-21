@@ -17,6 +17,7 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     [SerializeField] private string _attackEnd = "attack_end";
     private MeshRenderer _renderer;
     private UnitBase _unit;
+    private SpineAttackSpeedSync _attackSpeed;
     private bool _dragging;
     private bool _paused;
     private bool _previousUnscaled;
@@ -38,6 +39,13 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     {
         if (_skeleton != null) _renderer = _skeleton.GetComponent<MeshRenderer>();
         _unit = GetComponent<UnitBase>();
+        if (_skeleton != null)
+        {
+            _attackSpeed = gameObject.AddComponent<SpineAttackSpeedSync>();
+            _attackSpeed.Initialize(_skeleton, _unit, GetComponent<DroneUnit>(), _drag, _idle);
+            _attackSpeed.RegisterAttackCycle(_attack);
+            _attackSpeed.RegisterAttackCycle(_attackStart, _attackLoop, _attackEnd);
+        }
     }
 
     private void OnEnable()
@@ -70,6 +78,7 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
         state.ClearTracks();
         _skeleton.Skeleton.SetupPose();
         if (Has(_idle)) state.SetAnimation(0, _idle, true);
+        _attackSpeed?.Refresh();
     }
 
     private bool Has(string name) => !string.IsNullOrEmpty(name)
@@ -86,6 +95,7 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
         {
             state.SetAnimation(0, _attack, false);
             QueueIdle();
+            _attackSpeed?.Refresh();
             return;
         }
         if (!Has(_attackStart)) return;
@@ -93,6 +103,7 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
         if (Has(_attackLoop)) state.AddAnimation(0, _attackLoop, false, 0f);
         if (Has(_attackEnd)) state.AddAnimation(0, _attackEnd, false, 0f);
         QueueIdle();
+        _attackSpeed?.Refresh();
     }
 
     /// <summary>Plays the authored skill once, then returns to idle without changing skill effects or timing.</summary>
@@ -113,6 +124,8 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
     {
         if (_skeleton == null || on == _paused) return;
         _paused = on;
+        _attackSpeed?.SetPauseIdle(on);
+        _attackSpeed?.Refresh();
         if (on) { _previousUnscaled = _skeleton.UnscaledTime; _skeleton.UnscaledTime = true; }
         else _skeleton.UnscaledTime = _previousUnscaled;
     }

@@ -1,5 +1,8 @@
 <dependencies>
   <packages>
+    <package>androidx.credentials:credentials:1.6.0</package>
+    <package>androidx.credentials:credentials-play-services-auth:1.6.0</package>
+    <package>com.google.android.libraries.identity.googleid:googleid:1.2.1</package>
     <package>com.google.games:gpgs-plugin-support:2.1.0</package>
   </packages>
   <files>

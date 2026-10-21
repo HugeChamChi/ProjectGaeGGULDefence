@@ -45,8 +45,7 @@ MonoBehaviour:
   prefabAddress: DroneUnit_Zeltan
   icon: {fileID: 21300000, guid: 9db28dea548971348984f593f77b080f, type: 3}
   prefab: {fileID: 2509367199185363107, guid: 14b18c01ede94854d80abbe83f408456, type: 3}
-  description: "\uB3D9\uB8CC\uB4E4\uC744 \uC704\uD574 \uBC30\uCE58\uB418\uC5B4\uC788\uB294
-    \uB4DC\uB860 \uBE44\uB840\uD558\uC5EC {3}\uC2DD\uB7C9\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
+  description: '매초 자체 식량 {3}을 생산하고 군단 드론의 식량 생산을 지원합니다. 인게임 강화는 자체 생산량을 높입니다.'
   atk:
     normal: 0
     rare: 0

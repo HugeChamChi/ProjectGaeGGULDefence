@@ -151,8 +151,9 @@ public static class SelectionDefinitionReader
             case 5: return new EmptyStackDamageDefinition {  };
             case 6: return new FoodPayoutDefinition { PeriodSeconds=effect.Interval, BonusRatio=effect.Value };
             case 7: return new HackingProductionFlatDefinition { StackCount=effect.Count };
-            case 8: return new HackingProductionRollDefinition { MinimumRatio=effect.Value, MaximumRatio=effect.MaxValue };
-            case 9: return new ManaRequirementDefinition { ReductionRatio=effect.Value };
+            // 2026-10-21 사용자 결정: 넹 !(8) 확률 2배, 넹...(9) 감망 기폭 여운. 직렬화 Kind 값은 유지한다.
+            case 8: return new HackingProductionProcDefinition { Chance=effect.Value, Multiplier=effect.Count };
+            case 9: return new GammanResidueDefinition { DamageRatio=effect.Value, DurationSeconds=effect.Interval, TickCount=effect.Count };
             case 10: return new ChiefCooldownDefinition { ReductionRatio=effect.Value };
             case 11: return new ChiefVolleyDefinition { ShotDelaySeconds=effect.Interval, DamageRatio=effect.Value, ShotCount=effect.Count };
             case 12: return new FoodProductionDefinition { BonusRatio=effect.Value };
@@ -254,12 +255,24 @@ public static class SelectionDefinitionReader
             case ManaRequirementDefinition d:
                 Ratio(d.ReductionRatio, nameof(d.ReductionRatio));
                 return new ManaRequirementDefinition { ReductionRatio = d.ReductionRatio };
+            case HackingProductionProcDefinition d:
+                Ratio(d.Chance, nameof(d.Chance)); if (d.Multiplier < 2) throw new ArgumentException("Multiplier must be at least two.");
+                return new HackingProductionProcDefinition { Chance = d.Chance, Multiplier = d.Multiplier };
+            case GammanResidueDefinition d:
+                Ratio(d.DamageRatio, nameof(d.DamageRatio)); Positive(d.DurationSeconds, nameof(d.DurationSeconds)); Positive(d.TickCount, nameof(d.TickCount));
+                return new GammanResidueDefinition { DamageRatio = d.DamageRatio, DurationSeconds = d.DurationSeconds, TickCount = d.TickCount };
             case ChiefCooldownDefinition d:
                 Ratio(d.ReductionRatio, nameof(d.ReductionRatio));
                 return new ChiefCooldownDefinition { ReductionRatio = d.ReductionRatio };
             case ChiefVolleyDefinition d:
                 NonNegative(d.ShotDelaySeconds, nameof(d.ShotDelaySeconds)); NonNegative(d.DamageRatio, nameof(d.DamageRatio)); Positive(d.ShotCount, nameof(d.ShotCount));
                 return new ChiefVolleyDefinition { ShotDelaySeconds = d.ShotDelaySeconds, DamageRatio = d.DamageRatio, ShotCount = d.ShotCount };
+            case ChiefChargeCapacityDefinition d:
+                Positive(d.MaximumCharges, nameof(d.MaximumCharges));
+                return new ChiefChargeCapacityDefinition { MaximumCharges = d.MaximumCharges };
+            case ChiefHackingDetonationDefinition d:
+                NonNegative(d.DamageRatioPerStack, nameof(d.DamageRatioPerStack));
+                return new ChiefHackingDetonationDefinition { DamageRatioPerStack = d.DamageRatioPerStack };
             case FoodProductionDefinition d:
                 NonNegative(d.BonusRatio, nameof(d.BonusRatio));
                 return new FoodProductionDefinition { BonusRatio = d.BonusRatio };

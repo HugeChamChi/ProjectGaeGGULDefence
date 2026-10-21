@@ -68,6 +68,10 @@ public class Drone_Deltan : HackingDroneSpawner
         float exact = ExactProduction;
         int produced = Mathf.FloorToInt(exact);
         _productionRemainder = exact - produced;
+        // 9108 넹 !: 이 해킹 1회만 확률로 생산량 배수(소수 이월분 포함 정수 생산 뒤 적용).
+        var effects = DroneEffects;
+        if (effects != null && effects.HackingProductionProcChance > 0f && Random.value < effects.HackingProductionProcChance)
+            produced = checked(produced * Mathf.Max(1, effects.HackingProductionProcMultiplier));
         FlashOwnedDrones();
         StartHacking(runtime, target, produced, null, 0, false);
     }

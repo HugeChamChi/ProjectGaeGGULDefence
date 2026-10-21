@@ -38,4 +38,14 @@ public sealed class CombatHealth
         CurrentUnits -= actual;
         return actual;
     }
+
+    /// <summary>Restores only missing HP, without overflow or resurrecting a defeated target.</summary>
+    public long Heal(long units)
+    {
+        if (units < 0) throw new ArgumentOutOfRangeException(nameof(units));
+        if (IsDead) return 0;
+        long actual = Math.Min(MaxUnits - CurrentUnits, units);
+        CurrentUnits += actual;
+        return actual;
+    }
 }

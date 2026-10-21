@@ -9,6 +9,7 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
     [Tooltip("페이드에 사용할 머티리얼이 들어있는 이미지 (ex. Custom_CircleTransition.mat)")]
     [SerializeField] private Image fadeImage;
     [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private TransitionLoadingView loadingView;
 
     [Header("Material Settings")]
     [Tooltip("머티리얼을 사용해 애니메이션할 경우 체크하세요")]
@@ -18,9 +19,24 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
 
     private Material _fadeMaterial;
 
+    public void ReportLoadingProgress(float progress, string message) => loadingView?.Report(progress, message);
+
+    private void Update()
+    {
+        if (loadingView == null) return;
+        float cover = useMaterialTransition && _fadeMaterial != null
+            ? _fadeMaterial.GetFloat(materialPropertyName) : canvasGroup.alpha * 0.5f;
+        float visible = cover <= 0.5f ? Mathf.InverseLerp(0.3f, 0.5f, cover)
+            : 1f - Mathf.InverseLerp(0.5f, 0.72f, cover);
+        loadingView.SetVisibility(visible);
+    }
+
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
+        // Tutorial overlays use orders up to 32000; the transition must cover them too.
+        var canvas = GetComponent<Canvas>();
+        if (canvas != null) canvas.sortingOrder = short.MaxValue;
 
         if (fadeImage != null && useMaterialTransition && fadeImage.material != null)
         {
@@ -50,6 +66,7 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
     [Button("Fade In (Test)")]
     public async UniTask FadeInAsync(float duration = 0.5f)
     {
+        loadingView?.Begin();
         // 화면을 가리는 상태 (Obscured) -> _Progress를 0에서 0.5로 이동
         if (useMaterialTransition && _fadeMaterial != null)
         {
@@ -87,5 +104,6 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
             canvasGroup.blocksRaycasts = false;
         }
+        loadingView?.Hide();
     }
 }

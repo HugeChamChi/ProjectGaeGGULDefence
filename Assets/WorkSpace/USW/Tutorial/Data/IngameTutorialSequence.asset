@@ -92,7 +92,7 @@ MonoBehaviour:
         delayBeforeExecute: 0
         useDim: 0
         Stage: 8
-        Instruction: "\uC871\uC7A5 \uC2A4\uD0AC\uC774 \uC900\uBE44\uB418\uBA74 \uC774
+        Instruction: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC774 \uC900\uBE44\uB418\uBA74 \uC774
           \uBC84\uD2BC\uC73C\uB85C \uC0AC\uC6A9\uD560 \uC218 \uC788\uC5B4\uC694!"
     - rid: 1992779535531114594
       type: {class: IngameTutorialStep, ns: GaeGGUL.Tutorial, asm: Assembly-CSharp}

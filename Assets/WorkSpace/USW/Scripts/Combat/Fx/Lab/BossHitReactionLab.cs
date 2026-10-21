@@ -74,6 +74,8 @@ public sealed class BossHitReactionLab : MonoBehaviour
             _combat.SelectPreset(0);
             _skeleton=_combat.Boss.GetComponentInChildren<SkeletonAnimation>();
             if(_skeleton == null || _settings == null)throw new InvalidOperationException("Reaction lab configuration missing");
+            // This comparison owns the pose; the production prefab reaction must not apply it a second time.
+            if(_combat.Boss.TryGetComponent<BossHitReaction>(out var productionReaction))productionReaction.enabled=false;
             foreach(string name in new[]{"body1","head","armL","armR"})
             {
                 var bone=_skeleton.Skeleton.FindBone(name);

@@ -23,6 +23,7 @@ public class InGameLifetimeScope : LifetimeScope
         if (combatSettings == null) throw new System.InvalidOperationException("LevelUpManager combat configuration source is required in scene.");
         builder.RegisterInstance(combatSettings);
         builder.Register<ResearchRunBonuses>(Lifetime.Scoped);
+        builder.Register<AccountExperienceRun>(Lifetime.Scoped);
         builder.RegisterEntryPoint<GaeGGUL.Tutorial.TutorialSceneBinding>();
         SceneComponentRegistration.RegisterOptional<GaeGGUL.Tutorial.TutorialActor>(builder, gameObject.scene);
         builder.Register<GaeGGUL.Extension.GridCellExtension>(Lifetime.Scoped);
@@ -115,6 +116,9 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterInstance(upgradeSettings);
         builder.RegisterComponentInHierarchy<UpgradeManager>();
         builder.RegisterComponentInHierarchy<InputManager>();
+        var worldInteraction = Resources.Load<WorldInteractionSettings>("WorldInteractionSettings");
+        if (worldInteraction == null) throw new System.InvalidOperationException("WorldInteractionSettings is required.");
+        builder.RegisterInstance(worldInteraction);
 
         if (isDron)
         {

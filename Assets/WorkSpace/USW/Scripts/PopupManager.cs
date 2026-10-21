@@ -6,6 +6,7 @@ using BackEnd;
 using DG.Tweening;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 팝업 통합 관리 클래스
@@ -42,6 +43,7 @@ public class PopupManager : MonoBehaviour
     {
         if (_couponInputField != null) _couponInputField.text = string.Empty;
         if (_couponText != null) _couponText.text = string.Empty;
+        RecoverAsync().Forget();
     }
 
     private void CloseCouponPanel()
@@ -51,11 +53,32 @@ public class PopupManager : MonoBehaviour
 
     private void OnCouponSubmitClicked()
     {
+        if (Table.Coupon.IsBusy) return;
+        if (_couponSubmitButton != null) _couponSubmitButton.interactable = false;
         string code = _couponInputField != null ? _couponInputField.text : string.Empty;
 
         Table.Coupon.UseCoupon(code, (success, message) =>
         {
             if (_couponText != null) _couponText.text = message;
+            if (_couponSubmitButton != null) _couponSubmitButton.interactable = true;
         });
+    }
+
+    private async UniTaskVoid RecoverAsync()
+    {
+        if (_couponSubmitButton != null) _couponSubmitButton.interactable = false;
+        try
+        {
+            var result = await Table.Coupon.RecoverPendingAsync();
+            if (this == null) return;
+            if (_couponText != null)
+            {
+                var history = Player.PlayerData.Data?.CouponHistory;
+                _couponText.text = string.IsNullOrEmpty(result.Message)
+                    ? $"계정 사용 이력: {history?.Count ?? 0}건\n쿠폰의 기간, 대상, 중복 사용 조건은 서버에서 확인합니다."
+                    : result.Message;
+            }
+        }
+        finally { if (_couponSubmitButton != null) _couponSubmitButton.interactable = true; }
     }
 }

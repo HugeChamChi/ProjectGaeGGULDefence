@@ -106,6 +106,7 @@ public class UI_BossHpBar : MonoBehaviour
     private Tween _barTween;
     private decimal _currentHp;
     private decimal _maxHp = 1m;
+    private decimal _runtimeHpPerLine;
     private float _targetRatio;
 
 
@@ -136,6 +137,7 @@ public class UI_BossHpBar : MonoBehaviour
     /// <summary>런타임에서 총 체력줄 수 변경 (디버그/설정용). 이후 SetHp 호출 시 즉시 반영.</summary>
     public void SetLineCount(int count)
     {
+        _runtimeHpPerLine = 0m;
         ResetHp(_currentHp, _maxHp, count);
     }
 
@@ -162,7 +164,7 @@ public class UI_BossHpBar : MonoBehaviour
         int targetLine =
             _currentHp <= 0m
                 ? 0
-                : Math.Max(1, (int)decimal.Ceiling(exactRatio * LineCount));
+                : Math.Max(1, (int)decimal.Ceiling(LineUnits(_currentHp)));
 
         if (targetLine != _currentLine)
         {
@@ -197,15 +199,17 @@ public class UI_BossHpBar : MonoBehaviour
 
     /// <summary>새 보스를 즉시 표시하고 이전 보스의 보간/피격 연출을 초기화한다.
     /// lineCount를 0 이하로 주면(생략 포함) <see cref="_hpPerLine"/> 기준 maxHp에서 자동 계산한다.</summary>
-    public void BeginBoss(decimal currentHp, decimal maxHp, int lineCount = 0)
+    public void BeginBoss(decimal currentHp, decimal maxHp, int lineCount = 0, decimal hpPerLine = 0m)
     {
         UseRuntimeData();
+        _runtimeHpPerLine = Math.Max(0m, hpPerLine);
         ResetHp(currentHp, maxHp, ResolveLineCount(maxHp, lineCount));
     }
 
     /// <summary>lineCount가 명시(1 이상)되면 그대로, 아니면 hpPerLine 기준으로 maxHp에서 계산한다.</summary>
     private int ResolveLineCount(decimal maxHp, int lineCount)
     {
+        if (_runtimeHpPerLine > 0m) return (int)Math.Max(1m, decimal.Ceiling(maxHp / _runtimeHpPerLine));
         if (lineCount > 0) return lineCount;
         long perLine = Math.Max(1, _hpPerLine);
         return (int)Math.Max(1m, Math.Ceiling(maxHp / perLine));
@@ -219,22 +223,27 @@ public class UI_BossHpBar : MonoBehaviour
         _currentHp = Math.Min(_maxHp, Math.Max(0m, currentHp));
         decimal ratio = _currentHp / _maxHp;
         _targetRatio = _shownRatio = (float)ratio;
-        _currentLine = _currentHp <= 0m ? 0 : Math.Max(1, (int)decimal.Ceiling(ratio * LineCount));
+        _currentLine = _currentHp <= 0m ? 0 : Math.Max(1, (int)decimal.Ceiling(LineUnits(_currentHp)));
         _initialized = true;
         ApplyBarVisual(_shownRatio);
         OnHpReset?.Invoke();
     }
 
+    private decimal LineUnits(decimal hp) => _runtimeHpPerLine > 0m
+        ? hp / _runtimeHpPerLine : hp / _maxHp * LineCount;
+
     /// <summary>보간된 표시 비율(shownRatio) 기준으로 바 길이·색·텍스트를 갱신.</summary>
     private void ApplyBarVisual(float shownRatio)
     {
         int lineCount = LineCount;
+        float shownLineUnits = _runtimeHpPerLine > 0m
+            ? shownRatio * (float)(_maxHp / _runtimeHpPerLine) : shownRatio * lineCount;
         int shownLine = shownRatio == _targetRatio && _currentLine >= 0 ? _currentLine :
-            shownRatio <= 0f ? 0 : Mathf.Clamp(Mathf.CeilToInt(shownRatio * lineCount), 1, lineCount);
+            shownRatio <= 0f ? 0 : Mathf.Clamp(Mathf.CeilToInt(shownLineUnits), 1, lineCount);
         // 줄 단위 채움은 3겹이다: 몸통 배경(전체 폭) > 다음 줄(전체 HP 비율 폭) > 현재 줄.
         // 현재 줄은 전체 HP 비율 구간 안에서 남은 한 줄 비율만큼 그려, 깎인 오른쪽에 배경이 드러난다.
         float fillRatio = _fillCurrentLine && shownLine > 0
-            ? shownRatio * Mathf.Clamp01(shownRatio * lineCount - (shownLine - 1)) : shownRatio;
+            ? shownRatio * Mathf.Clamp01(shownLineUnits - (shownLine - 1)) : shownRatio;
 
         // 표시 비율만큼 Mask 가로 길이 (왼쪽 고정, 오른쪽이 줄어듦).
         // 앵커 기반이라 Pivot 설정과 무관하게 왼쪽 정렬 + 부모 폭 상대.
@@ -280,7 +289,8 @@ public class UI_BossHpBar : MonoBehaviour
             // 비율은 아이콘 오른쪽부터 재되, 칠하기는 위에 그려지는 둥근 아이콘 중심부터 시작해
             // 원 테두리가 휘는 자리에 배경이 비치지 않게 한다.
             coverStart = padding.x;
-            if (fullBar != null && IconDrawsAboveBar())
+            // HP 0에서는 아이콘 밑 칠하기도 없앤다. 원형 아이콘이 직사각형 모서리를 다 덮지 못해 마지막 줄 색이 비친다.
+            if (fullBar != null && shownLine > 0 && IconDrawsAboveBar())
             {
                 float center = fullBar.InverseTransformPoint(_fillStartAfter.TransformPoint(_fillStartAfter.rect.center)).x;
                 coverStart = Mathf.Clamp(center - fullBar.rect.xMin, 0f, padding.x);

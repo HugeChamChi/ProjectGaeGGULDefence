@@ -486,7 +486,7 @@ public sealed class TermPopup : MonoBehaviour
         var text = NewRect(name, parent).gameObject.AddComponent<TextMeshProUGUI>();
         if (_font != null) text.font = _font;
         if (_fontMaterial != null) text.fontSharedMaterial = _fontMaterial;
-        text.fontSize = size;
+        text.fontSize = Mathf.Max(UiTypography.BodySize, size);
         text.color = color;
         text.alignment = TextAlignmentOptions.TopLeft;
         text.textWrappingMode = TextWrappingModes.Normal;

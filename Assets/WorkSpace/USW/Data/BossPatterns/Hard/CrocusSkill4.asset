@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dcfb7199a29ca848bf400c41b16cf1e, type: 3}
+  m_Name: CrocusSkill4
+  m_EditorClassIdentifier: Assembly-CSharp::PlacementBossPatternData
+  patternType: 9
+  patternName: "\uBC30\uCE58 \uAE30\uBBF9"
+  description: "8\uAC00\uC9C0 \uBC30\uCE58 \uAE30\uBBF9 \uC911 \uD558\uB098\uB97C
+    \uBB34\uC791\uC704\uB85C \uC2DC\uC804\uD569\uB2C8\uB2E4."
+  triggerType: 1
+  interval: 0
+  hpThreshold: 0.5
+  rangeType: 0
+  fixedCells: []
+  randomCellCount: 3
+  damageReductionRate: 0
+  speedReductionRate: 0
+  duration: 3
+  Priority: 10
+  SkillDuration: 0
+  ImpactTimeSec: 0.5
+  RetryDelay: 0.25
+  StunVisual: {fileID: 0}
+  UseScreenShake: 0
+  ShakeDuration: 1
+  ShakeIntensity: 0.08
+  AnimationTrigger: CrocusSkill4
+  Candidates:
+  - {fileID: 11400000, guid: a212da685444f534bb9b021b0384a708, type: 2}
+  - {fileID: 11400000, guid: 68bd9932ce8526045a335db7f688ad53, type: 2}
+  - {fileID: 11400000, guid: 8eeee08f891a7ad4c9a99dc4a9d84b96, type: 2}
+  - {fileID: 11400000, guid: fefc4be16ece21f448f737811312600f, type: 2}
+  - {fileID: 11400000, guid: 88e639b25024cb94c8120639d8b63e2f, type: 2}
+  - {fileID: 11400000, guid: 8b397a2c6d17dd94b9a1b2219768ac35, type: 2}
+  - {fileID: 11400000, guid: 3ee9919fab35d114086c3a1d4df3da8f, type: 2}
+  - {fileID: 11400000, guid: 4f55d563d2dbab9418f22ef01e138f11, type: 2}
+  Phases: {fileID: 11400000, guid: 678cc8d9db729524b8cccf4d2a8729b8, type: 2}
+  TelegraphMaterial: {fileID: 2100000, guid: 6d4119761f104cd4ab08adafed2179c2, type: 2}
+  NativeDuration: 1

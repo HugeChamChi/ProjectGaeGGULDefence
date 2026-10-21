@@ -63,7 +63,7 @@ public static class AlphanActiveSkillChecks
             var spawner=Component<ChieftainSelection>();var manager=Component<LevelUpManager>();
             var drones=Component<AlphanSkillCheckDroneManager>();var game=Component<GameManager>();
             Set(game,"<CurrentState>k__BackingField",GameManager.GameState.Playing);
-            var data=Asset<AlphanSkillData>();data.CooldownSeconds=14;data.DamagePerDrone=80;data.SoundAddress="";
+            var data=Asset<AlphanSkillData>();data.CooldownSeconds=14;data.RallyAttackCoefficient=1;data.SoundAddress="";
             skill=new AlphanActiveSkill(spawner,new DroneManager[]{drones},manager.Effects,game,null);
             skill.Initialize();
             Check(!skill.IsAvailable && spawner.ActiveSkill==null,"No selection stays unavailable");
@@ -82,7 +82,7 @@ public static class AlphanActiveSkillChecks
             var presenter=new UI_ChiefSkillPresenter(view);presenter.SetActiveSkill(skill);
             Check(button.interactable && slider.value==0,"Existing UI handles no-grid skill");
             presenter.ExecuteSkill();
-            Check(drones.CastCount==1 && drones.EmergencyCount==1 && drones.Damage==80,"Manual cast runs rally and emergency hook once");
+            Check(drones.CastCount==1 && drones.EmergencyCount==0 && drones.Damage==1,"Manual cast uses attack-scaled chief path without triggering separate Gamman casts");
             Check(skill.CooldownRemaining==14 && !skill.TryActivate(),"Successful cast consumes cooldown and double click blocked");
             presenter.OnUpdate(0);Check(!button.interactable && label.text.Contains("14.0"),"UI shows cooldown");
             Time.timeScale=0;skill.Advance(100);Check(skill.CooldownRemaining==14,"Time pause does not charge");Time.timeScale=1;
@@ -92,7 +92,8 @@ public static class AlphanActiveSkillChecks
             var cooldown=Asset<LevelUpData>();cooldown.chooseId=9110;DroneSelectionPresets.Configure(cooldown,DroneSelectionKind.AlphanCooldown);manager.ApplyEffect(cooldown);
             Check(Mathf.Approximately(skill.CooldownSeconds,11.2f),"Twenty percent cooldown applies to independent SO");
             var protocol=Asset<LevelUpData>();protocol.chooseId=9111;DroneSelectionPresets.Configure(protocol,DroneSelectionKind.AlphanDoubleShot);manager.ApplyEffect(protocol);
-            skill.Advance(11.2f);Check(skill.TryActivate() && drones.Protocol.Count==2 && drones.Protocol.DamageRatio==0.6f,"Protocol passed to rally");
+            skill.Advance(11.2f);Check(skill.MaximumCharges==2 && skill.AvailableCharges==1 && skill.TryActivate() && drones.Protocol.Count==0,"Protocol stores charges without automatic reduced-damage volley");
+            manager.RemoveEffect(protocol);
             manager.RemoveEffect(cooldown);Check(skill.CooldownSeconds==14,"Cooldown removal restored");
             skill.Advance(14);drones.UnregisterDrone(drone);presenter.OnUpdate(0);
             Check(!button.interactable && label.text=="" && !skill.TryActivate() && skill.CooldownRemaining==0,"Ready but no drones stays disabled without spending charge");

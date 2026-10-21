@@ -93,15 +93,25 @@ public class UpgradeManager : MonoBehaviour
     public int GetJobLevel(string jobType)
         => GetUpgradeLevel(jobType);
 
-    /// <summary>현재 강화 수를 0~10 범위로 반환한다.</summary>
+    /// <summary>현재 강화 수를 반환한다. 게임 규칙상의 단계 상한은 없다.</summary>
     public int GetUpgradeLevel(string upgradeTarget)
     {
         return upgradeTarget != null && _jobLevel.TryGetValue(upgradeTarget, out var lv)
-            ? Mathf.Clamp(lv, 0, UpgradeSettings.MaximumLevel) : 0;
+            ? Mathf.Max(0, lv) : 0;
     }
 
-    /// <summary>비용 데이터 유무와 구분하여 최대 강화 여부를 반환한다.</summary>
-    public bool IsMaxLevel(string target) => GetUpgradeLevel(target) >= UpgradeSettings.MaximumLevel;
+    /// <summary>강화와 관계없는 드론 1기당 초당 식량 생산량.</summary>
+    public float ZeltanFoodPerDrone => _settings != null ? _settings.ZeltanFoodPerDrone : 0f;
+
+    /// <summary>현재 젤탕 강화로 더하는 자체 초당 식량. 선택지 보정 전 값이다.</summary>
+    public float ZeltanFoodBonus => _settings != null
+        ? GetUpgradeLevel(UpgradeSettings.ZeltanTarget) * _settings.ZeltanFoodPerLevel : 0f;
+
+    /// <summary>동일 설정에서 강화 안내 문구를 만든다.</summary>
+    public string GetUpgradeDescription(string target) => _settings == null ? string.Empty
+        : target == UpgradeSettings.ZeltanTarget
+            ? $"자체 +{_settings.ZeltanFoodPerLevel:0.##}/초\n드론 {_settings.ZeltanFoodPerDrone:0.##}/초\n고정"
+            : $"공격력 +{_settings.AttackPercentPerLevel:0.##}%\n공속 +{_settings.AttackSpeedPercentPerLevel:0.##}%";
 
     /// <summary>현재 강화 레벨 기준 공격력 배율(1.0 = 강화 없음)을 반환합니다. 호출자가 자신의 기준 공격력에 곱해서 사용합니다.</summary>
     public float GetAtkUpgradeMultiplier(int characterId)
@@ -109,15 +119,8 @@ public class UpgradeManager : MonoBehaviour
         if (_settings == null) return 1f;
 
         string jobType = GetJobType(characterId);
-        int level = GetUpgradeLevel(jobType);
-
-        float mult = 1f;
-        for (int i = 0; i < level; i++)
-        {
-            if (_settings.TryGetStep(i, out var step)) mult += step.AttackPercent / 100f;
-        }
-
-        return mult;
+        return !_settings.ContainsTarget(jobType) || jobType == UpgradeSettings.ZeltanTarget ? 1f
+            : 1f + GetUpgradeLevel(jobType) * _settings.AttackPercentPerLevel / 100f;
     }
 
     /// <summary>현재 강화 레벨 기준 공격 속도 배율(1.0 = 강화 없음, 클수록 빠름)을 반환합니다. 호출자가 자신의 기준 공격 간격을 이 값으로 나눠서 사용합니다.</summary>
@@ -126,41 +129,35 @@ public class UpgradeManager : MonoBehaviour
         if (_settings == null) return 1f;
 
         string jobType = GetJobType(characterId);
-        int level = GetUpgradeLevel(jobType);
-
-        float speedMult = 1f;
-        for (int i = 0; i < level; i++)
-        {
-            if (_settings.TryGetStep(i, out var step)) speedMult += step.AttackSpeedPercent / 100f;
-        }
-
-        return speedMult;
+        return !_settings.ContainsTarget(jobType) || jobType == UpgradeSettings.ZeltanTarget ? 1f
+            : 1f + GetUpgradeLevel(jobType) * _settings.AttackSpeedPercentPerLevel / 100f;
     }
 
-    /// <summary>다음 강화 비용을 반환합니다. 최대 레벨이거나 데이터 없으면 -1.</summary>
-    public int GetUpgradeCost(string upgradeTarget)
+    /// <summary>다음 강화 비용을 반환한다. 설정 오류나 표현 불가능한 비용이면 -1.</summary>
+    public float GetUpgradeCost(string upgradeTarget)
     {
         if (_settings == null || !_settings.ContainsTarget(upgradeTarget)) return -1;
 
         int currentLevel = GetUpgradeLevel(upgradeTarget);
 
-        if (!_settings.TryGetStep(currentLevel, out var step)) return -1;
+        if (!_settings.TryGetStep(upgradeTarget, currentLevel, out var step)) return -1;
 
         float rate = 0f;
         foreach (float discount in _discounts.Values) rate += discount;
-        return Mathf.Max(0, Mathf.RoundToInt(step.Cost * (1f - Mathf.Clamp01(rate))));
+        return Mathf.Max(0f, Mathf.Round(step.Cost * (1f - Mathf.Clamp01(rate))));
     }
 
-    /// <summary>강화를 시도합니다. 재화 부족 또는 최대 레벨이면 false.</summary>
+    /// <summary>식량을 결제하고 한 단계 강화한다. 유효하지 않은 비용이나 재화 부족이면 false.</summary>
     public bool TryUpgrade(string upgradeTarget)
     {
-        int cost = GetUpgradeCost(upgradeTarget);
-        if (cost < 0) return false;
-        _audioManager?.PlayCue(GameAudioCue.UpgradeAttempt);
+        float cost = GetUpgradeCost(upgradeTarget);
+        if (cost < 0 || float.IsNaN(cost) || float.IsInfinity(cost)
+            || GetUpgradeLevel(upgradeTarget) == int.MaxValue || float.IsInfinity(TotalSpent + cost)) return false;
         if (_currencyManager == null || !_currencyManager.Spend(cost)) return false;
         TotalSpent += cost;
 
         _jobLevel[upgradeTarget] = GetUpgradeLevel(upgradeTarget) + 1;
+        _audioManager?.PlayCue(GameAudioCue.UpgradeAttempt);
         OnCostChanged?.Invoke();
 
         return true;

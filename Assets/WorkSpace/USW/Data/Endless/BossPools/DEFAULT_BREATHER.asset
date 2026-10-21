@@ -15,8 +15,8 @@ MonoBehaviour:
   _key: DEFAULT_BREATHER
   _role: 1
   _entries:
-  - _bossKey: BossData_Round01
-    _boss: {fileID: 11400000, guid: 65ef7d25bec35284cb736d03e3c88dbc, type: 2}
+  - _bossKey: Breather_DummyBoss01
+    _boss: {fileID: 11400000, guid: 6b69a7a275cd3204cb5799037ec07fc3, type: 2}
     _enabled: 1
   - _bossKey: BossData_Round02
     _boss: {fileID: 11400000, guid: 70dc0a4d05f73214ea9cb079aea91255, type: 2}
@@ -29,4 +29,13 @@ MonoBehaviour:
     _enabled: 1
   - _bossKey: BossData_Round05
     _boss: {fileID: 11400000, guid: 69ad6518c143832428a244fb482e1155, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round06
+    _boss: {fileID: 11400000, guid: 711eba722abcc454f85d62412fd82925, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round07
+    _boss: {fileID: 11400000, guid: 71b2f5af64ecd3c48ba081ba709a7050, type: 2}
+    _enabled: 1
+  - _bossKey: BossData_Round08
+    _boss: {fileID: 11400000, guid: 19ed0ecb742ff5542b9cb9db2c7676f0, type: 2}
     _enabled: 1

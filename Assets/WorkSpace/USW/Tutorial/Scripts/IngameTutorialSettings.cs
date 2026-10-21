@@ -34,8 +34,9 @@ namespace GaeGGUL.Tutorial
         [TextArea] public string CombatPracticeInstruction = "토템 이동과 회전을 모두 배웠어요!\n이제 WAVE 3 보스까지 물리쳐 보세요.";
         [Header("≡ menu lesson (before the WAVE 3 battle)")]
         [TextArea] public string MenuOpenInstruction = "전투 중에 볼 수 있는 정보는 이 메뉴에 모여 있어요.\n메뉴 버튼을 눌러 보세요.";
-        [TextArea] public string MenuDamageInstruction = "딜 기여도를 눌러 보세요.";
-        [TextArea] public string MenuDamageExplanation = "지금까지 누가 피해를 얼마나 줬는지 볼 수 있어요.\n전투 중에도 열어 둔 채로 확인할 수 있어요.";
+        [TextArea] public string MenuDamageInstruction = "하단 버튼 영역을 왼쪽으로 밀어 보세요.\n실시간 딜 그래프로 바뀌어요.";
+        [TextArea] public string MenuDamageExplanation = "캐릭터 그림과 막대로 누가 얼마나 피해를 줬는지 볼 수 있어요.\n전투 중에도 실시간으로 갱신돼요.";
+        [TextArea] public string MenuDamageReturnInstruction = "이번에는 오른쪽으로 밀어\n출격, 강화, 액티브 스킬, 토템 버튼으로 돌아가 보세요.";
         [TextArea] public string MenuReopenInstruction = "메뉴를 다시 열어 보세요.";
         [TextArea] public string MenuSelectionInstruction = "이번엔 선택지를 눌러 보세요.";
         [TextArea] public string MenuSelectionExplanation = "레벨업에서 얻은 선택지는 여기에 모여요.\n모서리의 얼굴이 효과를 받는 유닛이에요.";

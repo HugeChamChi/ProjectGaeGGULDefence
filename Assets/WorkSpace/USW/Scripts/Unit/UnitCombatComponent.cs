@@ -33,7 +33,7 @@ public class UnitCombatComponent : MonoBehaviour
     /// <summary>소환 드론의 일반 공격을 본체 셀의 디버프/그림자 구독에 전달한다. 본체 공격이나 스킬은 실행하지 않는다.</summary>
     public BasicAttackReplay BeginDroneBasicAttack(BossBase target, Transform visualSource, Func<bool> isSourceValid)
     {
-        if (AttacksHeld || _unit == null || _unit.IsStunned || target == null || target.IsDead) return null;
+        if (AttacksHeld || _unit == null || _unit.IsStunned || target == null || !target.IsTargetable) return null;
         _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, target);
         if (OnBasicAttackStarted == null) return null;
         var replay = new BasicAttackReplay(_unit, target, visualSource, isSourceValid);
@@ -108,7 +108,14 @@ public class UnitCombatComponent : MonoBehaviour
         }
     }
 
-    private BossBase LiveBoss => _deps?.BossManager?.CurrentBoss ?? _unit.Boss;
+    private BossBase LiveBoss
+    {
+        get
+        {
+            var boss = _deps?.BossManager?.CurrentBoss ?? _unit.Boss;
+            return boss != null && boss.IsTargetable ? boss : null;
+        }
+    }
 
     private async UniTaskVoid RunControlLoopAsync(CancellationToken token)
     {

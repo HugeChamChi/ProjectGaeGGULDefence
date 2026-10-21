@@ -56,11 +56,9 @@ MonoBehaviour:
   MenuOpenInstruction: "\uC804\uD22C \uC911\uC5D0 \uBCFC \uC218 \uC788\uB294 \uC815\uBCF4\uB294
     \uC774 \uBA54\uB274\uC5D0 \uBAA8\uC5EC \uC788\uC5B4\uC694.\n\uBA54\uB274 \uBC84\uD2BC\uC744
     \uB20C\uB7EC \uBCF4\uC138\uC694."
-  MenuDamageInstruction: "\uB51C \uAE30\uC5EC\uB3C4\uB97C \uB20C\uB7EC \uBCF4\uC138\uC694."
-  MenuDamageExplanation: "\uC9C0\uAE08\uAE4C\uC9C0 \uB204\uAC00 \uD53C\uD574\uB97C
-    \uC5BC\uB9C8\uB098 \uC92C\uB294\uC9C0 \uBCFC \uC218 \uC788\uC5B4\uC694.\n\uC804\uD22C
-    \uC911\uC5D0\uB3C4 \uC5F4\uC5B4 \uB454 \uCC44\uB85C \uD655\uC778\uD560 \uC218
-    \uC788\uC5B4\uC694."
+  MenuDamageInstruction: "하단 버튼 영역을 왼쪽으로 밀어 보세요.\n실시간 딜 그래프로 바뀌어요."
+  MenuDamageExplanation: "캐릭터 그림과 막대로 누가 얼마나 피해를 줬는지 볼 수 있어요.\n전투 중에도 실시간으로 갱신돼요."
+  MenuDamageReturnInstruction: "이번에는 오른쪽으로 밀어\n출격, 강화, 액티브 스킬, 토템 버튼으로 돌아가 보세요."
   MenuReopenInstruction: "\uBA54\uB274\uB97C \uB2E4\uC2DC \uC5F4\uC5B4 \uBCF4\uC138\uC694."
   MenuSelectionInstruction: "\uC774\uBC88\uC5D4 \uC120\uD0DD\uC9C0\uB97C \uB20C\uB7EC
     \uBCF4\uC138\uC694."

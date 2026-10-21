@@ -43,6 +43,7 @@ public sealed class ResearchNodeView : MonoBehaviour
     private Image _dotsFill;
     private bool _art;
     private Sprite _frameOverride;
+    private ResearchCompletionImpact _completion;
 
     /// <summary>이 뷰가 보여주는 노드.</summary>
     public ResearchNodeData Node { get; private set; }
@@ -108,7 +109,7 @@ public sealed class ResearchNodeView : MonoBehaviour
             float y = diamond ? -size * DiamondLevelGap : circle ? -size * 0.3f : -size * 0.36f;
             var levelRect = ResearchUi.Place(ResearchUi.NewRect(rect, "Level"), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0f, y), new Vector2(size, size * 0.2f));
-            _levelText = ResearchUi.NewText(levelRect, "Text", "", size * LevelFontRatio, s.FontBold, TextAlignmentOptions.Center);
+            _levelText = ResearchUi.NewText(levelRect, "Text", "", size * LevelFontRatio, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
             if (circle) _icon.rectTransform.anchoredPosition = new Vector2(0f, size * 0.06f);
         }
         else BuildPips(rect, size);
@@ -169,7 +170,7 @@ public sealed class ResearchNodeView : MonoBehaviour
         {
             var levelRect = ResearchUi.NewRect(rect, "Level");
             ResearchUi.Place(levelRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -size * 0.29f), new Vector2(size, size * 0.2f));
-            _levelText = ResearchUi.NewText(levelRect, "Text", string.Empty, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center);
+            _levelText = ResearchUi.NewText(levelRect, "Text", string.Empty, size * LevelFontRatio, _s.FontBold, TextAlignmentOptions.Center, _s.FontMaterial);
         }
         _blocked = ResearchUi.NewImage(rect, "Blocked", _s.BlockedIcon, Vector2.one * size * 0.2f, new Vector2(size * 0.36f, size * 0.36f));
         _blocked.preserveAspect = true;
@@ -271,11 +272,21 @@ public sealed class ResearchNodeView : MonoBehaviour
     public void SetFrameSprite(Sprite frame) => _frameOverride = frame;
 
     /// <summary>강화했을 때 톡 튀는 연출.</summary>
-    public void Punch()
+    public void Punch(bool completed = false)
     {
+        if (_completion != null) _completion.Stop();
         transform.DOKill(true);
         transform.localScale = Vector3.one;
-        transform.DOPunchScale(Vector3.one * PunchScale, PunchSeconds, 6, 0.6f).SetLink(gameObject);
+        if (completed)
+        {
+            if (_completion == null)
+            {
+                _completion = gameObject.AddComponent<ResearchCompletionImpact>();
+                _completion.Initialize(_s);
+            }
+            _completion.Play();
+        }
+        else transform.DOPunchScale(Vector3.one * PunchScale, PunchSeconds, 6, 0.6f).SetUpdate(true).SetLink(gameObject);
     }
 
     private void OnDestroy() => transform.DOKill();

@@ -43,12 +43,36 @@ public class RootLifetimeScope : LifetimeScope
 
         builder.Register<BackendGameData>(Lifetime.Singleton).AsSelf();
         builder.Register<BackendSession>(Lifetime.Singleton);
+        var webCouponConfig = Resources.Load<WebCouponConfig>("WebCouponConfig");
+        if (webCouponConfig == null) throw new System.InvalidOperationException("Resources/WebCouponConfig is required.");
+        builder.RegisterInstance(webCouponConfig);
+        builder.Register<WebCouponGateway>(Lifetime.Singleton);
+        builder.Register<WebCouponService>(Lifetime.Singleton);
+        builder.Register<GoogleIdentityAuth>(Lifetime.Singleton);
+        builder.Register<AccountSettingsService>(Lifetime.Singleton);
+        builder.Register<AccountSwitchGateway>(Lifetime.Singleton);
+        builder.Register<AccountSwitchService>(Lifetime.Singleton);
+        builder.Register<AccountDeletionGateway>(Lifetime.Singleton);
+        builder.Register<AccountDeletionService>(Lifetime.Singleton);
+        builder.RegisterEntryPoint<DeviceSettingsService>().AsSelf();
         builder.Register<AppInitialization>(Lifetime.Singleton);
+        builder.Register<BackendEndlessBalanceGateway>(Lifetime.Singleton).As<IEndlessBalanceGateway>();
         builder.Register<EndlessBalanceService>(Lifetime.Singleton);
         builder.Register<GaeGGUL.Tutorial.IngameTutorialProgress>(Lifetime.Singleton);
         if (_researchTree == null) throw new System.InvalidOperationException("Root research tree is required.");
         builder.RegisterInstance(_researchTree);
         builder.RegisterInstance(Player.PlayerData);
+        var accountProgression = Resources.Load<AccountProgressionConfig>("AccountProgressionConfig");
+        if (accountProgression == null) throw new System.InvalidOperationException("AccountProgressionConfig is required. Import Data/Balance/AccountProgression.xlsx.");
+        accountProgression.Validate();
+        builder.RegisterInstance(accountProgression);
+        var localNotifications = Resources.Load<LocalNotificationConfig>("LocalNotificationConfig");
+        var attendance = Resources.Load<AttendanceConfig>("AttendanceConfig");
+        if (localNotifications == null || attendance == null) throw new System.InvalidOperationException("Local notification and attendance configs are required.");
+        builder.RegisterInstance(localNotifications);
+        builder.RegisterInstance(attendance);
+        builder.Register<LocalNotificationGateway>(Lifetime.Singleton);
+        builder.RegisterEntryPoint<LocalNotificationService>().AsSelf();
         builder.Register<GamePresentationSettings>(Lifetime.Singleton);
         builder.Register<DescriptionDisplaySettings>(Lifetime.Singleton);
         builder.RegisterInstance(Resources.Load<DescriptionTermCatalog>("DescriptionTermCatalog"));
@@ -79,6 +103,7 @@ public class RootLifetimeScope : LifetimeScope
             resolver.Inject(Player.Mail);
             resolver.Inject(Table.Coupon);
             Player.Inject(resolver.Resolve<BackendGameData>());
+            Player.PlayerData.ConfigureAccountProgression(accountProgression);
         });
     }
 }

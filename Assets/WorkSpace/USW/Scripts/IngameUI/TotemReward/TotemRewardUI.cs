@@ -49,7 +49,7 @@ public class TotemRewardUI : MonoBehaviour
     private const float SlashCopyDelay = 0.065f;
     private const float SlashCopySeconds = 0.22f;
     private const float SlashCopyOffset = 95f;
-    private const float DetailDescriptionMinimumSize = 28f;
+    private const float DetailDescriptionMinimumSize = UiTypography.BodySize;
     private const float DetailRangeGap = 24f;
     private static readonly Vector2 ConfirmSize = new Vector2(740f, 150f);
     private static readonly Color ConfirmColor = new Color(1f, 0.72f, 0.17f, 1f);
@@ -766,8 +766,8 @@ public class TotemRewardUI : MonoBehaviour
             float textY = i == 0 ? 1620f / 1900f : i == 1 ? 915f / 1900f : 460f / 1900f;
             band.Icon.rectTransform.anchoredPosition = new Vector2(iconX * _overviewSize.x, iconY * _overviewSize.y);
             band.Icon.rectTransform.sizeDelta = Vector2.one * _settings.OverviewIconSize * contentScale;
-            band.Name.fontSize = _settings.OverviewNameSize * contentScale;
-            band.Description.fontSize = _settings.OverviewDescriptionSize * contentScale;
+            band.Name.fontSize = Mathf.Max(UiTypography.BodySize, _settings.OverviewNameSize * contentScale);
+            band.Description.fontSize = Mathf.Max(UiTypography.BodySize, _settings.OverviewDescriptionSize * contentScale);
             band.CopyHome = new Vector2(textX * _overviewSize.x, textY * _overviewSize.y);
             band.TextBlock.anchoredPosition = band.CopyHome;
             band.TextBlock.sizeDelta = new Vector2(TextBlockWidth * _overviewSize.x, 0f);
@@ -948,7 +948,7 @@ public class TotemRewardUI : MonoBehaviour
         var rt = NewRect(name, parent);
         var text = rt.gameObject.AddComponent<TextMeshProUGUI>();
         if (_settings.Font != null) text.font = _settings.Font;
-        text.fontSize = fontSize;
+        text.fontSize = Mathf.Max(UiTypography.BodySize, fontSize);
         text.color = color;
         text.alignment = align;
         text.raycastTarget = false;

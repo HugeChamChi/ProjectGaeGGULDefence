@@ -9,12 +9,12 @@ using UnityEngine.UI;
 using VContainer;
 
 /// <summary>
-/// 아웃게임 강화(영구 강화) 화면 진입점 — OutgameUpgrade 씬. (코드 이름은 Research, 화면 문구는 "강화")
+/// 로비 강화 패널과 단독 OutgameUpgrade 씬에서 공유하는 영구 강화 화면.
 /// Start에서 트리 데이터와 화면 설정을 읽어 화면 전체를 코드로 만든다:
 /// 배경, 스크롤 트리(구성이 2개 이상이면 테스트 버튼으로 전환), 하단 정보 패널, 강화 알림. 탭은 없다 (특별 노드도 한 트리 안).
 /// 처음 해 보는 사람을 위해 화면을 열면 추천 노드로 이동하고 그 노드를 선택해 둔다.
-/// 하단 패널을 좌우로 밀어 추천 방식 두 가지를 비교한다: 0번 [추천 강화] 버튼, 1번 패널 오른쪽 위 [추천 따라가기] 토글(켜면 [강화]가 추천 노드를 올림).
-/// 두 방식 모두 지금 선택과 상관없이 추천 노드로 이동해 올린다 (6-1을 보고 있어도 추천이 7-2면 7-2).
+/// 하단은 KHJ 아트의 고정 [추천 강화] / [강화] 두 버튼을 사용한다.
+/// 추천 강화는 추천 노드를, 강화는 현재 선택한 노드를 올린다.
 /// 진행 상황은 트리마다 IResearchSaveStore(지금은 PlayerPrefs)에 따로 저장한다. 영구 강화는 재화를 소모하지 않는다.
 /// </summary>
 public sealed class ResearchScreen : MonoBehaviour
@@ -34,12 +34,10 @@ public sealed class ResearchScreen : MonoBehaviour
     [Tooltip("구성별 트리. 테스트 버튼을 누를 때마다 다음 구성으로 바뀐다")]
     [SerializeField] private ResearchTreeData[] _trees;
     [SerializeField] private ResearchViewSettings _settings;
+    [Tooltip("로비 강화 탭 안에서 표시한다. 로비의 공용 상단/하단 메뉴를 사용한다")]
+    [SerializeField] private bool _embeddedInLobby;
     [Tooltip("기존 무버전 PlayerPrefs 저장 이관에만 사용하는 접두사")]
     [SerializeField] private string _saveKeyPrefix = "OutgameUpgrade.";
-    [Tooltip("[추천 따라가기] 켜짐 여부를 저장하는 PlayerPrefs 키")]
-    [SerializeField] private string _followKey = "OutgameUpgrade.FollowRecommend";
-    [Tooltip("마지막으로 쓴 추천 방식(0 버튼형 / 1 토글형)을 저장하는 PlayerPrefs 키")]
-    [SerializeField] private string _modeKey = "OutgameUpgrade.RecommendMode";
     [Tooltip("테스트용 [구성 전환] [초기화] 버튼 표시")]
     [SerializeField] private bool _showTestButtons = false;
 
@@ -64,16 +62,28 @@ public sealed class ResearchScreen : MonoBehaviour
     private bool _returning;
     private Button _back;
     private TextMeshProUGUI _goldBalance;
-    /// <summary>루트에 등록된 저장 서비스와 계정 경계를 주입한다.</summary>
+    /// <summary>루트에 등록된 저장 서비스·계정·전투와 공유하는 트리를 사용한다.</summary>
     [Inject]
-    public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes)
-    { _saveService = saveService; _account = account; _scenes = scenes; }
+    public void Construct(ResearchSaveService saveService, ResearchAccountContext account, SceneChangeManager scenes,
+        ResearchTreeData runTree = null)
+    {
+        _saveService = saveService; _account = account; _scenes = scenes;
+        // Player builds can include a separate copy in the lobby bundle and the root prefab.
+        // The save session and battle bonuses must use the same app-owned definition.
+        if (runTree == null || _trees == null) return;
+        for (int i = 0; i < _trees.Length; i++)
+            if (_trees[i] != null && _trees[i].TreeKey == runTree.TreeKey) _trees[i] = runTree;
+    }
 
     /// <summary>지금 보이는 구성의 진행 상황 (검증·연동용).</summary>
     public ResearchProgress Progress => _progresses?[_current];
     /// <summary>현재 선택된 노드.</summary>
     public ResearchNodeData Selected => _selected;
 
+    /// <summary>로비의 공용 메뉴 사이에 표시하는 화면인가.</summary>
+    public bool IsEmbeddedInLobby => _embeddedInLobby;
+
+    /// <summary>트리의 배경 표현만 교체한다.</summary>
     public void SetBackgroundSettings(ResearchViewSettings settings)
     {
         if (_views == null) return;
@@ -90,19 +100,27 @@ public sealed class ResearchScreen : MonoBehaviour
         { Debug.LogError("[ResearchScreen] 트리 데이터 또는 화면 설정 미연결", this); return; }
         var bar = ResearchUi.NewRect(transform, "SaveStatus");
         ResearchUi.Place(bar, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -Margin), new Vector2(650f, TopBarHeight));
-        _status = ResearchUi.NewText(bar, "Message", string.Empty, 26f, _settings.FontRegular, TextAlignmentOptions.Center);
+        _status = ResearchUi.NewText(bar, "Message", string.Empty, 26f, _settings.FontRegular, TextAlignmentOptions.Center, _settings.FontMaterial);
         _status.color = _settings.Ink;
         _retry = ResearchUi.NewButton(bar, "Retry", _settings.RoundedFill, _settings.Soft, "다시 시도",
-            26f, _settings.FontBold, out _, out _);
+            26f, _settings.FontBold, out _, out _, _settings.FontMaterial);
         ResearchUi.Place((RectTransform)_retry.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(180f, 60f));
         _retry.onClick.AddListener(Retry);
         _account.OnAccountChanged += Reload;
-        _back = ResearchUi.NewButton(transform, "BackToLobby", _settings.RoundedFill, _settings.Soft, "로비로",
-            TopButtonFont, _settings.FontBold, out _, out _);
-        ResearchUi.Place((RectTransform)_back.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-            new Vector2(Margin, -Margin), new Vector2(180f, TopButtonHeight));
-        _back.onClick.AddListener(ReturnToLobby);
+        if (!_embeddedInLobby)
+        {
+            _back = ResearchUi.NewButton(transform, "BackToLobby", _settings.RoundedFill, _settings.Soft, "로비로",
+                TopButtonFont, _settings.FontBold, out _, out _, _settings.FontMaterial);
+            ResearchUi.Place((RectTransform)_back.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(Margin, -Margin), new Vector2(180f, TopButtonHeight));
+            _back.onClick.AddListener(ReturnToLobby);
+        }
         Reload();
+    }
+
+    private void OnEnable()
+    {
+        if (Progress != null) RefreshAll();
     }
 
     private void Reload() => ReloadAsync().Forget();
@@ -218,7 +236,7 @@ public sealed class ResearchScreen : MonoBehaviour
         var s = _settings;
         var root = _content = ResearchUi.Stretch(ResearchUi.NewRect(transform, "Content"));
         _status.transform.parent.SetAsLastSibling();
-        _back.transform.SetAsLastSibling();
+        if (_back != null) _back.transform.SetAsLastSibling();
         var bg = ResearchUi.NewImage(root, "PanelBg", null, Vector2.zero, Vector2.zero);
         ResearchUi.Stretch(bg.rectTransform);
         bg.color = s.UnfinishedBackground;
@@ -228,7 +246,7 @@ public sealed class ResearchScreen : MonoBehaviour
         topBar.rectTransform.anchorMax = Vector2.one;
         topBar.rectTransform.pivot = new Vector2(0.5f, 1f);
         topBar.rectTransform.sizeDelta = new Vector2(0f, TopBarHeight);
-        var title = ResearchUi.NewText(topBar.transform, "Title", "영구 강화", TopButtonFont, s.FontBold, TextAlignmentOptions.Center);
+        var title = ResearchUi.NewText(topBar.transform, "Title", "영구 강화", TopButtonFont, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
         title.color = s.Ink;
 
         var wallet = ResearchUi.NewImage(topBar.transform, "GoldBalance", s.RoundedFill, Vector2.zero, Vector2.zero);
@@ -236,11 +254,14 @@ public sealed class ResearchScreen : MonoBehaviour
         wallet.color = new Color32(0x00, 0x50, 0x60, 0xFF);
         ResearchUi.Place(wallet.rectTransform, Vector2.one, Vector2.one,
             new Vector2(-Margin, -Margin), new Vector2(260f, 72f));
-        _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", "무료", 34f, s.FontBold, TextAlignmentOptions.Center);
+        _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", "무료", 34f, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
         ResearchUi.Stretch(_goldBalance.rectTransform);
+        topBar.gameObject.SetActive(!_embeddedInLobby);
 
         float testBarHeight = _showTestButtons ? Margin * 2f + TopButtonHeight : 0f;
-        var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, s.PanelHeight, 0f, TopBarHeight + testBarHeight);
+        float headerHeight = _embeddedInLobby ? 0f : TopBarHeight;
+        float panelBodyHeight = Mathf.Max(0f, s.PanelHeight - s.PanelTreeOverlap);
+        var treeArea = ResearchUi.Stretch(ResearchUi.NewRect(root, "TreeArea"), 0f, panelBodyHeight, 0f, headerHeight + testBarHeight);
 
         _progresses = new ResearchProgress[_trees.Length];
         _views = new ResearchTreeView[_trees.Length];
@@ -269,13 +290,8 @@ public sealed class ResearchScreen : MonoBehaviour
         dividerRect.pivot = new Vector2(0.5f, 1f);
         dividerRect.sizeDelta = new Vector2(0f, DividerHeight);
         _info = new ResearchInfoPanel(panelRect, s);
-        _info.SetGold(0);
         _info.OnUpgradeClicked += Upgrade;
         _info.OnRecommendClicked += UpgradeRecommended;
-        _info.OnFollowToggled += SetFollow;
-        _info.OnModeChanged += mode => { PlayerPrefs.SetInt(_modeKey, mode); PlayerPrefs.Save(); };
-        _info.SetFollow(PlayerPrefs.GetInt(_followKey, s.FollowByDefault ? 1 : 0) == 1);
-        _info.SetMode(PlayerPrefs.GetInt(_modeKey, 0));
         _info.OnChangeChoiceClicked += ChangeChoice;
 
         if (_showTestButtons) BuildTestButtons(root);
@@ -301,31 +317,13 @@ public sealed class ResearchScreen : MonoBehaviour
             RefreshAll();
             return;
         }
-        View.Punch(node);
-        _info.Punch();
+        bool completed = Progress.GetState(node) == ResearchNodeState.Maxed;
+        View.Punch(node, completed);
+        _info.Punch(completed);
         ShowToast(node);
     }
 
-    /// <summary>[추천 따라가기] 켜기/끄기 (켜면 토글형 [강화]가 추천 노드를 올린다). 켜면 바로 추천 노드로 이동한다. 저장한다.</summary>
-    public void SetFollow(bool on)
-    {
-        PlayerPrefs.SetInt(_followKey, on ? 1 : 0);
-        PlayerPrefs.Save();
-        _info.SetFollow(on);
-        if (!on) return;
-        var next = Progress.GetRecommended();
-        if (next == null) return;
-        Select(next);
-        View.ScrollTo(next, true);
-    }
-
-    /// <summary>검증용: 지금 추천 방식 (0 버튼형 / 1 토글형).</summary>
-    public int RecommendMode => _info.Mode;
-
-    /// <summary>검증용: 스와이프와 같은 경로로 추천 방식을 넘긴다 (+1 다음, -1 이전).</summary>
-    public void SwipeMode(int direction) => _info.SetMode(_info.Mode + direction);
-
-    /// <summary>추천 노드로 이동·선택하고 한 단계 올린다 (0번 [추천 강화], 1번 토글 켜짐 + [강화]).</summary>
+    /// <summary>추천 노드로 이동·선택하고 한 단계 올린다.</summary>
     public void UpgradeRecommended()
     {
         if (Progress == null) return;
@@ -361,7 +359,6 @@ public sealed class ResearchScreen : MonoBehaviour
     {
         _goldBalance.text = "무료";
         View.Refresh();
-        _info.SetGold(0);
         _info.Refresh();
     }
 
@@ -371,7 +368,7 @@ public sealed class ResearchScreen : MonoBehaviour
         if (_trees.Length > 1)
         {
             var layout = ResearchUi.NewButton(root, "LayoutButton", s.RoundedFill, s.Soft, string.Empty,
-                TopButtonFont, s.FontBold, out var layoutImage, out _layoutLabel);
+                TopButtonFont, s.FontBold, out var layoutImage, out _layoutLabel, s.FontMaterial);
             layoutImage.pixelsPerUnitMultiplier = s.RoundedCornerScale;
             _layoutLabel.color = s.Ink;
             ResearchUi.Place((RectTransform)layout.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
@@ -380,7 +377,7 @@ public sealed class ResearchScreen : MonoBehaviour
         }
 
         var reset = ResearchUi.NewButton(root, "ResetButton", s.RoundedFill, s.Soft, s.ResetLabel,
-            TopButtonFont, s.FontBold, out var resetImage, out var resetText);
+            TopButtonFont, s.FontBold, out var resetImage, out var resetText, s.FontMaterial);
         resetImage.pixelsPerUnitMultiplier = s.RoundedCornerScale;
         resetText.color = s.Muted;
         ResearchUi.Place((RectTransform)reset.transform, Vector2.one, Vector2.one, new Vector2(-Margin, -TopBarHeight - Margin),
@@ -405,7 +402,7 @@ public sealed class ResearchScreen : MonoBehaviour
         _toast.pivot = new Vector2(0.5f, 1f);
         _toastGroup = bg.gameObject.AddComponent<CanvasGroup>();
         _toastGroup.blocksRaycasts = false;
-        _toastText = ResearchUi.NewText(bg.transform, "Text", string.Empty, ToastFont, s.FontBold, TextAlignmentOptions.Center);
+        _toastText = ResearchUi.NewText(bg.transform, "Text", string.Empty, ToastFont, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
         _toastText.color = s.Ink;
         _toast.gameObject.SetActive(false);
     }
@@ -415,8 +412,8 @@ public sealed class ResearchScreen : MonoBehaviour
     {
         var s = _settings;
         int level = Progress.GetLevel(node);
-        _toastText.text = string.Format(s.ToastFormat, s.GetStat(node.Stat).DisplayName, level,
-            s.FormatValue(node.Stat, ResearchProgress.GetValue(node, level)));
+        _toastText.text = string.Format(s.ToastFormat, s.GetDisplayName(Progress.Tree, node), level,
+            s.FormatDisplayValue(Progress.Tree, node, level));
 
         _toast.DOKill();
         _toastGroup.DOKill();

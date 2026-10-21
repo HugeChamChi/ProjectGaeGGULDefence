@@ -230,17 +230,7 @@ public static class TutorialPresentationSync
             if (copy != null && copy.GetComponent<FullScreenUiBackdrop>() == null)
                 copy.gameObject.AddComponent<FullScreenUiBackdrop>();
         }
-        var fromBg = Find(source, "/// Map/bg");
-        var toBg = Find(target, "/// Map/bg");
-        if (fromBg != null && toBg != null)
-        {
-            toBg.localPosition = fromBg.localPosition; toBg.localScale = fromBg.localScale;
-            toBg.localRotation = fromBg.localRotation;
-            var fromSprite = fromBg.GetComponent<SpriteRenderer>();
-            var toSprite = toBg.GetComponent<SpriteRenderer>();
-            toSprite.sprite = fromSprite.sprite; toSprite.color = fromSprite.color;
-            if (PrefabUtility.IsPartOfPrefabInstance(toSprite)) PrefabUtility.RecordPrefabInstancePropertyModifications(toSprite);
-        }
+        SyncWorldBackground(source, target);
         var fromCamera = Find(source, "Main Camera").GetComponent<BattleViewportFitter>();
         var targetCamera = Find(target, "Main Camera");
         if (fromCamera != null)
@@ -256,6 +246,38 @@ public static class TutorialPresentationSync
             }
             so.ApplyModifiedPropertiesWithoutUndo();
         }
+    }
+
+    /// <summary>Copies the battlefield foreground and sky, retaining the grid and boss spawn children.</summary>
+    public static void SyncWorldBackground(Scene source, Scene target)
+    {
+        Transform Find(Scene scene, string path) => scene.GetRootGameObjects()
+            .SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Single(t => Path(t) == path);
+        void Copy(Transform from, Transform to)
+        {
+            to.localPosition = from.localPosition;
+            to.localRotation = from.localRotation;
+            to.localScale = from.localScale;
+            to.gameObject.layer = from.gameObject.layer;
+            to.gameObject.SetActive(from.gameObject.activeSelf);
+            EditorUtility.CopySerialized(from.GetComponent<SpriteRenderer>(), to.GetComponent<SpriteRenderer>());
+            if (PrefabUtility.IsPartOfPrefabInstance(to)) PrefabUtility.RecordPrefabInstancePropertyModifications(to);
+            if (PrefabUtility.IsPartOfPrefabInstance(to.GetComponent<SpriteRenderer>()))
+                PrefabUtility.RecordPrefabInstancePropertyModifications(to.GetComponent<SpriteRenderer>());
+        }
+        var fromBg = Find(source, "/// Map/bg");
+        var toBg = Find(target, "/// Map/bg");
+        Copy(fromBg, toBg);
+        var sky = fromBg.Find("Battlefield_Remake_002_Sky");
+        if (sky == null) throw new InvalidOperationException("Production sky background is missing.");
+        var targetSky = toBg.Find(sky.name);
+        if (targetSky == null)
+        {
+            var copy = UnityEngine.Object.Instantiate(sky.gameObject, toBg, false);
+            copy.name = sky.name;
+            targetSky = copy.transform;
+        }
+        Copy(sky, targetSky);
     }
 
     private static string Path(Transform t) => t.parent == null ? t.name : Path(t.parent) + "/" + t.name;

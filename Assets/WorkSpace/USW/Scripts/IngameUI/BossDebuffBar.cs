@@ -132,7 +132,7 @@ public sealed class BossDebuffBar : MonoBehaviour
             Stacks = CreateText(badge.transform, "Stacks", Vector2.zero, Vector2.one)
         };
         badge.transform.SetAsLastSibling();
-        slot.Stacks.fontSize = _stackFontSize;
+        slot.Stacks.fontSize = Mathf.Max(UiTypography.BodySize, _stackFontSize);
         slot.Stacks.fontStyle = FontStyles.Bold;
         return slot;
     }
@@ -144,7 +144,7 @@ public sealed class BossDebuffBar : MonoBehaviour
         Stretch((RectTransform)obj.transform, min, max);
         var text = obj.GetComponent<TextMeshProUGUI>();
         if (_font != null) text.font = _font;
-        text.fontSize = _labelFontSize;
+        text.fontSize = Mathf.Max(UiTypography.BodySize, _labelFontSize);
         text.enableAutoSizing = false;
         text.alignment = TextAlignmentOptions.Center;
         text.raycastTarget = false;

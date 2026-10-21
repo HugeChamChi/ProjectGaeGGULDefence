@@ -181,7 +181,7 @@ public sealed class DebuffInfoPopup : UI_Base, IDescriptionPopup
         var text = Rect(parent, name, min, max).gameObject.AddComponent<TextMeshProUGUI>();
         text.font = source.font;
         text.fontSharedMaterial = source.fontSharedMaterial;
-        text.fontSize = size;
+        text.fontSize = Mathf.Max(UiTypography.BodySize, size);
         text.color = Color.white;
         text.raycastTarget = false;
         text.textWrappingMode = TextWrappingModes.Normal;

@@ -15,6 +15,7 @@ public class ResultScreenView : MonoBehaviour
 {
     // 연출 시작 시각(초). HP·빌드·보상 구간은 앞 구간 길이에 따라 이어 붙는다.
     private const int BuildPopupSortingOffset = 20;
+    private const int AccountExperienceIconIndex = 1;
     private const float HeaderInTime = 0.15f;
     private const float ChiefInTime = 0.55f;
     private const float RoundInTime = 0.45f;
@@ -160,6 +161,8 @@ public class ResultScreenView : MonoBehaviour
     private bool _lobbyInAdSlot;
     private Vector2 _homeBasePosition;
     private ResultScreenData _data;
+    private ResultReward[] _shownRewards = Array.Empty<ResultReward>();
+    private Color _rewardLabelColor;
     private SafeAreaContentFrame _contentFrame;
     private Image _chiefImage;
     private RawImage _carriedBoss;
@@ -194,12 +197,21 @@ public class ResultScreenView : MonoBehaviour
         Cache();
         Kill();
         _data = data;
+        var otherRewards = data.Rewards ?? Array.Empty<ResultReward>();
+        _shownRewards = new ResultReward[otherRewards.Length + (data.HasAccountExperience ? 1 : 0)];
+        Array.Copy(otherRewards, _shownRewards, otherRewards.Length);
+        if (data.HasAccountExperience)
+        {
+            var experienceIcon = _unavailableRewardIcons != null && _unavailableRewardIcons.Length > AccountExperienceIconIndex
+                ? _unavailableRewardIcons[AccountExperienceIconIndex] : null;
+            _shownRewards[otherRewards.Length] = new ResultReward(experienceIcon, data.AccountExperience);
+        }
         gameObject.SetActive(true);
         _contentFrame?.Refresh();
         RefreshGraphics();
         bool hasBuild = showBuild && data.BuildChoices != null && data.BuildChoices.Length > 0;
         ResetVisuals(data, showBuild);
-        _headerTitle.text = isWin ? "전투 승리!" : "전투 종료";
+        _headerTitle.text = data.IsNewRecord ? "최고 기록 갱신!" : isWin ? "전투 승리!" : "전투 종료";
         if (_emptyBuildLabel != null) _emptyBuildLabel.gameObject.SetActive(showBuild && !hasBuild);
 
         var s = DOTween.Sequence().SetUpdate(_useUnscaledTime).SetLink(gameObject);
@@ -223,8 +235,8 @@ public class ResultScreenView : MonoBehaviour
             data.Round, _roundCountDuration).SetEase(Ease.OutCubic));
 
         // 미연결 보상은 수량을 만들지 않고 원본 아이콘과 대시로 표시한다.
-        bool hasRewards = data.Rewards != null && data.Rewards.Length > 0;
-        int rewardCount = hasRewards ? data.Rewards.Length : (_unavailableRewardIcons?.Length ?? 0);
+        bool hasRewards = _shownRewards.Length > 0;
+        int rewardCount = hasRewards ? _shownRewards.Length : (_unavailableRewardIcons?.Length ?? 0);
         float t = RoundInTime + _roundCountDuration;
         s.Insert(t, _rewardBlock.DOFade(1f, 0.15f));
         for (int i = 0; i < rewardCount; i++)
@@ -232,7 +244,7 @@ public class ResultScreenView : MonoBehaviour
             var slot = Spawn(_rewardSlotTemplate.gameObject).transform;
             var icon = slot.Find("Icon").GetComponent<Image>();
             var amount = slot.GetComponentInChildren<TextMeshProUGUI>();
-            icon.sprite = hasRewards ? data.Rewards[i].Icon : _unavailableRewardIcons[i];
+            icon.sprite = hasRewards ? _shownRewards[i].Icon : _unavailableRewardIcons[i];
             amount.text = hasRewards ? "0" : "—";
             slot.localScale = Vector3.zero;
             if (!hasRewards)
@@ -245,7 +257,7 @@ public class ResultScreenView : MonoBehaviour
             if (hasRewards)
             {
                 int shownAmount = 0;
-                int target = data.Rewards[i].Amount;
+                int target = _shownRewards[i].Amount;
                 s.Insert(t + 0.1f, DOTween.To(() => shownAmount,
                     v => { shownAmount = v; amount.text = v.ToString("N0"); }, target, 0.4f).SetEase(Ease.OutCubic));
             }
@@ -285,7 +297,7 @@ public class ResultScreenView : MonoBehaviour
             }
             t += 0.15f;
         }
-        bool canAdvertise = AdRewardRequested != null && hasRewards;
+        bool canAdvertise = AdRewardRequested != null && otherRewards.Length > 0;
         _adSlot.gameObject.SetActive(!_lobbyInAdSlot);
         _adRewardButton.interactable = canAdvertise;
         s.Insert(t, _adSlot.DOFade(canAdvertise ? _adSlotAlpha : 0.5f, 0.2f));
@@ -323,8 +335,8 @@ public class ResultScreenView : MonoBehaviour
             if (go.transform.Find("Icon") == null) continue;
             var amount = go.GetComponentInChildren<TextMeshProUGUI>();
             if (amount != null)
-                amount.text = _data.Rewards != null && rewardIndex < _data.Rewards.Length
-                    ? _data.Rewards[rewardIndex].Amount.ToString("N0") : "—";
+                amount.text = rewardIndex < _shownRewards.Length
+                    ? _shownRewards[rewardIndex].Amount.ToString("N0") : "—";
             rewardIndex++;
         }
         RefreshGraphics();
@@ -537,7 +549,12 @@ public class ResultScreenView : MonoBehaviour
         _rewardBlock.alpha = 0f;
         _rewardBlock.gameObject.SetActive(true);
         if (_rewardUnavailableLabel != null)
-            _rewardUnavailableLabel.gameObject.SetActive(data.Rewards == null || data.Rewards.Length == 0);
+        {
+            _rewardUnavailableLabel.gameObject.SetActive(data.HasAccountExperience || data.Rewards == null || data.Rewards.Length == 0);
+            _rewardUnavailableLabel.text = data.HasAccountExperience
+                ? "계정 경험치" : "보상 준비 중";
+            _rewardUnavailableLabel.color = data.HasAccountExperience ? Color.white : _rewardLabelColor;
+        }
         _adSlot.alpha = 0f;
         _adSlot.transform.localScale = Vector3.one * 0.9f;
         _adSlot.interactable = _adSlot.blocksRaycasts = false;
@@ -597,6 +614,7 @@ public class ResultScreenView : MonoBehaviour
         }
         _headerBasePos = ((RectTransform)_header.transform).anchoredPosition;
         _rewardBasePos = ((RectTransform)_rewardBlock.transform).anchoredPosition;
+        if (_rewardUnavailableLabel != null) _rewardLabelColor = _rewardUnavailableLabel.color;
         _buildIconTemplate.gameObject.SetActive(false);
         _rewardSlotTemplate.gameObject.SetActive(false);
     }

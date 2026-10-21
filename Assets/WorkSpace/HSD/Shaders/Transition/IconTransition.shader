@@ -58,6 +58,10 @@ Shader "Custom/IconTransition"
                 if (_Progress <= 0.0 || _Progress >= 1.0) 
                     return fixed4(0, 0, 0, 0);
 
+                // The scene-load hold must be completely opaque, including icon centers.
+                if (abs(_Progress - 0.5) < 0.0001)
+                    return _Color;
+
                 float2 gridUV = i.uv * _GridSize.xy;
                 float2 localUV = frac(gridUV);
                 

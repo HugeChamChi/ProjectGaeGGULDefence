@@ -22,7 +22,7 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
         runtime = _droneManager.Hacking;
         runtime.Configure(unitData.Hacking);
         target = runtime.Target;
-        return target != null;
+        return target != null && target.IsTargetable;
     }
     private bool CanContinue() => isActiveAndEnabled && currentCell != null;
     private bool IsHeld() => Combat == null || Combat.AttacksHeld || IsStunned || currentCell == null
@@ -62,12 +62,13 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
                 }
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
-            if ((runtime.Target != target || runtime.Ledger.Generation != generation) || target == null || target.IsDead || !CanContinue()) return;
+            if ((runtime.Target != target || runtime.Ledger.Generation != generation) || target == null || !target.IsTargetable || !CanContinue()) return;
             if (reservation == null) OnHackingProduced(produced, runtime.Add(target, produced));
             else if (runtime.Commit(target, reservation))
             {
                 committed = true;
                 target.TakeDamage(damage, target.transform.position, critical ? BossDamageKind.Critical : BossDamageKind.Normal, unitData);
+                OnHackingCommitted(runtime, target);
             }
             _castVisual.Draw(1f);
             elapsed = 0;
@@ -97,6 +98,8 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
             source.Dispose();
         }
     }
+    /// <summary>소비자의 기폭 피해가 확정된 직후 후속 효과.</summary>
+    protected virtual void OnHackingCommitted(DroneHackingRuntime runtime, BossBase target) { }
     /// <summary>생산자 자신이 만든 초과 생산분의 후속 효과.</summary>
     protected virtual void OnHackingProduced(int requested, int accepted) { }
     private void CancelHacking()

@@ -32,4 +32,12 @@ public sealed class EndlessGrowthSettings
         _intervalRounds = _intervalRounds, _hpPercentPerStep = hpPercent,
         _defenseAddedPerStep = _defenseAddedPerStep, _expPercentPerStep = _expPercentPerStep
     };
+
+    /// <summary>Creates HP growth exclusively from a validated remote run snapshot.</summary>
+    public static EndlessGrowthSettings FromRemote(EndlessBalanceSnapshot balance) => new EndlessGrowthSettings
+    {
+        _isConfigured = true, _firstGrowthRound = balance.BossProgression.FirstGrowthRound,
+        _intervalRounds = balance.BossProgression.IntervalRounds, _hpPercentPerStep = balance.HpGrowthPercent,
+        _defenseAddedPerStep = 0, _expPercentPerStep = 0
+    };
 }

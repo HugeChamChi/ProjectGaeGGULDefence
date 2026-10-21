@@ -21,26 +21,56 @@ namespace HSD.UI.Upgrade
         [Header("Upgrade Button States")]
         [SerializeField] private Sprite _normalSprite;
         [SerializeField] private Sprite _pressedSprite;
-        [SerializeField] private Sprite _maxSprite;
+        private TextMeshProUGUI _description;
 
         private string _target;
         private Action<string> _onUpgradeClicked;
         private bool _canUpgrade;
-        private int _currentCost;
-        private int _requestedCost;
+        private float _currentCost;
+        private float _requestedCost;
         private UI_UpgradeItemFeedback _feedback;
 
         public bool CanUpgrade => _canUpgrade;
         public string UpgradeTarget => _target;
-        public int CurrentCost => _currentCost;
+        public float CurrentCost => _currentCost;
         public int CurrentLevel { get; private set; }
 
         private void Awake()
         {
+            ConfigureTextAreas();
             if (btn_Upgrade != null) btn_Upgrade.onClick.AddListener(RequestUpgrade);
             _feedback = GetComponent<UI_UpgradeItemFeedback>();
             if (_feedback == null) _feedback = gameObject.AddComponent<UI_UpgradeItemFeedback>();
             _feedback.Bind(transform as RectTransform, txt_Level, txt_Cost, img_Icon != null ? img_Icon.rectTransform : null);
+        }
+
+        private void ConfigureTextAreas()
+        {
+            if (img_Icon != null && img_Icon.transform.parent is RectTransform iconSlot)
+            {
+                iconSlot.anchorMin = new Vector2(0.1f, 0.65f);
+                iconSlot.anchorMax = new Vector2(0.9f, 0.98f);
+                iconSlot.offsetMin = iconSlot.offsetMax = Vector2.zero;
+            }
+            if (txt_Level != null)
+            {
+                txt_Level.enableAutoSizing = true;
+                txt_Level.fontSizeMin = UiTypography.AutoSizeMinimum;
+                txt_Level.fontSizeMax = Mathf.Max(UiTypography.BodySize, txt_Level.fontSize);
+                if (txt_Level.transform.parent is RectTransform badge)
+                {
+                    badge.sizeDelta = new Vector2(130f, 70f);
+                    badge.anchoredPosition = new Vector2(60f, 20f);
+                }
+            }
+            if (txt_Cost != null)
+            {
+                txt_Cost.rectTransform.sizeDelta = new Vector2(120f, 0f);
+                txt_Cost.enableAutoSizing = true;
+                txt_Cost.fontSizeMin = UiTypography.AutoSizeMinimum;
+                txt_Cost.fontSizeMax = Mathf.Max(UiTypography.NumericSize, txt_Cost.fontSize);
+                txt_Cost.textWrappingMode = TextWrappingModes.NoWrap;
+            }
         }
 
         /// <summary>버튼 밖(카드 배경·아이콘·텍스트)을 눌렀을 때. 버튼 위 클릭은 버튼이 먼저 처리한다.</summary>
@@ -52,7 +82,7 @@ namespace HSD.UI.Upgrade
 
         private void RequestUpgrade()
         {
-            if (!_canUpgrade) return; // 최대 레벨
+            if (!_canUpgrade) return;
             // 강화 성공 시 UpdateUI가 다음 비용으로 덮어쓰므로, 이번에 쓴 비용을 먼저 기억한다.
             _requestedCost = _currentCost;
             _onUpgradeClicked?.Invoke(_target);
@@ -75,23 +105,15 @@ namespace HSD.UI.Upgrade
         public void UpdateUI(UpgradeModel.UpgradeItemData data)
         {
             CurrentLevel = data.CurrentLevel;
-            _canUpgrade = !data.IsMaxLevel && data.UpgradeCost >= 0;
+            _canUpgrade = data.UpgradeCost >= 0f;
             _currentCost = data.UpgradeCost;
             if (txt_Name != null) txt_Name.gameObject.SetActive(false);
-            
-            if (data.IsMaxLevel)
-            {
-                if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
-                if (txt_Cost != null) txt_Cost.text = "MAX";
-                if (btn_Upgrade != null) btn_Upgrade.interactable = false;
-            }
-            else
-            {
-                if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
-                if (txt_Cost != null) txt_Cost.text = data.UpgradeCost >= 0 ? data.UpgradeCost.ToString("N0") : "—";
-            }
-            if (img_CostIcon != null) img_CostIcon.gameObject.SetActive(!data.IsMaxLevel);
-            UpdateButton(data.IsMaxLevel);
+            if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
+            if (txt_Cost != null) txt_Cost.text = data.UpgradeCost >= 0f ? FormatCost(data.UpgradeCost) : "—";
+            if (img_CostIcon != null) img_CostIcon.gameObject.SetActive(data.UpgradeCost >= 0f);
+            UpdateButton();
+            EnsureDescription();
+            if (_description != null) _description.text = data.Description;
 
             if (img_Icon != null && data.Icon != null)
             {
@@ -107,7 +129,30 @@ namespace HSD.UI.Upgrade
             }
         }
 
-        private void UpdateButton(bool isMax)
+        /// <summary>큰 비용도 정수 오버플로 없이 카드에 들어가는 길이로 표시한다.</summary>
+        public static string FormatCost(float cost) => cost < 1000000f ? cost.ToString("N0") : cost.ToString("0.###E+0");
+
+        private void EnsureDescription()
+        {
+            if (_description != null || txt_Level == null) return;
+            _description = Instantiate(txt_Level, transform, false);
+            _description.name = "UpgradeDescription";
+            _description.raycastTarget = false;
+            _description.richText = true;
+            _description.fontSizeMin = 28f;
+            _description.fontSizeMax = 32f;
+            _description.enableAutoSizing = true;
+            _description.alignment = TextAlignmentOptions.Center;
+            var layout = _description.gameObject.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true;
+            var rect = _description.rectTransform;
+            rect.anchorMin = new Vector2(0f, 0.13f);
+            rect.anchorMax = new Vector2(1f, 0.60f);
+            rect.offsetMin = new Vector2(-12f, 0f);
+            rect.offsetMax = new Vector2(12f, 0f);
+        }
+
+        private void UpdateButton()
         {
             if (btn_Upgrade == null) return;
             btn_Upgrade.transition = UnityEngine.UI.Selectable.Transition.SpriteSwap;
@@ -115,11 +160,11 @@ namespace HSD.UI.Upgrade
             state.highlightedSprite = _normalSprite;
             state.selectedSprite = _normalSprite;
             state.pressedSprite = _pressedSprite;
-            state.disabledSprite = isMax ? _maxSprite : _normalSprite;
+            state.disabledSprite = _normalSprite;
             btn_Upgrade.spriteState = state;
             if (btn_Upgrade.targetGraphic is Image image)
             {
-                image.sprite = isMax ? _maxSprite : _normalSprite;
+                image.sprite = _normalSprite;
                 image.overrideSprite = null;
             }
             btn_Upgrade.interactable = _canUpgrade;

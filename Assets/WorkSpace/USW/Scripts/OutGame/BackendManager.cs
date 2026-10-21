@@ -7,7 +7,7 @@ public class BackendManager : MonoBehaviour
 {
     [VContainer.Inject] private BackendGameData _backendData;
 
-    private void Awake()
+    private void Start()
     {
 #if UNITY_EDITOR
         AutoLoginForEditorTesting();
@@ -41,7 +41,8 @@ public class BackendManager : MonoBehaviour
 
         // 로그인만으로는 Player.PlayerData가 비어있어 스태미나 등 UI가 갱신되지 않는다.
         // 타이틀 씬의 TitlePresenter가 하는 것과 동일하게 데이터 주입 + 초기화까지 진행한다.
-        Player.Inject(_backendData ?? new BackendGameData());
+        if (_backendData == null) { Debug.LogError("[BackendManager] Missing injected backend data."); return; }
+        Player.Inject(_backendData);
         Player.InitializeAsync().Forget(e => Debug.LogException(e));
     }
 #endif

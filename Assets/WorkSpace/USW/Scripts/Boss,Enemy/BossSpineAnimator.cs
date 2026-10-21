@@ -70,6 +70,13 @@ public class BossSpineAnimator : MonoBehaviour, IPauseIdleVisual
         state.SetAnimation(0, _idleAnimation, true);
     }
 
+    /// <summary>Returns a cancelled cast to idle and releases a held pattern pose.</summary>
+    public void ReturnToIdle()
+    {
+        SetPatternHold(false);
+        PlayIdle();
+    }
+
     private void OnPatternStarted(BossPatternData pattern)
     {
         if (pattern == null || _patternAnimations == null) return;
@@ -84,7 +91,12 @@ public class BossSpineAnimator : MonoBehaviour, IPauseIdleVisual
                 Debug.LogWarning($"[BossSpineAnimator] {name}: Spine 애니메이션 '{mapping.Animation}' 없음");
                 return;
             }
-            state.SetAnimation(0, mapping.Animation, false);
+            var track = state.SetAnimation(0, mapping.Animation, false);
+            if (pattern is PlacementBossPatternData)
+            {
+                var mechanic = _boss.GetComponent<PatternLabDriver>()?.CurrentPattern;
+                if (mechanic != null) track.TimeScale = track.Animation.Duration / Mathf.Max(.01f, mechanic.Windup);
+            }
             if (HasAnimation(_idleAnimation)) state.AddAnimation(0, _idleAnimation, true, 0f);
             return;
         }

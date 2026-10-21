@@ -184,7 +184,8 @@ public sealed class TimerBonusHack : ITimerBonusConcept
         else if (_owner != null && _owner != owner) return;
         else _owner = null;
         _root.gameObject.SetActive(visible);
-        _barBack.gameObject.SetActive(visible);
+        // In-game recovery uses the timer glitch and bonus text without a progress bar.
+        _barBack.gameObject.SetActive(visible && !_lab.IsRuntime);
         if (_state != null) _state.gameObject.SetActive(visible);
         _bonus.gameObject.SetActive(visible);
     }

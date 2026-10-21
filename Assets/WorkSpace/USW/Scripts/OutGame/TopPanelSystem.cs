@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using BackEnd;
+using Cysharp.Threading.Tasks;
 
 public class TopPanelSystem : MonoBehaviour
 {
@@ -51,7 +52,17 @@ public class TopPanelSystem : MonoBehaviour
 
     public void UpdateTopPanelUI(PlayerData playerData)
     {
-        if (playerData == null) return;
+        if (_playerNicknameText != null)
+            _playerNicknameText.text = playerData == null ? "—" : string.IsNullOrWhiteSpace(playerData.PlayerName) ? "플레이어" : playerData.PlayerName;
+        if (playerData == null)
+        {
+            if (_playerLevelText != null) _playerLevelText.text = "—";
+            if (_expBar != null) _expBar.fillAmount = 0f;
+            if (_goldText != null) _goldText.text = "—";
+            if (_diamondText != null) _diamondText.text = "—";
+            if (_staminaText != null) _staminaText.text = "—";
+            return;
+        }
 
         if (_playerLevelText != null)
             _playerLevelText.text = playerData.PlayerLevel.ToString();
@@ -63,12 +74,11 @@ public class TopPanelSystem : MonoBehaviour
             _diamondText.text = playerData.Diamond.ToString("N0");
 
         if (_staminaText != null)
-            _staminaText.text = $"{playerData.Stamina}/{playerData.MaxStamina}";
+            _staminaText.text = $"{FormatStaminaAmount(playerData.Stamina)}/{FormatStaminaAmount(playerData.MaxStamina)}";
 
         if (_expBar != null)
         {
-            int maxExp = playerData.MaxExp > 0 ? playerData.MaxExp : 500;
-            _expBar.fillAmount = Mathf.Clamp01((float)playerData.PlayerExp / maxExp);
+            _expBar.fillAmount = playerData.MaxExp <= 0 ? 1f : Mathf.Clamp01((float)playerData.PlayerExp / playerData.MaxExp);
         }
     }
 
@@ -88,6 +98,13 @@ public class TopPanelSystem : MonoBehaviour
         _staminaTimerText.text = $"{minutes:D2}:{seconds:D2}";
     }
 
+    private static string FormatStaminaAmount(int amount)
+    {
+        if (amount >= 1000000000) return (amount / 1000000000d).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "B";
+        if (amount >= 1000000) return (amount / 1000000d).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "M";
+        return amount.ToString();
+    }
+
     private void ShowPlayerProfilePopup()
     {
         if (_playerProfilePopup == null || _profilePopup == null || Player.PlayerData == null)
@@ -96,5 +113,10 @@ public class TopPanelSystem : MonoBehaviour
         _profilePopup.Init(Player.PlayerData.Data);
         _profilePopup.EnableDataBind(true);
         _playerProfilePopup.SetActive(true);
+    }
+    private void OnApplicationPause(bool paused)
+    {
+        if (paused) Player.UpdateDirtyDataAsync().Forget();
+        else Player.PlayerData.ResumeAsync().Forget();
     }
 }

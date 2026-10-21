@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed3f29e60dfeeef43879cebab29a79eb, type: 3}
+  m_Name: NORMAL_BossProgression
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessBossProgressionData
+  _breatherBaseHp: 25000
+  _firstGrowthRound: 2
+  _intervalRounds: 1
+  _hardReferenceRound: 3
+  _breatherReferenceRound: 5
+  _hardReferenceMultiplier: 1.1
+  _hpPerLine: 10000
+  _breatherDamageReductionPercent: 5
+  _hardDamageReductionPercent: 10
+  _defenseSettings: {fileID: 11400000, guid: 979697ec5dddea6a07f71ea8136162ff, type: 2}
+  _growthRateFinalized: 0

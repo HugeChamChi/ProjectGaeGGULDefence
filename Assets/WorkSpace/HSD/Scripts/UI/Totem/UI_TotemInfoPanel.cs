@@ -139,8 +139,8 @@ public class UI_TotemInfoPanel : UI_Base
             name.anchoredPosition = new Vector2(20, -12);
             name.sizeDelta = new Vector2(510, 52);
             txt_Name.enableAutoSizing = true;
-            txt_Name.fontSizeMin = 24;
-            txt_Name.fontSizeMax = 30;
+            txt_Name.fontSizeMin = 28;
+            txt_Name.fontSizeMax = 32;
         }
     }
 

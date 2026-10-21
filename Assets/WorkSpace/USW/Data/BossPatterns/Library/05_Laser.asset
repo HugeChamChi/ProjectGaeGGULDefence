@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56148fb378d0b7c41935666d00d5dc13, type: 3}
+  m_Name: 05_Laser
+  m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
+  Mechanic: 4
+  DisplayName: "\uC720\uB3C4 \uD3EC\uACA9"
+  Instruction: "\uD45C\uC2DD \uC720\uB2DB\uC73C\uB85C \uC870\uC900\uC744 \uC720\uB3C4\uD558\uACE0
+    \uC120\uC774 \uAD75\uC5B4\uC9C0\uBA74 \uC774\uD0C8"
+  Windup: 3.2
+  ActiveDuration: 2.5
+  Recovery: 0.8
+  StunDuration: 1.2
+  EffectDuration: 4
+  SlowRate: 0.45
+  TetherDistance: 3.2
+  BlastRadius: 1
+  SafeColumns: 3
+  MemorySafeCount: 10
+  LockTime: 1.6
+  BeamWidthCells: 0.62
+  AllowChiefCounter: 1
+  Accent: {r: 1, g: 0.13, b: 0.4, a: 1}
+  StunVisual: {fileID: 11400000, guid: 2ab425e3b1c5ad04f8812519ca16abd3, type: 2}

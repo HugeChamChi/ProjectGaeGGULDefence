@@ -72,11 +72,11 @@ MonoBehaviour:
     DucksBackground: 0
     CombatOnly: 0
   - Cue: 4
-    Clip: {fileID: 8300000, guid: 1542c07472527b1469358fe723b21b30, type: 3}
+    Clip: {fileID: 8300000, guid: 12d94a9d68ef49e9bdabaaf8cc96e168, type: 3}
     Gain: 0.5
     Priority: 150
-    MinimumInterval: 0.2
-    MaximumVoices: 1
+    MinimumInterval: 0
+    MaximumVoices: 2
     MaximumSeconds: 0
     PitchVariation: 0
     Repeated: 0

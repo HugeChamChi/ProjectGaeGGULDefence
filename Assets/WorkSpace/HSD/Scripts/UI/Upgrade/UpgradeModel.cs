@@ -37,8 +37,8 @@ namespace HSD.UI.Upgrade
             public string DisplayName;
             public Sprite Icon;
             public int CurrentLevel;
-            public int UpgradeCost;
-            public bool IsMaxLevel;
+            public float UpgradeCost;
+            public string Description;
         }
 
         [Header("UI Configuration")]
@@ -80,7 +80,7 @@ namespace HSD.UI.Upgrade
             {
                 string target = config.targetKey;
                 int currentLevel = _upgradeManager.GetUpgradeLevel(target);
-                int cost = _upgradeManager.GetUpgradeCost(target);
+                float cost = _upgradeManager.GetUpgradeCost(target);
 
                 items.Add(new UpgradeItemData
                 {
@@ -89,7 +89,7 @@ namespace HSD.UI.Upgrade
                     Icon = config.icon,
                     CurrentLevel = currentLevel,
                     UpgradeCost = cost,
-                    IsMaxLevel = _upgradeManager.IsMaxLevel(target)
+                    Description = _upgradeManager.GetUpgradeDescription(target)
                 });
             }
             return items;

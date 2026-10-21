@@ -38,13 +38,13 @@ public static class TermGlossarySetup
     {
         new TermEntry
         {
-            Id = "chief_skill", DisplayName = "족장 스킬", Aliases = new[] { "족장 스킬", "액티브 스킬", "알팡 액티브" },
+            Id = "chief_skill", DisplayName = "액티브 스킬", Aliases = new[] { "액티브 스킬", "족장 스킬", "알팡 액티브" },
             Kind = "족장", KindColor = new Color(0.62f, 0.38f, 0.95f),
             Body = "왼쪽 아래 족장 버튼을 눌러 직접 쓰는 기술입니다. 지금 족장 알팡은 드론을 모아 보스에게 일제 사격합니다. " +
                    "쿨타임이 다 차야 쓸 수 있고, 모일 드론이 없으면 발동하지 않습니다. 악어 보스가 지진을 예고하는 동안 쓰면 그 예고를 끊습니다. " +
                    "선택지에 따라 피해·쿨타임·사격 횟수가 달라집니다.",
             FactKind = TermFactKind.ChiefSkill, FactSource = Load<ScriptableObject>(DroneData + "AlphanActiveSkillData.asset"),
-            Clip = Load<VideoClip>(ClipRoot + "TermClip_ChiefSkill.mp4"), ClipCaption = "족장 스킬 — 일제 사격 · 예고 끊기",
+            Clip = Load<VideoClip>(ClipRoot + "TermClip_ChiefSkill.mp4"), ClipCaption = "액티브 스킬 — 일제 사격 · 예고 끊기",
         },
         new TermEntry
         {

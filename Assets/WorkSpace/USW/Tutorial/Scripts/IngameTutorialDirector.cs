@@ -518,7 +518,7 @@ namespace GaeGGUL.Tutorial
                         _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)_chiefButton.transform));
                         await Until(() => countered, token);
                         Block();
-                        _dialogue.ShowText("좋아요! 족장 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
+                        _dialogue.ShowText("좋아요! 액티브 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
                         await Delay(1.5f, token);
                     }
                     finally
@@ -584,7 +584,7 @@ namespace GaeGGUL.Tutorial
             }
         }
 
-        // ≡ 메뉴 수업: 메뉴 열기 → 딜 기여도 → 선택지 보관함 → 설정 위치. 각 창은 실제 버튼을 눌러 연다.
+        // 하단 HUD 왕복 스와이프 → ≡ 메뉴의 선택지 보관함 → 설정 위치.
         private async UniTask OptionsMenuAsync(CancellationToken token)
         {
             var menu = FindFirstObjectByType<IngameHudMenu>(FindObjectsInactive.Include);
@@ -595,18 +595,22 @@ namespace GaeGGUL.Tutorial
             _time.Pause(this);
             if (_optionsButton != null) _optionsButton.SetActive(true);
 
-            await OpenMenuAsync(menu, _settings.MenuOpenInstruction, token);
             if (chart != null)
             {
+                await Until(() => chart.HudPager != null, token);
+                chart.Close();
+                await Until(() => chart.HudPager.IsSettled, token);
                 _dialogue.ShowText(_settings.MenuDamageInstruction, _lessonIndex, _lessonCount, false);
-                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, ButtonArea(menu.DamageButton));
-                await Until(() => chart.IsOpen && chart.PanelArea != null, token);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Swipe, Ui(chart.HudPager.SwipeArea));
+                await Until(() => chart.IsOpen && chart.HudPager.IsSettled, token);
                 Block();
                 _dialogue.ShowText(_settings.MenuDamageExplanation, _lessonIndex, _lessonCount, true);
                 await AwarenessAsync(Ui(chart.PanelArea), token);
-                chart.Close();
-                await OpenMenuAsync(menu, _settings.MenuReopenInstruction, token);
+                _dialogue.ShowText(_settings.MenuDamageReturnInstruction, _lessonIndex, _lessonCount, false);
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.SwipeRight, Ui(chart.HudPager.SwipeArea));
+                await Until(() => !chart.IsOpen && chart.HudPager.IsSettled, token);
             }
+            await OpenMenuAsync(menu, _settings.MenuOpenInstruction, token);
             if (inventory != null)
             {
                 _dialogue.ShowText(_settings.MenuSelectionInstruction, _lessonIndex, _lessonCount, false);

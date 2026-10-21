@@ -16,6 +16,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     private AlphanSkillData _data;
     private Sprite _fallbackIcon;
     private float _elapsed;
+    private int _charges;
     private bool _casting;
     private bool _disposed;
     private bool _initialized;
@@ -37,12 +38,33 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
         * (1f-(_effects?.ChiefCooldownReduction ?? 0f)));
     private bool IsPlaying => (_game == null || _game.CurrentState == GameManager.GameState.Playing) && Time.timeScale > 0;
     /// <inheritdoc />
-    public float CooldownProgress => IsAvailable ? Mathf.Clamp01(_elapsed / CooldownSeconds) : 0;
+    public float CooldownProgress
+    {
+        get
+        {
+            SynchronizeCharges();
+            return !IsAvailable ? 0f : _charges >= MaximumCharges ? 1f : Mathf.Clamp01(_elapsed / CooldownSeconds);
+        }
+    }
     /// <inheritdoc />
-    public float CooldownRemaining => IsAvailable ? Mathf.Max(0, CooldownSeconds-_elapsed) : 0;
+    public float CooldownRemaining
+    {
+        get
+        {
+            SynchronizeCharges();
+            return IsAvailable && _charges < MaximumCharges ? Mathf.Max(0f, CooldownSeconds - _elapsed) : 0f;
+        }
+    }
+    /// <inheritdoc />
+    public int AvailableCharges
+    {
+        get { SynchronizeCharges(); return IsAvailable ? _charges : 0; }
+    }
+    /// <inheritdoc />
+    public int MaximumCharges => Mathf.Max(1, _effects?.ChiefChargeCapacity ?? 1);
     /// <inheritdoc />
     public bool CanActivate => IsAvailable && IsPlaying && !_casting && !_drones.IsRallying
-        && _drones.RallyAvailableDroneCount > 0 && _elapsed >= CooldownSeconds;
+        && _drones.RallyAvailableDroneCount > 0 && AvailableCharges > 0;
 
     /// <summary>초기화는 GameInitializer의 족장 선택보다 먼저 실행된다.</summary>
     public void Initialize()
@@ -57,7 +79,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     {
         if (_disposed) return;
         CancelCast();
-        _data=data; _fallbackIcon=fallbackIcon; _elapsed=0;
+        _data=data; _fallbackIcon=fallbackIcon; _elapsed=0; _charges=0;
         if (_selector != null) _selector.SetActiveSkill(IsAvailable ? this : null);
     }
     /// <inheritdoc />
@@ -66,13 +88,32 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     public void Advance(float seconds)
     {
         if (!IsAvailable || !IsPlaying || seconds <= 0) return;
-        _elapsed=Mathf.Min(CooldownSeconds,_elapsed+seconds);
+        SynchronizeCharges();
+        if (_charges >= MaximumCharges) return;
+        _elapsed += Mathf.Min(seconds, CooldownSeconds * (MaximumCharges - _charges));
+        SynchronizeCharges();
+    }
+
+    // Keep existing completed charges and partial seconds when cards change.
+    // A full bank never accumulates time beyond its authored capacity.
+    private void SynchronizeCharges()
+    {
+        if (_data == null) return;
+        int capacity = MaximumCharges;
+        _charges = Mathf.Min(_charges, capacity);
+        float cooldown = CooldownSeconds;
+        while (_charges < capacity && _elapsed >= cooldown)
+        {
+            _elapsed -= cooldown;
+            _charges++;
+        }
+        if (_charges >= capacity) _elapsed = 0f;
     }
     /// <inheritdoc />
     public bool TryActivate()
     {
         if (!CanActivate) return false;
-        _elapsed=0; _casting=true;
+        _charges--; _casting=true;
         _castCts=new CancellationTokenSource();
         var cts=_castCts;
         ExecuteAsync(cts).Forget(e => { if (e is not OperationCanceledException) Debug.LogException(e); });
@@ -83,11 +124,9 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     {
         try
         {
-            _drones.ApplyEmergencyBuffs();
             _drones.RallyBeamPrefab = _data.BeamFx;
             if (!string.IsNullOrEmpty(_data.SoundAddress)) _audio?.PlaySFX(_data.SoundAddress);
-            await _drones.ExecuteRallyAsync(_data.DamagePerDrone,cts.Token,
-                new ChiefVolleySettings(_effects?.ChiefVolleyCount ?? 0, _effects?.ChiefVolleyDelay ?? 0f, _effects?.ChiefVolleyDamageRatio ?? 0f), _selector?.SelectedChieftain);
+            await _drones.ExecuteChiefRallyAsync(_data, cts.Token, _selector?.SelectedChieftain);
         }
         finally
         {

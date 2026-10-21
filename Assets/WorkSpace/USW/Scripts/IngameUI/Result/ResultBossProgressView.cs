@@ -67,7 +67,7 @@ public class ResultBossProgressView : MonoBehaviour
     {
         _shown = progress;
         int damage = Mathf.RoundToInt(progress * 100f);
-        _caption.text = _showRemainingOnly ? $"{100 - damage}% 남음" : $"HP {damage}% 감소  ·  {100 - damage}% 남음";
+        _caption.text = _showRemainingOnly ? $"{100 - damage}% 남음" : $"HP {damage}% 감소, {100 - damage}% 남음";
         _hpFill.localScale = new Vector3(1f - progress, 1f, 1f);
         _stampReveal.sizeDelta = new Vector2(_stamp.rect.width * progress, _stampReveal.sizeDelta.y);
         _lineFill.localScale = new Vector3(progress, 1f, 1f);

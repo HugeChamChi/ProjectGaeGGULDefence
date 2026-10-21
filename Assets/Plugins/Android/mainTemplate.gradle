@@ -5,6 +5,9 @@ apply from: '../shared/keepUnitySymbols.gradle'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
+    implementation 'androidx.credentials:credentials:1.6.0' // Assets/WorkSpace/USW/Scripts/Editor/GoogleIdentityDependencies.xml:4
+    implementation 'androidx.credentials:credentials-play-services-auth:1.6.0' // Assets/WorkSpace/USW/Scripts/Editor/GoogleIdentityDependencies.xml:5
+    implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.1' // Assets/WorkSpace/USW/Scripts/Editor/GoogleIdentityDependencies.xml:6
     implementation 'com.google.games:gpgs-plugin-support:2.1.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:11
 // Android Resolver Dependencies End
 **DEPS**}

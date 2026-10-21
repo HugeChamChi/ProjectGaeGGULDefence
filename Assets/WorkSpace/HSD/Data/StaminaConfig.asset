@@ -14,3 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StaminaConfig
   recoveryIntervalSeconds: 600
   defaultMaxStamina: 30
+  refillAmount: 30
+  diamondCostForRefill: 50
+  stageEntryCost: 5

@@ -1,13 +1,14 @@
 using System;
 using UnityEngine;
 
-/// <summary>보스별 전투 수치와 체력줄 표시 설정. 연결된 보스는 시트보다 이 데이터를 우선한다.</summary>
+/// <summary>보스 외형/표시와 고정 스테이지 수치. 난도 공통 엔드리스 HP/방어/줄 수는 별도 진행 설정이 소유한다.</summary>
 [CreateAssetMenu(fileName = "BossData", menuName = "Game/Boss/Boss Data")]
 public sealed class BossData : ScriptableObject
 {
     [SerializeField] private string _displayName;
     [SerializeField] private GameObject _prefab;
     [SerializeField] private Sprite _icon;
+    [Header("고정 스테이지/튜토리얼 수치 · 엔드리스에서는 기존 전투 EXP 비율 보존용")]
     [SerializeField, Min(1)] private long _maxHp = 3000;
     [SerializeField, Min(0)] private double _defense;
     [SerializeField, Min(1)] private int _hpLineCount = 100;
@@ -25,7 +26,7 @@ public sealed class BossData : ScriptableObject
     public double Defense => double.IsNaN(_defense) || double.IsInfinity(_defense) ? 0d : Math.Max(0d, _defense);
     /// <summary>체력 비율을 나누어 표시할 전체 줄 수.</summary>
     public int HpLineCount => Mathf.Max(1, _hpLineCount);
-    /// <summary>이 보스를 100% 처치했을 때 지급할 총 경험치.</summary>
+    /// <summary>기존 전투 EXP 총량(선택지 레벨업용). 계정 EXP 보상과 별개다.</summary>
     public float ExpReward => Mathf.Max(0f, _expReward);
     /// <summary>데미지 1당 지급할 경험치 배율(ExpManager.CalculateExpFromDamage에서 사용).</summary>
     public float ExpMultiplier => MaxHp > 0 ? ExpReward / (float)MaxHp : 0f;

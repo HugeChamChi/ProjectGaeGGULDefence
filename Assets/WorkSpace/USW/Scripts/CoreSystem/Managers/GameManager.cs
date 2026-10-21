@@ -21,14 +21,38 @@ public class GameManager : MonoBehaviour
     [Inject] private TimeScaleService _timeScale;
     [Inject] private DefeatPresentation _defeat;
     [Inject] private ResearchRunBonuses _research;
+    [Inject] private AccountExperienceRun _accountExperience;
     private CancellationTokenSource _endingCts;
     private ResultScreenData _resultSnapshot;
     private float _survivalSeconds;
     private int _bossKills;
+    private string _recordAccount;
+    private string _recordMode;
     /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
     public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
     /// <summary>Snapshot captured before StopRun resets progression values.</summary>
     public ResultScreenData ResultSnapshot => _resultSnapshot;
+    /// <summary>True only for direct Editor preview play; always false in Player builds.</summary>
+    public bool IsEditorPreview
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return _isEditorPreview;
+#else
+            return false;
+#endif
+        }
+    }
+#if UNITY_EDITOR
+    private bool _isEditorPreview;
+    /// <summary>Marks a development-only run before gameplay starts.</summary>
+    public void EnableEditorPreview() => _isEditorPreview = true;
+#endif
+    /// <summary>Last preparation or run failure, suitable for an input rejection notice.</summary>
+    public string FailureReason { get; private set; }
+    private bool IsProductionBattle => !IsEditorPreview &&
+        (gameObject.scene.name == "IngameScene" || gameObject.scene.name == "HardIngameScene");
 
     private UIManager _uiManager;
     private WaveManager _waveManager;
@@ -47,6 +71,7 @@ public class GameManager : MonoBehaviour
         _gridManager = _resolver.Resolve<GridManager>();
         _run.OnFailed += HandleRunFailed;
         _waveManager.OnBossDefeated += HandleBossKilled;
+        _waveManager.OnRunStopped += _accountExperience.Cancel;
     }
 
     public event Action OnLevelUpStateEntered;
@@ -74,14 +99,25 @@ public class GameManager : MonoBehaviour
         if (CurrentState != GameState.Idle) return;
         if (_research?.IsReady != true) return;
         if (config == null) { Debug.LogError("GameManager: config 미연결"); return; }
+        if (IsProductionBattle && (Player.PlayerData?.IsReady != true
+            || string.IsNullOrEmpty(Player.PlayerData.Data.PendingEntryId)))
+        {
+            FailPreparation("스태미나 출격 예약이 없습니다. 로비에서 다시 출격해 주세요.");
+            return;
+        }
         if (!_waveManager.TryPrepareRun(out string error))
         {
             Debug.LogError($"[GameManager] Cannot start run: {error}");
-            OnRunFailed?.Invoke(error);
+            FailPreparation(error);
             return;
         }
 
         CurrentState = GameState.Playing;
+        if (IsProductionBattle) Player.PlayerData.ConsumeEntryReservation();
+        // Only production endless battles contribute. Capture ownership before callbacks can outlive login.
+        _recordAccount = IsProductionBattle && Player.RoundRecords.OwnsAccount ? Player.RoundRecords.Account : null;
+        _recordMode = IsProductionBattle ? "NORMAL" : null;
+        _accountExperience.Begin(IsProductionBattle);
 
         _uiManager.HideStartButton();
 
@@ -133,6 +169,12 @@ public class GameManager : MonoBehaviour
     {
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
+        var accountReceipt = _accountExperience.Finish(isWin);
+        _resultSnapshot.AccountExperience = accountReceipt?.Experience ?? 0;
+        _resultSnapshot.HasAccountExperience = accountReceipt != null;
+        if (accountReceipt != null) _accountExperience.SaveAsync().Forget();
+        if (IsProductionBattle && Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round))
+            Player.RoundRecords.SaveAsync().Forget();
         _uiManager?.BlockGameplayInput();
         _waveManager.StopRun();
         UnsubscribeGameplay();
@@ -169,9 +211,11 @@ public class GameManager : MonoBehaviour
         _resolver.TryResolve<LevelUpManager>(out var choices);
         var boss = bosses?.CurrentBoss;
         int round = Mathf.Max(1, _waveManager.CurrentWave + 1);
+        int? previousBest = IsProductionBattle && _recordAccount == Player.RoundRecords.Account
+            ? Player.RoundRecords.GetBest(_recordMode) : null;
         return new ResultScreenData
         {
-            Round = round, BestRound = round, BossKills = _bossKills, SurvivalSeconds = _survivalSeconds,
+            Round = round, BestRound = previousBest ?? round, BossKills = _bossKills, SurvivalSeconds = _survivalSeconds,
             LastBossDamageRatio = boss != null && boss.MaxHp > 0 ? (float)(1m - boss.CurrentHp / boss.MaxHp) : -1f,
             BuildChoices = choices?.GetResultChoices(), Rewards = Array.Empty<ResultReward>(),
             BossProgressStyle = ResultBossProgressStyle.HpSettlement
@@ -179,22 +223,31 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>Scene navigation cancels the pending result before releasing time owners.</summary>
-    public void CancelEndPresentation() => _endingCts?.Cancel();
+    public void CancelEndPresentation()
+    {
+        _endingCts?.Cancel();
+        if (!IsFinished) _accountExperience?.Cancel();
+    }
     private void OnDisable() => CancelEndPresentation();
     private void Update()
     {
         if (CurrentState == GameState.Playing || CurrentState == GameState.LevelUp) _survivalSeconds += Time.deltaTime;
     }
 
+    /// <summary>Stops a failed startup without leaving the scene in the waiting-to-start state.</summary>
+    public void FailPreparation(string error) => HandleRunFailed(error);
+
     private void HandleRunFailed(string error)
     {
         if (IsFinished) return;
+        FailureReason = error;
         CurrentState = GameState.Faulted;
-        _waveManager.StopRun();
+        _accountExperience?.Cancel();
+        _waveManager?.StopRun();
         UnsubscribeGameplay();
         _timerManager?.StopTimer();
         StopAllUnits();
-        _timeScale.Pause(this);
+        _timeScale?.Pause(this);
         Debug.LogError($"[GameManager] Run stopped: {error}");
         OnRunFailed?.Invoke(error);
     }
@@ -207,8 +260,10 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        _accountExperience?.Cancel();
         if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
         if (_waveManager != null) _waveManager.OnBossDefeated -= HandleBossKilled;
+        if (_waveManager != null) _waveManager.OnRunStopped -= _accountExperience.Cancel;
         CancelEndPresentation();
         UnsubscribeGameplay();
         _timeScale?.Release(this);
@@ -223,6 +278,7 @@ public class GameManager : MonoBehaviour
 
     private void OnApplicationPause(bool pauseStatus)
     {
+        if (IsEditorPreview) return;
         if (pauseStatus)
         {
             // 앱이 백그라운드로 전환될 때 디바운싱 타이머를 무시하고 무조건 즉시 저장 시도
@@ -233,6 +289,7 @@ public class GameManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+        if (IsEditorPreview) return;
         // 앱이 강제로 종료될 때 최후의 저장 시도
         UnityEngine.Debug.Log("[GameManager] 앱 강제 종료 감지. 데이터 강제 업데이트 진행...");
         Player.UpdateDirtyDataAsync().Forget();

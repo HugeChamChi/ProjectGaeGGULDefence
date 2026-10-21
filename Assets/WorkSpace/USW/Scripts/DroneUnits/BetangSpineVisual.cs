@@ -23,7 +23,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
     private bool _inactivePose;
     private bool _paused;
     private bool _previousUnscaled;
-    private float _authoredTimeScale;
+    private SpineAttackSpeedSync _attackSpeed;
     private Spine.Skeleton _cachedSkeleton;
     private ArmSlot[] _armSlots;
     private TrackEntry _activeSkillEntry;
@@ -47,7 +47,15 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         _unit = GetComponent<Drone_Betan>();
         if (_skeleton == null) return;
         _renderer = _skeleton.GetComponent<MeshRenderer>();
-        _authoredTimeScale = _skeleton.timeScale;
+        _attackSpeed = gameObject.AddComponent<SpineAttackSpeedSync>();
+        _attackSpeed.Initialize(_skeleton, _unit, null, _drag, _idle);
+        if (_tierAttacks != null)
+            foreach (string attack in _tierAttacks)
+            {
+                _attackSpeed.RegisterAttackCycle(attack);
+                _attackSpeed.RegisterAttackCycle(attack + "_start");
+                _attackSpeed.RegisterAttackCycle(attack + "_end");
+            }
     }
 
     private void OnEnable()
@@ -69,7 +77,6 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         _skeleton.BeforeApply -= RestoreArmAttachments;
         _skeleton.UpdateComplete -= FilterTierArms;
         RestoreArmAttachments();
-        _skeleton.timeScale = _authoredTimeScale;
         _skeleton.AnimationState?.ClearTracks();
         _skillSequence = false;
     }
@@ -168,6 +175,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
             state.AddAnimation(0, attack, true, 0f);
         }
         else state.SetAnimation(0, attack, true);
+        _attackSpeed?.Refresh();
     }
 
     private void PlayIdle()
@@ -221,6 +229,8 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
     {
         if (_skeleton == null || on == _paused) return;
         _paused = on;
+        _attackSpeed?.SetPauseIdle(on);
+        _attackSpeed?.Refresh();
         if (on) { _previousUnscaled = _skeleton.UnscaledTime; _skeleton.UnscaledTime = true; }
         else
         {
@@ -236,7 +246,6 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         _renderer.sortingOrder = _source.sortingOrder;
         var color = _source.color;
         _skeleton.Skeleton.SetColor(color.r, color.g, color.b, color.a);
-        _skeleton.timeScale = _unit != null && _unit.IsStunned ? 0f : _authoredTimeScale;
         bool inactive = (_drag != null && _drag.IsDragging) || (_unit != null && _unit.IsCellSealed);
         if (inactive != _inactivePose)
         {

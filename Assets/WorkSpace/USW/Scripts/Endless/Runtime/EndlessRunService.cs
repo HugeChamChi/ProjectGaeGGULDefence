@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 /// <summary>Single owner of run identity, round completion and deferred penalties. Null mode preserves finite play.</summary>
 public sealed class EndlessRunService : IRunStatModifiers, IDisposable
@@ -8,6 +9,9 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     private EndlessBossSchedule _bossSchedule;
     private EndlessModeData _mode;
     private EndlessGrowthSettings _growth;
+    private EndlessBossProgressionSnapshot? _bossProgression;
+    private EndlessBalanceSnapshot _remoteBalance;
+    private Dictionary<BossData, string> _bossKeys;
     private bool _roundCompleted;
 
     /// <summary>Constructs scene-owned state using an injectable random stream.</summary>
@@ -27,6 +31,8 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     public bool IsEndless => _mode != null;
     /// <summary>Calculated values for the current endless encounter.</summary>
     public RuntimeBossStats BossStats { get; private set; }
+    /// <summary>Frozen role settings for diagnostics; null only for legacy profiles.</summary>
+    public EndlessBossProgressionSnapshot? BossProgression => _bossProgression;
     /// <summary>Last configuration/numeric failure; never converted into a victory.</summary>
     public string LastError { get; private set; } = "";
     /// <inheritdoc />
@@ -61,19 +67,60 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     {
         error = "A run is already active.";
         if (IsActive) return false;
+        bool remoteRequired = mode != null && mode.RequiresRemoteBalance;
+        if (remoteRequired && balance == null)
+        { error = LastError = "NORMAL requires validated backend battle settings."; return false; }
         RuntimeBossStats stats = default;
-        if (mode != null && !EndlessConfigurationValidator.TryValidateForRun(mode, out error))
+        if (mode != null && !EndlessConfigurationValidator.TryValidateForRun(mode, out error, !remoteRequired))
         { LastError = error; return false; }
-        var growth = mode != null ? mode.Growth.WithHpPercent(
-            mode.Key == "NORMAL" && balance != null ? balance.HpGrowthPercent : mode.Growth.HpPercentPerStep) : null;
-        var schedule = mode != null ? new EndlessBossSchedule(mode, _random) : null;
+        if (mode != null && mode.Key == "NORMAL" && mode.BossSelection != EndlessBossSelection.ShuffleFromStart)
+        { error = LastError = "NORMAL requires first-round role pools."; return false; }
+        var growth = remoteRequired ? EndlessGrowthSettings.FromRemote(balance)
+            : mode != null ? mode.Growth.WithHpPercent(mode.Growth.HpPercentPerStep) : null;
+        EndlessBossProgressionSnapshot? progression = null;
+        if (remoteRequired) progression = balance.BossProgression;
+        else if (mode != null && mode.BossProgression != null)
+        {
+            if (!mode.BossProgression.TryCapture(out var captured, out error)) { LastError = error; return false; }
+            progression = captured;
+        }
+        var keys = new Dictionary<BossData, string>();
+        if (remoteRequired)
+        {
+            var registry = new Dictionary<string, BossData>(StringComparer.Ordinal);
+            foreach (var pool in new[] { mode.BreatherBossPool, mode.HardBossPool })
+                foreach (var entry in pool.Entries)
+                    if (!registry.TryAdd(entry.BossKey, entry.Boss))
+                    { error = LastError = "Duplicate installed boss key: " + entry.BossKey; return false; }
+            var assignedPrefabs = new HashSet<UnityEngine.GameObject>();
+            foreach (var role in new[] { EndlessBossRole.Breather, EndlessBossRole.Hard })
+                foreach (string key in balance.BossKeys(role))
+                {
+                    if (!registry.TryGetValue(key, out var boss) || boss == null || boss.Prefab == null
+                        || !assignedPrefabs.Add(boss.Prefab)
+                        || !balance.TryGetCombatExpPerHp(key, 1, out var rate)
+                        || !RuntimeBossStatsCalculator.TryCalculate(boss, growth, 1, role,
+                            progression.Value, out _, out error, rate))
+                    { error = LastError = "Missing/invalid remote boss balance/content: " + key + ". " + error; return false; }
+                    keys.Add(boss, key);
+                }
+        }
+        if (remoteRequired && mode.BossSelection == EndlessBossSelection.FixedCycle)
+            foreach (var slot in mode.Slots)
+                if (!keys.TryGetValue(slot.Boss, out var key)
+                    || !new HashSet<string>(balance.BossKeys(slot.Role), StringComparer.Ordinal).Contains(key))
+                { error = LastError = "Test boss is missing from the NORMAL remote role roster: " + slot.BossKey; return false; }
+        _remoteBalance = remoteRequired ? balance : null;
+        _bossKeys = keys;
+        var schedule = mode != null ? new EndlessBossSchedule(mode, _random, remoteRequired ? balance : null) : null;
         if (schedule != null && (!schedule.TrySelect(1, out var firstBoss, out error)
-            || !RuntimeBossStatsCalculator.TryCalculate(firstBoss, growth, 1, out stats, out error)))
+            || !TryCalculateStats(firstBoss, growth, progression, schedule.CurrentRole, 1, out stats, out error)))
         { LastError = error; return false; }
         if (RunId == long.MaxValue) { error = LastError = "Run identity exhausted."; return false; }
         _penalties.Reset(mode != null ? mode.PenaltyPool : null);
         _mode = mode;
         _growth = growth;
+        _bossProgression = progression;
         _bossSchedule = schedule;
         RunId++;
         long startedRunId = RunId;
@@ -108,7 +155,7 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
         if (IsEndless)
         {
             if (!_bossSchedule.TrySelect(completedRound + 1, out var boss, out string statsError)
-                || !RuntimeBossStatsCalculator.TryCalculate(boss, _growth, completedRound + 1, out stats, out statsError))
+                || !TryCalculateStats(boss, _growth, _bossProgression, _bossSchedule.CurrentRole, completedRound + 1, out stats, out statsError))
             { Fail(statsError); return false; }
         }
         if (!_penalties.TryActivate(out bool changed, out string error)) { Fail(error); return false; }
@@ -121,6 +168,19 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
 
     /// <summary>Already active stack count for one fixed penalty key.</summary>
     public int GetStackCount(string key) => _penalties.GetStackCount(key);
+
+    private bool TryCalculateStats(BossData source, EndlessGrowthSettings growth,
+        EndlessBossProgressionSnapshot? progression, EndlessBossRole role, int round, out RuntimeBossStats stats, out string error)
+    {
+        if (_remoteBalance != null)
+        {
+            if (!_bossKeys.TryGetValue(source, out string key) || !_remoteBalance.TryGetCombatExpPerHp(key, round, out float rate))
+            { stats = default; error = "Missing/invalid remote combat EXP rate."; return false; }
+            return RuntimeBossStatsCalculator.TryCalculate(source, growth, round, role, progression.Value, out stats, out error, rate);
+        }
+        if (!progression.HasValue) return RuntimeBossStatsCalculator.TryCalculate(source, growth, round, out stats, out error);
+        return RuntimeBossStatsCalculator.TryCalculate(source, growth, round, role, progression.Value, out stats, out error);
+    }
 
     /// <summary>Checks callback ownership, including stopped runs.</summary>
     public bool Matches(long runId, int round) => IsActive && RunId == runId && CurrentRound == round;

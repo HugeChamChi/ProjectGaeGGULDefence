@@ -3,6 +3,20 @@ using BackEnd;
 
 public class Post
 {
+    public PostType Type;
+    public string Author;
+    public long ExpiresAt;
+    public bool IsRead;
+    public string ValidationError;
+    public CouponReceipt Reward;
+    /// <summary>Namespaced receipt identity separate from coupon campaign UUIDs.</summary>
+    public string Key => "mail:" + Type + ":" + inDate;
+    /// <summary>Display/preflight only; the server enforces expiry.</summary>
+    public bool IsExpired => ExpiresAt > 0 && System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() >= ExpiresAt;
+    /// <summary>Player-facing reward summary.</summary>
+    public string RewardSummary => postReward.Count == 0 ? (string.IsNullOrEmpty(ValidationError) ? "첨부 보상 없음" : "보상 확인 필요") : string.Join(", ", System.Linq.Enumerable.Select(postReward, pair => pair.Key + " +" + pair.Value));
+    /// <summary>Player-facing expiry text.</summary>
+    public string ExpiryLabel => IsExpired ? "기간 만료" : ExpiresAt > 0 ? System.DateTimeOffset.FromUnixTimeSeconds(ExpiresAt).ToLocalTime().ToString("MM.dd HH:mm") + "까지" : Type == PostType.Coupon ? "기간 제한 없음" : "기간 확인 필요";
     public bool   isCanReceive = false;
     public string title;
     public string content;

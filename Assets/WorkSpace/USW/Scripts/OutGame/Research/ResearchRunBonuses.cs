@@ -14,6 +14,15 @@ public sealed class ResearchRunBonuses
     /// <summary>강화 로드가 끝나기 전에는 전투 시작을 허용하지 않는다.</summary>
     public bool IsReady { get; private set; }
 
+#if UNITY_EDITOR
+    /// <summary>Direct Editor previews use zero permanent bonuses and never load a player save session.</summary>
+    public void PrepareEditorPreview()
+    {
+        Array.Clear(_values, 0, _values.Length);
+        IsReady = true;
+    }
+#endif
+
     /// <summary>화면과 같은 SO/저장 세션을 사용하며 튜토리얼 씬은 명시적으로 제외한다.</summary>
     public ResearchRunBonuses(ResearchSaveService saves, ResearchAccountContext account,
         ResearchTreeData tree, SceneComponentCollection scene)

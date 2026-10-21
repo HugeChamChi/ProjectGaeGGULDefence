@@ -326,7 +326,7 @@ namespace GaeGGUL.UI.Totem
             if (!show) return;
 
             _noRangeLabel = EnsureLabel(_noRangeLabel, "Range_None");
-            _noRangeLabel.fontSize = settings.noRangeFontSize;
+            _noRangeLabel.fontSize = Mathf.Max(UiTypography.BodySize, settings.noRangeFontSize);
             _noRangeLabel.color = settings.noRangeColor;
             _noRangeLabel.text = settings.noRangeText;
             var rt = _noRangeLabel.rectTransform;
@@ -373,7 +373,7 @@ namespace GaeGGUL.UI.Totem
                 return;
             }
             _caption = EnsureLabel(_caption, "Range_Caption");
-            _caption.fontSize = settings.captionFontSize;
+            _caption.fontSize = Mathf.Max(UiTypography.BodySize, settings.captionFontSize);
             _caption.color = settings.captionColor;
             _caption.text = settings.captionText;
             _caption.gameObject.SetActive(true);

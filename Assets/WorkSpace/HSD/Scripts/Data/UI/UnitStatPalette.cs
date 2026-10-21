@@ -7,7 +7,9 @@ public enum UnitStatType
     Atk,
     SkillAtk,
     SkillCooldown,
-    FoodPerTick
+    FoodPerTick,
+    DroneCount,
+    FoodPerSecond
 }
 
 [CreateAssetMenu(fileName = "UnitStatPalette", menuName = "UI/StatPalette")]

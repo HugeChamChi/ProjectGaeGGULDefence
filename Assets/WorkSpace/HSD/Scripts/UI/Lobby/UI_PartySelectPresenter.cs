@@ -9,16 +9,19 @@ public class UI_PartySelectPresenter
     private readonly SceneChangeManager _sceneChangeManager;
     private readonly StaminaInsufficientPopup _staminaPopup;
     private readonly GaeGGUL.Tutorial.IngameTutorialProgress _tutorial;
+    private readonly EndlessBalanceService _balance;
     
     private PartyDataSO _selectedParty;
 
     [Inject]
     public UI_PartySelectPresenter(SceneChangeManager sceneChangeManager,
         System.Collections.Generic.IEnumerable<StaminaInsufficientPopup> staminaPopups = null,
-        GaeGGUL.Tutorial.IngameTutorialProgress tutorial = null)
+        GaeGGUL.Tutorial.IngameTutorialProgress tutorial = null,
+        EndlessBalanceService balance = null)
     {
         _sceneChangeManager = sceneChangeManager;
         _tutorial = tutorial;
+        _balance = balance;
         if (staminaPopups != null)
             foreach (var popup in staminaPopups) { _staminaPopup = popup; break; }
     }
@@ -41,58 +44,65 @@ public class UI_PartySelectPresenter
 
     private bool _isProcessing = false;
 
-    private void OnStartGameClicked()
+    public void StartDefaultGame(PartyLobbyDataSO lobbyData)
     {
         if (_isProcessing) return;
+        _selectedParty = GlobalData.SelectedParty;
+        if (_selectedParty == null && lobbyData != null && lobbyData.partyList.Count > 0)
+            _selectedParty = lobbyData.partyList[0];
+        OnStartGameClicked();
+    }
 
-        if (_selectedParty != null)
+    private void OnStartGameClicked()
+    {
+        if (_isProcessing || _selectedParty == null) return;
+        _view.ChooseMode(test =>
         {
-            if (_tutorial != null && !_tutorial.IsCompleted)
-            {
-                _isProcessing = true;
-                GlobalData.SelectedParty = _selectedParty;
-                OpenFirstTutorialAsync().Forget();
-                return;
-            }
-            var staminaConfig = RM.Load<StaminaConfig>("Data/StaminaConfig");
-            int cost = staminaConfig != null ? staminaConfig.stageEntryCost : 5;
+            if (!_isProcessing) StartSelectedAsync(test).Forget();
+        });
+    }
 
-            if (!Player.PlayerData.UseStamina(cost))
-            {
-                Debug.LogWarning($"UI_PartySelectPresenter: 스태미나가 부족합니다. 현재: {Player.PlayerData.Data.Stamina} / 필요: {cost}");
-                _staminaPopup?.Show(Player.PlayerData.Data.Stamina, cost);
-                return;
-            }
-
-            _isProcessing = true;
-
-            // 전역 데이터에 선택된 파티 저장
+    private async UniTaskVoid StartSelectedAsync(bool test)
+    {
+        _isProcessing = true;
+        try
+        {
+            if (_sceneChangeManager == null) { _staminaPopup?.ShowMessage("씬 이동을 준비하지 못했습니다."); return; }
             GlobalData.SelectedParty = _selectedParty;
-            Debug.Log($"Game Started with Party: {GlobalData.SelectedParty.partyName}");
-
-            // IngameScene으로 씬 전환
-            if (_sceneChangeManager != null)
+            if (!test && _tutorial != null && !_tutorial.IsCompleted)
+            { await _sceneChangeManager.TransitionToSceneAsync("TutorialScene"); return; }
+            var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
+            if (config == null || config.stageEntryCost <= 0) { _staminaPopup?.ShowMessage("출격 비용 설정을 확인해 주세요."); return; }
+            try
             {
-                _sceneChangeManager.TransitionToSceneAsync("IngameScene",
-                    beforeLoad: async () =>
-                    {
-                        // 인게임 시작 전, 선택된 파티 정보 등 저장 필요한 데이터가 있다면 여기서 저장
-                        await Player.UpdateDirtyDataAsync();
-                    }
-                ).Forget();
+                if (_balance == null) throw new System.InvalidOperationException("전투 설정 서비스를 준비하지 못했습니다.");
+                var mode = _view.GetBattleMode(test);
+                if (mode == null) throw new System.InvalidOperationException("전투 모드가 연결되지 않았습니다.");
+                await _balance.PrepareEntryAsync(_view.GetCancellationTokenOnDestroy(), mode);
             }
-            else
+            catch (System.OperationCanceledException) { return; }
+            catch (System.Exception error)
             {
-                Debug.LogWarning("[UI_PartySelectPresenter] SceneChangeManager is not injected! Falling back to standard SceneManager with manual Fade.");
-                
-                // 의존성 주입이 안 된 순수 테스트 환경이라도 버튼이 동작하고 페이드 효과가 나오도록 수동 처리
-                ManualFadeAndLoad().Forget();
+                Debug.LogWarning("전투 설정 확인 실패: " + error.Message);
+                _staminaPopup?.ShowMessage("전투 설정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+                return;
             }
+            var player = Player.PlayerData;
+            if (!await player.ReserveEntryAsync(config.stageEntryCost))
+            {
+                if (player.IsReady && string.IsNullOrEmpty(player.Data.PendingEntryId))
+                    _staminaPopup?.Show(player.Data.Stamina, config.stageEntryCost);
+                else _staminaPopup?.ShowMessage(player.SaveStatus + "\n저장 확인 후 출격할 수 있습니다.");
+                return;
+            }
+            await _sceneChangeManager.TransitionToSceneAsync(test ? "HardIngameScene" : "IngameScene");
         }
-        else
+        catch (System.Exception error)
         {
-            Debug.LogWarning("UI_PartySelectPresenter: 파티가 선택되지 않았습니다.");
+            Debug.LogWarning("출격 실패: " + error.Message);
+            _staminaPopup?.ShowMessage("출격을 완료하지 못했습니다. 예약된 출격은 다시 시도할 때 사용됩니다.");
         }
+        finally { _isProcessing = false; }
     }
 
     private async UniTask OpenFirstTutorialAsync()

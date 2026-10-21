@@ -203,31 +203,25 @@ public static class ResearchUpgradeChecks
             var progress = new ResearchProgress(tree, levels);
             var panel = new ResearchInfoPanel((RectTransform)root.transform, settings);
             panel.SetProgress(progress);
-            panel.SetGold(10000);
             panel.Show(tree.Find("1-1"));
-            panel.SetFollow(true);
-            for (int mode = 0; mode < 2; mode++)
-            {
-                panel.SetMode(mode);
-                Assert(root.transform.Find("CompletedRow").gameObject.activeSelf, "Completed selected node must show one central MAX in both modes.");
-                Assert(!root.transform.Find("ButtonRow_Recommend").gameObject.activeSelf && !root.transform.Find("ButtonRow_Follow").gameObject.activeSelf,
-                    "Both action rows must be hidden for a completed selection.");
-                Assert(!root.transform.Find("FollowToggle").gameObject.activeSelf, "Follow toggle must be hidden for a completed selection.");
-            }
-            var max = root.transform.Find("CompletedRow/MAX");
-            Assert(max.GetComponent<ResearchMaxGraphic>() != null && max.GetComponent<Button>() == null, "Centered MAX must be a noninteractive graphic.");
-            Assert(((RectTransform)max).anchoredPosition == Vector2.zero, "MAX must be centered in the entire action area.");
+            var main = root.transform.Find("ActionRow/MainButton0").GetComponent<Button>();
+            var recommend = root.transform.Find("ActionRow/RecommendButton").GetComponent<Button>();
+            Assert(!main.interactable && main.GetComponentInChildren<TMPro.TMP_Text>().text == settings.MaxLabel,
+                "Completed selected node must retain the blue button with a noninteractive MAX label.");
+            Assert(recommend.gameObject.activeSelf && recommend.interactable,
+                "Recommendation remains available beside MAX while other nodes can be upgraded.");
+            Assert(root.transform.Find("FollowToggle") == null && root.transform.Find("Dot0") == null,
+                "Fixed panel must not create mode controls or page dots.");
             panel.Show(tree.Find("2-1"));
-            Assert(!root.transform.Find("CompletedRow").gameObject.activeSelf && root.transform.Find("ButtonRow_Follow").gameObject.activeSelf,
-                "Selecting an unfinished node must restore its controls.");
+            Assert(main.gameObject.activeSelf, "Selecting an unfinished node keeps the fixed button row.");
             var view = ResearchNodeView.Create((RectTransform)root.transform, tree.Find("1-1"), settings, settings.NodeSize, null);
             view.Refresh(tree.Find("1-1").MaxLevel, ResearchNodeState.Maxed);
             Assert(view.transform.Find("Node_Max") == null, "Completed nodes must not add MAX labels.");
             foreach (var node in tree.Nodes) levels[node.Id] = node.MaxLevel;
             panel.SetProgress(new ResearchProgress(tree, levels));
             panel.Refresh();
-            Assert(root.transform.Find("CompletedRow").gameObject.activeSelf && !root.transform.Find("ButtonRow_Recommend").gameObject.activeSelf,
-                "Fully completed tree must show only one centered MAX.");
+            Assert(!main.interactable && !recommend.interactable && main.gameObject.activeSelf && recommend.gameObject.activeSelf,
+                "Fully completed tree must retain both authored buttons without accepting upgrades.");
         }
         finally { UnityEngine.Object.DestroyImmediate(root); }
     }

@@ -24,4 +24,30 @@ public sealed class DamageChartLabSettings : ScriptableObject
     [Min(1)] public int VisibleRows = 6;
     /// <summary>실험실 행 대비 실게임 글자 배율.</summary>
     [Min(.1f)] public float RuntimeTextScale = 1.08f;
+    /// <summary>식량·설정 아래 네 버튼 페이지 높이 (기존 HUD Canvas 단위).</summary>
+    [Min(100f)] public float HudHeight = 400f;
+    /// <summary>작은 HUD에서 초상·막대를 읽을 수 있도록 표시하는 행 수.</summary>
+    [Min(1)] public int HudVisibleRows = 3;
+    /// <summary>HUD의 피해량 글자 배율.</summary>
+    [Min(.1f)] public float HudTextScale = 1.35f;
+    /// <summary>좌우 전환 확정에 필요한 화면 폭 비율.</summary>
+    [Range(.03f, .4f)] public float HudSwipeFraction = .12f;
+    /// <summary>버튼 탭을 가로 드래그로 바꾸기 위해 필요한 HUD 화면 폭 비율.</summary>
+    [Range(.005f, .1f)] public float HudButtonSwipeStartFraction = .03f;
+    /// <summary>버튼에서 가로 전환을 시작할 때 필요한 가로/세로 이동 거리 비율.</summary>
+    [Min(1f)] public float HudButtonSwipeDirectionRatio = 1.5f;
+    /// <summary>일시정지 중에도 동작하는 페이지 정착 시간.</summary>
+    [Min(.01f)] public float HudSlideSeconds = .22f;
+    /// <summary>전환 중 화면 밖으로 나가는 페이지의 최소 배율.</summary>
+    [Range(.5f, 1f)] public float HudPageMinScale = .9f;
+    /// <summary>전환 중 화면 밖으로 나가는 페이지의 최소 불투명도.</summary>
+    [Range(0f, 1f)] public float HudPageMinAlpha = .25f;
+    /// <summary>전환이 끝난 페이지가 살짝 튀어 오르는 시작 배율.</summary>
+    [Range(1f, 1.2f)] public float HudSettlePopScale = 1.035f;
+    /// <summary>정착 튀어 오름이 원래 크기로 돌아오는 시간.</summary>
+    [Min(.01f)] public float HudSettlePopSeconds = .25f;
+    /// <summary>버튼 페이지의 스와이프 안내.</summary>
+    public string HudOpenHint = "‹ 좌우로 밀어서 딜 그래프 보기 ›";
+    /// <summary>그래프 페이지의 복귀 안내.</summary>
+    public string HudCloseHint = "‹ 좌우로 밀어서 버튼으로 돌아가기 ›";
 }

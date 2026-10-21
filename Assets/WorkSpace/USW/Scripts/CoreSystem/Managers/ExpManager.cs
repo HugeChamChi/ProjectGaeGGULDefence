@@ -48,13 +48,13 @@ public class ExpManager : MonoBehaviour
         }
     }
 
-    private bool _pendingLevelUp;
+    private int _pendingLevelUps;
 
     /// <summary>Accumulates experience without interrupting a scene-owned guided interaction.</summary>
     public bool DeferLevelUps { get; set; }
 
-    /// <summary>Discards a deferred choice when a scene-owned tutorial or run has ended.</summary>
-    public void CancelPendingLevelUp() => _pendingLevelUp = false;
+    /// <summary>Discards all deferred choices when a scene-owned tutorial or run has ended.</summary>
+    public void CancelPendingLevelUp() => _pendingLevelUps = 0;
 
     /// <summary>보스 데미지로부터 획득할 EXP 양 계산. 배율은 현재 보스의 BossData(SO)가 정본이다.</summary>
     public float CalculateExpFromDamage(float damage)
@@ -76,9 +76,12 @@ public class ExpManager : MonoBehaviour
         if (_gameManager?.IsFinished == true || IsMaxLevel) return;
 
         CurrentExp += amount * (float)(_runPenalties?.ExperienceMultiplier ?? 1d);
-        OnExpChanged?.Invoke(CurrentExp);
+        if (!TryAdvanceLevel()) OnExpChanged?.Invoke(CurrentExp);
+    }
 
-        if (!DeferLevelUps && CurrentExp >= ExpToLevelUp)
+    private bool TryAdvanceLevel()
+    {
+        if (!DeferLevelUps && !IsMaxLevel && CurrentExp >= ExpToLevelUp)
         {
             CurrentExp -= ExpToLevelUp;
             CurrentLevel++;
@@ -86,32 +89,51 @@ public class ExpManager : MonoBehaviour
             if (IsMaxLevel)
                 CurrentExp = 0f;
 
+            OnExpChanged?.Invoke(CurrentExp);
             TryFireLevelUp();
+            return true;
         }
+        return false;
     }
 
+    /// <summary>Delivers one earned choice immediately or preserves it alongside other deferred choices.</summary>
     public void TryFireLevelUp()
     {
-        if (_gameManager?.IsFinished == true) { _pendingLevelUp = false; return; }
+        if (_gameManager?.IsFinished == true) { _pendingLevelUps = 0; return; }
         var state = _gameManager.CurrentState;
 
         if (state == GameManager.GameState.Playing && _fieldPause?.AttacksHeld != true)
         {
-            _pendingLevelUp = false;
             OnLevelUp?.Invoke();
         }
         else
         {
-            _pendingLevelUp = true;
+            _pendingLevelUps++;
             Debug.Log($"[ExpManager] 레벨업 보류 (현재 상태: {state})");
         }
     }
 
+    /// <summary>Delivers one deferred choice, or advances one overflow level after a selection completes.</summary>
     public void FlushPendingLevelUp()
     {
-        if (_gameManager?.IsFinished == true) { _pendingLevelUp = false; return; }
-        if (!_pendingLevelUp) return;
-        _pendingLevelUp = false;
+        if (_gameManager?.IsFinished == true) { _pendingLevelUps = 0; return; }
+        if (DeferLevelUps
+            || _gameManager?.CurrentState != GameManager.GameState.Playing) return;
+        if (_pendingLevelUps == 0)
+        {
+            // A completed selection is also a settlement point for overflow EXP.
+            // Ignore the old selection's field hold: its owner releases only after this handoff.
+            if (!IsMaxLevel && CurrentExp >= ExpToLevelUp)
+            {
+                CurrentExp -= ExpToLevelUp;
+                CurrentLevel++;
+                if (IsMaxLevel) CurrentExp = 0f;
+                OnExpChanged?.Invoke(CurrentExp);
+                OnLevelUp?.Invoke();
+            }
+            return;
+        }
+        _pendingLevelUps--;
         Debug.Log("[ExpManager] 보류된 레벨업 발동");
         OnLevelUp?.Invoke();
     }

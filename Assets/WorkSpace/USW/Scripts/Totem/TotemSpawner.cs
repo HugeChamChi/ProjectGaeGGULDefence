@@ -27,6 +27,10 @@ public class TotemSpawner : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private UnitFactory _unitFactory;
+    private CenterToast _centerToast;
+
+    [Inject]
+    private void ConfigureToast(IObjectResolver resolver) => resolver.TryResolve(out _centerToast);
 
     [SerializeField] private GameObject genericPrefab;
 
@@ -185,5 +189,6 @@ public class TotemSpawner : MonoBehaviour
         float refund = 0f;
         if (refund > 0f)
             _currencyManager.AddCurrency(refund);
+        _centerToast?.Show("토템이 판매되었습니다", CenterToastKind.Info);
     }
 }

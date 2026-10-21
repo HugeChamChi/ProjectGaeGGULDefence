@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f002bcc268684d5e8c6906d8cea1217c, type: 3}
+  m_Name: BombHackFeedbackSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BombHackFeedbackSettings
+  RuptureSeconds: 0.32
+  SparkleSeconds: 0.75
+  ImpactSize: 62
+  SliceHalfLength: 32
+  SliceSpacing: 17
+  SliceWidth: 5
+  SparkleSize: 28
+  GlitchBlocks: 5
+  DenseGlitchBlocks: 3
+  DenseImpactThreshold: 4
+  DenseDetailScale: 0.65
+  RuptureColor: {r: 0.75, g: 0.34, b: 1, a: 1}
+  ImpactInkColor: {r: 0.13, g: 0.06, b: 0.24, a: 0.85}
+  GlitchLeadSeconds: 0.04
+  GlitchTransferSeconds: 0.22
+  GlitchSettleSeconds: 0.1
+  ReceiptSpacingSeconds: 0.07
+  DataColor: {r: 0.38, g: 0.86, b: 1, a: 1}
+  GlitchColor: {r: 0.75, g: 0.34, b: 1, a: 1}
+  ReceiptInkColor: {r: 0.05, g: 0.09, b: 0.16, a: 1}
+  RingRadius: 95
+  GlitchWidth: 62

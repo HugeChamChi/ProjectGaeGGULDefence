@@ -58,3 +58,16 @@ MonoBehaviour:
   RuntimePanelMax: {x: 0.97, y: 0.945}
   VisibleRows: 5
   RuntimeTextScale: 1.08
+  HudHeight: 400
+  HudVisibleRows: 3
+  HudTextScale: 1.35
+  HudSwipeFraction: 0.12
+  HudButtonSwipeStartFraction: 0.03
+  HudButtonSwipeDirectionRatio: 1.5
+  HudSlideSeconds: 0.22
+  HudPageMinScale: 0.9
+  HudPageMinAlpha: 0.25
+  HudSettlePopScale: 1.035
+  HudSettlePopSeconds: 0.25
+  HudOpenHint: "‹ 좌우로 밀어서 딜 그래프 보기 ›"
+  HudCloseHint: "‹ 좌우로 밀어서 버튼으로 돌아가기 ›"

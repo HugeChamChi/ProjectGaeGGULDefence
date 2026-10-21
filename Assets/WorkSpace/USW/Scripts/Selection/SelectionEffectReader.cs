@@ -112,7 +112,23 @@ public sealed class SelectionEffectReader : ISelectionCombatReader, IDroneEffect
     /// <inheritdoc />
     public bool HasManaRequirementReduction => _state.Current.HasManaRequirementReduction;
     /// <inheritdoc />
+    public float HackingProductionProcChance => _state.Current.HackingProductionProcChance;
+    /// <inheritdoc />
+    public int HackingProductionProcMultiplier => _state.Current.HackingProductionProcMultiplier;
+    /// <inheritdoc />
+    public bool HasGammanResidue => _state.Current.HasGammanResidue;
+    /// <inheritdoc />
+    public float GammanResidueRatio => _state.Current.GammanResidueRatio;
+    /// <inheritdoc />
+    public float GammanResidueDuration => _state.Current.GammanResidueDuration;
+    /// <inheritdoc />
+    public int GammanResidueTicks => _state.Current.GammanResidueTicks;
+    /// <inheritdoc />
     public float ChiefCooldownReduction => _state.Current.ChiefCooldownReduction;
+    /// <inheritdoc />
+    public int ChiefChargeCapacity => _state.Current.ChiefChargeCapacity;
+    /// <inheritdoc />
+    public float ChiefHackingDamagePerStack => _state.Current.ChiefHackingDamagePerStack;
     /// <inheritdoc />
     public float ChiefVolleyDelay => _state.Current.ChiefVolleyDelay;
     /// <inheritdoc />

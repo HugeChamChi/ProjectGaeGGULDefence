@@ -12,6 +12,7 @@ namespace GaeGGUL.UI.Unit
         private bool _wasPlaced, _trackingUnit, _hasStats;
         private float _attack, _interval, _cooldown;
         private bool _detailed = true;
+        private string _firstStat, _secondStat;
 
         /// <summary>기존 정보 패널을 표시 대상으로 사용한다.</summary>
         public UI_UnitInfoPresenter(UI_UnitInfoPanel view) => _view = view;
@@ -59,6 +60,7 @@ namespace GaeGGUL.UI.Unit
         {
             _unit = null; _displayedData = null;
             _hasStats = _wasPlaced = _trackingUnit = false;
+            _firstStat = _secondStat = null;
         }
 
         private string GetAuthoredDescription(UnitData data, Tier tier)
@@ -67,6 +69,15 @@ namespace GaeGGUL.UI.Unit
             string detailed = data.skillData?.description;
             return _detailed ? detailed ?? brief : !string.IsNullOrWhiteSpace(brief) ? brief : detailed ?? string.Empty;
         }
+        private static float Frequency(float interval) => interval > 0f && !float.IsInfinity(interval) ? 1f / interval : 0f;
+
+        private static string FormatSplit(float baseline, float total, string suffix = "")
+        {
+            string value = baseline.ToString("0.##");
+            string change = (total - baseline).ToString("+0.##;-0.##;0");
+            return change == "0" ? value + suffix : $"{value} <color=#69C875>{change}</color>{suffix}";
+        }
+
         private void Show(UnitData data, Tier tier, float attack, float interval, float cooldown)
         {
             bool identityChanged = _displayedData != data || _displayedTier != tier;
@@ -78,14 +89,19 @@ namespace GaeGGUL.UI.Unit
                 bool conversion = effects?.HasBombHacking == true;
                 _view.UpdateSkillInfo(data.SkillDisplayName,
                     conversion ? (_detailed
-                        ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬·추가 자폭 모두 전환되며 수리 키트가 발동합니다."
+                        ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬과 추가 자폭 모두 전환되며 수리 키트가 발동합니다."
                         : $"자폭 드론이 보스에게 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다.")
                     : GetAuthoredDescription(data, tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty);
             }
             else if (_unit is Drone_Zeltan || data.prefabAddress == "DroneUnit_Zeltan")
             {
-                _view.UpdateSkillInfo(data.SkillDisplayName, GetAuthoredDescription(data, tier), "패시브");
+                var zeltan = _unit as Drone_Zeltan;
+                string description = zeltan != null
+                    ? $"자체 식량 {zeltan.CurrentFoodProductionPerSecond:0.##}/초와 군단 식량 {zeltan.FleetFoodPerSecond:0.##}/초를 생산합니다."
+                        + (_detailed ? $" 드론 1기당 {zeltan.FoodPerDronePerSecond:0.##}/초. 강화는 자체 생산량을 높입니다. 군단 식량은 여러 젤탕이 중복 제공하지 않습니다." : string.Empty)
+                    : GetAuthoredDescription(data, tier);
+                _view.UpdateSkillInfo(data.SkillDisplayName, description, "패시브");
             }
             else if (data.Disigman != null)
             {
@@ -120,8 +136,31 @@ namespace GaeGGUL.UI.Unit
                 _view.UpdateSkillInfo(data.SkillDisplayName,
                     GetAuthoredDescription(data, tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty, data.DebuffBindings.Get(tier));
-            if (!_hasStats || _attack != attack || _interval != interval)
-                _view.UpdateStats(attack.ToString("0.##"), $"{interval:F2}초");
+            bool food = _unit is Drone_Zeltan || data.prefabAddress == "DroneUnit_Zeltan";
+            string first, second;
+            if (_unit is Drone_Zeltan foodProducer)
+            {
+                first = $"{foodProducer.FleetDroneCount}기";
+                float fleet = foodProducer.FleetFoodPerSecond;
+                second = FormatSplit(foodProducer.OwnFoodPerSecondBeforeUpgrade + fleet,
+                    foodProducer.CurrentFoodProductionPerSecond + fleet, "/초");
+            }
+            else if (food)
+            {
+                first = "0기";
+                second = $"{data.foodProduction.Get(tier):0.##}/초";
+            }
+            else
+            {
+                float baseAttack = _unit != null ? _unit.GetDisplayAttackDamageBeforeUpgrade() : attack;
+                float baseInterval = _unit != null ? _unit.GetDisplayAttackIntervalBeforeUpgrade() : interval;
+                first = FormatSplit(baseAttack, attack);
+                second = FormatSplit(Frequency(baseInterval), Frequency(interval), "/초");
+            }
+            _view.SetFoodStatMode(food);
+            if (!_hasStats || _firstStat != first || _secondStat != second)
+                _view.UpdateStats(first, second);
+            _firstStat = first; _secondStat = second;
             _displayedData = data; _displayedTier = tier;
             _attack = attack; _interval = interval; _cooldown = cooldown; _hasStats = true;
         }

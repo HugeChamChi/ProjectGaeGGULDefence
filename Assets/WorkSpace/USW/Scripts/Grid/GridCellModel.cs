@@ -62,6 +62,8 @@ public class GridCellModel
     }
     /// <summary>Optional per-effect range color; null uses the shared material palette.</summary>
     public Color? TotemPreviewColor { get; private set; }
+    /// <summary>Opacity of the totem range preview, independent of its tint and applied buffs.</summary>
+    public float TotemPreviewOpacity { get; private set; } = 1f;
     public bool  IsTotemDisabledRangePreviewed { get; private set; }
 
     // ── 보스 패턴 상태 (신규) ──────────────────────────────────
@@ -141,10 +143,12 @@ public class GridCellModel
         OnStateChanged?.Invoke();
     }
 
-    public void SetTotemRangePreview(bool effectRange, bool disabledRange, Color? color = null)
+    /// <summary>Updates only the range display, preserving actual cell effects.</summary>
+    public void SetTotemRangePreview(bool effectRange, bool disabledRange, Color? color = null, float opacity = 1f)
     {
         IsTotemRangePreviewed         = effectRange;
         TotemPreviewColor = color;
+        TotemPreviewOpacity = Mathf.Clamp01(opacity);
         IsTotemDisabledRangePreviewed = disabledRange;
         OnStateChanged?.Invoke();
     }
@@ -155,6 +159,7 @@ public class GridCellModel
 
         IsTotemRangePreviewed         = false;
         TotemPreviewColor = null;
+        TotemPreviewOpacity = 1f;
         IsTotemDisabledRangePreviewed = false;
         OnStateChanged?.Invoke();
     }

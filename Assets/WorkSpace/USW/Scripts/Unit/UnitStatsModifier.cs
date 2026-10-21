@@ -39,6 +39,9 @@ public class UnitStatsModifier : MonoBehaviour
     /// <summary>현재 보정을 포함하되 치명타 추첨과 적 방어 계산을 하지 않는 표시용 공격력.</summary>
     public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
 
+    /// <summary>현재 런타임 보정을 유지하고 인게임 강화만 제외한 표시용 공격력.</summary>
+    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(_unit.unitData.atk.Get(_unit.currentTier), 1f, false, out _, true);
+
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;
 
@@ -122,12 +125,16 @@ public class UnitStatsModifier : MonoBehaviour
         return Mathf.Max(0f, (multiplier - 1f) / ProjectileSizeStep * effects.ProjectileSizeAtkPerUnit);
     }
 
-    public float GetCurrentAttackInterval()
+    public float GetCurrentAttackInterval() => GetCurrentAttackInterval(true);
+
+    /// <summary>같은 런타임 보정에서 인게임 강화 포함 여부를 지정해 공격 간격을 계산한다.</summary>
+    public float GetCurrentAttackInterval(bool includeUpgrade)
     {
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult   = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
         
-        float baseInterval = 1.0f / Mathf.Max(UpgradedAttackFrequency, 0.01f);
+        float frequency = includeUpgrade ? UpgradedAttackFrequency : _unit.unitData.attackSpeed.Get(_unit.currentTier);
+        float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 
         float interval = baseInterval
@@ -137,7 +144,8 @@ public class UnitStatsModifier : MonoBehaviour
                        / rowSpeedMult;
         interval /= 1f + (_deps?.Research?.Get(ResearchStat.AttackSpeedPercent) ?? 0f);
         float baseline = Mathf.Max(interval, 0.05f);
-        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d); }
+        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d)
+            / Mathf.Max(0.01f, _unit.PatternAttackSpeedMultiplier); }
         catch (System.OverflowException error)
         {
             _deps?.ReportRunStatFailure?.Invoke(error.Message);

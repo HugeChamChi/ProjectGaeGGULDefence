@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f82abd6c1f5af3544b5153c8ddf52a4a, type: 3}
   m_Name: UpgradeViewSettings
   m_EditorClassIdentifier: Assembly-CSharp::ResearchViewSettings
-  FontBold: {fileID: 11400000, guid: 34571da45f3f3d8419493b418172203f, type: 2}
-  FontRegular: {fileID: 11400000, guid: 4e5648a79c753f44eb5571f3a22454ae, type: 2}
+  FontBold: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  FontRegular: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  FontMaterial: {fileID: 2100000, guid: 4cf9593e875b8d940aa2986ace5d59f7, type: 2}
   RoundedFill: {fileID: 21300000, guid: 5618123237d1d3f49a5a6025287065f7, type: 3}
   RoundedOutline: {fileID: 21300000, guid: 6f26b2434055f404d8d9c0b82e4de90f, type: 3}
   CircleFill: {fileID: 21300000, guid: d25e2ce15dd1c67438e4b70f404fb197, type: 3}
@@ -23,17 +24,19 @@ MonoBehaviour:
   GoldIcon: {fileID: 21300000, guid: c76fa86931d74e443b7d123ec3962adf, type: 3}
   BlockedIcon: {fileID: 21300000, guid: 76abe28924c3a9345adaa9cc63c803d3, type: 3}
   RoundedCornerScale: 4
-  PanelBackground: {fileID: 21300000, guid: b96fce96b352f5d41ad588e52cc21e43, type: 3}
-  UnfinishedBackground: {r: 0.023529412, g: 0.11764706, b: 0.13333334, a: 1}
-  BackgroundPattern: 5
-  BackgroundDesign: 0
-  BackgroundVignetteStrength: 0.45
-  BackgroundBandColor: {r: 0.16, g: 0.65, b: 0.65, a: 0.18}
-  BackgroundIconA: {fileID: 21300000, guid: 8cef3e686beb744e9b760a5901eb89e6, type: 3}
-  BackgroundIconB: {fileID: 21300000, guid: e676f74df43e748b79ba298055222ff1, type: 3}
-  BackgroundIconTint: {r: 1, g: 1, b: 1, a: 0.12}
-  BackgroundIconSize: 110
-  BackgroundIconRowSpacing: 240
+  PanelBackground: {fileID: 0}
+  UnfinishedBackground: {r: 0.03529412, g: 0.07058824, b: 0.11764706, a: 1}
+  BackgroundPattern: 6
+  BackgroundDesign: 2
+  BackgroundVignetteStrength: 0.14
+  BackgroundBandColor: {r: 0.25, g: 0.8, b: 0.88, a: 0.55}
+  BackgroundBottomFadeHeight: 220
+  BackgroundSmallIconScale: 1
+  BackgroundIconA: {fileID: 21300000, guid: cdc1463d730b8054d833128ca8218e70, type: 3}
+  BackgroundIconB: {fileID: 21300000, guid: cdc1463d730b8054d833128ca8218e70, type: 3}
+  BackgroundIconTint: {r: 0, g: 0, b: 0, a: 0.16}
+  BackgroundIconSize: 166
+  BackgroundIconRowSpacing: 224
   BackgroundIconSpeed: 24
   TopBarSprite: {fileID: 21300000, guid: 0d5d5f910e8d09141b68f7ecbd2ca410, type: 3}
   NodeLockedSprite: {fileID: 21300000, guid: eedd67c9a78e6414a89629b8e1d03f22, type: 3}
@@ -53,7 +56,7 @@ MonoBehaviour:
   UpgradeButtonSprite: {fileID: 21300000, guid: b763b9917428df74b8e7bd951d753f98,
     type: 3}
   MaxLabelSprite: {fileID: 21300000, guid: 96e3e7fa654b72b4591913a5915f65e7, type: 3}
-  Background: {r: 0.08235294, g: 0.09803922, b: 0.13725491, a: 1}
+  Background: {r: 0.13333334, g: 0.46666667, b: 0.6156863, a: 1}
   Surface: {r: 0.13333334, g: 0.15686275, b: 0.21176471, a: 1}
   Ink: {r: 1, g: 1, b: 1, a: 1}
   Muted: {r: 0.54901963, g: 0.5803922, b: 0.6509804, a: 1}
@@ -75,19 +78,21 @@ MonoBehaviour:
   SpecialColumnX: 350
   RowSpacing: 255
   ContentPadding: 200
-  PanelHeight: 440
-  FollowByDefault: 1
+  PanelHeight: 443
+  PanelTreeOverlap: 80
+  InfoValueColor: {r: 1, g: 0.7921569, b: 0.0627451, a: 1}
+  InfoEmptyDotColor: {r: 0.14901961, g: 0.12941177, b: 0.11764706, a: 1}
   ToastSeconds: 1.3
   TitleFormat: "\uAC15\uD654 {0}"
   UpgradeLabel: "\uAC15\uD654"
-  MaxLabel: MAX
+  MaxLabel: Max
   LockedLabel: "\uC7A0\uAE40"
   ChangeChoiceLabel: "\uC120\uD0DD \uBC14\uAFB8\uAE30"
   RecommendLabel: "\uCD94\uCC9C"
   RecommendButtonLabel: "\uCD94\uCC9C \uAC15\uD654"
   FollowLabel: "\uCD94\uCC9C \uB530\uB77C\uAC00\uAE30"
   ToastFormat: '{0} Lv.{1}   {2}'
-  GateLabelFormat: "{0}\uB2E8\uACC4 \xB7 \uC804\uCCB4 \uAC15\uD654 {1}/{2}"
+  GateLabelFormat: "{0}단계, 전체 강화 {1}/{2}"
   GateOpenFormat: "{0}\uB2E8\uACC4 \uC5F4\uB9BC"
   LayoutButtonFormat: "\uAD6C\uC131: {0}"
   ResetLabel: "\uCD08\uAE30\uD654"
@@ -122,3 +127,89 @@ MonoBehaviour:
   - Stat: 9
     DisplayName: "\uD1A0\uD15C \uD6A8\uACFC"
     IsPercent: 1
+  PreviewTreeKey: BASIC
+  PreviewItems:
+  - NodeId: 1-1
+    DisplayName: "\uACF5\uACA9\uB825"
+    MaxValue: 1.5
+    Suffix: '%'
+  - NodeId: 2-1
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD655\uB960"
+    MaxValue: 1.5
+    Suffix: '%'
+  - NodeId: 2-2
+    DisplayName: "\uACF5\uACA9 \uC18D\uB3C4"
+    MaxValue: 3
+    Suffix: '%'
+  - NodeId: 3-1
+    DisplayName: "\uCE58\uBA85\uD0C0 \uB370\uBBF8\uC9C0"
+    MaxValue: 3
+    Suffix: '%'
+  - NodeId: 3-2
+    DisplayName: "\uD1A0\uD15C \uD6A8\uC728"
+    MaxValue: 1.4
+    Suffix: '%'
+  - NodeId: 4-1
+    DisplayName: "\uC2DC\uC791 \uC7AC\uD654 \uC99D\uAC00"
+    MaxValue: 30
+    Suffix:
+  - NodeId: S-1
+    DisplayName: "\uC885\uB8CC \uBCF4\uC0C1 \uCD94\uAC00"
+    MaxValue: 10
+    Suffix: '%'
+  - NodeId: 5-1
+    DisplayName: "\uC2DC\uC791 \uD0C0\uC774\uBA38 \uC99D\uAC00"
+    MaxValue: 10
+    Suffix: "\uCD08"
+  - NodeId: 6-1
+    DisplayName: "\uBCF4\uC2A4 \uCC98\uCE58 \uD0C0\uC774\uBA38 \uD68C\uBCF5"
+    MaxValue: 3
+    Suffix: "\uCD08"
+  - NodeId: 6-2
+    DisplayName: "\uC0C1\uD0DC\uC774\uC0C1 \uC800\uD56D"
+    MaxValue: 20
+    Suffix: '%'
+  - NodeId: 7-1
+    DisplayName: "\uD310\uB9E4 \uAE08\uC561 \uC99D\uAC00"
+    MaxValue: 50
+    Suffix: '%'
+  - NodeId: 7-2
+    DisplayName: "\uBC29\uC5B4\uB825 \uAC10\uC18C\uC728 \uC99D\uAC00"
+    MaxValue: 1
+    Suffix: '%'
+  - NodeId: 8-1
+    DisplayName: "\uC120\uD0DD\uC9C0 \uB4F1\uAE09 \uD655\uB960"
+    MaxValue: 5
+    Suffix: '%'
+  - NodeId: S-2
+    DisplayName: "\uC2DC\uC791 \uC7AC\uD654 \uC99D\uAC00"
+    MaxValue: 50
+    Suffix:
+  - NodeId: 9-1
+    DisplayName: "\uD1A0\uD15C \uD6A8\uC728"
+    MaxValue: 1.4
+    Suffix: '%'
+  - NodeId: 10-1
+    DisplayName: "\uACF5\uACA9\uB825"
+    MaxValue: 2
+    Suffix: '%'
+  - NodeId: 10-2
+    DisplayName: "\uCE58\uBA85\uD0C0 \uD655\uB960"
+    MaxValue: 2
+    Suffix: '%'
+  - NodeId: 11-1
+    DisplayName: "\uC2A4\uD0AC \uCFE8\uD0C0\uC784"
+    MaxValue: 3
+    Suffix: '%'
+  - NodeId: 11-2
+    DisplayName: "\uC2A4\uD0AC \uD53C\uD574\uB7C9"
+    MaxValue: 5
+    Suffix: '%'
+  - NodeId: 12-1
+    DisplayName: "\uC120\uD0DD\uC9C0 \uB4F1\uAE09 \uD655\uB960"
+    MaxValue: 5
+    Suffix: '%'
+  - NodeId: S-3
+    DisplayName: "\uD1A0\uD15C \uD6A8\uC728"
+    MaxValue: 1.4
+    Suffix: '%'

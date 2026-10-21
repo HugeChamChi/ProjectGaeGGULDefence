@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.AddressableAssets;
+using Cysharp.Threading.Tasks;
 
 // ════════════════════════════════════════════════════════
 // UIManager — InGameSingleton 교체 + Manager 접근 통일
@@ -77,6 +78,7 @@ public class UIManager : MonoBehaviour
     private HackingHud _hackingHud;
     private bool _navigationStarted;
     private System.Action _resultHomeRequested;
+    private CenterToast _navigationToast;
 
     /// <summary>Uses scene-specific lobby preparation without replacing the shared battle result.
     /// lobbyInAdSlot은 보상 더 받기 칸 자리에 로비로 버튼을 둔다.</summary>
@@ -93,6 +95,7 @@ public class UIManager : MonoBehaviour
     protected void Awake()
     {
         _bossHpBar?.UseRuntimeData();
+        if (gameObject.scene.name == "IngameScene" || gameObject.scene.name == "HardIngameScene") HideStartButton();
     }
 
     /// <summary>Wires the boss status HUD after container injection has completed.</summary>
@@ -112,7 +115,12 @@ public class UIManager : MonoBehaviour
         }
 
         if (summonButton != null)
+        {
             summonButton.onClick.AddListener(_unitSpawner.OnSpawnButtonPressed);
+            // 연타 체감을 위해 누르는 순간 소환한다. 씬 저작은 바꾸지 않는다.
+            if (summonButton.GetComponent<PressToClickButton>() == null)
+                summonButton.gameObject.AddComponent<PressToClickButton>();
+        }
 
         if (startButton != null)
             startButton.onClick.AddListener(_gameManager.OnStartButtonPressed);
@@ -181,11 +189,11 @@ public class UIManager : MonoBehaviour
 
     /// <summary>새 보스의 체력과 줄 수를 설정하고 이전 보스의 연출을 초기화한다.
     /// lineCount를 생략하면(0) UI_BossHpBar가 자신의 hpPerLine 설정으로 max에서 자동 계산한다.</summary>
-    public void BeginBossHp(decimal current, decimal max, int lineCount = 0)
+    public void BeginBossHp(decimal current, decimal max, int lineCount = 0, decimal hpPerLine = 0m)
     {
         if (_bossHpBar != null)
         {
-            _bossHpBar.BeginBoss(current, max, lineCount);
+            _bossHpBar.BeginBoss(current, max, lineCount, hpPerLine);
             _displayedHp = current;
             _displayedHpMax = max;
             return;
@@ -444,10 +452,67 @@ public class UIManager : MonoBehaviour
     private void OnRetryButtonPressed()
     {
         if (_navigationStarted) return;
+        RetryAsync().Forget();
+    }
+
+    private async UniTaskVoid RetryAsync()
+    {
         _navigationStarted = true;
-        _gameManager.CancelEndPresentation();
-        _timeScale.ReleaseAll();
-        Addressables.LoadSceneAsync(SceneManager.GetActiveScene().name);
+        SetResultNavigationBusy(true);
+        bool loaded = false;
+        var token = this.GetCancellationTokenOnDestroy();
+        try
+        {
+            string scene = SceneManager.GetActiveScene().name;
+            bool paid = (scene == "IngameScene" || scene == "HardIngameScene") && !_gameManager.IsEditorPreview;
+            if (paid)
+            {
+                var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
+                if (config == null || config.stageEntryCost <= 0)
+                    throw new System.InvalidOperationException("출격 비용 설정을 확인해 주세요.");
+                var balance = VContainer.IObjectResolverExtensions.Resolve<EndlessBalanceService>(_resolver);
+                var mode = VContainer.IObjectResolverExtensions.Resolve<WaveManager>(_resolver).EndlessMode;
+                await balance.PrepareEntryAsync(token, mode);
+                token.ThrowIfCancellationRequested();
+                var player = Player.PlayerData;
+                if (!await player.ReserveEntryAsync(config.stageEntryCost))
+                {
+                    ShowNavigationFailure(player.IsReady && string.IsNullOrEmpty(player.Data.PendingEntryId)
+                        ? $"스태미나가 부족합니다. 현재: {player.Data.Stamina} / 필요: {config.stageEntryCost}"
+                        : "저장 확인 후 다시 시작할 수 있습니다. 잠시 후 다시 시도해 주세요.");
+                    return;
+                }
+                token.ThrowIfCancellationRequested();
+            }
+            // Keep the result pause until preflight and durable reservation have succeeded.
+            _gameManager.CancelEndPresentation();
+            if (paid)
+                await VContainer.IObjectResolverExtensions.Resolve<SceneChangeManager>(_resolver).TransitionToSceneAsync(scene);
+            else
+                await Addressables.LoadSceneAsync(scene).ToUniTask();
+            loaded = true;
+        }
+        catch (System.OperationCanceledException) { }
+        catch (System.Exception error)
+        {
+            Debug.LogWarning("다시하기 실패: " + error.Message);
+            if (this != null) ShowNavigationFailure("다시 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        }
+        finally
+        {
+            if (this != null && !loaded)
+            {
+                _navigationStarted = false;
+                SetResultNavigationBusy(false);
+            }
+        }
+    }
+
+    private void ShowNavigationFailure(string message)
+    {
+        if (_navigationToast == null)
+            _navigationToast = FindFirstObjectByType<CenterToast>(FindObjectsInactive.Include);
+        _navigationToast?.Show(message, CenterToastKind.Warning);
     }
 
     private void OnHomeButtonPressed()

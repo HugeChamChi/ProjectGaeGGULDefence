@@ -29,12 +29,14 @@ public class UI_ChiefSkillPresenter
             _view.SetButtonInteractable(false);
             _view.SetDisabledVisual(true);
             _view.SetChargedPresentation(false);
+            _view.SetChargeCount(0, 1);
             return;
         }
 
         float progress = _skill.CooldownProgress;
         bool isReady = _skill.CanActivate;
-        _view.SetChargedPresentation(progress >= 1f);
+        _view.SetChargedPresentation(_skill.AvailableCharges > 0);
+        _view.SetChargeCount(_skill.AvailableCharges, _skill.MaximumCharges);
 
         // 슬라이더 값이 0일 때가 사용 가능하도록 역전 (1 - progress)
         _view.SetCooldownSliderValue(Mathf.Clamp01(1f - progress));

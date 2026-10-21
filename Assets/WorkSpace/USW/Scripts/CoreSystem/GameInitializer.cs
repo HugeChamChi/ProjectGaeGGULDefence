@@ -7,6 +7,10 @@ public class GameInitializer : IInitializable, IAsyncStartable
 {
     /// <summary>True after scene initialization, preload and the entry fade have finished.</summary>
     public bool IsReady { get; private set; }
+    private readonly UniTaskCompletionSource _preparation = new();
+    /// <summary>Completes when combat data is ready, or faults when preparation fails.</summary>
+    public UniTask Preparation => _preparation.Task;
+    [Inject] private SceneChangeManager _sceneChangeManager;
     [Inject] private GlobalUIManager _globalUIManager;
     [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
@@ -36,6 +40,15 @@ public class GameInitializer : IInitializable, IAsyncStartable
     public void Initialize()
     {
         Debug.Log("[GameInitializer] 시작");
+#if UNITY_EDITOR
+        // Direct Play is an explicit development preview. Lobby transitions retain production preflight.
+        if (_gameManager.gameObject.scene.name == "IngameScene" && !_sceneChangeManager.IsTransitioning)
+        {
+            _gameManager.gameObject.AddComponent<IngameEditorPreview>().Configure(_waveManager);
+            _gameManager.EnableEditorPreview();
+            _research.PrepareEditorPreview();
+        }
+#endif
         if (_gameDataManager != null) _gameDataManager.Init();
         if (_currencyManager != null) _currencyManager.Init();
         if (_expManager != null) _expManager.Init();
@@ -59,20 +72,50 @@ public class GameInitializer : IInitializable, IAsyncStartable
 
     public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
-        // Direct in-game/tutorial entry can skip the title's Table initialization.
-        await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
-        await _research.LoadAsync(cancellation);
-        if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.Key == "NORMAL")
-            await _endlessBalance.RefreshAsync(cancellation);
-        // Prepare only the app-owned approved palette; scene cancellation owns this wait.
-        if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
-
-        // 3. 로딩이 모두 끝나면 페이드아웃 후 게임 진입
-        if (_globalUIManager != null)
+        try
         {
-            await _globalUIManager.FadeOutAsync();
+            await PrepareAsync(cancellation);
+            _preparation.TrySetResult();
         }
+        catch (System.Exception error)
+        {
+            _preparation.TrySetException(error);
+            // The VContainer Awaitable entry point is fire-and-forget; keep failures visible in device logs.
+            if (error is not System.OperationCanceledException)
+            {
+                Debug.LogError($"[GameInitializer] Battle preparation failed: {error}");
+                _gameManager.FailPreparation("전투 준비에 실패했습니다. 로그인과 전투 설정을 확인한 뒤 다시 출격해 주세요.");
+            }
+            throw;
+        }
+
+        // A scene transition owns the reveal. Direct Editor entry reveals itself.
+        if (_sceneChangeManager.IsTransitioning)
+            await UniTask.WaitUntil(() => !_sceneChangeManager.IsTransitioning, cancellationToken: cancellation);
+        else if (_globalUIManager != null)
+            await _globalUIManager.FadeOutAsync();
         cancellation.ThrowIfCancellationRequested();
         IsReady = true;
+        if (_gameManager.gameObject.scene.name == "IngameScene" || _gameManager.gameObject.scene.name == "HardIngameScene")
+            _gameManager.StartGame(true);
+    }
+
+    private async UniTask PrepareAsync(System.Threading.CancellationToken cancellation)
+    {
+        // Direct in-game/tutorial entry can skip the title's Table initialization.
+        await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.65f, "전투 데이터 준비 중");
+        await _research.LoadAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.75f, "전투 설정 확인 중");
+        if (_waveManager.EndlessMode != null && _waveManager.EndlessMode.RequiresRemoteBalance)
+            await _endlessBalance.PrepareSceneAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.85f, "사운드 준비 중");
+        // Prepare only the app-owned approved palette; scene cancellation owns this wait.
+        if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
+        _globalUIManager.ReportLoadingProgress(0.95f, "출격 준비 중");
+
+        // Finish scene Start callbacks before starting combat and publishing initial HUD events.
+        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation);
+
     }
 }

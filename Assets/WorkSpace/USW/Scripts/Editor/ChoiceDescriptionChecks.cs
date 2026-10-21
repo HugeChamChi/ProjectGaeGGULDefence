@@ -81,9 +81,9 @@ public static class ChoiceDescriptionChecks
         foreach (var text in new[] { card.simpleDescription, card.description })
         {
             string linked = linker.AddLinks(text, card.DescriptionTerms);
-            Assert(TermLinker.LinkedIds(linked).SequenceEqual(new[] { "hack_stack" }),
-                "9109 hacking skill must open hacking in both modes, never mana.");
-            Assert(linked.Contains("해킹 스킬</color>"), "The complete hacking skill phrase must be interactive.");
+            Assert(TermLinker.LinkedIds(linked).Distinct().SequenceEqual(new[] { "detonation" }),
+                "9109 residue text must open detonation in both modes, never mana.");
+            Assert(linked.Contains("기폭</color>"), "The detonation word must be interactive.");
             Assert(!linked.Contains("<u>") && !linked.Contains("▶"), "Terms use only colors without underline or video markers.");
         }
         Assert(TermLinker.LinkedIds(linker.AddLinks("해킹 스킬, 마나")).SequenceEqual(new[] { "hack_stack", "mana" }),
@@ -120,10 +120,15 @@ public static class ChoiceDescriptionChecks
         var state = new LevelUpRunState();
         typeof(LevelUpManager).GetField("_runState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
             .SetValue(manager, state);
+        LevelUpData card = null;
         try
         {
-            var card = AssetDatabase.LoadAssetAtPath<LevelUpData>("Assets/WorkSpace/USW/Data/SelectionData/DroneSelection8.asset");
-            Assert(card.droneEffect.Kind == DroneSelectionKind.DeltanDamageTaken, "Random check must use the real Deltan card.");
+            // 2026-10-21부터 실제 카드에 범위 추첨이 없으므로 추첨 경계는 메모리 전용 카드로 검사한다.
+            card = ScriptableObject.CreateInstance<LevelUpData>();
+            card.chooseId = 99108; card.EffectSchemaVersion = 1;
+            card.description = "해킹 생산 +{value}%"; card.simpleDescription = "해킹 생산 증가";
+            card.Composition = new SelectionCardDefinition();
+            card.Composition.Effects.Add(new HackingProductionRollDefinition { MinimumRatio = .01f, MaximumRatio = .1f });
             UnityEngine.Random.InitState(9876);
             var before = UnityEngine.Random.state;
             var snapshot = new ChoiceDescriptionAdapter(card, manager).Capture();
@@ -137,7 +142,7 @@ public static class ChoiceDescriptionChecks
             Assert(repeated.Values["value"] == snapshot.Values["value"] && captured.Equals(UnityEngine.Random.state), "Existing run cache must preserve the displayed roll on selection.");
             Assert(Mathf.RoundToInt(manager.CurrentEffects.HackingProductionBonus * 100).ToString() == snapshot.Values["value"], "Applied composition value must match the snapshot.");
         }
-        finally { UnityEngine.Random.state = savedRandom; UnityEngine.Object.DestroyImmediate(root); }
+        finally { UnityEngine.Random.state = savedRandom; UnityEngine.Object.DestroyImmediate(root); if (card != null) UnityEngine.Object.DestroyImmediate(card); }
     }
 
     [MenuItem("Tools/Descriptions/Run Standalone Play Checks")]

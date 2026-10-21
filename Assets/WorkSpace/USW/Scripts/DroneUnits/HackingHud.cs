@@ -8,6 +8,7 @@ public sealed class HackingHud : MonoBehaviour
     private HackGaugeOrbit _gauge;
     private RectTransform _parent, _bar;
     private TMP_Text _reserved;
+    private BombHackFeedback _bombFeedback;
     private readonly Vector3[] _corners = new Vector3[4];
     private BossBase _target;
     private int _version;
@@ -29,18 +30,26 @@ public sealed class HackingHud : MonoBehaviour
         var label = bar.GetComponentInChildren<TMP_Text>(true);
         var font = label != null ? label.font : TMP_Settings.defaultFontAsset;
         _gauge = new HackGaugeOrbit(_parent, font, null, HackGaugeOrbit.Look.Segmented);
+        foreach (var text in _parent.GetComponentsInChildren<TMP_Text>(true))
+        {
+            text.fontSize = Mathf.Max(text.name == "Capacity" ? UiTypography.NumericSize : UiTypography.BodySize, text.fontSize);
+            text.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(text.rectTransform.rect.height, text.fontSize * 1.6f));
+        }
         _capacity = Mathf.Max(1, runtime.Ledger.Capacity);
         _gauge.Reset(0, _capacity);
         var pending = new GameObject("ReservedStacks", typeof(RectTransform), typeof(TextMeshProUGUI));
         pending.transform.SetParent(_parent, false);
         _reserved = pending.GetComponent<TextMeshProUGUI>();
-        _reserved.font = font; _reserved.fontSize = 18; _reserved.alignment = TextAlignmentOptions.Center;
+        _reserved.font = font; _reserved.fontSize = UiTypography.BodySize; _reserved.alignment = TextAlignmentOptions.Center;
         _reserved.raycastTarget = false;
-        _reserved.rectTransform.sizeDelta = new Vector2(220, 30);
+        _reserved.rectTransform.sizeDelta = new Vector2(280, 60);
+        _bombFeedback = host.AddComponent<BombHackFeedback>();
+        _bombFeedback.Initialize(runtime, _parent, canvas, Resources.Load<BombHackFeedbackSettings>("BombHackFeedbackSettings"));
     }
     /// <summary>링과 확보 표시를 숨기고 더 갱신하지 않는다(전투 종료 시).</summary>
     public void Hide()
     {
+        _bombFeedback?.Clear();
         if (_parent != null) _parent.gameObject.SetActive(false);
         enabled = false;
     }
@@ -55,6 +64,7 @@ public sealed class HackingHud : MonoBehaviour
             _target = target;
             _capacity = capacity;
             _gauge.Reset(0, capacity);
+            _bombFeedback?.Clear();
             _version = _runtime.ConsumptionVersion;
             _totalConsumed = _runtime.TotalConsumed;
         }
@@ -62,7 +72,10 @@ public sealed class HackingHud : MonoBehaviour
         Vector3 min = _parent.InverseTransformPoint(_corners[0]);
         Vector3 max = _parent.InverseTransformPoint(_corners[2]);
         _gauge.HudBar = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
-        _gauge.Set(_runtime.Ledger.Available + _runtime.Ledger.Reserved);
+        // 9122 자폭 스택은 적중 순간 장부에 반영되고, 숫자는 신호가 HACK에 도착할 때 확인한다.
+        _bombFeedback?.Tick(capacity);
+        int pending = _bombFeedback != null ? _bombFeedback.PendingGain : 0;
+        _gauge.Set(Mathf.Max(0, _runtime.Ledger.Available + _runtime.Ledger.Reserved - pending));
         if (_version != _runtime.ConsumptionVersion)
         {
             _version = _runtime.ConsumptionVersion;

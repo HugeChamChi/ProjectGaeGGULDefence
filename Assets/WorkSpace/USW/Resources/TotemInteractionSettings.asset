@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: TotemInteractionSettings
   m_EditorClassIdentifier: Assembly-CSharp::TotemInteractionSettings
   _capacity: 5
-  _moveHoldSeconds: 0.45
-  _rotationDeadZonePixels: 24
+  _rotateHoldSeconds: 0.45
+  _rotationDeadZonePixels: 66
+  _rotationCancelPreviewOpacity: 0.4
   _holdFeedbackDelaySeconds: 0.2
   _holdSlowTimeScale: 0.2
   _holdSlowRampSeconds: 0.12

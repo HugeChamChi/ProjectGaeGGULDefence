@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56148fb378d0b7c41935666d00d5dc13, type: 3}
+  m_Name: 03_Shelter
+  m_EditorClassIdentifier: Assembly-CSharp::PatternLabData
+  Mechanic: 2
+  DisplayName: "\uD3ED\uD48D \uD53C\uB09C\uCC98"
+  Instruction: "사선 칸은 위험합니다. 지붕 표시의 청록 구역으로 이동하세요"
+  Windup: 4
+  ActiveDuration: 2.5
+  Recovery: 0.8
+  StunDuration: 1.2
+  EffectDuration: 4
+  SlowRate: 0.45
+  TetherDistance: 3.2
+  BlastRadius: 1
+  SafeColumns: 3
+  MemorySafeCount: 10
+  LockTime: 1.5
+  BeamWidthCells: 0.62
+  AllowChiefCounter: 1
+  Accent: {r: 0.75, g: 0.43, b: 1, a: 1}
+  StunVisual: {fileID: 11400000, guid: 2ab425e3b1c5ad04f8812519ca16abd3, type: 2}

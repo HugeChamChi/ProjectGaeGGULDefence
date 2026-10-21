@@ -14,6 +14,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         internal float EndsAt;
         internal float ClipSeconds;
         internal UnityEngine.Object Owner;
+        internal long StartedOrder;
     }
 
     private readonly AudioMixer _mainMixer;
@@ -24,6 +25,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
     private readonly HashSet<UnityEngine.Object> _laserOwners = new();
     private readonly System.Random _presentationRandom = new System.Random();
     private readonly List<Voice> _voices = new();
+    private long _voiceOrder;
     private static readonly Predicate<UnityEngine.Object> DestroyedOwner = IsDestroyed;
     private AudioSource _music, _laser;
     private float _musicEnvelope, _laserEnvelope, _duck;
@@ -115,7 +117,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
             if (voice.Cue.Cue == cue.Cue)
             {
                 same++;
-                if (oldestSame == null || voice.EndsAt < oldestSame.EndsAt) oldestSame = voice;
+                if (oldestSame == null || voice.StartedOrder < oldestSame.StartedOrder) oldestSame = voice;
             }
             if (voice.Cue.Repeated)
             {
@@ -126,9 +128,9 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         }
         if (same >= cue.MaximumVoices)
         {
-            // Each accepted UI press gets feedback even while earlier click tails are playing.
-            // Reuse a HUD voice without raising the authored overlap or combat voice budgets.
-            if (cue.Cue != GameAudioCue.HudButton) return;
+            // New clicks and successful summons retain their attack when older tails fill the cue budget.
+            // Reuse the oldest same-cue voice; never raise the authored overlap or combat voice budgets.
+            if (cue.Cue != GameAudioCue.HudButton && cue.Cue != GameAudioCue.UnitSummon) return;
             available = oldestSame;
             Stop(available);
         }
@@ -147,6 +149,7 @@ public sealed class UnityAudioProvider : IAudioProvider, IDisposable
         _lastPlayedTime[cue.Cue] = now;
         available.Cue = cue;
         available.Owner = owner;
+        available.StartedOrder = ++_voiceOrder;
         available.Filter.enabled = cue.Repeated;
         available.Filter.cutoffFrequency = _palette.RepeatedLowPassHz;
         available.Source.clip = cue.Clip;

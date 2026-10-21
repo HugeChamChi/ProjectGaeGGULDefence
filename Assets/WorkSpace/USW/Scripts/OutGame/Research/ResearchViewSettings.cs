@@ -21,11 +21,23 @@ public class ResearchViewSettings : ScriptableObject
         public bool IsPercent = true;
     }
 
+    /// <summary>화면 검토용 항목. 게임 스탯과 강화 저장에는 사용하지 않는다.</summary>
+    [Serializable]
+    public class PreviewInfo
+    {
+        public string NodeId;
+        public string DisplayName;
+        [Min(0f)] public float MaxValue;
+        public string Suffix = "%";
+    }
+
     [Header("폰트 / 스프라이트")]
     [Tooltip("제목·버튼·수치")]
     public TMP_FontAsset FontBold;
     [Tooltip("보조 글자")]
     public TMP_FontAsset FontRegular;
+    /// <summary>강화 화면 전용 흰 글자·검은 외곽선 머티리얼.</summary>
+    public Material FontMaterial;
     [Tooltip("둥근 네모 채움 (9-slice)")]
     public Sprite RoundedFill;
     [Tooltip("둥근 네모 테두리 (9-slice)")]
@@ -140,8 +152,12 @@ public class ResearchViewSettings : ScriptableObject
 
     [Header("하단 패널")]
     public float PanelHeight = 430f;
-    [Tooltip("처음 실행할 때 [추천 따라가기] 켜짐 여부 (이후엔 저장된 값)")]
-    public bool FollowByDefault = true;
+    /// <summary>KHJ 카드의 잎 장식이 트리 위에 겹치는 투명 영역 높이.</summary>
+    public float PanelTreeOverlap = 80f;
+    /// <summary>KHJ 시안의 강조 수치 색.</summary>
+    public Color InfoValueColor = new Color32(255, 202, 16, 255);
+    /// <summary>아이콘 아래 아직 올리지 않은 레벨 점 색.</summary>
+    public Color InfoEmptyDotColor = new Color32(38, 33, 30, 255);
 
     [Header("알림")]
     public float ToastSeconds = 1.3f;
@@ -149,20 +165,46 @@ public class ResearchViewSettings : ScriptableObject
     [Header("문구")]
     public string TitleFormat = "강화 {0}";
     public string UpgradeLabel = "강화";
-    public string MaxLabel = "MAX";
+    public string MaxLabel = "Max";
     public string LockedLabel = "잠김";
     public string ChangeChoiceLabel = "선택 바꾸기";
     public string RecommendLabel = "추천";
     public string RecommendButtonLabel = "추천 강화";
     public string FollowLabel = "추천 따라가기";
     public string ToastFormat = "{0} Lv.{1}   {2}";
-    public string GateLabelFormat = "{0}단계 · 전체 강화 {1}/{2}";
+    public string GateLabelFormat = "{0}단계, 전체 강화 {1}/{2}";
     public string GateOpenFormat = "{0}단계 열림";
     public string LayoutButtonFormat = "구성: {0}";
     public string ResetLabel = "초기화";
 
     [Header("스탯 표시")]
     public StatInfo[] Stats = Array.Empty<StatInfo>();
+
+    [Header("화면 검토용 항목 (게임 효과 미연결)")]
+    public string PreviewTreeKey;
+    public PreviewInfo[] PreviewItems = Array.Empty<PreviewInfo>();
+
+    /// <summary>해당 트리·노드의 화면 검토용 항목. 미등록이면 기존 스탯을 표시한다.</summary>
+    public PreviewInfo GetPreview(ResearchTreeData tree, ResearchNodeData node)
+    {
+        if (tree == null || node == null || tree.TreeKey != PreviewTreeKey) return null;
+        foreach (var item in PreviewItems)
+            if (item != null && item.NodeId == node.Id) return item;
+        return null;
+    }
+
+    /// <summary>화면에서 사용할 짧은 항목명.</summary>
+    public string GetDisplayName(ResearchTreeData tree, ResearchNodeData node) =>
+        GetPreview(tree, node)?.DisplayName ?? GetStat(node.Stat).DisplayName;
+
+    /// <summary>화면 검토용 수치 또는 기존 SO 수치. 검토용 수치는 게임 계산에 전달하지 않는다.</summary>
+    public string FormatDisplayValue(ResearchTreeData tree, ResearchNodeData node, int level)
+    {
+        var preview = GetPreview(tree, node);
+        if (preview == null) return FormatValue(node.Stat, ResearchProgress.GetValue(node, level)).TrimStart('+');
+        float value = preview.MaxValue * Mathf.Clamp(level, 0, node.MaxLevel) / Mathf.Max(1, node.MaxLevel);
+        return $"{value:0.##}{preview.Suffix}";
+    }
 
     /// <summary>스탯 표시 정보. 등록이 없으면 enum 이름을 쓴다.</summary>
     public StatInfo GetStat(ResearchStat stat)

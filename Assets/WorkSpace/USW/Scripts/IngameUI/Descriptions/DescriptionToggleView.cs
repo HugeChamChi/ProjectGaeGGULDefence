@@ -54,7 +54,7 @@ public static class DescriptionToggleView
             label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
             if (source != null) { label.font = source.font; label.fontSharedMaterial = source.fontSharedMaterial; }
             label.text = detailed ? "자세히" : "간단히";
-            label.fontSize = 26f;
+            label.fontSize = 32f;
             label.alignment = TextAlignmentOptions.Center;
             label.raycastTarget = false;
             visual.Labels[i] = label;

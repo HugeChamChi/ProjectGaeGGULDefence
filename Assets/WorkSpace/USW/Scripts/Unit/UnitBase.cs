@@ -28,6 +28,19 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public GridCell currentCell { get; private set; }
     public BossBase Boss { get; private set; }
+    private readonly System.Collections.Generic.Dictionary<UnityEngine.Object, float> _patternAttackSpeed = new();
+    /// <summary>Multiplicative attack frequency from boss patterns; skill charge and food production are separate.</summary>
+    public float PatternAttackSpeedMultiplier { get; private set; } = 1f;
+
+    /// <summary>Sets or releases one boss-owned attack-speed modifier without clearing other sources.</summary>
+    public void SetPatternAttackSpeed(UnityEngine.Object source, float multiplier)
+    {
+        if (ReferenceEquals(source, null)) return;
+        if (multiplier >= 1f) _patternAttackSpeed.Remove(source);
+        else _patternAttackSpeed[source] = Mathf.Clamp(multiplier, 0.01f, 1f);
+        PatternAttackSpeedMultiplier = 1f;
+        foreach (var factor in _patternAttackSpeed.Values) PatternAttackSpeedMultiplier *= factor;
+    }
     
     public UnitAnimator animator;
     protected UnitSoundController _sound;
@@ -311,6 +324,14 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual float GetDisplayAttackDamage() => GetNonCriticalAttackDamage();
     /// <summary>정보창에 초 단위로 표시하는 현재 공격간격.</summary>
     public virtual float GetDisplayAttackInterval() => GetCurrentAttackInterval();
+    /// <summary>현재 보정을 유지하고 인게임 강화만 제외한 비치명타 공격력.</summary>
+    public int GetNonCriticalAttackDamageBeforeUpgrade() => _stats?.GetNonCriticalAttackDamageBeforeUpgrade() ?? 0;
+    /// <summary>현재 보정을 유지하고 인게임 강화만 제외한 공격 간격.</summary>
+    public float GetAttackIntervalBeforeUpgrade() => _stats?.GetCurrentAttackInterval(false) ?? 0f;
+    /// <summary>정보창의 기본 공격력. 드론 소유자는 실제 합계를 반환한다.</summary>
+    public virtual float GetDisplayAttackDamageBeforeUpgrade() => GetNonCriticalAttackDamageBeforeUpgrade();
+    /// <summary>정보창의 기본 공격 간격. 실제 보정과 속도 상한을 유지한다.</summary>
+    public virtual float GetDisplayAttackIntervalBeforeUpgrade() => GetAttackIntervalBeforeUpgrade();
     public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>

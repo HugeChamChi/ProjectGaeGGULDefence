@@ -25,6 +25,11 @@ public class ResultScreenData
 
     public ResultReward[] Rewards;
 
+    /// <summary>Actual account EXP retained, including the maximum-level cap.</summary>
+    public int AccountExperience;
+    /// <summary>True only when the account settlement produced a durable receipt.</summary>
+    public bool HasAccountExperience;
+
     /// <summary>패배 순간 필드 보스 그림. 있으면 결과 화면이 고정 초상화 대신 이 보스를 이어 보여 준다.</summary>
     [NonSerialized] public ResultBossSnapshot BossSnapshot;
 

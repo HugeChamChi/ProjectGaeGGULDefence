@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41f7f874c2a19c54291f380380307454, type: 3}
+  m_Name: LobbyUtilityAssets
+  m_EditorClassIdentifier: Assembly-CSharp::LobbyUtilityAssets
+  SettingsPrefab: {fileID: 1893987393719635616, guid: cd95d5cee879f654180365b558dcdf72,
+    type: 3}
+  AttendancePrefab: {fileID: 3148105503693210332, guid: d745fbd5da156a44bb9982c5ccdbc3d1,
+    type: 3}
+  AccountPrefab: {fileID: 3431974451023852667, guid: c3e169f19c11801448ee38a2c028a356,
+    type: 3}
+  Icons:
+  - {fileID: 21300000, guid: 7d891b18332e2174a97d6f6588bca6ca, type: 3}
+  - {fileID: 21300000, guid: 8cef3e686beb744e9b760a5901eb89e6, type: 3}
+  - {fileID: 21300000, guid: 4961cc1ec4fe3457e852f8176b4c2ef3, type: 3}
+  - {fileID: 21300000, guid: 7f74d697d40634ba497ff98b5e900637, type: 3}
+  - {fileID: 21300000, guid: 2f91aff300fca4e468fa2916398758f5, type: 3}
+  - {fileID: 21300000, guid: cbd3acc391eb04d52aa1ffd082eb3f22, type: 3}
+  - {fileID: 21300000, guid: 2db141e2f17c34c74befa49dea105a42, type: 3}
+  - {fileID: 21300000, guid: 2e202bdff2da646ff9770131637609b2, type: 3}

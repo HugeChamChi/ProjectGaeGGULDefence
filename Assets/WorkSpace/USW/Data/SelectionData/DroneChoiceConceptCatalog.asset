@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe3a56dd06e489b4d9cb9f46a2044fbc, type: 3}
+  m_Name: DroneChoiceConceptCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::DroneChoiceConceptCatalog
+  _poolId: 9100
+  _schemaVersion: 1
+  _dataVersion: drone-concepts-001
+  _sourceWorkbookSha256: 8bd9b13786b6f49dba759d100d8cc141da63a54797f31ffadab74ee91639927e
+  _contentHash: 48b2c3ca791c4e760ec0bb5a242b8193a37a8da1ab7aa316614523e0a823844b
+  _entries:
+  - ChooseId: 9101
+    Tags: 2
+  - ChooseId: 9102
+    Tags: 1
+  - ChooseId: 9103
+    Tags: 2
+  - ChooseId: 9104
+    Tags: 8
+  - ChooseId: 9105
+    Tags: 8
+  - ChooseId: 9106
+    Tags: 1
+  - ChooseId: 9107
+    Tags: 8
+  - ChooseId: 9108
+    Tags: 8
+  - ChooseId: 9109
+    Tags: 8
+  - ChooseId: 9110
+    Tags: 1
+  - ChooseId: 9111
+    Tags: 1
+  - ChooseId: 9112
+    Tags: 1
+  - ChooseId: 9113
+    Tags: 1
+  - ChooseId: 9114
+    Tags: 1
+  - ChooseId: 9115
+    Tags: 2
+  - ChooseId: 9116
+    Tags: 1
+  - ChooseId: 9117
+    Tags: 1
+  - ChooseId: 9118
+    Tags: 1
+  - ChooseId: 9119
+    Tags: 1
+  - ChooseId: 9120
+    Tags: 1
+  - ChooseId: 9121
+    Tags: 8
+  - ChooseId: 9122
+    Tags: 10
+  - ChooseId: 9123
+    Tags: 8
+  - ChooseId: 9124
+    Tags: 8

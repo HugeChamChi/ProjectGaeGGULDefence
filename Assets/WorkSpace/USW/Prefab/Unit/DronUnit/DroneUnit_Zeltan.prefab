@@ -118,7 +118,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   animator: {fileID: 0}
-  foodPerDronePerSec: 1
 --- !u!114 &-8214074648721856230
 MonoBehaviour:
   m_ObjectHideFlags: 0
