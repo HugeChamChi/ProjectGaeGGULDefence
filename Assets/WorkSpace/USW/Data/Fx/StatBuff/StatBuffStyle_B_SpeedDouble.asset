@@ -16,16 +16,16 @@ MonoBehaviour:
   Usage: "\uACF5\uACA9\uC18D\uB3C4 \uC0C1\uC2B9 \uAE30\uBCF8 \u2014 \uC138\uBAA8
     \uB450 \uAC1C\uC529 + \uAC00\uB294 \uC18D\uB3C4\uC120. TD1008 \uBC14\uAE65 \xB7
     TD1011 \uC544\uB798 \uCE78"
-  Primary: {r: 0.3, g: 0.9, b: 0.4, a: 1}
-  Secondary: {r: 0.3, g: 0.9, b: 0.4, a: 1}
-  BadgeColor: {r: 0.3, g: 0.9, b: 0.4, a: 1}
+  Primary: {r: 1, g: 0.85, b: 0.2, a: 1}
+  Secondary: {r: 1, g: 0.85, b: 0.2, a: 1}
+  BadgeColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   AutoOutlineColor: 1
   OutlineColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.9}
   AnimateRiserColor: 1
   RiserColorOverLife:
     serializedVersion: 2
-    key0: {r: 0.3, g: 0.9, b: 0.4, a: 1}
-    key1: {r: 0.75, g: 1, b: 0.75, a: 1}
+    key0: {r: 1, g: 0.85, b: 0.2, a: 1}
+    key1: {r: 1, g: 0.97, b: 0.65, a: 1}
     key2: {r: 0.5, g: 1, b: 0.9, a: 0}
     key3: {r: 0.55, g: 0.8, b: 1, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -56,7 +56,7 @@ MonoBehaviour:
   Outline: 0
   Downward: 0
   Pattern: 0
-  Interval: 0.2
+  Interval: 0.12
   Life: 0.85
   Rise: 0.9
   Size: {x: 0.34, y: 0.56}
@@ -95,6 +95,6 @@ MonoBehaviour:
   BadgeHold: 0.8
   BadgeRepeat: 0
   BurstRing: 1
-  BurstCount: 3
+  BurstCount: 4
   Intro: 0.35
   Outro: 0.35

@@ -25,7 +25,7 @@ MonoBehaviour:
   Outline: 0
   Downward: 1
   Pattern: 0
-  Interval: 0.26
+  Interval: 0.16
   Life: 0.85
   Rise: 0.6
   Size: {x: 0.22, y: 0.4}
@@ -64,6 +64,6 @@ MonoBehaviour:
   BadgeHold: 1.4
   BadgeRepeat: 2
   BurstRing: 0
-  BurstCount: 3
+  BurstCount: 4
   Intro: 0.35
   Outro: 0.35

@@ -63,10 +63,6 @@ public class InGameLifetimeScope : LifetimeScope
         if (buffVisualSettings == null) throw new System.InvalidOperationException("UnitBuffVisualSettings is required.");
         builder.RegisterInstance(buffVisualSettings);
         builder.Register<StatBuffFxPool>(Lifetime.Scoped);
-        var statusPopupCatalog = Resources.Load<StatusPopupCatalog>("StatusPopupCatalog");
-        if (statusPopupCatalog == null) throw new System.InvalidOperationException("StatusPopupCatalog is required.");
-        builder.RegisterInstance(statusPopupCatalog);
-        builder.Register<StatusPopupService>(Lifetime.Scoped); // 버프·디버프 문구 팝업 관리자
         builder.RegisterComponentInHierarchy<BuffManager>();
 
         builder.RegisterComponentInHierarchy<ChieftainSelection>();

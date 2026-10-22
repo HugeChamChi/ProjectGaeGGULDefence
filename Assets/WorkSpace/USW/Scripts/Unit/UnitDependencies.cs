@@ -6,8 +6,6 @@ public class UnitDependencies
     public UnitBuffVisualSettings BuffVisualSettings { get; set; }
     /// <summary>씬이 소유하는 버프 연출 풀.</summary>
     public StatBuffFxPool BuffFxPool { get; set; }
-    /// <summary>버프·디버프 문구 팝업 관리자.</summary>
-    public StatusPopupService StatusPopups { get; set; }
     /// <summary>Scene countdown used by time-recovery skills.</summary>
     public TimerController Timer { get; set; }
     /// <summary>현재 전투에 고정된 영구 강화 수치.</summary>
