@@ -1,0 +1,11 @@
+node_modules/
+GGD-Planner/
+backups/
+verification/
+original-app.asar
+installed-sha256.txt
+__pycache__/
+*.pyc
+bin/
+obj/
+!*.csproj

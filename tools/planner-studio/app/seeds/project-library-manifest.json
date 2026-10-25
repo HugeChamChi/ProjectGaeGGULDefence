@@ -1,0 +1,69 @@
+{
+  "version": 4,
+  "files": {
+    "UnitBalance.xlsx": {
+      "fingerprint": "574ca3b57a8760dcdbeaf5b315ddb2ebee1ed4a05c7debcdebdcc93e8fca26a1",
+      "previousFingerprints": [
+        "4cc1e65b3369b3d91ec3f5fa1317c59856ab1deeca1c9ea03ec021edf911c873",
+        "a6c9cdafdaf3e544d731688054e6d24324bca74a53d442bc785a223cf11b3489",
+        "574ca3b57a8760dcdbeaf5b315ddb2ebee1ed4a05c7debcdebdcc93e8fca26a1"
+      ]
+    },
+    "PermanentUpgrade.xlsx": {
+      "fingerprint": "69a93efff200ea95049e3b5028dd71e8950d9cf741d5dd488747a1e6b70dcb8e",
+      "previousFingerprints": [
+        "d17cda566f7042b8566971c3325f1fe48f249b890e22dfa1784d71bdad8f6ee1",
+        "69a93efff200ea95049e3b5028dd71e8950d9cf741d5dd488747a1e6b70dcb8e"
+      ]
+    },
+    "AttendanceEvent.xlsx": {
+      "fingerprint": "9a17d57dcb0a0aae9006dce1f4ee3ee50590540551a1e1cf65fbbf6acff8ed16",
+      "previousFingerprints": [
+        "4847058cb3b317b292b9d0f8f51a1c96d4cf23be2ecbecf7ac69f626301368d5",
+        "9a17d57dcb0a0aae9006dce1f4ee3ee50590540551a1e1cf65fbbf6acff8ed16"
+      ]
+    },
+    "AttendanceEventExample.xlsx": {
+      "fingerprint": "207cb15529b650b3e3b78e313c13d90297861f45c0e21119542f1e4f1720f9e2",
+      "previousFingerprints": [
+        "307fa30b2d31d804a8722b941ec96f8535b5e7a45f5facf8a645109992a75a15",
+        "26d52ca31d5b0d6ec9a3685839420bd508a78b4718f65e93b8cc2f83b1facd4b",
+        "207cb15529b650b3e3b78e313c13d90297861f45c0e21119542f1e4f1720f9e2"
+      ]
+    },
+    "MissionEvents.xlsx": {
+      "fingerprint": "57064bc994891a3bcc2aa2967d098013da7c844b2ffc4941b27ac4be5bbf1a28",
+      "previousFingerprints": [
+        "57064bc994891a3bcc2aa2967d098013da7c844b2ffc4941b27ac4be5bbf1a28"
+      ]
+    },
+    "Party.xlsx": {
+      "fingerprint": "1521d182fb4cd34d0ba42639a80b996724055802fe04f88c9baa6fac7c285d51",
+      "previousFingerprints": [
+        "13a52eba5628114919f7c3e019592ef83b9e2d68d67bd465bd9156a0b2a72648",
+        "1521d182fb4cd34d0ba42639a80b996724055802fe04f88c9baa6fac7c285d51"
+      ]
+    },
+    "AccountSettings.xlsx": {
+      "fingerprint": "77b9236f30b0d7cb59cc1794cd69901e11fb1423d1dc83609ca4784c1fed97c0",
+      "previousFingerprints": [
+        "4a7b019abe42641074181dbe1c4ca119599564a045f14fd323be9e2b41d92f65",
+        "77b9236f30b0d7cb59cc1794cd69901e11fb1423d1dc83609ca4784c1fed97c0"
+      ]
+    },
+    "Profile.xlsx": {
+      "fingerprint": "c178e55404bff87a252fd6fa5cb43e0d6555f2a1b4e38a2ec1cb8e5bb5d977ae",
+      "previousFingerprints": [
+        "84d5891b1c2e655747af971572d7098d45fe84a4b924dbcccd265d4e9d944b01",
+        "c178e55404bff87a252fd6fa5cb43e0d6555f2a1b4e38a2ec1cb8e5bb5d977ae"
+      ]
+    },
+    "Tutorial.xlsx": {
+      "fingerprint": "9000b353fe10267d861a635c398b73ed4b6600805a74669bac6d9d7107808de2",
+      "previousFingerprints": [
+        "26b322bc9dd61196878d48b031c1e27a6cfb1c6b60d16767c502a3d808b11333",
+        "9000b353fe10267d861a635c398b73ed4b6600805a74669bac6d9d7107808de2"
+      ]
+    }
+  }
+}

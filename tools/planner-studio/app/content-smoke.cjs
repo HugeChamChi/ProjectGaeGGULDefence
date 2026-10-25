@@ -1,0 +1,111 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
+  const checks=[];
+  try{
+    const folder=path.join(workspace,'excel');fs.mkdirSync(folder,{recursive:true});store.setExcelFolder(folder);
+    const run=source=>window.webContents.executeJavaScript(source);
+    async function until(source){for(let i=0;i<100;i++){if(await run(source))return;await new Promise(r=>setTimeout(r,50));}throw Error('Timeout: '+source);}
+    const catalogue=require('./content-workbook.cjs');
+    for(const [name,expected]of [['UnitBalance.xlsx','units'],['PermanentUpgrade.xlsx','research'],['AttendanceEvent.xlsx','attendance'],['AttendanceEventExample.xlsx','attendance'],['MissionEvents.xlsx','dataBindings'],['Party.xlsx','party'],['AccountSettings.xlsx','economy'],['Profile.xlsx','profile'],['Tutorial.xlsx','tutorial']]){
+      const seed=path.join(__dirname,'seeds',name);fs.copyFileSync(seed,path.join(folder,name));
+      const entry=store.library().entries.find(x=>x.name===name);assert(entry&&entry.domain==='content',name);
+      catalogue.read(fs.readFileSync(seed),catalogue.engine().Studio.create());
+    }
+    checks.push('nine bundled project workbooks are recognized and parse successfully');
+    await until('Boolean(window.__studioReady)');
+    await run(`document.getElementById('enhancementWorkspaceButton').click()`);
+    await until(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]').length===2`);
+    const tabs=await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]')).map(b=>b.textContent)`);
+    assert.deepEqual(tabs,['유닛','영구강화']);checks.push('Enhancement balance has Unit / Permanent tabs');
+    await until(`Boolean(document.querySelector('iframe').contentDocument.querySelector('.unit-level-table'))`);
+    const unitBefore=await run(`(()=>{const w=document.querySelector('iframe').contentWindow;return w.StudioUI.snapshot().tables.UnitUpgrade.find(r=>r.UnitId===w.document.querySelector('[data-unit-select].active').dataset.unitSelect).Multiplier})()`);
+    await run(`(()=>{const w=document.querySelector('iframe').contentWindow,d=w.document;d.getElementById('unit-edit').click();const input=d.querySelector('[data-level-multiplier="0"]');input.value='1.25';input.dispatchEvent(new w.Event('input',{bubbles:true}));})()`);
+    assert.equal(await run(`(()=>{const w=document.querySelector('iframe').contentWindow;return w.StudioUI.snapshot().tables.UnitUpgrade.find(r=>r.UnitId===w.document.querySelector('[data-unit-select].active').dataset.unitSelect).Multiplier})()`),unitBefore);
+    await run(`document.querySelector('iframe').contentDocument.getElementById('unit-cancel').click()`);
+    await run(`(()=>{const w=document.querySelector('iframe').contentWindow,d=w.document;d.getElementById('unit-edit').click();const input=d.querySelector('[data-level-multiplier="0"]');input.value='1.25';input.dispatchEvent(new w.Event('input',{bubbles:true}));const stat=d.querySelector('[data-base-stat="0:Attack"]');stat.value='123';stat.dispatchEvent(new w.Event('input',{bubbles:true}));d.getElementById('unit-save').click();})()`);
+    assert.equal(await run(`(()=>{const w=document.querySelector('iframe').contentWindow;return w.StudioUI.snapshot().tables.UnitUpgrade.find(r=>r.UnitId===w.document.querySelector('[data-unit-select].active').dataset.unitSelect).Multiplier})()`),1.25);
+    assert.equal(await run(`(()=>{const w=document.querySelector('iframe').contentWindow,p=w.StudioUI.snapshot(),unit=p.tables.Unit.find(u=>u.UnitId===w.document.querySelector('[data-unit-select].active').dataset.unitSelect);return p.tables.UnitBaseStat.find(r=>r.BaseStatKey===unit.BaseStatKey&&r.Tier==='normal').Attack})()`),123);
+    await new Promise(r=>setTimeout(r,400));atomic(resultPath.replace('.json','-unit.png'),(await window.webContents.capturePage()).toPNG());
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-table="UnitMilestone"]').click()`);
+    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-field="Description"]'))`));
+    checks.push('unified unit overview: staged edit/cancel/save, separate level bonus tab');
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-workspace-section="research"]').click()`);
+    await until(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-node]'))`);
+    await new Promise(r=>setTimeout(r,400));atomic(resultPath.replace('.json','-enhancement.png'),(await window.webContents.capturePage()).toPNG());
+    await run(`document.getElementById('rewardsWorkspaceButton').click()`);
+    await until(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-reward-cell]'))`);
+    assert(!await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('#nav button')).some(b=>b.dataset.nav==='rewards')`));
+    checks.push('attendance is the only reward editing page');
+    assert(await run(`document.querySelector('iframe').contentDocument.querySelector('.reward-palette').hidden`));
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-open-palette="1"]').click()`);
+    assert(await run(`!document.querySelector('iframe').contentDocument.querySelector('.reward-palette').hidden`));
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-palette-item="Diamond"]').click()`);
+    assert(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.Attendance[1].Rewards.some(r=>r.itemId==='Diamond')`));
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-close-palette]').click()`);
+    assert(await run(`document.querySelector('iframe').contentDocument.querySelector('.reward-palette').hidden`));
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-open-palette="0"]').click()`);
+    checks.push('per-cell Add opens item picker; icon click targets that cell; picker closes');
+    await run(`(()=>{const w=document.querySelector('iframe').contentWindow,d=w.document;for(const id of ['Gold','Diamond']){const data=new w.DataTransfer();data.setData('application/x-ggd-reward',JSON.stringify({itemId:id}));d.querySelector('[data-reward-cell="0"]').dispatchEvent(new w.DragEvent('drop',{bubbles:true,dataTransfer:data}));}const input=d.querySelector('[data-grid-amount="0:0"]');input.value='321';input.dispatchEvent(new w.Event('input',{bubbles:true}));})()`);
+    const snapshot=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot()`);
+    assert(snapshot.tables.Attendance[0].Rewards.some(r=>r.itemId==='Gold'));assert(snapshot.tables.Attendance[0].Rewards.some(r=>r.itemId==='Diamond'));
+    assert.equal(snapshot.tables.Attendance[0].Rewards[0].amount,321);checks.push('dragging multiple item icons into one reward cell and editing quantity');
+    assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-reward-cell]').length`),7);
+    checks.push('attendance shows seven editable reward cells');
+    assert(!await run(`document.querySelector('iframe').contentDocument.getElementById('content').textContent.includes('undefined')`));
+    await new Promise(r=>setTimeout(r,500));atomic(resultPath.replace('.json','-attendance.png'),(await window.webContents.capturePage()).toPNG());
+    await run(`document.querySelector('iframe').contentDocument.getElementById('workbook-export').click()`);
+    let files=[];
+    for(let i=0;i<100;i++){files=fs.existsSync(store.exportFolder())?fs.readdirSync(store.exportFolder(),{recursive:true}):[];if(files.some(f=>f.endsWith('AttendanceEvent.xlsx')))break;await new Promise(r=>setTimeout(r,50));}
+    const file=path.join(store.exportFolder(),files.find(f=>f.endsWith('AttendanceEvent.xlsx')));
+    assert(fs.existsSync(file.replace('.xlsx','.data.json')));assert(fs.existsSync(file.replace('.xlsx','.schema.json')));
+    assert.equal(JSON.parse(fs.readFileSync(file.replace('.xlsx','.data.json'),'utf8')).attendanceEvents[0].days[0].rewards[0].amount,321);
+    const excel=require('./content-workbook.cjs'),parsed=excel.read(fs.readFileSync(file),snapshot);
+    assert.equal(parsed.project.tables.Attendance[0].Rewards[0].amount,321);checks.push('multi-sheet reward Excel roundtrip preserves all items and quantities');
+    const library=store.library(),entry=library.entries.find(e=>e.name!=='AttendanceEvent.xlsx'&&e.name.endsWith('AttendanceEvent.xlsx'));
+    assert(entry);assert.equal(entry.domain,'content');checks.push('exported workbook appears in the existing Data Library');
+    const imported=await run(`window.studio.contentLibraryImport(${JSON.stringify({name:entry.name,sha256:entry.sha256})})`);
+    assert(imported.ok);await run(`window.dispatchEvent(new CustomEvent('content-imported',{detail:${JSON.stringify(imported.data)}}))`);
+    assert.equal(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.Attendance[0].Rewards[0].amount`),321);
+    checks.push('Data Library import restores the editable reward project');
+    const active=await run(`Array.from(document.querySelector('iframe').contentWindow.PlannerScope.active)`);
+    for(const hidden of ['MailMapping','DynamicShop','Notification','GachaPool'])assert(!active.includes(hidden));
+    await run(`document.getElementById('contentWorkspaceButton').click();document.querySelector('[data-section="tutorial"]').click()`);
+    await until(`Boolean(document.querySelector('iframe').contentDocument.getElementById('tutorial-rich-preview'))`);
+    const richText='안내 <color=#D66A27>합성</color> <b>강화</b>\n다음 안내';
+    await run(`(()=>{const w=document.querySelector('iframe').contentWindow,input=w.document.getElementById('tutorial-instruction');input.value=${JSON.stringify(richText)};input.dispatchEvent(new w.Event('input',{bubbles:true}));const start=input.value.indexOf('강화');input.setSelectionRange(start,start+2);w.document.querySelector('[data-rich-tag="u"]').click();})()`);
+    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('#tutorial-rich-preview b u'))`));
+    const tutorial=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot()`);
+    const instruction=tutorial.tables.Tutorial[0].Instruction;assert(instruction.includes('<u>강화</u>'));
+    const tutorialBytes=excel.write(tutorial,['Tutorial']);assert.equal(excel.read(tutorialBytes,tutorial).project.tables.Tutorial[0].Instruction,instruction);
+    assert(await run(`document.querySelector('iframe').contentWindow.TutorialRich.html('<img src=x onerror=alert(1)>').startsWith('&lt;img')`));
+    checks.push('tutorial rich preview, toolbar formatting, escaped unsupported HTML and exact Excel tag roundtrip');
+    for(const [name,section]of [['UnitBalance.xlsx','units'],['PermanentUpgrade.xlsx','research'],['AttendanceEvent.xlsx','attendance'],['AttendanceEventExample.xlsx','attendance'],['MissionEvents.xlsx','dataBindings'],['Party.xlsx','party'],['AccountSettings.xlsx','economy'],['Profile.xlsx','profile'],['Tutorial.xlsx','tutorial']]){
+      const entry=store.library().entries.find(x=>x.name===name);
+      const imported=await run(`window.studio.contentLibraryImport(${JSON.stringify({name,sha256:entry.sha256})})`);assert(imported.ok);
+      await run(`window.dispatchEvent(new CustomEvent('content-imported',{detail:${JSON.stringify(imported.data)}}))`);
+      assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelector('#nav .active').dataset.nav`),section,name);
+    }
+    checks.push('each bundled workbook opens its matching editor through Data Library import');
+    await run(`document.getElementById('rewardsWorkspaceButton').click();document.querySelector('iframe').contentDocument.querySelector('[data-workspace-section="dataBindings"]').click()`);
+    assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-binding-hook]').length`),2);
+    await run(`(()=>{const w=document.querySelector('iframe').contentWindow,d=w.document,input=d.querySelector('[data-binding-field="ConstantValue"]');input.value='2';input.dispatchEvent(new w.Event('change',{bubbles:true}));})()`);
+    assert.equal(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.DataBindings[0].ConstantValue`),2);
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-binding-hook="BattleEnd_Hard"]').click()`);
+    assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-binding-field="DataKey"]').length`),2);
+    await run(`document.querySelector('iframe').contentDocument.querySelector('[data-workspace-section="missions"]').click()`);
+    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-field="DataKey"]'))`));
+    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-add="Rewards:Gold"]'))`));
+    await new Promise(r=>setTimeout(r,500));
+    atomic(resultPath.replace('.json','-missions.png'),(await window.webContents.capturePage()).toPNG());
+    await run(`document.querySelector('iframe').contentDocument.getElementById('workbook-export').click()`);
+    let missionFiles=[];
+    for(let i=0;i<100;i++){missionFiles=fs.readdirSync(store.exportFolder(),{recursive:true});if(missionFiles.some(f=>f.endsWith('MissionEvents.data.json')))break;await new Promise(r=>setTimeout(r,50));}
+    const missionFile=missionFiles.find(f=>f.endsWith('MissionEvents.data.json'));assert(missionFile);
+    const missionConfig=JSON.parse(fs.readFileSync(path.join(store.exportFolder(),missionFile),'utf8'));assert.equal(missionConfig.DataBindings[0].ConstantValue,2);assert.equal(missionConfig.Missions.length,2);
+    checks.push('mission tabs, per-hook editing, reward icons and runtime JSON export');
+    await run(`document.getElementById('balanceWorkspaceButton').click()`);assert(await run(`!document.querySelector('body > main').hidden`));
+    checks.push('excluded menus absent; original balance editor retained');
+    atomic(resultPath,JSON.stringify({ok:true,checks,workspace},null,2));app.exit(0);
+  }catch(error){atomic(resultPath,JSON.stringify({ok:false,checks,error:error.stack},null,2));app.exit(1);}
+};

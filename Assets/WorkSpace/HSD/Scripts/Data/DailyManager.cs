@@ -18,7 +18,7 @@ public class DailyManager : Global.IClearable
         if (IsDirty) IsDirty = false;
         await UniTask.CompletedTask;
     }
-    const int RESET_HOUR = 5;
+    public const int ResetHourKst = 5;
 
     public async UniTask InitializeAsync()
     {
@@ -27,7 +27,7 @@ public class DailyManager : Global.IClearable
             throw new InvalidOperationException("일일 초기화에 필요한 서버 시간을 확인하지 못했습니다.");
         DateTime nowUtc = ServerClock.UtcNow;
         DateTime nowKst = Server.ToKST(nowUtc);
-        string currentDate = nowKst.AddHours(-RESET_HOUR).ToString("yyyy-MM-dd");
+        string currentDate = nowKst.AddHours(-ResetHourKst).ToString("yyyy-MM-dd");
 
         string lastResetDate = Player.PlayerData.Data.LastResetDate;
 

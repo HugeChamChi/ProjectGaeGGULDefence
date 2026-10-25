@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>GGD 기획 작업실</title>
+  <link rel="stylesheet" href="studio.css">
+  <script src="renderer.js" defer></script>
+  <script src="content-shell.js" defer></script>
+  <link rel="stylesheet" href="content-shell.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">G</span><div><strong>GGD</strong><small>기획 작업실</small></div></div>
+    <nav aria-label="내 작업">
+      <button class="nav-item active" id="balanceWorkspaceButton"><span class="nav-icon">≋</span>밸런스 편집</button>
+      <button class="nav-item" id="contentWorkspaceButton"><span class="nav-icon">◇</span>강화·보상 콘텐츠</button>
+      <button class="nav-item" id="libraryButton"><span class="nav-icon">▧</span>자료 목록</button>
+      <button class="nav-item" id="historyButton"><span class="nav-icon">◷</span>저장한 실험<span class="nav-count" id="historyCount">0</span></button>
+      <button class="nav-item" id="openExportsButton"><span class="nav-icon">↗</span>내보낸 파일</button>
+    </nav>
+    <button class="nav-item settings-nav" id="settingsButton"><span class="nav-icon">⚙</span>설정</button>
+  </aside>
+  <main>
+    <section class="page-heading"><h1>데이터 편집</h1><div class="heading-actions"><button class="button secondary" id="importButton">↓ 자료 가져오기</button><button class="button secondary" id="shareButton">↗ 실험 전달하기</button></div></section>
+    <div class="search-wrap"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="이름, 설명 또는 데이터 키 검색" autocomplete="off" aria-label="기획 데이터 검색"><span class="search-shortcut">Ctrl K</span></div>
+    <section class="workbench">
+      <section class="results-panel" aria-label="검색 결과"><div class="results-header"><h2>검색 결과 <span id="resultCount">7</span></h2></div><div id="resultsList" class="results-list"></div></section>
+      <section class="editor-panel" aria-label="수치 편집"><div class="editor-top"><div class="editor-title"><span class="domain-symbol" id="domainIcon">∞</span><h2 id="domainName">무한모드</h2><span class="destination-pill green" id="destinationPill">뒤끝 차트</span></div><p id="domainSubtitle">전투 시간과 보스 성장</p><div class="source-line"><span class="source-square">▧</span><span id="sourceName">EndlessBalance.xlsx</span></div></div>
+        <div class="editor-scroll"><div class="field-heading"><span>편집 항목</span><span>기준값 → 내 실험</span></div><div id="fieldsList"></div><section class="graph-panel"><div class="graph-heading"><h3 id="graphTitle">보스 HP 성장 비교</h3><div class="graph-legend"><span><i class="legend-base"></i>기준</span><span><i class="legend-trial"></i>내 실험</span></div></div><div id="graphContainer" class="graph-container"></div><div class="graph-caption" id="graphCaption"></div><div class="metric-row" id="metrics"></div></section></div>
+      </section>
+      <aside class="inspector-panel" aria-label="선택한 항목 설명"><div class="guide-heading"><h2 id="guideLabel">시작 시간</h2><button class="button secondary" id="editGuideButton">설명 편집</button></div><p class="guide-description" id="guideDescription"></p><div class="example-box"><span>입력 예시</span><p id="guideExample"></p></div><dl class="guide-properties"><dt>연결 키</dt><dd><code id="guideKey"></code></dd><dt>입력 단위</dt><dd id="guideUnit"></dd><dt>입력 규칙</dt><dd id="guideRule"></dd><dt>Excel 위치</dt><dd id="guideLocation"></dd><dt>반영 대상</dt><dd id="guideTarget"></dd></dl></aside>
+    </section>
+    <section class="draftbar"><div class="draft-heading"><span class="draft-icon">✎</span><div><strong>내 실험</strong><span id="saveStatus">저장 전</span></div></div><label class="sr-only" for="experimentTitle">실험 이름</label><input id="experimentTitle" maxlength="80" placeholder="실험 이름"><label class="sr-only" for="experimentNote">실험 메모</label><input id="experimentNote" maxlength="4000" placeholder="메모"><button class="button secondary" id="resetButton">기준으로</button><button class="button secondary" id="saveButton">실험 저장</button><button class="button primary" id="exportButton">Excel 내보내기 <span>↗</span></button></section>
+    <footer class="statusbar"><span id="statusText">자료를 불러오는 중…</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="guideDialog" aria-labelledby="guideEditHeading">
+    <form id="guideForm">
+      <div class="dialog-heading"><h2 id="guideEditHeading">설명 편집</h2><button type="button" class="icon-button" data-close="guideDialog" aria-label="닫기">×</button></div>
+      <p id="guideEditField" class="guide-edit-field"></p>
+      <label class="guide-edit-label" for="guideDescriptionInput">설명</label><textarea id="guideDescriptionInput" maxlength="2000" rows="5" required></textarea>
+      <label class="guide-edit-label" for="guideExampleInput">입력 예시</label><textarea id="guideExampleInput" maxlength="1000" rows="3"></textarea>
+      <p class="guide-edit-note">이 PC에 저장되며, 실험 전달하기로 보낼 때 함께 담깁니다.</p>
+      <p id="guideEditError" class="field-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button type="button" class="button secondary guide-default" id="defaultGuideButton">기본 설명</button><button type="button" class="button secondary" data-close="guideDialog">취소</button><button type="submit" class="button primary" id="saveGuideButton">저장</button></div>
+    </form>
+  </dialog>
+  <dialog id="settingsDialog" aria-labelledby="settingsHeading">
+    <div class="dialog-heading"><h2 id="settingsHeading">설정</h2><button class="icon-button" data-close="settingsDialog" aria-label="닫기">×</button></div>
+    <section class="settings-section"><h3>엑셀 폴더</h3><p class="settings-description">자료를 가져올 때 이 폴더에서 시작합니다. 내보낸 Excel은 폴더 안의 ‘내보내기’에 저장합니다.</p><div class="folder-setting"><label class="sr-only" for="excelFolder">엑셀 폴더 경로</label><input id="excelFolder" readonly placeholder="폴더를 선택하세요"><button class="button secondary" id="chooseExcelFolderButton">폴더 선택</button></div><p id="exportFolderHint" class="settings-path"></p><div class="dialog-actions"><button class="button secondary" id="openExcelFolderButton">엑셀 폴더 열기</button></div></section>
+  </dialog>
+  <dialog id="libraryDialog" aria-labelledby="libraryHeading"><div class="dialog-heading"><h2 id="libraryHeading">자료 목록</h2><button class="icon-button" data-close="libraryDialog" aria-label="닫기">×</button></div><p>이 폴더의 Excel을 골라 앱에서 편집하세요. 파일 변경은 새로고침 후 가져와야 반영됩니다.</p><p id="libraryFolder" class="settings-path"></p><div class="dialog-actions"><button class="button secondary" id="bundledFolderButton">동봉 자료 사용</button><button class="button secondary" id="refreshLibraryButton">새로고침</button></div><p id="libraryError" role="alert"></p><div id="libraryList" class="history-list"></div></dialog>
+  <dialog id="historyDialog"><div class="dialog-heading"><h2>저장한 실험</h2><button class="icon-button" data-close="historyDialog" aria-label="닫기">×</button></div><div id="historyList" class="history-list"></div></dialog>
+  <dialog id="importDialog"><div class="dialog-heading"><h2>자료 가져오기</h2><button class="icon-button" data-close="importDialog" aria-label="닫기">×</button></div><button class="import-choice" data-import="endless"><span class="choice-icon">∞</span><div><strong>무한모드 Excel</strong><p>시작 시간 · HP 성장 · 처치 보너스</p></div><span>→</span></button><button class="import-choice" data-import="account"><span class="choice-icon">↗</span><div><strong>계정 성장 Excel</strong><p>경험치 곡선 · 보스 기준 경험치</p></div><span>→</span></button><button class="import-choice" data-import="bundle"><span class="choice-icon">▧</span><div><strong>실험 묶음</strong><p>.ggdplan</p></div><span>→</span></button></dialog>
+  <dialog id="exportDialog"><div class="dialog-heading"><h2>Excel 내보내기 완료</h2><button class="icon-button" data-close="exportDialog" aria-label="닫기">×</button></div><div class="export-status">✓ 검사 통과 <span>서버·게임 적용 미확인</span></div><p id="exportInstruction" class="export-instruction"></p><div class="export-file"><span>생성한 파일</span><input id="exportFile" readonly aria-label="내보낸 Excel 경로"></div><p class="export-note">변경 내역과 적용 안내를 같은 폴더에 저장했습니다.</p><div class="dialog-actions"><button class="button secondary" id="revealExportButton">내보낸 폴더 열기</button><button class="button primary" id="consoleButton">뒤끝 콘솔 열기 ↗</button></div></dialog>
+</body>
+</html>

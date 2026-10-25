@@ -1,0 +1,59 @@
+# 출석 이벤트 예시
+
+왼쪽 **이벤트 → 출석 이벤트**에서 이벤트를 선택합니다. **일차별 보상** 셀에는 기존과 같이 아이템 아이콘을 추가하며, **이벤트 설정**에서 기간·초기화·반복을 편집합니다.
+
+자료 목록의 `AttendanceEventExample.xlsx`에는 **신규 유저 14일 출석**과 **일반 7일 출석** 두 예시가 들어 있습니다. 둘 다 **Enabled=0(비활성)**입니다. 날짜와 보상 수량은 편집용 예시입니다.
+
+신규 유저 예시는 `attendance_newuser_14day_sample` 키로 일반 출석과 분리했습니다. 현재 형식에는 가입일 기준 자격 조건이 없으므로 이름만으로 신규 유저 참여가 제한되지는 않습니다. 실제 운영 연결 시 가입일·최초 참여일 기준을 별도로 정해야 합니다.
+
+## AttendanceEvents
+
+| EventKey | Name | StartAt | EndAt | ClaimEndAt | CycleDays | RepeatMode | Enabled |
+|---|---|---|---|---|---:|---|---:|
+| attendance_newuser_14day_sample | 신규 유저 14일 출석 (예시) | 2026-11-01T05:00:00+09:00 | 2026-12-01T05:00:00+09:00 | 2026-12-02T05:00:00+09:00 | 14 | Once | 0 |
+| attendance_7day_sample | 7일 출석 이벤트 (예시) | 2026-11-01T05:00:00+09:00 | 2026-11-15T05:00:00+09:00 | 2026-11-16T05:00:00+09:00 | 7 | Once | 0 |
+
+EventKey는 이벤트 회차별 고유 문자열입니다. Once는 기간 중 7일차까지 한 번, Cycle은 완주 후 다시 1일차부터 반복하는 설계입니다. 일차는 접속한 날마다 하루씩 누적하며, 연속 출석 보정이나 결석 초기화는 이 예시에 없습니다.
+
+활성 이벤트는 시작·종료가 필요하고 종료는 시작보다 늦어야 합니다. 수령 마감은 종료 이후여야 하며, 빈칸이면 종료 시각을 사용합니다. 한국 시간 5시를 날짜 경계로 사용합니다.
+
+## AttendanceRewards
+
+신규 유저 14일 예시:
+
+| Day | Rewards |
+|---:|---|
+| 1 | Gold:500;Stamina:10 |
+| 2 | Diamond:10 |
+| 3 | Gold:1000 |
+| 4 | Stamina:20 |
+| 5 | Diamond:20 |
+| 6 | Gold:1500 |
+| 7 | Diamond:50 |
+| 8 | Gold:2000;Stamina:10 |
+| 9 | Diamond:20 |
+| 10 | Gold:2500 |
+| 11 | Stamina:30 |
+| 12 | Diamond:30 |
+| 13 | Gold:3000 |
+| 14 | Diamond:100;Stamina:30 |
+
+모든 행의 EventKey는 `attendance_newuser_14day_sample`입니다. 일반 7일 예시는 아래와 같습니다.
+
+| EventKey | Day | Rewards |
+|---|---:|---|
+| attendance_7day_sample | 1 | Stamina:10 |
+| attendance_7day_sample | 2 | Gold:500 |
+| attendance_7day_sample | 3 | Diamond:10 |
+| attendance_7day_sample | 4 | Stamina:15 |
+| attendance_7day_sample | 5 | Gold:1000 |
+| attendance_7day_sample | 6 | Diamond:20 |
+| attendance_7day_sample | 7 | Diamond:50 |
+
+여러 아이템은 `Gold:500;Stamina:10`처럼 한 셀에 넣습니다. EventKey + Day는 중복될 수 없으며 1~CycleDays까지 빠짐없이 있어야 합니다.
+
+## 서버 진행 데이터 설계
+
+공통 Excel은 일정·보상 정의입니다. 유저 진행은 별도 `UserKey + EventKey`로 저장해야 합니다. 필요한 값은 누적 출석 일차, 마지막 출석 기준일, 수령한 일차 목록, 반복 회차입니다. 중복 지급 방지 키는 `UserKey + EventKey + 반복 회차 + Day`로 잡습니다.
+
+예시는 클라이언트 기획 편집·Excel/JSON 파싱까지 제공합니다. 서버 날짜 판정·유저 진행 저장·중복 지급 방지·실제 아이템 지급은 별도 구현이 필요합니다. 기존 일반 출석 코드가 이 이벤트 기간을 자동으로 처리하는 것은 아닙니다.

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net9.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../../../../Assets/WorkSpace/USW/Scripts/Events/EventDataCatalog.cs" />
+    <Compile Include="../../../../Assets/WorkSpace/USW/Scripts/Events/EventDataRuntime.cs" />
+  </ItemGroup>
+</Project>

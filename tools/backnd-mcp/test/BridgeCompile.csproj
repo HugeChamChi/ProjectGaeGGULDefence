@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../BackndChartReader.cs" />
+    <Reference Include="Backend"><HintPath>../../../Assets/TheBackend/Plugins/Backend.dll</HintPath></Reference>
+    <Reference Include="LitJSON"><HintPath>../../../Assets/TheBackend/Plugins/LitJSON.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

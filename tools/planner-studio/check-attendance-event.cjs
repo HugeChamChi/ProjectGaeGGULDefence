@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),excel=require('./app/content-workbook.cjs'),e=excel.engine(),p=e.Studio.create();
+const plan=p.tables.AttendancePlan[0];assert.equal(plan.Enabled,false);assert.equal(p.tables.Attendance.length,7);
+const bytes=excel.write(p,['AttendancePlan','Attendance']);assert.equal(JSON.stringify(Array.from(excel.inspect(bytes).names)),JSON.stringify(['AttendanceEvents','AttendanceRewards']));
+const restored=excel.read(bytes,p).project;assert.equal(restored.tables.AttendancePlan[0].Enabled,false);
+plan.Enabled=true;assert.throws(()=>excel.write(p,['Attendance']));
+plan.StartAt='2026-11-01T05:00:00+09:00';plan.EndAt='2026-11-15T05:00:00+09:00';plan.ClaimEndAt='2026-11-16T05:00:00+09:00';
+const valid=excel.write(p,['AttendancePlan','Attendance']);assert.equal(excel.read(valid,p).project.tables.AttendancePlan[0].Enabled,true);
+plan.ClaimEndAt='2026-11-14T05:00:00+09:00';assert.throws(()=>excel.write(p,['Attendance']));
+plan.ClaimEndAt='';plan.EndAt=plan.StartAt;assert.throws(()=>excel.write(p,['Attendance']));
+const multiple=e.Studio.create(),second={...multiple.tables.AttendancePlan[0],AttendanceId:'attendance_second'};multiple.tables.AttendancePlan.push(second);multiple.tables.Attendance.push(...multiple.tables.Attendance.map(r=>({...e.Studio.clone(r),AttendanceId:second.AttendanceId})));
+const restoredMultiple=excel.read(excel.write(multiple,['AttendancePlan','Attendance']),multiple).project;assert.equal(restoredMultiple.tables.AttendancePlan.length,2);assert.equal(restoredMultiple.tables.Attendance.filter(r=>r.AttendanceId==='attendance_second').length,7);
+console.log('Attendance event: disabled example, event-key roundtrip, required dates and claim window checks passed');

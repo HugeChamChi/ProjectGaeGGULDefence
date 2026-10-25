@@ -130,3 +130,14 @@ Assets/outputs.meta
 Assets/WorkSpace/HSD/GEMINI.md.meta
 /docs
 /GGD-Planner
+
+# Share planner/MCP source; keep other local tools and documentation ignored.
+!/Tools/
+/Tools/*
+!/Tools/planner-studio/
+!/Tools/backnd-mcp/
+!/docs/
+/docs/*
+!/docs/technical/
+/docs/technical/*
+!/docs/technical/unit-balance-runtime-integration-plan.md
