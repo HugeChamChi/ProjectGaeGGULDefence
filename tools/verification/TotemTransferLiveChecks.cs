@@ -14,7 +14,7 @@ using VContainer;
 /// <summary>Real IngameScene checks for inventory recall/exchange using its existing UI and injected services.</summary>
 public static class TotemTransferLiveChecks
 {
-    private const string Output = "outputs/totem-transfer-20261020";
+    private static string Output => SessionState.GetString("RegressionOutput", "outputs/totem-transfer-20261020");
     private static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static readonly List<string> Checks = new List<string>();
     private static T Get<T>(object owner, string field) => (T)owner.GetType().GetField(field, Private).GetValue(owner);

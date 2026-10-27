@@ -44,12 +44,15 @@ public class LevelUpUI : MonoBehaviour
     public bool DescriptionBlocksInput => _descriptionPopup?.BlocksOwnerInput == true || _glossaryView != null && _glossaryView.BlocksOwnerInput;
     /// <summary>Visible term video, allowing a tutorial to point without searching the hierarchy.</summary>
     public RectTransform DescriptionVideoArea => _glossaryView != null ? _glossaryView.VideoArea : null;
-    public bool FieldPreviewBlocksInput => obj != null && obj.GetComponentInChildren<UI_Peekthrough>(true)?.BlocksSelection == true;
+    /// <summary>Field toggle, card preview and return gestures temporarily block choice input.</summary>
+    public bool FieldPreviewBlocksInput => (_fieldView != null && _fieldView.BlocksSelection) || (_peekthrough != null && _peekthrough.BlocksSelection);
     public float SelectionTimeRemaining { get; private set; }
 
     [SerializeField] private GameObject    obj;
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
+    [SerializeField] private LevelUpFieldView _fieldView;
+    private UI_Peekthrough _peekthrough;
 
     [Header("Selection Timer")]
     [SerializeField] private TMP_Text selectionTimerText;
@@ -87,6 +90,8 @@ public class LevelUpUI : MonoBehaviour
         _select = GetComponent<LevelUpSelectSequence>();
         _peek   = GetComponent<LevelUpPeekHighlighter>();
         _time   = GetComponent<LevelUpTimeDirector>();
+        _peekthrough = obj != null ? obj.GetComponentInChildren<UI_Peekthrough>(true) : null;
+        _peekthrough?.SetBackgroundPeekEnabled(false);
         if (_reveal != null && obj != null)
         {
             _panelGroup = obj.GetComponent<CanvasGroup>();
@@ -131,12 +136,12 @@ public class LevelUpUI : MonoBehaviour
         foreach (var data in choices)
         {
             var card = Instantiate(cardPrefab, cardContainer);
-            card.ConfigurePeek(obj.GetComponentInChildren<UI_Peekthrough>(true));
+            card.ConfigurePeek(_peekthrough);
             EnsureDescriptions(card.DescriptionText);
             var snapshot = new ChoiceDescriptionAdapter(data, _levelUpManager).Capture();
             _descriptions.Add(card, snapshot);
             card.Setup(data, OnCardClicked, FormatDescription(snapshot, data));
-            card.ConfigureDescription(id => OpenDescriptionTerm(card, id), () => !IsReadyForSelection || DescriptionBlocksInput ||
+            card.ConfigureDescription(id => OpenDescriptionTerm(card, id), () => !IsReadyForSelection || DescriptionBlocksInput || FieldPreviewBlocksInput ||
                 _spawnedCards.Any(other => other != null && other != card && other.HasActivePress));
             if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
@@ -148,6 +153,7 @@ public class LevelUpUI : MonoBehaviour
 
         obj.SetActive(true);
         gameObject.SetActive(true);
+        _fieldView?.BeginSession();
 
         bool freezeImmediately = _ownsPause || _fieldPause?.MustFreezeImmediately == true;
         _ownsPause = true;
@@ -217,8 +223,9 @@ public class LevelUpUI : MonoBehaviour
 
     private void OnCardClicked(LevelUpCardUI clicked)
     {
-        if (DescriptionBlocksInput) return;
+        if (DescriptionBlocksInput || FieldPreviewBlocksInput) return;
         IsReadyForSelection = false;
+        _fieldView?.StopInteraction();
         if (!_spawnedCards.Contains(clicked)) return;
         if (_selectedCard == clicked) return;
         _selectedCard?.Deselect();
@@ -278,15 +285,15 @@ public class LevelUpUI : MonoBehaviour
             return;
         }
         SelectionTimeRemaining = selectionSeconds;
-        while (SelectionTimeRemaining > 0f || DescriptionBlocksInput)
+        while (SelectionTimeRemaining > 0f || DescriptionBlocksInput || FieldPreviewBlocksInput)
         {
             if (selectionTimerText != null)
                 selectionTimerText.text = $"{Mathf.CeilToInt(SelectionTimeRemaining)}";
 
-            bool blocked = DescriptionBlocksInput;
+            bool blocked = DescriptionBlocksInput || FieldPreviewBlocksInput;
             float started = Time.unscaledTime;
             await UniTask.Yield(PlayerLoopTiming.Update, token);
-            if (!blocked && !DescriptionBlocksInput) SelectionTimeRemaining = Mathf.Max(0, SelectionTimeRemaining - (Time.unscaledTime - started));
+            if (!blocked && !DescriptionBlocksInput && !FieldPreviewBlocksInput) SelectionTimeRemaining = Mathf.Max(0, SelectionTimeRemaining - (Time.unscaledTime - started));
         }
 
         // 시간 초과 — 첫 번째 카드 자동 선택 및 확인
@@ -335,6 +342,7 @@ public class LevelUpUI : MonoBehaviour
         _descriptionPopup?.HideImmediately();
         StopSelectionTimer();
         IsReadyForSelection = false;
+        _fieldView?.EndSession(false);
         if (!_ownsPause) return;
         _ownsPause = false;
         _time?.CancelAndRelease();
@@ -366,6 +374,7 @@ public class LevelUpUI : MonoBehaviour
         // 새 레벨업 패널이 열리지 않았을 때만 루프 재개
         if (_gameManager.CurrentState != GameManager.GameState.LevelUp)
         {
+            _fieldView?.EndSession(true);
             _ownsPause = false;
             _fieldPause?.Exit(this);
             if (_time != null) _time.SpeedUpTime();
@@ -434,8 +443,7 @@ public class LevelUpUI : MonoBehaviour
     }
     private bool CanChangeDescriptionMode()
     {
-        var field = obj.GetComponentInChildren<UI_Peekthrough>(true);
-        return IsReadyForSelection && !DescriptionBlocksInput && (field == null || !field.BlocksSelection) &&
+        return IsReadyForSelection && !DescriptionBlocksInput && !FieldPreviewBlocksInput &&
             !_spawnedCards.Any(card => card != null && (card.HasActivePress || card.TutorialPreviewOnly));
     }
 }

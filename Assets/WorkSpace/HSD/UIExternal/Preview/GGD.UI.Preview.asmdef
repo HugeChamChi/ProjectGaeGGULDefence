@@ -1,0 +1,6 @@
+{
+  "name": "GGD.UI.Preview",
+  "rootNamespace": "GGD.UI.Preview",
+  "references": ["GGD.UI.External", "UnityEngine.UI", "Unity.TextMeshPro", "VContainer"],
+  "autoReferenced": true
+}

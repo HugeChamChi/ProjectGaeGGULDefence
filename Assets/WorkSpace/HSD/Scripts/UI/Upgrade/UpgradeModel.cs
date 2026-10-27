@@ -39,6 +39,8 @@ namespace HSD.UI.Upgrade
             public int CurrentLevel;
             public float UpgradeCost;
             public string Description;
+            /// <summary>최대 단계에 도달해 더 강화할 수 없는 대상(현재 젤탕만 상한을 가진다).</summary>
+            public bool IsMaxLevel;
         }
 
         [Header("UI Configuration")]
@@ -89,7 +91,8 @@ namespace HSD.UI.Upgrade
                     Icon = config.icon,
                     CurrentLevel = currentLevel,
                     UpgradeCost = cost,
-                    Description = _upgradeManager.GetUpgradeDescription(target)
+                    Description = _upgradeManager.GetUpgradeDescription(target),
+                    IsMaxLevel = _upgradeManager.IsMaxLevel(target)
                 });
             }
             return items;

@@ -21,22 +21,21 @@ MonoBehaviour:
     Feedback:
     - Target: 4
       Row: 0
-      Tribes: []
+      Tribes:
       RequiresHighOwnedTier: 0
     Commands: []
   chooseId: 9121
   chooseName: "\uBC31\uB3C4\uC5B4"
   tier: 2
   spawnRate: 1
-  description: "\uD574\uD0B9 \uC2A4\uD0DD\uC774 \uC0C1\uD55C\uC120\uC744 \uCD08\uACFC
-    \uD560 \uB54C \uB9C8\uB2E4, \uD574\uB2F9 \uB378\uD0D5\uC758 \uB9C8\uB098\uB97C
-    {count} \uD68C\uBCF5\uD569\uB2C8\uB2E4."
-  simpleDescription: "\uD574\uD0B9 \uC2A4\uD0DD\uC774 \uC0C1\uD55C\uC120\uC744 \uCD08\uACFC\uD55C\uB2E4\uBA74
-    \uB9C8\uB098\uB97C \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  description: "\uB378\uD0D5\uC740 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uCD08\uACFC \uC0DD\uC0B0\uD558\uBA74
+    \uB9C8\uB098\uB97C {count} \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uB378\uD0D5\uC740 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uCD08\uACFC
+    \uC0DD\uC0B0\uD558\uBA74 \uB9C8\uB098\uB97C \uD68C\uBCF5\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - hack_stack
   - mana
-  applicableTribes: 
+  applicableTribes:
   primaryEffect: 0
   primaryValue: 0
   secondaryEffect: 0
@@ -58,4 +57,4 @@ MonoBehaviour:
     - rid: 1000
       type: {class: OverflowManaDefinition, ns: , asm: Assembly-CSharp}
       data:
-        ManaPerStack: 1
+        ManaPerCast: 1

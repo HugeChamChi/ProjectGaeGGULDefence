@@ -152,6 +152,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual float SkillCooldownMultiplier => 1f;
     /// <summary>식량 지급을 묶는 기본 초 간격. 초당 생산량과 별개다.</summary>
     public virtual float FoodPayoutInterval => 1f;
+    /// <summary>유닛별 생산 서비스가 자체 생산까지 함께 정산할 때 기본 식량 틱을 생략한다.</summary>
+    public virtual bool UsesExternalFoodPayout => false;
 
     /// <summary>이 유닛에 걸린 버프("용기")를 보관/집계하는 컴포넌트.</summary>
     public BuffController Buffs => _buff;

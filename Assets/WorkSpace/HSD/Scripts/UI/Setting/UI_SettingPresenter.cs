@@ -16,9 +16,9 @@ namespace HSD.UI.Setting
         private SceneChangeManager _scenes;
         private bool _navigationStarted;
 
-        private readonly UI_SettingPanel_Base _view;
+        private readonly ISettingsView _view;
 
-        public UI_SettingPresenter(UI_SettingPanel_Base view, AudioManager audioManager)
+        public UI_SettingPresenter(ISettingsView view, AudioManager audioManager)
         {
             _view = view;
             _audioManager = audioManager;

@@ -90,23 +90,27 @@ public sealed class SelectionEffectReader : ISelectionCombatReader, IDroneEffect
     /// <inheritdoc />
     public float DroneAttackSpeedBonus => _state.Current.DroneAttackSpeedBonus;
     /// <inheritdoc />
-    public float StackSkillReduction => _state.Current.StackSkillReduction;
+    public float StackDamageBonusPerDrone => _state.Current.StackDamageBonusPerDrone;
     /// <inheritdoc />
-    public float MaximumStackSkillReduction => _state.Current.MaximumStackSkillReduction;
+    public float MaximumStackDamageBonus => _state.Current.MaximumStackDamageBonus;
     /// <inheritdoc />
     public bool HasEmptyStackDamage => _state.Current.HasEmptyStackDamage;
     /// <inheritdoc />
-    public bool HasFoodPayoutAnimation => _state.Current.HasFoodPayoutAnimation;
+    public bool HasBatchedFoodPayout => _state.Current.HasBatchedFoodPayout;
     /// <inheritdoc />
     public float FoodPayoutInterval => _state.Current.FoodPayoutInterval;
     /// <inheritdoc />
     public float FoodProductionBonus => _state.Current.FoodProductionBonus;
     /// <inheritdoc />
-    public float FleetFoodProductionBonus => _state.Current.FleetFoodProductionBonus;
+    public float WaveFoodDividendRatio => _state.Current.WaveFoodDividendRatio;
     /// <inheritdoc />
     public int HackingProductionFlat => _state.Current.HackingProductionFlat;
     /// <inheritdoc />
     public float HackingProductionBonus => _state.Current.HackingProductionBonus;
+    /// <inheritdoc />
+    public int HackingCompressionRequiredAttacks => _state.Current.HackingCompressionRequiredAttacks;
+    /// <inheritdoc />
+    public int HackingCompressionMultiplier => _state.Current.HackingCompressionMultiplier;
     /// <inheritdoc />
     public float ManaRequirementReduction => _state.Current.ManaRequirementReduction;
     /// <inheritdoc />
@@ -146,7 +150,7 @@ public sealed class SelectionEffectReader : ISelectionCombatReader, IDroneEffect
     /// <inheritdoc />
     public int ExtraCombatDroneCount => _state.Current.ExtraCombatDroneCount;
     /// <inheritdoc />
-    public int OverflowManaPerStack => _state.Current.OverflowManaPerStack;
+    public int OverflowManaPerCast => _state.Current.OverflowManaPerCast;
     /// <inheritdoc />
     public bool HasBombHacking => _state.Current.HasBombHacking;
     /// <inheritdoc />

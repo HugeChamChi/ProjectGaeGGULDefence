@@ -186,6 +186,7 @@ public class InputManager : MonoBehaviour
         {
             var occupant = pointerCell.OccupyingUnit != null ? pointerCell.OccupyingUnit.gameObject
                 : pointerCell.OccupyingTotem != null ? pointerCell.OccupyingTotem.gameObject : null;
+            if (occupant != null && !occupant.activeInHierarchy) return null;
             if (occupant != null && occupant.TryGetComponent<DragHandler>(out var occupiedDrag)) return occupiedDrag;
         }
 

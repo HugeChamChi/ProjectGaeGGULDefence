@@ -1,0 +1,1 @@
+{"name":"GGD.UI.Studio","rootNamespace":"GGD.UI.Authoring.Studio","references":["GGD.UI.DocumentCore","GGD.UI.Authoring","UnityEngine.UI","Unity.TextMeshPro"],"includePlatforms":["Editor","WindowsStandalone64"],"autoReferenced":true}

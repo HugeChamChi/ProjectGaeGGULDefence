@@ -1,0 +1,6 @@
+{
+  "name": "GGD.UI.External",
+  "rootNamespace": "GGD.UI.External",
+  "references": ["UnityEngine.UI", "Unity.TextMeshPro"],
+  "autoReferenced": true
+}

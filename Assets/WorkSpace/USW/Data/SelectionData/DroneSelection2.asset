@@ -19,7 +19,7 @@ MonoBehaviour:
     Effects:
     - rid: 1000
     Feedback:
-    - Target: 1
+    - Target: 5
       Row: 0
       Tribes: 
       RequiresHighOwnedTier: 0
@@ -28,10 +28,10 @@ MonoBehaviour:
   chooseName: "\uB2E4 \uC3F4 \uC81C\uAEF4\uBC84\uB824!!!!"
   tier: 2
   spawnRate: 1
-  description: "\uC804\uD22C \uB4DC\uB860\uC758 \uC77C\uBC18 \uACF5\uACA9 \uC18D\uB3C4\uAC00
-    +{value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
-  simpleDescription: "\uC804\uD22C \uB4DC\uB860 \uACF5\uACA9 \uC18D\uB3C4 +{value}%
-    \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  description: "\uC18C\uC720 \uC720\uB2DB\uACFC \uAD00\uACC4\uC5C6\uC774 \uBAA8\uB4E0
+    \uC804\uD22C \uB4DC\uB860\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC804\uD22C \uB4DC\uB860\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00
+    {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - combat_drone
   applicableTribes: 

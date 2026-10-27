@@ -115,15 +115,7 @@ public class DroneManager : MonoBehaviour
 
     public int DroneCount => _drones.Count;
     /// <summary>현재 실제 생산 가능한 전투 드론들의 초당 식량 합계. 식량 지급과 같은 필터·보정을 사용한다.</summary>
-    public float CurrentFoodProductionPerSecond
-    {
-        get
-        {
-            int count = 0;
-            foreach (var drone in _drones) if (CanProduceFood(drone)) count++;
-            return count * BaseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
-        }
-    }
+    public float CurrentFoodProductionPerSecond => GetFleetFoodPerSecond(BaseFoodPerDrone);
 
     private static bool CanProduceFood(DroneUnit drone) => drone != null && drone.isActiveAndEnabled
         && drone.Owner != null && drone.Owner.currentCell != null && !drone.Owner.IsStunned && !drone.Owner.IsCellSealed;
@@ -140,17 +132,32 @@ public class DroneManager : MonoBehaviour
     }
     public IReadOnlyList<DroneUnit> Drones => _drones;
     private readonly List<Drone_Zeltan> _foodProducers = new();
-    /// <summary>가장 최근 배치된 유효 젤탕의 패시브를 사용하고, 없으면 기본 생산량을 사용한다.</summary>
+    /// <summary>유효한 젤탕들의 드론 1기당 계수를 모두 더한다. 유효한 젤탕이 없으면 기본 생산량을 사용한다.</summary>
     public float BaseFoodPerDrone
     {
         get
         {
-            for (int i = _foodProducers.Count - 1; i >= 0; i--)
-                if (_foodProducers[i] != null && _foodProducers[i].isActiveAndEnabled
-                    && _foodProducers[i].currentCell != null && !_foodProducers[i].IsCellSealed)
-                    return _foodProducers[i].FoodPerDronePerSecond;
-            return _baseFoodPerDrone;
+            bool any = false;
+            float sum = 0f;
+            foreach (var producer in _foodProducers)
+            {
+                if (!IsActiveFoodProducer(producer)) continue;
+                any = true;
+                sum += producer.FoodPerDronePerSecond;
+            }
+            return any ? sum : _baseFoodPerDrone;
         }
+    }
+
+    private static bool IsActiveFoodProducer(Drone_Zeltan producer) => producer != null && producer.isActiveAndEnabled
+        && producer.currentCell != null && !producer.IsCellSealed;
+
+    /// <summary>주어진 드론 1기당 계수로 현재 생산 가능한 드론들이 버는 초당 식량. 지급과 같은 필터·토템 보정을 쓴다.</summary>
+    public float GetFleetFoodPerSecond(float foodPerDrone)
+    {
+        int count = 0;
+        foreach (var drone in _drones) if (CanProduceFood(drone)) count++;
+        return count * foodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
     }
 
     /// <summary>젤탕을 군단 식량 생산자로 등록한다.</summary>
@@ -162,14 +169,34 @@ public class DroneManager : MonoBehaviour
     /// <summary>제거된 젤탕만 해제하며 다른 젤탕의 패시브는 유지한다.</summary>
     public void UnregisterFoodProducer(Drone_Zeltan producer) => _foodProducers.Remove(producer);
 
-    /// <summary>실제 자폭마다 배치된 베탕의 충전을 앞당긴다. 완충을 넘는 시간은 저장하지 않는다.</summary>
-    public void NotifySelfDestructExplosion()
+    private long _dividendRunId;
+    private int _dividendRound;
+
+    /// <summary>클리어가 확정된 런·라운드의 현재 잔고를 한 번 정산한다. 자격 없는 완료도 재처리하지 않는다.</summary>
+    public float SettleWaveFoodDividend(long runId, int round)
+    {
+        if (round <= 0 || (_dividendRunId == runId && round <= _dividendRound)) return 0f;
+        _dividendRunId = runId;
+        _dividendRound = round;
+        float ratio = _effects?.WaveFoodDividendRatio ?? 0f;
+        if (ratio <= 0f || _currencyManager == null || _gridManager == null) return 0f;
+        bool placed = false;
+        foreach (var cell in _gridManager.GetOccupiedCells())
+            if (cell.OccupyingUnit is Drone_Zeltan producer && producer.isActiveAndEnabled && producer.currentCell == cell)
+            { placed = true; break; }
+        if (!placed) return 0f;
+        float amount = _currencyManager.Currency * ratio;
+        if (amount <= 0f) return 0f;
+        _currencyManager.AddCurrency(amount);
+        return amount;
+    }
+
+    /// <summary>실제 자폭의 발사자가 같은 개체 수명으로 배치되어 있을 때 충전을 앞당긴다.</summary>
+    public void NotifySelfDestructExplosion(Drone_Betan owner, int lifetime)
     {
         float seconds = _effects?.ExplosionSkillRecoverySeconds ?? 0f;
-        if (seconds <= 0 || _gridManager == null) return;
-        foreach (var cell in _gridManager.GetOccupiedCells())
-            if (cell.OccupyingUnit is Drone_Betan betan && betan.isActiveAndEnabled && !betan.IsCellSealed && betan.Combat != null)
-                betan.Combat.SkillTimer = Mathf.Min(betan.GetCurrentSkillInterval(), betan.Combat.SkillTimer + seconds);
+        if (seconds <= 0f || owner == null || !owner.IsBombOwnerCurrent(lifetime) || owner.IsCellSealed || owner.Combat == null) return;
+        owner.Combat.SkillTimer = Mathf.Min(owner.GetCurrentSkillInterval(), owner.Combat.SkillTimer + seconds);
     }
 
     /// <summary>황금 모노클은 알팡 액티브에 확정 치명타 배율을 적용한다.</summary>
@@ -535,7 +562,25 @@ public class DroneManager : MonoBehaviour
 
     private void TickFood(float deltaTime)
     {
-        if (deltaTime <= 0f || _currencyManager == null) return;
+        if (deltaTime <= 0f || _currencyManager == null || _fieldPause?.AttacksHeld == true) return;
+        bool hasProducer = false;
+        bool hasIndividualPayout = false;
+        float individualFoodPerDrone = 0f;
+        foreach (var producer in _foodProducers)
+        {
+            if (!IsActiveFoodProducer(producer)) continue;
+            producer.TickBatchedFoodPayout(deltaTime);
+            hasProducer = true;
+            if (!producer.UsesExternalFoodPayout)
+            {
+                hasIndividualPayout = true;
+                individualFoodPerDrone += producer.FoodPerDronePerSecond;
+            }
+        }
+        // Exclude only shares already paid by a producer's batch account.
+        // With no active producer, retain the existing default fleet production.
+        if (hasProducer && !hasIndividualPayout) return;
+        if (!hasProducer) individualFoodPerDrone = _baseFoodPerDrone;
         // 개별 드론의 생산 진행도를 보존한다. 스턴 중 시간은 지급 주기에 포함하지 않는다.
         foreach (var drone in _drones)
         {
@@ -546,7 +591,7 @@ public class DroneManager : MonoBehaviour
             _foodProgress[drone] = progress - ticks;
             if (ticks > 0)
             {
-                float food = ticks * BaseFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
+                float food = ticks * individualFoodPerDrone * (_totemBuffManager?.FoodAmountMultiplier ?? 1f);
                 _currencyManager.AddCurrency(food);
             }
         }

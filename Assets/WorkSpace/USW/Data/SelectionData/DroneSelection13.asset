@@ -17,7 +17,7 @@ MonoBehaviour:
     ExclusiveGroups:
     - drone.kind.13
     Effects:
-    - rid: 1000
+    - rid: 5888965001733996631
     Feedback:
     - Target: 3
       Row: 0
@@ -28,12 +28,13 @@ MonoBehaviour:
   chooseName: "\uC815\uAE30 \uC810\uAC80"
   tier: 1
   spawnRate: 1
-  description: "\uC824\uD0D5\uC774 \uD544\uB4DC\uC5D0 \uC788\uB294 \uC804\uD22C \uB4DC\uB860
-    1\uAE30\uB2F9 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9\uC774 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
-  simpleDescription: "\uBCF4\uC720\uD55C \uC804\uD22C\uB4DC\uB860\uC758 \uC218\uC5D0
-    \uB530\uB77C \uC824\uD0D5\uC758 \uC2DD\uB7C9 \uC0DD\uC0B0\uB7C9\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  description: "\uC824\uD0D5\uC774 \uBC30\uCE58\uB418\uC5B4 \uC788\uC73C\uBA74 \uC6E8\uC774\uBE0C
+    \uD074\uB9AC\uC5B4 \uC2DC \uD604\uC7AC \uBCF4\uC720 \uC2DD\uB7C9\uC758 {value}%\uB97C
+    \uCD94\uAC00\uB85C \uD68D\uB4DD\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC824\uD0D5\uC774 \uBC30\uCE58\uB418\uC5B4 \uC788\uC73C\uBA74
+    \uC6E8\uC774\uBE0C \uD074\uB9AC\uC5B4 \uC2DC \uCD94\uAC00 \uC2DD\uB7C9\uC744
+    \uD68D\uB4DD\uD569\uB2C8\uB2E4."
   DescriptionTerms:
-  - combat_drone
   - food
   applicableTribes: 
   primaryEffect: 0
@@ -45,7 +46,7 @@ MonoBehaviour:
   droneEffect:
     Kind: 13
     Interval: 0
-    Value: 0.1
+    Value: 0.03
     MaxValue: 0
     Count: 0
   icon: {fileID: 21300000, guid: 7f41ca5b7e2725e4c91b0a6a821767da, type: 3}
@@ -54,7 +55,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1000
-      type: {class: FleetFoodProductionDefinition, ns: , asm: Assembly-CSharp}
+    - rid: 5888965001733996631
+      type: {class: WaveFoodDividendDefinition, ns: , asm: Assembly-CSharp}
       data:
-        BonusRatio: 0.1
+        Ratio: 0.03

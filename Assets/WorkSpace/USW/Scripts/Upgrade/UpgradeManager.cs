@@ -93,24 +93,25 @@ public class UpgradeManager : MonoBehaviour
     public int GetJobLevel(string jobType)
         => GetUpgradeLevel(jobType);
 
-    /// <summary>현재 강화 수를 반환한다. 게임 규칙상의 단계 상한은 없다.</summary>
+    /// <summary>현재 강화 수를 반환한다. 젤탕만 단계 상한을 가지며 다른 대상은 상한이 없다.</summary>
     public int GetUpgradeLevel(string upgradeTarget)
     {
         return upgradeTarget != null && _jobLevel.TryGetValue(upgradeTarget, out var lv)
             ? Mathf.Max(0, lv) : 0;
     }
 
-    /// <summary>강화와 관계없는 드론 1기당 초당 식량 생산량.</summary>
-    public float ZeltanFoodPerDrone => _settings != null ? _settings.ZeltanFoodPerDrone : 0f;
+    /// <summary>현재 젤탕 강화로 더하는 전투 드론 1기당 초당 식량. 선택지 보정 전 값이다.</summary>
+    public float ZeltanFoodPerDroneBonus => _settings != null
+        ? GetUpgradeLevel(UpgradeSettings.ZeltanTarget) * _settings.ZeltanFoodPerDronePerLevel : 0f;
 
-    /// <summary>현재 젤탕 강화로 더하는 자체 초당 식량. 선택지 보정 전 값이다.</summary>
-    public float ZeltanFoodBonus => _settings != null
-        ? GetUpgradeLevel(UpgradeSettings.ZeltanTarget) * _settings.ZeltanFoodPerLevel : 0f;
+    /// <summary>대상이 최대 단계에 도달해 더 강화할 수 없는지 확인한다.</summary>
+    public bool IsMaxLevel(string upgradeTarget) => _settings != null
+        && _settings.IsMaxLevel(upgradeTarget, GetUpgradeLevel(upgradeTarget));
 
     /// <summary>동일 설정에서 강화 안내 문구를 만든다.</summary>
     public string GetUpgradeDescription(string target) => _settings == null ? string.Empty
         : target == UpgradeSettings.ZeltanTarget
-            ? $"자체 +{_settings.ZeltanFoodPerLevel:0.##}/초\n드론 {_settings.ZeltanFoodPerDrone:0.##}/초\n고정"
+            ? $"드론 1기당\n+{_settings.ZeltanFoodPerDronePerLevel:0.##}/초\n최대 {_settings.ZeltanMaxLevel}단계"
             : $"공격력 +{_settings.AttackPercentPerLevel:0.##}%\n공속 +{_settings.AttackSpeedPercentPerLevel:0.##}%";
 
     /// <summary>현재 강화 레벨 기준 공격력 배율(1.0 = 강화 없음)을 반환합니다. 호출자가 자신의 기준 공격력에 곱해서 사용합니다.</summary>

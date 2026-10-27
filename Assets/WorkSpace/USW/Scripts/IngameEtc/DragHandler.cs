@@ -212,6 +212,7 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     public void OnBeginDrag()
     {
+        if (!gameObject.activeInHierarchy) return;
         if (_unit != null && _unit.IsStunned) return;
         if (RotationOnly && !(CanRotateTotem && IsHoldComplete)) return;
         OnDragStartedEvent?.Invoke();
@@ -321,7 +322,7 @@ public class DragHandler : MonoBehaviour, IDraggable
         UnitBase  targetUnit  = targetCell.OccupyingUnit;
         TotemBase targetTotem = targetCell.OccupyingTotem;
         // 다른 유닛/토템으로 스턴 유닛을 밀거나 드래그 합성하여 이동 제한을 우회하지 않는다.
-        if (targetUnit != null && targetUnit.IsStunned) { ReturnToOrigin(); return; }
+        if (targetUnit != null && (targetUnit.IsStunned || !targetUnit.gameObject.activeInHierarchy)) { ReturnToOrigin(); return; }
 
         // 드래그 합성: 합성 가능한 유닛 위에 놓으면 스왑 대신 합성한다.
         if (_unit != null && targetUnit != null && UnitMergeRules.CanPair(_unit, targetUnit))

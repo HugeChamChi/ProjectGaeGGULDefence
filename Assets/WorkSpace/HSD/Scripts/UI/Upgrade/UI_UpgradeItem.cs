@@ -109,8 +109,9 @@ namespace HSD.UI.Upgrade
             _currentCost = data.UpgradeCost;
             if (txt_Name != null) txt_Name.gameObject.SetActive(false);
             if (txt_Level != null) txt_Level.text = $"Lv.{data.CurrentLevel}";
-            if (txt_Cost != null) txt_Cost.text = data.UpgradeCost >= 0f ? FormatCost(data.UpgradeCost) : "—";
-            if (img_CostIcon != null) img_CostIcon.gameObject.SetActive(data.UpgradeCost >= 0f);
+            if (txt_Cost != null) txt_Cost.text = data.IsMaxLevel ? MaxLabel
+                : data.UpgradeCost >= 0f ? FormatCost(data.UpgradeCost) : "—";
+            if (img_CostIcon != null) img_CostIcon.gameObject.SetActive(!data.IsMaxLevel && data.UpgradeCost >= 0f);
             UpdateButton();
             EnsureDescription();
             if (_description != null) _description.text = data.Description;
@@ -128,6 +129,9 @@ namespace HSD.UI.Upgrade
                 btn_Upgrade.interactable = interactable && _canUpgrade;
             }
         }
+
+        /// <summary>최대 단계에 도달한 대상의 비용 칸 표시.</summary>
+        public const string MaxLabel = "MAX";
 
         /// <summary>큰 비용도 정수 오버플로 없이 카드에 들어가는 길이로 표시한다.</summary>
         public static string FormatCost(float cost) => cost < 1000000f ? cost.ToString("N0") : cost.ToString("0.###E+0");

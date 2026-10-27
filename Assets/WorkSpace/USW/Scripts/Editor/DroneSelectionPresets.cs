@@ -37,18 +37,18 @@ public static class DroneSelectionPresets
                 card.chooseName="만나서 반가워!"; card.description="10초마다 배치된 베탕 각각의 자폭 드론 1기를 추가 생성합니다.";
                 e.Interval=10; e.Count=1; break;
             case DroneSelectionKind.BetanAttackSpeed:
-                card.chooseName="다 쏴 제껴버려!!!!"; card.description="베탕의 전투 드론 공격 속도가 20% 상승합니다";
+                card.chooseName="다 쏴 제껴버려!!!!"; card.description="소유 유닛과 관계없이 모든 전투 드론의 공격 속도가 {value}% 증가합니다.";
                 card.tier=Tier.Epic; e.Value=0.2f; break;
             case DroneSelectionKind.BetanFleetBomb:
                 card.chooseName="슈슝 콰광!!!!!"; card.description="20초마다 필드에 있는 베탕의 전투 드론 수만큼 자폭 드론이 추가 생성됩니다 (최대 10기)";
                 card.tier=Tier.Legend; e.Interval=20; e.Count=10; break;
             case DroneSelectionKind.GammanFrequency:
-                card.chooseName="주파수 동조"; card.description="필드 드론 1기당 감망의 스택 추가 피해가 0.3% 증가합니다. 최대 9%.";
-                card.tier=Tier.Epic; e.Value=0.003f; e.MaxValue=0.09f; break;
+                card.chooseName="주파수 동조"; card.description="전장에 있는 전투 드론 1기당 감망의 해킹 추가 피해가 {value}% 증가합니다.";
+                card.tier=Tier.Epic; e.Value=0.005f; e.MaxValue=0f; break;
             case DroneSelectionKind.GammanEmergency:
                 card.chooseName="긴급 교신"; card.description="액티브 스킬 사용 시, 보스에게 쌓인 해킹 스택을 모두 소모해 기폭합니다."; break;
             case DroneSelectionKind.ZeltanAirFryer:
-                card.chooseName="에어프라이기"; card.description="젤탕의 자체 식량 생산량이 20% 증가하며 3초마다 모아서 지급됩니다.";
+                card.chooseName="에어프라이기"; card.description="젤탕의 식량 생산량이 {value}% 증가하고, 생산한 식량을 {seconds}초마다 한 번에 지급합니다.";
                 e.Interval=3; e.Value=0.2f; break;
             case DroneSelectionKind.DeltanDefenseReduction:
                 card.chooseName="넹?"; card.description="델탕 해킹 스킬의 생산량이 1스택 증가합니다.";
@@ -57,8 +57,8 @@ public static class DroneSelectionPresets
                 card.chooseName="넹 !"; card.description="델탕 해킹 시 {value}% 확률로 그 해킹의 스택 생산량이 {count}배가 됩니다.";
                 card.tier=Tier.Epic; e.Value=0.05f; e.Count=2; break;
             case DroneSelectionKind.DeltanCooldown:
-                card.chooseName="넹..."; card.description="감망 기폭 후 스택 추가 피해의 {value}%를 {seconds}초 동안 {count}회에 나눠 줍니다. 다시 기폭하면 남은 여운을 합칩니다.";
-                e.Value=0.2f; e.Interval=3f; e.Count=6; break;
+                card.chooseName="넹..."; card.description="델탕의 기본 해킹 충전량이 6에서 {count}로 증가하고, 해킹 스택 생산량이 {value}배가 됩니다.";
+                e.Value=2f; e.Count=9; break;
             case DroneSelectionKind.AlphanCooldown:
                 card.chooseName="위대한 지도자"; card.description="알팡 액티브 스킬 쿨타임이 20% 감소합니다.";
                 e.Value=0.2f; break;
@@ -69,13 +69,13 @@ public static class DroneSelectionPresets
                 card.chooseName="냉동 보관"; card.description="젤탕의 자체 식량 생산량이 10% 증가합니다.";
                 e.Value=0.1f; break;
             case DroneSelectionKind.ZeltanMaintenance:
-                card.chooseName="정기 점검"; card.description="젤탕의 드론당 군단 식량 생산량이 10% 증가합니다.";
-                e.Value=0.1f; break;
+                card.chooseName="정기 점검"; card.description="젤탕이 배치되어 있으면 웨이브 클리어 시 현재 보유 식량의 {value}%를 추가로 획득합니다.";
+                e.Value=0.03f; break;
             case DroneSelectionKind.AlphanGoldenMonocle:
                 card.chooseName="황금 모노클"; card.description="알팡의 액티브 스킬이 확정 치명타로 1.5배 피해를 줍니다.";
                 card.tier=Tier.Legend; e.Value=1.5f; break;
             case DroneSelectionKind.BetanRepairKit:
-                card.chooseName="수리 키트"; card.description="자폭 드론이 폭발할 때마다 배치된 베탕의 남은 스킬 쿨타임이 0.5초 감소합니다.";
+                card.chooseName="수리 키트"; card.description="각 베탕은 자신의 자폭 드론이 폭발할 때마다 남은 스킬 쿨타임이 {seconds}초 감소합니다.";
                 card.tier=Tier.Legend; e.Value=0.5f; break;
             default: throw new ArgumentOutOfRangeException(nameof(kind));
         }
@@ -84,7 +84,7 @@ public static class DroneSelectionPresets
         if (kind == DroneSelectionKind.AlphanDoubleShot)
             card.Composition.Effects[0] = new ChiefChargeCapacityDefinition { MaximumCharges = e.Count };
         if (kind == DroneSelectionKind.GammanEmergency)
-            card.Composition.Effects[0] = new ChiefHackingDetonationDefinition { DamageRatioPerStack = 0.01f };
+            card.Composition.Effects[0] = new ChiefHackingDetonationDefinition { DamageRatioPerStack = 0.03f };
         card.EffectSchemaVersion = 1;
     }
 
