@@ -45,7 +45,7 @@ MonoBehaviour:
   specialValue: 0
   droneEffect:
     Kind: 3
-    Interval: 20
+    Interval: 60
     Value: 0
     MaxValue: 0
     Count: 10
@@ -58,5 +58,5 @@ MonoBehaviour:
     - rid: 1000
       type: {class: FleetBombDefinition, ns: , asm: Assembly-CSharp}
       data:
-        PeriodSeconds: 20
+        PeriodSeconds: 60
         BombCount: 10

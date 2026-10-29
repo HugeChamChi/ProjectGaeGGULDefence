@@ -25,7 +25,8 @@ public class UnitStatsModifier : MonoBehaviour
         ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
         : 1f;
 
-    private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier;
+    private float LevelAttackMultiplier => 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f);
+    private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier * LevelAttackMultiplier;
 
     // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
     private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
@@ -40,7 +41,12 @@ public class UnitStatsModifier : MonoBehaviour
     public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
 
     /// <summary>현재 런타임 보정을 유지하고 인게임 강화만 제외한 표시용 공격력.</summary>
-    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(_unit.unitData.atk.Get(_unit.currentTier), 1f, false, out _, true);
+    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(_unit.unitData.atk.Get(_unit.currentTier) * LevelAttackMultiplier, 1f, false, out _, true);
+
+    public int GetCombatDroneDamage(out bool critical) => ComputeDamage(UpgradedAtk * _unit.unitData.CombatDroneAttackCoefficient, 1f, true, out critical, true);
+    public int GetCombatDroneDisplayDamage(bool includeUpgrade) => ComputeDamage(
+        (includeUpgrade ? UpgradedAtk : _unit.unitData.atk.Get(_unit.currentTier) * LevelAttackMultiplier)
+        * _unit.unitData.CombatDroneAttackCoefficient, 1f, false, out _, true);
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;
@@ -56,10 +62,10 @@ public class UnitStatsModifier : MonoBehaviour
         => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical);
 
     /// <summary>Attack-coefficient path; run attack applies once and fixed damage bypasses it.</summary>
-    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
-        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true);
+    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
+        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true, damageMultiplier);
 
-    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false)
+    private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false, float damageMultiplier = 1f)
     {
         critical = false;
         if (_unit.unitData == null) return 0;
@@ -88,7 +94,7 @@ public class UnitStatsModifier : MonoBehaviour
                      * totemModifier
                      * rowModifier
                      * projAtk
-                     * burstAtk;
+                     * burstAtk * damageMultiplier;
 
         // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
         // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.
@@ -99,7 +105,8 @@ public class UnitStatsModifier : MonoBehaviour
         if (rollCritical && UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
-            float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage);
+            float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage)
+                + (_unit.LevelBonuses?.GetStat(UnitBonusStat.CriticalDamagePoints) ?? 0f);
             damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * DamageCalculator.Spread(_deps?.CombatSettings?.CritDamageVariance ?? 0f);
             critical = true;
         }
@@ -134,6 +141,7 @@ public class UnitStatsModifier : MonoBehaviour
         float rowSpeedMult   = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
         
         float frequency = includeUpgrade ? UpgradedAttackFrequency : _unit.unitData.attackSpeed.Get(_unit.currentTier);
+        frequency *= 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.BasicAttackFrequencyPercent) ?? 0f);
         float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 

@@ -50,16 +50,16 @@ public static class DroneSelectionChecks
                 var drone=Component<DroneUnit>(); Set(drone,"_owner",beta); drone.gameObject.SetActive(true); drones.RegisterDrone(drone);
             }
             drones.TickSelections(20); Check(beta.Spawned==0,"No selection no extra bombs");
-            manager.ApplyEffect(cards[1]); drones.TickSelections(9); Check(beta.Spawned==0,"Normal waits");
+            manager.ApplyEffect(cards[1]); drones.TickSelections(14); Check(beta.Spawned==0,"Normal waits");
             var unrelated=Asset<LevelUpData>(); unrelated.chooseId=9199;
             unrelated.primaryEffect=LevelUpEffectType.ExpGainPercent; unrelated.primaryValue=10;
-            manager.ApplyEffect(unrelated); // Must not reset the nine seconds already accumulated.
-            drones.TickSelections(1); Check(beta.Spawned==1,"Normal one bomb at ten seconds");
-            manager.ApplyEffect(cards[3]); drones.TickSelections(20); Check(beta.Spawned==13,"Normal plus epic ten cap");
+            manager.ApplyEffect(unrelated); // Must not reset the fourteen seconds already accumulated.
+            drones.TickSelections(1); Check(beta.Spawned==1,"Normal one bomb at fifteen seconds");
+            manager.ApplyEffect(cards[3]); drones.TickSelections(60); Check(beta.Spawned==15,"Normal plus epic ten cap");
             manager.RemoveEffect(cards[1]);manager.RemoveEffect(cards[3]); drones.TickSelections(60);
-            Check(beta.Spawned==13,"Removed periodic effects stop");
+            Check(beta.Spawned==15,"Removed periodic effects stop");
             var ownDrone=drones.Drones[0];float interval=ownDrone.AttackInterval;
-            manager.ApplyEffect(cards[2]); Check(Mathf.Approximately(ownDrone.AttackInterval,interval/1.2f),"Betan speed plus twenty percent");
+            manager.ApplyEffect(cards[2]); Check(Mathf.Approximately(ownDrone.AttackInterval,interval/1.1f),"Betan speed plus ten percent");
             manager.RemoveEffect(cards[2]);Check(Mathf.Approximately(ownDrone.AttackInterval,interval),"Speed restored");
 
             var currency=Component<CurrencyManager>(); var zelta=Component<Drone_Zeltan>(); zelta.unitData=Asset<UnitData>();

@@ -43,7 +43,7 @@ MonoBehaviour:
   specialValue: 0
   droneEffect:
     Kind: 1
-    Interval: 10
+    Interval: 15
     Value: 0
     MaxValue: 0
     Count: 1
@@ -56,5 +56,5 @@ MonoBehaviour:
     - rid: 1000
       type: {class: PeriodicBombDefinition, ns: , asm: Assembly-CSharp}
       data:
-        PeriodSeconds: 10
+        PeriodSeconds: 15
         BombCount: 1
