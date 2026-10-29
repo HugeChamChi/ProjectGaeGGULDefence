@@ -27,6 +27,18 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Button   button;
+    [SerializeField] private Image _recommendationBadge;
+
+    /// <summary>Whether an external recommendation result is currently displayed on this card.</summary>
+    public bool IsRecommended => _recommendationBadge != null && _recommendationBadge.gameObject.activeSelf;
+
+    /// <summary>Displays a recommendation result without changing eligibility, weight or selection input.</summary>
+    public void SetRecommended(bool recommended)
+    {
+        if (_recommendationBadge == null) return;
+        _recommendationBadge.raycastTarget = false;
+        _recommendationBadge.gameObject.SetActive(recommended);
+    }
 
     [Header("Tier Border Sprites (0=Rare 1=Epic 2=Legend) — 레벨업 카드 등급은 레어부터")]
     [SerializeField] private Sprite[] borderSprites;
@@ -177,6 +189,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     public void Setup(LevelUpData data, Action<LevelUpCardUI> onCardClicked, string resolvedDescription = null)
     {
         CancelPress();
+        SetRecommended(false);
         _data          = data;
         _onCardClicked = onCardClicked;
 
