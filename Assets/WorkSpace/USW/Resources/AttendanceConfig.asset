@@ -19,17 +19,39 @@ MonoBehaviour:
   UtcOffsetHours: 9
   ResetHour: 5
   Rewards:
-  - Currency: 2
+  - Items:
+    - RewardId: 10003
+      Amount: 10
+    Currency: 2
     Amount: 10
-  - Currency: 0
+  - Items:
+    - RewardId: 10001
+      Amount: 500
+    Currency: 0
     Amount: 500
-  - Currency: 1
+  - Items:
+    - RewardId: 10002
+      Amount: 10
+    Currency: 1
     Amount: 10
-  - Currency: 2
+  - Items:
+    - RewardId: 10003
+      Amount: 15
+    Currency: 2
     Amount: 15
-  - Currency: 0
+  - Items:
+    - RewardId: 10001
+      Amount: 1000
+    Currency: 0
     Amount: 1000
-  - Currency: 1
+  - Items:
+    - RewardId: 10002
+      Amount: 20
+    Currency: 1
     Amount: 20
-  - Currency: 1
+  - Items:
+    - RewardId: 10002
+      Amount: 50
+    Currency: 1
     Amount: 50
+  RewardCatalog: {fileID: 11400000, guid: a2be8daf3db35aa468e5672ac802f0f6, type: 2}

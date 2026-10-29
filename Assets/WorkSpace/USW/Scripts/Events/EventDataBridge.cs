@@ -11,6 +11,7 @@ namespace GGD.Events
         public static EventDataRuntime Current { get; private set; }
         private static string account;
         private static Func<DateTimeOffset> clock;
+        public static bool IsConfiguredFor(string accountKey) => Current != null && account == accountKey;
 
         public static void Configure(string accountKey, string json, int commonResetHourKst, Func<DateTimeOffset> serverClock)
         {

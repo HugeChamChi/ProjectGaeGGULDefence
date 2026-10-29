@@ -112,6 +112,16 @@ production/session-state/active.md
 /Assets/Resources
 /Assets/_Recovery
 /Assets/AddressableAssetsData
+!/Assets/AddressableAssetsData/
+/Assets/AddressableAssetsData/*
+!/Assets/AddressableAssetsData/AssetGroups/
+/Assets/AddressableAssetsData/AssetGroups/*
+!/Assets/AddressableAssetsData/AssetGroups/ResearchIcons.asset
+!/Assets/AddressableAssetsData/AssetGroups/ResearchIcons.asset.meta
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/
+/Assets/AddressableAssetsData/AssetGroups/Schemas/*
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/ResearchIcons_*.asset
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/ResearchIcons_*.asset.meta
 Assets/outputs.meta
 /apk파일모음
 
@@ -141,3 +151,8 @@ Assets/WorkSpace/HSD/GEMINI.md.meta
 !/docs/technical/
 /docs/technical/*
 !/docs/technical/unit-balance-runtime-integration-plan.md
+!/docs/technical/betan-level-bonus-runtime.md
+!/Tools/verification/
+/Tools/verification/*
+!/Tools/verification/BetanLevelBonusAuthoring.cs
+!/Tools/verification/BetanLevelBonusChecks.cs

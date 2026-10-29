@@ -6,10 +6,13 @@ import { projectRoot, tableKeys, readJson, localFile, validateProject, checkedTa
 import { readLive, unity } from './unity.mjs';
 import { readChartXlsx } from './xlsx.mjs';
 import { verifyLiveBundle } from './live-bundle.mjs';
+import { chartTarget, deploymentPlan } from './deployment.mjs';
+import { readResearch, validateResearch, exportResearch } from './research.mjs';
 
 const server = new McpServer({ name: 'ggd-backnd', version: '0.1.0' });
 const file = z.string().min(1).describe('Unity 프로젝트 기준 상대 파일 경로.');
 const table = z.enum(Object.keys(tableKeys));
+const environment = z.enum(['DEV', 'LIVE']).default('DEV');
 function register(name, description, inputSchema, handler, readOnly = true, openWorld = false) {
   server.registerTool(name, { description, inputSchema, annotations: {
     readOnlyHint: readOnly, destructiveHint: false, idempotentHint: readOnly, openWorldHint: openWorld,
@@ -27,7 +30,7 @@ register('backnd_status', '로컬 MCP 기능 및 Unity Pipeline 연결 상태. �
   let editor;
   try { editor = { available: true, details: await unity(['command', 'editor_status', '--project-path', projectRoot]) }; }
   catch (error) { editor = { available: false, reason: error.message }; }
-  return { projectRoot, editor, capabilities: { unitBalanceValidation: true, unitChartExport: true, localComparison: true,
+  return { projectRoot, editor, defaultTarget: chartTarget(), capabilities: { unitBalanceValidation: true, unitChartExport: true, localComparison: true,
     sdkChartRead: 'Unity Pipeline 연결 + 뒤끝 로그인 필요', remoteChartWrite: false, createTable: false, gameplayIntegration: false } };
 });
 
@@ -70,8 +73,20 @@ register('compare_live_unit_chart', '전체 실서버 차트를 읽어 로컬 �
   return { chartName, selectedChartFileId: current.selectedChartFileId, ...compareRows(table, tables[table], current.rows) };
 }, true, true);
 
-register('verify_live_chart_bundle', '검증한 XLSX/CSV 배포 묶음의 차트 4개를 실제 서버에서 모두 읽어 원본과 비교합니다. 개발용 차트는 chartPrefix로 구분하며 누락·조회 실패도 검증 실패로 반환합니다.', {
-  directory: file, chartPrefix: z.string().max(120).default(''),
-}, ({ directory, chartPrefix }) => verifyLiveBundle(directory, chartPrefix), true, true);
+register('plan_unit_chart_deployment', '검증한 기존 파일에 DEV(기본)/LIVE 대상 차트명과 해시를 대응시킵니다. 고유 보너스는 제외합니다. 파일 재생성이나 서버 쓰기는 수행하지 않습니다.', {
+  directory: file, environment,
+}, ({ directory, environment }) => deploymentPlan(directory, environment));
+
+register('verify_live_chart_bundle', 'DEV(기본) 또는 명시한 LIVE의 유닛 차트 3개를 원본과 비교합니다. 후순위 LevelBonuses는 제외하며 누락·조회 실패는 검증 실패입니다.', {
+  directory: file, environment,
+}, ({ directory, environment }) => verifyLiveBundle(directory, environment), true, true);
+
+register('validate_research_balance', '강화 트리 프로젝트 JSON 또는 ResearchBalance XLSX/JSON을 검사합니다. 아이콘 주소, 선행 조건, 무료 강화 계약을 검사합니다.', {
+  sourceFile: file,
+}, ({ sourceFile }) => validateResearch(readResearch(sourceFile)));
+
+register('export_research_chart', '강화 트리를 단일 ResearchBalance.xlsx와 런타임 JSON으로 내보냅니다. DEV 기본, LIVE는 명시합니다. 서버 업로드는 하지 않습니다.', {
+  sourceFile: file, releaseKey: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/), environment,
+}, ({ sourceFile, releaseKey, environment }) => exportResearch(sourceFile, releaseKey, environment), false);
 
 await server.connect(new StdioServerTransport());

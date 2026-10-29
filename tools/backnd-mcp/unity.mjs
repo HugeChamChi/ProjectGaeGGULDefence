@@ -30,7 +30,7 @@ export function readLive(operation, chartName = '') {
   const run = pending.then(async () => {
     await unity(['command', 'set_autotick', '--enable', 'true', '--project-path', projectRoot]);
     const data = await unity(['command', 'run_script', '--project-path', projectRoot,
-      '--file', 'tools/backnd-mcp/BackndChartReader.cs', '--entry', 'BackndChartReader.Run',
+      '--file', 'tools/planner-studio/app/backend-chart-reader.cs', '--entry', 'BackndChartReader.Run',
       '--args', JSON.stringify([operation, chartName]), '--timeout_ms', '25000', '--timeout', '35']);
     return unwrapRead(data);
   });

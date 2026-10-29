@@ -5,6 +5,7 @@ public class PlayerData
 {
     /// <summary>Last absolute snapshot identifier, for retry acknowledgement and local journal reconciliation.</summary>
     public string SaveId = string.Empty;
+    public RewardInventory RewardInventory = new();
     /// <summary>Paid entry reserved until a production battle actually starts.</summary>
     public string PendingEntryId = string.Empty;
     /// <summary>Cost already deducted for the pending entry.</summary>
@@ -35,6 +36,8 @@ public class PlayerData
 
     /// <summary>Days claimed in the current 7-day attendance cycle (0-7).</summary>
     public int AttendanceCount;
+    public int AttendancePendingDays;
+    public string AttendanceLastVisitDay;
     /// <summary>Server-day key of the last attendance claim; one claim per server day.</summary>
     public string AttendanceLastDay = string.Empty;
 

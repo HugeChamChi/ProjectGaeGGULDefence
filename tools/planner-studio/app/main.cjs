@@ -54,6 +54,7 @@ async function start() {
     catch (error) { return { ok: false, error: error.message }; }
   });
   require('./content-service.cjs').register({ handler, workspace, store, atomic });
+  require('./backend-console.cjs').register({handler,parent:window});
   handler('state', () => store.getState());
   handler('save-guide', p => store.saveGuide(p.uid, p.guide));
   handler('settings', () => store.getSettings());

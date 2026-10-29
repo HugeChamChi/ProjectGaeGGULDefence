@@ -185,6 +185,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
+        var runtimeData = UnitBalanceRuntime.Resolve(data);
         var go   = RM.Instantiate(data.prefab);
         var unit = go.GetComponent<UnitBase>();
 
@@ -195,7 +196,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        unit.unitData = data;
+        unit.unitData = runtimeData;
         unit.currentTier = tier;
         unit.animator?.Initialize(unit);
 

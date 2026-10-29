@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
   const S=STUDIO_SCHEMAS,field=(key,label,type='text',extra={})=>({key,label,type,...extra});
-  S.UnitBaseStat={label:'기본 스탯',keys:['BaseStatKey','Tier'],fields:[field('BaseStatKey','기본 스탯 키','id',{required:true}),field('Tier','등급','enum',{values:['normal','rare','epic','legend']}),...['Attack','AttackInterval','SkillCooldown','FoodProduction'].map(k=>field(k,{Attack:'공격력',AttackInterval:'공격 간격(초)',SkillCooldown:'스킬 쿨타임(초)',FoodProduction:'초당 식량'}[k],'float',{min:0})),field('MaxDroneCount','최대 드론 수','int',{min:0,max:2147483647})],note:'실제 UnitData의 등급별 원본 스탯입니다. 강화 시안 배율과 구분합니다.'};
+  S.UnitBaseStat={label:'기본 스탯',keys:['BaseStatKey','Tier'],fields:[field('BaseStatKey','기본 스탯 키','id',{required:true}),field('Tier','등급','enum',{values:['normal','rare','epic','legend']}),...['Attack','AttackInterval','SkillCooldown','FoodProduction'].map(k=>field(k,{Attack:'공격력',AttackInterval:'공격 속도(회/초)',SkillCooldown:'스킬 쿨타임(초)',FoodProduction:'초당 식량'}[k],'float',{min:0})),field('MaxDroneCount','최대 드론 수','int',{min:0,max:2147483647})],note:'실제 UnitData의 등급별 원본 스탯입니다. 강화 시안 배율과 구분합니다.'};
   STUDIO_SEED.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);
   PlannerScope.active.add('UnitBaseStat');STUDIO_NAV.find(n=>n.id==='units').tables.push('UnitBaseStat');
   for(const [key,label]of [['UnitKey','유닛 키'],['BaseStatKey','기본 스탯 키'],['UpgradeKey','강화 성장 키'],['LevelBonusKey','레벨 보너스 키']])S.Unit.fields.push(field(key,label));
@@ -21,12 +21,12 @@
   Studio.shape=p=>decorate(shape(prepare(p)));Studio.migrate=p=>p.schemaVersion===2?Studio.shape(p):decorate(migrate(p));
   const headers={
     Units:['UnitKey','Name','Kind','BackendKeys','IconKey','MaxLevel','BaseStatKey','UpgradeKey','LevelBonusKey'],
-    BaseStats:S.UnitBaseStat.fields.map(f=>f.key),
+    BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?'AttackFrequency':f.key),
     UpgradeStats:['UpgradeKey','TargetLevel','Costs','MultiplierIncrease','GlobalBonusIncrease'],
     LevelBonuses:['LevelBonusKey','Level','Description','EffectStatus','EffectKey','EffectParams']
   };
   function tables(p){
-    const out={Units:[headers.Units,...p.tables.Unit.map(u=>[u.UnitKey,u.Name,u.Kind,u.BackendIds,u.IconKey,u.MaxLevel,u.BaseStatKey,u.UpgradeKey,u.LevelBonusKey])],BaseStats:[headers.BaseStats,...p.tables.UnitBaseStat.map(r=>headers.BaseStats.map(k=>r[k]))],UpgradeStats:[headers.UpgradeStats],LevelBonuses:[headers.LevelBonuses]};
+    const out={Units:[headers.Units,...p.tables.Unit.map(u=>[u.UnitKey,u.Name,u.Kind,u.BackendIds,u.IconKey,u.MaxLevel,u.BaseStatKey,u.UpgradeKey,u.LevelBonusKey])],BaseStats:[headers.BaseStats,...p.tables.UnitBaseStat.map(r=>headers.BaseStats.map(k=>r[k==='AttackFrequency'?'AttackInterval':k]))],UpgradeStats:[headers.UpgradeStats],LevelBonuses:[headers.LevelBonuses]};
     const growth=new Map(),bonus=new Map();
     for(const u of p.tables.Unit){
       const levels=p.tables.UnitUpgrade.filter(r=>r.UnitId===u.UnitId).sort((a,b)=>a.TargetLevel-b.TargetLevel);let multiplier=1,global=0;
@@ -58,7 +58,7 @@
   };
   const fields={
     Units:[field('UnitKey','유닛 키','id',{required:true}),field('Name','이름','text',{required:true}),field('Kind','종류','enum',{values:['Unit','Chief']}),field('BackendKeys','서버 매핑'),field('IconKey','아이콘','icon'),field('MaxLevel','최대 레벨','int',{min:1,max:1000}),field('BaseStatKey','기본 스탯 키'),field('UpgradeKey','강화 키'),field('LevelBonusKey','보너스 키')],
-    BaseStats:S.UnitBaseStat.fields,
+    BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?{...f,key:'AttackFrequency',unit:'attacks/second',legacyAliases:['AttackInterval']}:f),
     UpgradeStats:[field('UpgradeKey','강화 키','id',{required:true}),field('TargetLevel','목표 레벨','int',{min:2,max:1000}),field('Costs','비용','costs'),field('MultiplierIncrease','배율 증가량','float'),field('GlobalBonusIncrease','전체 보너스 증가량','float')],
     LevelBonuses:[field('LevelBonusKey','보너스 키','id',{required:true}),field('Level','해금 레벨','int',{min:1,max:1000}),field('Description','설명','text',{required:true}),...S.UnitMilestone.fields.filter(f=>['EffectStatus','EffectParams'].includes(f.key)),field('EffectKey','효과 키')]
   };

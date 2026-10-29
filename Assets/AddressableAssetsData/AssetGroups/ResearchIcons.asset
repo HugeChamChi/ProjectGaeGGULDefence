@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: ResearchIcons
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: ResearchIcons
+  m_GUID: a0021cf3e19553f48a92b20c808ff30c
+  m_SerializeEntries:
+  - m_GUID: 038ccab8cd184d04cb1bfa1d79704320
+    m_Address: Research/Icons/038ccab8cd184d04cb1bfa1d79704320
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12ce67a96878541b29388f9452483249
+    m_Address: Research/Icons/12ce67a96878541b29388f9452483249
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e41e49e206bc2947b8943351eed53d3
+    m_Address: Research/Icons/1e41e49e206bc2947b8943351eed53d3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 447cb81759d8742888a02fa6be150fd0
+    m_Address: Research/Icons/447cb81759d8742888a02fa6be150fd0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65a1928224b8541439b433a52ea9c3d9
+    m_Address: Research/Icons/65a1928224b8541439b433a52ea9c3d9
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9851fb8e6f12a40d09379e3d9a144449
+    m_Address: Research/Icons/9851fb8e6f12a40d09379e3d9a144449
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9df0f4d8c02014347ad2d7de427e0ced
+    m_Address: Research/Icons/9df0f4d8c02014347ad2d7de427e0ced
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5edbb1acb3234a5db0f0daa141eb77b
+    m_Address: Research/Icons/a5edbb1acb3234a5db0f0daa141eb77b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0d9939b4e24549aebfe1441f4104b8b
+    m_Address: Research/Icons/e0d9939b4e24549aebfe1441f4104b8b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7f5d551fd1925040bd01a8ec66c0ae0
+    m_Address: Research/Icons/e7f5d551fd1925040bd01a8ec66c0ae0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5d3c19ee35f34a7dae4a36e5ec57472
+    m_Address: Research/Icons/f5d3c19ee35f34a7dae4a36e5ec57472
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9b293277bc1b4e24b12ba67c353239b
+    m_Address: Research/Icons/f9b293277bc1b4e24b12ba67c353239b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 62ecb7143346cd947a725445b3886c08, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3c329628f052c35498e0950be56f64c8, type: 2}
+    - {fileID: 11400000, guid: fd13255a5fce6234096273cc4dec73b8, type: 2}

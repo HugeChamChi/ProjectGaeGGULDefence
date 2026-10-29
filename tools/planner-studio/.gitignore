@@ -1,5 +1,6 @@
 node_modules/
 GGD-Planner/
+tests/dark-runtime/
 backups/
 verification/
 original-app.asar

@@ -169,6 +169,7 @@ public class BackendGameData
         {
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            RewardInventory = JsonMapper.ToObject<RewardInventory>(data.GetString("RewardInventory", "{}")),
             AccountExperienceSequence = data.GetLong("AccountExperienceSequence", 0),
             AccountExperienceRunId = data.GetString("AccountExperienceRunId", string.Empty),
             AccountExperienceReceipt = ParseAccountExperienceReceipt(data.GetString("AccountExperienceReceipt", string.Empty)),
@@ -186,6 +187,8 @@ public class BackendGameData
             MaxExp      = data.GetInt(COLUMN_MAX_EXP, 500),
             LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty),
             AttendanceCount = data.GetInt(COLUMN_ATTENDANCE_COUNT, 0),
+            AttendancePendingDays = data.GetInt("AttendancePendingDays", 0),
+            AttendanceLastVisitDay = data.GetString("AttendanceLastVisitDay", string.Empty),
             AttendanceLastDay = data.GetString(COLUMN_ATTENDANCE_LAST_DAY, string.Empty),
             ShowDamageNumbers = data.GetInt(COLUMN_SHOW_DAMAGE_NUMBERS, 1) != 0,
             VibrationEnabled = data.GetInt(COLUMN_VIBRATION_ENABLED, 1) != 0
@@ -196,6 +199,7 @@ public class BackendGameData
     {
         Param param = new Param();
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("RewardInventory", JsonMapper.ToJson(data.RewardInventory));
         param.Add("AccountExperienceSequence", data.AccountExperienceSequence);
         param.Add("AccountExperienceRunId", data.AccountExperienceRunId ?? string.Empty);
         param.Add("AccountExperienceReceipt", IsEmptyExperienceReceipt(data.AccountExperienceReceipt) ? string.Empty : JsonMapper.ToJson(data.AccountExperienceReceipt));
@@ -213,6 +217,8 @@ public class BackendGameData
         param.Add(COLUMN_MAX_EXP, data.MaxExp);
         param.Add(COLUMN_LAST_RESET_DATE, data.LastResetDate);
         param.Add(COLUMN_ATTENDANCE_COUNT, data.AttendanceCount);
+        param.Add("AttendancePendingDays", data.AttendancePendingDays);
+        param.Add("AttendanceLastVisitDay", data.AttendanceLastVisitDay ?? string.Empty);
         param.Add(COLUMN_ATTENDANCE_LAST_DAY, data.AttendanceLastDay ?? string.Empty);
         param.Add(COLUMN_SHOW_DAMAGE_NUMBERS, data.ShowDamageNumbers ? 1 : 0);
         param.Add(COLUMN_VIBRATION_ENABLED, data.VibrationEnabled ? 1 : 0);

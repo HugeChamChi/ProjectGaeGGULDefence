@@ -114,6 +114,11 @@ public sealed class AttendancePopup : UI_Base
                 : i + 1 == status.ClaimableDay ? AttendanceDaySlot.State.Claimable
                 : AttendanceDaySlot.State.Locked;
             _slots[i].Bind(i + 1, reward != null ? IconFor(reward.Currency) : null, reward?.Amount ?? 0, state);
+            if (reward?.Items != null && reward.Items.Length > 0 && _config.RewardCatalog != null) {
+                var first = _config.RewardCatalog.Find(reward.Items[0].RewardId);
+                _slots[i].Bind(i + 1, first.Icon != null ? first.Icon : first.Type == RewardType.Currency ? IconFor((MailRewardConfig.Currency)(first.TargetId - 1)) : null, reward.Items[0].Amount, state);
+                _slots[i].SetRewardText(DescribeItems(reward.Items));
+            }
         }
         SetStatus(StatusText(status));
     }
@@ -151,8 +156,18 @@ public sealed class AttendancePopup : UI_Base
     private string RewardText(int day)
     {
         var reward = _config.Rewards[day - 1];
+        if (reward.Items != null && reward.Items.Length > 0) return DescribeItems(reward.Items);
         string name = reward.Currency switch { MailRewardConfig.Currency.Gold => "골드", MailRewardConfig.Currency.Diamond => "다이아", _ => "스태미나" };
         return $"{name} {reward.Amount:N0}";
+    }
+    private string DescribeItems(RewardAmount[] items)
+    {
+        var text = new System.Text.StringBuilder();
+        foreach (var item in items) {
+            if (text.Length > 0) text.Append("\n");
+            text.Append(_config.RewardCatalog.Find(item.RewardId).Name).Append(" x").Append(item.Amount);
+        }
+        return text.ToString();
     }
 
     private Sprite IconFor(MailRewardConfig.Currency currency) => currency switch

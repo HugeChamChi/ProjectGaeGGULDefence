@@ -10,3 +10,11 @@ body > main[hidden], #contentWorkspace[hidden] { display:none; }
 .content-section { display:block; width:100%; border:0; border-radius:5px; padding:7px 7px; background:transparent; color:#a9b9ce; text-align:left; font-size:11px; }
 .content-section.active { background:#ffffff17; color:white; }
 .content-section:hover { background:#ffffff0d; color:white; }
+.integration-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:14px; }
+.integration-table th,.integration-table td { padding:9px 8px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); line-height:1.6; }
+.integration-table th:first-child { width:140px; }
+#backendDeploymentDialog { width:740px; }
+#backendKind { display:block; width:100%; padding:10px; font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:7px; }
+#backendStatus { font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+#backendVerification { font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+#backendPrepared .dialog-actions { flex-wrap:wrap; }

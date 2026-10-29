@@ -53,6 +53,15 @@ public static class Player
         // 2. 서버 시간과 비교하여 새로운 날인지 판단
         await Daily.InitializeAsync();
         RequireCurrentInitialization(owner, generation);
+        PlayerData.RegisterAttendanceVisit(ServerClock.UtcNow.AddHours(9 - DailyManager.ResetHourKst).ToString("yyyy-MM-dd"));
+        await PlayerData.TrySaveAsync();
+        RequireCurrentInitialization(owner, generation);
+        await GGD.Events.EventChartLoader.InitializeAsync(owner);
+        RequireCurrentInitialization(owner, generation);
+        using (var unitChartTimeout = new CancellationTokenSource())
+        using (unitChartTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await UnitBalanceChartLoader.InitializeAsync(unitChartTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
 
         // 3. 나머지는 병렬로 초기화하되, IsNewDay 상태를 참조함
         await UniTask.WhenAll(
@@ -91,6 +100,7 @@ public static class Player
         _debounceCts?.Dispose();
         _debounceCts = null;
         RoundRecords.Clear();
+        GGD.Events.EventChartLoader.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();

@@ -31,6 +31,8 @@ function inspect(bytes){
   for(const name of names){
     const sheet=book.sheets.get(name),schema=e.STUDIO_SCHEMAS[name]||{label:name,fields:e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]},headers=new Map();
     for(const address of sheet.cells.keys())if(/^[A-Z]+1$/.test(address))headers.set(column(address),book.get(name,address).value);
+    // Normalize old column names before validating, including ambiguous old/new duplicates.
+    for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
     if(name==='Unit'&&![...headers.values()].includes('UnitKey'))fields=fields.filter(f=>!['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'].includes(f.key));
     if(name==='AttendancePlan')fields=fields.filter(f=>!['StartAt','EndAt','ClaimEndAt','RepeatMode','Enabled'].includes(f.key)||[...headers.values()].includes(f.key));
@@ -38,6 +40,7 @@ function inspect(bytes){
     // Accept the previous workbook layout while exporting only direct attendance rewards.
     if(name==='Attendance'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.export!==false);
     if(name==='UnitMilestone')fields=fields.filter(f=>!['EffectStatus','EffectId','EffectParams'].includes(f.key)||[...headers.values()].includes(f.key));
+    if(name==='ResearchNode')fields=fields.filter(f=>f.key!=='IconAddress'||[...headers.values()].includes(f.key));
     if(fields.some(f=>![...headers.values()].includes(f.key))||new Set(headers.values()).size!==headers.size)throw Error(`${name}: 열 이름이 양식과 다릅니다.`);
     const rowNumbers=[...new Set([...sheet.cells.keys()].map(a=>Number(a.match(/\d+$/)[0])).filter(n=>n>1))].sort((a,b)=>a-b);
     tables[name]=rowNumbers.map(n=>{
@@ -46,7 +49,9 @@ function inspect(bytes){
         const field=fields.find(f=>f.key===key);if(!field)continue;
         const cell=book.get(name,col+n),v=cell.value;
         if(cell.formula!==null)throw Error(`${name} ${n}행: 입력 셀의 수식은 지원하지 않습니다.`);
-        if(['rewards','costs'].includes(field.type))result[key]=v.trim()?v.split(';').map(part=>{const match=/^([^:;]+):(\d+)$/.exec(part.trim());if(!match)throw Error(`${name} ${n}행: 보상은 Gold:500;Stamina:10 형식입니다.`);return {itemId:match[1],amount:Number(match[2])};}):[];
+        if(['rewards','costs'].includes(field.type)){
+          try{result[key]=e.RewardCore.parseItems(v);}catch(error){throw Error(`${name} ${n}행 ${key}: ${error.message}`);}
+        }
         else if(['parents','refs','strings'].includes(field.type))result[key]=v?v.split(';').map(s=>s.trim()):[];
         else if(['int','float'].includes(field.type)){if(v.trim()===''||!Number.isFinite(Number(v)))throw Error(`${name} ${n}행: ${key} 숫자가 필요합니다.`);result[key]=Number(v);}
         else if(field.type==='bool'){if(!['0','1','true','false'].includes(v))throw Error(`${name} ${n}행: ${key}는 0 또는 1입니다.`);result[key]=['1','true'].includes(v);}
@@ -79,7 +84,7 @@ function read(bytes,project){
     }
     const old=p.tables.Unit;
     p.tables.Unit=parsed.tables.Units.map(r=>({...e.Studio.newRecord('Unit',p),...old.find(u=>u.UnitKey===r.UnitKey),UnitId:r.UnitKey,UnitKey:r.UnitKey,Name:r.Name,Kind:r.Kind,BackendIds:r.BackendKeys,IconKey:r.IconKey,MaxLevel:r.MaxLevel,BaseStatKey:r.BaseStatKey,UpgradeKey:r.UpgradeKey,LevelBonusKey:r.LevelBonusKey}));
-    p.tables.UnitBaseStat=parsed.tables.BaseStats;
+    p.tables.UnitBaseStat=parsed.tables.BaseStats.map(({AttackFrequency,...row})=>({...row,AttackInterval:AttackFrequency}));
     p.tables.UnitUpgrade=[];p.tables.UnitMilestone=[];
     for(const unit of p.tables.Unit){
       let multiplier=1,global=0;
@@ -121,12 +126,12 @@ function toRuntime(project,names){
   if(names.includes('Attendance')||names.includes('AttendanceRewards'))result.attendanceEvents=p.tables.AttendancePlan.map(plan=>({eventKey:plan.AttendanceId,name:plan.Name,startAt:plan.StartAt,endAt:plan.EndAt,claimEndAt:plan.ClaimEndAt||plan.EndAt,enabled:plan.Enabled,repeatMode:plan.RepeatMode,cycleDays:plan.CycleDays,days:p.tables.Attendance.filter(r=>r.AttendanceId===plan.AttendanceId).sort((a,b)=>a.Day-b.Day).map(r=>({day:r.Day,rewards:r.Rewards.map(x=>({itemKey:x.itemId,amount:x.amount}))}))}));
   for(const [table,key]of [['ResearchTree','researchTrees'],['ResearchNode','researchNodes'],['Tutorial','tutorialSteps'],['Party','parties'],['Profile','profiles'],['Economy','economy'],['AccountLevel','accountLevels'],['BattleReward','battleRewards'],['Item','items']])if(names.includes(table))result[key]=p.tables[table].map(r=>Object.fromEntries(e.STUDIO_SCHEMAS[table].fields.filter(f=>!f.hidden&&f.export!==false).map(f=>[f.key,r[f.key]])));
   if(names.some(n=>e.UnitKeys.sheetFor[n]||e.UnitKeys.headers[n])){
-    for(const [name,rows]of Object.entries(e.UnitKeys.tables(p)))result[{Units:'units',BaseStats:'baseStats',UpgradeStats:'upgradeStats',LevelBonuses:'levelBonuses'}[name]]=rows.slice(1).map(row=>Object.fromEntries(rows[0].map((key,i)=>[key,key==='Costs'?row[i]?row[i].split(';').map(part=>{const[id,amount]=part.split(':');return {itemKey:id,amount:Number(amount)};}):[]:key==='EffectParams'?JSON.parse(row[i]):row[i]])));
+    for(const [name,rows]of Object.entries(e.UnitKeys.tables(p)))result[{Units:'units',BaseStats:'baseStats',UpgradeStats:'upgradeStats',LevelBonuses:'levelBonuses'}[name]]=rows.slice(1).map(row=>Object.fromEntries(rows[0].map((key,i)=>[key,key==='Costs'?e.RewardCore.parseItems(row[i]).map(r=>({itemKey:r.itemId,amount:r.amount})):key==='EffectParams'?JSON.parse(row[i]):row[i]])));
   }
   if(names.some(n=>e.MissionEvents.names.includes(n)))Object.assign(result,e.MissionEvents.runtime(p));
   return result;
 }
 function contract(names){
-  const e=engine();names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];return {schemaVersion:4,headerRow:1,firstDataRow:2,rewardEncoding:'ItemKey:positiveInteger;ItemKey:positiveInteger',booleanEncoding:'0 or 1',formulaPolicy:'reject',tables:names.map(name=>({sheet:name,keys:({AttendanceEvents:['EventKey'],AttendanceRewards:['EventKey','Day'],Units:['UnitKey'],BaseStats:['BaseStatKey','Tier'],UpgradeStats:['UpgradeKey','TargetLevel'],LevelBonuses:['LevelBonusKey','Level']}[name]||e.STUDIO_SCHEMAS[name].keys),columns:(e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]||e.STUDIO_SCHEMAS[name].fields).filter(f=>!f.hidden&&f.export!==false).map(f=>({key:f.key,type:f.type,required:!!f.required,...(f.values?{values:f.values}:{}),...(f.min!==undefined?{min:f.min}:{}),...(f.max!==undefined?{max:f.max}:{})}))}))};
+  const e=engine();names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];return {schemaVersion:4,headerRow:1,firstDataRow:2,rewardEncoding:'ItemKey:positiveInteger;ItemKey:positiveInteger',booleanEncoding:'0 or 1',formulaPolicy:'reject',tables:names.map(name=>({sheet:name,keys:({AttendanceEvents:['EventKey'],AttendanceRewards:['EventKey','Day'],Units:['UnitKey'],BaseStats:['BaseStatKey','Tier'],UpgradeStats:['UpgradeKey','TargetLevel'],LevelBonuses:['LevelBonusKey','Level']}[name]||e.STUDIO_SCHEMAS[name].keys),columns:(e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]||e.STUDIO_SCHEMAS[name].fields).filter(f=>!f.hidden&&f.export!==false).map(f=>({key:f.key,type:f.type,required:!!f.required,...(f.values?{values:f.values}:{}),...(f.min!==undefined?{min:f.min}:{}),...(f.max!==undefined?{max:f.max}:{}),...(f.unit?{unit:f.unit}:{}),...(f.legacyAliases?{legacyAliases:f.legacyAliases}:{})}))}))};
 }
 module.exports={engine,bundles,write,inspect,read,toRuntime,contract};
