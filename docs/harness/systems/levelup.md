@@ -3,9 +3,19 @@ system: levelup
 title: EXP·선택지 (경험치·레벨업·카드 추첨·효과 적용)
 keywords: expmanager, exp 구슬, 경험치, 레벨업, levelup, level up, 선택지, 카드 효과, 선택 카드, choice, 추첨, 재추첨, reroll, levelupdata, levelupmanager, selection, 획득 선택지, 보관함, 설명 문구, 용어, 오버드라이브, particleimage, quaternion, aabb, assertion
 verified: 2026-10-30
-commit: de2cbd00
+commit: 2f719c91
 ---
 # EXP·선택지 카드
+
+## J 추천 뱃지 표시부 (2026-10-30)
+사용자 확정 J 빼꼼 개구리(개구리가 살짝 내다보는 추천 뱃지)를 공용 카드에 연결했다. `LevelUpCardUI.SetRecommended(bool)`는 외부 판정의 표시만 담당하며 `LevelUpCardUI.IsRecommended`로 표시 상태를 읽는다. `Setup`마다 숨김으로 초기화하며 자동 추천 판정은 아직 없다. 첫 카드에만 예시 표시한 [인게임 캡처와 Play12/전체 회귀 결과](../../../outputs/choice-j-ingame-20261030/RESULT.md). 사용자는 기존 분류를 이용한 테마별 추천을 원하지만 실제 시스템 설계는 Claude와 별도로 진행하기로 했다. 아래 G01 기록의 분류 데이터 연결과 추천 판단 구현 완료를 혼동하지 않는다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Prefab/UI/LevelUp_Selection 1.prefab` | 일반/하드/튜토리얼 공용 카드. J 뱃지 기본 비활성, raycast 없음, 레이아웃 제외 |
+| `Assets/WorkSpace/USW/Data/UI/ChoiceRecommendation/SPR_ChoiceRecommendation_J.png` | 사용자 확정 J 시안의 투명 추천 표시 스프라이트 |
+
+병합으로 중복된 `FieldViewEye`의 실험실 코드 사본과 meta는 제거했다. 실험실과 게임이 기존 공용 `LevelUpPresentation/FieldViewEye.cs`를 사용하며 공용 GUID와 씬 참조는 유지된다. 실험실 worktree의 원본 시안 파일은 그대로 보존한다.
 
 10-28 정적 대조: 일반·하드·튜토리얼의 카드 홀드와 필드 보기 버튼은 같은 `UI_Peekthrough`로 0.3초 InOutSine 페이드·터치 해제 후 입력 복원을 공유한다. 카드 홀드 대상 강조는 유지한다. `IngameHudMotion`은 판매/선택지의 소유자별 HUD 수납을 담당하며 전투·토템·딜 그래프 아래/햄버거 오른쪽, InBack0.3/OutBack0.4초로 숨김·복원한다. `LevelUpFieldView`는 토글·실드·문구, LevelUpUI는 선택·정지를 소유한다. 이 구현은 HEAD에 포함된다. 아래 날짜별 미커밋 설명은 작성 당시 기록이다. [이식 검증](../../../outputs/field-view-shared-20261027/RESULT.md), [이번 대조](../../../outputs/harness-refresh-20261028/RESULT.md).
 
