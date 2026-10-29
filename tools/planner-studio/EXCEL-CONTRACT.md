@@ -1,122 +1,72 @@
-# 콘텐츠 Excel / JSON 규약 v4
+# 기획 데이터 Excel 작성 규약
 
-출석은 **이벤트 → 출석 이벤트**로 분류합니다. 최신 `AttendanceEvent.xlsx`와 `AttendanceEventExample.xlsx`는 `AttendanceEvents` / `AttendanceRewards` 두 시트이며 `EventKey`로 연결합니다. 기간·수령 마감·반복·비활성 예시는 [ATTENDANCE-EVENT.md](ATTENDANCE-EVENT.md)에 정리했습니다. 아래 AttendancePlan / Attendance 설명은 이전 형식의 이관 참고입니다.
+같은 의미의 데이터는 기능에 관계없이 같은 열 이름·단위·셀 형식을 사용합니다. 기능별 고유 항목까지 같은 표로 합치지는 않습니다. 실제 열 순서와 타입은 내보내는 `.schema.json`이 기준입니다.
+
+## 공통 작성 규칙
+
+첫 행은 영문 열 이름, 두 번째 행부터 데이터입니다. 입력 셀 수식과 병합 셀은 사용하지 않습니다. 키는 텍스트로 보관하고 이름·설명·행 순서는 식별자로 쓰지 않습니다. 중복 키·없는 참조·누락 등급·누락 레벨은 검사에서 거절합니다.
+
+| 데이터 | 작성 방식 | 적용 예 |
+|---|---|---|
+| 이벤트 식별 | EventKey | AttendanceEvents, AttendanceRewards, MissionEvents, Missions |
+| 보상 | Rewards = `Gold:500;Diamond:10;Stamina:30` | 출석 일차, 미션 완료 |
+| 비용 | Costs = `Gold:500;Diamond:10` | 강화 비용. 보상과 같은 파서 사용 |
+| 기간 | StartAt, EndAt, 시간대를 포함한 ISO 시각 | `2026-11-01T05:00:00+09:00`. 시작 포함·종료 제외 |
+| 활성 | Enabled = 0 또는 1 | 출석·미션 이벤트 |
+| 공격 속도 | AttackFrequency, 공격 횟수/초 | 2 = 초당 두 번. 엑셀·게임 데이터 동일 |
+
+아이템 수량은 1~2,147,483,647의 정수이며 프로젝트의 아이템 목록에 있는 키를 사용합니다. 한 셀에서 같은 아이템 키를 두 번 쓰지 않습니다. 보상은 한 개 이상 필요하고 비용은 빈 셀(무료)을 허용합니다. 소수·음수·0·초과 수량은 모두 거절합니다.
 
 ## 유닛 — UnitBalance.xlsx
 
-유닛은 한 Excel의 4개 시트로 관리합니다. 숫자 ID나 SO 경로 대신 문자열 키를 사용합니다.
-
-| 시트 | 행 키 | 연결·내용 |
+| 시트 | 행 식별 키 | 내용 |
 |---|---|---|
-| Units | UnitKey | 이름·종류·MaxLevel·BaseStatKey·UpgradeKey·LevelBonusKey |
-| BaseStats | BaseStatKey + Tier | Attack, AttackInterval(초), SkillCooldown(초), FoodProduction(초당), MaxDroneCount |
+| Units | UnitKey | 이름·종류·서버 매핑·아이콘·최대 레벨·BaseStatKey·UpgradeKey·LevelBonusKey |
+| BaseStats | BaseStatKey + Tier | Attack, AttackFrequency, SkillCooldown(초), FoodProduction(초당), MaxDroneCount |
 | UpgradeStats | UpgradeKey + TargetLevel | Costs, MultiplierIncrease, GlobalBonusIncrease |
 | LevelBonuses | LevelBonusKey + Level | Description, EffectStatus, EffectKey, EffectParams |
 
-유닛 키는 영문/밑줄로 시작하고 영문·숫자·밑줄·점·하이픈으로 구성합니다. 기존 숫자 서버 매핑은 BackendKeys에 보관하며, 시트 간 연결 키와 구분합니다. 동일한 BaseStatKey / UpgradeKey / LevelBonusKey를 여러 유닛이 참조할 수 있습니다.
+BaseStats는 normal / rare / epic / legend 네 등급을 모두 작성합니다. 같은 BaseStatKey를 참조하는 유닛은 기본 스탯을 공유합니다. 강화는 Lv.2부터 MaxLevel까지 연속이어야 하며 Costs는 목표 레벨에 도달하는 비용입니다. 증가량 0.1은 기준 배율에 +0.1입니다. 같은 공유 키의 정의가 다르면 거절합니다.
 
-BaseStats는 실제 UnitData에서 읽은 9개 유닛 × normal/rare/epic/legend 4등급 = 36행입니다. 족장 SO에 없는 일반 유닛 기본 스탯은 만들어 넣지 않으며 족장의 BaseStatKey는 비워 둡니다.
+EffectStatus=DescriptionOnly는 설명만 있는 항목이며 EffectKey는 빈칸, EffectParams는 `{}`입니다. Defined는 효과 키와 JSON 객체를 작성한 상태입니다. 게임에 해당 효과 처리기가 구현됐다는 뜻은 아닙니다. 설명 문구를 자동으로 전투 효과로 해석하지 않습니다.
 
-UpgradeStats는 레벨별 **증가량**입니다. MultiplierIncrease `0.1`은 누적 배율에 +0.1, GlobalBonusIncrease `0.02`는 전체 보너스에 +2%p입니다. Lv.1 기준 배율 1 / 보너스 0에서 해당 레벨까지 합산합니다. Excel을 가져오면 기존 UI의 누적 수치로 복원합니다. Costs는 해당 목표 레벨에 도달하는 비용입니다. 강화 키가 있는 유닛은 Lv.2부터 MaxLevel까지 빠짐없이 있어야 합니다.
+이전 BaseStats의 AttackInterval 열은 실제로 공격 횟수/초를 저장했습니다. 가져올 때 같은 값을 AttackFrequency로 취급하며 역수 변환하지 않습니다. 두 열을 함께 넣으면 모호한 중복으로 거절합니다. 기존 프로젝트 JSON의 내부 필드명은 보존하므로 저장된 작업도 계속 열 수 있습니다.
 
-기존 보너스의 EffectId는 새 시트에서 EffectKey로 표기합니다. DescriptionOnly / Defined와 JSON 객체 규칙은 동일합니다. 없는 참조·중복 복합 키·누락 등급·누락 레벨은 거절합니다. 같은 성장/보너스 키의 서로 다른 정의도 거절합니다.
+## 출석 — AttendanceEvent.xlsx
 
-개별 보너스 Excel은 백업 후 UnitBalance.xlsx로 통합했습니다. 예전 Unit / UnitUpgrade / UnitMilestone 시트 형식의 가져오기는 호환 유지합니다. 아래의 기존 시트 설명은 이전 형식 참고입니다. 최신 열 순서·타입은 내보내는 `.schema.json`이 기준입니다.
-
-첫 행은 고정 영문 열 이름, 두 번째 행부터 데이터입니다. 병합 셀과 입력 셀 수식은 사용하지 않습니다. ID를 텍스트로 보관하세요. 이름·설명은 표시용이며 파싱 키로 쓰지 않습니다. 행 순서 대신 아래 복합 키로 식별합니다.
-
-## 출석 — Attendance.xlsx
-
-별도 보상 표나 보상 묶음 ID가 없습니다. 출석 행의 Rewards가 지급 데이터 원본입니다.
-
-| 시트 | 키 | 열 |
+| 시트 | 행 식별 키 | 열 |
 |---|---|---|
-| AttendancePlan | AttendanceId | AttendanceId, Name, CycleDays |
-| Attendance | AttendanceId + Day | AttendanceId, Day, Rewards |
+| AttendanceEvents | EventKey | EventKey, Name, StartAt, EndAt, ClaimEndAt, CycleDays, RepeatMode, Enabled |
+| AttendanceRewards | EventKey + Day | EventKey, Day, Rewards |
 
-`ResetHourKst`: 0~23 정수. `CycleDays`: 1~365 정수. 각 계획은 Day 1부터 CycleDays까지 중복·누락 없이 구성합니다.
+CycleDays는 1~365이며 모든 일차를 빠짐없이 작성합니다. ClaimEndAt 빈칸은 종료 시각을 뜻합니다. RepeatMode는 Once 또는 Cycle입니다. 새 양식에 별도 보상 묶음이나 ResetHourKst 열은 없습니다. 신규 출석 이벤트의 게임 진행·수령 연결은 아직 미구현입니다.
 
-`Rewards`: `Gold:500;Diamond:10;Stamina:30`. 항목은 세미콜론, 아이템 ID와 수량은 콜론으로 구분합니다. 수량은 1~2147483647 정수이며 프로젝트 아이템 목록에 존재하는 ID만 허용합니다. 빈 셀은 보상 없는 일차입니다. 같은 셀의 아이템 ID 중복은 거절합니다.
+## 미션 — MissionEvents.xlsx
 
-파싱 결과 `Attendance.data.json`:
-
-```json
-{
-  "schemaVersion": 3,
-  "attendance": [{
-    "attendanceId": "DefaultAttendance",
-    "resetHourKst": 5,
-    "cycleDays": 7,
-    "days": [{"day": 1, "rewards": [{"itemId": "Gold", "amount": 500}]}]
-  }]
-}
-```
-
-위 days는 형식 설명을 위한 일부 예시입니다. 실제 파일에는 모든 일차가 들어갑니다.
-
-## 강화 — EnhancementBalance.xlsx
-
-| 시트 | 키 | 용도 |
+| 시트 | 행 식별 키 | 내용 |
 |---|---|---|
-| Unit | UnitId | 이름·종류·최대 레벨·원본 정보 |
-| UnitUpgrade | UnitId + TargetLevel | 해당 레벨 강화 비용·누적 배율·족장 전체 보너스 |
-| UnitMilestone | UnitId + Level | 보너스 해금 레벨·표시 문구·효과 정의 |
-| ResearchTree | TreeKey | 영구강화 트리 설정 |
-| ResearchNode | TreeKey + NodeId | 노드 수치·배치·선행 조건 |
+| MissionEvents | EventKey | Name, StartAt, EndAt, Enabled |
+| Missions | MissionKey | EventKey, Name, DataKey, Target, Period, Rewards |
+| DataBindings | BindingKey | HookKey, DataKey, ValueSource, ConstantValue, Enabled |
+| EventData | DataKey | 코드에서 제공하는 데이터 목록, 읽기 전용 |
+| ExecutionHooks | HookKey | 코드에서 제공하는 실행 지점 목록, 읽기 전용 |
 
-서버용 Excel·data.json·schema.json에는 `Source`, `Note`, `ChiefAsset`, `LegacySaveName`, `GrowthPerLevel`을 내보내지 않습니다. 원본 추적·메모·SO 경로·참고 성장률은 편집 프로젝트 JSON에만 보관합니다. 실제 성장 수치는 UnitUpgrade가 원본입니다. 파티의 족장은 경로 대신 `ChiefId`로 연결합니다. `AlphanChief`, `TestPartyChieftain`은 현재 프로젝트의 족장 키이며 뒤끝 숫자 ID와 같다는 뜻은 아닙니다.
+Period는 Event(이벤트 누적) 또는 Daily(공통 일일 초기화)입니다. 미션은 활성 DataBindings에 연결된 DataKey를 참조합니다. 같은 실행 지점에서 같은 데이터를 중복 갱신하도록 작성할 수 없습니다. 보상은 출석과 똑같은 Rewards 셀 규칙을 사용합니다.
 
-`Multiplier` 1.1은 ×1.1, `GlobalBonus` 0.02는 +2%입니다. 영구강화의 비율 스탯 `ValuePerLevel` 0.02는 +2%, 고정 스탯은 원값입니다. 목록은 세미콜론 구분, bool은 0/1로 내보냅니다. 열 전체 목록·타입·범위·enum은 함께 생성하는 `.schema.json`에서 확인합니다.
+## 영구강화와 기타 자료
 
-### 레벨업 보너스
+PermanentUpgrade.xlsx의 ResearchTree / ResearchNode는 TreeKey와 TreeKey + NodeId로 연결합니다. 비율 수치 0.02는 +2%, 고정 스탯은 원값입니다. 선행 노드 목록은 세미콜론 구분이며 순환 참조를 거절합니다. 파티는 에셋 경로 대신 ChiefId로 족장을 연결합니다. Source·Note·ChiefAsset 등 원본 추적 필드는 출력에서 제외합니다.
 
-고정 열:
+기존 무한모드·계정 성장 Excel은 기존 게임이 소비하는 양식을 보존합니다. 다른 게임 계약을 확인 없이 새 표 이름으로 바꾸지 않습니다.
 
-```text
-UnitId | Level | Description | EffectStatus | EffectId | EffectParams
-```
+## 작성용과 뒤끝 업로드용
 
-- `Level`: 1 이상 정수이며 해당 유닛 MaxLevel 이하. 유닛 ID + 레벨 중복 불가.
-- `Description`: 화면 표시 문구. 이를 정규식이나 자연어 해석으로 효과에 변환하지 않습니다.
-- `EffectStatus=DescriptionOnly`: 현재 문구만 존재하는 기존 보너스. EffectId는 빈칸, EffectParams는 `{}`.
-- `EffectStatus=Defined`: 효과 데이터를 작성한 항목. EffectId는 영문자로 시작하는 영문·숫자·밑줄 키, EffectParams는 JSON 객체.
-- JSON 숫자는 유한해야 합니다. 수치 단위·대상·조건은 해당 효과 키를 처리하는 게임 코드와 합의해야 합니다.
+작성은 위 양식으로 합니다. DEV 파일 준비는 동일 프로젝트 스냅샷에서 작성용 `.xlsx`, 열 규약 `.schema.json`, 업로드용 `.backend.xlsx`, 해시가 있는 `deployment.json`을 같은 폴더에 만듭니다. 유닛 작성용의 강화·보너스도 검토할 수 있지만 현재 업로드 대상은 기본 스탯만입니다.
 
-정의 예시:
+업로드용은 미션과 유닛 모두 `SchemaVersion, ReleaseKey, PartIndex, PartCount, Sha256, Payload`의 공통 전송 형식입니다. 직접 작성·수정하는 양식이 아닙니다. 작성용을 수정했다면 툴로 다시 가져와 적용 파일을 다시 만듭니다. 여러 표를 하나의 검증된 스냅샷으로 전달하기 위한 구조이며 파일 생성은 서버 적용 완료를 뜻하지 않습니다.
 
-```text
-UnitData_Betan | 3 | 스킬 쿨타임 20% 감소 | Defined | skill_cooldown_reduction | {"percent":20}
-```
+이전 Unit / UnitUpgrade / UnitMilestone, AttendancePlan / Attendance / RewardGroup 양식은 가져오기 호환을 유지합니다. 새로 내보내면 현재 양식을 사용합니다. `.data.json`은 개발용 변환 결과입니다. 프로젝트 복원은 프로젝트 저장 JSON 또는 작성용 Excel을 사용합니다.
 
-이 효과 키는 규약 설명 예시입니다. 게임에 이 이름의 처리기가 구현됐다는 의미가 아닙니다. 기존 보너스 설명을 임의로 효과 데이터로 변환하지 않습니다.
+## 검증
 
-`EnhancementBalance.data.json`의 보너스:
-
-```json
-{
-  "unitId": "UnitData_Betan",
-  "level": 3,
-  "description": "스킬 쿨타임 20% 감소",
-  "effectStatus": "Defined",
-  "effect": {"id": "skill_cooldown_reduction", "parameters": {"percent": 20}}
-}
-```
-
-DescriptionOnly이면 `effect`는 null입니다. Defined도 데이터가 정의됐다는 뜻이며 게임 적용 완료 표시는 아닙니다.
-
-## 가져오기·검사·호환
-
-시트에 포함된 표만 교체합니다. 나머지 프로젝트 데이터는 유지합니다. 잘못된 타입·필수 열 누락·수량·ID 참조·중복 키·트리 순환·출석 일차 누락·효과 JSON 오류는 적용 전에 거절합니다.
-
-이전 출석 Excel의 RewardGroupId 연결은 직접 Rewards로 변환합니다. 이전 JSON도 같은 방식으로 이관합니다. 이전 레벨 보너스 파일에 효과 열이 없으면 DescriptionOnly로 읽습니다.
-
-내보낼 때 `.xlsx`, `.data.json`, `.schema.json`이 생성됩니다. 기획작업실 재편집은 Excel 또는 프로젝트 저장 JSON을 사용합니다. `.data.json`은 개발용 파싱 결과이고, 프로젝트 복원 파일이 아닙니다.
-
-독립 변환:
-
-```powershell
-node Tools/planner-studio/parse-content.cjs Attendance.xlsx Attendance-parsed.json
-node Tools/planner-studio/parse-content.cjs EnhancementBalance.xlsx EnhancementBalance-parsed.json
-```
-
-변환은 동일한 검증기를 사용하며 기존 출력 파일을 덮어쓰지 않습니다. 게임 SO 변경·서버 업로드·실제 보상 지급은 수행하지 않습니다.
+`node tools/planner-studio/check-excel-contract.cjs`는 작성용 표의 열 규약 일치, 보상·비용의 공통 입력 규칙, 이전 공격 속도 열 호환, 작성용 원본과 뒤끝 전송 데이터의 값 일치를 검사합니다. 게임 원격 로드·저장·보상 지급 검증과는 구분합니다.

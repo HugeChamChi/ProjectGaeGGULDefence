@@ -33,6 +33,20 @@
     return [...new Set(errors)];
   }
   function serialize(rewards) {return rewards.map(r=>`${r.itemId}:${r.amount}`).join(';');}
+  // Rewards and costs use the same Excel cell contract in every feature.
+  function parseItems(value) {
+    if (!value.trim()) return [];
+    const seen = new Set();
+    return value.split(';').map(part => {
+      const match = /^([A-Za-z][A-Za-z0-9_]*):(\d+)$/.exec(part.trim());
+      if (!match) throw Error('아이템은 Gold:500;Stamina:10 형식으로 입력하세요.');
+      const amount = Number(match[2]);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 2147483647) throw Error('수량은 1~2,147,483,647 정수입니다.');
+      if (seen.has(match[1])) throw Error('같은 아이템이 중복되었습니다: ' + match[1]);
+      seen.add(match[1]);
+      return {itemId:match[1],amount};
+    });
+  }
   function tables(p,catalog) {
     const errors=validate(p,catalog); if(errors.length) throw Error(errors.join('\n'));
     return {
@@ -72,7 +86,7 @@
       'xl/worksheets/sheet1.xml':`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="4" width="28" customWidth="1"/></cols><sheetData>${sheet}</sheetData></worksheet>`
     });
   }
-  const api={clone,createProject,validate,serialize,tables,zip,xlsx};
+  const api={clone,createProject,validate,serialize,parseItems,tables,zip,xlsx};
   root.RewardCore=api;
   if(typeof module!=='undefined') module.exports=api;
 })(globalThis);

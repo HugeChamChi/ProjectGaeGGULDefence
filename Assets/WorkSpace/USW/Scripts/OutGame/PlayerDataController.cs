@@ -226,9 +226,20 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public int TryClaimAttendance(AttendanceConfig config, string today)
     {
         if (!IsReady || config == null || !config.IsValid) return 0;
-        var status = AttendanceRules.Evaluate(_data.AttendanceCount, _data.AttendanceLastDay, today);
+        RegisterAttendanceVisit(today);
+        var status = AttendanceRules.Evaluate(_data, today);
         if (!status.CanClaim) return 0;
         var reward = config.Rewards[status.ClaimableDay - 1];
+        if (reward.Items != null && reward.Items.Length > 0)
+        {
+            var next = RewardInventory.Apply(_data, config.RewardCatalog, "attendance:" + Guid.NewGuid().ToString("N"), reward.Items);
+            next.AttendanceCount = status.ClaimableDay;
+            next.AttendanceLastDay = today;
+            next.AttendancePendingDays--;
+            _data = next;
+            SaveAndRefresh();
+            return status.ClaimableDay;
+        }
         int balance = reward.Currency switch
         {
             MailRewardConfig.Currency.Gold => _data.Gold,
@@ -243,7 +254,12 @@ public class PlayerDataController : IDisposable, Global.IClearable
             default: _data.Stamina += reward.Amount; break;
         }
         _data.AttendanceCount = status.ClaimableDay; _data.AttendanceLastDay = today;
+        _data.AttendancePendingDays--;
         SaveAndRefresh(); return status.ClaimableDay;
+    }
+    public void RegisterAttendanceVisit(string today)
+    {
+        if (IsReady && AttendanceRules.Accrue(_data, today)) SaveAndRefresh();
     }
     /// <summary>Reserves one paid entry. Failed navigation/retry reuses the reservation without charging twice.</summary>
     public async UniTask<bool> ReserveEntryAsync(int cost)
@@ -312,6 +328,13 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     /// <summary>Marks an existing direct data mutation at a legacy boundary as a durable change.</summary>
     public void MarkDirty() { if (IsReady) SaveAndRefresh(); }
+    public async UniTask<bool> GrantRewardAsync(RewardCatalog catalog, string grantId, RewardAmount[] rewards)
+    {
+        if (!IsReady) return false;
+        var next = RewardInventory.Apply(_data, catalog, grantId, rewards);
+        if (next != null) { _data = next; SaveAndRefresh(); }
+        return await TrySaveAsync();
+    }
     /// <inheritdoc />
     public async UniTask SaveAsync() { await TrySaveAsync(); }
     /// <summary>Serializes writes; only a confirmed matching revision clears dirty state.</summary>

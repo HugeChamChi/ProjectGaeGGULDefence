@@ -17,11 +17,13 @@ public sealed class AttendanceConfig : ScriptableObject
     [Range(0, 23)] public int ResetHour = 5;
     /// <summary>Exactly seven rewards, day 1 first.</summary>
     public Reward[] Rewards = new Reward[CycleDays];
+    public RewardCatalog RewardCatalog;
 
     /// <summary>One day's grant.</summary>
     [Serializable]
     public sealed class Reward
     {
+        public RewardAmount[] Items = Array.Empty<RewardAmount>();
         public MailRewardConfig.Currency Currency;
         [Min(1)] public int Amount = 1;
     }
@@ -32,7 +34,13 @@ public sealed class AttendanceConfig : ScriptableObject
         get
         {
             if (Rewards == null || Rewards.Length != CycleDays) return false;
-            foreach (var reward in Rewards) if (reward == null || reward.Amount <= 0 || !Enum.IsDefined(typeof(MailRewardConfig.Currency), reward.Currency)) return false;
+            foreach (var reward in Rewards) {
+                if (reward == null) return false;
+                if (reward.Items != null && reward.Items.Length > 0) {
+                    if (RewardCatalog == null) return false;
+                    try { RewardCatalog.Expand(reward.Items); } catch (Exception) { return false; }
+                } else if (reward.Amount <= 0 || !Enum.IsDefined(typeof(MailRewardConfig.Currency), reward.Currency)) return false;
+            }
             return true;
         }
     }

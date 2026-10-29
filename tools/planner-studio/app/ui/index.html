@@ -2,13 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
+<script src="theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>GGD 기획 작업실</title>
   <link rel="stylesheet" href="studio.css">
   <script src="renderer.js" defer></script>
   <script src="content-shell.js" defer></script>
+  <script src="backend-deployment.js" defer></script>
   <link rel="stylesheet" href="content-shell.css">
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
   <aside class="sidebar">
@@ -20,6 +23,7 @@
       <button class="nav-item" id="historyButton"><span class="nav-icon">◷</span>저장한 실험<span class="nav-count" id="historyCount">0</span></button>
       <button class="nav-item" id="openExportsButton"><span class="nav-icon">↗</span>내보낸 파일</button>
     </nav>
+    <button class="nav-item" id="backendDeploymentButton">뒤끝 DEV 적용</button>
     <button class="nav-item settings-nav" id="settingsButton"><span class="nav-icon">⚙</span>설정</button>
   </aside>
   <main>
@@ -49,11 +53,42 @@
   </dialog>
   <dialog id="settingsDialog" aria-labelledby="settingsHeading">
     <div class="dialog-heading"><h2 id="settingsHeading">설정</h2><button class="icon-button" data-close="settingsDialog" aria-label="닫기">×</button></div>
+    <section class="settings-section theme-setting"><h3 id="darkModeLabel">다크 모드</h3><button type="button" id="themeToggle" role="switch" aria-checked="false" aria-labelledby="darkModeLabel">OFF</button></section>
+    <section class="settings-section" id="integrationStatus">
+      <h3>팀 검증 버전 · 게임 적용 범위</h3>
+      <p class="settings-description">편집과 파일 내보내기는 사용할 수 있습니다. 내보내기만으로 게임이나 뒤끝에 자동 반영되지 않습니다. 아래는 이 버전의 연결 범위이며 서버의 현재 적용 상태를 조회한 결과가 아닙니다.</p>
+      <table class="integration-table"><thead><tr><th>자료</th><th>게임 적용 상태</th></tr></thead><tbody>
+        <tr><td>기존 밸런스 편집</td><td>Excel 내보내기 후 기존 적용 절차 사용</td></tr>
+        <tr><td>유닛 기본 스탯</td><td>전용 DEV 파일·게임 로더 연결 / 실서버 적용 검증 대기. 유닛 강화·기본 설정·튜토리얼은 별도 연결 필요</td></tr>
+        <tr><td>영구강화 정의</td><td>별도 차트 변환·아이콘 등록·게임 검증 필요</td></tr>
+        <tr><td>미션 이벤트 설정</td><td>뒤끝 업로드 파일 생성·게임 로더 구현 / DEV 실서버 적용 검증 대기</td></tr>
+        <tr><td>미션 진행도·보상</td><td>세션 내 계산만 지원 / 서버 저장·복원·보상 지급 미연결</td></tr>
+        <tr><td>출석 이벤트</td><td>편집·내보내기 지원 / 새 이벤트 양식 게임 적용 미연결</td></tr>
+      </tbody></table>
+      <p class="settings-description">팀 전달: 폴더 전체를 전달하고 「팀 사용 안내.md」를 먼저 확인하세요. DEV 검증 후 동일 파일을 LIVE에 적용하며, 운영 이벤트 지급에는 진행도 저장과 보상 지급 개발이 추가로 필요합니다.</p>
+    </section>
     <section class="settings-section"><h3>엑셀 폴더</h3><p class="settings-description">자료를 가져올 때 이 폴더에서 시작합니다. 내보낸 Excel은 폴더 안의 ‘내보내기’에 저장합니다.</p><div class="folder-setting"><label class="sr-only" for="excelFolder">엑셀 폴더 경로</label><input id="excelFolder" readonly placeholder="폴더를 선택하세요"><button class="button secondary" id="chooseExcelFolderButton">폴더 선택</button></div><p id="exportFolderHint" class="settings-path"></p><div class="dialog-actions"><button class="button secondary" id="openExcelFolderButton">엑셀 폴더 열기</button></div></section>
   </dialog>
   <dialog id="libraryDialog" aria-labelledby="libraryHeading"><div class="dialog-heading"><h2 id="libraryHeading">자료 목록</h2><button class="icon-button" data-close="libraryDialog" aria-label="닫기">×</button></div><p>이 폴더의 Excel을 골라 앱에서 편집하세요. 파일 변경은 새로고침 후 가져와야 반영됩니다.</p><p id="libraryFolder" class="settings-path"></p><div class="dialog-actions"><button class="button secondary" id="bundledFolderButton">동봉 자료 사용</button><button class="button secondary" id="refreshLibraryButton">새로고침</button></div><p id="libraryError" role="alert"></p><div id="libraryList" class="history-list"></div></dialog>
   <dialog id="historyDialog"><div class="dialog-heading"><h2>저장한 실험</h2><button class="icon-button" data-close="historyDialog" aria-label="닫기">×</button></div><div id="historyList" class="history-list"></div></dialog>
   <dialog id="importDialog"><div class="dialog-heading"><h2>자료 가져오기</h2><button class="icon-button" data-close="importDialog" aria-label="닫기">×</button></div><button class="import-choice" data-import="endless"><span class="choice-icon">∞</span><div><strong>무한모드 Excel</strong><p>시작 시간 · HP 성장 · 처치 보너스</p></div><span>→</span></button><button class="import-choice" data-import="account"><span class="choice-icon">↗</span><div><strong>계정 성장 Excel</strong><p>경험치 곡선 · 보스 기준 경험치</p></div><span>→</span></button><button class="import-choice" data-import="bundle"><span class="choice-icon">▧</span><div><strong>실험 묶음</strong><p>.ggdplan</p></div><span>→</span></button></dialog>
   <dialog id="exportDialog"><div class="dialog-heading"><h2>Excel 내보내기 완료</h2><button class="icon-button" data-close="exportDialog" aria-label="닫기">×</button></div><div class="export-status">✓ 검사 통과 <span>서버·게임 적용 미확인</span></div><p id="exportInstruction" class="export-instruction"></p><div class="export-file"><span>생성한 파일</span><input id="exportFile" readonly aria-label="내보낸 Excel 경로"></div><p class="export-note">변경 내역과 적용 안내를 같은 폴더에 저장했습니다.</p><div class="dialog-actions"><button class="button secondary" id="revealExportButton">내보낸 폴더 열기</button><button class="button primary" id="consoleButton">뒤끝 콘솔 열기 ↗</button></div></dialog>
+  <dialog id="backendDeploymentDialog">
+    <div class="dialog-heading"><h2>뒤끝 DEV 적용</h2><button class="icon-button" id="backendClose" aria-label="닫기">×</button></div>
+    <p class="settings-description">1. 적용할 자료를 선택하고 파일을 준비합니다. 2. 공식 콘솔에서 표시된 DEV 차트에 업로드·적용합니다. 3. 개발 빌드에서 설정 로드와 동작을 확인합니다.</p>
+    <label class="guide-edit-label" for="backendKind">적용할 자료</label><select id="backendKind"><option value="missions">미션 이벤트 설정</option><option value="unitBaseStats">유닛 기본 스탯</option></select>
+    <p class="settings-description">유닛 기본 스탯은 공격력·공격 속도·쿨타임·식량·드론 수를 연결합니다. 강화 비용·레벨 보너스 실행·유저 레벨 저장은 포함하지 않습니다. 미션 보상 지급과 진행 저장도 아직 미연결입니다. 편집 중인 내용은 먼저 수정 저장하세요.</p>
+    <div class="dialog-actions"><button class="button primary" id="backendPrepare">DEV 적용 파일 준비</button></div>
+    <label for="backendHistory">이전에 준비한 버전</label><select id="backendHistory"></select>
+    <button class="button" id="backendRestore">선택한 버전 불러오기</button>
+    <p>유닛은 기본 스탯만, 미션은 설정만 적용합니다. 강화 구매·출석·미션 저장 및 보상 지급은 아직 운영 연결 전입니다.</p>
+    <p id="backendStatus" role="status">아직 파일을 준비하지 않았습니다.</p>
+    <div id="backendPrepared" hidden><dl class="guide-properties"><dt>대상 차트</dt><dd id="backendChart"></dd><dt>업로드 파일</dt><dd id="backendPath"></dd><dt>작성·검토용 엑셀</dt><dd id="backendAuthoringPath"></dd><dt>버전</dt><dd id="backendRelease"></dd></dl>
+    <p class="settings-description">작성·검토용 엑셀과 열 규약을 같은 폴더에 함께 저장합니다. 기획 수정은 작성용 엑셀에서 하고 다시 준비하세요. 업로드 파일(.backend.xlsx)은 동일 데이터에서 자동 생성하므로 직접 수정하지 않습니다.</p>
+    <p class="settings-description">공식 콘솔에서 위 차트를 생성 또는 선택하고 이 파일을 업로드한 뒤 「차트 파일 적용」을 누르세요. 파일 준비나 콘솔 열기는 업로드 완료를 뜻하지 않습니다. 게임의 원격 설정을 켜고 게임 앱 또는 Play를 다시 시작해야 적용됩니다.</p>
+    <div class="dialog-actions"><button class="button secondary" id="backendReveal">업로드 파일 위치 열기</button><button class="button primary" id="backendConsole">공식 콘솔에서 업로드·적용</button><button class="button secondary" id="backendExternalConsole">기본 브라우저로 열기</button></div>
+    <p class="settings-description">게임 담당자는 Unity Editor/Pipeline·뒤끝 로그인·Unity CLI가 준비된 PC에서 프로젝트를 선택하고 서버 적용 파일을 대조할 수 있습니다. 파일 일치 확인과 게임 플레이 검증은 별도입니다.</p>
+    <div class="dialog-actions"><button class="button secondary" id="backendProject">게임 프로젝트 선택</button><button class="button primary" id="backendVerify">서버 적용 파일 확인</button></div><p id="backendVerification" role="status"></p></div>
+  </dialog>
 </body>
 </html>

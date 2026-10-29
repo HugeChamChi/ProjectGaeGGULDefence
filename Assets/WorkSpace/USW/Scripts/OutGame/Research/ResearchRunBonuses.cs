@@ -38,8 +38,12 @@ public sealed class ResearchRunBonuses
         if (_enabled)
         {
             if (_tree == null) throw new InvalidOperationException("영구 강화 트리 미연결");
-            var session = _saves.GetSession(_account.AccountKey, _tree, "OutgameUpgrade.");
+            string accountKey = _account.AccountKey;
+            var tree = await _saves.ResolveTreeAsync(_tree, cancellationToken);
+            if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
+            var session = _saves.GetSession(accountKey, tree, "OutgameUpgrade.");
             await session.LoadAsync(cancellationToken);
+            if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
             foreach (ResearchStat stat in Enum.GetValues(typeof(ResearchStat)))
                 _values[(int)stat] = session.Progress.GetTotal(stat);
         }

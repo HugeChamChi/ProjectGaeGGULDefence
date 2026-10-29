@@ -5,7 +5,7 @@
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../BackndChartReader.cs" />
+    <Compile Include="../../planner-studio/app/backend-chart-reader.cs" />
     <Reference Include="Backend"><HintPath>../../../Assets/TheBackend/Plugins/Backend.dll</HintPath></Reference>
     <Reference Include="LitJSON"><HintPath>../../../Assets/TheBackend/Plugins/LitJSON.dll</HintPath></Reference>
   </ItemGroup>

@@ -96,7 +96,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _originalTier = currentTier;
         _temporaryTierSource = source;
         _hasTemporaryTier = true;
-        unitData = upgradedData != null ? upgradedData : unitData;
+        unitData = upgradedData != null ? UnitBalanceRuntime.Resolve(upgradedData) : unitData;
         currentTier = (Tier)((int)_originalTier + 1);
         _visual?.UpdateVisual(currentTier);
         OnCombatTierChanged();
@@ -183,6 +183,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public void Init(UnitDependencies deps)
     {
+        unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
         LevelBonuses = new UnitLevelBonusController(unitData.LevelBonuses, deps.UnitLevels?.GetLevel(unitData.name) ?? 1);
         

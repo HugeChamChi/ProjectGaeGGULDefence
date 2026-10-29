@@ -1,5 +1,21 @@
 # 실행 지점 → 데이터 → 미션
 
+## 뒤끝 연결 추가 (2026-10-26)
+
+미션 Excel 내보내기에 `MissionEvents.backend.xlsx`를 추가했습니다. 뒤끝에는 이 단일 시트 파일을 업로드합니다. 편집용 Excel은 기존대로 유지합니다.
+
+1. 뒤끝 콘솔의 **DEV_MissionEvents** 차트에 backend 파일을 업로드하고 **적용**합니다.
+2. `Assets/WorkSpace/USW/Resources/EventChartSettings.json`의 `UseRemote`를 true로 변경합니다. 기본값은 false입니다.
+3. Editor/Development Build에서 로그인하면 DEV 차트를 다운로드·검증하여 적용합니다. 일반 출시 빌드는 **LIVE_MissionEvents**를 사용합니다. DEV 검증 후 동일 파일을 LIVE에 적용합니다.
+
+`Player` 로그인 초기화에서 `EventChartLoader`를 호출합니다. 계정 변경 시 이전 요청을 거절하며 이미 설정된 같은 계정의 진행도는 초기화하지 않습니다. 원격 모드의 실패는 로그인 초기화 오류로 전달하고 로컬 예시나 다른 환경으로 대체하지 않습니다. 설정은 세션 중 자동 갱신하지 않습니다.
+
+차트 조각을 SHA-256으로 확인한 후 기존 설정 JSON으로 복원합니다. 체크섬은 전송 무결성 검사이며 전투 검증이나 보상 권한을 대신하지 않습니다.
+
+검증: 실제 SDK/Unity 참조로 C# 컴파일, XLSX에서 C# 설정 복원, 잘못된 체크섬·개수·버전 거절, 기존 미션 런타임 및 Electron 내보내기 검사 통과. **서버 업로드·적용 및 플레이 검증은 미실행**입니다. 진행도 서버 저장·복원, 보상 지급과 출석 이벤트 연결은 이번 구현에 포함되지 않습니다.
+
+명령줄: `node tools/planner-studio/export-event-chart.mjs <프로젝트.json> <새출력.xlsx> <releaseKey>`.
+
 ## 기획자 작업 순서
 
 1. **이벤트 → 데이터 연결**에서 실행 지점을 선택합니다.
@@ -46,7 +62,7 @@
 
 기본 설정은 `Assets/WorkSpace/USW/Resources/EventDataConfig.json`에서 읽습니다. 이 파일은 비활성 예시입니다. 개발자가 내보낸 `MissionEvents.data.json`을 해당 파일에 적용하면 다음 설정 로드 시 파싱됩니다. **기획 툴에서 내보내기만 해서는 게임 파일을 덮어쓰지 않습니다.** Resources 변경을 배포하려면 게임 빌드가 필요합니다.
 
-원격 설정 어댑터는 내려받은 JSON을 `EventDataBridge.Configure(accountKey, json, commonResetHourKst, serverClock)`에 전달하면 됩니다. 현재 뒤끝에서 이 JSON을 다운로드하는 어댑터는 구현되어 있지 않습니다. Configure는 새 세션 상태를 만드므로 진행 중인 계정에 반복 호출하여 진행도를 초기화하지 않도록 해야 합니다.
+`EventChartLoader`가 공통 `BackendChartReader`로 뒤끝 차트를 다운로드하고 `ChartSnapshotPayload`로 복원한 JSON을 `EventDataBridge.Configure(accountKey, json, commonResetHourKst, serverClock)`에 전달합니다. Configure는 새 세션 상태를 만드므로 진행 중인 계정에 반복 호출하여 진행도를 초기화하지 않도록 해야 합니다.
 
 런타임은 `EventDataRuntime`입니다. 이벤트별 미션 진행은 시작 포함·종료 제외의 서버 시각을 사용합니다. Daily는 `DailyManager.ResetHourKst` 공통 기준으로 날짜가 나뉘며 이벤트에 초기화 시간 필드가 없습니다. Event는 해당 이벤트 기간 동안 누적합니다. 이전 계정의 실행은 거절하고 같은 실행 키는 한 번만 적용합니다.
 
@@ -54,7 +70,7 @@
 
 완료: 코드 카탈로그 → 툴 목록 생성 → 실행 지점별 연결 편집 → Excel/JSON 파싱 → 실제 전투 종료 전달 → 세션 내 미션 진행 계산.
 
-미연결: 뒤끝 원격 설정 다운로드, 유저 진행도/실행 영수증 저장·재접속 복원, 서버의 전투 결과 검증, 수령 상태와 실제 보상 지급, 게임 내 미션 화면. 따라서 현재 미션은 **개발·기획 검증용**이며 운영용 지급 시스템이 아닙니다. 메모리의 중복 방지는 프로세스 종료 후 유지되지 않습니다. 기존 출석 서비스는 별도 경로를 유지합니다.
+미연결: 실서버 새 차트 적용·플레이 검증, 유저 진행도/실행 영수증 저장·재접속 복원, 서버의 전투 결과 검증, 수령 상태와 실제 보상 지급, 게임 내 미션 화면. 따라서 현재 미션은 **개발·기획 검증용**이며 운영용 지급 시스템이 아닙니다. 메모리의 중복 방지는 프로세스 종료 후 유지되지 않습니다. 기존 출석 서비스는 별도 경로를 유지합니다.
 
 ## 검증
 

@@ -143,6 +143,8 @@ public sealed class ResearchScreen : MonoBehaviour
             for (int i = 0; i < _trees.Length; i++)
             {
                 if (_trees[i] == null || !keys.Add(_trees[i].TreeKey)) throw new InvalidOperationException("누락/중복 트리입니다.");
+                _trees[i] = await _saveService.ResolveTreeAsync(_trees[i], loading.Token);
+                if (request != _request || generation != _account.Generation) return;
                 sessions[i] = _saveService.GetSession(accountKey, _trees[i], _saveKeyPrefix);
                 await sessions[i].LoadAsync(loading.Token);
                 if (request != _request || generation != _account.Generation) return;

@@ -36,7 +36,7 @@ public sealed class AttendanceService
     /// <summary>Progress currently held in the account snapshot.</summary>
     public AttendanceRules.Status Evaluate() =>
         _data?.Data == null || Config == null || LastServerUtc == null ? default
-        : AttendanceRules.Evaluate(_data.Data.AttendanceCount, _data.Data.AttendanceLastDay, Config.DayKey(EstimatedServerUtc));
+        : AttendanceRules.Evaluate(_data.Data, Config.DayKey(EstimatedServerUtc));
 
     /// <summary>Server time advanced locally since the last fetch.</summary>
     public DateTime EstimatedServerUtc => (LastServerUtc ?? DateTime.UtcNow).AddSeconds(Time.realtimeSinceStartup - _observedAt);
@@ -64,7 +64,8 @@ public sealed class AttendanceService
             if (!_data.IsReady) return (ClaimResult.NotReady, 0);
             if (!await RefreshAsync(token)) return (ClaimResult.TimeUnavailable, 0);
             string today = Config.DayKey(LastServerUtc.Value);
-            if (!AttendanceRules.Evaluate(_data.Data.AttendanceCount, _data.Data.AttendanceLastDay, today).CanClaim) return (ClaimResult.AlreadyClaimed, 0);
+            _data.RegisterAttendanceVisit(today);
+            if (!AttendanceRules.Evaluate(_data.Data, today).CanClaim) return (ClaimResult.AlreadyClaimed, 0);
             int day = _data.TryClaimAttendance(Config, today);
             if (day == 0) return (ClaimResult.Invalid, 0);
             bool saved = await _data.TrySaveAsync();

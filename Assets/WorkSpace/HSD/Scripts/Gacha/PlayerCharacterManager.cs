@@ -29,7 +29,9 @@ public class PlayerCharacterManager : Global.IClearable
 
     public int GetCount(int characterId)
     {
-        return _ownedCharacterCounts.TryGetValue(characterId, out int count) ? count : 0;
+        int existing = _ownedCharacterCounts.TryGetValue(characterId, out int count) ? count : 0;
+        int rewards = Player.PlayerData.IsReady ? Player.PlayerData.Data.RewardInventory.Count(RewardType.Unit, characterId) : 0;
+        return (int)Math.Min(int.MaxValue, (long)existing + rewards);
     }
     public void AddCharacter(int characterId, int count = 1)
     {

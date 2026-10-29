@@ -13,7 +13,7 @@ test('real stdio client lists tools and validates/exports/verifies/compares with
   await client.connect(transport);
   t.after(() => client.close());
   const list = await client.listTools();
-  assert.equal(list.tools.length,9);
+  assert.equal(list.tools.length,12);
   assert.ok(!list.tools.some(tool => /upload|delete|create_table/.test(tool.name)));
   const fixtures = path.join(projectRoot,'outputs/backnd-mcp');
   fs.mkdirSync(fixtures,{recursive:true});
@@ -23,12 +23,19 @@ test('real stdio client lists tools and validates/exports/verifies/compares with
   fs.writeFileSync(input,JSON.stringify(workbook.engine().Studio.create()));
   t.after(() => { fs.rmSync(input,{force:true}); fs.rmSync(path.join(fixtures,id),{recursive:true,force:true}); });
   const call = (name,args) => client.callTool({name,arguments:args});
+  const research = await call('validate_research_balance',{sourceFile:'Assets/WorkSpace/USW/Resources/ResearchBalance.json'});
+  assert.ok(!research.isError,research.content[0].text);
+  assert.equal(JSON.parse(research.content[0].text).nodes,61);
   const valid = await call('validate_unit_balance',{projectFile:input});
   assert.ok(!valid.isError); assert.equal(JSON.parse(valid.content[0].text).valid,true);
   const exported = await call('export_unit_charts',{projectFile:input,releaseKey:id});
   assert.ok(!exported.isError,exported.content[0].text);
   const bundle = JSON.parse(exported.content[0].text);
   assert.equal(bundle.format,'xlsx');
+  const plan = JSON.parse((await call('plan_unit_chart_deployment',{directory:bundle.directory})).content[0].text);
+  assert.equal(plan.environment,'DEV');
+  assert.deepEqual(plan.charts.map(c => c.targetChartName),['DEV_Units','DEV_BaseStats','DEV_UpgradeStats']);
+  assert.equal((await call('plan_unit_chart_deployment',{directory:bundle.directory,environment:'PROD'})).isError,true);
   const verified = await call('verify_chart_bundle',{directory:bundle.directory});
   assert.equal(JSON.parse(verified.content[0].text).valid,true);
   const compared = await call('compare_unit_chart',{projectFile:input,table:'Units',currentFile:path.join(bundle.directory,'Units.xlsx')});

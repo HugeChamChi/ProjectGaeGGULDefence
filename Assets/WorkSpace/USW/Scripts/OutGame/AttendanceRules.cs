@@ -4,6 +4,28 @@
 /// </summary>
 public static class AttendanceRules
 {
+    // Accrue only observed login days, never elapsed calendar days.
+    public static bool Accrue(PlayerData data, string today)
+    {
+        if (data == null || string.IsNullOrEmpty(today)) return false;
+        string previous = string.IsNullOrEmpty(data.AttendanceLastVisitDay)
+            ? data.AttendanceLastDay : data.AttendanceLastVisitDay;
+        if (!string.IsNullOrEmpty(previous) && string.CompareOrdinal(today, previous) <= 0) return false;
+        if (data.AttendancePendingDays == int.MaxValue) return false;
+        data.AttendancePendingDays++;
+        data.AttendanceLastVisitDay = today;
+        return true;
+    }
+
+    public static Status Evaluate(PlayerData data, string today)
+    {
+        if (data == null) return default;
+        int claimed = System.Math.Clamp(data.AttendanceCount, 0, AttendanceConfig.CycleDays);
+        bool validDay = !string.IsNullOrEmpty(today)
+            && string.CompareOrdinal(today, data.AttendanceLastVisitDay ?? "") >= 0;
+        int next = validDay && data.AttendancePendingDays > 0 ? claimed % AttendanceConfig.CycleDays + 1 : 0;
+        return new Status(claimed, next, next == 0 && data.AttendanceLastDay == today);
+    }
     /// <summary>Display and claim state for one server day.</summary>
     public readonly struct Status
     {

@@ -121,5 +121,5 @@ public sealed class AppInitialization : IDisposable
     }
 
     /// <summary>앱 종료에서만 진행 중인 부팅 작업을 취소한다.</summary>
-    public void Dispose() { _lifetime.Cancel(); _lifetime.Dispose(); }
+    public void Dispose() { _lifetime.Cancel(); _lifetime.Dispose(); UnitBalanceChartLoader.Clear(); }
 }

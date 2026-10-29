@@ -11,12 +11,20 @@ exports.register = ({ handler, workspace, store, atomic }) => {
     const folder=path.join(store.exportFolder(),'콘텐츠-'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+crypto.randomBytes(3).toString('hex'));
     fs.mkdirSync(folder,{recursive:true});const file=path.join(folder,name);atomic(file,bytes);return {file};
   }
+  require('./backend-deployment.cjs').register({handler,workspace,atomic,exportFile,getCurrentProject:current});
   handler('content-workbook-export',p=>{
     const names=excel.bundles[p.bundle]||[p.table];
     const result=exportFile(p.bundle==='missions'?'MissionEvents.xlsx':p.bundle==='enhancement'?'EnhancementBalance.xlsx':p.bundle==='rewards'?'AttendanceEvent.xlsx':p.table+'.xlsx',excel.write(p.project,names));
     const parsed=excel.toRuntime(p.project,names);
     result.dataFile=result.file.replace(/\.xlsx$/,'.data.json');atomic(result.dataFile,JSON.stringify(parsed,null,2));
-    result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));return result;
+    result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));
+    if(p.bundle==='missions'){
+      const release='event-'+crypto.randomBytes(12).toString('hex');
+      const rows=require('./chart-payload.cjs').encodeConfigRows(parsed,release);
+      result.chartFile=result.file.replace(/\.xlsx$/,'.backend.xlsx');
+      atomic(result.chartFile,Buffer.from(excel.engine().RewardCore.xlsx('MissionEvents',rows)));
+    }
+    return result;
   });
   handler('content-workbook-import',p=>{
     if(!Array.isArray(p.bytes)||p.bytes.length>8*1024*1024)throw Error('Excel은 8MB 이하여야 합니다.');

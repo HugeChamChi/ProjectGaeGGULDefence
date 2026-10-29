@@ -30,3 +30,9 @@
 - `compare_unit_chart`는 XLSX 입력을 추가 지원. `verify_live_chart_bundle` 도구와 CLI는 4개 파일 전부를 실제 차트와 대조하며 누락/조회 실패/값 불일치를 실패로 반환한다.
 - 실제 기획 원본으로 `outputs/backnd-mcp/unit-xlsx-20261025/`에 XLSX 4개 생성, 10/36/114/30행과 셀 값/타입 및 manifest 해시 검증 완료. 4개 시트의 렌더링도 확인했다.
 - 이번 XLSX 묶음은 아직 서버에 업로드/적용하지 않았다. 파일 생성/로컬 왕복 검증과 서버 적용 검증은 별개다.
+# DEV/LIVE 경로 설정 검증 (2026-10-25 후속)
+
+- Node 테스트 12개 통과: 기존 XLSX/CSV 검증, 실제 MCP stdio 10개 도구, 기본 DEV 계획, 잘못된 환경 거부, 동일 파일/해시의 LIVE 계획, DEV 조회 실패 시 LIVE로 대체하지 않음.
+- UnitBalanceChartRoute 원본을 .NET 9에서 UNITY_EDITOR / DEVELOPMENT_BUILD / 일반 빌드 조건으로 각각 컴파일·실행하여 DEV / DEV / LIVE 및 잘못된 차트명 거부 확인.
+- 이번 후속 검증은 Unity 플레이/전체 프로젝트 빌드나 서버 차트 업로드 검증이 아니다. 실제 유닛 로더 연결은 미구현이다.
+- LevelBonuses는 로컬 묶음에 보존하지만 배포 계획/원격 비교에서는 제외한다. 아래 기록은 이전 시점의 검증 내역이다.
