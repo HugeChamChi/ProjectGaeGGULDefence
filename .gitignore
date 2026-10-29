@@ -130,3 +130,7 @@ Assets/outputs.meta
 Assets/WorkSpace/HSD/GEMINI.md.meta
 /docs
 /GGD-Planner
+
+# UI Studio distribution-only team client metadata and per-user OAuth config
+**/ArtTools/team.json
+**/art-rclone.conf

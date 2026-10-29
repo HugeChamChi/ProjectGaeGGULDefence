@@ -12,34 +12,106 @@ namespace GGD.UI.Authoring
     /// <summary>The identical UGUI component graph renderer used by the visual Studio and the production settings host.</summary>
     public sealed class AuthoredUiView : IDisposable
     {
+        private static readonly Unity.Profiling.ProfilerMarker _createMarker = new Unity.Profiling.ProfilerMarker("UIAuthoring.Create");
+        private static readonly Unity.Profiling.ProfilerMarker _prefabMarker = new Unity.Profiling.ProfilerMarker("UIAuthoring.InstantiateAndBind");
         private readonly AuthoringResources _resources;
         private readonly IAuthoringBindings _bindings;
         private readonly List<Action> _refresh = new List<Action>();
         private readonly List<Action> _cleanup = new List<Action>();
-        private readonly List<Material> _materials = new List<Material>();
+        private readonly Dictionary<(Material Base, float Width, UnityEngine.Color Color), Material> _materials = new Dictionary<(Material, float, UnityEngine.Color), Material>();
         private bool _disposed;
         /// <summary>Inactive until every component/reference/state has been prepared.</summary>
         public GameObject Root { get; private set; }
         /// <summary>Stable composed identities, including nested prefab instance paths.</summary>
         public Dictionary<string, RectTransform> Elements { get; } = new Dictionary<string, RectTransform>();
-        /// <summary>Source metadata retained for selection and provenance inspectors.</summary>
+        /// <summary>Source metadata for authoring and source comparisons; null on a baked game view.</summary>
         public ResolvedUiDocument Document { get; private set; }
+        /// <summary>Host animation target prepared by source composition or serialized prefab references.</summary>
+        public RectTransform AnimationRoot { get; private set; }
+        /// <summary>Whether this view was instantiated from a baked prefab without source interpretation.</summary>
+        public bool IsBaked { get; private set; }
 
         private AuthoredUiView(AuthoringResources resources, IAuthoringBindings bindings) { _resources = resources; _bindings = bindings; }
 
         /// <summary>Builds a hidden candidate; any failure releases all newly owned objects and resources.</summary>
         public static AuthoredUiView Create(ResolvedUiDocument document, RectTransform parent, AuthoringResources resources, IAuthoringBindings bindings)
         {
+            using var sample = _createMarker.Auto();
             var view = new AuthoredUiView(resources, bindings) { Document = document };
             try
             {
                 view.Root = new GameObject("Authored UI3030", typeof(RectTransform), typeof(CanvasGroup)); view.Root.SetActive(false);
                 var root = (RectTransform)view.Root.transform; root.SetParent(parent, false); Stretch(root);
+                if ((string)document.Root.Attribute("canvas") == "own")
+                {
+                    var canvas = view.Root.AddComponent<Canvas>();
+                    canvas.overrideSorting = false;
+                    var parentCanvas = parent.GetComponentInParent<Canvas>();
+                    if (parentCanvas != null) canvas.additionalShaderChannels = parentCanvas.additionalShaderChannels;
+                    var raycaster = view.Root.AddComponent<GraphicRaycaster>();
+                    var parentRaycaster = parent.GetComponentInParent<GraphicRaycaster>();
+                    if (parentRaycaster != null)
+                    {
+                        raycaster.ignoreReversedGraphics = parentRaycaster.ignoreReversedGraphics;
+                        raycaster.blockingObjects = parentRaycaster.blockingObjects;
+                        raycaster.blockingMask = parentRaycaster.blockingMask;
+                    }
+                }
                 foreach (var element in document.Root.Elements("Element")) view.CreateTree(element, root);
                 foreach (var element in document.Root.Descendants("Element")) view.AddComponents(element);
                 foreach (var element in document.Root.Descendants("Element")) view.Wire(element);
+                string animation = (string)document.Root.Attribute("animation");
+                view.AnimationRoot = animation != null && view.Elements.TryGetValue(animation, out var target) ? target : view.Elements.Values.FirstOrDefault(x => x.name == "Window");
                 bindings.OnChanged += view.Refresh; view.Refresh();
                 return view;
+            }
+            catch { view.Dispose(); throw; }
+        }
+
+        /// <summary>Clones a native prefab hierarchy and applies permitted visual edits without rebuilding its objects.</summary>
+        public static AuthoredUiView FromNative(NativePrefabTemplate template, ResolvedUiDocument document, RectTransform parent, AuthoringResources resources, IAuthoringBindings bindings)
+        {
+            var view = new AuthoredUiView(resources, bindings) { Document = document, IsBaked = true };
+            try
+            {
+                view.Root = UnityEngine.Object.Instantiate(template.gameObject, parent, false); view.Root.SetActive(false);
+                var copy = view.Root.GetComponent<NativePrefabTemplate>();
+                for (int i = 0; i < copy.Ids.Length; i++) view.Elements.Add(copy.Ids[i], copy.Rects[i]);
+                if (view.Root.GetComponent<CanvasGroup>() == null) view.Root.AddComponent<CanvasGroup>();
+                foreach (var node in document.Root.Descendants("Element"))
+                {
+                    var rect = view.Elements[AuthoringWorkspace.Required(node, "id")];
+                    ApplyRect(rect, node); rect.name = (string)node.Attribute("name");
+                    rect.gameObject.SetActive(Boolean(node, "active", true));
+                    string visible = (string)node.Attribute("visible");
+                    if (visible != null) view._refresh.Add(() => rect.gameObject.SetActive(Boolean(node, "active", true) && Convert.ToBoolean(bindings.Read(visible))));
+                    view.AddComponents(node);
+                }
+                foreach (var node in document.Root.Descendants("Element")) view.Wire(node);
+                view.AnimationRoot = view.Elements[copy.AnimationId];
+                var motion = view.Root.AddComponent<NativePrefabMotion>(); motion.Configure(copy, view.AnimationRoot);
+                bindings.OnChanged += view.Refresh; view.Refresh(); return view;
+            }
+            catch { view.Dispose(); throw; }
+        }
+
+        /// <summary>Clones the complete serialized graph, binds live services while hidden, and never resolves XML.</summary>
+        public static AuthoredUiView FromPrefab(BakedUiDocument prefab, RectTransform parent, IAuthoringBindings bindings)
+        {
+            using var sample = _prefabMarker.Auto();
+            if (prefab == null) throw new FormatException("Baked UI is missing. Install the current publication in Unity.");
+            var view = new AuthoredUiView(null, bindings) { IsBaked = true };
+            try
+            {
+                view.Root = UnityEngine.Object.Instantiate(prefab.gameObject, parent, false); view.Root.SetActive(false);
+                var document = view.Root.GetComponent<BakedUiDocument>();
+                document.Bind(bindings, view.Elements, view._refresh, view._cleanup); view.AnimationRoot = document.AnimationRoot;
+                var canvas = view.Root.GetComponent<Canvas>(); var parentCanvas = parent.GetComponentInParent<Canvas>();
+                if (canvas != null && parentCanvas != null) canvas.additionalShaderChannels |= parentCanvas.additionalShaderChannels;
+                var raycaster = view.Root.GetComponent<GraphicRaycaster>(); var parentRaycaster = parent.GetComponentInParent<GraphicRaycaster>();
+                if (raycaster != null && parentRaycaster != null)
+                { raycaster.ignoreReversedGraphics = parentRaycaster.ignoreReversedGraphics; raycaster.blockingObjects = parentRaycaster.blockingObjects; raycaster.blockingMask = parentRaycaster.blockingMask; }
+                bindings.OnChanged += view.Refresh; view.Refresh(); return view;
             }
             catch { view.Dispose(); throw; }
         }
@@ -79,14 +151,14 @@ namespace GGD.UI.Authoring
                 switch (item.Name.LocalName)
                 {
                     case "Image":
-                        var image = target.AddComponent<Image>(); image.sprite = _resources.Sprite((string)item.Attribute("sprite"));
+                        var image = (target.GetComponent<Image>() ?? target.AddComponent<Image>()); image.sprite = _resources.Sprite((string)item.Attribute("sprite"));
                         image.color = Color(item, "color", UnityEngine.Color.white); image.type = (Image.Type)(int)N(item, "type");
-                        image.preserveAspect = Boolean(item, "preserveAspect"); image.raycastTarget = Boolean(item, "raycast", true);
+                        image.preserveAspect = Boolean(item, "preserveAspect"); image.raycastTarget = UiPublishLint.ImageRaycastTarget(item);
                         image.fillMethod = (Image.FillMethod)(int)N(item, "fillMethod", 4); image.fillAmount = N(item, "fillAmount", 1);
                         image.fillOrigin = (int)N(item, "fillOrigin"); image.fillClockwise = Boolean(item, "clockwise", true);
                         image.pixelsPerUnitMultiplier = N(item, "ppuMultiplier", 1); break;
                     case "Text":
-                        var text = target.AddComponent<TextMeshProUGUI>(); text.font = _resources.Font(AuthoringWorkspace.Required(item, "font"));
+                        var text = (target.GetComponent<TextMeshProUGUI>() ?? target.AddComponent<TextMeshProUGUI>()); text.font = _resources.Font(AuthoringWorkspace.Required(item, "font"));
                         text.text = (string)item.Attribute("text") ?? ""; text.fontSize = N(item, "size", 32); text.color = Color(item, "color", UnityEngine.Color.white);
                         text.alignment = (TextAlignmentOptions)(int)N(item, "alignment", (int)TextAlignmentOptions.Center);
                         text.fontStyle = (FontStyles)(int)N(item, "style"); text.enableAutoSizing = Boolean(item, "autoSize");
@@ -96,33 +168,37 @@ namespace GGD.UI.Authoring
                         text.margin = new Vector4(N(item, "marginLeft"), N(item, "marginTop"), N(item, "marginRight"), N(item, "marginBottom"));
                         if (N(item, "outlineWidth") > 0)
                         {
-                            var material = new Material(text.fontSharedMaterial); _materials.Add(material); text.fontSharedMaterial = material;
-                            // TMP's outlineWidth setter assumes Awake has cached its CanvasRenderer.
-                            // Staged candidates are deliberately inactive, so author the owned material directly.
-                            material.SetFloat("_OutlineWidth", N(item, "outlineWidth"));
-                            material.SetColor("_OutlineColor", Color(item, "outlineColor", UnityEngine.Color.black));
+                            var key = (text.fontSharedMaterial, N(item, "outlineWidth"), Color(item, "outlineColor", UnityEngine.Color.black));
+                            if (!_materials.TryGetValue(key, out var material))
+                            {
+                                material = new Material(key.Item1) { name = "Authored outline" };
+                                // Hidden candidates have not run TMP.Awake; configure the material directly.
+                                material.SetFloat("_OutlineWidth", key.Item2); material.SetColor("_OutlineColor", key.Item3);
+                                _materials.Add(key, material);
+                            }
+                            text.fontSharedMaterial = material;
                         }
                         string textState = (string)item.Attribute("bind");
                         if (!string.IsNullOrEmpty(textState)) _refresh.Add(() => text.text = Convert.ToString(_bindings.Read(textState), CultureInfo.InvariantCulture));
                         break;
-                    case "Button": target.AddComponent<Button>(); break;
-                    case "Slider": target.AddComponent<Slider>(); break;
-                    case "Toggle": target.AddComponent<Toggle>(); break;
-                    case "Switch": target.AddComponent<AuthoredSwitch>(); break;
+                    case "Button": _ = target.GetComponent<Button>() ?? target.AddComponent<Button>(); break;
+                    case "Slider": _ = target.GetComponent<Slider>() ?? target.AddComponent<Slider>(); break;
+                    case "Toggle": _ = target.GetComponent<Toggle>() ?? target.AddComponent<Toggle>(); break;
+                    case "Switch": _ = target.GetComponent<AuthoredSwitch>() ?? target.AddComponent<AuthoredSwitch>(); break;
                     case "CanvasGroup":
-                        var group = target.AddComponent<CanvasGroup>(); group.alpha = N(item, "alpha", 1); group.interactable = Boolean(item, "interactable", true); group.blocksRaycasts = Boolean(item, "blocksRaycasts", true); break;
-                    case "Mask": target.AddComponent<Mask>().showMaskGraphic = Boolean(item, "showGraphic", true); break;
-                    case "RectMask": target.AddComponent<RectMask2D>(); break;
+                        var group = (target.GetComponent<CanvasGroup>() ?? target.AddComponent<CanvasGroup>()); group.alpha = N(item, "alpha", 1); group.interactable = Boolean(item, "interactable", true); group.blocksRaycasts = Boolean(item, "blocksRaycasts", true); break;
+                    case "Mask": (target.GetComponent<Mask>() ?? target.AddComponent<Mask>()).showMaskGraphic = Boolean(item, "showGraphic", true); break;
+                    case "RectMask": _ = target.GetComponent<RectMask2D>() ?? target.AddComponent<RectMask2D>(); break;
                     case "Layout":
-                        HorizontalOrVerticalLayoutGroup layout = (string)item.Attribute("axis") == "vertical" ? target.AddComponent<VerticalLayoutGroup>() : target.AddComponent<HorizontalLayoutGroup>();
+                        HorizontalOrVerticalLayoutGroup layout = (string)item.Attribute("axis") == "vertical" ? (target.GetComponent<VerticalLayoutGroup>() ?? target.AddComponent<VerticalLayoutGroup>()) : (target.GetComponent<HorizontalLayoutGroup>() ?? target.AddComponent<HorizontalLayoutGroup>());
                         layout.padding = new RectOffset((int)N(item, "paddingLeft"), (int)N(item, "paddingRight"), (int)N(item, "paddingTop"), (int)N(item, "paddingBottom"));
                         layout.spacing = N(item, "gap"); layout.childAlignment = (TextAnchor)(int)N(item, "alignment");
                         layout.childControlWidth = Boolean(item, "controlWidth", true); layout.childControlHeight = Boolean(item, "controlHeight", true);
                         layout.childForceExpandWidth = Boolean(item, "expandWidth"); layout.childForceExpandHeight = Boolean(item, "expandHeight"); break;
                     case "LayoutElement":
-                        var element = target.AddComponent<LayoutElement>(); element.ignoreLayout = Boolean(item, "ignore"); element.minWidth = N(item, "minWidth", -1); element.minHeight = N(item, "minHeight", -1);
+                        var element = (target.GetComponent<LayoutElement>() ?? target.AddComponent<LayoutElement>()); element.ignoreLayout = Boolean(item, "ignore"); element.minWidth = N(item, "minWidth", -1); element.minHeight = N(item, "minHeight", -1);
                         element.preferredWidth = N(item, "preferredWidth", -1); element.preferredHeight = N(item, "preferredHeight", -1); element.flexibleWidth = N(item, "flexibleWidth", -1); element.flexibleHeight = N(item, "flexibleHeight", -1); break;
-                    case "SizeFitter": var fitter = target.AddComponent<ContentSizeFitter>(); fitter.horizontalFit = (ContentSizeFitter.FitMode)(int)N(item, "horizontal"); fitter.verticalFit = (ContentSizeFitter.FitMode)(int)N(item, "vertical"); break;
+                    case "SizeFitter": var fitter = (target.GetComponent<ContentSizeFitter>() ?? target.AddComponent<ContentSizeFitter>()); fitter.horizontalFit = (ContentSizeFitter.FitMode)(int)N(item, "horizontal"); fitter.verticalFit = (ContentSizeFitter.FitMode)(int)N(item, "vertical"); break;
                     default: throw new FormatException("Unsupported component " + item.Name);
                 }
             }
@@ -198,13 +274,24 @@ namespace GGD.UI.Authoring
         public static UnityEngine.Color Color(XElement node, string key, UnityEngine.Color fallback) => node.Attribute(key) == null ? fallback : ColorUtility.TryParseHtmlString((string)node.Attribute(key), out var color) ? color : throw new FormatException("Invalid color " + key);
         /// <summary>Stretches a new UI root inside a host.</summary>
         public static void Stretch(RectTransform rect) { rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = rect.offsetMax = Vector2.zero; }
-        /// <summary>Unsubscribes and removes controls before releasing external resources and per-label materials.</summary>
+        /// <summary>Unsubscribes and removes controls before releasing external resources and this view's shared materials.</summary>
         public void Dispose()
         {
             if (_disposed) return; _disposed = true; _bindings.OnChanged -= Refresh;
             foreach (var cleanup in _cleanup) cleanup(); _cleanup.Clear(); _refresh.Clear();
-            if (Root != null) { Root.SetActive(false); UnityEngine.Object.Destroy(Root); }
-            foreach (var material in _materials) UnityEngine.Object.Destroy(material); _materials.Clear(); _resources.Dispose();
+            if (Root != null) { Root.SetActive(false); DestroyOwned(Root); }
+            foreach (var material in _materials.Values) DestroyOwned(material); _materials.Clear(); _resources?.Dispose();
+        }
+        private static void DestroyOwned(UnityEngine.Object value)
+        {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                if (UnityEditor.EditorUtility.IsPersistent(value)) throw new InvalidOperationException("A view cannot destroy an asset it does not own");
+                UnityEngine.Object.DestroyImmediate(value); return;
+            }
+#endif
+            UnityEngine.Object.Destroy(value);
         }
     }
 }

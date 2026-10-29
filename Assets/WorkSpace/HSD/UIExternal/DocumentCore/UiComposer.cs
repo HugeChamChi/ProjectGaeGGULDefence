@@ -34,11 +34,12 @@ namespace GGD.UI.Authoring
             path ??= workspace.CurrentPath;
             var source = workspace.Documents[path].Root;
             if (source.Name != "Screen" && source.Name != "Prefab") throw new FormatException(path + ": expected Screen or Prefab");
-            CheckAttributes(source, "schema,key,width,height,animation");
+            CheckAttributes(source, source.Name == "Screen" ? "schema,key,width,height,animation,canvas" : "schema,key,width,height,animation");
             if ((string)source.Attribute("schema") != "2") throw new FormatException(path + ": unsupported document schema");
             foreach (var document in workspace.Documents.Values.Where(x => x.Root.Name == "Screen" || x.Root.Name == "Prefab")) CheckStructure(document.Root);
             var result = new ResolvedUiDocument { Root = new XElement("Resolved", new XAttribute("width", (string)source.Attribute("width") ?? "1080"), new XAttribute("height", (string)source.Attribute("height") ?? "1920")) };
             if (source.Attribute("animation") != null) result.Root.SetAttributeValue("animation", (string)source.Attribute("animation"));
+            if (source.Attribute("canvas") != null) result.Root.SetAttributeValue("canvas", (string)source.Attribute("canvas"));
             var prefabs = workspace.Documents.Where(x => x.Value.Root.Name == "Prefab").ToDictionary(x => AuthoringWorkspace.Required(x.Value.Root, "key"), x => x.Key);
             var stack = new HashSet<string>(); int count = 0;
             var defaults = source.Element("Parameters")?.Elements("Parameter").ToDictionary(x => AuthoringWorkspace.Required(x, "key"), x => (string)x.Attribute("default") ?? "") ?? new Dictionary<string, string>();
@@ -129,7 +130,9 @@ namespace GGD.UI.Authoring
             switch (node.Name.LocalName)
             {
                 case "Screen": case "Prefab":
-                    CheckAttributes(node, "schema,key,width,height,animation");
+                    CheckAttributes(node, node.Name == "Screen" ? "schema,key,width,height,animation,canvas" : "schema,key,width,height,animation");
+                    string canvas = (string)node.Attribute("canvas");
+                    if (canvas != null && canvas != "own" && canvas != "inherit") throw Error(node, "Canvas must be own or inherit");
                     allowedChildren = "Element,Instance,Slot,Parameters";
                     if (node.Elements("Parameters").Count() > 1) throw Error(node, "Duplicate Parameters");
                     break;
@@ -162,7 +165,10 @@ namespace GGD.UI.Authoring
             foreach (var item in images.Elements())
             {
                 if (item.Name != "Image" || item.HasElements) throw Error(item, "Unsupported image metadata node");
-                CheckAttributes(item, "key,file,guid,localId,left,bottom,right,top,ppu,pivotX,pivotY,filter,sha256");
+                CheckAttributes(item, "key,file,guid,localId,left,bottom,right,top,ppu,pivotX,pivotY,filter,sha256,atlas,artPath");
+                ArtImageSource.Validate((string)item.Attribute("artPath"));
+                string atlas = (string)item.Attribute("atlas");
+                if (!string.IsNullOrEmpty(atlas) && !Regex.IsMatch(atlas, "^[A-Za-z0-9_-]+$")) throw Error(item, "Atlas key must use letters, numbers, underscore or hyphen");
                 if (!keys.Add(AuthoringWorkspace.Required(item, "key"))) throw Error(item, "Duplicate image key");
                 string extension = System.IO.Path.GetExtension(AuthoringWorkspace.Required(item, "file")).ToLowerInvariant();
                 if (extension != ".png" && extension != ".jpg" && extension != ".jpeg") throw Error(item, "Only PNG/JPG images are supported");

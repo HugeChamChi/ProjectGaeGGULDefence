@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2084f70ef4d0224a81e13f4f0942970, type: 3}
   m_Name: Settings
   m_EditorClassIdentifier: GGD.UI.Authoring::GGD.UI.Authoring.AuthoringAssets
-  ContentHash: e84627463da9918734a41e37ae6d0f39ac75194b200d0ca971d5a76538384a62
-  SourceVersion: 25f7a760a5604f5e99ab500de635ab11
+  ContentHash: d037f9f965bef18eab260eec6ae82694326005034aa6e5405261fffe2202b53e
+  SourceVersion: f7d34b1030a7487ea20feafaeec61edb
+  BakedScreen: {fileID: 2618266832912729420, guid: 74550a04a18422a4894a5debd1694b51,
+    type: 3}
   Fonts:
   - Key: KCC-Ganpan SDF
     Asset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
@@ -50,6 +52,9 @@ MonoBehaviour:
     Asset: {fileID: 21300000, guid: 7ed486228aa22344cb5ed0917b74751f, type: 3}
   - Key: SPR_UI1100_LobbyButton_Nomal
     Asset: {fileID: 21300000, guid: 780f970aaf85b38479f3a5856adbaff4, type: 3}
+  Atlases:
+  - Key: UI3030
+    Asset: {fileID: 100100200, guid: 4179d1a6ec74a76409b3fc4e9404ed41, type: 3}
   Documents:
   - Path: kit.xml
     Xml: "<Kit schema=\"2\" runtime=\"2\" project=\"GaeGGULDefence\" id=\"fcc7ada06a480015d14402b94d049d61\">\r\n 
@@ -79,76 +84,91 @@ MonoBehaviour:
       type=\"none\" />\r\n  <Command key=\"settings.frame.previous\" type=\"none\"
       />\r\n  <Command key=\"settings.frame.next\" type=\"none\" />\r\n</Catalog>\r\n\r\n\n"
   - Path: images.xml
-    Xml: "<Images>\r\n  <Image key=\"SPR_UI1100_GearDecoration\" file=\"Images/fafb7409ba07daab5ddc122f18502cb4.png\"
-      guid=\"7d2063ed649b4f94f84796d9b2d7ebf8\" localId=\"21300000\" left=\"0\" bottom=\"0\"
-      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
-      sha256=\"6c29b1f5a66ed15b1be7482644f6b19326251e93eec18a8a560396af3c7fe195\"
-      />\r\n  <Image key=\"SPR_UI1100_Background\" file=\"Images/bd5b72ead0f95bff324f098639776dd6.png\"
+    Xml: "<Images>\r\n  <Image atlas=\"UI3030\" key=\"SPR_UI1100_GearDecoration\"
+      file=\"Images/fafb7409ba07daab5ddc122f18502cb4.png\" guid=\"7d2063ed649b4f94f84796d9b2d7ebf8\"
+      localId=\"21300000\" left=\"0\" bottom=\"0\" right=\"0\" top=\"0\" ppu=\"100\"
+      pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\" sha256=\"6c29b1f5a66ed15b1be7482644f6b19326251e93eec18a8a560396af3c7fe195\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_GearDecoration.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1100_Background\" file=\"Images/bd5b72ead0f95bff324f098639776dd6.png\"
       guid=\"e50ecf26a099a70459a6c086e7cd475b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"44c5188db17d91cda47ab2b3c51967844a26b8cfc7a6fdd6afaaa9ac145eabc2\"
-      />\r\n  <Image key=\"SPR_UI1100_BackButton_Nomal\" file=\"Images/05dd980d384786b5249e0ddaeb11f044.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_Background.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_BackButton_Nomal\" file=\"Images/05dd980d384786b5249e0ddaeb11f044.png\"
       guid=\"32217f60564f6b049958f3c063779fdf\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"8d322d4400f030d8986c095ac89de530abf2d38dc969ea86189dd62aea928a57\"
-      />\r\n  <Image key=\"SPR_UI1100_interior\" file=\"Images/f456019cc8b55a8c4adf86803e79949d.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_BackButton_Nomal.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1100_interior\" file=\"Images/f456019cc8b55a8c4adf86803e79949d.png\"
       guid=\"260b26f6528734246b11c36a3b928911\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"b8785663c8c873f2d1e03c182ed7a45898adae3a55795ad29b4aaf2b98085c12\"
-      />\r\n  <Image key=\"SPR_UI1100_Separatorline\" file=\"Images/6f5cf45f0e5c9fc7b13bf69f6a9103ee.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_interior.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_Separatorline\" file=\"Images/6f5cf45f0e5c9fc7b13bf69f6a9103ee.png\"
       guid=\"9105f4210343dbd4090e251a1dde974b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"bc9c98350aca8aee1601d88b87eb3834cd9d9d40f95556848e8fb7887cd037a8\"
-      />\r\n  <Image key=\"SPR_UI1101_BackgroundmusicIcon_Nomal\" file=\"Images/640b9002da666822c387432cc129a922.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_Separatorline.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_BackgroundmusicIcon_Nomal\" file=\"Images/640b9002da666822c387432cc129a922.png\"
       guid=\"1468627b7d4dac548b647728387b81ba\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"6370a58af8d10e388b70862698e84173322ae249562373d5588822563376d3e3\"
-      />\r\n  <Image key=\"SPR_UI1101_SoundBarFrame\" file=\"Images/f4cb0ff58674ccfc3ca969bdf0c1f606.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_BackgroundmusicIcon_Nomal.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1101_SoundBarFrame\" file=\"Images/f4cb0ff58674ccfc3ca969bdf0c1f606.png\"
       guid=\"28cec2a33d812e842a3b32a39934d21b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"25430adf9e950df8ed0f51fb6e2a7b4d6dff3c3feac9cadc0c99597cdc822711\"
-      />\r\n  <Image key=\"SPR_UI1101_SoundBar\" file=\"Images/03cc6c8430b5822b7ddf1396275074f1.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBarFrame.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_SoundBar\" file=\"Images/03cc6c8430b5822b7ddf1396275074f1.png\"
       guid=\"4d622a453dffbf74e8241404b9d70d12\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"17af264b724853e6593c2b04366e02c42b8d36bd1a497a99dfc3a9aae0c48f7c\"
-      />\r\n  <Image key=\"SPR_UI1101_SoundBarHandle\" file=\"Images/daa462bf33684ba2b654308f255e6385.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBar.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1101_SoundBarHandle\" file=\"Images/daa462bf33684ba2b654308f255e6385.png\"
       guid=\"331704ed705f6734abeb78fd22852561\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"af03e8bf37611b5066bedfbae87813e7dca78b9fa4dfc109593a34866e1f8507\"
-      />\r\n  <Image key=\"SPR_UI1101_Mute_ToggleOn\" file=\"Images/d14a05dcee9b953ebe632e9d32fd80fc.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBarHandle.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_Mute_ToggleOn\" file=\"Images/d14a05dcee9b953ebe632e9d32fd80fc.png\"
       guid=\"fae9996254718a348b7585b32dbede00\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"92738c496853deb0f9c99e353af98783e5124924a61062c913d8958b7d8d12a5\"
-      />\r\n  <Image key=\"SPR_UI1101_Mute_ToggleOff\" file=\"Images/caad970d64326e3cfc054a184931e777.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_Mute_ToggleOn.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_Mute_ToggleOff\" file=\"Images/caad970d64326e3cfc054a184931e777.png\"
       guid=\"f77d4b70d0951c04cb86dc731a35e4e8\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"03e382e098eb29b2c2382a59ed279bffa33465c4740dad253d7ab42507708316\"
-      />\r\n  <Image key=\"SPR_UI1101_SoundeffectIcon_Nomal\" file=\"Images/9f63f47ed04b47c502e9277290b9070d.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_Mute_ToggleOff.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_SoundeffectIcon_Nomal\" file=\"Images/9f63f47ed04b47c502e9277290b9070d.png\"
       guid=\"198f82d3d5c98b9418d20179a1c034cf\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"765103c2312fd634a6c20d81f944beaa76e612d05b839d56b6894d127535b47f\"
-      />\r\n  <Image key=\"SPR_UI1102_VibrationeffectIcon\" file=\"Images/bb05fc2c0fb3e5267562c34855e8eeb9.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundeffectIcon_Nomal.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1102_VibrationeffectIcon\" file=\"Images/bb05fc2c0fb3e5267562c34855e8eeb9.png\"
       guid=\"1813d195f6f00554f9433486b6bc2c6c\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"8b8a54a7cc9adfaf35ca82b0e2479037fb1fdab90d903d1e42fe1479262d7b25\"
-      />\r\n  <Image key=\"SPR_UI1102_damagefloaterIcon\" file=\"Images/6047870abdb46f1d8d04d1f38bed233a.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1102_VibrationeffectIcon.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1102_damagefloaterIcon\" file=\"Images/6047870abdb46f1d8d04d1f38bed233a.png\"
       guid=\"6b4bb1196de6e754583cdd7a47c98e4a\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"ffe34e3d6b4a9a80e82492f13f6d8beb5dcedb552d9c270def0df4286e78ac56\"
-      />\r\n  <Image key=\"SPR_UI1103_ArrowButton\" file=\"Images/297037feca5232785f3af7a56df2e8bb.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1102_damagefloaterIcon.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1103_ArrowButton\" file=\"Images/297037feca5232785f3af7a56df2e8bb.png\"
       guid=\"7ed486228aa22344cb5ed0917b74751f\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"3e29d8a32c7bed16bf3891ad8b1b5dd26c9940ed2dda93b7d182ba7ba146b84f\"
-      />\r\n  <Image key=\"SPR_UI1100_LobbyButton_Nomal\" file=\"Images/80f331cc0466358cfdab1a4ecac94c91.png\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1103_ArrowButton.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_LobbyButton_Nomal\" file=\"Images/80f331cc0466358cfdab1a4ecac94c91.png\"
       guid=\"780f970aaf85b38479f3a5856adbaff4\" localId=\"21300000\" left=\"0\" bottom=\"0\"
       right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
       sha256=\"e743d722c9403d54bc73ce6c085ae803ae3998ee8b8744dd2da96201892fb662\"
-      />\r\n</Images>\r\n\r\n\n"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_LobbyButton_Nomal.png\" />\r\n</Images>\r\n\r\n\n"
   - Path: fonts.xml
     Xml: "<Fonts>\r\n  <Font key=\"KCC-Ganpan SDF\" asset=\"Assets/Imports/Font/KCC-Ganpan
       SDF.asset\" />\r\n</Fonts>\r\n\r\n\n"
   - Path: Screens/UI3030.xml
-    Xml: "\r\n<Screen schema=\"2\" key=\"UI3030\" width=\"1080\" height=\"1920\"
+    Xml: "\r\n<Screen canvas=\"own\" schema=\"2\" key=\"UI3030\" width=\"1080\" height=\"1920\"
       animation=\"cc914106c4984567de21fedc15c07961\">\r\n  <Element id=\"98b85b9bde2e4de6dc67026e8e3b2c0d\"
       name=\"InGame_Setting_Popup\" key=\"InGame_Setting_Popup\" x=\"0\" y=\"0\"
       width=\"0\" height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\" anchorMaxX=\"1\"

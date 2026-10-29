@@ -87,7 +87,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void OnDisable()
     {
-        CancelDrag();
+        CancelDrag(keepOpen: false);
         EndFieldDrag(_fieldDragTotem);
     }
     private void OnApplicationFocus(bool focused) { if (!focused) CancelDrag(); }
@@ -256,9 +256,10 @@ public sealed class TotemInventoryUI : MonoBehaviour
         for (int i = 0; i < Input.touchCount; i++)
             if (Input.GetTouch(i).fingerId == pointer.pointerId && Input.GetTouch(i).phase == TouchPhase.Canceled) { CancelDrag(); return; }
         int index = _dragIndex;
-        CancelDrag();
+        // Hide the drawer while resolving the board so its backdrop cannot mask the drop.
+        CancelDrag(keepOpen: false);
         var target = GetDropCell(pointer);
-        if (!_inventory.CanPlaceAt(index, target)) return;
+        if (!_inventory.CanPlaceAt(index, target)) { OpenInventory(); return; }
         PlaceAsync(index, target).Forget();
     }
 
@@ -338,18 +339,23 @@ public sealed class TotemInventoryUI : MonoBehaviour
     private async UniTaskVoid PlaceAsync(int index, GridCell cell)
     {
         _placing = true;
-        try { await _inventory.TryPlaceAsync(index, cell, this.GetCancellationTokenOnDestroy()); }
+        bool placed = false;
+        try { placed = await _inventory.TryPlaceAsync(index, cell, this.GetCancellationTokenOnDestroy()); }
         catch (OperationCanceledException) { }
         catch (Exception exception) { Debug.LogException(exception, this); }
-        finally { _placing = false; }
+        finally
+        {
+            _placing = false;
+            if (!placed && isActiveAndEnabled) OpenInventory();
+        }
     }
-    private void CancelDrag()
+    private void CancelDrag(bool keepOpen = true)
     {
         if (_dragIndex >= 0)
         {
             _gridManager?.ClearTotemRangePreview();
-            _panel.SetActive(false);
-            if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(false);
+            _panel.SetActive(keepOpen);
+            if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(keepOpen);
             _panelGroup.alpha = 1f;
             _panelGroup.blocksRaycasts = true;
             _panelGroup.interactable = true;

@@ -20,6 +20,11 @@ namespace GGD.UI.Authoring.Studio
         [SerializeField] private Font _editorFont;
         private RectTransform _viewport, _design;
         private AuthoredUiView _view;
+        private AssetBundle _nativeBundle;
+        private string _nativeBundleHash;
+        private NativePrefabTemplate _nativeTemplate;
+        private AuthoringResources _previewResources;
+        private string _artRootText = "";
         private ResolvedUiDocument _resolved;
         private StudioBindings _bindings;
         private Vector2 _treeScroll, _propertyScroll, _pickerScroll;
@@ -53,8 +58,12 @@ namespace GGD.UI.Authoring.Studio
         public string SelectedId => _selected;
         /// <summary>Current validation/loading problem.</summary>
         public string Error => _error;
+        /// <summary>Advisory diagnostics for the last successful publication.</summary>
+        public IReadOnlyList<string> PublishDiagnostics { get; private set; } = Array.Empty<string>();
         /// <summary>Whether UGUI controls receive input instead of selection/dragging.</summary>
         public bool Testing => _testing;
+        /// <summary>Whether this kit edits a connected Unity prefab original.</summary>
+        public bool NativeMode => Workspace != null && NativePrefabContract.Read(Workspace) != null;
 
         /// <summary>Build tooling supplies exact preview assets and a bundled Korean editor font.</summary>
         public void Configure(AuthoringAssets assets, Font editorFont) { _assets = assets; _editorFont = editorFont; }
@@ -62,6 +71,7 @@ namespace GGD.UI.Authoring.Studio
         private void Start()
         {
             Application.runInBackground = true; Application.targetFrameRate = 60;
+            _artRootText = PersonalArtSettings.ReadRoot();
             var canvas = new GameObject("StudioCanvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
             canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay; canvas.transform.SetParent(transform, false);
             _viewport = NewRect("Viewport", canvas.transform); _viewport.gameObject.AddComponent<RectMask2D>();
@@ -98,12 +108,13 @@ namespace GGD.UI.Authoring.Studio
             var resolved = UiComposer.Resolve(candidate, validate: false);
             var bindings = new StudioBindings(candidate.Catalog.Root);
             AuthoredUiView view = null; string problem = "";
-            try { UiComposer.Resolve(candidate); view = AuthoredUiView.Create(resolved, _design, new AuthoringResources(_assets, candidate), bindings); }
+            try { UiComposer.Resolve(candidate); view = CreatePreview(resolved, candidate, bindings); }
             catch (Exception error) { problem = error.Message; Debug.LogWarning("STUDIO_LOAD: " + error); }
             Workspace = candidate; _resolved = resolved; _bindings = bindings;
             if (view != null) { var old = _view; _view = view; view.Root.SetActive(true); view.SetInput(_testing); old?.Dispose(); }
             _selected = null; _properties.Clear(); _error = problem; _resourceKey = null; _collapsed.Clear(); _locked.Clear(); _hidden.Clear(); UpdateViewport();
             if (File.Exists(AuthoringWorkspace.SafePath(directory, ".studio-recovery.xml"))) _message = "자동 복구본이 있습니다. 상단 [복구본]에서 복원할 수 있습니다.";
+            else if (NativeMode) _message = "원본 프리팹 편집: 위치·크기·그림·글씨를 수정하고 기존 열기/닫기 연출을 확인합니다. 요소 추가·삭제와 새 기능 연결은 Unity에서 합니다.";
         }
         /// <summary>Rebuilds a hidden candidate and retains the last valid screen on validation/resource failures.</summary>
         public void Rebuild()
@@ -117,7 +128,7 @@ namespace GGD.UI.Authoring.Studio
             {
                 _resolved = UiComposer.Resolve(Workspace, validate: false);
                 var resolved = UiComposer.Resolve(Workspace);
-                var candidate = AuthoredUiView.Create(resolved, _design, new AuthoringResources(_assets, Workspace), _bindings);
+                var candidate = CreatePreview(resolved, Workspace, _bindings);
                 var old = _view; _view = candidate; candidate.Root.SetActive(true); candidate.SetInput(_testing); old?.Dispose(); _error = "";
             }
             catch (Exception error) { _error = error.Message; }
@@ -130,7 +141,55 @@ namespace GGD.UI.Authoring.Studio
         /// <summary>Persists memory documents with optimistic file-conflict detection.</summary>
         public void Save() { ApplyProperties(); Workspace.Save(); _message = "저장 완료. 같은 키트를 재열면 배치와 프리팹 참조가 유지됩니다."; }
         /// <summary>Validates and publishes through the bundled C# implementation.</summary>
-        public string Publish() { ApplyProperties(); string version = KitPublisher.Publish(Workspace); _message = "게임용 게시 완료: " + version; return version; }
+        public string Publish()
+        {
+            ApplyProperties(); string version = KitPublisher.Publish(Workspace, out var diagnostics, PersonalArtSettings.ReadRoot()); PublishDiagnostics = diagnostics;
+            _message = "게임용 게시 완료. 게시 검사 " + diagnostics.Count + "건: " + version;
+            _dialog = "게시 검사\n" + string.Join("\n\n", diagnostics); _confirmed = null; return version;
+        }
+        /// <summary>Changes screen-owned Canvas isolation as one undoable source edit.</summary>
+        public void SetOwnCanvas(bool own)
+        {
+            if (Workspace.Documents[Workspace.CurrentPath].Root.Name != "Screen") throw new InvalidOperationException("Canvas isolation belongs to a screen");
+            Workspace.Edit(() => Workspace.Documents[Workspace.CurrentPath].Root.SetAttributeValue("canvas", own ? "own" : "inherit")); Rebuild();
+        }
+        /// <summary>Saves only the per-user root preference and reloads images without discarding XML edits.</summary>
+        public void SetArtRoot(string root) { PersonalArtSettings.SaveRoot(root); ReloadArt(); }
+        /// <summary>Reloads current source images and rereads the downloader's personal preference.</summary>
+        public void ReloadArt() { _artRootText = PersonalArtSettings.ReadRoot(); Rebuild(); }
+        /// <summary>Reports the source actually used by the last valid preview.</summary>
+        public string ImageSource(string key) => _previewResources != null && _previewResources.Sources.TryGetValue(key, out var source) ? source : "미리보기에 사용하지 않은 그림";
+        private AuthoredUiView CreatePreview(ResolvedUiDocument resolved, AuthoringWorkspace workspace, StudioBindings bindings)
+        {
+            var resources = new AuthoringResources(_assets, workspace, PersonalArtSettings.ReadRoot());
+            AuthoredUiView candidate;
+            var native = NativePrefabContract.Read(workspace);
+            if (native != null && workspace.CurrentPath == "Screens/UI3030.xml")
+            {
+                NativePrefabContract.Validate(workspace, resolved);
+                string hash = AuthoringWorkspace.Required(native, "bundleHash");
+                if (_nativeBundleHash != hash)
+                {
+                    string path = AuthoringWorkspace.SafePath(workspace.DirectoryPath, AuthoringWorkspace.Required(native, "bundle"));
+                    if (AuthoringWorkspace.Hash(File.ReadAllBytes(path)) != hash) throw new FormatException("원본 프리팹 패키지 해시가 다릅니다.");
+                    var bundle = AssetBundle.LoadFromFile(path) ?? throw new FormatException("원본 프리팹 패키지를 열 수 없습니다.");
+                    var prefab = bundle.LoadAllAssets<GameObject>().Single(x => x.GetComponent<NativePrefabTemplate>() != null);
+                    _nativeBundle?.Unload(false); _nativeBundle = bundle; _nativeBundleHash = hash; _nativeTemplate = prefab.GetComponent<NativePrefabTemplate>();
+                }
+                candidate = AuthoredUiView.FromNative(_nativeTemplate, resolved, _design, resources, bindings);
+            }
+            else candidate = AuthoredUiView.Create(resolved, _design, resources, bindings);
+            _previewResources = resources;
+            return candidate;
+        }
+        /// <summary>Plays the original popup animation against the edited resting pose.</summary>
+        public void PreviewMotion(bool opening)
+        {
+            ApplyProperties();
+            var motion = _view?.Root.GetComponent<NativePrefabMotion>();
+            if (motion == null) { _message = "원본 프리팹 애니메이션이 포함된 키트를 열어 주세요."; return; }
+            _bindings?.Reopen(); motion.Play(opening);
+        }
         /// <summary>Undoes one GUI/source transaction.</summary>
         public void Undo() { Workspace.Undo(); Rebuild(); }
         /// <summary>Redoes one GUI/source transaction.</summary>
@@ -154,7 +213,7 @@ namespace GGD.UI.Authoring.Studio
             GUI.Box(new Rect(0, HeaderHeight, LeftWidth, Screen.height - HeaderHeight - FooterHeight), "");
             GUI.Box(new Rect(Screen.width - RightWidth, HeaderHeight, RightWidth, Screen.height - HeaderHeight - FooterHeight), "");
             // Canvas gestures get first refusal. Scroll views can otherwise consume their mouse-down event.
-            if (!_testing && _dialog == null && _pickerProperty == null) HandleCanvasInput(Event.current);
+            if (!_testing && _dialog == null && _pickerProperty == null && _view?.Root.GetComponent<NativePrefabMotion>()?.IsPlaying != true) HandleCanvasInput(Event.current);
             DrawHierarchy(); DrawInspector(); DrawFooter();
             if (!_testing && _dialog == null) DrawSelection();
             HandleKeys(Event.current); DrawPicker(); DrawDialog();
@@ -163,7 +222,7 @@ namespace GGD.UI.Authoring.Studio
         {
             GUI.Box(new Rect(0, 0, Screen.width, HeaderHeight), "");
             GUILayout.BeginArea(new Rect(10, 8, Screen.width - 20, 94));
-            GUILayout.BeginHorizontal(); GUILayout.Label("GaeGGUL  UI 제작실" + (Workspace?.IsDirty == true ? "  ● 미저장" : ""), GUILayout.Width(245));
+            GUILayout.BeginHorizontal(); GUILayout.Label((NativeMode ? "UI 제작실 | 원본 프리팹" : "GaeGGUL  UI 제작실") + (Workspace?.IsDirty == true ? "  ● 미저장" : ""), GUILayout.Width(245));
             Button("키트 열기", () => AskDiscard(() => { string path = StudioFileDialog.Open("제작 키트|kit.xml", "제작 키트 열기"); if (path != null) OpenKit(Path.GetDirectoryName(path)); }), 100);
             Button("저장", Save, 72); Button("다른 이름", SaveCopy, 100); Button("실행 취소", Undo, 100); Button("다시 실행", Redo, 100);
             Button("복구본", () => { Workspace.Recover(); Rebuild(); }, 80); Button("게시 / 게임 전달", () => Publish(), 150);
@@ -172,7 +231,12 @@ namespace GGD.UI.Authoring.Studio
             GUILayout.BeginHorizontal(); GUILayout.Label(Workspace?.CurrentPath ?? "", GUILayout.Width(320));
             if (GUILayout.Button(_ingame ? "인게임 상태" : "로비 상태", GUILayout.Width(115))) { _ingame = !_ingame; _bindings?.Reset(_ingame); }
             if (GUILayout.Button("모의 값 초기화", GUILayout.Width(125))) _bindings?.Reset(_ingame);
-            if (GUILayout.Button("화면 다시 열기", GUILayout.Width(125))) { _bindings?.Reopen(); }
+            if (NativeMode)
+            {
+                if (GUILayout.Button("열기 연출", GUILayout.Width(90))) PreviewMotion(true);
+                if (GUILayout.Button("닫기 연출", GUILayout.Width(90))) PreviewMotion(false);
+            }
+            else if (GUILayout.Button("화면 다시 열기", GUILayout.Width(125))) _bindings?.Reopen();
             if (GUILayout.Button("1080×1920", GUILayout.Width(110))) { _designHeight = 1920; _fit = true; UpdateViewport(); }
             if (GUILayout.Button("1080×2340", GUILayout.Width(110))) { _designHeight = 2340; _fit = true; UpdateViewport(); }
             if (GUILayout.Button(_safeTop == 0 ? "안전영역: 없음" : "안전영역: 상80 하60", GUILayout.Width(155))) { _safeTop = _safeTop == 0 ? 80 : 0; _safeBottom = _safeTop == 0 ? 0 : 60; UpdateViewport(); }
@@ -188,6 +252,11 @@ namespace GGD.UI.Authoring.Studio
             GUILayout.BeginHorizontal(); Button("새 화면", () => NameDialog("새 화면 키", "Screen", CreateScreen), 80); Button("프리팹 추출", () => NameDialog("새 프리팹 키", "component", key => { PrefabEditing.Extract(Workspace, _selected, key); Rebuild(); }), 100); GUILayout.EndHorizontal();
             foreach (var doc in Workspace.Documents.Where(x => x.Value.Root.Name == "Screen" || x.Value.Root.Name == "Prefab" || Workspace.IsReadOnly && (x.Key.StartsWith("Screens/") || x.Key.StartsWith("Prefabs/"))))
                 if (GUILayout.Button((doc.Key == Workspace.CurrentPath ? "● " : "") + Path.GetFileNameWithoutExtension(doc.Key))) { Workspace.CurrentPath = doc.Key; _selected = null; Rebuild(); }
+            if (!Workspace.IsReadOnly && Workspace.Documents[Workspace.CurrentPath].Root.Name == "Screen")
+            {
+                bool own = (string)Workspace.Documents[Workspace.CurrentPath].Root.Attribute("canvas") == "own";
+                bool next = GUILayout.Toggle(own, "화면 전용 Canvas"); if (next != own) Try(() => SetOwnCanvas(next));
+            }
             GUILayout.Space(8); GUILayout.BeginHorizontal();
             Button("추가", () => _pickerProperty = "__component", 50); Button("복제", Duplicate, 50); Button("삭제", Delete, 50); Button("프리팹 배치", () => _pickerProperty = "__prefab", 90); GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(); Button("위", () => Reorder(-1), 40); Button("아래", () => Reorder(1), 40); Button("부모 변경", () => _pickerProperty = "__parent", 90); Button("정렬", () => _pickerProperty = "__align", 60); GUILayout.EndHorizontal();
@@ -209,6 +278,15 @@ namespace GGD.UI.Authoring.Studio
         private void DrawInspector()
         {
             GUILayout.BeginArea(new Rect(Screen.width - RightWidth + 12, HeaderHeight + 8, RightWidth - 24, Screen.height - HeaderHeight - FooterHeight - 16));
+            GUILayout.Label("아트 루트 폴더 (이 PC 전용)");
+            _artRootText = GUILayout.TextField(_artRootText);
+            GUILayout.BeginHorizontal();
+            Button("찾기", () => { string root = StudioFileDialog.Folder(); if (root != null) SetArtRoot(root); }, 60);
+            Button("적용", () => SetArtRoot(_artRootText), 60);
+            Button("해제", () => SetArtRoot(""), 60);
+            Button("그림 새로고침", ReloadArt, 125);
+            GUILayout.EndHorizontal();
+            if (_previewResources != null) GUILayout.Label("현재 그림: 원본 " + _previewResources.Sources.Values.Count(x => x.StartsWith("아트 원본:")) + " / 복사본 " + _previewResources.Sources.Values.Count(x => x.StartsWith("키트 복사본:")));
             GUILayout.Label(_resourceKey == null ? "선택 요소 속성" : "리소스 메타 / 9-slice");
             if (Workspace.IsReadOnly)
             {
@@ -221,6 +299,8 @@ namespace GGD.UI.Authoring.Studio
             GUILayout.BeginHorizontal(); Button("그림 가져오기", ImportImage, 130); Button("리소스 목록", () => _pickerProperty = "__resource", 120); GUILayout.EndHorizontal();
             if (_resourceKey == null && _selected == null) { GUILayout.Label("캔버스 또는 계층에서 요소를 선택하세요.\n버튼·글자·그림은 직접 이동할 수 있습니다."); GUILayout.EndArea(); return; }
             GUILayout.Label(_resourceKey ?? _selected, GUILayout.Height(38));
+            string selectedImage = _resourceKey ?? (_properties.TryGetValue("Image.sprite", out var imageKey) ? imageKey : null);
+            if (!string.IsNullOrEmpty(selectedImage)) GUILayout.TextArea(ImageSource(selectedImage), GUILayout.Height(58));
             if (_resourceKey != null) Button("리소스 키 바꾸기", () => NameDialog("새 그림 키 (사용처 함께 변경)", _resourceKey, newKey =>
             {
                 string previous = _resourceKey;
@@ -441,9 +521,22 @@ namespace GGD.UI.Authoring.Studio
             string key = Path.GetFileNameWithoutExtension(file), resource = "Images/" + Guid.NewGuid().ToString("N") + Path.GetExtension(file).ToLowerInvariant();
             if (Workspace.Documents["images.xml"].Root.Elements("Image").Any(x => (string)x.Attribute("key") == key)) key += "_" + Guid.NewGuid().ToString("N").Substring(0, 6);
             File.WriteAllBytes(AuthoringWorkspace.SafePath(Workspace.DirectoryPath, resource), bytes);
+            string artRoot = PersonalArtSettings.ReadRoot();
+            string artPath = null;
+            if (!string.IsNullOrEmpty(artRoot))
+            {
+                string prefix = Path.GetFullPath(artRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                string full = Path.GetFullPath(file);
+                if (full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) artPath = full.Substring(prefix.Length).Replace('\\', '/');
+            }
             Workspace.Edit(() =>
             {
-                Workspace.Documents["images.xml"].Root.Add(new XElement("Image", new XAttribute("key", key), new XAttribute("file", resource), new XAttribute("ppu", 100), new XAttribute("left", 0), new XAttribute("bottom", 0), new XAttribute("right", 0), new XAttribute("top", 0), new XAttribute("pivotX", .5), new XAttribute("pivotY", .5), new XAttribute("filter", 1)));
+                var screen = Workspace.Documents[Workspace.CurrentPath].Root;
+                if (screen.Name != "Screen") screen = Workspace.Documents.Values.First(x => x.Root.Name == "Screen").Root;
+                string atlas = (string)screen.Attribute("key") ?? "UI";
+                if (!System.Text.RegularExpressions.Regex.IsMatch(atlas, "^[A-Za-z0-9_-]+$")) atlas = "UI";
+                Workspace.Documents["images.xml"].Root.Add(new XElement("Image", new XAttribute("key", key), new XAttribute("file", resource), new XAttribute("atlas", atlas), new XAttribute("ppu", 100), new XAttribute("left", 0), new XAttribute("bottom", 0), new XAttribute("right", 0), new XAttribute("top", 0), new XAttribute("pivotX", .5), new XAttribute("pivotY", .5), new XAttribute("filter", 1)));
+                if (artPath != null) Workspace.Documents["images.xml"].Root.Elements("Image").Last().SetAttributeValue("artPath", artPath);
                 if (_selected != null && _properties.ContainsKey("Image.sprite")) Workspace.SetProperty(_selected, "Image.sprite", key);
             });
             Rebuild(); _message = "그림 추가: " + key;
@@ -519,10 +612,13 @@ namespace GGD.UI.Authoring.Studio
         {
             if (_dialog == null) return;
             bool compare = _dialog.StartsWith("File conflict:", StringComparison.Ordinal);
-            float width = compare ? Mathf.Min(1100, Screen.width - 40) : 650, height = compare ? Mathf.Min(700, Screen.height - 80) : 270;
+            bool publication = _dialog.StartsWith("게시 검사", StringComparison.Ordinal);
+            float width = compare ? Mathf.Min(1100, Screen.width - 40) : 650, height = compare || publication ? Mathf.Min(700, Screen.height - 80) : 270;
             GUI.ModalWindow(901, new Rect(Screen.width / 2f - width / 2, Screen.height / 2f - height / 2, width, height), _ =>
             {
-                GUILayout.Label(_dialog, new GUIStyle(GUI.skin.label) { wordWrap = true }, GUILayout.Height(85));
+                if (publication) _compareScroll = GUILayout.BeginScrollView(_compareScroll, GUILayout.Height(height - 85));
+                GUILayout.Label(_dialog, new GUIStyle(GUI.skin.label) { wordWrap = true }, publication ? GUILayout.ExpandHeight(true) : GUILayout.Height(85));
+                if (publication) GUILayout.EndScrollView();
                 if (compare)
                 {
                     _compareScroll = GUILayout.BeginScrollView(_compareScroll, GUILayout.Height(height - 155));
@@ -570,6 +666,6 @@ namespace GGD.UI.Authoring.Studio
         private static RectTransform NewRect(string name, Transform parent) { var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>(); rect.SetParent(parent, false); return rect; }
         private static Rect Bounds(RectTransform rect)
         { var points = new Vector3[4]; rect.GetWorldCorners(points); return new Rect(points[0].x, Screen.height - points[1].y, points[2].x - points[0].x, points[1].y - points[0].y); }
-        private void OnDestroy() { Application.wantsToQuit -= CheckQuit; _view?.Dispose(); }
+        private void OnDestroy() { Application.wantsToQuit -= CheckQuit; _view?.Dispose(); _nativeBundle?.Unload(false); }
     }
 }

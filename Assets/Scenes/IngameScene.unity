@@ -25085,11 +25085,6 @@ PrefabInstance:
       objectReference: {fileID: 1144465688}
     - target: {fileID: 6510709638199516423, guid: 3429407cf8738254898392653ad40039,
         type: 3}
-      propertyPath: _closeButton
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 6510709638199516423, guid: 3429407cf8738254898392653ad40039,
-        type: 3}
       propertyPath: _edgePadding
       value: 0
       objectReference: {fileID: 0}

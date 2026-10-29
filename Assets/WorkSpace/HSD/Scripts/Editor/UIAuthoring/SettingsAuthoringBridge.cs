@@ -22,9 +22,17 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
     {
         if (!File.Exists("Data/UI/Authoring/kit.xml")) return;
         var assets = AssetDatabase.LoadAssetAtPath<AuthoringAssets>(AssetPath);
+        if (assets != null && assets.NativeSourceInstalled)
+        {
+            if (assets.NativeSourceHash != AuthoringWorkspace.Hash(File.ReadAllBytes(NativeSettingsPrefabBridge.Source)))
+                throw new BuildFailedException("Native settings source changed after validation. Re-export and verify its visual edits.");
+            return;
+        }
         string pointerPath = "Data/UI/Authoring/Published/current.xml";
         if (assets == null || !File.Exists(pointerPath) || assets.ContentHash != (string)XDocument.Load(pointerPath).Root.Attribute("sha256"))
             throw new BuildFailedException("Authored settings publication is not installed. Run Tools/UI Authoring/Install Published Settings.");
+        UiAuthoringAtlases.Validate(AuthoringWorkspace.FromSources(assets.Documents.ToDictionary(x => x.Path, x => x.Xml)), assets.Images, assets.Atlases);
+        SettingsPrefabBaker.Validate(assets);
     }
     /// <summary>Creates the first publication from the actual extracted screen and installs it.</summary>
     public static void InstallInitial()
@@ -46,6 +54,7 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
     public static void Install(string directory)
     {
         directory = Path.GetFullPath(directory);
+        if (File.Exists(Path.Combine(directory, NativePrefabContract.Path))) { NativeSettingsPrefabBridge.Apply(directory); return; }
         var pointer = AuthoringWorkspace.Parse(File.ReadAllText(AuthoringWorkspace.SafePath(directory, "Published/current.xml")), "current.xml").Root;
         string version = AuthoringWorkspace.Required(pointer, "version");
         string root = AuthoringWorkspace.SafePath(directory, "Published/versions/" + version);
@@ -61,6 +70,8 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
         var fontEntries = workspace.Documents["fonts.xml"].Root.Elements("Font").Select(x => new AuthoringAssets.FontEntry
         { Key = AuthoringWorkspace.Required(x, "key"), Asset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AuthoringWorkspace.Required(x, "asset")) ?? throw new FormatException("Exact production font missing") }).ToArray();
         var imageEntries = workspace.Documents["images.xml"].Root.Elements("Image").Select(x => new AuthoringAssets.ImageEntry { Key = AuthoringWorkspace.Required(x, "key"), Asset = Image(x, root) }).ToArray();
+        var atlasEntries = UiAuthoringAtlases.Build(workspace, imageEntries);
+        foreach (string diagnostic in UiPublishLint.Inspect(workspace)) Debug.LogWarning("UI_AUTHORING_LINT " + diagnostic);
         var textEntries = workspace.Documents.Select(x => new AuthoringAssets.TextEntry { Path = x.Key, Xml = AuthoringWorkspace.Serialize(x.Value) }).ToArray();
         Directory.CreateDirectory(Path.GetDirectoryName(AssetPath)); AssetDatabase.Refresh();
         string contentHash = (string)pointer.Attribute("sha256");
@@ -95,13 +106,19 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
                 AuthoringWorkspace.AtomicWrite(destination, bytes);
             }
         }
-        // Commit the installed game asset only after the returned originals and pointer are complete.
+        var bakedScreen = SettingsPrefabBaker.Bake(workspace, fontEntries, imageEntries, contentHash);
+        // Commit the installed game asset only after the returned originals, baked candidate and pointer are complete.
         var target = AssetDatabase.LoadAssetAtPath<AuthoringAssets>(AssetPath);
         if (target == null) { target = ScriptableObject.CreateInstance<AuthoringAssets>(); AssetDatabase.CreateAsset(target, AssetPath); }
-        target.Fonts = fontEntries; target.Images = imageEntries; target.Documents = textEntries; target.ContentHash = contentHash; target.SourceVersion = version;
+        target.Fonts = fontEntries; target.Images = imageEntries; target.Atlases = atlasEntries; target.Documents = textEntries; target.ContentHash = contentHash; target.SourceVersion = version;
+        target.BakedScreen = bakedScreen;
+        target.NativeSourceInstalled = false; target.NativeSourceHash = null;
         EditorUtility.SetDirty(target); AssetDatabase.SaveAssets();
         Debug.Log("UI_AUTHORING_INSTALLED " + version);
     }
+
+    /// <summary>Resolves a published image through the same validated original GUID and import contract.</summary>
+    public static Sprite ResolveImage(XElement item, string publication) => Image(item, publication);
 
     private static Sprite Image(XElement item, string publication)
     {
@@ -109,7 +126,30 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
         string guid = (string)item.Attribute("guid"), hash = (string)item.Attribute("sha256");
         Vector4 border = new Vector4(N("left"), N("bottom"), N("right"), N("top"));
         Vector2 pivot = new Vector2(N("pivotX", .5f), N("pivotY", .5f)); float ppu = N("ppu", 100);
-        if (!string.IsNullOrEmpty(guid) && hash == AuthoringWorkspace.Hash(bytes))
+        string relative = (string)item.Attribute("artPath");
+        if (!string.IsNullOrEmpty(relative))
+        {
+            ArtImageSource.Validate(relative);
+            string originalPath = "Assets/Imports/GGD_ArtWork/" + relative;
+            string actualGuid = AssetDatabase.AssetPathToGUID(originalPath);
+            if (File.Exists(originalPath))
+            {
+                if (string.IsNullOrEmpty(actualGuid)) throw new FormatException("[ART] Unity에 먼저 임포트해 주세요: " + relative);
+                if (!string.IsNullOrEmpty(guid) && guid != actualGuid)
+                    throw new FormatException("[ART GUID] 게시 검사 실패: " + relative + "의 GUID가 기존 images.xml과 다릅니다. 원본과 meta를 확인하세요.");
+                var originals = AssetDatabase.LoadAllAssetsAtPath(originalPath).OfType<Sprite>().ToArray();
+                long localId = (long?)item.Attribute("localId") ?? 0;
+                var original = originals.Length == 1 ? originals[0] : originals.FirstOrDefault(x => { AssetDatabase.TryGetGUIDAndLocalFileIdentifier(x, out string _, out long id); return id == localId; });
+                if (original == null) throw new FormatException("[ART] Sprite 임포트 또는 서브 스프라이트 확인 필요: " + relative);
+                if (original.border == border && original.pixelsPerUnit == ppu && Vector2.Distance(original.pivot / original.rect.size, pivot) < .001f)
+                    return original;
+                // Retain authored slicing overrides, but use the updated original pixels.
+                bytes = File.ReadAllBytes(originalPath);
+                Debug.LogWarning("[ART] 원본 이미지에 제작실의 9-slice 설정을 적용합니다: " + relative);
+            }
+            else Debug.LogWarning("[ART] 원본 없음, 게시 복사본으로 설치합니다: " + relative);
+        }
+        if (string.IsNullOrEmpty(relative) && !string.IsNullOrEmpty(guid) && hash == AuthoringWorkspace.Hash(bytes))
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guid); long localId = (long?)item.Attribute("localId") ?? 0;
             var installed = AssetDatabase.LoadAllAssetsAtPath(assetPath).OfType<Sprite>().FirstOrDefault(x => { AssetDatabase.TryGetGUIDAndLocalFileIdentifier(x, out string _, out long id); return id == localId; });

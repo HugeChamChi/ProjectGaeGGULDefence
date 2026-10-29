@@ -11,6 +11,19 @@ namespace GGD.UI.Authoring.Studio
         public static string Open(string filter, string title) => Choose(filter, title, false);
         /// <summary>Selects a destination file with a native overwrite prompt.</summary>
         public static string Save(string filter, string title) => Choose(filter, title, true);
+        /// <summary>Selects a local art folder without requiring Unity Editor.</summary>
+        public static string Folder()
+        {
+            var info = new BrowseInfo { title = "GGD_ArtWork 폴더를 선택하세요", flags = 1 };
+            IntPtr result = SHBrowseForFolder(ref info);
+            if (result == IntPtr.Zero) return null;
+            try { var path = new StringBuilder(32768); return SHGetPathFromIDList(result, path) ? path.ToString() : null; }
+            finally { Marshal.FreeCoTaskMem(result); }
+        }
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct BrowseInfo
+        { public IntPtr owner, root, displayName; public string title; public uint flags; public IntPtr callback, parameter; public int image; }
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern IntPtr SHBrowseForFolder(ref BrowseInfo info);
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SHGetPathFromIDList(IntPtr item, StringBuilder path);
         private static string Choose(string filter, string title, bool save)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN

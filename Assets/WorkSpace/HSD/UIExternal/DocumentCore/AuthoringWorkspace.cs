@@ -58,7 +58,7 @@ namespace GGD.UI.Authoring
             {
                 if (workspace._documents.ContainsKey(path)) throw new FormatException("Duplicate document " + path);
                 string text = File.ReadAllText(SafePath(directory, path));
-                workspace._documents.Add(path, Parse(text, path)); workspace._diskHashes[path] = Hash(Encoding.UTF8.GetBytes(text));
+                workspace._documents.Add(path, Parse(text, path)); workspace._diskHashes[path] = Hash(File.ReadAllBytes(SafePath(directory, path)));
             }
             workspace._savedFingerprint = workspace.Fingerprint();
             return workspace;

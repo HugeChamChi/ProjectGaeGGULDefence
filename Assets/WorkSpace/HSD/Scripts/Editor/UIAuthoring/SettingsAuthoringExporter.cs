@@ -203,6 +203,9 @@ public static class SettingsAuthoringExporter
         finally { RenderTexture.active = previous; RenderTexture.ReleaseTemporary(render); UnityEngine.Object.DestroyImmediate(readable); }
         AssetDatabase.TryGetGUIDAndLocalFileIdentifier(sprite, out string guid, out long localId);
         var node = new XElement("Image", new XAttribute("key", key), new XAttribute("file", file), new XAttribute("guid", guid), new XAttribute("localId", localId));
+        const string artRoot = "Assets/Imports/GGD_ArtWork/";
+        string assetPath = AssetDatabase.GetAssetPath(sprite);
+        if (assetPath.StartsWith(artRoot, StringComparison.Ordinal)) node.SetAttributeValue("artPath", assetPath.Substring(artRoot.Length));
         A(node, "left", sprite.border.x); A(node, "bottom", sprite.border.y); A(node, "right", sprite.border.z); A(node, "top", sprite.border.w); A(node, "ppu", sprite.pixelsPerUnit); A(node, "pivotX", sprite.pivot.x / sprite.rect.width); A(node, "pivotY", sprite.pivot.y / sprite.rect.height); A(node, "filter", (int)sprite.texture.filterMode); A(node, "sha256", AuthoringWorkspace.Hash(File.ReadAllBytes(Destination + "/" + file))); return node;
     }
     private static void CompareUse(string path)
