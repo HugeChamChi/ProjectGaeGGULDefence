@@ -32,6 +32,16 @@ public static class StatusPopupLabBuilder
     private const string MixStylePath = DataFolder + "/StatusPopupStyle_C_Mix.asset";
     private const string UnitSpritePath = "Assets/WorkSpace/USW/Sprites/Unit/Betang_SpinePortrait.png";
 
+    // 본게임 시연 실험실 (사용자 요청 2026-10-23): IngameScene 복사본 + "상태 팝업 시연" 버튼 1개.
+    /// <summary>본게임 시연 실험실 씬 경로.</summary>
+    public const string IngameLabPath = "Assets/WorkSpace/USW/Scene/FxLab_StatusPopupIngame.unity";
+    private const string IngameSourcePath = "Assets/Scenes/IngameScene.unity";
+    private const string DemoFontPath = "Assets/Imports/Font/NotoSansKR-Bold SDF.asset";
+    private const string MixedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset";
+    private const string AttackSpeedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset";
+    private const string DemoChoicePath = "Assets/WorkSpace/USW/Data/SelectionData/DroneSelection2.asset";
+    private const int DemoCanvasOrder = 500;
+
     private const int ArrowTextureSize = 64;
     private const float ArrowHalfSide = 17f;
     private const float ArrowRounding = 4f;
@@ -151,6 +161,53 @@ public static class StatusPopupLabBuilder
         EditorSceneManager.SaveScene(scene, ScenePath);
         Selection.activeGameObject = lab.gameObject;
         return ScenePath;
+    }
+
+    /// <summary>본게임 씬을 복사해 시연 버튼을 붙인다. 매번 현재 IngameScene으로 새로 만든다.</summary>
+    [MenuItem("Tools/USW/Fx/Build Status Popup Ingame Lab")]
+    public static void BuildIngame()
+    {
+        if (EditorApplication.isPlaying) { Debug.LogError("[StatusPopupLab] 플레이 중에는 실행하지 않는다"); return; }
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        BuildIngameScene();
+        Debug.Log($"[StatusPopupLab] 완료: {IngameLabPath}");
+    }
+
+    /// <summary>본게임 시연 실험실 씬을 새로 만든다 (자동화 진입점).</summary>
+    public static string BuildIngameScene()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(IngameLabPath) != null) AssetDatabase.DeleteAsset(IngameLabPath);
+        if (!AssetDatabase.CopyAsset(IngameSourcePath, IngameLabPath))
+            throw new System.InvalidOperationException("IngameScene 복사 실패: " + IngameSourcePath);
+        var scene = EditorSceneManager.OpenScene(IngameLabPath, OpenSceneMode.Single);
+        var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(DemoFontPath);
+        if (font == null) font = EnsureFont();
+
+        var root = new GameObject("StatusPopupDemo Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var canvas = root.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = DemoCanvasOrder;
+        var scaler = root.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1080, 1920);
+        scaler.matchWidthOrHeight = 0f;
+        var button = Button((RectTransform)root.transform, font, "상태 팝업 시연", 0, -330, 560);
+        var label = button.GetComponentInChildren<TMP_Text>();
+
+        var demo = new GameObject("Status Popup Ingame Demo").AddComponent<StatusPopupIngameDemo>();
+        UnityEventTools.AddPersistentListener(button.onClick, demo.Play);
+        var demoSo = new SerializedObject(demo);
+        demoSo.FindProperty("_mixedTotem").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TotemData>(MixedTotemPath);
+        demoSo.FindProperty("_attackSpeedTotem").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TotemData>(AttackSpeedTotemPath);
+        demoSo.FindProperty("_choice").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LevelUpData>(DemoChoicePath);
+        demoSo.FindProperty("_button").objectReferenceValue = button;
+        demoSo.FindProperty("_label").objectReferenceValue = label;
+        demoSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorSceneManager.SaveScene(scene);
+        Selection.activeGameObject = demo.gameObject;
+        return IngameLabPath;
     }
 
     private static StatusPopupStyle EnsureStyle(TMP_FontAsset font)
