@@ -20,10 +20,14 @@ public class UnitFactory : MonoBehaviour
     public UnitData[] UnitDataList => unitDataList;
     private UnitDependencies _deps;
 
-    public void Init()
+    public void Init() => Init(null);
+
+    /// <summary>Account integration supplies one immutable level snapshot before spawning any units.</summary>
+    public void Init(UnitLevelSnapshot unitLevels)
     {
         _deps = new UnitDependencies
         {
+            UnitLevels = unitLevels,
             BuffVisualSettings = _resolver.Resolve<UnitBuffVisualSettings>(),
             BuffFxPool = _resolver.Resolve<StatBuffFxPool>(),
             Timer = _resolver.Resolve<TimerController>(),

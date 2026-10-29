@@ -48,26 +48,55 @@ MonoBehaviour:
   description: "\uC790\uD3ED \uB4DC\uB860 1\uAE30\uB97C \uBCF4\uC2A4\uC5D0\uAC8C
     \uB0A0\uB824\uBCF4\uB0B4 \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
   atk:
-    normal: 80
-    rare: 120
-    epic: 170
-    legend: 800
+    normal: 136
+    rare: 197
+    epic: 257
+    legend: 1234
   attackSpeed:
     normal: 1.32
     rare: 1.43
     epic: 1.54
     legend: 1.65
   skillCooldown:
-    normal: 14
-    rare: 14
-    epic: 14
-    legend: 14
+    normal: 6
+    rare: 6
+    epic: 6
+    legend: 6
   basicAttackData: {fileID: 0}
   skillData: {fileID: 0}
   _skillDisplayName: "\uD3ED\uBC1C\uC740 \uC608\uC220\uC774\uC57C"
   Hacking: {fileID: 11400000, guid: 6770f25b048611949929596efc470881, type: 2}
   Disigman: {fileID: 0}
-  SelfDestructAttackCoefficient: 2.5
+  SelfDestructAttackCoefficient: 3.6
+  SelfDestructCoefficients:
+    normal: 3.6
+    rare: 7.8
+    epic: 12.6
+    legend: 18
+  CombatDroneAttackCoefficient: 0.3
+  LevelBonuses:
+  - Level: 3
+    Description: "\uACF5\uACA9\uB825 +5%"
+    Parts:
+    - rid: 8251262586956021760
+  - Level: 6
+    Description: "\uB9E4 2\uBC88\uC9F8 \uAE30\uBCF8 \uC790\uD3ED \uD53C\uD574 +40%
+      (\uC120\uD0DD\uC9C0 \uCD94\uAC00 \uC790\uD3ED \uC81C\uC678)"
+    Parts:
+    - rid: 8251262586956021761
+  - Level: 9
+    Description: "\uC77C\uBC18\uACF5\uACA9 \uC18D\uB3C4 +5%"
+    Parts:
+    - rid: 8251262586956021762
+  - Level: 12
+    Description: "\uB9E4 2\uBC88\uC9F8 \uAE30\uBCF8 \uC790\uD3ED \uCDA9\uC804\uC2DC\uAC04
+      -30% (\uC120\uD0DD\uC9C0 \uCD94\uAC00 \uC790\uD3ED \uC81C\uC678)"
+    Parts:
+    - rid: 8251262586956021763
+  - Level: 15
+    Description: "\uC720\uB2DB \uCE58\uBA85\uD0C0 \uD53C\uD574 +50%p"
+    Parts:
+    - rid: 8251262586956021764
   SkillGaugeMode: 0
   foodProduction:
     normal: 1
@@ -81,3 +110,35 @@ MonoBehaviour:
     legend: 4
   passive: {fileID: 0}
   spawnOffsetY: -0.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 8251262586956021760
+      type: {class: StatModifierBonus, ns: , asm: Assembly-CSharp}
+      data:
+        Stat: 0
+        Value: 0.05
+    - rid: 8251262586956021761
+      type: {class: EveryNthCycleBonus, ns: , asm: Assembly-CSharp}
+      data:
+        CycleId: basic_skill
+        Every: 2
+        DamageBonusRatio: 0.4
+        ChargeTimeMultiplier: 1
+    - rid: 8251262586956021762
+      type: {class: StatModifierBonus, ns: , asm: Assembly-CSharp}
+      data:
+        Stat: 1
+        Value: 0.05
+    - rid: 8251262586956021763
+      type: {class: EveryNthCycleBonus, ns: , asm: Assembly-CSharp}
+      data:
+        CycleId: basic_skill
+        Every: 2
+        DamageBonusRatio: 0
+        ChargeTimeMultiplier: 0.7
+    - rid: 8251262586956021764
+      type: {class: StatModifierBonus, ns: , asm: Assembly-CSharp}
+      data:
+        Stat: 2
+        Value: 0.5

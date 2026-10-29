@@ -18,19 +18,19 @@ public class DroneUnit : MonoBehaviour
     [Inject] private EndlessRunService _run;
     [Inject] private GameManager _gameManager;
 
-    public float   Atk            => _owner != null ? _owner.GetAttackDamage() : 0f;
+    public float   Atk            => _owner != null ? _owner.GetCombatDroneDamage(out _) : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
         / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f) : 1f;
     /// <summary>선택지 대상 판별에 사용하는 소유 유닛.</summary>
     public UnitBase Owner => _owner;
     /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>
     public int NonCriticalAttackDamage => _owner != null
-        ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
+        ? Mathf.RoundToInt(_owner.GetCombatDroneDisplayDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격.</summary>
     public float EffectiveAttackInterval => AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
     /// <summary>강화만 제외하고 소유자 보정과 군단 버프를 반영한 비치명타 공격력.</summary>
     public int NonCriticalAttackDamageBeforeUpgrade => _owner != null
-        ? Mathf.RoundToInt(_owner.GetNonCriticalAttackDamageBeforeUpgrade() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
+        ? Mathf.RoundToInt(_owner.GetCombatDroneDisplayDamage(false) * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>강화만 제외하고 전용 선택지와 군단 버프를 반영한 공격 간격.</summary>
     public float EffectiveAttackIntervalBeforeUpgrade => _owner != null ? _owner.GetAttackIntervalBeforeUpgrade()
         / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f)
@@ -481,7 +481,7 @@ public class DroneUnit : MonoBehaviour
             var boss = _bossManager?.CurrentBoss;
             if (boss == null || !boss.IsTargetable) continue;
             bool critical = false;
-            int ownerDamage = _owner != null ? _owner.GetAttackDamage(out critical) : 0;
+            int ownerDamage = _owner != null ? _owner.GetCombatDroneDamage(out critical) : 0;
             float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
             LaunchProjectile(Mathf.RoundToInt(dmg), critical);
         }

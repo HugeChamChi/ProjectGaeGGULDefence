@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class UnitDependencies
 {
+    public UnitLevelSnapshot UnitLevels { get; set; }
     /// <summary>토템 획득 표시의 저작된 설정.</summary>
     public UnitBuffVisualSettings BuffVisualSettings { get; set; }
     /// <summary>씬이 소유하는 버프 연출 풀.</summary>
