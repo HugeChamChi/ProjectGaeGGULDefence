@@ -49,6 +49,8 @@ public class UnitData : ScriptableObject, ILoadableAsset
     public SkillGaugeMode SkillGaugeMode;
 
     [TierTabGroup("등급")] public PerTierFloat foodProduction = new PerTierFloat(); // 초당 식량 생산량
+    /// <summary>젤탕 전용. 전장 전투 드론 1기당 초당 식량 계수이며 여러 젤탕의 값은 중첩된다. 다른 유닛은 0.</summary>
+    [TierTabGroup("등급")] public PerTierFloat fleetFoodPerDrone = new PerTierFloat();
 
     [TierTabGroup("등급")] public PerTierInt maxDroneCount = new PerTierInt();
 

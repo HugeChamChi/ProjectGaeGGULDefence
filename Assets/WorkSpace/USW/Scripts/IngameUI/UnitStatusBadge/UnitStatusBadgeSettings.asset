@@ -27,17 +27,29 @@ MonoBehaviour:
   CellSideInset: 0.04
   Tiers:
   - Plate: {r: 0.1, g: 0.11, b: 0.14, a: 1}
-    Number: {r: 0.97, g: 0.97, b: 0.95, a: 1}
+    Number: {r: 0.93, g: 0.94, b: 0.96, a: 1}
     RimWidth: 0
+    Symbol: 0
+    Glint: 1
+    Effect: 0
   - Plate: {r: 0.1, g: 0.11, b: 0.14, a: 1}
-    Number: {r: 0.97, g: 0.97, b: 0.95, a: 1}
+    Number: {r: 0.58, g: 0.82, b: 1, a: 1}
     RimWidth: 0
+    Symbol: 0
+    Glint: 1
+    Effect: 0
   - Plate: {r: 0.1, g: 0.11, b: 0.14, a: 1}
-    Number: {r: 0.97, g: 0.97, b: 0.95, a: 1}
+    Number: {r: 0.82, g: 0.64, b: 1, a: 1}
     RimWidth: 0
+    Symbol: 0
+    Glint: 1
+    Effect: 0
   - Plate: {r: 0.1, g: 0.11, b: 0.14, a: 1}
     Number: {r: 1, g: 0.8, b: 0.25, a: 1}
-    RimWidth: 0.14
+    RimWidth: 0
+    Symbol: 1
+    Glint: 0
+    Effect: 1
   OutlineColor: {r: 0.05, g: 0.07, b: 0.08, a: 1}
   GaugeFill: {r: 1, g: 0.8, b: 0.18, a: 1}
   GaugeFull: {r: 1, g: 0.93, b: 0.55, a: 1}

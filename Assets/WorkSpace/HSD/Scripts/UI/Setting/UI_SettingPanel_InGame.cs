@@ -31,8 +31,11 @@ namespace HSD.UI.Setting
         {
             base.Awake();
 
-            if (btn_Restart != null) btn_Restart.onClick.AddListener(_presenter.OnRestartClicked);
-            if (btn_GoToLobby != null) btn_GoToLobby.onClick.AddListener(_presenter.OnGoToLobbyClicked);
+            if (!UsesAuthoredUi)
+            {
+                if (btn_Restart != null) btn_Restart.onClick.AddListener(_presenter.OnRestartClicked);
+                if (btn_GoToLobby != null) btn_GoToLobby.onClick.AddListener(_presenter.OnGoToLobbyClicked);
+            }
         }
     }
 }

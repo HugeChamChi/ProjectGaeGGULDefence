@@ -54,7 +54,7 @@ namespace HSD.UI.Setting
         public void SetState(int volume, bool isMuted)
         {
             // Slider 범위에 맞춰 값 보정하여 설정 (정수 나눗셈 방지를 위해 100f 사용)
-            _slider.value = _slider.maxValue <= 1.01f ? volume / 100f : volume;
+            _slider.SetValueWithoutNotify(_slider.maxValue <= 1.01f ? volume / 100f : volume);
             _muteToggle.SetIsOnWithoutNotify(!isMuted);
             UpdateVisual(!isMuted);
         }

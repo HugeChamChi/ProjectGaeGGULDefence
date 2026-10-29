@@ -18,9 +18,13 @@ public class Drone_Betan : DroneSpawnerBase
     [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private GameManager _gameManager;
     private int _bombRequestLifetime;
+    private int _bombOwnerLifetime;
     private int _pendingSkillBombs;
     private BossBase _pendingSkillBoss;
     private int _fleetVolleyIndex = -1;
+
+    /// <summary>발사자 개체 수명을 확인한다. 이동·교환은 유지하고 제거 중·비활성화·풀 재사용은 환급하지 않는다.</summary>
+    public bool IsBombOwnerCurrent(int lifetime) => lifetime == _bombOwnerLifetime && isActiveAndEnabled && currentCell != null;
 
     protected override void OnSkillFull()
     {
@@ -96,12 +100,12 @@ public class Drone_Betan : DroneSpawnerBase
                     if (effects?.HasBombHacking == true && unitData.Hacking != null && _droneManager != null)
                     {
                         var runtime=_droneManager.Hacking;runtime.Configure(unitData.Hacking);
-                        bomb.InitializeHacking(target,runtime,effects.HackingStacksPerBomb,volleyIndex);
+                        bomb.InitializeHacking(target,runtime,effects.HackingStacksPerBomb,volleyIndex,this,_bombOwnerLifetime);
                     }
                     else
                     {
                         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-                        bomb.Initialize(damage, critical, target, unitData, volleyIndex);
+                        bomb.Initialize(damage, critical, target, unitData, volleyIndex, this, _bombOwnerLifetime);
                     }
                 }
                 else RM.Destroy(bombObj);
@@ -129,6 +133,7 @@ public class Drone_Betan : DroneSpawnerBase
 
     protected override void OnDisable()
     {
+        _bombOwnerLifetime++;
         _bombRequestLifetime++;
         CancelPendingSkillBombs();
         base.OnDisable();

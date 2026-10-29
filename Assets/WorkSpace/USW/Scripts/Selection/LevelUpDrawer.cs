@@ -27,6 +27,9 @@ public sealed class LevelUpDrawer
                 filtered.Add(data);
         }
 
+        // A guarantee card needs another, eligible, unacquired legendary to promise.
+        filtered.RemoveAll(card => HasLegendCommand(card) && !HasLegendCandidate(pool, hasAcquired, presentTribes, card.chooseId));
+
         var tierGroups = new Dictionary<Tier, List<LevelUpData>>();
         var tierWeights = new Dictionary<Tier, float>();
 
@@ -86,6 +89,19 @@ public sealed class LevelUpDrawer
         }
 
         return result;
+    }
+
+    private static bool HasLegendCommand(LevelUpData card)
+        => card.EffectSchemaVersion > 0
+            ? card.Composition?.Commands?.Exists(command => command is GuaranteeLegendCommandDefinition) == true
+            : card.specialEffect == LevelUpSpecialEffect.GuaranteeNextLegend;
+
+    private static bool HasLegendCandidate(IReadOnlyList<LevelUpData> pool, Func<int,bool> acquired, HashSet<UnitTribe> tribes, int sourceId)
+    {
+        foreach (var card in pool)
+            if (card != null && card.chooseId != sourceId && card.tier == Tier.Legend && card.spawnRate > 0f
+                && !float.IsInfinity(card.spawnRate) && !acquired(card.chooseId) && IsApplicable(card, tribes) && !HasLegendCommand(card)) return true;
+        return false;
     }
 
     private static float GetTierWeight(Tier tier, LevelUpPoolData settings)

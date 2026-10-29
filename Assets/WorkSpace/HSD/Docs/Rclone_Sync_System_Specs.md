@@ -20,6 +20,8 @@
 
 ## 🔄 2. 동작 방식 (Sync Logic)
 
+**UI 제작실 키트 전용 받기(2026-10-28):** 아래 Unity 도구의 Download와 별개다. 키트에는 팀 OAuth client와 rclone을 포함하고 각자 로그인하며, 전용 `--config`와 `drive.readonly` 범위로 `GGD_ArtWork`만 `copy --checksum --exclude *.meta` 한다. 기존 파일의 변경도 갱신하고 로컬 삭제는 하지 않는다. 기존 gdrive_ggd 설정과 토큰은 건드리지 않는다. 기획/아트 팀원의 뷰어 공유 권한 및 OAuth 테스트 사용자 등록, 개인 아트 루트, 재로그인 절차는 [제작실 사용법](../../../../docs/technical/ui-authoring-studio.md)의 “아트 원본 받기”를 따른다. client 값은 저장소에 기록하지 않는다.
+
 | 버튼 | 실행 명령 | 동작 |
 | :--- | :--- | :--- |
 | 📥 **Download** | `rclone copy gdrive_ggd: <로컬> --ignore-existing --exclude "*.meta"` | **로컬에 없는 원본 파일만** 받는다. 이미 있는 파일은 덮어쓰지 않고, 아무것도 삭제하지 않는다. |

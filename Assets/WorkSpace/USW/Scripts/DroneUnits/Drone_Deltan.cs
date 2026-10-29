@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>소유 드론의 일반공격으로 마나를 충전하고 완충 시 해킹 스택을 생산한다.</summary>
 public class Drone_Deltan : HackingDroneSpawner
@@ -12,6 +12,7 @@ public class Drone_Deltan : HackingDroneSpawner
         {
             int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.AttacksToCharge.Get(currentTier) : 1);
             var effects = DroneEffects;
+            if (effects?.HackingCompressionRequiredAttacks > 0) baseline = effects.HackingCompressionRequiredAttacks;
             return effects?.HasManaRequirementReduction != true ? baseline : Mathf.Max(1, baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction)));
         }
     }
@@ -21,6 +22,7 @@ public class Drone_Deltan : HackingDroneSpawner
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
     private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.StacksProduced.Get(currentTier) : 0)
         + (DroneEffects?.HackingProductionFlat ?? 0))
+        * (DroneEffects?.HackingCompressionMultiplier ?? 1)
         * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;
     /// <inheritdoc />
     public override bool UsesTimedSkillCharge => false;
@@ -52,7 +54,7 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <inheritdoc />
     protected override void OnHackingProduced(int requested,int accepted)
     {
-        AddMana((requested - accepted) * (DroneEffects?.OverflowManaPerStack ?? 0));
+        if (requested > accepted) AddMana(DroneEffects?.OverflowManaPerCast ?? 0);
     }
     /// <inheritdoc />
     protected override void OnUnitRemoved()

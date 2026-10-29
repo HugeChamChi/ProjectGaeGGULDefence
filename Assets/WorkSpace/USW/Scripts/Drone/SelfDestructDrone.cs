@@ -61,6 +61,9 @@ public class SelfDestructDrone : MonoBehaviour
     private GameObject _previewExplosion;
     private UnitData _damageSource;
     private int _volleyIndex = -1;
+    private Drone_Betan _repairOwner;
+    private int _repairOwnerLifetime;
+    private bool _explosionNotified;
 
     private void Awake()
     {
@@ -73,10 +76,11 @@ public class SelfDestructDrone : MonoBehaviour
 
     /// <summary>Drone_Betan.SpawnSelfDestructDrones() 에서 호출 — 차징 후 보스를 향해 돌진한다.</summary>
     /// <param name="volleyIndex">0 이상이면 9103 일제 출격 순번. 순번만큼 출발을 늦추고 좌우 곡선을 번갈아 쓴다.</param>
-    public void Initialize(int damage, bool critical, BossBase target, UnitData source = null, int volleyIndex = -1)
+    public void Initialize(int damage, bool critical, BossBase target, UnitData source = null, int volleyIndex = -1, Drone_Betan owner = null, int ownerLifetime = 0)
     {
         StopSequence();
         _volleyIndex = volleyIndex;
+        SetRepairOwner(owner, ownerLifetime);
         _cts = new CancellationTokenSource();
         _previewTarget = null;
         _previewExplosion = null;
@@ -85,9 +89,9 @@ public class SelfDestructDrone : MonoBehaviour
     }
 
     /// <summary>폭발 피해 대신 원래 보스에 스택을 생산한다. 기본/선택지 자폭 생성 경로 모두 사용한다.</summary>
-    public void InitializeHacking(BossBase target, DroneHackingRuntime runtime, int stacks, int volleyIndex = -1)
+    public void InitializeHacking(BossBase target, DroneHackingRuntime runtime, int stacks, int volleyIndex = -1, Drone_Betan owner = null, int ownerLifetime = 0)
     {
-        StopSequence(); _volleyIndex = volleyIndex; _cts=new CancellationTokenSource(); _previewTarget=null; _previewExplosion=null;
+        StopSequence(); SetRepairOwner(owner, ownerLifetime); _volleyIndex = volleyIndex; _cts=new CancellationTokenSource(); _previewTarget=null; _previewExplosion=null;
         SequenceAsync(new Shot(target,runtime,stacks),_cts.Token).Forget();
     }
 
@@ -97,6 +101,7 @@ public class SelfDestructDrone : MonoBehaviour
     {
         StopSequence();
         _volleyIndex = -1;
+        SetRepairOwner(null, 0);
         _cts = new CancellationTokenSource();
         target.z = 0f;
         _previewTarget = target;
@@ -262,6 +267,16 @@ public class SelfDestructDrone : MonoBehaviour
         return false;
     }
 
+    private void SetRepairOwner(Drone_Betan owner, int lifetime)
+    { _repairOwner = owner; _repairOwnerLifetime = lifetime; _explosionNotified = false; }
+
+    private void NotifyExplosionOnce()
+    {
+        if (_explosionNotified) return;
+        _explosionNotified = true;
+        _droneManager?.NotifySelfDestructExplosion(_repairOwner, _repairOwnerLifetime);
+    }
+
     private void Explode(Shot shot, Vector3 target)
     {
         var boss = _previewTarget.HasValue ? null : shot.Target;
@@ -270,7 +285,7 @@ public class SelfDestructDrone : MonoBehaviour
             if(boss!=null && !boss.IsDead && shot.Hacking.Target==boss && shot.Hacking.Ledger.Generation==shot.Generation)
             {
                 shot.Hacking.AddFromBomb(boss,shot.Stacks,target);
-                _droneManager?.NotifySelfDestructExplosion();
+                NotifyExplosionOnce();
             }
             return;
         }
@@ -285,7 +300,7 @@ public class SelfDestructDrone : MonoBehaviour
             if (fx != null) RM.Destroy(fx, _explosionLifetime);
         }
 
-        if (!_previewTarget.HasValue) _droneManager?.NotifySelfDestructExplosion();
+        if (!_previewTarget.HasValue) NotifyExplosionOnce();
     }
 
     private void SetTrailEmitting(bool on)

@@ -78,6 +78,14 @@ namespace GaeGGUL.UI.Unit
             return change == "0" ? value + suffix : $"{value} <color=#69C875>{change}</color>{suffix}";
         }
 
+        /// <summary>설명 문장 안에서 저작 기본값과 실제 보정으로 늘어난 분량을 "기본 (+추가)"로 표시한다.</summary>
+        private static string FormatAddition(float baseline, float total)
+        {
+            string value = baseline.ToString("0.##");
+            string change = (total - baseline).ToString("+0.##;-0.##;0");
+            return change == "0" ? value : $"{value} <color=#69C875>({change})</color>";
+        }
+
         private void Show(UnitData data, Tier tier, float attack, float interval, float cooldown)
         {
             bool identityChanged = _displayedData != data || _displayedTier != tier;
@@ -97,10 +105,12 @@ namespace GaeGGUL.UI.Unit
             else if (_unit is Drone_Zeltan || data.prefabAddress == "DroneUnit_Zeltan")
             {
                 var zeltan = _unit as Drone_Zeltan;
-                string description = zeltan != null
-                    ? $"자체 식량 {zeltan.CurrentFoodProductionPerSecond:0.##}/초와 군단 식량 {zeltan.FleetFoodPerSecond:0.##}/초를 생산합니다."
-                        + (_detailed ? $" 드론 1기당 {zeltan.FoodPerDronePerSecond:0.##}/초. 강화는 자체 생산량을 높입니다. 군단 식량은 여러 젤탕이 중복 제공하지 않습니다." : string.Empty)
-                    : GetAuthoredDescription(data, tier);
+                float own = data.foodProduction.Get(tier);
+                float perDrone = data.fleetFoodPerDrone.Get(tier);
+                string description = !_detailed ? data.GetFormattedDescription(tier)
+                    : $"매초 {FormatAddition(own, zeltan != null ? zeltan.GetBaseFoodPerSecond() : own)}의 식량을 생산하고, "
+                        + $"전장에 있는 전투 드론 1기당 매초 {FormatAddition(perDrone, zeltan != null ? zeltan.FoodPerDronePerSecond : perDrone)}의 식량을 추가로 생산합니다. "
+                        + "여러 젤탕의 효과는 중첩됩니다.";
                 _view.UpdateSkillInfo(data.SkillDisplayName, description, "패시브");
             }
             else if (data.Disigman != null)
@@ -141,9 +151,9 @@ namespace GaeGGUL.UI.Unit
             if (_unit is Drone_Zeltan foodProducer)
             {
                 first = $"{foodProducer.FleetDroneCount}기";
-                float fleet = foodProducer.FleetFoodPerSecond;
-                second = FormatSplit(foodProducer.OwnFoodPerSecondBeforeUpgrade + fleet,
-                    foodProducer.CurrentFoodProductionPerSecond + fleet, "/초");
+                float own = foodProducer.CurrentFoodProductionPerSecond;
+                second = FormatSplit(own + foodProducer.FleetFoodPerSecondBeforeUpgrade,
+                    own + foodProducer.FleetFoodPerSecond, "/초");
             }
             else if (food)
             {

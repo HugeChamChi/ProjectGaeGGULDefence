@@ -107,7 +107,8 @@ public static class SelectionDefinitionReader
         {
             SelectionFeedbackTarget? target = kind switch
             {
-                DroneSelectionKind.BetanPeriodicBomb or DroneSelectionKind.BetanAttackSpeed or DroneSelectionKind.BetanFleetBomb or DroneSelectionKind.BetanRepairKit => SelectionFeedbackTarget.Betan,
+                DroneSelectionKind.BetanPeriodicBomb or DroneSelectionKind.BetanFleetBomb or DroneSelectionKind.BetanRepairKit => SelectionFeedbackTarget.Betan,
+                DroneSelectionKind.BetanAttackSpeed => SelectionFeedbackTarget.CombatDroneOwner,
                 DroneSelectionKind.GammanFrequency or DroneSelectionKind.GammanEmergency => SelectionFeedbackTarget.Gamman,
                 DroneSelectionKind.ZeltanAirFryer or DroneSelectionKind.ZeltanColdStorage or DroneSelectionKind.ZeltanMaintenance => SelectionFeedbackTarget.Zeltan,
                 DroneSelectionKind.DeltanDefenseReduction or DroneSelectionKind.DeltanDamageTaken or DroneSelectionKind.DeltanCooldown => SelectionFeedbackTarget.Deltan,
@@ -151,18 +152,18 @@ public static class SelectionDefinitionReader
             case 5: return new EmptyStackDamageDefinition {  };
             case 6: return new FoodPayoutDefinition { PeriodSeconds=effect.Interval, BonusRatio=effect.Value };
             case 7: return new HackingProductionFlatDefinition { StackCount=effect.Count };
-            // 2026-10-21 사용자 결정: 넹 !(8) 확률 2배, 넹...(9) 감망 기폭 여운. 직렬화 Kind 값은 유지한다.
+            // Kind 값은 유지한다. 넹...(9)은 10-23 승인된 델탕 압축 업로드로 저작한다.
             case 8: return new HackingProductionProcDefinition { Chance=effect.Value, Multiplier=effect.Count };
-            case 9: return new GammanResidueDefinition { DamageRatio=effect.Value, DurationSeconds=effect.Interval, TickCount=effect.Count };
+            case 9: return new HackingCompressionDefinition { RequiredAttacks=effect.Count, ProductionMultiplier=RequireWholePositive(effect.Value) };
             case 10: return new ChiefCooldownDefinition { ReductionRatio=effect.Value };
             case 11: return new ChiefVolleyDefinition { ShotDelaySeconds=effect.Interval, DamageRatio=effect.Value, ShotCount=effect.Count };
             case 12: return new FoodProductionDefinition { BonusRatio=effect.Value };
-            case 13: return new FleetFoodProductionDefinition { BonusRatio=effect.Value };
+            case 13: return new WaveFoodDividendDefinition { Ratio=effect.Value };
             case 14: return new RallyDamageDefinition { BonusRatio=effect.Value };
             case 15: return new ExplosionSkillRecoveryDefinition { Seconds=effect.Value };
             case 16: return new MergeSupportDefinition { Chance=effect.Value };
             case 17: return new CombatDroneCapacityDefinition { Count=effect.Count };
-            case 18: return new OverflowManaDefinition { ManaPerStack=effect.Count };
+            case 18: return new OverflowManaDefinition { ManaPerCast=effect.Count };
             case 19: return new BombHackingDefinition { StacksPerBomb=effect.Count };
             case 20: return new HackingCarryoverDefinition { Ratio=effect.Value };
             case 21: return new BonusManaDefinition { Chance=effect.Value, ManaCount=effect.Count };
@@ -249,6 +250,10 @@ public static class SelectionDefinitionReader
             case HackingProductionFlatDefinition d:
                 Positive(d.StackCount, nameof(d.StackCount));
                 return new HackingProductionFlatDefinition { StackCount = d.StackCount };
+            case HackingCompressionDefinition d:
+                Positive(d.RequiredAttacks, nameof(d.RequiredAttacks));
+                if (d.ProductionMultiplier < 2) throw new ArgumentException("Compression multiplier must be at least two.");
+                return new HackingCompressionDefinition { RequiredAttacks=d.RequiredAttacks, ProductionMultiplier=d.ProductionMultiplier };
             case HackingProductionRollDefinition d:
                 PercentStep(d.MinimumRatio, nameof(d.MinimumRatio)); PercentStep(d.MaximumRatio, nameof(d.MaximumRatio)); if (d.MinimumRatio > d.MaximumRatio) throw new ArgumentException("MinimumRatio exceeds MaximumRatio.");
                 return new HackingProductionRollDefinition { MinimumRatio = d.MinimumRatio, MaximumRatio = d.MaximumRatio };
@@ -276,9 +281,9 @@ public static class SelectionDefinitionReader
             case FoodProductionDefinition d:
                 NonNegative(d.BonusRatio, nameof(d.BonusRatio));
                 return new FoodProductionDefinition { BonusRatio = d.BonusRatio };
-            case FleetFoodProductionDefinition d:
-                NonNegative(d.BonusRatio, nameof(d.BonusRatio));
-                return new FleetFoodProductionDefinition { BonusRatio = d.BonusRatio };
+            case WaveFoodDividendDefinition d:
+                Ratio(d.Ratio, nameof(d.Ratio));
+                return new WaveFoodDividendDefinition { Ratio = d.Ratio };
             case RallyDamageDefinition d:
                 NonNegative(d.BonusRatio, nameof(d.BonusRatio));
                 return new RallyDamageDefinition { BonusRatio = d.BonusRatio };
@@ -292,8 +297,8 @@ public static class SelectionDefinitionReader
                 Positive(d.Count, nameof(d.Count));
                 return new CombatDroneCapacityDefinition { Count = d.Count };
             case OverflowManaDefinition d:
-                Positive(d.ManaPerStack, nameof(d.ManaPerStack));
-                return new OverflowManaDefinition { ManaPerStack = d.ManaPerStack };
+                Positive(d.ManaPerCast, nameof(d.ManaPerCast));
+                return new OverflowManaDefinition { ManaPerCast = d.ManaPerCast };
             case BombHackingDefinition d:
                 Positive(d.StacksPerBomb, nameof(d.StacksPerBomb));
                 return new BombHackingDefinition { StacksPerBomb = d.StacksPerBomb };

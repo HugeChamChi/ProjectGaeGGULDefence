@@ -909,7 +909,7 @@ namespace GaeGGUL.Tutorial
             _rewardUI.SetTutorialBrowsing(false);
             _dialogue.ShowText(_settings.TotemReturnInstruction, _lessonIndex, _lessonCount, false);
             _rewardUI.SetTutorialBrowsing(true);
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Swipe, TotemSwipeBounds);
+            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.SwipeRight, TotemSwipeBounds);
             await Until(() => _rewardUI.DetailChoice == _settings.RequiredTotem, token);
             _rewardUI.SetTutorialBrowsing(false);
             _dialogue.ShowText(_settings.TotemRotationBadgeInstruction, _lessonIndex, _lessonCount, true);

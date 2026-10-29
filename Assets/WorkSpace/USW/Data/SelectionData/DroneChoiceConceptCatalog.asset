@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DroneChoiceConceptCatalog
   _poolId: 9100
   _schemaVersion: 1
-  _dataVersion: drone-concepts-001
-  _sourceWorkbookSha256: 8bd9b13786b6f49dba759d100d8cc141da63a54797f31ffadab74ee91639927e
+  _dataVersion: drone-concepts-20261024-001
+  _sourceWorkbookSha256: 65294dc034df887d76901c4076f47a5e03a9cf07da8a1fc09200e2bb311f037f
   _contentHash: 48b2c3ca791c4e760ec0bb5a242b8193a37a8da1ab7aa316614523e0a823844b
   _entries:
   - ChooseId: 9101

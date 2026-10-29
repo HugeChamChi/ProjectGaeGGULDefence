@@ -1,0 +1,588 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2084f70ef4d0224a81e13f4f0942970, type: 3}
+  m_Name: Settings
+  m_EditorClassIdentifier: GGD.UI.Authoring::GGD.UI.Authoring.AuthoringAssets
+  ContentHash: d037f9f965bef18eab260eec6ae82694326005034aa6e5405261fffe2202b53e
+  SourceVersion: f7d34b1030a7487ea20feafaeec61edb
+  BakedScreen: {fileID: 2618266832912729420, guid: 74550a04a18422a4894a5debd1694b51,
+    type: 3}
+  Fonts:
+  - Key: KCC-Ganpan SDF
+    Asset: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  Images:
+  - Key: SPR_UI1100_GearDecoration
+    Asset: {fileID: 21300000, guid: 7d2063ed649b4f94f84796d9b2d7ebf8, type: 3}
+  - Key: SPR_UI1100_Background
+    Asset: {fileID: 21300000, guid: e50ecf26a099a70459a6c086e7cd475b, type: 3}
+  - Key: SPR_UI1100_BackButton_Nomal
+    Asset: {fileID: 21300000, guid: 32217f60564f6b049958f3c063779fdf, type: 3}
+  - Key: SPR_UI1100_interior
+    Asset: {fileID: 21300000, guid: 260b26f6528734246b11c36a3b928911, type: 3}
+  - Key: SPR_UI1100_Separatorline
+    Asset: {fileID: 21300000, guid: 9105f4210343dbd4090e251a1dde974b, type: 3}
+  - Key: SPR_UI1101_BackgroundmusicIcon_Nomal
+    Asset: {fileID: 21300000, guid: 1468627b7d4dac548b647728387b81ba, type: 3}
+  - Key: SPR_UI1101_SoundBarFrame
+    Asset: {fileID: 21300000, guid: 28cec2a33d812e842a3b32a39934d21b, type: 3}
+  - Key: SPR_UI1101_SoundBar
+    Asset: {fileID: 21300000, guid: 4d622a453dffbf74e8241404b9d70d12, type: 3}
+  - Key: SPR_UI1101_SoundBarHandle
+    Asset: {fileID: 21300000, guid: 331704ed705f6734abeb78fd22852561, type: 3}
+  - Key: SPR_UI1101_Mute_ToggleOn
+    Asset: {fileID: 21300000, guid: fae9996254718a348b7585b32dbede00, type: 3}
+  - Key: SPR_UI1101_Mute_ToggleOff
+    Asset: {fileID: 21300000, guid: f77d4b70d0951c04cb86dc731a35e4e8, type: 3}
+  - Key: SPR_UI1101_SoundeffectIcon_Nomal
+    Asset: {fileID: 21300000, guid: 198f82d3d5c98b9418d20179a1c034cf, type: 3}
+  - Key: SPR_UI1102_VibrationeffectIcon
+    Asset: {fileID: 21300000, guid: 1813d195f6f00554f9433486b6bc2c6c, type: 3}
+  - Key: SPR_UI1102_damagefloaterIcon
+    Asset: {fileID: 21300000, guid: 6b4bb1196de6e754583cdd7a47c98e4a, type: 3}
+  - Key: SPR_UI1103_ArrowButton
+    Asset: {fileID: 21300000, guid: 7ed486228aa22344cb5ed0917b74751f, type: 3}
+  - Key: SPR_UI1100_LobbyButton_Nomal
+    Asset: {fileID: 21300000, guid: 780f970aaf85b38479f3a5856adbaff4, type: 3}
+  Atlases:
+  - Key: UI3030
+    Asset: {fileID: 100100200, guid: 4179d1a6ec74a76409b3fc4e9404ed41, type: 3}
+  Documents:
+  - Path: kit.xml
+    Xml: "<Kit schema=\"2\" runtime=\"2\" project=\"GaeGGULDefence\" id=\"fcc7ada06a480015d14402b94d049d61\">\r\n 
+      <Document path=\"Screens/UI3030.xml\" />\r\n  <Document path=\"Prefabs/settings.soundRow.xml\"
+      />\r\n</Kit>\r\n\r\n\n"
+  - Path: catalog.xml
+    Xml: "<Catalog version=\"2\">\r\n  <State key=\"settings.master.volume\" type=\"number\"
+      default=\"80\" min=\"0\" max=\"100\" />\r\n  <State key=\"settings.master.enabled\"
+      type=\"bool\" default=\"true\" />\r\n  <Command key=\"settings.master.setVolume\"
+      type=\"number\" />\r\n  <Command key=\"settings.master.setEnabled\" type=\"bool\"
+      />\r\n  <State key=\"settings.bgm.volume\" type=\"number\" default=\"80\" min=\"0\"
+      max=\"100\" />\r\n  <State key=\"settings.bgm.enabled\" type=\"bool\" default=\"true\"
+      />\r\n  <Command key=\"settings.bgm.setVolume\" type=\"number\" />\r\n  <Command
+      key=\"settings.bgm.setEnabled\" type=\"bool\" />\r\n  <State key=\"settings.sfx.volume\"
+      type=\"number\" default=\"80\" min=\"0\" max=\"100\" />\r\n  <State key=\"settings.sfx.enabled\"
+      type=\"bool\" default=\"true\" />\r\n  <Command key=\"settings.sfx.setVolume\"
+      type=\"number\" />\r\n  <Command key=\"settings.sfx.setEnabled\" type=\"bool\"
+      />\r\n  <State key=\"settings.damageNumbers\" type=\"bool\" default=\"true\"
+      />\r\n  <State key=\"settings.vibration\" type=\"bool\" default=\"true\" />\r\n 
+      <State key=\"settings.frameRate\" type=\"number\" default=\"30\" />\r\n  <State
+      key=\"settings.frame.canPrevious\" type=\"bool\" default=\"false\" />\r\n 
+      <State key=\"settings.frame.canNext\" type=\"bool\" default=\"true\" />\r\n 
+      <State key=\"context.ingame\" type=\"bool\" default=\"false\" />\r\n  <Command
+      key=\"settings.setDamageNumbers\" type=\"bool\" />\r\n  <Command key=\"settings.setVibration\"
+      type=\"bool\" />\r\n  <Command key=\"settings.close\" type=\"none\" />\r\n 
+      <Command key=\"settings.restart\" type=\"none\" />\r\n  <Command key=\"settings.lobby\"
+      type=\"none\" />\r\n  <Command key=\"settings.frame.previous\" type=\"none\"
+      />\r\n  <Command key=\"settings.frame.next\" type=\"none\" />\r\n</Catalog>\r\n\r\n\n"
+  - Path: images.xml
+    Xml: "<Images>\r\n  <Image atlas=\"UI3030\" key=\"SPR_UI1100_GearDecoration\"
+      file=\"Images/fafb7409ba07daab5ddc122f18502cb4.png\" guid=\"7d2063ed649b4f94f84796d9b2d7ebf8\"
+      localId=\"21300000\" left=\"0\" bottom=\"0\" right=\"0\" top=\"0\" ppu=\"100\"
+      pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\" sha256=\"6c29b1f5a66ed15b1be7482644f6b19326251e93eec18a8a560396af3c7fe195\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_GearDecoration.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1100_Background\" file=\"Images/bd5b72ead0f95bff324f098639776dd6.png\"
+      guid=\"e50ecf26a099a70459a6c086e7cd475b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"44c5188db17d91cda47ab2b3c51967844a26b8cfc7a6fdd6afaaa9ac145eabc2\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_Background.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_BackButton_Nomal\" file=\"Images/05dd980d384786b5249e0ddaeb11f044.png\"
+      guid=\"32217f60564f6b049958f3c063779fdf\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"8d322d4400f030d8986c095ac89de530abf2d38dc969ea86189dd62aea928a57\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_BackButton_Nomal.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1100_interior\" file=\"Images/f456019cc8b55a8c4adf86803e79949d.png\"
+      guid=\"260b26f6528734246b11c36a3b928911\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"b8785663c8c873f2d1e03c182ed7a45898adae3a55795ad29b4aaf2b98085c12\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_interior.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_Separatorline\" file=\"Images/6f5cf45f0e5c9fc7b13bf69f6a9103ee.png\"
+      guid=\"9105f4210343dbd4090e251a1dde974b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"bc9c98350aca8aee1601d88b87eb3834cd9d9d40f95556848e8fb7887cd037a8\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_Separatorline.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_BackgroundmusicIcon_Nomal\" file=\"Images/640b9002da666822c387432cc129a922.png\"
+      guid=\"1468627b7d4dac548b647728387b81ba\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"6370a58af8d10e388b70862698e84173322ae249562373d5588822563376d3e3\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_BackgroundmusicIcon_Nomal.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1101_SoundBarFrame\" file=\"Images/f4cb0ff58674ccfc3ca969bdf0c1f606.png\"
+      guid=\"28cec2a33d812e842a3b32a39934d21b\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"25430adf9e950df8ed0f51fb6e2a7b4d6dff3c3feac9cadc0c99597cdc822711\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBarFrame.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_SoundBar\" file=\"Images/03cc6c8430b5822b7ddf1396275074f1.png\"
+      guid=\"4d622a453dffbf74e8241404b9d70d12\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"17af264b724853e6593c2b04366e02c42b8d36bd1a497a99dfc3a9aae0c48f7c\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBar.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1101_SoundBarHandle\" file=\"Images/daa462bf33684ba2b654308f255e6385.png\"
+      guid=\"331704ed705f6734abeb78fd22852561\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"af03e8bf37611b5066bedfbae87813e7dca78b9fa4dfc109593a34866e1f8507\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundBarHandle.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_Mute_ToggleOn\" file=\"Images/d14a05dcee9b953ebe632e9d32fd80fc.png\"
+      guid=\"fae9996254718a348b7585b32dbede00\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"92738c496853deb0f9c99e353af98783e5124924a61062c913d8958b7d8d12a5\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_Mute_ToggleOn.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_Mute_ToggleOff\" file=\"Images/caad970d64326e3cfc054a184931e777.png\"
+      guid=\"f77d4b70d0951c04cb86dc731a35e4e8\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"03e382e098eb29b2c2382a59ed279bffa33465c4740dad253d7ab42507708316\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_Mute_ToggleOff.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1101_SoundeffectIcon_Nomal\" file=\"Images/9f63f47ed04b47c502e9277290b9070d.png\"
+      guid=\"198f82d3d5c98b9418d20179a1c034cf\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"765103c2312fd634a6c20d81f944beaa76e612d05b839d56b6894d127535b47f\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1101_SoundeffectIcon_Nomal.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1102_VibrationeffectIcon\" file=\"Images/bb05fc2c0fb3e5267562c34855e8eeb9.png\"
+      guid=\"1813d195f6f00554f9433486b6bc2c6c\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"8b8a54a7cc9adfaf35ca82b0e2479037fb1fdab90d903d1e42fe1479262d7b25\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1102_VibrationeffectIcon.png\" />\r\n 
+      <Image atlas=\"UI3030\" key=\"SPR_UI1102_damagefloaterIcon\" file=\"Images/6047870abdb46f1d8d04d1f38bed233a.png\"
+      guid=\"6b4bb1196de6e754583cdd7a47c98e4a\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"ffe34e3d6b4a9a80e82492f13f6d8beb5dcedb552d9c270def0df4286e78ac56\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1102_damagefloaterIcon.png\" />\r\n  <Image
+      atlas=\"UI3030\" key=\"SPR_UI1103_ArrowButton\" file=\"Images/297037feca5232785f3af7a56df2e8bb.png\"
+      guid=\"7ed486228aa22344cb5ed0917b74751f\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"3e29d8a32c7bed16bf3891ad8b1b5dd26c9940ed2dda93b7d182ba7ba146b84f\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1103_ArrowButton.png\" />\r\n  <Image atlas=\"UI3030\"
+      key=\"SPR_UI1100_LobbyButton_Nomal\" file=\"Images/80f331cc0466358cfdab1a4ecac94c91.png\"
+      guid=\"780f970aaf85b38479f3a5856adbaff4\" localId=\"21300000\" left=\"0\" bottom=\"0\"
+      right=\"0\" top=\"0\" ppu=\"100\" pivotX=\"0.5\" pivotY=\"0.5\" filter=\"1\"
+      sha256=\"e743d722c9403d54bc73ce6c085ae803ae3998ee8b8744dd2da96201892fb662\"
+      artPath=\"KHJ_Artwork/Setting/SPR_UI1100_LobbyButton_Nomal.png\" />\r\n</Images>\r\n\r\n\n"
+  - Path: fonts.xml
+    Xml: "<Fonts>\r\n  <Font key=\"KCC-Ganpan SDF\" asset=\"Assets/Imports/Font/KCC-Ganpan
+      SDF.asset\" />\r\n</Fonts>\r\n\r\n\n"
+  - Path: Screens/UI3030.xml
+    Xml: "\r\n<Screen canvas=\"own\" schema=\"2\" key=\"UI3030\" width=\"1080\" height=\"1920\"
+      animation=\"cc914106c4984567de21fedc15c07961\">\r\n  <Element id=\"98b85b9bde2e4de6dc67026e8e3b2c0d\"
+      name=\"InGame_Setting_Popup\" key=\"InGame_Setting_Popup\" x=\"0\" y=\"0\"
+      width=\"0\" height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\" anchorMaxX=\"1\"
+      anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\"
+      active=\"true\">\r\n    <Element id=\"bc42cb858cfe41f8365563f00df58084\" name=\"Dim\"
+      key=\"backgroundClose\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n      <Image sprite=\"\"
+      color=\"#00000099\" type=\"0\" preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n     
+      <Button target=\"bc42cb858cfe41f8365563f00df58084\" interactable=\"true\" transition=\"0\"
+      normal=\"#FFFFFFFF\" highlighted=\"#F5F5F5FF\" pressed=\"#C8C8C8FF\" selected=\"#F5F5F5FF\"
+      disabled=\"#C8C8C880\" command=\"settings.close\" />\r\n    </Element>\r\n   
+      <Element id=\"cc914106c4984567de21fedc15c07961\" name=\"Window\" key=\"Window\"
+      x=\"0\" y=\"-61\" width=\"928\" height=\"1336\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n      <Element id=\"478448a431d76d8442f80b7912d8c477\"
+      name=\"Gear\" key=\"Gear\" x=\"-6.7866044\" y=\"710.2227\" width=\"228.087234\"
+      height=\"228.087234\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n        <Image sprite=\"SPR_UI1100_GearDecoration\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n     
+      </Element>\r\n      <Element id=\"52cf31cc4a7d8ffa8a2694a7d12fea13\" name=\"Frame\"
+      key=\"Frame\" x=\"-3\" y=\"-6.253746\" width=\"969.3373\" height=\"1356.76123\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Image sprite=\"SPR_UI1100_Background\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"true\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n      </Element>\r\n      <Element id=\"aaa6975f4e7d367df203ca36a420d2ff\"
+      name=\"TitleTag\" key=\"TitleTag\" x=\"0\" y=\"557\" width=\"237\" height=\"50\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Image sprite=\"SPR_UI1100_BackButton_Nomal\" color=\"#FFFFFFFF\" type=\"0\"
+      preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\"
+      fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n      </Element>\r\n     
+      <Element id=\"76bc2dfa43f3f41b34448ea8fef61af9\" name=\"Title\" key=\"Title\"
+      x=\"0\" y=\"585\" width=\"500\" height=\"110\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n        <Text font=\"KCC-Ganpan
+      SDF\" text=\"\uC124\uC815\" size=\"86\" color=\"#FFFFFFFF\" alignment=\"514\"
+      style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n     
+      </Element>\r\n      <Element id=\"7cef7532505f0202c3fb3318c81e74d6\" name=\"Inner\"
+      key=\"Inner\" x=\"0.5678522\" y=\"27\" width=\"851.7639\" height=\"1022.92157\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Image sprite=\"SPR_UI1100_interior\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n        <Element id=\"edc08f0c2ed651d7eaf6e456791fa37b\"
+      name=\"Tab_Sound\" key=\"Tab_Sound\" x=\"-260.573975\" y=\"402.396454\" width=\"248.426041\"
+      height=\"112.08284\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n          <Image sprite=\"SPR_UI1100_Separatorline\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n         
+      <Element id=\"2d62d16a80d6600c042cf3ec85fefd19\" name=\"Label\" key=\"Label\"
+      x=\"-2.42603564\" y=\"-1.3964498\" width=\"225\" height=\"82\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n            <Text
+      font=\"KCC-Ganpan SDF\" text=\"\uC0AC\uC6B4\uB4DC\" size=\"44\" color=\"#FFFFFFFF\"
+      alignment=\"514\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n          </Element>\r\n        </Element>\r\n       
+      <Instance id=\"07145955972ec3c48479390a72f50eb2\" key=\"bgmRow\" prefab=\"settings.soundRow\">\r\n         
+      <Input key=\"volumeState\" value=\"settings.bgm.volume\" />\r\n          <Input
+      key=\"volumeCommand\" value=\"settings.bgm.setVolume\" />\r\n          <Input
+      key=\"enabledState\" value=\"settings.bgm.enabled\" />\r\n          <Input
+      key=\"enabledCommand\" value=\"settings.bgm.setEnabled\" />\r\n        </Instance>\r\n       
+      <Instance id=\"d05384eec4d421825ee3c2e6b715e1f3\" key=\"sfxRow\" prefab=\"settings.soundRow\">\r\n         
+      <Input key=\"volumeState\" value=\"settings.sfx.volume\" />\r\n          <Input
+      key=\"volumeCommand\" value=\"settings.sfx.setVolume\" />\r\n          <Input
+      key=\"enabledState\" value=\"settings.sfx.enabled\" />\r\n          <Input
+      key=\"enabledCommand\" value=\"settings.sfx.setEnabled\" />\r\n          <Override
+      target=\"a8c28eccd57a7193ab70f22b1678e5c5\" property=\"name\" value=\"SFX_Row\"
+      />\r\n          <Override target=\"a8c28eccd57a7193ab70f22b1678e5c5\" property=\"key\"
+      value=\"SFX_Row\" />\r\n          <Override target=\"a8c28eccd57a7193ab70f22b1678e5c5\"
+      property=\"y\" value=\"133\" />\r\n          <Override target=\"a5f1863e743fe7c4ee25f88cc62274fc\"
+      property=\"x\" value=\"-305.7427\" />\r\n          <Override target=\"a5f1863e743fe7c4ee25f88cc62274fc\"
+      property=\"y\" value=\"2.86472154\" />\r\n          <Override target=\"a5f1863e743fe7c4ee25f88cc62274fc\"
+      property=\"width\" value=\"108.647217\" />\r\n          <Override target=\"a5f1863e743fe7c4ee25f88cc62274fc\"
+      property=\"height\" value=\"108.647217\" />\r\n          <Override target=\"a5f1863e743fe7c4ee25f88cc62274fc\"
+      property=\"Image.sprite\" value=\"SPR_UI1101_SoundeffectIcon_Nomal\" />\r\n       
+      </Instance>\r\n        <Element id=\"4ef9fa5c799ed2649f87ba22fb71d777\" name=\"Tab_Game\"
+      key=\"Tab_Game\" x=\"-250.573959\" y=\"3.3964498\" width=\"248.426041\" height=\"112.08284\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n         
+      <Image sprite=\"SPR_UI1100_Separatorline\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n          <Element id=\"1d6408dde9d0294b5541fb350e6a8023\"
+      name=\"Label\" key=\"Label\" x=\"-2.42603564\" y=\"-1.3964498\" width=\"225\"
+      height=\"82\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n           
+      <Text font=\"KCC-Ganpan SDF\" text=\"\uAC8C\uC784\" size=\"44\" color=\"#FFFFFFFF\"
+      alignment=\"514\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n          </Element>\r\n        </Element>\r\n       
+      <Element id=\"16b38f6592d36355ac475fd0668b1ae9\" name=\"Vibration_Row\" key=\"Vibration_Row\"
+      x=\"0\" y=\"-131\" width=\"760\" height=\"110\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Element id=\"ab195fa6734096e859f20b8f3a74203f\"
+      name=\"Icon\" key=\"Icon\" x=\"-302.870453\" y=\"3.30769253\" width=\"89.133606\"
+      height=\"89.133606\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n            <Image sprite=\"SPR_UI1102_VibrationeffectIcon\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n         
+      </Element>\r\n          <Element id=\"8d06b4ee0ed1eb3d632db667e70b0160\" name=\"Label\"
+      key=\"Label\" x=\"-213\" y=\"0\" width=\"380\" height=\"70\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n            <Text
+      font=\"KCC-Ganpan SDF\" text=\"\uC9C4\uB3D9 \uD6A8\uACFC\" size=\"44\" color=\"#FFFFFFFF\"
+      alignment=\"4097\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n          </Element>\r\n          <Element
+      id=\"110e53ad7ae0d56a9a67028180dbf3f1\" name=\"Toggle\" key=\"Toggle\" x=\"254.5\"
+      y=\"0\" width=\"170\" height=\"90\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n            <Slider target=\"\" interactable=\"false\"
+      fill=\"\" handle=\"\" min=\"0\" max=\"1\" wholeNumbers=\"false\" value=\"0\"
+      direction=\"0\" />\r\n            <Switch visualSlider=\"110e53ad7ae0d56a9a67028180dbf3f1\"
+      on=\"ddd12c2abaa3f694306c72484b278ec1\" off=\"f04accc7f7ed187cb2ca8c28082205be\"
+      bind=\"settings.vibration\" command=\"settings.setVibration\" />\r\n           
+      <Element id=\"10f4f143bd075cce42d5d027ecbbd63b\" name=\"HitArea\" key=\"HitArea\"
+      x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\"
+      anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n              <Image sprite=\"\"
+      color=\"#FFFFFF00\" type=\"0\" preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n           
+      </Element>\r\n            <Element id=\"fa6349e74b72817137c30189fc2de1b4\"
+      name=\"Box\" key=\"Box\" x=\"-51.5\" y=\"0\" width=\"49.152\" height=\"49.152\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n             
+      <Image sprite=\"SPR_UI1101_Mute_ToggleOn\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n            </Element>\r\n            <Element id=\"ddd12c2abaa3f694306c72484b278ec1\"
+      name=\"On\" key=\"On\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n             
+      <Element id=\"c34ef5b1af8883e61b558937a542d0cf\" name=\"Check\" key=\"Check\"
+      x=\"-44.5\" y=\"15\" width=\"83.968\" height=\"83.968\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n               
+      <Image sprite=\"SPR_UI1101_Mute_ToggleOff\" color=\"#FFFFFFFF\" type=\"0\"
+      preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\"
+      fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n             
+      </Element>\r\n              <Element id=\"2b8f3560446db05685076ef08ed472fd\"
+      name=\"ON\" key=\"ON\" x=\"27.5\" y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n               
+      <Text font=\"KCC-Ganpan SDF\" text=\"ON\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\"
+      style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n             
+      </Element>\r\n            </Element>\r\n            <Element id=\"f04accc7f7ed187cb2ca8c28082205be\"
+      name=\"Off\" key=\"Off\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"false\">\r\n             
+      <Element id=\"e807f52fbed13d906231a3aa6ab5336a\" name=\"OFF\" key=\"OFF\" x=\"33.5\"
+      y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n                <Text font=\"KCC-Ganpan
+      SDF\" text=\"OFF\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\" style=\"0\"
+      autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n             
+      </Element>\r\n            </Element>\r\n          </Element>\r\n        </Element>\r\n       
+      <Element id=\"33e69ba2c69ee9cd7fcaf4e1f2df2412\" name=\"DamageFloater_Row\"
+      key=\"DamageFloater_Row\" x=\"0\" y=\"-270\" width=\"760\" height=\"110\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Element
+      id=\"e62c2fdd026763c45ccdf1a67c5d0571\" name=\"Icon\" key=\"Icon\" x=\"-303.5653\"
+      y=\"2.39400434\" width=\"94.28694\" height=\"94.28694\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n            <Image
+      sprite=\"SPR_UI1102_damagefloaterIcon\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n          </Element>\r\n          <Element id=\"be461c2d9ab8b5ce87ef5156bc1ae832\"
+      name=\"Label\" key=\"Label\" x=\"-213\" y=\"0\" width=\"380\" height=\"70\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n           
+      <Text font=\"KCC-Ganpan SDF\" text=\"\uB370\uBBF8\uC9C0 \uD50C\uB85C\uD130\"
+      size=\"44\" color=\"#FFFFFFFF\" alignment=\"4097\" style=\"0\" autoSize=\"false\"
+      minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\"
+      marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n          </Element>\r\n          <Element
+      id=\"92ceb1cfa854f7a5c58ea0b89d37a8e6\" name=\"Toggle\" key=\"Toggle\" x=\"254.5\"
+      y=\"0\" width=\"170\" height=\"90\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n            <Slider target=\"\" interactable=\"false\"
+      fill=\"\" handle=\"\" min=\"0\" max=\"1\" wholeNumbers=\"false\" value=\"0\"
+      direction=\"0\" />\r\n            <Switch visualSlider=\"92ceb1cfa854f7a5c58ea0b89d37a8e6\"
+      on=\"17e1555e6555996a8a570833fec085b1\" off=\"2d5cf4411b4413e440557b861ec27fa0\"
+      bind=\"settings.damageNumbers\" command=\"settings.setDamageNumbers\" />\r\n           
+      <Element id=\"6ad81c5028af54dc5a1f35d6407f9e0a\" name=\"HitArea\" key=\"HitArea\"
+      x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\"
+      anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n              <Image sprite=\"\"
+      color=\"#FFFFFF00\" type=\"0\" preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n           
+      </Element>\r\n            <Element id=\"30c0d1f0a5095c8cd1fe197949643b08\"
+      name=\"Box\" key=\"Box\" x=\"-51.5\" y=\"0\" width=\"49.152\" height=\"49.152\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n             
+      <Image sprite=\"SPR_UI1101_Mute_ToggleOn\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n            </Element>\r\n            <Element id=\"17e1555e6555996a8a570833fec085b1\"
+      name=\"On\" key=\"On\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n             
+      <Element id=\"f64ff4908cace452e55da6d3fbfb50cb\" name=\"Check\" key=\"Check\"
+      x=\"-44.5\" y=\"15\" width=\"83.968\" height=\"83.968\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n               
+      <Image sprite=\"SPR_UI1101_Mute_ToggleOff\" color=\"#FFFFFFFF\" type=\"0\"
+      preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\"
+      fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n             
+      </Element>\r\n              <Element id=\"db2fc9625c1036ec9c083b7401a8e56f\"
+      name=\"ON\" key=\"ON\" x=\"27.5\" y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n               
+      <Text font=\"KCC-Ganpan SDF\" text=\"ON\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\"
+      style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n             
+      </Element>\r\n            </Element>\r\n            <Element id=\"2d5cf4411b4413e440557b861ec27fa0\"
+      name=\"Off\" key=\"Off\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"false\">\r\n             
+      <Element id=\"7b555afff1e566975feda53ca2ac9681\" name=\"OFF\" key=\"OFF\" x=\"33.5\"
+      y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n                <Text font=\"KCC-Ganpan
+      SDF\" text=\"OFF\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\" style=\"0\"
+      autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n             
+      </Element>\r\n            </Element>\r\n          </Element>\r\n        </Element>\r\n       
+      <Element id=\"f847915dcd98ded80d80e9aceb87a25d\" name=\"FrameRate_Row\" key=\"FrameRate_Row\"
+      x=\"0\" y=\"-392\" width=\"760\" height=\"110\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Element id=\"123160ac2004a6d752f432c8290882cc\"
+      name=\"Label\" key=\"Label\" x=\"-280\" y=\"0\" width=\"200\" height=\"70\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n           
+      <Text font=\"KCC-Ganpan SDF\" text=\"\uD504\uB808\uC784\" size=\"44\" color=\"#FFFFFFFF\"
+      alignment=\"514\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n          </Element>\r\n          <Element
+      id=\"1f25d35aaa87d555de87b1755aa599c5\" name=\"Prev\" key=\"framePrevious\"
+      x=\"-104.8783\" y=\"0.06084656\" width=\"62.3068771\" height=\"62.3068771\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n           
+      <Image sprite=\"SPR_UI1103_ArrowButton\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"true\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n            <Button target=\"1f25d35aaa87d555de87b1755aa599c5\"
+      interactable=\"true\" transition=\"0\" normal=\"#FFFFFFFF\" highlighted=\"#F5F5F5FF\"
+      pressed=\"#C8C8C8FF\" selected=\"#F5F5F5FF\" disabled=\"#C8C8C880\" command=\"settings.frame.previous\"
+      enabled=\"settings.frame.canPrevious\" />\r\n          </Element>\r\n         
+      <Element id=\"2ee3e661f1f9897ed611c6e14c963008\" name=\"Value\" key=\"Value\"
+      x=\"93\" y=\"0\" width=\"160\" height=\"70\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n            <Text font=\"KCC-Ganpan
+      SDF\" text=\"60\" size=\"46\" color=\"#FFFFFFFF\" alignment=\"514\" style=\"0\"
+      autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" bind=\"settings.frameRate\"
+      />\r\n          </Element>\r\n          <Element id=\"a4ab4d7e81c029b206fe643e750f2a00\"
+      name=\"Next\" key=\"frameNext\" x=\"291.8783\" y=\"-0.06084656\" width=\"62.3068771\"
+      height=\"62.3068771\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"-1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n            <Image sprite=\"SPR_UI1103_ArrowButton\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n           
+      <Button target=\"a4ab4d7e81c029b206fe643e750f2a00\" interactable=\"true\" transition=\"0\"
+      normal=\"#FFFFFFFF\" highlighted=\"#F5F5F5FF\" pressed=\"#C8C8C8FF\" selected=\"#F5F5F5FF\"
+      disabled=\"#C8C8C880\" command=\"settings.frame.next\" enabled=\"settings.frame.canNext\"
+      />\r\n          </Element>\r\n        </Element>\r\n      </Element>\r\n     
+      <Element id=\"c0166d2ca387096e078a5d907c66bbe8\" name=\"Back_Button\" key=\"closeButton\"
+      x=\"-217\" y=\"-547\" width=\"355\" height=\"75\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n        <Image sprite=\"SPR_UI1100_BackButton_Nomal\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n       
+      <Button target=\"c0166d2ca387096e078a5d907c66bbe8\" interactable=\"true\" transition=\"2\"
+      normal=\"#FFFFFFFF\" highlighted=\"#F5F5F5FF\" pressed=\"#C8C8C8FF\" selected=\"#F5F5F5FF\"
+      disabled=\"#C8C8C880\" command=\"settings.close\" />\r\n        <Element id=\"127560631197caa1ed3acd7e8fdb0c34\"
+      name=\"Label\" key=\"Label\" x=\"0\" y=\"3\" width=\"355\" height=\"75\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Text
+      font=\"KCC-Ganpan SDF\" text=\"\uB4A4\uB85C\uAC00\uAE30\" size=\"46\" color=\"#FFFFFFFF\"
+      alignment=\"514\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n        </Element>\r\n      </Element>\r\n     
+      <Element id=\"f223e90a7ceb7736ae117f32d56ab67d\" name=\"Lobby_Button\" key=\"lobbyButton\"
+      x=\"216\" y=\"-547\" width=\"355\" height=\"75\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\" visible=\"context.ingame\">\r\n       
+      <Image sprite=\"SPR_UI1100_LobbyButton_Nomal\" color=\"#FFFFFFFF\" type=\"0\"
+      preserveAspect=\"false\" raycast=\"true\" fillMethod=\"4\" fillAmount=\"1\"
+      fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n        <Button
+      target=\"f223e90a7ceb7736ae117f32d56ab67d\" interactable=\"true\" transition=\"2\"
+      normal=\"#FFFFFFFF\" highlighted=\"#F5F5F5FF\" pressed=\"#C8C8C8FF\" selected=\"#F5F5F5FF\"
+      disabled=\"#C8C8C880\" command=\"settings.lobby\" />\r\n        <Element id=\"1ac57871943c14e95ba072b64f140da8\"
+      name=\"Label\" key=\"Label\" x=\"0\" y=\"3\" width=\"355\" height=\"75\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Text
+      font=\"KCC-Ganpan SDF\" text=\"\uB85C\uBE44\uC774\uB3D9\" size=\"46\" color=\"#FFFFFFFF\"
+      alignment=\"514\" style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\"
+      wrap=\"0\" overflow=\"0\" rich=\"true\" raycast=\"false\" marginLeft=\"0\"
+      marginTop=\"0\" marginRight=\"0\" marginBottom=\"0\" outlineWidth=\"0.65\"
+      outlineColor=\"#000000FF\" />\r\n        </Element>\r\n      </Element>\r\n   
+      </Element>\r\n  </Element>\r\n</Screen>\r\n\n"
+  - Path: Prefabs/settings.soundRow.xml
+    Xml: "<Prefab schema=\"2\" key=\"settings.soundRow\" width=\"1080\" height=\"1920\">\r\n 
+      <Parameters>\r\n    <Parameter key=\"volumeState\" default=\"settings.bgm.volume\"
+      />\r\n    <Parameter key=\"volumeCommand\" default=\"settings.bgm.setVolume\"
+      />\r\n    <Parameter key=\"enabledState\" default=\"settings.bgm.enabled\"
+      />\r\n    <Parameter key=\"enabledCommand\" default=\"settings.bgm.setEnabled\"
+      />\r\n  </Parameters>\r\n  <Element id=\"a8c28eccd57a7193ab70f22b1678e5c5\"
+      name=\"BGM_Row\" key=\"BGM_Row\" x=\"0\" y=\"277\" width=\"760\" height=\"110\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n   
+      <Element id=\"a5f1863e743fe7c4ee25f88cc62274fc\" name=\"Icon\" key=\"Icon\"
+      x=\"-301.923065\" y=\"2.69230771\" width=\"98.46154\" height=\"98.46154\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n      <Image sprite=\"SPR_UI1101_BackgroundmusicIcon_Nomal\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n   
+      </Element>\r\n    <Element id=\"e4ab2249766a87eeddd0169b711757c7\" name=\"Slider\"
+      key=\"Slider\" x=\"-32\" y=\"0\" width=\"383\" height=\"44\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n      <Slider
+      target=\"29276a385c650a7dbe3f007de4133e3c\" interactable=\"true\" fill=\"a7af5de7ca4f6f38107f09ec7cf8a7dc\"
+      handle=\"29276a385c650a7dbe3f007de4133e3c\" min=\"0\" max=\"100\" wholeNumbers=\"true\"
+      value=\"1\" direction=\"0\" bind=\"${volumeState}\" command=\"${volumeCommand}\"
+      />\r\n      <Element id=\"4a96d6a847500dddec4686c775606930\" name=\"Background\"
+      key=\"Background\" x=\"-0.3762279\" y=\"-1.099999\" width=\"385.257355\" height=\"55\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Image sprite=\"SPR_UI1101_SoundBarFrame\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"true\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n      </Element>\r\n      <Element id=\"4d82f09c2a4fcce4524e31eff3a55784\"
+      name=\"Fill Area\" key=\"Fill Area\" x=\"0\" y=\"0\" width=\"-12\" height=\"-12\"
+      anchorMinX=\"0\" anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\"
+      pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Element id=\"a7af5de7ca4f6f38107f09ec7cf8a7dc\" name=\"Fill\" key=\"Fill\"
+      x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\"
+      anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Image sprite=\"SPR_UI1101_SoundBar\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n       
+      </Element>\r\n      </Element>\r\n      <Element id=\"2f33421f675c6fe613990ad5afcb99bf\"
+      name=\"Handle Slide Area\" key=\"Handle Slide Area\" x=\"0\" y=\"0\" width=\"-44\"
+      height=\"0\" anchorMinX=\"0\" anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Element id=\"29276a385c650a7dbe3f007de4133e3c\" name=\"Handle\" key=\"Handle\"
+      x=\"0\" y=\"0\" width=\"50\" height=\"6\" anchorMinX=\"1\" anchorMinY=\"0\"
+      anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Image sprite=\"SPR_UI1101_SoundBarHandle\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"true\" raycast=\"true\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n       
+      </Element>\r\n      </Element>\r\n    </Element>\r\n    <Element id=\"be4cddb73592cbb9e4a0b89ba1bbfeef\"
+      name=\"Mute_Toggle\" key=\"Mute_Toggle\" x=\"254.5\" y=\"0\" width=\"170\"
+      height=\"90\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n     
+      <Toggle target=\"0f0544eaebce86f848b1f0ddb93d302c\" interactable=\"true\" graphic=\"\"
+      value=\"true\" bind=\"${enabledState}\" command=\"${enabledCommand}\" on=\"c7421691d69f96193ff1c171c88a8de4\"
+      off=\"a9417912b87bb99848857aa86521d1fb\" />\r\n      <Element id=\"2abc99c6c3dc9f35bd7497bd12ed4fad\"
+      name=\"HitArea\" key=\"HitArea\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n        <Image
+      sprite=\"\" color=\"#FFFFFF00\" type=\"0\" preserveAspect=\"false\" raycast=\"true\"
+      fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\"
+      />\r\n      </Element>\r\n      <Element id=\"0f0544eaebce86f848b1f0ddb93d302c\"
+      name=\"Box\" key=\"Box\" x=\"-51.5\" y=\"0\" width=\"49.152\" height=\"49.152\"
+      anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\"
+      pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n       
+      <Image sprite=\"SPR_UI1101_Mute_ToggleOn\" color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\"
+      raycast=\"false\" fillMethod=\"4\" fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\"
+      ppuMultiplier=\"1\" />\r\n      </Element>\r\n      <Element id=\"c7421691d69f96193ff1c171c88a8de4\"
+      name=\"SoundOn\" key=\"SoundOn\" x=\"0\" y=\"0\" width=\"0\" height=\"0\" anchorMinX=\"0\"
+      anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n        <Element
+      id=\"8cec6c20ac937862706edf016d8be09c\" name=\"Check\" key=\"Check\" x=\"-44.5\"
+      y=\"15\" width=\"83.968\" height=\"83.968\" anchorMinX=\"0.5\" anchorMinY=\"0.5\"
+      anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\"
+      scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Image sprite=\"SPR_UI1101_Mute_ToggleOff\"
+      color=\"#FFFFFFFF\" type=\"0\" preserveAspect=\"false\" raycast=\"false\" fillMethod=\"4\"
+      fillAmount=\"1\" fillOrigin=\"0\" clockwise=\"true\" ppuMultiplier=\"1\" />\r\n       
+      </Element>\r\n        <Element id=\"30c9dbd03bb6262e5e0e7794f858c28d\" name=\"ON\"
+      key=\"ON\" x=\"27.5\" y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\"
+      anchorMinY=\"0.5\" anchorMaxX=\"0.5\" anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\"
+      scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"true\">\r\n          <Text
+      font=\"KCC-Ganpan SDF\" text=\"ON\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\"
+      style=\"0\" autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n       
+      </Element>\r\n      </Element>\r\n      <Element id=\"a9417912b87bb99848857aa86521d1fb\"
+      name=\"SoundOff\" key=\"SoundOff\" x=\"0\" y=\"0\" width=\"0\" height=\"0\"
+      anchorMinX=\"0\" anchorMinY=\"0\" anchorMaxX=\"1\" anchorMaxY=\"1\" pivotX=\"0.5\"
+      pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\" rotation=\"0\" active=\"false\">\r\n       
+      <Element id=\"4058ec4485ee662edc6e12a9dca95fa4\" name=\"OFF\" key=\"OFF\" x=\"33.5\"
+      y=\"0\" width=\"110\" height=\"60\" anchorMinX=\"0.5\" anchorMinY=\"0.5\" anchorMaxX=\"0.5\"
+      anchorMaxY=\"0.5\" pivotX=\"0.5\" pivotY=\"0.5\" scaleX=\"1\" scaleY=\"1\"
+      rotation=\"0\" active=\"true\">\r\n          <Text font=\"KCC-Ganpan SDF\"
+      text=\"OFF\" size=\"42\" color=\"#FFFFFFFF\" alignment=\"514\" style=\"0\"
+      autoSize=\"false\" minSize=\"18\" maxSize=\"72\" wrap=\"0\" overflow=\"0\"
+      rich=\"true\" raycast=\"false\" marginLeft=\"0\" marginTop=\"0\" marginRight=\"0\"
+      marginBottom=\"0\" outlineWidth=\"0.65\" outlineColor=\"#000000FF\" />\r\n       
+      </Element>\r\n      </Element>\r\n    </Element>\r\n  </Element>\r\n</Prefab>\r\n\r\n\n"

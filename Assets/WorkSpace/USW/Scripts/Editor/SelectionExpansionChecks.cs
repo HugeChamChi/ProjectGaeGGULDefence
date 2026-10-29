@@ -100,8 +100,9 @@ public static class SelectionExpansionChecks
         Set(manager, "_poolInitialized", true); Set(manager, "_selectedPool", pool);
         manager.ApplyEffect(guarantee);
         Set(manager, "_effectivePool", new[] { candidates[0] });
-        Check(manager.GetRandomChoices().Count == 0, "No eligible legend yields empty draw");
-        Check(manager.GetRandomChoices().Count == 1, "Empty forced draw does not retain guarantee");
+        Check(manager.GetRandomChoices().Count == 1, "No eligible legend falls back to valid ordinary choices");
+        var state = (LevelUpRunState)typeof(LevelUpManager).GetField("_runState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(manager);
+        Check(state.HasLegendGuarantee, "Unavailable legendary draw retains guarantee");
         manager.RemoveEffect(guarantee);
     }
 
@@ -137,20 +138,20 @@ public static class SelectionExpansionChecks
         var zelta = Component<Drone_Zeltan>(); zelta.unitData = Asset<UnitData>();
         var upgrade = Component<UpgradeManager>(); var settings = Asset<UpgradeSettings>();
         Set(upgrade, "_settings", settings); Set(zelta, "_upgradeManager", upgrade);
-        zelta.unitData.foodProduction.normal = 4;
+        zelta.unitData.foodProduction.normal = 4; zelta.unitData.fleetFoodPerDrone.normal = .55f;
         zelta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });
         var cell = Component<GridCell>(); Set(cell, "<Model>k__BackingField", new GridCellModel());
         Set(zelta, "<currentCell>k__BackingField", cell); zelta.gameObject.SetActive(true);
         drones.SetPerDroneFood(0.15f); drones.RegisterFoodProducer(zelta);
         manager.ApplyEffect(cards[0]);
-        Check(Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f) && Mathf.Approximately(drones.BaseFoodPerDrone, .55f),
-            "Cold storage affects own production only");
+        Check(Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f) && Mathf.Approximately(drones.BaseFoodPerDrone, .605f),
+            "Cold storage affects both own and proportional production");
         manager.ApplyEffect(cards[1]);
         Check(Mathf.Approximately(drones.BaseFoodPerDrone, .605f) && Mathf.Approximately(zelta.GetBaseFoodPerSecond(), 4.4f),
-            "Maintenance affects legion production only");
-        manager.RemoveEffect(cards[1]); Check(Mathf.Approximately(drones.BaseFoodPerDrone, .55f), "Maintenance removal updates immediately");
+            "Wave dividend does not change per-second production");
+        manager.RemoveEffect(cards[1]); Check(Mathf.Approximately(drones.BaseFoodPerDrone, .605f), "Maintenance removal updates immediately");
         manager.ApplyEffect(cards[1]);
-        Check(Mathf.Approximately(drones.BaseFoodPerDrone, .55f), "Removed card cannot be reacquired in same run");
+        Check(Mathf.Approximately(drones.BaseFoodPerDrone, .605f), "Removed card cannot be reacquired in same run");
         drones.UnregisterFoodProducer(zelta);
         Check(Mathf.Approximately(drones.BaseFoodPerDrone, 0.15f), "No Zeltan means no maintenance bonus");
         Check(drones.GetRallyDamage(10, 80) == 800m, "Unmodified rally damage");
@@ -164,13 +165,13 @@ public static class SelectionExpansionChecks
         Set(cell, "<OccupyingUnit>k__BackingField", beta);
         var grid = Component<GridManager>(); Set(grid, "_grid", new[,] { { cell } });
         Set(drones, "_gridManager", grid);
-        beta.Combat.SkillTimer = 3; drones.NotifySelfDestructExplosion();
+        beta.Combat.SkillTimer = 3; drones.NotifySelfDestructExplosion(beta, 0);
         Check(beta.Combat.SkillTimer == 3, "No repair kit no recharge");
-        manager.ApplyEffect(cards[3]); drones.NotifySelfDestructExplosion(); drones.NotifySelfDestructExplosion();
+        manager.ApplyEffect(cards[3]); drones.NotifySelfDestructExplosion(beta, 0); drones.NotifySelfDestructExplosion(beta, 0);
         Check(beta.Combat.SkillTimer == 4, "Each explosion advances by half second");
-        beta.Combat.SkillTimer = 13.8f; drones.NotifySelfDestructExplosion();
+        beta.Combat.SkillTimer = 13.8f; drones.NotifySelfDestructExplosion(beta, 0);
         Check(beta.Combat.SkillTimer == 14, "Recharge caps at ready");
-        manager.RemoveEffect(cards[3]); beta.Combat.SkillTimer = 3; drones.NotifySelfDestructExplosion();
+        manager.RemoveEffect(cards[3]); beta.Combat.SkillTimer = 3; drones.NotifySelfDestructExplosion(beta, 0);
         Check(beta.Combat.SkillTimer == 3, "Repair kit removal stops recharge");
     }
 

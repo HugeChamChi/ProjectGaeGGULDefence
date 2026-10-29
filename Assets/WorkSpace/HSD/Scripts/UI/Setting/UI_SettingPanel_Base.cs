@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ namespace HSD.UI.Setting
     /// <summary>
     /// 공통 설정을 담는 Base 클래스
     /// </summary>
-    public class UI_SettingPanel_Base : UI_Base
+    public class UI_SettingPanel_Base : UI_Base, ISettingsView
     {
         [Header("Sound Slots")]
         [SerializeField] private List<UI_SoundSettingSlot> _soundSlots;
@@ -35,18 +36,68 @@ namespace HSD.UI.Setting
         }
         private UI_SettingPresenter _presenterValue;
         private AudioManager _settingsAudioManager;
+        private GamePresentationSettings _presentationSettings;
+        private GGD.UI.Authoring.AuthoringAssets _authoredAssets;
+        private GGD.UI.Authoring.AuthoredUiView _authoredView;
+        private SettingsGameBindings _authoredBindings;
+        private bool _viewInitialized;
+#if UNITY_EDITOR
+        private string _editorComparisonMode;
+        /// <summary>Last editor comparison XML interpretation time; zero for baked and legacy views.</summary>
+        public double EditorResolveMilliseconds { get; private set; }
+        /// <summary>Last editor comparison graph construction or prefab clone/binding time.</summary>
+        public double EditorCreateMilliseconds { get; private set; }
+        /// <summary>Managed bytes allocated by XML interpretation on the editor's main thread.</summary>
+        public long EditorResolveBytes { get; private set; }
+        /// <summary>Managed bytes allocated by graph construction or clone/binding on the editor's main thread.</summary>
+        public long EditorCreateBytes { get; private set; }
+        /// <summary>Selects an editor-only comparison path before the inactive fixture is initialized. Production always uses the baked prefab.</summary>
+        public void SetEditorComparisonMode(string mode)
+        {
+            if (_viewInitialized) throw new System.InvalidOperationException("Configure an inactive fixture before Awake");
+            if (mode != "xml" && mode != "prefab" && mode != "legacy") throw new System.ArgumentException("Unknown UI comparison mode");
+            _editorComparisonMode = mode;
+        }
+#endif
+
+        /// <summary>Whether this host uses the installed source-authored screen.</summary>
+        public bool UsesAuthoredUi => _authoredAssets != null;
+        /// <summary>Current authored graph for targeted integration checks.</summary>
+        public GGD.UI.Authoring.AuthoredUiView AuthoredView => _authoredView;
+        /// <summary>Actual service adapter for targeted integration checks.</summary>
+        public SettingsGameBindings AuthoredBindings => _authoredBindings;
 
         [VContainer.Inject]
         public void Construct(AudioManager audioManager, GamePresentationSettings settings, SceneChangeManager scenes)
         {
             _settingsAudioManager = audioManager;
+            _presentationSettings = settings;
             _presenter.Configure(audioManager, settings, scenes);
         }
 
         protected override void Awake()
         {
+            InitializeView();
+        }
+
+        private void InitializeView()
+        {
+            if (_viewInitialized) return;
+            _viewInitialized = true;
             base.Awake();
-            InitializeBase();
+            _authoredAssets = Resources.Load<GGD.UI.Authoring.AuthoringAssets>("UiAuthoring/Settings");
+            if (_authoredAssets != null && _authoredAssets.NativeSourceInstalled) _authoredAssets = null;
+#if UNITY_EDITOR
+            if (_editorComparisonMode == "legacy") _authoredAssets = null;
+#endif
+            if (_authoredAssets == null) InitializeBase();
+            else
+            {
+                btn_Close?.onClick.RemoveAllListeners(); btn_BackgroundClose?.onClick.RemoveAllListeners();
+                btn_Close = null; btn_BackgroundClose = null;
+                foreach (Transform child in transform)
+                    if (confirmPopup == null || child != confirmPopup.transform) child.gameObject.SetActive(false);
+            }
         }
 
         public void ShowConfirm(string title, string description, System.Action onYes, System.Action onNo = null)
@@ -79,12 +130,53 @@ namespace HSD.UI.Setting
 
         public override async UniTask OpenAsync()
         {
+            // Serialized popup roots start inactive. Their first OpenAsync can precede Unity's Awake.
+            InitializeView();
+            if (UsesAuthoredUi)
+            {
+                EnsureAuthoredView();
+                _authoredBindings.OnOpen();
+            }
             _presenter.RefreshUI();
             await base.OpenAsync();
         }
 
+        private void EnsureAuthoredView()
+        {
+            if (_authoredView != null) return;
+            var bindings = new SettingsGameBindings(_settingsAudioManager, _presentationSettings, _presenter, this, GetComponentInParent<LobbySettingsPopup>(true) == null);
+            try
+            {
+                GGD.UI.Authoring.AuthoredUiView candidate;
+#if UNITY_EDITOR
+                long start = System.Diagnostics.Stopwatch.GetTimestamp(), bytes = System.GC.GetAllocatedBytesForCurrentThread();
+                if (_editorComparisonMode == "xml")
+                {
+                    var resolved = _authoredAssets.Resolve("Screens/UI3030.xml");
+                    EditorResolveMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000d / System.Diagnostics.Stopwatch.Frequency;
+                    EditorResolveBytes = System.GC.GetAllocatedBytesForCurrentThread() - bytes;
+                    start = System.Diagnostics.Stopwatch.GetTimestamp(); bytes = System.GC.GetAllocatedBytesForCurrentThread();
+                    candidate = GGD.UI.Authoring.AuthoredUiView.Create(resolved, (RectTransform)transform, new GGD.UI.Authoring.AuthoringResources(_authoredAssets), bindings);
+                }
+                else
+#endif
+                candidate = GGD.UI.Authoring.AuthoredUiView.FromPrefab(_authoredAssets.BakedScreen, (RectTransform)transform, bindings);
+#if UNITY_EDITOR
+                EditorCreateMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000d / System.Diagnostics.Stopwatch.Frequency;
+                EditorCreateBytes = System.GC.GetAllocatedBytesForCurrentThread() - bytes;
+#endif
+                _authoredView = candidate; _authoredBindings = bindings;
+                var window = candidate.AnimationRoot;
+                if (targetAnim != null && window != null) targetAnim.Initialize(window);
+                candidate.Root.SetActive(true);
+                confirmPopup?.transform.SetAsLastSibling();
+            }
+            catch { bindings.Dispose(); throw; }
+        }
+
         public void UpdateSoundSlot(AudioGroup group, int volume, bool isMuted)
         {
+            if (UsesAuthoredUi) { _authoredView?.Refresh(); return; }
             var slot = _soundSlots.Find(s => s.Group == group);
             if (slot != null)
             {
@@ -95,8 +187,11 @@ namespace HSD.UI.Setting
         /// <summary>콜백을 다시 실행하지 않고 저장된 토글 상태를 표시한다.</summary>
         public void UpdatePresentationToggles(bool damageNumbers, bool vibration)
         {
+            if (UsesAuthoredUi) { _authoredView?.Refresh(); return; }
             toggle_DamageFloater?.SetState(damageNumbers, true);
             toggle_Vibration?.SetState(vibration, true);
         }
+
+        private void OnDestroy() { _authoredView?.Dispose(); _authoredBindings?.Dispose(); }
     }
 }

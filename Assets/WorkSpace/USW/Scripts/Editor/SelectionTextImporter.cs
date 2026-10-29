@@ -149,9 +149,15 @@ public static class SelectionTextImporter
                 throw row.Error("ChooseId", "드론 풀에 없는 ID");
             if (!seen.Add(id)) throw row.Error("ChooseId", "중복 ID");
             string name = Required(row, "Name"), simple = Required(row, "SimpleDescription"), detail = Required(row, "Description");
-            string known = card.description + card.simpleDescription;
-            CheckTokens(row, "SimpleDescription", simple, known);
-            CheckTokens(row, "Description", detail, known);
+            // Revised effects may introduce a supported token absent from the previous text.
+            // Validate against the authored effect, rather than treating old wording as its schema.
+            var definition = SelectionDefinitionReader.CopyAndValidate(card.Composition);
+            try
+            {
+                SelectionDescriptionFormatter.ValidateTemplate(simple, definition);
+                SelectionDescriptionFormatter.ValidateTemplate(detail, definition);
+            }
+            catch (ArgumentException error) { throw row.Error("Description", error.Message); }
             string[] terms = SplitList(row.Get("Terms"));
             foreach (string term in terms) if (!termIds.Contains(term)) throw row.Error("Terms", $"'용어' 탭에 없는 Id: {term}");
             string label = id.ToString(CultureInfo.InvariantCulture);

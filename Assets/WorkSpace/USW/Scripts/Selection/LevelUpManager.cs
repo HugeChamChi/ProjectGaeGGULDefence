@@ -106,14 +106,18 @@ public class LevelUpManager : MonoBehaviour
         }
         return result;
     }
-    /// <summary>현재 씬 조건을 수집하고 기존 소비 시점에서 보장을 사용한 뒤 순수 추첨기로 전달한다.</summary>
+    /// <summary>현재 씬 조건으로 추첨하고 유효한 레전더리 목록을 얻은 뒤에만 보장을 소비한다.</summary>
     public List<LevelUpData> GetRandomChoices(int count=3)
     {
         if (count<=0 || _gameManager?.IsFinished==true) return new List<LevelUpData>();
         count=_runPenalties?.GetChoiceCount(count) ?? count;
         if (!_poolInitialized) Init();
-        bool forceLegend=State.ConsumeLegendGuarantee();
-        return _drawer.Draw(_effectivePool,State.HasEverAcquired,GetPresentTribes(),_selectedPool,count,forceLegend);
+        bool forceLegend=State.HasLegendGuarantee;
+        var tribes=GetPresentTribes();
+        var choices=_drawer.Draw(_effectivePool,State.HasEverAcquired,tribes,_selectedPool,count,forceLegend);
+        if (forceLegend && choices.Count > 0) State.ConsumeLegendGuarantee();
+        else if (forceLegend) choices=_drawer.Draw(_effectivePool,State.HasEverAcquired,tribes,_selectedPool,count,false);
+        return choices;
     }
     private HashSet<UnitTribe> GetPresentTribes()
     {

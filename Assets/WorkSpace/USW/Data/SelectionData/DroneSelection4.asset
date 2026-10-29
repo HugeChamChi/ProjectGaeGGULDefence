@@ -28,10 +28,11 @@ MonoBehaviour:
   chooseName: "\uC8FC\uD30C\uC218 \uB3D9\uC870"
   tier: 2
   spawnRate: 1
-  description: "\uD574\uD0B9 \uCD94\uAC00 \uD53C\uD574\uAC00 \uC804\uD22C \uB4DC\uB860
-    1\uAE30\uB2F9 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4. (\uCD5C\uB300 {max}%)"
-  simpleDescription: "\uC804\uD22C \uB4DC\uB860 1\uAE30\uB2F9 \uD574\uD0B9 \uCD94\uAC00
-    \uD53C\uD574\uB7C9\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  description: "\uC804\uC7A5\uC5D0 \uC788\uB294 \uC804\uD22C \uB4DC\uB860 1\uAE30\uB2F9
+    \uAC10\uB9DD\uC758 \uD574\uD0B9 \uCD94\uAC00 \uD53C\uD574\uAC00 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC804\uC7A5\uC5D0 \uC788\uB294 \uC804\uD22C \uB4DC\uB860 \uC218\uC5D0
+    \uB530\uB77C \uAC10\uB9DD\uC758 \uD574\uD0B9 \uCD94\uAC00 \uD53C\uD574\uAC00
+    \uC99D\uAC00\uD569\uB2C8\uB2E4."
   DescriptionTerms:
   - combat_drone
   - hack_stack
@@ -45,8 +46,8 @@ MonoBehaviour:
   droneEffect:
     Kind: 4
     Interval: 0
-    Value: 0.003
-    MaxValue: 0.09
+    Value: 0.005
+    MaxValue: 0
     Count: 0
   icon: {fileID: 21300000, guid: a7455f25c75038f499302ebff214515d, type: 3}
   animationFrames: []
@@ -57,5 +58,5 @@ MonoBehaviour:
     - rid: 1000
       type: {class: StackSkillFrequencyDefinition, ns: , asm: Assembly-CSharp}
       data:
-        ReductionPerStack: 0.003
-        MaximumReduction: 0.09
+        ReductionPerStack: 0.005
+        MaximumReduction: 0
