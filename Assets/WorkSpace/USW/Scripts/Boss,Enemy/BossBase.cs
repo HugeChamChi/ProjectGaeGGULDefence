@@ -165,6 +165,8 @@ public abstract class BossBase : MonoBehaviour
 
     /// <summary>(남은 보호막, 최대HP) — 보호막 부여·흡수·소멸 시. HP바 보호막 표시용.</summary>
     public event Action<decimal, decimal> OnShieldChanged;
+    /// <summary>새 디버프가 처음 걸렸을 때(재부여·중첩 제외). 상태 팝업 표시용.</summary>
+    public event Action<DebuffKind> OnDebuffStarted;
 
     /// <summary>사망 — WaveManager가 구독하여 다음 웨이브 처리</summary>
     public event Action           OnDeath;
@@ -239,6 +241,7 @@ public abstract class BossBase : MonoBehaviour
             _damageSources.TryGetValue(sourceId, out var source);
             ApplyFinalDamage(ScaleBurnDamage(units), null, BossDamageKind.Burn, source);
         });
+        Debuffs.OnStarted += kind => OnDebuffStarted?.Invoke(kind);
         _debuffTime = 0; _combatTimeOrigin = _combatTimer != null ? _combatTimer.ElapsedCombatTime : 0; _deathStarted = false;
 
         if (_animator != null)

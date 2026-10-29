@@ -22,6 +22,7 @@ public class BossManager : MonoBehaviour
     [Inject] private UIManager _uiManager;
     [Inject] private GameManager _gameManager;
     [Inject] private DebuffCatalog _debuffCatalog;
+    [Inject] private StatusPopupService _statusPopups;
     [Inject] private DebuffSettings _debuffSettings;
     [Inject] private BossPatternController _patternController;
     [Inject] private TimerController _combatTimer;
@@ -108,6 +109,7 @@ public class BossManager : MonoBehaviour
             _uiManager?.UpdateBossHp(cur, max);
         };
         boss.OnShieldChanged += (shield, max) => _uiManager?.UpdateBossShield(shield, max);
+        boss.OnDebuffStarted += kind => _statusPopups?.ShowDebuff(boss.transform, kind);
         bool deathConsumed = false;
         boss.OnDeath     += () =>
         {

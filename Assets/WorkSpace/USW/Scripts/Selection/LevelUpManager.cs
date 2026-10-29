@@ -16,6 +16,7 @@ public class LevelUpManager : MonoBehaviour
     [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private UpgradeManager _upgradeManager;
     [Inject] private GameManager _gameManager;
+    [Inject] private StatusPopupService _statusPopups;
 
     [Inject] private EndlessRunService _runPenalties;
     [Inject] private LevelUpDrawer _drawer;
@@ -161,6 +162,7 @@ public class LevelUpManager : MonoBehaviour
         catch (ArgumentException error) { Debug.LogError("[LevelUp] 선택 거절: "+error.Message,this); return SelectionApplyResult.Rejected; }
         CommitPersistentEffects();
         NotifyChanges();
+        _statusPopups?.ShowSelection(data.Composition?.Effects,_gridManager!=null ? _gridManager.GetOccupiedCells() : null);
         var executor=_commands ?? new SelectionCommandExecutor(_currencyManager,_upgradeManager,_gridManager,_unitFactoryManager,_spawnerManager,_gameManager,new UnitySelectionRandom());
         executor.Execute(card,RequestTotem,this.GetCancellationTokenOnDestroy());
         return card.HasCommand<RerollChoicesCommandDefinition>() ? SelectionApplyResult.Reroll : SelectionApplyResult.Applied;

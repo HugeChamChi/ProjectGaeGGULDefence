@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc6a24db9edfc88428c3118b8156fc9d, type: 3}
+  m_Name: StatusPopupStyle
+  m_EditorClassIdentifier: Assembly-CSharp::StatusPopupStyle
+  font: {fileID: 11400000, guid: 3e2c3a3748586f742bb390eb2d0986dc, type: 2}
+  fontSize: 46
+  buffMaterial: {fileID: 2100000, guid: 8112be55dc478ef41bb4f62e19ec57c1, type: 2}
+  debuffMaterial: {fileID: 2100000, guid: db0dc4f002185694fa2e6a5cdf8724a4, type: 2}
+  buffColor: {r: 0.45, g: 0.95, b: 0.7, a: 1}
+  debuffColor: {r: 0.788, g: 0.635, b: 1, a: 1}
+  arrowFill: {fileID: 21300000, guid: e654964dbcca7c6498381fdc4ccfa945, type: 3}
+  arrowStroke: {fileID: 21300000, guid: c7b7018d3cf3a514b88d2a30463fec8d, type: 3}
+  arrowStrokeColor: {r: 0.12, g: 0.1, b: 0.18, a: 1}
+  arrowSize: 34
+  arrowSpacing: 4
+  maxLines: 3
+  lineSpacing: -6
+  enterDuration: 0.26
+  enterOvershoot: 2.2
+  lineStagger: 0.04
+  holdDuration: 0.5
+  exitDuration: 0.44
+  exitRiseDuration: 0.3
+  exitRise: 60
+  repeatPunch: 0.18
+  repeatPunchDuration: 0.22
+  fadeSoftnessRatio: 0.96
