@@ -5,10 +5,10 @@ const {open,hash}=require('./workbook.cjs');
 let context;
 function engine(){
   if(!context){context=vm.createContext({TextEncoder,TextDecoder,Uint8Array,Uint32Array,DataView,ArrayBuffer});
-    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','attendance-events','event-catalog','mission-events','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
+    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','attendance-events','event-catalog','mission-events','bonus-defaults','bonus-editor','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
-const bundles={enhancement:['Unit','UnitUpgrade','UnitMilestone','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
+const bundles={enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusEffect','BonusDescription','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
 function write(project,names){
   const e=engine(),all=e.Studio.tables(project),files={};let index=0;
   names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];

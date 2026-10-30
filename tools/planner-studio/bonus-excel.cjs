@@ -2,19 +2,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const workbook=require('./app/content-workbook.cjs');
 const {open}=require('./app/workbook.cjs');
-const headers=['UnitKey','Level','PartIndex','EffectType','Stat','ValueMode','Value','CycleId','Every','DamageBonusPercent','ChargeReductionPercent'];
-const modes={Attack:['Flat','Percent'],BasicAttackFrequency:['Flat','Percent'],CriticalChance:['PercentagePoints'],CriticalDamage:['PercentagePoints'],SkillCooldownReduction:['Flat','Percent'],FoodProduction:['Flat','Percent'],MaxDroneCount:['Flat']};
-function validate(rows){const seen=new Set();for(const r of rows){
- const key=[r.UnitKey,r.Level,r.PartIndex].join('|');if(seen.has(key))throw Error('중복 효과: '+key);seen.add(key);
- if(!r.UnitKey||!Number.isInteger(r.Level)||r.Level<1||!Number.isInteger(r.PartIndex)||r.PartIndex<0)throw Error('키/레벨/효과 순번 오류');
- if(r.EffectType==='StatModifierBonus'){
-  if(!modes[r.Stat]?.includes(r.ValueMode)||!Number.isFinite(r.Value)||r.Value<0)throw Error('지원하지 않는 스탯/단위/수치');
-  if(r.Stat==='MaxDroneCount'&&!Number.isInteger(r.Value))throw Error('드론 수는 정수');
-  if(r.Stat==='SkillCooldownReduction'&&r.ValueMode==='Percent'&&r.Value>=100)throw Error('쿨타임 감소는 100% 미만');
- }else if(r.EffectType==='EveryNthCycleBonus'){
-  if(r.UnitKey!=='UnitData_Betan'||r.CycleId!=='basic_skill'||!Number.isInteger(r.Every)||r.Every<1||!Number.isFinite(r.DamageBonusPercent)||r.DamageBonusPercent<0||!Number.isFinite(r.ChargeReductionPercent)||r.ChargeReductionPercent<0||r.ChargeReductionPercent>=100)throw Error('주기 효과 값 오류');
- }else throw Error('지원하지 않는 효과 클래스');
- }for(const r of rows){const indices=rows.filter(x=>x.UnitKey===r.UnitKey&&x.Level===r.Level).map(x=>x.PartIndex).sort((a,b)=>a-b);if(indices.some((x,i)=>x!==i))throw Error('PartIndex는 0부터 연속');}return rows;}
+const {headers,modes,validate}=require('./app/bonus-validation.cjs');
 function write(rows){validate(rows);return Buffer.from(workbook.engine().RewardCore.xlsx('LevelBonusParts',[headers,...rows.map(r=>headers.map(k=>r[k]??''))]));}
 function read(bytes){const b=open(bytes),sheet='LevelBonusParts';if(!b.sheets.has(sheet))throw Error('LevelBonusParts 시트 필요');const cells=b.sheets.get(sheet).cells;const cols=headers.map((_,i)=>String.fromCharCode(65+i));headers.forEach((h,i)=>{if(b.get(sheet,cols[i]+'1').value!==h)throw Error('열 이름 오류: '+h);});const numbers=[...new Set([...cells.keys()].map(a=>Number(a.match(/\d+$/)[0])).filter(n=>n>1))].sort((a,b)=>a-b);return validate(numbers.map(n=>Object.fromEntries(headers.map((h,i)=>{const c=b.get(sheet,cols[i]+n);if(c.formula!==null)throw Error('수식은 지원하지 않음');const value=c.value;return [h,['Level','PartIndex','Value','Every','DamageBonusPercent','ChargeReductionPercent'].includes(h)&&value!==''?Number(value):value];}))));}
 function apply(project,rows){validate(rows);const p=JSON.parse(JSON.stringify(project));for(const r of rows){const u=p.tables.Unit.find(u=>(u.UnitKey||u.UnitId)===r.UnitKey);if(!u||u.Kind!=='Unit'||r.Level>u.MaxLevel)throw Error('유닛/최대 레벨 오류: '+r.UnitKey);}const groups=new Map();for(const r of rows){const key=r.UnitKey+'|'+r.Level;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}for(const group of groups.values()){const first=group[0],unit=p.tables.Unit.find(u=>(u.UnitKey||u.UnitId)===first.UnitKey);const parts=group.sort((a,b)=>a.PartIndex-b.PartIndex).map(({UnitKey,Level,PartIndex,...part})=>part);let milestone=p.tables.UnitMilestone.find(r=>r.UnitId===unit.UnitId&&r.Level===first.Level);if(!milestone){milestone={UnitId:unit.UnitId,Level:first.Level};p.tables.UnitMilestone.push(milestone);}Object.assign(milestone,{Description:parts.map(r=>r.EffectType==='StatModifierBonus'?`${r.Stat} +${r.Value} ${r.ValueMode}`:`${r.Every}번째 ${r.CycleId} 강화`).join(', '),EffectStatus:'Defined',EffectId:'CompositeBonus',EffectParams:JSON.stringify({Parts:parts})});}return p;}

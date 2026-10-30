@@ -13,6 +13,11 @@ function serializeTarget(project, kind) {
       return { chart: 'MissionEvents', authoring: 'MissionEvents', tables: excel.bundles.missions, config: excel.toRuntime(project, excel.bundles.missions) };
     case 'unitBaseStats':
       return { chart: 'UnitBaseStats', authoring: 'UnitBalance', tables: ['Unit'], config: unitRuntime(project) };
+    case 'unitBonuses':
+      const errors=excel.engine().Studio.validate(project).filter(x=>x.severity==='error');
+      if(errors.length)throw Error(errors[0].message);
+      require('./bonus-validation.cjs').validate(project.tables.BonusEffect);
+      return {chart:'UnitLevelBonuses',authoring:'UnitLevelBonuses',tables:['BonusEffect','BonusDescription'],config:project};
     default:
       throw Error('지원하지 않는 게임 연결 대상입니다.');
   }
@@ -43,9 +48,11 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const authoringBytes = excel.write(project, tables);
     const releaseKey = 'dev-' + crypto.randomBytes(12).toString('hex');
     const encoding = payload.base64 === true ? 'Base64' : 'Table';
+    if(payload.kind==='unitBonuses'&&encoding!=='Table')throw Error('보너스 설명은 일반 표 형식만 지원합니다. Base64를 끄세요.');
     const rows = encoding === 'Table' ? require('./readable-chart.cjs').table(config,payload.kind) : encodeConfigRows(config, releaseKey, encoding);
     const bytes = Buffer.from(excel.engine().RewardCore.xlsx(chart, rows));
-    const { file } = exportFile(chart + '.backend.xlsx', bytes);
+    const date=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+    const { file } = exportFile(chart + '_' + date + '.backend.xlsx', bytes);
     const authoringFile = path.join(path.dirname(file), authoring + '.xlsx');
     const schemaFile = path.join(path.dirname(file), authoring + '.schema.json');
     atomic(authoringFile, authoringBytes);

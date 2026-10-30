@@ -57,12 +57,15 @@ namespace GaeGGUL.DeckUpgrade
             int unit = unitName == "베탕" ? 0 : unitName == "델탕" ? 1 : unitName == "감망" ? 2 : unitName == "디시그망" ? 3 : unitName == "젤탕" ? 4 : 5;
             for (int i = 0; i < descriptions.Length; i++)
             {
-                string description = data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
+                var presentation=UnitBonusChart.GetPresentation(data!=null?UnitBalanceRuntime.GetUnitKey(data.name):"AlphanChief",(i+1)*3);
+                string description = presentation?.Text ?? data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
                     ?? Labels[unit][i] ?? string.Empty;
-                string text = HighlightNumbers(description).Replace("[해킹]", Mark("해킹", "hack_stack"))
+                string text = presentation==null||presentation.HighlightNumbers?HighlightNumbers(description):description;
+                if(presentation==null||presentation.LinkTerms)text=text.Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))
                     .Replace("[액티브 스킬]", Mark("액티브 스킬", "chief_skill"));
-                if (unit == 5 && i == 3)
+                if (presentation?.EffectLink=="ChiefAttackSpeed")text=text.Replace("{공격속도효과}","<link=\""+AttackSpeedBuffId+"\"><color=#91E6A6>공격속도 증가</color></link>");
+                if (presentation==null && unit == 5 && i == 3)
                     text = text.Replace("공격속도 증가", "<link=\"" + AttackSpeedBuffId + "\"><color=#91E6A6>공격속도 증가</color></link>");
                 if (descriptions[i].text == text) continue;
                 descriptions[i].text = text; links[i].RefreshHitArea();
