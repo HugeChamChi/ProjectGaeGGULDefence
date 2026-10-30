@@ -6,7 +6,7 @@ const workbook = require('./content-workbook.cjs');
 // Give the runtime field its actual unit without changing existing saved projects.
 function unitRuntime(project) {
   const engine = workbook.engine(), shaped = engine.Studio.shape(project);
-  const errors = engine.Studio.validate(shaped).filter(i => ['Unit','UnitBaseStat'].includes(i.table) && i.severity === 'error');
+  const errors = engine.Studio.validate(shaped).filter(i => (i.table==='UnitBaseStat'||i.table==='Unit'&&i.field!=='LevelBonusKey') && i.severity === 'error');
   if (errors.length) throw Error(errors.map(i => i.message).join('\n'));
   const units = shaped.tables.Unit.filter(u => u.Kind === 'Unit').map(u => {
     const asset = path.posix.basename(String(u.Source || '').replaceAll('\\','/'), '.asset');

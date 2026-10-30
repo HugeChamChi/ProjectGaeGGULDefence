@@ -10,6 +10,7 @@ assert(!JSON.stringify(config).includes('Assets/'));
 assert.equal(config.Units[0].Stats[0].AttackFrequency,project.tables.UnitBaseStat[0].AttackInterval);
 const edited=engine.Studio.clone(project);edited.tables.Unit[0].UnitKey='renamed_key';
 edited.tables.UnitBaseStat[0].Attack=777;
+assert(engine.Studio.validate(engine.Studio.shape(edited)).some(i=>i.table==='BonusDefinition'&&i.severity==='error'));
 assert.equal(unitRuntime(edited).Units[0].AssetKey,config.Units[0].AssetKey);
 assert.equal(unitRuntime(edited).Units[0].Stats[0].Attack,777);
 const missing=engine.Studio.clone(project);missing.tables.UnitBaseStat.shift();assert.throws(()=>unitRuntime(missing));

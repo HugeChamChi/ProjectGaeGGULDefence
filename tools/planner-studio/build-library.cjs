@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path');
 const crypto=require('node:crypto'),{unzipSync}=require('./app/node_modules/fflate');
 const excel=require('./app/content-workbook.cjs'),project=excel.engine().Studio.create();
 const definitions={
- 'UnitBalance.xlsx':['Unit','UnitBaseStat','UnitUpgrade','UnitMilestone','BonusEffect','BonusDescription'],
+ 'UnitBalance.xlsx':['Unit','UnitBaseStat','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect'],
  'PermanentUpgrade.xlsx':['ResearchTree','ResearchNode'],
  'AttendanceEvent.xlsx':['AttendancePlan','Attendance'],
  'AttendanceEventExample.xlsx':['AttendancePlan','Attendance'],

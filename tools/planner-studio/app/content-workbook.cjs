@@ -5,10 +5,10 @@ const {open,hash}=require('./workbook.cjs');
 let context;
 function engine(){
   if(!context){context=vm.createContext({TextEncoder,TextDecoder,Uint8Array,Uint32Array,DataView,ArrayBuffer});
-    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-defaults','bonus-editor','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
+    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
-const bundles={enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusEffect','BonusDescription','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
+const bundles={bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
 function write(project,names){
   const e=engine(),all=e.Studio.tables(project),files={};let index=0;
   names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];
@@ -24,13 +24,15 @@ function write(project,names){
 }
 function column(address){return address.replace(/[0-9]+$/,'');}
 function inspect(bytes){
-  const book=open(bytes),e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]);
+  const book=open(bytes),e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]||n==='BonusDescription');
   if(!names.length)throw Error('기획작업실의 콘텐츠 Excel 양식이 아닙니다.');
   let count=0;
   const tables={};
   for(const name of names){
-    const sheet=book.sheets.get(name),schema=e.STUDIO_SCHEMAS[name]||{label:name,fields:e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]},headers=new Map();
+    const sheet=book.sheets.get(name),headers=new Map();let schema=e.STUDIO_SCHEMAS[name]||e.BonusModel.legacySchemas[name]||{label:name,fields:e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]};
     for(const address of sheet.cells.keys())if(/^[A-Z]+1$/.test(address))headers.set(column(address),book.get(name,address).value);
+    if(name==='BonusEffect'&&[...headers.values()].includes('UnitKey'))schema=e.BonusModel.legacySchemas.BonusEffect;
+    else if(name==='BonusEffect'&&[...headers.values()].includes('Every'))schema=e.BonusModel.legacySchemas.BonusEffectV2;
     // Normalize old column names before validating, including ambiguous old/new duplicates.
     for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
@@ -92,14 +94,14 @@ function read(bytes,project){
         multiplier=Number((multiplier+r.MultiplierIncrease).toPrecision(12));global=Number((global+r.GlobalBonusIncrease).toPrecision(12));
         p.tables.UnitUpgrade.push({UnitId:unit.UnitId,TargetLevel:r.TargetLevel,Costs:r.Costs,Multiplier:multiplier,GlobalBonus:global,Source:'Excel key import'});
       }
-      for(const r of parsed.tables.LevelBonuses.filter(r=>unit.LevelBonusKey&&r.LevelBonusKey===unit.LevelBonusKey))p.tables.UnitMilestone.push({UnitId:unit.UnitId,Level:r.Level,Description:r.Description,EffectStatus:r.EffectStatus,EffectId:r.EffectKey,EffectParams:r.EffectParams,Source:'Excel key import'});
+      for(const r of parsed.tables.LevelBonuses.filter(r=>unit.LevelBonusKey&&r.LevelBonusKey===unit.LevelBonusKey))p.tables.UnitMilestone.push({UnitId:unit.UnitId,Level:r.Level,Description:r.Description,EffectStatus:r.EffectStatus||'DescriptionOnly',EffectId:r.EffectKey||'',EffectParams:r.EffectParams||'{}',Source:'Excel key import'});
     }
     for(const r of parsed.tables.UpgradeStats)if(!p.tables.Unit.some(u=>u.UpgradeKey===r.UpgradeKey))throw Error('연결되지 않은 강화 키: '+r.UpgradeKey);
     for(const r of parsed.tables.LevelBonuses)if(!p.tables.Unit.some(u=>u.LevelBonusKey===r.LevelBonusKey))throw Error('연결되지 않은 보너스 키: '+r.LevelBonusKey);
   }
   for(const [name,rows]of Object.entries(parsed.tables).filter(([name])=>!e.UnitKeys.headers[name]&&!e.AttendanceEvents.headers[name]))p.tables[name]=rows.map(row=>{
-    const schema=e.STUDIO_SCHEMAS[name],old=p.tables[name].find(r=>schema.keys.every(k=>r[k]===row[k]));
-    return {...(old||e.Studio.newRecord(name,p)),...row};
+    const schema=name==='BonusDescription'||name==='BonusEffect'&&Object.hasOwn(row,'UnitKey')?e.BonusModel.legacySchemas[name]:e.STUDIO_SCHEMAS[name],old=p.tables[name]?.find(r=>schema.keys.every(k=>r[k]===row[k]));
+    return {...(old||(e.STUDIO_SCHEMAS[name]?e.Studio.newRecord(name,p):{})),...row};
   });
   if(parsed.tables.Party)parsed.tables.Party.forEach((row,index)=>{
     const party=p.tables.Party[index];
@@ -116,6 +118,7 @@ function read(bytes,project){
       p.tables.Attendance[index].Rewards=JSON.parse(JSON.stringify(group.Rewards));
     }
   });
+  if(parsed.tables.BonusEffect?.some(r=>Object.hasOwn(r,'UnitKey')))p.meta.unitBonusModel='html-20261030';
   const clean=e.Studio.shape(p),errors=e.Studio.validate(clean).filter(i=>i.severity==='error');
   if(errors.length)throw Error(errors.slice(0,4).map(i=>`${e.STUDIO_SCHEMAS[i.table].label} ${i.index+1}행: ${i.message}`).join('\n'));
   return {project:JSON.parse(JSON.stringify(clean)),names:[...(keyed?['Unit','UnitBaseStat','UnitUpgrade','UnitMilestone']:[]),...(evented?['AttendancePlan','Attendance']:[]),...parsed.names.filter(n=>!e.UnitKeys.headers[n]&&!e.AttendanceEvents.headers[n])]};
@@ -123,6 +126,7 @@ function read(bytes,project){
 function toRuntime(project,names){
   const e=engine(),p=e.Studio.shape(project);e.Studio.tables(p);
   const result={schemaVersion:4};
+  if(names.includes('BonusDefinition')||names.includes('BonusEffect')){result.bonusDefinitions=p.tables.BonusDefinition;result.bonusEffects=p.tables.BonusEffect;}
   if(names.includes('Attendance')||names.includes('AttendanceRewards'))result.attendanceEvents=p.tables.AttendancePlan.map(plan=>({eventKey:plan.AttendanceId,name:plan.Name,startAt:plan.StartAt,endAt:plan.EndAt,claimEndAt:plan.ClaimEndAt||plan.EndAt,enabled:plan.Enabled,repeatMode:plan.RepeatMode,cycleDays:plan.CycleDays,days:p.tables.Attendance.filter(r=>r.AttendanceId===plan.AttendanceId).sort((a,b)=>a.Day-b.Day).map(r=>({day:r.Day,rewards:r.Rewards.map(x=>({itemKey:x.itemId,amount:x.amount}))}))}));
   for(const [table,key]of [['ResearchTree','researchTrees'],['ResearchNode','researchNodes'],['Tutorial','tutorialSteps'],['Party','parties'],['Profile','profiles'],['Economy','economy'],['AccountLevel','accountLevels'],['BattleReward','battleRewards'],['Item','items']])if(names.includes(table))result[key]=p.tables[table].map(r=>Object.fromEntries(e.STUDIO_SCHEMAS[table].fields.filter(f=>!f.hidden&&f.export!==false).map(f=>[f.key,r[f.key]])));
   if(names.some(n=>e.UnitKeys.sheetFor[n]||e.UnitKeys.headers[n])){

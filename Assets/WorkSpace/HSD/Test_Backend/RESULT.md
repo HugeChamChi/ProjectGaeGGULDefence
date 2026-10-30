@@ -54,3 +54,37 @@ Drone-only live check 2026-10-30 21:00 KST: DEV_UnitBaseStats file272692 has20ro
 중요한 경계: 현재 로그인 계정의 UnitLevels 저장 목록은 0건이므로 일반 생성 시 레벨 1이다. 15레벨 해금 효과의 전투 검사는 계정 레벨 저장값을 바꾸지 않고 테스트용 UnitLevelSnapshot으로 진행했다. 차트에 설계가 존재하는 것과 계정이 해당 레벨을 해금한 것은 별개다. 실계정 강화 구매·저장은 이 검증에서 구현하거나 우회하지 않았다.
 
 재현: BootScene 복사본 Play → LiveHtmlBonusChecks.Boot → UnitBonusTableChecks.RunRemote → LiveBonusDescriptionChecks.Run → LiveHtmlBonusChecks.Factory. 서버 전체 행 비교 산출물은 outputs/html-bonus-live-20261030/comparison.json과 server.json.
+
+## 2026-10-31 보너스 저작 구조 v2 마무리
+
+보너스 ID 하나가 대상·해금 레벨·설명 템플릿과 여러 이름 있는 효과를 소유하도록 구성했다. 30개 보너스/39개 효과의 기존 전투 값은 보존했다. 설명 숫자는 연결된 효과 값에서 생성한다. 작성용 Excel은 BonusDefinition/BonusEffect 2시트이며 한글 UnitName을 포함한다. 업로드 파일은 Bonus/Effect 69행 단일 시트로 자동 생성한다. PartIndex/Description 전용 행/JSON 효과 입력 칸은 새 저작 형식에서 제거했다.
+
+- Node 보너스/Excel/구버전 이관/ID 참조 검사 통과. 2/6시트 재가져오기 및 사용자 값 보존 확인.
+- 기본 스탯 내보내기 회귀 발견·수정: 보너스 연결 오류는 기본 스탯 내보내기를 막지 않고, 보너스 배포 검증에서 거절한다. check-unit-runtime에서 기본 스탯 UnitKey/에셋 매핑 검사와 보너스 오류 거절을 함께 검증.
+- BonusModelV2Checks.Run: 1,735개 통과. 설명/전투 수치 공유, ID 관계, 중복·고아·잘못된 참조 거절, 7개 레벨 경계의 v1 호환 비교.
+- UnitBonusTableChecks.Run: 새 형식 로컬 표로 전투 검사 99개 통과.
+- LiveBonusDescriptionChecks.RunPrepared: 실제 5종 유닛과 알팡 설명·강조·링크·툴팁 통과.
+- UnitBonusTableChecks.RunRemote: 현재 서버의 이전 형식을 직접 내려받아 전투 검사 99개 통과.
+- Electron UI 22개, 백엔드/워크북 회귀 17개 통과. 실제 화면 대비 확인 완료. Unity 콘솔 오류 0건.
+- v1 고정 비교 자료는 tools/backnd-mcp/test/fixtures/unit-bonus-v1.json에 보관하여 과거 outputs 파일 없이 재현할 수 있다.
+
+오늘 생성 파일: outputs/bonus-design-v2-ready-20261031/UnitLevelBonuses_2026-10-31.xlsx. 현재 기획툴 작업 데이터의 효과 값 비교는 preserved=true, 보너스30/효과39/업로드69행이다. 상세 설계와 재현은 docs/technical/unit-bonus-authoring-v2.md 참조.
+
+서버 재조회: DEV_UnitLevelBonuses 파일272706, Part/Description 69행의 이전 구조가 적용 중이다. 새 런타임은 이 구조를 계속 읽는다. 새 v2 파일의 실제 서버 적용/전체 행 대조는 콘솔 업로드 후 남은 항목이며, 이번 작업에서 서버 차트를 교체하지 않았다.
+
+
+## 2026-10-31 Value 규약
+효과 한 행/Value 고정 인수 순서, Name·UnitName 제거. 기본 30개 보너스/30개 효과 → 기존 39개 실행 부품과 수치 동일. Unity 비교 1735, 실제 전투 99, XLSX·규약·검사 창 17개 통과. 기획툴 UI 22개 통과. Tools > Backend Tests > 보너스 Value 규약 검사 창에 새 엑셀 로드 완료. 바탕화면 뒤끝업로드_Value규약_2026-10-31의 backend.xlsx는 DEV_UnitLevelBonuses용이며 서버 업로드는 별도. 전체 Node의 구형 검사 6개 실패는 변경 전 HEAD에서도 재현됨.
+
+
+## 2026-10-31 09:07 새 Value 규약 서버 적용 확인
+
+- 적용 차트: DEV_UnitLevelBonuses, selectedChartFileId=272753, Bonus 30 + Effect 30 = 60행.
+- 복사 BootScene Play 재시작 → 정상 자동 로그인 → 서버 차트 다운로드 → 복사 LobbyScene DI 준비 통과. 이전 Play 세션은 로그인 상태가 없어 재시작했다.
+- LiveValueChartChecks.Run: 바탕화면 업로드용 XLSX와 실제 서버 60행/780셀 전체 일치. 부팅 때 로드된 6종/30개 보너스·설명이 새 서버와 일치하며, 7개 레벨 경계에서 1554개 능력치 비교 통과. 서버 원본은 outputs/value-live-20261031/server-rows.json에 저장.
+- UnitBonusTableChecks.RunRemote: 새 서버 데이터를 직접 내려받아 실제 전투 코드 검사99개 통과. 베탕 주기/충전, 델탕 생산·공속, 감망 소모·스택 피해, 디시그망 회복·다음 정규 사격, 젤탕 생산·보스 보상, 알팡 준비·쿨타임·공속·받는 피해 만료 확인.
+- LiveBonusDescriptionChecks.Run: 5종25개 설명과 알팡 설명, 숫자 강조·용어 링크·특수 효과 링크·20%/10초 툴팁 통과. 물리 포인터 동작 검사는 아님.
+- LiveHtmlBonusChecks.Factory: 실제 UnitFactory로 5종×4등급=20개 프리팹 생성. 원격 차트→UnitData→UnitBase.Init→모든 능력치 전달 확인. 15레벨은 임시 UnitLevelSnapshot 사용. 계정 레벨·스태미나·보상은 변경하지 않음. 생성물 정리 후 복사 로비로 복귀.
+- 테스트 종료 시 Unity 콘솔 Error 0건. 복사 LobbyScene Play 상태 유지. DOTween 참조 호환 경고 CS1701은 검사 스크립트 컴파일에서 발생했으며 실행은 통과.
+
+재현 순서: 복사 BootScene Play → LiveHtmlBonusChecks.Boot → LiveValueChartChecks.Run → UnitBonusTableChecks.RunRemote → LiveBonusDescriptionChecks.Run → LiveHtmlBonusChecks.Factory.

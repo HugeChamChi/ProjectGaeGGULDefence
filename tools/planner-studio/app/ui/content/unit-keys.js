@@ -26,7 +26,7 @@ globalThis.UnitKeysFeature = ({studio: Studio}) => {
     Units:['UnitKey','Name','Kind','BackendKeys','IconKey','MaxLevel','BaseStatKey','UpgradeKey','LevelBonusKey'],
     BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?'AttackFrequency':f.key),
     UpgradeStats:['UpgradeKey','TargetLevel','Costs','MultiplierIncrease','GlobalBonusIncrease'],
-    LevelBonuses:['LevelBonusKey','Level','Description','EffectStatus','EffectKey','EffectParams']
+    LevelBonuses:['LevelBonusKey','Level','Description']
   };
   function tables(p){
     const out={Units:[headers.Units,...p.tables.Unit.map(u=>[u.UnitKey,u.Name,u.Kind,u.BackendIds,u.IconKey,u.MaxLevel,u.BaseStatKey,u.UpgradeKey,u.LevelBonusKey])],BaseStats:[headers.BaseStats,...p.tables.UnitBaseStat.map(r=>headers.BaseStats.map(k=>r[k==='AttackFrequency'?'AttackInterval':k]))],UpgradeStats:[headers.UpgradeStats],LevelBonuses:[headers.LevelBonuses]};
@@ -36,23 +36,23 @@ globalThis.UnitKeysFeature = ({studio: Studio}) => {
       for(const r of levels){const row=[u.UpgradeKey,r.TargetLevel,Studio.serialize(r.Costs),Number((r.Multiplier-multiplier).toPrecision(12)),Number((r.GlobalBonus-global).toPrecision(12))];multiplier=r.Multiplier;global=r.GlobalBonus;
         const key=u.UpgradeKey+'|'+r.TargetLevel;if(growth.has(key)&&JSON.stringify(growth.get(key))!==JSON.stringify(row))throw Error('공유 강화 키의 수치가 서로 다릅니다: '+key);growth.set(key,row);
       }
-      for(const r of p.tables.UnitMilestone.filter(r=>r.UnitId===u.UnitId)){const row=[u.LevelBonusKey,r.Level,r.Description,r.EffectStatus,r.EffectId,r.EffectParams],key=u.LevelBonusKey+'|'+r.Level;if(bonus.has(key)&&JSON.stringify(bonus.get(key))!==JSON.stringify(row))throw Error('공유 보너스 키의 내용이 서로 다릅니다: '+key);bonus.set(key,row);}
+      for(const r of p.tables.UnitMilestone.filter(r=>r.UnitId===u.UnitId)){const row=[u.LevelBonusKey,r.Level,r.Description],key=u.LevelBonusKey+'|'+r.Level;if(bonus.has(key)&&JSON.stringify(bonus.get(key))!==JSON.stringify(row))throw Error('공유 보너스 키의 내용이 서로 다릅니다: '+key);bonus.set(key,row);}
     }
     out.UpgradeStats.push(...growth.values());out.LevelBonuses.push(...bonus.values());return out;
   }
   function validate(p){
     const issues=[],keys=new Set();
     p.tables.Unit.forEach((u,index)=>{
-      const add=message=>issues.push({table:'Unit',index,field:'UnitKey',message,severity:'error'});
+      const add=(message,field='UnitKey')=>issues.push({table:'Unit',index,field,message,severity:'error'});
       if(!/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(u.UnitKey)||keys.has(u.UnitKey))add('유닛 키는 영문 문자열 키여야 하며 중복될 수 없습니다.');keys.add(u.UnitKey);
       for(const key of ['BaseStatKey','UpgradeKey','LevelBonusKey'])if(u[key]&&!/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(u[key]))add(key+'는 영문 문자열 키여야 합니다.');
       if(u.BaseStatKey&&!p.tables.UnitBaseStat.some(r=>r.BaseStatKey===u.BaseStatKey))add('연결된 기본 스탯 키가 없습니다.');
       if(u.Kind==='Unit'&&!u.BaseStatKey)add('유닛에는 기본 스탯 키가 필요합니다.');
       if(u.BaseStatKey&&['normal','rare','epic','legend'].some(tier=>!p.tables.UnitBaseStat.some(r=>r.BaseStatKey===u.BaseStatKey&&r.Tier===tier)))add('기본 스탯은 4개 등급이 모두 필요합니다.');
       if(u.UpgradeKey&&!p.tables.UnitUpgrade.some(r=>r.UnitId===u.UnitId))add('연결된 강화 성장 데이터가 없습니다.');
-      if(u.LevelBonusKey&&!p.tables.UnitMilestone.some(r=>r.UnitId===u.UnitId))add('연결된 레벨 보너스 데이터가 없습니다.');
+      if(u.LevelBonusKey&&!p.tables.UnitMilestone.some(r=>r.UnitId===u.UnitId))add('연결된 레벨 보너스 데이터가 없습니다.','LevelBonusKey');
       if(!u.UpgradeKey&&p.tables.UnitUpgrade.some(r=>r.UnitId===u.UnitId))add('강화 수치가 있는 유닛에는 강화 키가 필요합니다.');
-      if(!u.LevelBonusKey&&p.tables.UnitMilestone.some(r=>r.UnitId===u.UnitId))add('보너스가 있는 유닛에는 보너스 키가 필요합니다.');
+      if(!u.LevelBonusKey&&p.tables.UnitMilestone.some(r=>r.UnitId===u.UnitId))add('보너스가 있는 유닛에는 보너스 키가 필요합니다.','LevelBonusKey');
       const levels=p.tables.UnitUpgrade.filter(r=>r.UnitId===u.UnitId).sort((a,b)=>a.TargetLevel-b.TargetLevel);
       if(u.UpgradeKey&&(levels.length!==u.MaxLevel-1||levels.some((r,i)=>r.TargetLevel!==i+2)))add('강화 성장 표는 Lv.2부터 최대 레벨까지 연속이어야 합니다.');
     });
@@ -62,7 +62,7 @@ globalThis.UnitKeysFeature = ({studio: Studio}) => {
     Units:[field('UnitKey','유닛 키','id',{required:true}),field('Name','이름','text',{required:true}),field('Kind','종류','enum',{values:['Unit','Chief']}),field('BackendKeys','서버 매핑'),field('IconKey','아이콘','icon'),field('MaxLevel','최대 레벨','int',{min:1,max:1000}),field('BaseStatKey','기본 스탯 키'),field('UpgradeKey','강화 키'),field('LevelBonusKey','보너스 키')],
     BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?{...f,key:'AttackFrequency',unit:'attacks/second',legacyAliases:['AttackInterval']}:f),
     UpgradeStats:[field('UpgradeKey','강화 키','id',{required:true}),field('TargetLevel','목표 레벨','int',{min:2,max:1000}),field('Costs','비용','costs'),field('MultiplierIncrease','배율 증가량','float'),field('GlobalBonusIncrease','전체 보너스 증가량','float')],
-    LevelBonuses:[field('LevelBonusKey','보너스 키','id',{required:true}),field('Level','해금 레벨','int',{min:1,max:1000}),field('Description','설명','text',{required:true}),...S.UnitMilestone.fields.filter(f=>['EffectStatus','EffectParams'].includes(f.key)),field('EffectKey','효과 키')]
+    LevelBonuses:[field('LevelBonusKey','보너스 키','id',{required:true}),field('Level','해금 레벨','int',{min:1,max:1000}),field('Description','설명','text',{required:true})]
   };
   const sheetFor={Unit:'Units',UnitBaseStat:'BaseStats',UnitUpgrade:'UpgradeStats',UnitMilestone:'LevelBonuses'};
   fields.LevelBonuses.sort((a,b)=>headers.LevelBonuses.indexOf(a.key)-headers.LevelBonuses.indexOf(b.key));

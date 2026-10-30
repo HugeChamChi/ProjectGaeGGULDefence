@@ -9,7 +9,7 @@ public static class UnitBonusTableV2
 {
     private static readonly Regex Id = new("^[A-Za-z][A-Za-z0-9_]*$");
     private static readonly Regex Token = new(@"\{([^{}]+)\}");
-    private static readonly Regex Reference = new(@"^([A-Za-z][A-Za-z0-9_]*)\.(Value|Every|DamageBonusPercent|ChargeReductionPercent)$");
+    private static readonly Regex Reference = new(@"^([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*)$");
     private static string Text(JsonData row, string key) => row.ContainsKey(key) && row[key] != null ? row[key].ToString() : "";
     public static string LegacyId(string key, int level) => key.Replace("UnitData_", "").Replace("Chief", "").ToLowerInvariant() + "_lv" + level;
 
@@ -31,7 +31,7 @@ public static class UnitBonusTableV2
                 if (bonuses.ContainsKey(id)) throw new FormatException("Duplicate BonusId: " + id);
                 string key = Text(row, "UnitKey"), level = Text(row, "Level");
                 if (string.IsNullOrWhiteSpace(key) || !int.TryParse(level, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed < 1 || parsed > 1000
-                    || string.IsNullOrWhiteSpace(Text(row, "Name")) || !slots.Add(key + "/" + parsed)) throw new FormatException("Bonus owner/level/name");
+                    || !slots.Add(key + "/" + parsed)) throw new FormatException("Bonus owner/level");
                 bonuses.Add(id, row);
             }
             else if (type == "Effect")
@@ -53,11 +53,12 @@ public static class UnitBonusTableV2
             int index = 0;
             var parameters = new HashSet<string>(StringComparer.Ordinal);
             foreach (var effect in group)
+            foreach (var projected in UnitBonusValueContracts.Project(effect.Value))
             {
-                string parameter = Text(effect.Value, "EffectType") == "StatModifierBonus" ? Text(effect.Value, "Stat") + "/" + Text(effect.Value, "ValueMode") : Text(effect.Value, "CycleId") + "/" + Text(effect.Value, "Every");
+                string parameter = Text(projected, "EffectType") == "StatModifierBonus" ? Text(projected, "Stat") + "/" + Text(projected, "ValueMode") : Text(projected, "CycleId") + "/" + Text(projected, "Every");
                 if (!parameters.Add(parameter)) throw new FormatException("Duplicate bonus parameter: " + bonus.Key + "/" + parameter);
-                var row = JsonMapper.ToObject(effect.Value.ToJson());
-                row["RecordType"] = "Part"; row["UnitKey"] = Text(bonus.Value, "UnitKey"); row["Level"] = Text(bonus.Value, "Level"); row["PartIndex"] = index++;
+                var row = JsonMapper.ToObject(projected.ToJson());
+                row["BonusId"] = bonus.Key; row["RecordType"] = "Part"; row["UnitKey"] = Text(bonus.Value, "UnitKey"); row["Level"] = Text(bonus.Value, "Level"); row["PartIndex"] = index++;
                 row["Description"] = description; result.Add(row);
             }
             var presentation = JsonMapper.ToObject(bonus.Value.ToJson());
@@ -80,9 +81,8 @@ public static class UnitBonusTableV2
             }
             var reference = Reference.Match(key);
             if (!reference.Success || !effects.TryGetValue(reference.Groups[1].Value, out var effect)) throw new FormatException("Unknown description reference: " + key);
-            string field = reference.Groups[2].Value, type = Text(effect, "EffectType");
-            if (!(type == "StatModifierBonus" && field == "Value" || type == "EveryNthCycleBonus" && field != "Value")) throw new FormatException("Unsupported description field: " + key);
-            if (!decimal.TryParse(Text(effect, field), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) || number < 0) throw new FormatException("Description number: " + key);
+            string field = reference.Groups[2].Value;
+            if (!UnitBonusValueContracts.Arguments(effect).TryGetValue(field,out var number)) throw new FormatException("Unsupported description field: " + key);
             return number.ToString("0.######", CultureInfo.InvariantCulture);
         });
         string remaining = text.Replace("{공격속도효과}", "");

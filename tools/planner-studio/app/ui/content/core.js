@@ -72,6 +72,9 @@
   }
   const xml=s=>String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
   function xlsx(name,rows) {
+    const bonus=['BonusDefinition','BonusEffect','UnitLevelBonuses'].includes(name);
+    const widths={UnitName:18,BonusId:26,EffectKey:30,UnitKey:25,Name:25,DescriptionTemplate:72,Stat:30,EffectType:28,ValueMode:19};
+    const columns=bonus?rows[0].map((key,i)=>`<col min="${i+1}" max="${i+1}" width="${widths[key]||16}" customWidth="1"/>`).join(''):'<col min="1" max="4" width="28" customWidth="1"/>';
     const sheet=rows.map((row,r)=>`<row r="${r+1}">${row.map((value,c)=>{
       let column='',columnIndex=c+1;
       while(columnIndex>0){columnIndex--;column=String.fromCharCode(65+columnIndex%26)+column;columnIndex=Math.floor(columnIndex/26);}
@@ -83,7 +86,7 @@
       '_rels/.rels':'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
       'xl/workbook.xml':`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xml(name)}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
       'xl/_rels/workbook.xml.rels':'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
-      'xl/worksheets/sheet1.xml':`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="4" width="28" customWidth="1"/></cols><sheetData>${sheet}</sheetData></worksheet>`
+      'xl/worksheets/sheet1.xml':`<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${columns}</cols><sheetData>${sheet}</sheetData></worksheet>`
     });
   }
   const api={clone,createProject,validate,serialize,parseItems,tables,zip,xlsx};

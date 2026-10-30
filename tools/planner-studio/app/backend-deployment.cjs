@@ -7,6 +7,7 @@ const { encodeConfigRows } = require('./chart-payload.cjs');
 const { unitRuntime } = require('./unit-runtime.cjs');
 
 function serializeTarget(project, kind) {
+  project=excel.engine().Studio.shape(project);
   switch (kind) {
     case 'missions':
       excel.write(project, excel.bundles.missions);
@@ -16,8 +17,8 @@ function serializeTarget(project, kind) {
     case 'unitBonuses':
       const errors=excel.engine().Studio.validate(project).filter(x=>x.severity==='error');
       if(errors.length)throw Error(errors[0].message);
-      require('./bonus-validation.cjs').validate(project.tables.BonusEffect);
-      return {chart:'UnitLevelBonuses',authoring:'UnitLevelBonuses',tables:['BonusEffect','BonusDescription'],config:project};
+      require('./bonus-validation.cjs').validateModel(project);
+      return {chart:'UnitLevelBonuses',authoring:'UnitLevelBonuses',tables:['BonusDefinition','BonusEffect'],config:project};
     default:
       throw Error('지원하지 않는 게임 연결 대상입니다.');
   }

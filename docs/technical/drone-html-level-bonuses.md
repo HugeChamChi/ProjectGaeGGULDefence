@@ -1,5 +1,7 @@
 ﻿# 드론덱 레벨업 보너스: HTML 최신안 반영
 
+저작 구조는 [보너스 저작 v2](unit-bonus-authoring-v2.md)가 정본이다. 아래는 기존 밸런스와 이전 형식의 검증 이력이다. v2에서는 보너스 정의가 설명을 소유하고, 효과는 BonusId로 연결된다.
+
 2026-10-30. 기준은 `outputs/drone-efficiency/드론덱_효율계산기.html`이 불러오는 `current-model.js`의 최신 합의안이다. 앞서 로드되는 proposal 버전보다 최신 모델을 우선한다. 디시그망의 가정용 선택지 9801~9808은 정식 효과로 추가하지 않는다. 배포되는 정본 값은 `tools/planner-studio/app/ui/content/bonus-defaults.js`에 보관한다.
 
 | 대상 | Lv.3 | Lv.6 | Lv.9 | Lv.12 | Lv.15 |
