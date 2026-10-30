@@ -42,8 +42,8 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const { chart, config, authoring, tables } = serializeTarget(project, payload.kind);
     const authoringBytes = excel.write(project, tables);
     const releaseKey = 'dev-' + crypto.randomBytes(12).toString('hex');
-    const encoding = payload.base64 === true ? 'Base64' : 'Json';
-    const rows = encodeConfigRows(config, releaseKey, encoding);
+    const encoding = payload.base64 === true ? 'Base64' : 'Table';
+    const rows = encoding === 'Table' ? require('./readable-chart.cjs').table(config,payload.kind) : encodeConfigRows(config, releaseKey, encoding);
     const bytes = Buffer.from(excel.engine().RewardCore.xlsx(chart, rows));
     const { file } = exportFile(chart + '.backend.xlsx', bytes);
     const authoringFile = path.join(path.dirname(file), authoring + '.xlsx');
@@ -55,6 +55,7 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const record = {
       sourceFile, sourceSha256: digest(sourceFile), createdAt: new Date().toISOString(),
       file, releaseKey, encoding, targetChartName: 'DEV_' + chart, kind: payload.kind,
+      ...(encoding==='Table'?{expectedTable:rows}:{}),
       authoringFile, schemaFile,
       authoringSha256: crypto.createHash('sha256').update(authoringBytes).digest('hex'),
       sha256: crypto.createHash('sha256').update(bytes).digest('hex'),

@@ -11,6 +11,7 @@ public static class ResearchChartParser
     {
         if (rows == null || !rows.IsArray || rows.Count == 0 || rows.Count > 20000)
             throw new FormatException("ResearchBalance requires 1..20000 rows.");
+        if (rows[0].ContainsKey("RecordType")) rows = GGD.BackendCharts.ReadableChartRows.Research(rows);
         var trees = new Dictionary<string, ResearchTreeData>(StringComparer.Ordinal);
         var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
         string release = null;

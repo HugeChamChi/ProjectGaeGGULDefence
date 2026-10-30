@@ -12,6 +12,7 @@ namespace GGD.BackendCharts
         {
             var rows = JsonMapper.ToObject(rowsJson);
             if (!rows.IsArray || rows.Count == 0 || rows.Count > 4096) throw new ArgumentException("Invalid chart snapshot rows.");
+            if (!rows[0].ContainsKey("Payload")) return ReadableChartRows.Decode(rows);
             var parts = new string[rows.Count];
             string release = null, digest = null, encoding = null;
             foreach (JsonData row in rows)

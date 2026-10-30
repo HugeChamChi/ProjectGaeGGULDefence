@@ -53,6 +53,13 @@ function comparePrepared(record, server) {
   if (server.chartName !== record.targetChartName || !server.selectedChartFileId || String(server.selectedChartFileId) === '0') {
     throw Error('조회한 차트 또는 적용 파일 ID가 올바르지 않습니다.');
   }
+  if(record.encoding==='Table'){
+    const [headers,...expected]=record.expectedTable;
+    const normalize=rows=>rows.map(row=>JSON.stringify(row)).sort();
+    const actual=server.rows.map(row=>headers.map(key=>String(row[key]??'')));
+    if(JSON.stringify(normalize(actual))!==JSON.stringify(normalize(expected.map(row=>row.map(String)))))throw Error('서버 일반 표가 준비한 파일과 다릅니다.');
+    return {serverFileMatches:true,gameplayVerified:false,chartName:record.targetChartName,selectedChartFileId:server.selectedChartFileId,verifiedAt:new Date().toISOString()};
+  }
   const actual = decodeConfigRows(server.rows);
   if (actual.releaseKey !== record.releaseKey || actual.sha256 !== record.payloadSha256) {
     throw Error('서버 적용 파일이 현재 준비한 버전과 다릅니다.');
