@@ -76,6 +76,18 @@ public sealed class AppInitialization : IDisposable
             }
             else Backend.BMember.GuestLogin(result => login.TrySetResult(result));
             var response = await login.Task.AttachExternalCancellation(token);
+            if (!identityLogin && !GoogleAccountAuth.PrefersGoogleLogin
+                && response.GetStatusCode() == "401"
+                && response.GetErrorCode() == "BadUnauthorizedException"
+                && response.GetMessage().StartsWith("bad customId", StringComparison.Ordinal))
+            {
+                token.ThrowIfCancellationRequested();
+                UnityEngine.Debug.LogWarning("[Login] 저장된 게스트 ID를 사용할 수 없어 게스트 정보를 초기화하고 한 번 재가입합니다.");
+                Backend.BMember.DeleteGuestInfo();
+                var retry = new UniTaskCompletionSource<BackendReturnObject>();
+                Backend.BMember.GuestLogin(result => retry.TrySetResult(result));
+                response = await retry.Task.AttachExternalCancellation(token);
+            }
             if (!response.IsSuccess()) throw new InvalidOperationException(DescribeLoginFailure(response));
             if (identityLogin)
             {
