@@ -5,6 +5,8 @@ public class PlayerData
 {
     /// <summary>Last absolute snapshot identifier, for retry acknowledgement and local journal reconciliation.</summary>
     public string SaveId = string.Empty;
+    public System.Collections.Generic.List<UnitLevelEntry> UnitLevels = new();
+    [Serializable] public sealed class UnitLevelEntry { public string UnitKey; public int Level = 1; }
     public RewardInventory RewardInventory = new();
     /// <summary>Paid entry reserved until a production battle actually starts.</summary>
     public string PendingEntryId = string.Empty;

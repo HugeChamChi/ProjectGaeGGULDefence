@@ -169,6 +169,7 @@ public class BackendGameData
         {
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            UnitLevels = JsonMapper.ToObject<System.Collections.Generic.List<PlayerData.UnitLevelEntry>>(data.GetString("UnitLevels", "[]")),
             RewardInventory = JsonMapper.ToObject<RewardInventory>(data.GetString("RewardInventory", "{}")),
             AccountExperienceSequence = data.GetLong("AccountExperienceSequence", 0),
             AccountExperienceRunId = data.GetString("AccountExperienceRunId", string.Empty),
@@ -199,6 +200,7 @@ public class BackendGameData
     {
         Param param = new Param();
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("UnitLevels", JsonMapper.ToJson(data.UnitLevels ?? new System.Collections.Generic.List<PlayerData.UnitLevelEntry>()));
         param.Add("RewardInventory", JsonMapper.ToJson(data.RewardInventory));
         param.Add("AccountExperienceSequence", data.AccountExperienceSequence);
         param.Add("AccountExperienceRunId", data.AccountExperienceRunId ?? string.Empty);

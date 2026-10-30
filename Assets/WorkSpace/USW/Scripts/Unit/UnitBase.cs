@@ -185,7 +185,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
-        LevelBonuses = new UnitLevelBonusController(unitData.LevelBonuses, deps.UnitLevels?.GetLevel(unitData.name) ?? 1);
+        LevelBonuses = new UnitLevelBonusController(unitData.LevelBonuses, deps.UnitLevels?.GetLevel(UnitBalanceRuntime.GetUnitKey(unitData.name)) ?? 1);
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
@@ -312,7 +312,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>

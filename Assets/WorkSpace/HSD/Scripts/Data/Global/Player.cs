@@ -64,6 +64,10 @@ public static class Player
         RequireCurrentInitialization(owner, generation);
 
         // 3. 나머지는 병렬로 초기화하되, IsNewDay 상태를 참조함
+        using (var bonusTimeout = new CancellationTokenSource())
+        using (bonusTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await UnitBonusChart.InitializeAsync(bonusTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
         await UniTask.WhenAll(
             Profile.InitalizeAsync(),
             Mail.InitalizeAsync(),
@@ -101,6 +105,7 @@ public static class Player
         _debounceCts = null;
         RoundRecords.Clear();
         GGD.Events.EventChartLoader.Clear();
+        UnitBonusChart.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();

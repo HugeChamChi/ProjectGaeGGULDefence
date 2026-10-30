@@ -20,7 +20,8 @@ public class UnitFactory : MonoBehaviour
     public UnitData[] UnitDataList => unitDataList;
     private UnitDependencies _deps;
 
-    public void Init() => Init(null);
+    public void Init() => Init(new UnitLevelSnapshot((Player.PlayerData.Data?.UnitLevels ?? new System.Collections.Generic.List<PlayerData.UnitLevelEntry>())
+        .Select(entry => new System.Collections.Generic.KeyValuePair<string,int>(entry.UnitKey, entry.Level))));
 
     /// <summary>Account integration supplies one immutable level snapshot before spawning any units.</summary>
     public void Init(UnitLevelSnapshot unitLevels)

@@ -74,7 +74,7 @@ public class Drone_Zeltan : UnitBase
 
     public override float GetBaseFoodPerSecond()
     {
-        return unitData != null ? (unitData.foodProduction.Get(currentTier) + (_upgradeManager?.ZeltanFoodBonus ?? 0f))
+        return unitData != null ? (base.GetBaseFoodPerSecond() + (_upgradeManager?.ZeltanFoodBonus ?? 0f))
             * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) : 0f;
     }
 }

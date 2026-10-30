@@ -26,7 +26,9 @@ public class UnitStatsModifier : MonoBehaviour
         : 1f;
 
     private float LevelAttackMultiplier => 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f);
-    private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier * LevelAttackMultiplier;
+    private float LevelStat(UnitBonusStat stat) => _unit.LevelBonuses?.GetStat(stat) ?? 0f;
+    private float LevelBaseAtk => (_unit.unitData.atk.Get(_unit.currentTier) + LevelStat(UnitBonusStat.AttackFlat)) * LevelAttackMultiplier;
+    private float UpgradedAtk => LevelBaseAtk * AtkUpgradeMultiplier;
 
     // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
     private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
@@ -41,11 +43,11 @@ public class UnitStatsModifier : MonoBehaviour
     public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
 
     /// <summary>현재 런타임 보정을 유지하고 인게임 강화만 제외한 표시용 공격력.</summary>
-    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(_unit.unitData.atk.Get(_unit.currentTier) * LevelAttackMultiplier, 1f, false, out _, true);
+    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(LevelBaseAtk, 1f, false, out _, true);
 
     public int GetCombatDroneDamage(out bool critical) => ComputeDamage(UpgradedAtk * _unit.unitData.CombatDroneAttackCoefficient, 1f, true, out critical, true);
     public int GetCombatDroneDisplayDamage(bool includeUpgrade) => ComputeDamage(
-        (includeUpgrade ? UpgradedAtk : _unit.unitData.atk.Get(_unit.currentTier) * LevelAttackMultiplier)
+        (includeUpgrade ? UpgradedAtk : LevelBaseAtk)
         * _unit.unitData.CombatDroneAttackCoefficient, 1f, false, out _, true);
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
@@ -101,7 +103,7 @@ public class UnitStatsModifier : MonoBehaviour
         if (rollCritical) damage *= DamageCalculator.Spread(_deps?.CombatSettings?.DamageVariance ?? 0f);
 
         float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
-        float critChance = (lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f);
+        float critChance = Mathf.Clamp01((lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f) + LevelStat(UnitBonusStat.CriticalChancePoints));
         if (rollCritical && UnityEngine.Random.value < critChance)
         {
             float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
@@ -140,7 +142,8 @@ public class UnitStatsModifier : MonoBehaviour
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult   = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
         
-        float frequency = includeUpgrade ? UpgradedAttackFrequency : _unit.unitData.attackSpeed.Get(_unit.currentTier);
+        float frequency = _unit.unitData.attackSpeed.Get(_unit.currentTier) + LevelStat(UnitBonusStat.BasicAttackFrequencyFlat);
+        if (includeUpgrade) frequency *= Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
         frequency *= 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.BasicAttackFrequencyPercent) ?? 0f);
         float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
@@ -166,7 +169,8 @@ public class UnitStatsModifier : MonoBehaviour
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
         float cellGaugeSpeedMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.GaugeSpeed));
-        float interval = _unit.unitData.skillCooldown.Get(_unit.currentTier)
+        float interval = Mathf.Max(0f, _unit.unitData.skillCooldown.Get(_unit.currentTier) - LevelStat(UnitBonusStat.SkillCooldownFlat))
+                       * Mathf.Max(0f, 1f - LevelStat(UnitBonusStat.SkillCooldownPercent))
                        * _unit.SkillCooldownMultiplier
                        * cellGaugeSpeedMult
                        * (_unit.currentCell?.Model.SpeedModifier ?? 1f)

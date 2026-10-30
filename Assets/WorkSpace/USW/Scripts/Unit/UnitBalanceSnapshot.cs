@@ -19,6 +19,7 @@ public sealed class UnitBalanceSnapshot : IDisposable
     private readonly Dictionary<UnitData, UnitData> copies = new();
     private readonly HashSet<UnitData> resolved = new();
     public int Count => definitions.Count;
+    public string GetUnitKey(string assetKey) => definitions.TryGetValue(assetKey,out var value) ? value.UnitKey : assetKey;
 
     public static Config ParseConfig(string json)
     {
@@ -111,6 +112,7 @@ public sealed class UnitBalanceSnapshot : IDisposable
         }
         // Asset loading belongs to the original and its lifecycle manager.
         copy.icon = source.icon; copy.prefab = source.prefab;
+        copy.LevelBonuses = UnitBonusChart.Resolve(definition.UnitKey, source.LevelBonuses);
         return copy;
     }
 

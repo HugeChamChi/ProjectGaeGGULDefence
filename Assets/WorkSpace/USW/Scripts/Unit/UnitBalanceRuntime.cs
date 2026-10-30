@@ -8,6 +8,7 @@ public static class UnitBalanceRuntime
     private static UnitBalanceSnapshot snapshot;
     private static bool? remoteRequired;
     public static bool IsLoaded => snapshot != null;
+    public static string GetUnitKey(string assetKey) => snapshot?.GetUnitKey(assetKey) ?? assetKey;
 
     internal static bool RequiresRemote
     {
