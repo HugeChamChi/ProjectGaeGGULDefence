@@ -7,6 +7,7 @@ using UnityEngine;
 public sealed class UnitLevelBonusDefinition
 {
     [Min(1)] public int Level = 1;
+    public string BonusId;
     public string Description;
     [SerializeReference, SelectableReference] public List<UnitLevelBonusPart> Parts = new();
 }

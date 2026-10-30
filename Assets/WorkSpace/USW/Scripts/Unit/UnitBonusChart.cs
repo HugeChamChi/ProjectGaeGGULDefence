@@ -40,6 +40,7 @@ public static class UnitBonusChart
     static int Integer(JsonData r,string k){float v=Number(r,k);if(v>100000||v!=Math.Floor(v))throw new FormatException(k);return (int)v;}
     public static Dictionary<string,List<UnitLevelBonusDefinition>> Parse(JsonData rows)
     {
+        rows=UnitBonusTableV2.Expand(rows);
         if(rows==null||!rows.IsArray||rows.Count==0)throw new FormatException("Bonus rows missing");
         var result=new Dictionary<string,List<UnitLevelBonusDefinition>>();var counts=new Dictionary<string,SortedDictionary<int,UnitLevelBonusPart>>();
         foreach(JsonData row in rows){
@@ -101,7 +102,7 @@ public static class UnitBonusChart
                 part=new EveryNthCycleBonus{CycleId="basic_skill",Every=every,DamageBonusRatio=damage/100f,ChargeTimeMultiplier=1-reduction/100f};
             }
             if(!result.TryGetValue(key,out var list)){list=new List<UnitLevelBonusDefinition>();result.Add(key,list);}
-            var definition=list.Find(x=>x.Level==level);if(definition==null){definition=new UnitLevelBonusDefinition{Level=level,Description=""};list.Add(definition);}
+            var definition=list.Find(x=>x.Level==level);if(definition==null){definition=new UnitLevelBonusDefinition{Level=level,BonusId=Text(row,"BonusId")!=""?Text(row,"BonusId"):UnitBonusTableV2.LegacyId(key,level),Description=Text(row,"BonusId")!=""?Text(row,"Description"):""};list.Add(definition);}
             string group=key+"/"+level;if(!counts.ContainsKey(group))counts.Add(group,new SortedDictionary<int,UnitLevelBonusPart>());counts[group].Add(index,part);
             string label=Text(row,"Stat") switch {"Attack"=>"공격력","BasicAttackFrequency"=>"일반 공격속도","CriticalChance"=>"치명타 확률","CriticalDamage"=>"치명타 피해","SkillCooldownReduction"=>"스킬 쿨타임 감소","FoodProduction"=>"초당 식량 생산","MaxDroneCount"=>"최대 드론 수","ChargeAttackReduction"=>"스킬 충전 필요 공격 횟수 감소","HackingCapacity"=>"공유 해킹 최대 스택 증가 (델탕 중 최댓값)","HackingPostSpeed"=>"해킹 후 자신의 공격속도 증가","HackingPostDuration"=>"해킹 후 공격속도 지속시간 (초)","HackingStackDamage"=>"해킹 스택 부분 피해 증가","RecoveryNextBasic"=>"시간 회복 후 다음 정규 일반공격 피해 증가","TimeRecovery"=>"시간 회복량 증가","BasicDamage"=>"일반공격 피해 증가","FoodSpeed"=>"자체 식량 생산속도 증가","BossFoodSeconds"=>"보스 처치 시 자체 식량 지급 (초분)","FoodFifthMultiplier"=>"매 5번째 자체 식량 배율 (높은 레벨로 교체)","ChiefCooldown"=>"알팡 액티브 쿨타임 감소","ChiefStartsReady"=>"알팡 전투 시작 충전 (1=완료)","ChiefGlobalAttack"=>"알팡 전체 유닛 공격력 증가","ChiefSpeed"=>"알팡 스킬 후 전체 유닛 공격속도 증가","ChiefSpeedDuration"=>"알팡 공격속도 지속시간 (초)","ChiefDamageTaken"=>"알팡 집결 적중 후 보스 받는 피해 증가","ChiefDamageTakenDuration"=>"알팡 받는 피해 증가 지속시간 (초)","HackingProducedNormal"=>"노말 해킹 추가 생산","HackingProducedRare"=>"레어 해킹 추가 생산","HackingProducedEpic"=>"에픽 해킹 추가 생산","HackingProducedLegend"=>"전설 해킹 추가 생산","HackingConsumedNormal"=>"노말 해킹 추가 소모 한도","HackingConsumedRare"=>"레어 해킹 추가 소모 한도","HackingConsumedEpic"=>"에픽 해킹 추가 소모 한도","HackingConsumedLegend"=>"전설 해킹 추가 소모 한도",_=>""};
             string suffix=Text(row,"ValueMode") switch {"Percent"=>"%","PercentagePoints"=>"%",_=>""};
@@ -110,13 +111,14 @@ public static class UnitBonusChart
                 var clauses=new List<string>();if(cyclePart.DamageBonusRatio>0)clauses.Add("피해 +"+Text(row,"DamageBonusPercent")+"%");if(cyclePart.ChargeTimeMultiplier<1)clauses.Add("충전시간 -"+Text(row,"ChargeReductionPercent")+"%");
                 description="매 "+Text(row,"Every")+"번째 기본 [자폭드론] "+string.Join(", ",clauses)+" (선택지 추가 자폭 제외)";
             }else description=label+" +"+Text(row,"Value")+suffix;
-            definition.Description+=(definition.Description.Length>0?", ":"")+description;
+            if(Text(row,"BonusId")=="")definition.Description+=(definition.Description.Length>0?", ":"")+description;
         }
         foreach(var pair in result)foreach(var definition in pair.Value){var ordered=counts[pair.Key+"/"+definition.Level];int i=0;foreach(var part in ordered){if(part.Key!=i++)throw new FormatException("PartIndex gap");definition.Parts.Add(part.Value);}new UnitLevelBonusController(new[]{definition},definition.Level);}
         return result;
     }
     public static Dictionary<string,Presentation> ParsePresentations(JsonData rows)
     {
+        rows=UnitBonusTableV2.Expand(rows);
         var result=new Dictionary<string,Presentation>();
         foreach(JsonData row in rows)if(Text(row,"RecordType")=="Description"){
             string key=Text(row,"UnitKey"),text=Text(row,"Description"),link=Text(row,"EffectLink");int level=Integer(row,"Level");
