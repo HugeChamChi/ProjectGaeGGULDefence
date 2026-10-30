@@ -478,7 +478,8 @@ namespace GaeGGUL.DeckUpgrade
             skillTabFace.color = index == 0 ? C("0094A6") : C("003B44");
             bonusTabFace.color = index == 1 ? C("0094A6") : C("003B44");
             int level = _presenter.GetItem(selected).Level;
-            bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName);
+            bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName,
+                selected < 0 ? null : units[selected]);
             for (int i = 0; i < BonusLevels.Length; i++)
             {
                 bool locked = level < BonusLevels[i];

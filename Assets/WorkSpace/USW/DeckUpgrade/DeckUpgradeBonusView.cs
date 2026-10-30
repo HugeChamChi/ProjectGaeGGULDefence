@@ -9,7 +9,7 @@ namespace GaeGGUL.DeckUpgrade
     {
         private static readonly string[][] Labels =
         {
-            new[] { "공격력 +5%", "매 2번째 기본 [자폭드론] 피해 +40% (선택지 추가 자폭 제외)", "일반공격 속도 +5%", "매 2번째 기본 [자폭드론] 충전시간 -30% (선택지 추가 자폭 제외)", "유닛 치명타 피해 +50%p" },
+            new string[5], // Authored bonuses come from UnitData; remaining rows are legacy previews.
             new[] { "[해킹] 최대 스택 +5", "스킬 사용 시 20% 확률로 [해킹] +1", "스킬 충전 공격 횟수 -1", "스킬 사용 시 [해킹] 추가 부여 확정", "[해킹] 최대 스택 추가 +10" },
             new[] { "공격력 10% 증가", "스킬 쿨타임 20% 감소", "스킬 피해 20% 증가", "스킬 사용 시 [해킹] 추가 소모 +1", "치명타 확률/피해 10% 증가." },
             new[] { "공격력 10% 증가", "스킬 충전 공격 횟수 -1", "공격속도 10% 증가", "일반공격 시 25% 확률로 추가 공격", "일반공격 피해 20% 증가" },
@@ -50,14 +50,16 @@ namespace GaeGGUL.DeckUpgrade
             }
         }
 
-        public void Refresh(string unitName)
+        public void Refresh(string unitName, UnitData data = null)
         {
             if (currentUnit != unitName) { popup?.HideImmediately(); effectTooltip?.Hide(); }
             currentUnit = unitName;
             int unit = unitName == "베탕" ? 0 : unitName == "델탕" ? 1 : unitName == "감망" ? 2 : unitName == "디시그망" ? 3 : unitName == "젤탕" ? 4 : 5;
             for (int i = 0; i < descriptions.Length; i++)
             {
-                string text = HighlightNumbers(Labels[unit][i]).Replace("[해킹]", Mark("해킹", "hack_stack"))
+                string description = data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
+                    ?? Labels[unit][i] ?? string.Empty;
+                string text = HighlightNumbers(description).Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))
                     .Replace("[액티브 스킬]", Mark("액티브 스킬", "chief_skill"));
                 if (unit == 5 && i == 3)
