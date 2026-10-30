@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fa48e49b3d4ba44bb1998f52a3563d1, type: 3}
   m_Name: ResearchChartConfig
   m_EditorClassIdentifier: Assembly-CSharp::ResearchChartConfig
-  UseRemote: 0
+  UseRemote: 1
   BundledChart: {fileID: 4900000, guid: dd55e73e2bd5ede4f80ff5756412714a, type: 3}

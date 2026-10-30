@@ -26,6 +26,15 @@ public sealed class ResearchChartService : IDisposable
     {
         if (_disposed) throw new ObjectDisposedException(nameof(ResearchChartService));
         if (original == null) throw new ArgumentNullException(nameof(original));
+        await PrepareAsync(token);
+        if (!_trees.TryGetValue(original.TreeKey, out var tree)) throw new InvalidOperationException("Missing research tree: " + original.TreeKey);
+        if (tree.LegacySaveName != original.LegacySaveName) throw new InvalidOperationException("Legacy research save key changed");
+        return tree;
+    }
+
+    public async UniTask PrepareAsync(CancellationToken token)
+    {
+        if (_disposed) throw new ObjectDisposedException(nameof(ResearchChartService));
         token.ThrowIfCancellationRequested();
         if (_trees == null)
         {
@@ -33,9 +42,6 @@ public sealed class ResearchChartService : IDisposable
             if (operation == null) { operation = _loading = new UniTaskCompletionSource(); Load(operation).Forget(); }
             await operation.Task.AttachExternalCancellation(token);
         }
-        if (!_trees.TryGetValue(original.TreeKey, out var tree)) throw new InvalidOperationException("Missing research tree: " + original.TreeKey);
-        if (tree.LegacySaveName != original.LegacySaveName) throw new InvalidOperationException("Legacy research save key changed");
-        return tree;
     }
 
     private async UniTaskVoid Load(UniTaskCompletionSource completion)
