@@ -1,6 +1,6 @@
-(()=>{
-  'use strict';
-  const S=STUDIO_SCHEMAS,C=Studio,cat=EVENT_CATALOG;
+'use strict';
+globalThis.MissionEventsFeature = ({studio: C}) => {
+  const S=STUDIO_SCHEMAS,cat=EVENT_CATALOG;
   const f=(key,label,type='text',more={})=>({key,label,type,...more});
   const id=(key,label)=>f(key,label,'id',{required:true});
   const ref=(key,label,table)=>f(key,label,'ref',{table,required:true});
@@ -35,13 +35,12 @@
   };
   Object.assign(STUDIO_SEED.tables,C.clone(defaults));
   function upgrade(p){const q=C.clone(p);for(const n of names)if(!q.tables[n])q.tables[n]=C.clone(defaults[n]);q.tables.EventData=C.clone(cat.data);q.tables.ExecutionHooks=C.clone(cat.hooks);return q;}
-  const shape=C.shape,migrate=C.migrate;C.shape=p=>shape(upgrade(p));C.migrate=p=>p.schemaVersion===2?C.shape(p):upgrade(migrate(p));
-  const validate=C.validate;
-  C.validate=p=>{const issues=validate(p),add=(table,index,field,message)=>issues.push({table,index,field,message,severity:'error'}),pairs=new Set();
+  function validate(p){const issues=[],add=(table,index,field,message)=>issues.push({table,index,field,message,severity:'error'}),pairs=new Set();
     p.tables.DataBindings.forEach((b,i)=>{const hook=cat.hooks.find(h=>h.HookKey===b.HookKey);if(hook&&!hook.Sources.split(';').includes(b.ValueSource))add('DataBindings',i,'ValueSource','이 실행 지점에서 제공하지 않는 값입니다.');const pair=b.HookKey+'/'+b.DataKey;if(b.Enabled&&pairs.has(pair))add('DataBindings',i,'DataKey','동일 실행 지점의 데이터 연결이 중복됩니다.');if(b.Enabled)pairs.add(pair);});
     p.tables.MissionEvents.forEach((e,i)=>{if(!e.StartAt||!e.EndAt||Date.parse(e.StartAt)>=Date.parse(e.EndAt))add('MissionEvents',i,'EndAt','시작보다 늦은 종료 시각을 입력하세요.');});
     p.tables.Missions.forEach((m,i)=>{if(!p.tables.DataBindings.some(b=>b.Enabled&&b.DataKey===m.DataKey))add('Missions',i,'DataKey','이 데이터를 갱신하는 활성 연결이 필요합니다.');});
     return issues;
-  };
+  }
   globalThis.MissionEvents={names,runtime(p){return {CatalogVersion:cat.version,DataBindings:C.clone(p.tables.DataBindings),MissionEvents:C.clone(p.tables.MissionEvents),Missions:C.clone(p.tables.Missions)};}};
-})();
+  return {prepare:upgrade,migrate:upgrade,validate};
+};

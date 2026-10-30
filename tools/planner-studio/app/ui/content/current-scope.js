@@ -1,5 +1,5 @@
-(() => {
-  'use strict';
+'use strict';
+globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   const S = STUDIO_SCHEMAS;
   globalThis.STUDIO_NAV = [
     {id:'overview',label:'작업 안내',icon:'◈',tables:[]},
@@ -78,17 +78,7 @@
   };
   statuses.Attendance='일차별 셀에 아이콘을 추가하고 수량을 입력하세요. 이 값이 출석 Excel에 직접 저장됩니다.';
   Object.assign(STUDIO_SEED.meta.statuses,statuses);
-  const originalCreate=Studio.create, originalShape=Studio.shape, originalMigrate=Studio.migrate;
-  const originalNewRecord=Studio.newRecord;
-  const originalUpdate=Studio.update;
-  Studio.update=(p,name,index,key,value)=>{originalUpdate(p,name,index,key,value);if(name==='Party'&&key==='ChiefId')p.tables.Party[index].ChiefAsset=chiefPaths.get(value)||'';};
-  Studio.newRecord=(name,p)=>{const row=originalNewRecord(name,p);if(name==='UnitMilestone')Object.assign(row,{EffectStatus:'DescriptionOnly',EffectId:'',EffectParams:'{}'});return row;};
-  const originalLabel=Studio.label;
-  Studio.label=(name,row)=>name==='ResearchNode'?`${row.NodeId} · ${STUDIO_SEED.meta.stats.find(s=>s.value===row.Stat)?.label||row.Stat}`:originalLabel(name,row);
   const decorate=p=>{Object.assign(p.meta.statuses,statuses);return upgradeBonuses(p);};
-  Studio.create=()=>decorate(originalCreate());
-  Studio.shape=p=>decorate(originalShape(upgrade(p)));
-  Studio.migrate=p=>{if(p?.schemaVersion===2)return Studio.shape(p);const result=originalMigrate(p);for(const r of result.tables.Attendance)r.Rewards=Studio.clone(result.tables.RewardGroup.find(g=>g.RewardGroupId===r.RewardGroupId)?.Rewards||[]);return decorate(result);};
   // Preserve older JSON drafts, but validate and export only the current workspace.
   function current(p){
     const copy=Studio.clone(p);
@@ -98,17 +88,15 @@
     }
     return copy;
   }
-  const validate=Studio.validate, tables=Studio.tables;
-  Studio.validate=p=>{
-    const issues=validate(current(p)).filter(i=>active.has(i.table)&&!hidden[i.table]?.includes(i.field));
+  function validate(p){
+    const issues=[];
     p.tables.UnitMilestone.forEach((b,index)=>{
       const add=(field,message)=>issues.push({table:'UnitMilestone',index,field,message,severity:'error'});
       let params;try{params=JSON.parse(b.EffectParams);if(!params||Array.isArray(params)||typeof params!=='object')throw Error();JSON.stringify(params,(_,v)=>{if(typeof v==='number'&&!Number.isFinite(v))throw Error();return v;});}catch{add('EffectParams','효과 수치는 유한한 숫자를 사용하는 JSON 객체여야 합니다. 예: {"percent":20}');}
       if(b.EffectStatus==='Defined'&&!/^[A-Za-z][A-Za-z0-9_]*$/.test(b.EffectId))add('EffectId','정의한 효과에는 영문 효과 키가 필요합니다.');
       if(b.EffectStatus==='DescriptionOnly'&&(b.EffectId||params&&Object.keys(params).length))add('EffectStatus','효과 키/수치를 입력했다면 상태를 Defined로 바꾸세요.');
     });return issues;
-  };
-  Studio.tables=p=>{const errors=Studio.validate(p).filter(i=>i.severity==='error');if(errors.length)throw Error(`검사 오류 ${errors.length}개를 먼저 수정하세요.`);return Object.fromEntries(Object.entries(tables(current(p))).filter(([name])=>active.has(name)||name==='ResearchLevel'));};
+  }
   S.UnitMilestone.note='한 행은 유닛 ID + 해금 레벨로 구분합니다. DescriptionOnly는 현재 설명만 존재하는 항목입니다. 효과를 정의하려면 Defined, 효과 키, JSON 수치를 입력합니다. 게임의 효과 처리 연결은 별도입니다.';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   globalThis.PlannerScope={active,chiefPaths,overview(p){
@@ -124,4 +112,13 @@
     if(options.length)document.getElementById('page-title').textContent=workspace==='enhancement'?'강화 밸런스':'보상·출석';
     if(workspace==='rewards')document.getElementById('page-title').textContent='이벤트';
   }};
-})();
+  return {
+    prepare:upgrade, decorate, validationProject:current, validate,
+    filterIssues:issues=>issues.filter(i=>active.has(i.table)&&!hidden[i.table]?.includes(i.field)),
+    migrate(p){for(const row of p.tables.Attendance)row.Rewards=Studio.clone(p.tables.RewardGroup.find(g=>g.RewardGroupId===row.RewardGroupId)?.Rewards||[]);return decorate(p);},
+    updated(p,name,index,key,value){if(name==='Party'&&key==='ChiefId')p.tables.Party[index].ChiefAsset=chiefPaths.get(value)||'';},
+    newRecord(row,name){if(name==='UnitMilestone')Object.assign(row,{EffectStatus:'DescriptionOnly',EffectId:'',EffectParams:'{}'});return row;},
+    label(text,name,row){return name==='ResearchNode'?`${row.NodeId} · ${STUDIO_SEED.meta.stats.find(s=>s.value===row.Stat)?.label||row.Stat}`:text;},
+    tables:tables=>Object.fromEntries(Object.entries(tables).filter(([name])=>active.has(name)||name==='ResearchLevel'))
+  };
+};

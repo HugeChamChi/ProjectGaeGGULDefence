@@ -11,6 +11,7 @@ require('./app/ui/content/unit-keys.js');
 require('./app/ui/content/attendance-events.js');
 require('./app/ui/content/event-catalog.js');
 require('./app/ui/content/mission-events.js');
+require('./app/ui/content/studio-compose.js');
 const fresh = Studio.create;
 const errors = p => Studio.validate(p).filter(i=>i.severity==='error');
 assert.deepEqual(errors(fresh()), []);

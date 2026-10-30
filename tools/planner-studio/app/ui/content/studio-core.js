@@ -172,5 +172,5 @@
       return [n.NodeId,level(n)>=n.MaxLevel?'maxed':blocked?'blocked':ready&&total>=n.RequiredTotalLevel?'available':'locked'];
     }));
   }
-  globalThis.Studio={clone,create,shape,migrate,newRecord,references,update,validate,tables,treeState,recordKey,label,primary,serialize};
+  globalThis.StudioCore=Object.freeze({clone,create,shape,migrate,newRecord,references,update,validate,tables,treeState,recordKey,label,primary,serialize});
 })();

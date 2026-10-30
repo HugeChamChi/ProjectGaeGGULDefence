@@ -1,8 +1,14 @@
-(()=>{
-  'use strict';
+'use strict';
+globalThis.UnitKeysFeature = ({studio: Studio}) => {
   const S=STUDIO_SCHEMAS,field=(key,label,type='text',extra={})=>({key,label,type,...extra});
   S.UnitBaseStat={label:'기본 스탯',keys:['BaseStatKey','Tier'],fields:[field('BaseStatKey','기본 스탯 키','id',{required:true}),field('Tier','등급','enum',{values:['normal','rare','epic','legend']}),...['Attack','AttackInterval','SkillCooldown','FoodProduction'].map(k=>field(k,{Attack:'공격력',AttackInterval:'공격 속도(회/초)',SkillCooldown:'스킬 쿨타임(초)',FoodProduction:'초당 식량'}[k],'float',{min:0})),field('MaxDroneCount','최대 드론 수','int',{min:0,max:2147483647})],note:'실제 UnitData의 등급별 원본 스탯입니다. 강화 시안 배율과 구분합니다.'};
   STUDIO_SEED.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);
+  // Only new project defaults use authored descriptions; saved planning drafts keep their edits.
+  for(const bonus of UNIT_AUTHORED_BONUSES){
+    const existing=STUDIO_SEED.tables.UnitMilestone.find(row=>row.UnitId===bonus.UnitId&&row.Level===bonus.Level);
+    if(existing)Object.assign(existing,bonus);
+    else STUDIO_SEED.tables.UnitMilestone.push({...bonus,EffectStatus:'DescriptionOnly',EffectId:'',EffectParams:'{}'});
+  }
   PlannerScope.active.add('UnitBaseStat');STUDIO_NAV.find(n=>n.id==='units').tables.push('UnitBaseStat');
   for(const [key,label]of [['UnitKey','유닛 키'],['BaseStatKey','기본 스탯 키'],['UpgradeKey','강화 성장 키'],['LevelBonusKey','레벨 보너스 키']])S.Unit.fields.push(field(key,label));
   function decorate(p){
@@ -15,10 +21,7 @@
     }return p;
   }
   decorate(STUDIO_SEED);
-  const create=Studio.create,shape=Studio.shape,migrate=Studio.migrate;
-  Studio.create=()=>decorate(create());
   function prepare(p){const copy=Studio.clone(p);if(!copy.tables.UnitBaseStat)copy.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);for(const u of copy.tables.Unit){const original=STUDIO_SEED.tables.Unit.find(x=>x.UnitId===u.UnitId);for(const k of ['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'])if(!Object.hasOwn(u,k))u[k]=original?.[k]??(k==='UnitKey'?u.UnitId:'');}return copy;}
-  Studio.shape=p=>decorate(shape(prepare(p)));Studio.migrate=p=>p.schemaVersion===2?Studio.shape(p):decorate(migrate(p));
   const headers={
     Units:['UnitKey','Name','Kind','BackendKeys','IconKey','MaxLevel','BaseStatKey','UpgradeKey','LevelBonusKey'],
     BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?'AttackFrequency':f.key),
@@ -37,9 +40,8 @@
     }
     out.UpgradeStats.push(...growth.values());out.LevelBonuses.push(...bonus.values());return out;
   }
-  const validate=Studio.validate;
-  Studio.validate=p=>{
-    const issues=validate(p),keys=new Set();
+  function validate(p){
+    const issues=[],keys=new Set();
     p.tables.Unit.forEach((u,index)=>{
       const add=message=>issues.push({table:'Unit',index,field:'UnitKey',message,severity:'error'});
       if(!/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(u.UnitKey)||keys.has(u.UnitKey))add('유닛 키는 영문 문자열 키여야 하며 중복될 수 없습니다.');keys.add(u.UnitKey);
@@ -55,7 +57,7 @@
       if(u.UpgradeKey&&(levels.length!==u.MaxLevel-1||levels.some((r,i)=>r.TargetLevel!==i+2)))add('강화 성장 표는 Lv.2부터 최대 레벨까지 연속이어야 합니다.');
     });
     try{tables(p);}catch(e){issues.push({table:'Unit',index:0,field:'UpgradeKey',message:e.message,severity:'error'});}return issues;
-  };
+  }
   const fields={
     Units:[field('UnitKey','유닛 키','id',{required:true}),field('Name','이름','text',{required:true}),field('Kind','종류','enum',{values:['Unit','Chief']}),field('BackendKeys','서버 매핑'),field('IconKey','아이콘','icon'),field('MaxLevel','최대 레벨','int',{min:1,max:1000}),field('BaseStatKey','기본 스탯 키'),field('UpgradeKey','강화 키'),field('LevelBonusKey','보너스 키')],
     BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?{...f,key:'AttackFrequency',unit:'attacks/second',legacyAliases:['AttackInterval']}:f),
@@ -64,9 +66,11 @@
   };
   const sheetFor={Unit:'Units',UnitBaseStat:'BaseStats',UnitUpgrade:'UpgradeStats',UnitMilestone:'LevelBonuses'};
   fields.LevelBonuses.sort((a,b)=>headers.LevelBonuses.indexOf(a.key)-headers.LevelBonuses.indexOf(b.key));
-  const baseTables=Studio.tables;
-  Studio.tables=p=>{const result=baseTables(p);for(const name of Object.keys(sheetFor))delete result[name];return {...result,...tables(p)};};
   function propagate(p,id,bonus=false){const unit=p.tables.Unit.find(u=>u.UnitId===id);const key=bonus?'LevelBonusKey':'UpgradeKey',table=bonus?'UnitMilestone':'UnitUpgrade';for(const other of p.tables.Unit){if(other===unit)continue;if(unit[key]&&other[key]===unit[key]){const rows=p.tables[table].filter(r=>r.UnitId===id).map(r=>({...Studio.clone(r),UnitId:other.UnitId})),indices=p.tables[table].map((r,i)=>r.UnitId===other.UnitId?i:-1).filter(i=>i>=0);if(rows.length===indices.length)indices.forEach((index,i)=>Object.assign(p.tables[table][index],rows[i]));else p.tables[table]=p.tables[table].filter(r=>r.UnitId!==other.UnitId).concat(rows);}}}
-  const update=Studio.update;Studio.update=(p,name,index,key,value)=>{update(p,name,index,key,value);if(name==='UnitMilestone')propagate(p,p.tables[name][index].UnitId,true);};
   globalThis.UnitKeys={headers,fields,tables,decorate,sheetFor,propagate};
-})();
+  return {
+    prepare,decorate,migrate:decorate,validate,
+    updated(p,name,index){if(name==='UnitMilestone')propagate(p,p.tables[name][index].UnitId,true);},
+    tables(result,p){for(const name of Object.keys(sheetFor))delete result[name];return {...result,...tables(p)};}
+  };
+};
