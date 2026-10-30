@@ -2,12 +2,14 @@
   "version": 4,
   "files": {
     "UnitBalance.xlsx": {
-      "fingerprint": "f1311b46e5b6ac1cddd5b9d0b815421c5bf1dc729cdc8c082d9231846d4f272f",
+      "fingerprint": "a88603586d8a1e90cdcc14d9a0edf9ea3ee1f58798defc08cce05ca34bc32f60",
       "previousFingerprints": [
         "4cc1e65b3369b3d91ec3f5fa1317c59856ab1deeca1c9ea03ec021edf911c873",
         "a6c9cdafdaf3e544d731688054e6d24324bca74a53d442bc785a223cf11b3489",
         "574ca3b57a8760dcdbeaf5b315ddb2ebee1ed4a05c7debcdebdcc93e8fca26a1",
-        "48bcaa1222fafb516a084a7766b6a969375568536dece005e677fbec3bbe03df"
+        "48bcaa1222fafb516a084a7766b6a969375568536dece005e677fbec3bbe03df",
+        "f1311b46e5b6ac1cddd5b9d0b815421c5bf1dc729cdc8c082d9231846d4f272f",
+        "8ef800897d7e647fcc376d9236c04eae99d833a190c3f43bdb493862414aacf7"
       ]
     },
     "PermanentUpgrade.xlsx": {
@@ -40,10 +42,11 @@
       ]
     },
     "Party.xlsx": {
-      "fingerprint": "1521d182fb4cd34d0ba42639a80b996724055802fe04f88c9baa6fac7c285d51",
+      "fingerprint": "20a175c52f671b8b7bcbda0c176ec29fd61d5a14f3bde43e2897a1805db24e4a",
       "previousFingerprints": [
         "13a52eba5628114919f7c3e019592ef83b9e2d68d67bd465bd9156a0b2a72648",
-        "1521d182fb4cd34d0ba42639a80b996724055802fe04f88c9baa6fac7c285d51"
+        "1521d182fb4cd34d0ba42639a80b996724055802fe04f88c9baa6fac7c285d51",
+        "20a175c52f671b8b7bcbda0c176ec29fd61d5a14f3bde43e2897a1805db24e4a"
       ]
     },
     "AccountSettings.xlsx": {

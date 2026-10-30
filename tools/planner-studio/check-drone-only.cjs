@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const e=require('./app/content-workbook.cjs').engine();
+const p=JSON.parse(JSON.stringify(e.Studio.create()));
+assert.equal(p.tables.Unit.filter(u=>u.Kind==='Unit').length,5);
+assert.equal(p.tables.Unit.filter(u=>u.Kind==='Chief').length,1);
+assert.equal(p.tables.UnitBaseStat.length,20);
+assert.equal(p.tables.BonusEffect.length,25);
+assert.deepEqual(p.tables.Party.map(x=>x.PartyId),['Dron_Party']);
+assert(!JSON.stringify(p.tables).includes('UD_Frog_'));
+const legacy=JSON.parse(JSON.stringify(p));legacy.tables.Unit.push({UnitId:'UD_Frog_Mage',UnitKey:'UD_Frog_Mage',Kind:'Unit'});legacy.tables.Party.push({PartyId:'Test_Party',Units:['UD_Frog_Mage']});legacy.tables.BonusEffect.push({...p.tables.BonusEffect[0],UnitKey:'UD_Frog_Mage'});
+const restored=e.Studio.shape(legacy);assert(!JSON.stringify(restored.tables).includes('UD_Frog_'));
+for(const unit of p.tables.Unit.filter(u=>u.Kind==='Unit'))assert.deepEqual(p.tables.BonusEffect.filter(r=>r.UnitKey===unit.UnitKey).map(r=>r.Level).sort((a,b)=>a-b),[3,6,9,12,15]);
+assert.equal(e.Studio.validate(p).filter(x=>x.severity==='error').length,0);
+console.log('PASS drone-only defaults/import, 5 units/20 tiers/25 milestones; only drone party; all 5 unlock levels per drone');

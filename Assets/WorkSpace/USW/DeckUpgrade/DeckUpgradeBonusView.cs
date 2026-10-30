@@ -60,6 +60,7 @@ namespace GaeGGUL.DeckUpgrade
                 var presentation=UnitBonusChart.GetPresentation(data!=null?UnitBalanceRuntime.GetUnitKey(data.name):"AlphanChief",(i+1)*3);
                 string description = presentation?.Text ?? data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
                     ?? Labels[unit][i] ?? string.Empty;
+                description=description.Replace("%p","%");
                 string text = presentation==null||presentation.HighlightNumbers?HighlightNumbers(description):description;
                 if(presentation==null||presentation.LinkTerms)text=text.Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))

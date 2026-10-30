@@ -11,12 +11,12 @@ function write(directory,name,rows){
  const table=[columns,...rows.map(r=>columns.map(k=>r[k]??''))];
  const file=path.join(directory,name+'_2026-10-30.xlsx');
  fs.writeFileSync(file,Buffer.from(workbook.engine().RewardCore.xlsx(name,table)));
- const actual=records(file,name);assert.deepEqual(actual,rows.map(r=>Object.fromEntries(columns.map(k=>[k,String(r[k]??'')]))));
+ const actual=records(file,name);assert.deepEqual(actual,JSON.parse(JSON.stringify(rows.map(r=>Object.fromEntries(columns.map(k=>[k,String(r[k]??'')]))))));
  return {chart:'DEV_'+name,file:path.basename(file),rows:rows.length,columns};
 }
 function run(directory){
  if(fs.existsSync(directory))throw Error('Output exists');fs.mkdirSync(directory,{recursive:true});
- const units=config('outputs/dev-chart-upload-1793181571206/UnitBaseStats.backend.xlsx','UnitBaseStats');
+ const units=require('./app/unit-runtime.cjs').unitRuntime(workbook.engine().Studio.create());
  const missions=config('outputs/dev-chart-upload-1793181571206/MissionEvents.backend.xlsx','MissionEvents');
  const manifest=[];
  manifest.push(write(directory,'UnitBaseStats',units.Units.flatMap(u=>u.Stats.map(s=>({UnitKey:u.UnitKey,AssetKey:u.AssetKey,Name:u.Name,...s})))));
@@ -25,7 +25,8 @@ function run(directory){
  for(const r of missions.MissionEvents)missionRows.push({RecordType:'Event',...r});
  for(const r of missions.Missions){const {Rewards,...mission}=r;missionRows.push({RecordType:'Mission',...mission});Rewards.forEach((reward,i)=>missionRows.push({RecordType:'Reward',MissionKey:r.MissionKey,RewardIndex:i,ItemKey:reward.itemId,Amount:reward.amount}));}
  manifest.push(write(directory,'MissionEvents',missionRows));
- const bonuses=require('./bonus-excel.cjs').read(fs.readFileSync('outputs/unit-level-bonuses/UnitLevelBonuses.xlsx'));
+ const bonusProject=workbook.engine().Studio.create();
+ const bonuses=[...bonusProject.tables.BonusEffect.map(row=>({RecordType:'Part',...row})),...bonusProject.tables.BonusDescription.map(row=>({RecordType:'Description',...row}))];
  manifest.push(write(directory,'UnitLevelBonuses',bonuses));
  // Research arrays become individual relation rows rather than JSON cells.
  const research=records('outputs/backend-upload-20261029/02_DEV_ResearchBalance/ResearchBalance.xlsx','ResearchBalance');

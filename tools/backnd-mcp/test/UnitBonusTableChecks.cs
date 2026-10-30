@@ -10,10 +10,13 @@ public static class UnitBonusTableChecks {
  static void Near(float value,float expected,string message)=>Check(Math.Abs(value-expected)<0.001f,message+": "+value);
  public static string Run(){
   var rows=JsonMapper.ToObject(File.ReadAllText("outputs/readable-UnitLevelBonuses.json"));
-  var parsed=UnitBonusChart.Parse(rows);int count=0;foreach(var list in parsed.Values)count+=list.Count;Check(parsed.Count==9&&count==45,"Definition counts");
+  var parsed=UnitBonusChart.Parse(rows);int count=0;foreach(var list in parsed.Values)count+=list.Count;Check(parsed.Count==5&&count==25,"Definition counts");
   var betan=new UnitLevelBonusController(parsed["UnitData_Betan"],15);Near(betan.GetStat(UnitBonusStat.AttackPercent),.05f,"Betan attack");Near(betan.GetStat(UnitBonusStat.CriticalDamagePoints),.5f,"Betan critical");
   Near(betan.CompleteCycle("basic_skill").DamageMultiplier,1,"First cycle");var second=betan.CompleteCycle("basic_skill");Near(second.DamageMultiplier,1.4f,"Second cycle");Near(second.ChargeTimeMultiplier,.7f,"Charge");
   var locked=new UnitLevelBonusController(parsed["UnitData_Betan"],2);Near(locked.GetStat(UnitBonusStat.AttackPercent),0,"Level2 locked");
+  foreach(var list in parsed.Values){Check(list.Count==5,"Five milestones per drone");foreach(int level in new[]{3,6,9,12,15})Check(list.Exists(x=>x.Level==level),"Missing milestone");}
+  var gamman=new UnitLevelBonusController(parsed["UnitData_Gamman"],15);Near(gamman.GetStat(UnitBonusStat.BasicAttackFrequencyPercent),.15f,"Gamman speed");Near(gamman.GetStat(UnitBonusStat.CriticalChancePoints),.03f,"Gamman critical chance");Near(gamman.GetStat(UnitBonusStat.CriticalDamagePoints),.3f,"Gamman critical damage");
+  var disigman=new UnitLevelBonusController(parsed["UnitData_Disigman"],15);Near(disigman.GetStat(UnitBonusStat.AttackPercent),.15f,"Disigman attack");Near(disigman.GetStat(UnitBonusStat.SkillCooldownPercent),.05f,"Disigman cooldown");
   var go=new GameObject("IsolatedBonusCheck");go.SetActive(false);var data=ScriptableObject.CreateInstance<UnitData>();
   try {
    data.atk=new PerTierFloat();data.atk.normal=100;data.attackSpeed=new PerTierFloat();data.attackSpeed.normal=2;data.skillCooldown=new PerTierFloat();data.skillCooldown.normal=10;data.foodProduction=new PerTierFloat();data.foodProduction.normal=4;
@@ -25,6 +28,6 @@ public static class UnitBonusTableChecks {
    var deltan=new UnitLevelBonusController(parsed["UnitData_Deltan"],15);Near(deltan.GetStat(UnitBonusStat.DroneCountFlat),2,"Drone capacity increase");
   }finally{UnityEngine.Object.DestroyImmediate(go);UnityEngine.Object.DestroyImmediate(data);}
   var bad=JsonMapper.ToObject(rows.ToJson());bad[0]["EffectType"]="ArbitraryClass";bool rejected=false;try{UnitBonusChart.Parse(bad);}catch(FormatException){rejected=true;}Check(rejected,"Unknown effect accepted");
-  return "PASS 9 units/45 milestones; level2 lock; Betan cycle1/2; combat attack105 and interval1/2.1; food7.8; cooldown9.5; drone bonus2; unknown effect rejected. Isolated levels, no account mutation.";
+  return "PASS 5 drone units/25 milestones; level2 lock; Betan cycle1/2; combat attack105 and interval1/2.1; food7.8; cooldown9.5; drone bonus2; unknown effect rejected. Isolated levels, no account mutation.";
  }
 }

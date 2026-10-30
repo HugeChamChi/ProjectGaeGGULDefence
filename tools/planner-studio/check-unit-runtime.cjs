@@ -4,7 +4,7 @@ const workbook=require('./app/content-workbook.cjs'),engine=workbook.engine();
 const {unitRuntime}=require('./app/unit-runtime.cjs');
 const {encodeConfigRows}=require('./app/chart-payload.cjs');
 const project=engine.Studio.create(),config=unitRuntime(project);
-assert.equal(config.Units.length,9);
+assert.equal(config.Units.length,5);
 assert(config.Units.every(u=>u.Stats.length===4));
 assert(!JSON.stringify(config).includes('Assets/'));
 assert.equal(config.Units[0].Stats[0].AttackFrequency,project.tables.UnitBaseStat[0].AttackInterval);

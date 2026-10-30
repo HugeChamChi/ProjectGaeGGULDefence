@@ -30,8 +30,8 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     const bonusPrepared=await run(`window.studio.contentBackendPrepare({kind:'unitBonuses'})`);
     assert(bonusPrepared.ok,bonusPrepared.error);
     assert.equal(bonusPrepared.data.targetChartName,'DEV_UnitLevelBonuses');
-    assert.equal(bonusPrepared.data.expectedTable.length,56);
-    checks.push('bonus deployment prepares 45 effect rows and 10 Betan/chief description rows in one readable chart');
+    assert.equal(bonusPrepared.data.expectedTable.length,36);
+    checks.push('bonus deployment prepares 25 effect rows and 10 Betan/chief description rows in one readable chart');
     await run(`document.getElementById('backendDeploymentButton').click();document.getElementById('backendPrepare').click()`);
     await until(`document.getElementById('backendStatus').textContent.startsWith('파일 준비 완료')`);
     assert.equal(await run(`document.getElementById('backendChart').textContent`),'DEV_MissionEvents');
@@ -69,12 +69,12 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     await until(`Boolean(document.querySelector('iframe').contentDocument.querySelector('.unit-level-table'))`);
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-table="BonusEffect"]').click()`);
     assert(await run(`document.querySelector('iframe').contentDocument.getElementById('content').textContent.includes('보너스 능력')`));
-    assert.equal(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.BonusEffect.length`),45);
+    assert.equal(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.BonusEffect.length`),25);
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-table="BonusDescription"]').click()`);
     assert(await run(`document.querySelector('iframe').contentDocument.getElementById('content').textContent.includes('알팡')`));
     await until(`Boolean(document.querySelector('iframe').contentDocument.getElementById('bonus-text-preview'))`);
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-table="Unit"]').click()`);
-    checks.push('bonus ability and chief description editor tabs render with 45 editable defaults');
+    checks.push('bonus ability and chief description editor tabs render with 25 editable defaults');
     assert.equal(await run(`document.querySelector('iframe').contentDocument.documentElement.dataset.theme`),'dark');
     await run(`document.getElementById('themeToggle').click()`);
     assert.equal(await run(`document.querySelector('iframe').contentDocument.documentElement.dataset.theme`),'light');

@@ -12,6 +12,7 @@ bonuses=[]
 fields={'Attack':'atk','AttackInterval':'attackSpeed','SkillCooldown':'skillCooldown','FoodProduction':'foodProduction','MaxDroneCount':'maxDroneCount'}
 for unit in seed['tables']['Unit']:
     if unit['Kind']!='Unit':continue
+    if unit['UnitId'] not in {'UnitData_Betan','UnitData_Deltan','UnitData_Gamman','UnitData_Disigman','UnitData_Zeltan'}:continue
     data=(ROOT/unit['Source']).read_text(encoding='utf-8-sig')
     for tier in ['normal','rare','epic','legend']:
         row={'BaseStatKey':'base_'+unit['UnitId'],'Tier':tier}

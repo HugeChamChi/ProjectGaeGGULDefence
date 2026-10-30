@@ -69,7 +69,7 @@ public static class UnitBonusChart
             var definition=list.Find(x=>x.Level==level);if(definition==null){definition=new UnitLevelBonusDefinition{Level=level,Description=""};list.Add(definition);}
             string group=key+"/"+level;if(!counts.ContainsKey(group))counts.Add(group,new SortedDictionary<int,UnitLevelBonusPart>());counts[group].Add(index,part);
             string label=Text(row,"Stat") switch {"Attack"=>"공격력","BasicAttackFrequency"=>"일반 공격속도","CriticalChance"=>"치명타 확률","CriticalDamage"=>"치명타 피해","SkillCooldownReduction"=>"스킬 쿨타임 감소","FoodProduction"=>"초당 식량 생산","MaxDroneCount"=>"최대 드론 수",_=>""};
-            string suffix=Text(row,"ValueMode") switch {"Percent"=>"%","PercentagePoints"=>"%p",_=>""};
+            string suffix=Text(row,"ValueMode") switch {"Percent"=>"%","PercentagePoints"=>"%",_=>""};
             string description;
             if(part is EveryNthCycleBonus cyclePart){
                 var clauses=new List<string>();if(cyclePart.DamageBonusRatio>0)clauses.Add("피해 +"+Text(row,"DamageBonusPercent")+"%");if(cyclePart.ChargeTimeMultiplier<1)clauses.Add("충전시간 -"+Text(row,"ChargeReductionPercent")+"%");
