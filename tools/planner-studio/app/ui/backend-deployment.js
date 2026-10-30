@@ -30,7 +30,7 @@
     clearPrepared('검사하고 파일을 준비하는 중…');
     try {
       const project = document.querySelector('#contentWorkspace iframe')?.contentWindow?.StudioUI?.snapshot();
-      prepared = await call('contentBackendPrepare', { kind: $('backendKind').value, project });
+      prepared = await call('contentBackendPrepare', { kind: $('backendKind').value, project, base64: $('backendBase64').checked });
       $('backendChart').textContent = prepared.targetChartName;
       $('backendPath').textContent = prepared.file;
       $('backendAuthoringPath').textContent = prepared.authoringFile;
@@ -66,6 +66,7 @@
   function showPrepared(record) {
     prepared = record;
     $('backendKind').value = record.kind;
+    $('backendBase64').checked = !record.encoding || record.encoding === 'Base64';
     $('backendChart').textContent = record.targetChartName;
     $('backendPath').textContent = record.file;
     $('backendAuthoringPath').textContent = record.authoringFile;
@@ -94,6 +95,7 @@
   });
   $('backendClose').onclick = () => dialog.close();
   $('backendKind').onchange = () => clearPrepared('대상이 변경되었습니다. 파일을 다시 준비하세요.');
+  $('backendBase64').onchange = () => clearPrepared('전송 형식이 변경되었습니다. 파일을 다시 준비하세요.');
   $('backendPrepare').onclick = prepare;
   $('backendVerify').onclick = verify;
   $('backendReveal').onclick = () => report(() => call('contentBackendFile', { releaseKey: prepared.releaseKey }));

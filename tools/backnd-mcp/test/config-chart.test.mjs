@@ -11,6 +11,14 @@ test('configuration verifies reordered parts and exact UTF8 payload',()=>{
   const result=decodeConfigRows([...rows].reverse());
   assert.deepEqual(JSON.parse(result.bytes.toString('utf8')),config);
 });
+
+test('plain JSON retains readable values, roundtrips and rejects mixed encodings',()=>{
+ const table=encodeConfigRows(config,'plain-test','Json');
+ const rows=table.slice(1).map(r=>Object.fromEntries(table[0].map((k,i)=>[k,String(r[i])])));
+ assert.ok(rows[0].Payload.startsWith('{'));
+ assert.deepEqual(JSON.parse(decodeConfigRows(rows).bytes.toString('utf8')),config);
+ const changed=structuredClone(rows);changed[0].Encoding='Base64';assert.throws(()=>decodeConfigRows(changed));
+});
 test('configuration rejects mixed releases, missing/duplicate parts, wrong hash/version',()=>{
   for(const [field,value]of [['ReleaseKey','other'],['Sha256','0'.repeat(64)],['SchemaVersion','2'],['PartIndex',rows[1].PartIndex]]){
     const changed=structuredClone(rows);changed[0][field]=value;assert.throws(()=>decodeConfigRows(changed));

@@ -8,11 +8,11 @@ function exportChart(input,directory,releaseKey){
  if(fs.existsSync(directory))throw Error('출력 폴더가 이미 존재합니다. 새 릴리스 폴더를 사용하세요.');
  const source=fs.readFileSync(input),parts=bonus.read(source);
  const config={SchemaVersion:1,Kind:'UnitLevelBonuses',Parts:parts};
- const table=encodeConfigRows(config,releaseKey);
+ const table=encodeConfigRows(config,releaseKey,'Json');
  const bytes=Buffer.from(workbook.engine().RewardCore.xlsx('UnitLevelBonuses',table));
  const book=open(bytes),sheet=book.sheets.get('UnitLevelBonuses');
  if(book.sheets.size!==1)throw Error('단일 시트 오류');
- const cols=['A','B','C','D','E','F'];
+ const cols=['A','B','C','D','E','F','G'];
  const rows=table.slice(1).map((_,index)=>Object.fromEntries(table[0].map((key,i)=>{
   const cell=book.get('UnitLevelBonuses',cols[i]+(index+2));if(cell.formula!==null)throw Error('수식 검출');return [key,cell.value];
  })));

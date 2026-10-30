@@ -42,7 +42,8 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const { chart, config, authoring, tables } = serializeTarget(project, payload.kind);
     const authoringBytes = excel.write(project, tables);
     const releaseKey = 'dev-' + crypto.randomBytes(12).toString('hex');
-    const rows = encodeConfigRows(config, releaseKey);
+    const encoding = payload.base64 === true ? 'Base64' : 'Json';
+    const rows = encodeConfigRows(config, releaseKey, encoding);
     const bytes = Buffer.from(excel.engine().RewardCore.xlsx(chart, rows));
     const { file } = exportFile(chart + '.backend.xlsx', bytes);
     const authoringFile = path.join(path.dirname(file), authoring + '.xlsx');
@@ -53,7 +54,7 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     atomic(sourceFile, JSON.stringify(project, null, 2));
     const record = {
       sourceFile, sourceSha256: digest(sourceFile), createdAt: new Date().toISOString(),
-      file, releaseKey, targetChartName: 'DEV_' + chart, kind: payload.kind,
+      file, releaseKey, encoding, targetChartName: 'DEV_' + chart, kind: payload.kind,
       authoringFile, schemaFile,
       authoringSha256: crypto.createHash('sha256').update(authoringBytes).digest('hex'),
       sha256: crypto.createHash('sha256').update(bytes).digest('hex'),

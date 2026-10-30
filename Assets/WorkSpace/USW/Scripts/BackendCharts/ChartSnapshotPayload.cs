@@ -13,12 +13,16 @@ namespace GGD.BackendCharts
             var rows = JsonMapper.ToObject(rowsJson);
             if (!rows.IsArray || rows.Count == 0 || rows.Count > 4096) throw new ArgumentException("Invalid chart snapshot rows.");
             var parts = new string[rows.Count];
-            string release = null, digest = null;
+            string release = null, digest = null, encoding = null;
             foreach (JsonData row in rows)
             {
                 if (row["SchemaVersion"].ToString() != "1" || int.Parse(row["PartCount"].ToString()) != rows.Count)
                     throw new ArgumentException("Invalid chart snapshot version/count.");
                 var key = row["ReleaseKey"].ToString(); var hash = row["Sha256"].ToString();
+                string format = row.ContainsKey("Encoding") ? row["Encoding"].ToString() : "Base64";
+                if ((format != "Base64" && format != "Json") || (encoding != null && encoding != format))
+                    throw new ArgumentException("Invalid/mixed chart encoding.");
+                encoding = format;
                 if (string.IsNullOrWhiteSpace(key) || (release != null && release != key) || (digest != null && digest != hash))
                     throw new ArgumentException("Mixed chart snapshot releases.");
                 release = key; digest = hash;
@@ -27,7 +31,7 @@ namespace GGD.BackendCharts
                 parts[index] = row["Payload"].ToString();
                 if (parts[index].Length == 0 || parts[index].Length > 2000) throw new ArgumentException("Invalid chart snapshot payload size.");
             }
-            var bytes = Convert.FromBase64String(string.Concat(parts));
+            var bytes = encoding == "Json" ? new UTF8Encoding(false, true).GetBytes(string.Concat(parts)) : Convert.FromBase64String(string.Concat(parts));
             using var sha = SHA256.Create();
             var actual = BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
             if (actual != digest) throw new ArgumentException("Chart snapshot checksum mismatch.");
