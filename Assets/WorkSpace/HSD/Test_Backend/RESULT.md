@@ -13,3 +13,5 @@ Automation: outputs/BackendSuite.cs (Setup/Run), tools/backnd-mcp/test/RestoreEx
 
 Detailed read-only probe: server snapshot dated 2026-10-24, local pending LastResetDate 2026-10-18; stamina server=30/local=25, account battle sequence server=6/local=1. PlayerSaveId exists. Both pending SaveId and BaseSaveId differ from the server. Journal parses correctly. This is an obsolete/conflicting local snapshot, not a missing PlayerSaveId column. Exact writer history cannot be reconstructed from these snapshots alone.
 Repro scripts: tools/backnd-mcp/test/BackendSuite.cs and AccountStructureProbe.cs. Raw account diagnostics stay in ignored outputs/.
+
+Recovery 2026-10-30 18:08 KST: user authorized keeping server state. Pending journal and loaded server state backed up to ignored outputs/account-recovery/20261030-090846-653. AcceptServerAfterConflict completed. BackendSuite.Run PASS: authenticated Player initialization, remote unit/mission/research preparation, copied LobbyScene load and DI readiness. This explicitly uses an already authenticated account; automatic guest login 401 remains unresolved. Editor left running in copied LobbyScene Play mode.
