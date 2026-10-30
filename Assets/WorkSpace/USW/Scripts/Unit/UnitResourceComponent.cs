@@ -25,7 +25,7 @@ public class UnitResourceComponent : MonoBehaviour
         float speedMultiplier = 1f / Mathf.Max(0.1f, 1f + cellFoodSpeedBonus);
         if (!_unit.IsFoodProductionBuffable) speedMultiplier = 1f;
 
-        _foodTimer += deltaTime / speedMultiplier;
+        _foodTimer += deltaTime / speedMultiplier * (1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent));
 
         float payoutInterval = Mathf.Max(1f, _unit.FoodPayoutInterval);
         if (_foodTimer < payoutInterval) return;
@@ -51,8 +51,9 @@ public class UnitResourceComponent : MonoBehaviour
         {
             for (int i = 0; i < elapsedTicks; i++)
             {
-                _deps.CurrencyManager.AddCurrency(amountPerTick);
-                _deps.CurrencyFloaterManager?.ReportFoodProduction(amountPerTick);
+                float payout = amountPerTick * _unit.NextFoodPayoutMultiplier();
+                _deps.CurrencyManager.AddCurrency(payout);
+                _deps.CurrencyFloaterManager?.ReportFoodProduction(payout);
                 OnFoodProduced?.Invoke();
             }
         }
@@ -77,7 +78,7 @@ public class UnitResourceComponent : MonoBehaviour
             float intervalMultiplier = 1f / Mathf.Max(0.1f, 1f + cellIntervalBonus);
             if (!_unit.IsFoodProductionBuffable) intervalMultiplier = 1f;
 
-            return amountPerTick / intervalMultiplier;
+            return amountPerTick / intervalMultiplier * (1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent));
         }
     }
 }

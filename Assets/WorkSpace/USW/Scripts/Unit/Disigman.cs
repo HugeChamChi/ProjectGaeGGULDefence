@@ -6,6 +6,20 @@ public sealed class Disigman : UnitBase
     [SerializeField] private Transform _muzzle;
     private UnitDependencies _dependencies;
     private int _chargedAttacks;
+    private BossBase _recoveryShotTarget;
+    public bool RecoveryShotReady => _recoveryShotTarget != null && !_recoveryShotTarget.IsDead;
+    private void ClearRecoveryShot()
+    {
+        if (_recoveryShotTarget != null) _recoveryShotTarget.OnDeath -= ClearRecoveryShot;
+        _recoveryShotTarget = null;
+    }
+    public float ConsumeRecoveryShot(BossBase target)
+    {
+        bool ready = RecoveryShotReady && ReferenceEquals(target, _recoveryShotTarget);
+        ClearRecoveryShot();
+        return ready ? 1f + LevelStat(UnitBonusStat.RecoveryNextBasicPercent) : 1f;
+    }
+    private void OnDisable() => ClearRecoveryShot();
 
     /// <summary>Single authored muzzle follows the body's cell facing and breathing scale.</summary>
     public override Vector3 ProjectileOrigin => _muzzle != null ? _muzzle.position : base.ProjectileOrigin;
@@ -17,7 +31,7 @@ public sealed class Disigman : UnitBase
     public int ChargedAttacks => Mathf.Min(_chargedAttacks, RequiredAttacks);
     /// <summary>Seconds restored immediately on the next accepted cast.</summary>
     public float SecondsRecovered => unitData?.Disigman != null
-        ? Mathf.Max(0f, unitData.Disigman.SecondsRecovered.Get(currentTier)) : 0f;
+        ? Mathf.Max(0f, unitData.Disigman.SecondsRecovered.Get(currentTier)) * (1f + LevelStat(UnitBonusStat.TimeRecoveryPercent)) : 0f;
     /// <inheritdoc />
     public override bool UsesTimedSkillCharge => false;
     /// <inheritdoc />
@@ -66,6 +80,9 @@ public sealed class Disigman : UnitBase
         _chargedAttacks = 0;
         // Commit immediately. The scene presentation follows the skill's actual impact and shard arrival.
         _dependencies.Timer.AddTime(SecondsRecovered, TimeAddSource.Hack, transform.position);
+        ClearRecoveryShot();
+        if (LevelStat(UnitBonusStat.RecoveryNextBasicPercent) > 0f)
+        { _recoveryShotTarget = target; target.OnDeath += ClearRecoveryShot; }
         return true;
     }
 }

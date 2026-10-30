@@ -22,6 +22,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     protected BossBase SkillDebuffTarget => _deps?.BossManager?.CurrentBoss;
     public UnitData unitData;
     public UnitLevelBonusController LevelBonuses { get; private set; }
+    public float LevelStat(UnitBonusStat stat) => LevelBonuses?.GetStat(stat) ?? 0f;
+    public virtual float LevelAttackSpeedBonus => 0f;
+    public virtual float NextFoodPayoutMultiplier() => 1f;
     public Tier currentTier = Tier.Normal;
     public UnityEvent onSkillFull;
     public UnityEvent onAttack;

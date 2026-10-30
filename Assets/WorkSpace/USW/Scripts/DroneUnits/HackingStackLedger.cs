@@ -30,9 +30,14 @@ public sealed class HackingStackLedger
         _epoch++;
     }
     /// <summary>초과를 버리고 실제 들어온 양을 반환한다.</summary>
+    public void Resize(int capacity)
+    {
+        Capacity = Math.Max(1, capacity);
+        Available = Math.Min(Available, Math.Max(0, Capacity - Reserved));
+    }
     public int Add(int amount)
     {
-        int accepted = Math.Min(Math.Max(0, amount), Capacity - Available - Reserved);
+        int accepted = Math.Min(Math.Max(0, amount), Math.Max(0, Capacity - Available - Reserved));
         Available += accepted;
         return accepted;
     }
@@ -53,7 +58,7 @@ public sealed class HackingStackLedger
         if (reservation == null || reservation.Owner != this || reservation.Closed || reservation.Epoch != _epoch) return false;
         reservation.Closed = true;
         Reserved -= reservation.Amount;
-        if (refund) Available += reservation.Amount;
+        if (refund) Available = Math.Min(Math.Max(0, Capacity - Reserved), Available + reservation.Amount);
         return true;
     }
 }

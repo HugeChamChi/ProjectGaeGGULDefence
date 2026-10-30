@@ -25,7 +25,8 @@ public class UnitStatsModifier : MonoBehaviour
         ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
         : 1f;
 
-    private float LevelAttackMultiplier => 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f);
+    private float LevelAttackMultiplier => (1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f)) * (1f + (_deps?.Alphan?.GlobalAttackBonus ?? 0f));
+    private float BasicDamageMultiplier => (1f + LevelStat(UnitBonusStat.BasicDamagePercent)) * (_unit.Combat?.RegularBasicDamageMultiplier ?? 1f);
     private float LevelStat(UnitBonusStat stat) => _unit.LevelBonuses?.GetStat(stat) ?? 0f;
     private float LevelBaseAtk => (_unit.unitData.atk.Get(_unit.currentTier) + LevelStat(UnitBonusStat.AttackFlat)) * LevelAttackMultiplier;
     private float UpgradedAtk => LevelBaseAtk * AtkUpgradeMultiplier;
@@ -34,10 +35,10 @@ public class UnitStatsModifier : MonoBehaviour
     private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
         * Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
 
-    public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true);
+    public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true, BasicDamageMultiplier);
 
     /// <summary>GetAttackDamage와 같고, 이번 추첨이 치명타였는지도 알려준다 (데미지 표시용).</summary>
-    public int GetAttackDamage(out bool critical) => ComputeDamage(UpgradedAtk, 1f, true, out critical, true);
+    public int GetAttackDamage(out bool critical) => ComputeDamage(UpgradedAtk, 1f, true, out critical, true, BasicDamageMultiplier);
 
     /// <summary>현재 보정을 포함하되 치명타 추첨과 적 방어 계산을 하지 않는 표시용 공격력.</summary>
     public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
@@ -65,7 +66,8 @@ public class UnitStatsModifier : MonoBehaviour
 
     /// <summary>Attack-coefficient path; run attack applies once and fixed damage bypasses it.</summary>
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
-        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true, damageMultiplier);
+        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, true, damageMultiplier
+            * (_unit.Combat?.IsExecutingRegularBasic == true ? BasicDamageMultiplier : 1f));
 
     private int ComputeDamage(float baseDamage, float projAtkBonusMultiplier, bool rollCritical, out bool critical, bool attackBased = false, float damageMultiplier = 1f)
     {
@@ -145,6 +147,8 @@ public class UnitStatsModifier : MonoBehaviour
         float frequency = _unit.unitData.attackSpeed.Get(_unit.currentTier) + LevelStat(UnitBonusStat.BasicAttackFrequencyFlat);
         if (includeUpgrade) frequency *= Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
         frequency *= 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.BasicAttackFrequencyPercent) ?? 0f);
+        frequency *= 1f + _unit.LevelAttackSpeedBonus;
+        frequency *= 1f + (_deps?.Alphan?.AttackSpeedBonus ?? 0f);
         float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 

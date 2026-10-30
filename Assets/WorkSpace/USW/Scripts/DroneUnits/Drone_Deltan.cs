@@ -1,10 +1,14 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>소유 드론의 일반공격으로 마나를 충전하고 완충 시 해킹 스택을 생산한다.</summary>
 public class Drone_Deltan : HackingDroneSpawner
 {
     private int _attackCount;
     private float _productionRemainder;
+    private float _postHackingRemaining;
+    public override float LevelAttackSpeedBonus => _postHackingRemaining > 0f ? LevelStat(UnitBonusStat.HackingPostSpeedPercent) : 0f;
+    private void Update() { if (currentCell != null && !IsStunned && Combat?.AttacksHeld != true) _postHackingRemaining = Mathf.Max(0f, _postHackingRemaining - Time.deltaTime); }
+    public int LevelProductionBonus => Mathf.RoundToInt(LevelStat(currentTier switch { Tier.Normal => UnitBonusStat.HackingProducedNormal, Tier.Rare => UnitBonusStat.HackingProducedRare, Tier.Epic => UnitBonusStat.HackingProducedEpic, _ => UnitBonusStat.HackingProducedLegend }));
     /// <summary>마나 카드까지 반영한 필요 공격 횟수.</summary>
     public int RequiredAttacks
     {
@@ -12,7 +16,8 @@ public class Drone_Deltan : HackingDroneSpawner
         {
             int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.AttacksToCharge.Get(currentTier) : 1);
             var effects = DroneEffects;
-            return effects?.HasManaRequirementReduction != true ? baseline : Mathf.Max(1, baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction)));
+            int selected = effects?.HasManaRequirementReduction != true ? baseline : baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction));
+            return Mathf.Max(1, selected - Mathf.RoundToInt(LevelStat(UnitBonusStat.ChargeAttackReductionFlat)));
         }
     }
     /// <summary>현재 모은 유효 일반공격 수.</summary>
@@ -20,7 +25,7 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <summary>선택지와 이월 소수량을 포함한 다음 시전의 생산량. 조회는 상태를 바꾸지 않는다.</summary>
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
     private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.StacksProduced.Get(currentTier) : 0)
-        + (DroneEffects?.HackingProductionFlat ?? 0))
+        + LevelProductionBonus + (DroneEffects?.HackingProductionFlat ?? 0))
         * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;
     /// <inheritdoc />
     public override bool UsesTimedSkillCharge => false;
@@ -38,7 +43,9 @@ public class Drone_Deltan : HackingDroneSpawner
         if (IsFirstPlacement) { _attackCount = 0; _productionRemainder = 0; }
         if (Combat != null) { Combat.OnBasicAttackStarted -= Charge; Combat.OnBasicAttackStarted += Charge; }
         base.OnUnitPlaced();
+        if (unitData?.Hacking != null && _droneManager != null) { _droneManager.Hacking.Configure(unitData.Hacking); _droneManager.Hacking.SetCapacityBonus(this, Mathf.RoundToInt(LevelStat(UnitBonusStat.HackingCapacityFlat))); }
     }
+    protected override void OnDisable() { _droneManager?.Hacking.SetCapacityBonus(this, 0); base.OnDisable(); }
     private void Charge(BasicAttackReplay attack)
     {
         if (isActiveAndEnabled && currentCell != null && unitData?.Hacking != null)
@@ -58,6 +65,7 @@ public class Drone_Deltan : HackingDroneSpawner
     protected override void OnUnitRemoved()
     {
         if (Combat != null) Combat.OnBasicAttackStarted -= Charge;
+        _droneManager?.Hacking.SetCapacityBonus(this, 0);
         base.OnUnitRemoved();
     }
     /// <summary>SkillData 액션에서 호출한다. 수동 호출도 완충을 우회하지 않는다.</summary>
@@ -72,6 +80,7 @@ public class Drone_Deltan : HackingDroneSpawner
         var effects = DroneEffects;
         if (effects != null && effects.HackingProductionProcChance > 0f && Random.value < effects.HackingProductionProcChance)
             produced = checked(produced * Mathf.Max(1, effects.HackingProductionProcMultiplier));
+        _postHackingRemaining = LevelStat(UnitBonusStat.HackingPostDuration);
         FlashOwnedDrones();
         StartHacking(runtime, target, produced, null, 0, false);
     }

@@ -15,6 +15,7 @@ public sealed class UnitLevelBonusController
         if (level < 1) throw new ArgumentOutOfRangeException(nameof(level));
         Level = level;
         if (definitions == null) return;
+        int foodMultiplierLevel = -1;
         foreach (var definition in definitions)
         {
             if (definition == null || definition.Level < 1) throw new ArgumentException("Invalid milestone.");
@@ -25,7 +26,12 @@ public sealed class UnitLevelBonusController
                 {
                     if (!Enum.IsDefined(typeof(UnitBonusStat), stat.Stat) || !Finite(stat.Value) || stat.Value < 0f)
                         throw new ArgumentException("Invalid stat bonus.");
-                    stats[stat.Stat] = GetStat(stat.Stat) + stat.Value;
+                    if (stat.Stat == UnitBonusStat.FoodFifthMultiplier)
+                    {
+                        if (definition.Level >= foodMultiplierLevel)
+                        { stats[stat.Stat] = stat.Value; foodMultiplierLevel = definition.Level; }
+                    }
+                    else stats[stat.Stat] = GetStat(stat.Stat) + stat.Value;
                 }
                 else if (part is EveryNthCycleBonus cycle)
                 {

@@ -57,7 +57,42 @@ public static class UnitBonusChart
                     ("CriticalChance","PercentagePoints")=>UnitBonusStat.CriticalChancePoints,("CriticalDamage","PercentagePoints")=>UnitBonusStat.CriticalDamagePoints,
                     ("SkillCooldownReduction","Flat")=>UnitBonusStat.SkillCooldownFlat,("SkillCooldownReduction","Percent")=>UnitBonusStat.SkillCooldownPercent,
                     ("FoodProduction","Flat")=>UnitBonusStat.FoodFlat,("FoodProduction","Percent")=>UnitBonusStat.FoodPercent,
-                    ("MaxDroneCount","Flat")=>UnitBonusStat.DroneCountFlat,_=>throw new FormatException("Stat/mode")};
+                    ("MaxDroneCount","Flat")=>UnitBonusStat.DroneCountFlat,
+                    ("ChargeAttackReduction","Flat")=>UnitBonusStat.ChargeAttackReductionFlat,
+                    ("HackingCapacity","Flat")=>UnitBonusStat.HackingCapacityFlat,
+                    ("HackingPostSpeed","Percent")=>UnitBonusStat.HackingPostSpeedPercent,
+                    ("HackingPostDuration","Flat")=>UnitBonusStat.HackingPostDuration,
+                    ("HackingStackDamage","Percent")=>UnitBonusStat.HackingStackDamagePercent,
+                    ("RecoveryNextBasic","Percent")=>UnitBonusStat.RecoveryNextBasicPercent,
+                    ("TimeRecovery","Percent")=>UnitBonusStat.TimeRecoveryPercent,
+                    ("BasicDamage","Percent")=>UnitBonusStat.BasicDamagePercent,
+                    ("FoodSpeed","Percent")=>UnitBonusStat.FoodSpeedPercent,
+                    ("BossFoodSeconds","Flat")=>UnitBonusStat.BossFoodSeconds,
+                    ("FoodFifthMultiplier","Flat")=>UnitBonusStat.FoodFifthMultiplier,
+                    ("ChiefCooldown","Percent")=>UnitBonusStat.ChiefCooldownPercent,
+                    ("ChiefStartsReady","Flat")=>UnitBonusStat.ChiefStartsReady,
+                    ("ChiefGlobalAttack","Percent")=>UnitBonusStat.ChiefGlobalAttackPercent,
+                    ("ChiefSpeed","Percent")=>UnitBonusStat.ChiefSpeedPercent,
+                    ("ChiefSpeedDuration","Flat")=>UnitBonusStat.ChiefSpeedDuration,
+                    ("ChiefDamageTaken","Percent")=>UnitBonusStat.ChiefDamageTakenPercent,
+                    ("ChiefDamageTakenDuration","Flat")=>UnitBonusStat.ChiefDamageTakenDuration,
+                    ("HackingProducedNormal","Flat")=>UnitBonusStat.HackingProducedNormal,
+                    ("HackingProducedRare","Flat")=>UnitBonusStat.HackingProducedRare,
+                    ("HackingProducedEpic","Flat")=>UnitBonusStat.HackingProducedEpic,
+                    ("HackingProducedLegend","Flat")=>UnitBonusStat.HackingProducedLegend,
+                    ("HackingConsumedNormal","Flat")=>UnitBonusStat.HackingConsumedNormal,
+                    ("HackingConsumedRare","Flat")=>UnitBonusStat.HackingConsumedRare,
+                    ("HackingConsumedEpic","Flat")=>UnitBonusStat.HackingConsumedEpic,
+                    ("HackingConsumedLegend","Flat")=>UnitBonusStat.HackingConsumedLegend,
+                    _=>throw new FormatException("Stat/mode")};
+                string owner = stat.StartsWith("Chief") ? "AlphanChief"
+                    : stat=="ChargeAttackReduction" || stat=="HackingCapacity" || stat.StartsWith("HackingProduced") || stat.StartsWith("HackingPost") ? "UnitData_Deltan"
+                    : stat=="HackingStackDamage" || stat.StartsWith("HackingConsumed") ? "UnitData_Gamman"
+                    : stat=="RecoveryNextBasic" || stat=="TimeRecovery" || stat=="BasicDamage" ? "UnitData_Disigman"
+                    : stat=="FoodSpeed" || stat=="BossFoodSeconds" || stat=="FoodFifthMultiplier" ? "UnitData_Zeltan" : null;
+                if (owner!=null && key!=owner || key=="AlphanChief" && !stat.StartsWith("Chief")) throw new FormatException("Stat owner");
+                if ((stat=="ChargeAttackReduction" || stat=="HackingCapacity" || stat.StartsWith("HackingProduced") || stat.StartsWith("HackingConsumed")) && (value!=Math.Floor(value)||value>10000)
+                    || stat=="ChiefStartsReady" && value!=0 && value!=1 || stat=="ChiefCooldown" && value>=100) throw new FormatException("Stat value");
                 if(mapped==UnitBonusStat.DroneCountFlat&&(value!=Math.Floor(value)||value>10000)||mapped==UnitBonusStat.SkillCooldownPercent&&value>=100)throw new FormatException("Stat value");
                 part=new StatModifierBonus {Stat=mapped,Value=mode=="Flat"?value:value/100f};
             }else{
@@ -68,7 +103,7 @@ public static class UnitBonusChart
             if(!result.TryGetValue(key,out var list)){list=new List<UnitLevelBonusDefinition>();result.Add(key,list);}
             var definition=list.Find(x=>x.Level==level);if(definition==null){definition=new UnitLevelBonusDefinition{Level=level,Description=""};list.Add(definition);}
             string group=key+"/"+level;if(!counts.ContainsKey(group))counts.Add(group,new SortedDictionary<int,UnitLevelBonusPart>());counts[group].Add(index,part);
-            string label=Text(row,"Stat") switch {"Attack"=>"공격력","BasicAttackFrequency"=>"일반 공격속도","CriticalChance"=>"치명타 확률","CriticalDamage"=>"치명타 피해","SkillCooldownReduction"=>"스킬 쿨타임 감소","FoodProduction"=>"초당 식량 생산","MaxDroneCount"=>"최대 드론 수",_=>""};
+            string label=Text(row,"Stat") switch {"Attack"=>"공격력","BasicAttackFrequency"=>"일반 공격속도","CriticalChance"=>"치명타 확률","CriticalDamage"=>"치명타 피해","SkillCooldownReduction"=>"스킬 쿨타임 감소","FoodProduction"=>"초당 식량 생산","MaxDroneCount"=>"최대 드론 수","ChargeAttackReduction"=>"스킬 충전 필요 공격 횟수 감소","HackingCapacity"=>"공유 해킹 최대 스택 증가 (델탕 중 최댓값)","HackingPostSpeed"=>"해킹 후 자신의 공격속도 증가","HackingPostDuration"=>"해킹 후 공격속도 지속시간 (초)","HackingStackDamage"=>"해킹 스택 부분 피해 증가","RecoveryNextBasic"=>"시간 회복 후 다음 정규 일반공격 피해 증가","TimeRecovery"=>"시간 회복량 증가","BasicDamage"=>"일반공격 피해 증가","FoodSpeed"=>"자체 식량 생산속도 증가","BossFoodSeconds"=>"보스 처치 시 자체 식량 지급 (초분)","FoodFifthMultiplier"=>"매 5번째 자체 식량 배율 (높은 레벨로 교체)","ChiefCooldown"=>"알팡 액티브 쿨타임 감소","ChiefStartsReady"=>"알팡 전투 시작 충전 (1=완료)","ChiefGlobalAttack"=>"알팡 전체 유닛 공격력 증가","ChiefSpeed"=>"알팡 스킬 후 전체 유닛 공격속도 증가","ChiefSpeedDuration"=>"알팡 공격속도 지속시간 (초)","ChiefDamageTaken"=>"알팡 집결 적중 후 보스 받는 피해 증가","ChiefDamageTakenDuration"=>"알팡 받는 피해 증가 지속시간 (초)","HackingProducedNormal"=>"노말 해킹 추가 생산","HackingProducedRare"=>"레어 해킹 추가 생산","HackingProducedEpic"=>"에픽 해킹 추가 생산","HackingProducedLegend"=>"전설 해킹 추가 생산","HackingConsumedNormal"=>"노말 해킹 추가 소모 한도","HackingConsumedRare"=>"레어 해킹 추가 소모 한도","HackingConsumedEpic"=>"에픽 해킹 추가 소모 한도","HackingConsumedLegend"=>"전설 해킹 추가 소모 한도",_=>""};
             string suffix=Text(row,"ValueMode") switch {"Percent"=>"%","PercentagePoints"=>"%",_=>""};
             string description;
             if(part is EveryNthCycleBonus cyclePart){

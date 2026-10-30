@@ -29,6 +29,7 @@ public class UnitFactory : MonoBehaviour
         _deps = new UnitDependencies
         {
             UnitLevels = unitLevels,
+            Alphan = _resolver.Resolve<AlphanActiveSkill>(),
             BuffVisualSettings = _resolver.Resolve<UnitBuffVisualSettings>(),
             BuffFxPool = _resolver.Resolve<StatBuffFxPool>(),
             Timer = _resolver.Resolve<TimerController>(),
@@ -57,6 +58,7 @@ public class UnitFactory : MonoBehaviour
             unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
             _useUniformSummonPool = GlobalData.SelectedParty.UseUniformSummonPool;
         }
+        _deps.Alphan.ConfigureLevel(unitLevels);
         ValidateUnitDataList();
 
         LoadAllUnitAssetsAsync().Forget();

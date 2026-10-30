@@ -12,6 +12,23 @@ public class Drone_Zeltan : UnitBase
     [Inject] private UpgradeManager _upgradeManager;
     private SpineActorVisual _spineVisual;
     private UnitResourceComponent _foodResource;
+    private UnitDependencies _dependencies;
+    private int _payoutCount;
+    protected override void OnInitialized(UnitDependencies dependencies) { _dependencies=dependencies; _payoutCount=0; }
+    public override float NextFoodPayoutMultiplier()
+    {
+        _payoutCount++;
+        return _payoutCount % 5 == 0 ? Mathf.Max(1f, LevelStat(UnitBonusStat.FoodFifthMultiplier)) : 1f;
+    }
+    private void OnBossKilled()
+    {
+        if (currentCell == null || IsStunned || IsCellSealed || _dependencies?.GameManager?.IsFinished == true) return;
+        float amount=GetBaseFoodPerSecond() * (1f+LevelStat(UnitBonusStat.FoodSpeedPercent)) * LevelStat(UnitBonusStat.BossFoodSeconds);
+        if (amount <= 0f) return;
+        _dependencies?.CurrencyManager?.AddCurrency(amount);
+        _dependencies?.CurrencyFloaterManager?.ReportFoodProduction(amount);
+        PlayFoodPayoutVisual();
+    }
 
     protected override void Awake()
     {
@@ -37,7 +54,7 @@ public class Drone_Zeltan : UnitBase
     public float FleetFoodPerSecond => _droneManager?.CurrentFoodProductionPerSecond ?? 0f;
     /// <summary>강화분을 제외한 현재 자체 초당 생산량. 선택지와 생산 불가 상태는 유지한다.</summary>
     public float OwnFoodPerSecondBeforeUpgrade => IsStunned || IsCellSealed || unitData == null ? 0f
-        : unitData.foodProduction.Get(currentTier) * (1f + (DroneEffects?.FoodProductionBonus ?? 0f));
+        : base.GetBaseFoodPerSecond() * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) * (1f + LevelStat(UnitBonusStat.FoodSpeedPercent));
     /// <inheritdoc />
     public override float CurrentFoodProductionPerSecond => IsStunned ? 0f : base.CurrentFoodProductionPerSecond;
     /// <inheritdoc />
@@ -45,6 +62,8 @@ public class Drone_Zeltan : UnitBase
 
     protected override void OnUnitPlaced()
     {
+        BossBase.OnAnyBossDied -= OnBossKilled;
+        BossBase.OnAnyBossDied += OnBossKilled;
         _foodResource = GetComponent<UnitResourceComponent>();
         if (_foodResource != null)
         {
@@ -57,9 +76,12 @@ public class Drone_Zeltan : UnitBase
 
     protected override void OnUnitRemoved()
     {
+        BossBase.OnAnyBossDied -= OnBossKilled;
         if (_foodResource != null) _foodResource.OnFoodProduced -= PlayFoodPayoutVisual;
         _droneManager?.UnregisterFoodProducer(this);
     }
+
+    private void OnDisable() => BossBase.OnAnyBossDied -= OnBossKilled;
 
     private void PlayFoodPayoutVisual()
     {

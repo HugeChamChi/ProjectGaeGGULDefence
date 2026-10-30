@@ -1,8 +1,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
-const bonus=require('./bonus-excel.cjs');
-const plans={UnitData_Betan:[['Attack','Percent',5],null,['BasicAttackFrequency','Percent',5],null,['CriticalDamage','PercentagePoints',50]],UnitData_Deltan:[['Attack','Percent',5],['MaxDroneCount','Flat',1],['BasicAttackFrequency','Percent',5],['Attack','Percent',10],['MaxDroneCount','Flat',1]],UnitData_Gamman:[['BasicAttackFrequency','Percent',5],['Attack','Percent',5],['CriticalChance','PercentagePoints',3],['BasicAttackFrequency','Percent',10],['CriticalDamage','PercentagePoints',30]],UnitData_Disigman:[['Attack','Percent',5],['SkillCooldownReduction','Percent',5],['CriticalChance','PercentagePoints',3],['Attack','Percent',10],['CriticalDamage','PercentagePoints',30]],UnitData_Zeltan:[['FoodProduction','Percent',5],['FoodProduction','Flat',1],['FoodProduction','Percent',10],['FoodProduction','Flat',1],['FoodProduction','Percent',15]]};
-const rows=Object.entries(plans).flatMap(([UnitKey,plan])=>plan.map((p,i)=>({UnitKey,Level:(i+1)*3,PartIndex:0,EffectType:p?'StatModifierBonus':'EveryNthCycleBonus',Stat:p?.[0]??'',ValueMode:p?.[1]??'',Value:p?.[2]??'',CycleId:p?'':'basic_skill',Every:p?'':2,DamageBonusPercent:p?'':i===1?40:0,ChargeReductionPercent:p?'':i===3?30:0})));
-const bytes=bonus.write(rows),back=bonus.read(bytes);assert.deepEqual(back,rows);assert.equal(rows.length,25);assert.throws(()=>bonus.validate([{...rows[0],EffectType:'Unknown'}]));assert.throws(()=>bonus.validate([{...rows[0],Value:Infinity}]));assert.throws(()=>bonus.validate([...rows,rows[0]]));
-const project=JSON.parse(JSON.stringify(require('./app/content-workbook.cjs').engine().Studio.create()));project.tables.Unit=Object.keys(plans).map(UnitId=>({UnitId,UnitKey:UnitId,Kind:String.fromCharCode(85,110,105,116),MaxLevel:15}));const applied=bonus.apply(project,back);assert.equal(applied.tables.UnitMilestone.filter(x=>x.EffectId==='CompositeBonus').length,25);assert.notDeepEqual(applied,project);
+const bonus=require('./bonus-excel.cjs'),engine=require('./app/content-workbook.cjs').engine();
+const rows=JSON.parse(JSON.stringify(engine.UNIT_BONUS_DEFAULTS));
+const bytes=bonus.write(rows),back=bonus.read(bytes);assert.deepEqual(back,rows);assert.equal(rows.length,39);
+assert.throws(()=>bonus.validate([{...rows[0],EffectType:'Unknown'}]));assert.throws(()=>bonus.validate([{...rows[0],Value:Infinity}]));assert.throws(()=>bonus.validate([...rows,rows[0]]));
+assert.throws(()=>bonus.validate([{...rows.find(r=>r.Stat==='RecoveryNextBasic'),UnitKey:'UnitData_Betan'}]));
+const project=JSON.parse(JSON.stringify(engine.Studio.create()));const applied=bonus.apply(project,back);assert.equal(applied.tables.UnitMilestone.filter(x=>x.EffectId==='CompositeBonus').length,30);
+assert.equal(applied.tables.BonusEffect.length,39);
 if(process.argv.includes('--write')){fs.mkdirSync('outputs/unit-level-bonuses',{recursive:true});fs.writeFileSync('outputs/unit-level-bonuses/UnitLevelBonuses.xlsx',bytes);fs.writeFileSync('outputs/unit-level-bonuses/bonus-parts.json',JSON.stringify(rows,null,2));}
-console.log('PASS 25 bonus rows Excel roundtrip, project application, invalid class/number/duplicate rejection');
+console.log('PASS 39 bonus parts Excel roundtrip, 30 milestone summaries, invalid class/number/duplicate/owner rejection');
