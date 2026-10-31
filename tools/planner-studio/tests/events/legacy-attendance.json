@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 4,
+  "attendanceEvents": [
+    {
+      "eventKey": "attendance_integration_7day",
+      "name": "7? ?? ?? ??",
+      "startAt": "2026-11-01T05:00:00+09:00",
+      "endAt": "2026-12-01T05:00:00+09:00",
+      "claimEndAt": "2026-12-01T05:00:00+09:00",
+      "enabled": true,
+      "repeatMode": "Once",
+      "cycleDays": 7,
+      "days": [
+        {
+          "day": 1,
+          "rewards": [
+            {
+              "itemKey": "Stamina",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "rewards": [
+            {
+              "itemKey": "Gold",
+              "amount": 500
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "rewards": [
+            {
+              "itemKey": "Diamond",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "day": 4,
+          "rewards": [
+            {
+              "itemKey": "Stamina",
+              "amount": 15
+            }
+          ]
+        },
+        {
+          "day": 5,
+          "rewards": [
+            {
+              "itemKey": "Gold",
+              "amount": 1000
+            }
+          ]
+        },
+        {
+          "day": 6,
+          "rewards": [
+            {
+              "itemKey": "Diamond",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "day": 7,
+          "rewards": [
+            {
+              "itemKey": "Diamond",
+              "amount": 50
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "CatalogVersion": 1,
+  "DataBindings": [
+    {
+      "BindingKey": "normal_count",
+      "HookKey": "BattleEnd_Normal",
+      "DataKey": "BattleCount_Normal",
+      "ValueSource": "Constant",
+      "ConstantValue": 1,
+      "Enabled": true
+    },
+    {
+      "BindingKey": "normal_all",
+      "HookKey": "BattleEnd_Normal",
+      "DataKey": "BattleCount_All",
+      "ValueSource": "Constant",
+      "ConstantValue": 1,
+      "Enabled": true
+    },
+    {
+      "BindingKey": "hard_count",
+      "HookKey": "BattleEnd_Hard",
+      "DataKey": "BattleCount_Hard",
+      "ValueSource": "Constant",
+      "ConstantValue": 1,
+      "Enabled": true
+    },
+    {
+      "BindingKey": "hard_all",
+      "HookKey": "BattleEnd_Hard",
+      "DataKey": "BattleCount_All",
+      "ValueSource": "Constant",
+      "ConstantValue": 1,
+      "Enabled": true
+    },
+    {
+      "BindingKey": "normal_seconds",
+      "HookKey": "BattleEnd_Normal",
+      "DataKey": "PlaySeconds_Normal",
+      "ValueSource": "PlaySeconds",
+      "ConstantValue": 0,
+      "Enabled": true
+    },
+    {
+      "BindingKey": "normal_round",
+      "HookKey": "BattleEnd_Normal",
+      "DataKey": "BestRound_Normal",
+      "ValueSource": "ReachedRound",
+      "ConstantValue": 0,
+      "Enabled": true
+    }
+  ],
+  "MissionEvents": [
+    {
+      "EventKey": "play_3week_sample",
+      "Name": "3주 플레이 이벤트 (예시)",
+      "StartAt": "2026-11-01T05:00:00+09:00",
+      "EndAt": "2026-11-22T05:00:00+09:00",
+      "Enabled": false
+    }
+  ],
+  "Missions": [
+    {
+      "MissionKey": "daily_normal_1",
+      "EventKey": "play_3week_sample",
+      "Name": "매일 일반 모드 1판",
+      "DataKey": "BattleCount_Normal",
+      "Target": 1,
+      "Period": "Daily",
+      "Rewards": [
+        {
+          "itemId": "Gold",
+          "amount": 500
+        }
+      ]
+    },
+    {
+      "MissionKey": "total_all_30",
+      "EventKey": "play_3week_sample",
+      "Name": "누적 30판 플레이",
+      "DataKey": "BattleCount_All",
+      "Target": 30,
+      "Period": "Event",
+      "Rewards": [
+        {
+          "itemId": "Diamond",
+          "amount": 100
+        }
+      ]
+    }
+  ]
+}

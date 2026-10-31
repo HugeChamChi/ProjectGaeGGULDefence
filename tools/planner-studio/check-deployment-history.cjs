@@ -16,7 +16,7 @@ const mission=first['content-backend-prepare']({kind:'missions'});
 const restarted=session();
 assert.equal(restarted['content-backend-history']().length,2);
 assert.equal(restarted['content-backend-restore']({releaseKey:unit.releaseKey}).sha256,unit.sha256);
-assert.equal(restarted['content-backend-restore']({releaseKey:mission.releaseKey}).targetChartName,'DEV_MissionEvents');
+assert.equal(restarted['content-backend-restore']({releaseKey:mission.releaseKey}).targetChartName,'DEV_Missions');
 assert.throws(()=>restarted['content-backend-restore']({releaseKey:'missing'}));
 fs.appendFileSync(unit.sourceFile,' ');
 assert.throws(()=>restarted['content-backend-restore']({releaseKey:unit.releaseKey}));

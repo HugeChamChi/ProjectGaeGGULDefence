@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const x=require('./app/content-workbook.cjs'),e=x.engine(),p=e.Studio.create(),names=x.bundles.missions;
 const restored=x.read(x.write(p,names),p).project;
 assert.equal(restored.tables.DataBindings.length,6);
-assert.equal(restored.tables.Missions.length,2);
+assert.equal(restored.tables.Missions.length,9);
 assert.equal(restored.tables.MissionEvents[0].Enabled,false);
 const legacy=e.Studio.clone(p);for(const name of names)delete legacy.tables[name];
 assert.equal(e.Studio.shape(legacy).tables.DataBindings.length,6);

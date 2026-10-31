@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace GGD.Events
@@ -44,10 +44,11 @@ namespace GGD.Events
             var occurrence = new DataOccurrence {
                 AccountKey = accountKey, OccurrenceKey = runKey,
                 Hook = hard ? EventHookKey.BattleEnd_Hard : EventHookKey.BattleEnd_Normal,
-                OccurredAt = clock != null ? clock() : DateTimeOffset.UtcNow,
+                OccurredAt = ServerClock.IsSynced ? new DateTimeOffset(ServerClock.UtcNow,TimeSpan.Zero) : throw new InvalidOperationException("Server time required."),
                 PlaySeconds = seconds, ReachedRound = round
             };
             Current?.Apply(occurrence);
+            if (BackEnd.Backend.IsLogin && accountKey == BackEnd.Backend.UserInDate) Player.PlayerData?.RecordEventBattle(occurrence);
             Occurred?.Invoke(occurrence);
         }
     }

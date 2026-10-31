@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using LitJson;
 
 namespace GGD.BackendCharts
@@ -38,9 +39,15 @@ namespace GGD.BackendCharts
         }
         static string Missions(JsonData rows)
         {
+            var attendance=new Dictionary<string,Dictionary<string,object>>();var attendanceRewards=new List<JsonData>();
             var bindings=new List<object>();var events=new List<object>();var missions=new Dictionary<string,Dictionary<string,object>>();var rewards=new List<JsonData>();
             foreach(JsonData row in rows)switch(Text(row,"RecordType"))
             {
+                case "AttendanceEvent":
+                    var definition=new Dictionary<string,object>();
+                    foreach(var pair in new[]{("EventKey","eventKey"),("Name","name"),("StartAt","startAt"),("EndAt","endAt"),("ClaimEndAt","claimEndAt"),("RepeatMode","repeatMode")})definition[pair.Item2]=Text(row,pair.Item1);
+                    definition["enabled"]=Bool(row,"Enabled");definition["cycleDays"]=Index(row,"CycleDays");definition["days"]=new List<object>();attendance.Add(Text(row,"EventKey"),definition);break;
+                case "AttendanceReward": attendanceRewards.Add(row);break;
                 case "Binding": var binding=Strings(row,"BindingKey","HookKey","DataKey","ValueSource");binding["ConstantValue"]=Number(row,"ConstantValue");binding["Enabled"]=Bool(row,"Enabled");bindings.Add(binding);break;
                 case "Event": var evt=Strings(row,"EventKey","Name","StartAt","EndAt");evt["Enabled"]=Bool(row,"Enabled");events.Add(evt);break;
                 case "Mission": var mission=Strings(row,"MissionKey","EventKey","Name","DataKey","Period");mission["Target"]=Number(row,"Target");mission["Rewards"]=new List<object>();missions.Add(Text(row,"MissionKey"),mission);break;
@@ -53,7 +60,20 @@ namespace GGD.BackendCharts
                 double index=Number(row,"RewardIndex"),amount=Number(row,"Amount");if(index<0||index!=Math.Truncate(index)||!seen.Add(key+"/"+index)||amount<1||amount!=Math.Truncate(amount)||amount>int.MaxValue)throw new FormatException("Invalid reward");
                 ((List<object>)mission["Rewards"]).Add(new {itemId=Text(row,"ItemKey"),amount=(int)amount});
             }
-            return JsonMapper.ToJson(new {CatalogVersion=1,DataBindings=bindings,MissionEvents=events,Missions=new List<Dictionary<string,object>>(missions.Values)});
+            var attendanceSeen=new HashSet<string>();
+            foreach(var group in attendanceRewards.GroupBy(r=>Text(r,"EventKey"))) {
+                if(!attendance.TryGetValue(group.Key,out var definition))throw new FormatException("Unknown attendance event");
+                foreach(var day in group.GroupBy(r=>Index(r,"Day"))) {
+                    var items=new List<object>();
+                    foreach(var row in day) {
+                        int amount=Index(row,"Amount"),index=Index(row,"RewardIndex");
+                        if(day.Key<1||amount<1||!attendanceSeen.Add(group.Key+"/"+day.Key+"/"+index))throw new FormatException("Invalid attendance reward");
+                        items.Add(new {itemKey=Text(row,"ItemKey"),amount});
+                    }
+                    ((List<object>)definition["days"]).Add(new {day=day.Key,rewards=items});
+                }
+            }
+            return JsonMapper.ToJson(new {CatalogVersion=1,DataBindings=bindings,MissionEvents=events,Missions=new List<Dictionary<string,object>>(missions.Values),attendanceEvents=new List<Dictionary<string,object>>(attendance.Values)});
         }
         public static JsonData Research(JsonData rows)
         {

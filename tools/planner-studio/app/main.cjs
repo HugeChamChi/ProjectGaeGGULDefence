@@ -10,6 +10,7 @@ app.setName('GGD-Planner');
 const argument = name => process.argv.find(a => a.startsWith(name + '='))?.slice(name.length + 1);
 const smokePath = argument('--smoke');
 const contentSmokePath = argument('--content-smoke');
+const eventMissionSmokePath = argument('--event-missions-smoke');
 const workspace = path.resolve(argument('--workspace') || app.getPath('userData'));
 app.setPath('userData', workspace);
 app.setPath('sessionData', path.join(workspace, 'browser-cache'));
@@ -20,7 +21,7 @@ if (!gotLock) app.quit();
 else {
   app.on('second-instance', () => { if (window) { window.restore(); window.focus(); } });
   app.whenReady().then(start).catch(error => {
-    if (smokePath || contentSmokePath) atomic(smokePath || contentSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
+    if (smokePath || contentSmokePath || eventMissionSmokePath) atomic(smokePath || contentSmokePath || eventMissionSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
     else dialog.showErrorBox('기획 작업실을 열 수 없습니다', error.message);
     app.exit(1);
   });
@@ -110,6 +111,7 @@ async function start() {
   handler('open-console', async () => { await shell.openExternal('https://console.thebackend.io/'); return true; });
   await window.loadURL('ggd://app/index.html'+(argument('--open-workspace')?'?workspace='+encodeURIComponent(argument('--open-workspace')):''));
   if (smokePath) await smoke();
+  if(eventMissionSmokePath)await require('./event-missions-smoke.cjs')({window,app,resultPath:eventMissionSmokePath,workspace,store});
   if (contentSmokePath) await require('./content-smoke.cjs')({window, app, store, workspace, resultPath:contentSmokePath, atomic});
 }
 

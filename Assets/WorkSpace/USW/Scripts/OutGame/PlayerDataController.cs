@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
@@ -223,6 +223,16 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     /// <summary>Claims today's attendance reward and records the day in the same durable snapshot.</summary>
     /// <returns>The claimed day (1-7), or 0 when nothing was granted.</returns>
+    public void VisitEventMissions(DateTimeOffset now) { if(IsReady && GGD.Events.EventMissions.Visit(_data,now))SaveAndRefresh(); }
+    public void RecordEventBattle(GGD.Events.DataOccurrence occurrence) { if(IsReady && GGD.Events.EventMissions.Battle(_data,occurrence))SaveAndRefresh(); }
+    public bool ClaimEventMission(string key,DateTimeOffset now) { if(!IsReady || !GGD.Events.EventMissions.Claim(_data,key,now))return false;SaveAndRefresh();return true; }
+    public int TryClaimAttendanceEvent(GGD.Events.AttendanceEventDefinition definition, DateTimeOffset now)
+    {
+        if (!IsReady) return 0;
+        int day = GGD.Events.AttendanceEventRuntime.Claim(_data, definition, now);
+        if (day > 0) SaveAndRefresh();
+        return day;
+    }
     public int TryClaimAttendance(AttendanceConfig config, string today)
     {
         if (!IsReady || config == null || !config.IsValid) return 0;

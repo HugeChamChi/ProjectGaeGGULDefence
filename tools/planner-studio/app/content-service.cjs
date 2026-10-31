@@ -22,10 +22,8 @@ exports.register = ({ handler, workspace, store, atomic }) => {
     result.dataFile=result.file.replace(/\.xlsx$/,'.data.json');atomic(result.dataFile,JSON.stringify(parsed,null,2));
     result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));
     if(p.bundle==='missions'){
-      const release='event-'+crypto.randomBytes(12).toString('hex');
-      const rows=require('./chart-payload.cjs').encodeConfigRows(parsed,release);
-      result.chartFile=result.file.replace(/\.xlsx$/,'.backend.xlsx');
-      atomic(result.chartFile,Buffer.from(excel.engine().RewardCore.xlsx('MissionEvents',rows)));
+      const pair=require('./event-tables.cjs').tables(excel.engine().Studio.shape(p.project));
+      result.chartFiles=Object.entries(pair).map(([name,rows])=>{const file=path.join(path.dirname(result.file),name+'.backend.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;});
     }
     return result;
   });
@@ -43,7 +41,12 @@ exports.register = ({ handler, workspace, store, atomic }) => {
     const bytes=fs.readFileSync(file);if(crypto.createHash('sha256').update(bytes).digest('hex')!==p.sha256)throw Error('파일이 바뀌었습니다. 자료 목록을 새로고침하세요.');
     const result=excel.read(bytes,current());atomic(draft,JSON.stringify(result.project,null,2));return result;
   });
-  handler('content-load', () => fs.existsSync(draft) ? JSON.parse(fs.readFileSync(draft, 'utf8')) : null);
+  handler('content-load', () => {
+    if(!fs.existsSync(draft))return null;
+    const raw=JSON.parse(fs.readFileSync(draft,'utf8'));
+    if(raw.tables?.AttendancePlan?.length){const backup=path.join(workspace,'content-project-before-event-missions.json');if(!fs.existsSync(backup))atomic(backup,JSON.stringify(raw,null,2));}
+    return raw;
+  });
   handler('content-save', p => {
     if (p.project?.schemaVersion !== 2 || !p.project.tables) throw Error('지원하지 않는 콘텐츠 프로젝트입니다.');
     const data = JSON.stringify(p.project, null, 2);

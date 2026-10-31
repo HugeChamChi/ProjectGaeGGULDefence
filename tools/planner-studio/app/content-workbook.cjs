@@ -8,7 +8,7 @@ function engine(){
     for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
-const bundles={items:['Item','ItemFunction','SelectionList','SelectionOption'],bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
+const bundles={items:['Item','ItemFunction','SelectionList','SelectionOption'],bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['MissionEvents','Missions']};
 function write(project,names){
   const e=engine(),all=e.Studio.tables(project),files={};let index=0;
   names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];
@@ -17,14 +17,15 @@ function write(project,names){
     if(!index)for(const [key,value]of Object.entries(single))if(!key.startsWith('xl/worksheets/'))files[key]=value;
     files[`xl/worksheets/sheet${++index}.xml`]=single['xl/worksheets/sheet1.xml'];
   }
-  files['xl/workbook.xml']=strToU8(`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${names.map((n,i)=>`<sheet name="${n}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`);
+  files['xl/workbook.xml']=strToU8(`<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${names.map((n,i)=>`<sheet name="${n==='MissionEvents'?'Events':n}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`);
   files['xl/_rels/workbook.xml.rels']=strToU8(`<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${names.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}</Relationships>`);
   files['[Content_Types].xml']=strToU8(`<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${names.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`);
   return Buffer.from(zipSync(files));
 }
 function column(address){return address.replace(/[0-9]+$/,'');}
 function inspect(bytes){
-  const book=open(bytes),e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]||n==='BonusDescription');
+  const book=open(bytes);if(book.sheets.has('Events')){book.sheets.set('MissionEvents',book.sheets.get('Events'));book.sheets.delete('Events');}
+  const e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]||n==='BonusDescription');
   if(!names.length)throw Error('기획작업실의 콘텐츠 Excel 양식이 아닙니다.');
   let count=0;
   const tables={};
@@ -36,6 +37,8 @@ function inspect(bytes){
     // Normalize old column names before validating, including ambiguous old/new duplicates.
     for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
+    if(name==='Missions'&&![...headers.values()].includes('MissionType'))fields=fields.filter(f=>f.key!=='MissionType');
+    if(name==='MissionEvents'&&![...headers.values()].includes('ClaimEndAt'))fields=fields.filter(f=>f.key!=='ClaimEndAt');
     if(name==='ItemFunction'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.key!=='FunctionDrafts');
     if(name==='Unit'&&![...headers.values()].includes('UnitKey'))fields=fields.filter(f=>!['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'].includes(f.key));
     if(name==='AttendancePlan')fields=fields.filter(f=>!['StartAt','EndAt','ClaimEndAt','RepeatMode','Enabled'].includes(f.key)||[...headers.values()].includes(f.key));
@@ -66,8 +69,9 @@ function inspect(bytes){
 }
 function read(bytes,project){
   const e=engine(),parsed=inspect(bytes),p=e.Studio.shape(project);
+  for(const mission of parsed.tables.Missions||[])if(!Object.hasOwn(mission,'MissionType'))mission.MissionType=mission.EventKey?'Event':'Normal';
   if(parsed.names.some(n=>e.MissionEvents.names.includes(n))){
-    for(const name of ['DataBindings','MissionEvents','Missions'])if(!parsed.tables[name])throw Error('Mission workbook requires DataBindings, MissionEvents and Missions.');
+    for(const name of ['MissionEvents','Missions'])if(!parsed.tables[name])throw Error('??? Excel?? Events? Missions ??? ?? ?????.');
     for(const [name,expected]of [['EventData',e.EVENT_CATALOG.data],['ExecutionHooks',e.EVENT_CATALOG.hooks]])if(parsed.tables[name]){
       const key=e.STUDIO_SCHEMAS[name].keys[0];
       for(const row of parsed.tables[name]){const original=expected.find(r=>r[key]===row[key]);if(!original||Object.keys(original).some(k=>original[k]!==row[k]))throw Error(name+': developer catalogue cannot be modified: '+row[key]);}
@@ -128,7 +132,7 @@ function toRuntime(project,names){
   const e=engine(),p=e.Studio.shape(project);e.Studio.tables(p);
   const result={schemaVersion:4};
   if(names.includes('BonusDefinition')||names.includes('BonusEffect')){result.bonusDefinitions=p.tables.BonusDefinition;result.bonusEffects=p.tables.BonusEffect;}
-  if(names.includes('Attendance')||names.includes('AttendanceRewards'))result.attendanceEvents=p.tables.AttendancePlan.map(plan=>({eventKey:plan.AttendanceId,name:plan.Name,startAt:plan.StartAt,endAt:plan.EndAt,claimEndAt:plan.ClaimEndAt||plan.EndAt,enabled:plan.Enabled,repeatMode:plan.RepeatMode,cycleDays:plan.CycleDays,days:p.tables.Attendance.filter(r=>r.AttendanceId===plan.AttendanceId).sort((a,b)=>a.Day-b.Day).map(r=>({day:r.Day,rewards:r.Rewards.map(x=>({itemKey:x.itemId,amount:x.amount}))}))}));
+  if(names.includes('Attendance')||names.includes('AttendanceRewards'))result.attendanceEvents=(p.tables.AttendancePlan||[]).map(plan=>({eventKey:plan.AttendanceId,name:plan.Name,startAt:plan.StartAt,endAt:plan.EndAt,claimEndAt:plan.ClaimEndAt||plan.EndAt,enabled:plan.Enabled,repeatMode:plan.RepeatMode,cycleDays:plan.CycleDays,days:p.tables.Attendance.filter(r=>r.AttendanceId===plan.AttendanceId).sort((a,b)=>a.Day-b.Day).map(r=>({day:r.Day,rewards:r.Rewards.map(x=>({itemKey:x.itemId,amount:x.amount}))}))}));
   for(const [table,key]of [['ItemFunction','itemFunctions'],['SelectionList','selectionLists'],['SelectionOption','selectionOptions'],['ResearchTree','researchTrees'],['ResearchNode','researchNodes'],['Tutorial','tutorialSteps'],['Party','parties'],['Profile','profiles'],['Economy','economy'],['AccountLevel','accountLevels'],['BattleReward','battleRewards'],['Item','items']])if(names.includes(table))result[key]=p.tables[table].map(r=>Object.fromEntries(e.STUDIO_SCHEMAS[table].fields.filter(f=>!f.hidden&&f.export!==false).map(f=>[f.key,r[f.key]])));
   if(names.some(n=>e.UnitKeys.sheetFor[n]||e.UnitKeys.headers[n])){
     for(const [name,rows]of Object.entries(e.UnitKeys.tables(p)))result[{Units:'units',BaseStats:'baseStats',UpgradeStats:'upgradeStats',LevelBonuses:'levelBonuses'}[name]]=rows.slice(1).map(row=>Object.fromEntries(rows[0].map((key,i)=>[key,key==='Costs'?e.RewardCore.parseItems(row[i]).map(r=>({itemKey:r.itemId,amount:r.amount})):key==='EffectParams'?JSON.parse(row[i]):row[i]])));

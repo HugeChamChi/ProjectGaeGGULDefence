@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 [System.Serializable]
 public class PlayerData
@@ -37,7 +37,10 @@ public class PlayerData
     public string LastResetDate;
 
     /// <summary>Days claimed in the current 7-day attendance cycle (0-7).</summary>
+    public System.Collections.Generic.List<GGD.Events.SavedMission> EventMissions = new();
+    public System.Collections.Generic.List<string> EventMissionReceipts = new();
     public int AttendanceCount;
+    public System.Collections.Generic.List<GGD.Events.AttendanceEventProgress> EventAttendance = new();
     public int AttendancePendingDays;
     public string AttendanceLastVisitDay;
     /// <summary>Server-day key of the last attendance claim; one claim per server day.</summary>

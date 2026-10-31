@@ -1,0 +1,92 @@
+[
+  {
+    "MissionKey": "daily_normal_1",
+    "MissionType": "Event",
+    "EventKey": "play_3week_sample",
+    "Name": "매일 일반 모드 1판",
+    "DataKey": "BattleCount_Normal",
+    "Target": 1,
+    "Period": "Daily",
+    "Rewards": "Gold:500"
+  },
+  {
+    "MissionKey": "total_all_30",
+    "MissionType": "Event",
+    "EventKey": "play_3week_sample",
+    "Name": "누적 30판 플레이",
+    "DataKey": "BattleCount_All",
+    "Target": 30,
+    "Period": "Total",
+    "Rewards": "Diamond:100"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_1",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "1일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 1,
+    "Period": "Total",
+    "Rewards": "Stamina:10"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_2",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "2일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 2,
+    "Period": "Total",
+    "Rewards": "Gold:500"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_3",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "3일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 3,
+    "Period": "Total",
+    "Rewards": "Diamond:10"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_4",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "4일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 4,
+    "Period": "Total",
+    "Rewards": "Stamina:15"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_5",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "5일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 5,
+    "Period": "Total",
+    "Rewards": "Gold:1000"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_6",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "6일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 6,
+    "Period": "Total",
+    "Rewards": "Diamond:20"
+  },
+  {
+    "MissionKey": "dev_attendance_7day_20261031_day_7",
+    "MissionType": "Event",
+    "EventKey": "dev_attendance_7day_20261031",
+    "Name": "7일 출석",
+    "DataKey": "AttendanceDays",
+    "Target": 7,
+    "Period": "Total",
+    "Rewards": "Diamond:50"
+  }
+]

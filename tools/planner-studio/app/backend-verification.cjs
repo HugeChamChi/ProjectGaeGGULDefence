@@ -24,7 +24,7 @@ async function unityCommand(project, args) {
 }
 
 async function verifyPrepared(record, project, workspace) {
-  if (!record || !/^DEV_(MissionEvents|UnitBaseStats|UnitLevelBonuses)$/.test(record.targetChartName)) {
+  if (!record || !/^DEV_(Events|Missions|MissionEvents|UnitBaseStats|UnitLevelBonuses)$/.test(record.targetChartName)) {
     throw Error('지원하지 않는 DEV 대상입니다.');
   }
   if (!project || !fs.existsSync(path.join(project, 'ProjectSettings/ProjectVersion.txt'))) {
@@ -46,7 +46,13 @@ async function verifyPrepared(record, project, workspace) {
   if (!data.success || !data.result?.success || typeof data.result.result !== 'string') {
     throw Error('차트를 읽지 못했습니다. 뒤끝 로그인 및 ' + record.targetChartName + '의 파일 적용 여부를 확인하세요.');
   }
-  return comparePrepared(record, JSON.parse(data.result.result));
+  const result=comparePrepared(record, JSON.parse(data.result.result));
+  if(record.eventFile){
+    const eventData=await unityCommand(project,['command','run_script','--project-path',project,'--file',script,'--entry','BackndChartReader.Run','--args',JSON.stringify(['read',record.targetEventChartName]),'--timeout_ms','25000','--timeout','35']);
+    if(!eventData.success||!eventData.result?.success)throw Error('??? ??? ?? ?????.');
+    comparePrepared({...record,targetChartName:record.targetEventChartName,expectedTable:record.eventTable},JSON.parse(eventData.result.result));
+  }
+  return result;
 }
 
 function comparePrepared(record, server) {

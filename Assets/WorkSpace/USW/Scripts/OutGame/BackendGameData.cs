@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
@@ -187,6 +187,9 @@ public class BackendGameData
             PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),
             MaxExp      = data.GetInt(COLUMN_MAX_EXP, 500),
             LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty),
+            EventMissions = JsonMapper.ToObject<System.Collections.Generic.List<GGD.Events.SavedMission>>(data.GetString("EventMissions", "[]")),
+            EventMissionReceipts = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("EventMissionReceipts", "[]")),
+            EventAttendance = JsonMapper.ToObject<System.Collections.Generic.List<GGD.Events.AttendanceEventProgress>>(data.GetString("EventAttendance", "[]")),
             AttendanceCount = data.GetInt(COLUMN_ATTENDANCE_COUNT, 0),
             AttendancePendingDays = data.GetInt("AttendancePendingDays", 0),
             AttendanceLastVisitDay = data.GetString("AttendanceLastVisitDay", string.Empty),
@@ -218,6 +221,9 @@ public class BackendGameData
         param.Add(COLUMN_PLAYER_EXP, data.PlayerExp);
         param.Add(COLUMN_MAX_EXP, data.MaxExp);
         param.Add(COLUMN_LAST_RESET_DATE, data.LastResetDate);
+        param.Add("EventMissions", JsonMapper.ToJson(data.EventMissions));
+        param.Add("EventMissionReceipts", JsonMapper.ToJson(data.EventMissionReceipts));
+        param.Add("EventAttendance", JsonMapper.ToJson(data.EventAttendance ?? new System.Collections.Generic.List<GGD.Events.AttendanceEventProgress>()));
         param.Add(COLUMN_ATTENDANCE_COUNT, data.AttendanceCount);
         param.Add("AttendancePendingDays", data.AttendancePendingDays);
         param.Add("AttendanceLastVisitDay", data.AttendanceLastVisitDay ?? string.Empty);

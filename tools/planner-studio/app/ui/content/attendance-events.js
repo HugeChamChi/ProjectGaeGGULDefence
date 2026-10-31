@@ -6,7 +6,7 @@ globalThis.AttendanceEventsFeature = ({studio: Studio}) => {
   S.AttendancePlan.fields.push(...extra);S.AttendancePlan.label='이벤트 설정';S.Attendance.label='일차별 보상';
   S.AttendancePlan.note='7일 출석을 바탕으로 한 비활성 이벤트 예시입니다. 활성화하려면 시작·종료 시각을 입력하세요. 게임의 이벤트 진행/수령 처리는 별도 연결이 필요합니다.';
   const nav=STUDIO_NAV.find(n=>n.id==='attendance');nav.label='출석 이벤트';
-  function defaults(p){for(const plan of p.tables.AttendancePlan){delete plan.ResetHourKst;if(plan.StartAt===undefined)plan.StartAt='';if(plan.EndAt===undefined)plan.EndAt='';if(plan.ClaimEndAt===undefined)plan.ClaimEndAt='';if(!plan.RepeatMode)plan.RepeatMode='Once';if(plan.Enabled===undefined)plan.Enabled=false;}return p;}
+  function defaults(p){for(const plan of p.tables.AttendancePlan||[]){delete plan.ResetHourKst;if(plan.StartAt===undefined)plan.StartAt='';if(plan.EndAt===undefined)plan.EndAt='';if(plan.ClaimEndAt===undefined)plan.ClaimEndAt='';if(!plan.RepeatMode)plan.RepeatMode='Once';if(plan.Enabled===undefined)plan.Enabled=false;}return p;}
   defaults(STUDIO_SEED);for(const plan of STUDIO_SEED.tables.AttendancePlan){plan.Enabled=false;plan.Name='7일 출석 이벤트 예시';}
   function validate(p){const issues=[];p.tables.AttendancePlan.forEach((plan,index)=>{
     const add=(key,message)=>issues.push({table:'AttendancePlan',index,field:key,message,severity:'error'});

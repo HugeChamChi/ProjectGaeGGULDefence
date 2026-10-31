@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const excel = require('./content-workbook.cjs');
-const { encodeConfigRows } = require('./chart-payload.cjs');
 const { unitRuntime } = require('./unit-runtime.cjs');
 
 function serializeTarget(project, kind) {
@@ -36,6 +35,7 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     for (const [file, hash] of [[record.file, record.sha256], [record.authoringFile, record.authoringSha256], [record.sourceFile, record.sourceSha256]]) {
       if (!file || !hash || digest(file) !== hash) throw Error('배포 원본 또는 준비 파일이 변경되었습니다. 다시 준비하세요.');
     }
+    if(record.eventFile && digest(record.eventFile)!==record.eventSha256)throw Error('Event file changed. Prepare both files again.');
     return record;
   }
   handler('content-backend-history', () => history.map(record => {
@@ -49,12 +49,14 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const { chart, config, authoring, tables } = serializeTarget(project, payload.kind);
     const authoringBytes = excel.write(project, tables);
     const releaseKey = 'dev-' + crypto.randomBytes(12).toString('hex');
-    const encoding = payload.base64 === true ? 'Base64' : 'Table';
-    if(payload.kind==='unitBonuses'&&encoding!=='Table')throw Error('보너스 설명은 일반 표 형식만 지원합니다. Base64를 끄세요.');
-    const rows = encoding === 'Table' ? require('./readable-chart.cjs').table(config,payload.kind) : encodeConfigRows(config, releaseKey, encoding);
+    const encoding = 'Table';
+    const pair = payload.kind==='missions' ? require('./event-tables.cjs').tables(project) : null;
+    const rows = pair ? pair.Missions : require('./readable-chart.cjs').table(config,payload.kind);
     const bytes = Buffer.from(excel.engine().RewardCore.xlsx(chart, rows));
     const date=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
-    const { file } = exportFile(chart + '_' + date + '.backend.xlsx', bytes);
+    const { file } = exportFile((pair?'Missions':chart) + '_' + date + '.backend.xlsx', pair?Buffer.from(excel.engine().RewardCore.xlsx('Missions', rows)):bytes);
+    let eventFile;
+    if(pair){eventFile=path.join(path.dirname(file),'Events_'+date+'.backend.xlsx');atomic(eventFile,Buffer.from(excel.engine().RewardCore.xlsx('Events',pair.Events)));}
     const authoringFile = path.join(path.dirname(file), authoring + '.xlsx');
     const schemaFile = path.join(path.dirname(file), authoring + '.schema.json');
     atomic(authoringFile, authoringBytes);
@@ -63,17 +65,18 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     atomic(sourceFile, JSON.stringify(project, null, 2));
     const record = {
       sourceFile, sourceSha256: digest(sourceFile), createdAt: new Date().toISOString(),
-      file, releaseKey, encoding, targetChartName: 'DEV_' + chart, kind: payload.kind,
+      file, releaseKey, encoding, targetChartName: pair ? 'DEV_Missions' : 'DEV_' + chart, eventFile, eventSha256:eventFile?digest(eventFile):undefined, targetEventChartName:pair?'DEV_Events':undefined, eventTable:pair?.Events, kind: payload.kind,
       ...(encoding==='Table'?{expectedTable:rows}:{}),
       authoringFile, schemaFile,
       authoringSha256: crypto.createHash('sha256').update(authoringBytes).digest('hex'),
-      sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
-      payloadSha256: rows[1][4], status: 'prepared', remoteApplied: false,
+      sha256: digest(file),
+       status: 'prepared', remoteApplied: false,
     };
     atomic(path.join(path.dirname(file), 'deployment.json'), JSON.stringify(record, null, 2));
     prepared.set(releaseKey, record);
     history.unshift(record);
     atomic(historyFile, JSON.stringify(history, null, 2));
+    if(record.eventFile && digest(record.eventFile)!==record.eventSha256)throw Error('Event file changed. Prepare both files again.');
     return record;
   });
 

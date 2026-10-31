@@ -3,7 +3,7 @@ system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
 verified: 2026-10-31
-commit: 685e94f5
+commit: 0312d9aa
 ---
 # 아웃게임 카드
 
@@ -341,3 +341,15 @@ commit: 685e94f5
 | `Assets/WorkSpace/USW/Scripts/OutGame/AttendanceRules.cs` | 누적 출석 수령 판정, 결석 유지와 7일 완료 후 재시작 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/Attendance/AttendanceDaySlot.cs` | 보상 칸의 아이콘/수량과 잠김/수령 가능/수령 완료 표시 |
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/LobbyDeviceSettingsView.cs` | 기기별 그래픽/언어 보조 설정 View |
+
+## 2026-10-31 ?? ??? ??
+`Assets/WorkSpace/USW/Scripts/Events/AttendanceEventRuntime.cs`? ??? attendanceEvents ??????? ??/??/?? ??? ????. EventChartLoader?? ?? ???? AttendanceService/AttendancePopup? ?? ??? ??? ??? ??? ????. PlayerData.EventAttendance? BackendGameData? ?? ???? ????. 14?? 7? ??? ?? ???? ????. ?? 3?? ???? ?? ?? ??/?? ? ?? ??? ???. `tools/verification/AttendanceEventChecks.cs` 26??? ?? ?? ?? ?? ? Unity ??? ??. ?? ??/???/?? ?? ??? ???. ??: `outputs/attendance-event-integration/RESULT.md`.
+
+## 2026-10-31 Events / Missions
+Current event authoring and deployment use two readable tables: Events and Missions. AttendanceDays is a mission condition. Runtime: `Assets/WorkSpace/USW/Scripts/Events/EventMissions.cs`, `EventMissionPanel.cs`, `EventChartLoader.cs`. Export: `tools/planner-studio/app/event-tables.cjs`. PlayerData.EventMissions and EventMissionReceipts are persisted by BackendGameData in the currency snapshot. Old EventAttendance claims are migrated conservatively. Events and Missions are independently editable and joined by EventKey. Unity 27 checks and Electron event/mission creation + two-file export passed; live server and mobile checks remain unexecuted. See `tools/planner-studio/EVENT-MISSIONS.md` and `outputs/event-missions-release/RESULT.md`.
+
+2026-10-31 follow-up: ConfigVersion column and equality checks removed. EventMissions.ForEvent is used by the game panel to fetch only the selected EventKey. Unity integration checks: 34 passed, including independent event updates, missing EventKey rejection and cross-event progress/claim isolation. Desktop two-chart files and the new planner runtime were refreshed.
+
+2026-10-31 MissionType follow-up: MissionType enum Normal/Event added. Normal requires an empty EventKey and progresses independently of event dates; Event requires a valid EventKey. Period uses Total/Daily/Weekly, with legacy Event converted to Total while preserving saved period identifiers. Game logic checks: 45 passed. Planner type selection/automatic event type/conditional event field/export checks passed; screenshot capture failed with UnknownVizError. Desktop charts and planner runtime refreshed.
+
+2026-10-31 attendance clarification: EventMissionPanel was removed. Existing AttendancePopup and original prefab slots now bind AttendanceDays missions through AttendanceMissionData; AttendanceService routes claims to the chosen mission. Explicit EventKey is required if multiple eligible attendance groups exist. Binding checks 9 + mission checks 45 passed, with no server writes in these checks. Prior live test granted Stamina 10 to the existing Editor test account; subsequent UI binding checks did not grant rewards.

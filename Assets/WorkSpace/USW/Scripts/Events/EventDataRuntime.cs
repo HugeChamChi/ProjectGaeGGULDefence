@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,11 +19,13 @@ namespace GGD.Events
     }
     [Serializable] public sealed class MissionEvent
     {
-        public string EventKey, Name, StartAt, EndAt;
+        public string EventKey, Name, StartAt, EndAt, ClaimEndAt;
         public bool Enabled;
     }
+    public enum MissionType { Event = 0, Normal = 1 }
     [Serializable] public sealed class MissionDefinition
     {
+        public MissionType MissionType = MissionType.Event;
         public string MissionKey, EventKey, Name, DataKey, Period;
         public double Target;
         public MissionReward[] Rewards = Array.Empty<MissionReward>();
@@ -65,7 +67,7 @@ namespace GGD.Events
                 hook.TryResolveSource(binding.ValueSource, out var source);
                 return new ResolvedBinding { Hook = hook.Key, Data = catalog.FindData(binding.DataKey), Source = source, Constant = binding.ConstantValue };
             }).ToArray();
-            missionData = config.Missions.ToDictionary(mission => mission.MissionKey, mission => catalog.FindData(mission.DataKey).Key);
+            missionData = config.Missions.Where(mission=>mission.DataKey!="AttendanceDays").ToDictionary(mission => mission.MissionKey, mission => catalog.FindData(mission.DataKey).Key);
         }
         private sealed class ResolvedBinding
         {
@@ -102,8 +104,8 @@ namespace GGD.Events
                 if (!DateTimeOffset.TryParse(e.StartAt, out var start) || !DateTimeOffset.TryParse(e.EndAt, out var end) || start >= end)
                     throw new ArgumentException("Invalid event dates: " + e.EventKey);
             foreach (var m in c.Missions)
-                if (!c.MissionEvents.Any(e => e.EventKey == m.EventKey) || EventDataCatalog.Default.FindData(m.DataKey) == null
-                    || !Finite(m.Target) || m.Target <= 0 || (m.Period != "Event" && m.Period != "Daily")
+                if ((m.MissionType == MissionType.Event && !c.MissionEvents.Any(e => e.EventKey == m.EventKey)) || (m.DataKey != "AttendanceDays" && EventDataCatalog.Default.FindData(m.DataKey) == null)
+                    || !Finite(m.Target) || m.Target <= 0 || (m.Period != "Total" && m.Period != "Event" && m.Period != "Daily" && m.Period != "Weekly")
                     || m.Rewards == null || m.Rewards.Length == 0 || m.Rewards.Any(r => r == null || r.amount <= 0 || !new[] { "Gold", "Diamond", "Stamina" }.Contains(r.itemId))
                     || m.Rewards.Select(r => r.itemId).Distinct().Count() != m.Rewards.Length)
                     throw new ArgumentException("Invalid mission: " + m.MissionKey);
@@ -114,8 +116,13 @@ namespace GGD.Events
             foreach (var key in keys) if (string.IsNullOrWhiteSpace(key) || key.Contains("/") || !seen.Add(key)) throw new ArgumentException("Invalid or duplicate key.");
         }
         private static bool Finite(double n) => !double.IsNaN(n) && !double.IsInfinity(n);
-        private string ProgressKey(MissionDefinition m, DateTimeOffset at) => m.EventKey + "/" + m.MissionKey + "/" +
-            (m.Period == "Daily" ? at.ToOffset(TimeSpan.FromHours(9)).AddHours(-resetHourKst).ToString("yyyy-MM-dd") : "Event");
+        private string ProgressKey(MissionDefinition m, DateTimeOffset at)
+        {
+            var day = at.ToOffset(TimeSpan.FromHours(9)).AddHours(-resetHourKst);
+            var period = m.Period == "Daily" ? day.ToString("yyyy-MM-dd") :
+                m.Period == "Weekly" ? day.AddDays(-((int)day.DayOfWeek + 6) % 7).ToString("yyyy-MM-dd") : "Event";
+            return m.EventKey + "/" + m.MissionKey + "/" + period;
+        }
         public double GetProgress(string missionKey, DateTimeOffset at)
         {
             var m = config.Missions.Single(x => x.MissionKey == missionKey);
@@ -133,7 +140,7 @@ namespace GGD.Events
             }).ToArray();
             var pending = new Dictionary<string, double>();
             foreach (var e in config.MissionEvents.Where(e => e.Enabled && occurrence.OccurredAt >= DateTimeOffset.Parse(e.StartAt) && occurrence.OccurredAt < DateTimeOffset.Parse(e.EndAt)))
-            foreach (var m in config.Missions.Where(m => m.EventKey == e.EventKey))
+            foreach (var m in config.Missions.Where(m => m.EventKey == e.EventKey && missionData.ContainsKey(m.MissionKey)))
             foreach (var u in updates.Where(u => u.DataKey == missionData[m.MissionKey]))
             {
                 var key = ProgressKey(m, occurrence.OccurredAt);

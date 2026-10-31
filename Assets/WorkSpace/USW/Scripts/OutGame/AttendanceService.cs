@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -50,10 +50,10 @@ public sealed class AttendanceService
     }
 
     /// <summary>Re-reads the account and server day, then grants today's reward once.</summary>
-    public async UniTask<(ClaimResult result, int day)> ClaimAsync(CancellationToken token)
+    public async UniTask<(ClaimResult result, int day)> ClaimAsync(CancellationToken token, string missionKey = null)
     {
         if (_busy) return (ClaimResult.NotReady, 0);
-        if (Config == null || !Config.IsValid) return (ClaimResult.Invalid, 0);
+        if (missionKey == null && (Config == null || !Config.IsValid)) return (ClaimResult.Invalid, 0);
         _busy = true;
         try
         {
@@ -63,6 +63,13 @@ public sealed class AttendanceService
             token.ThrowIfCancellationRequested();
             if (!_data.IsReady) return (ClaimResult.NotReady, 0);
             if (!await RefreshAsync(token)) return (ClaimResult.TimeUnavailable, 0);
+            if(missionKey!=null){
+                var now=new DateTimeOffset(LastServerUtc.Value,TimeSpan.Zero);
+                _data.VisitEventMissions(now);
+                if(!_data.ClaimEventMission(missionKey,now))return (ClaimResult.AlreadyClaimed,0);
+                bool savedMission=await _data.TrySaveAsync();
+                return (savedMission?ClaimResult.Claimed:ClaimResult.ClaimedSavePending,1);
+            }
             string today = Config.DayKey(LastServerUtc.Value);
             _data.RegisterAttendanceVisit(today);
             if (!AttendanceRules.Evaluate(_data.Data, today).CanClaim) return (ClaimResult.AlreadyClaimed, 0);
