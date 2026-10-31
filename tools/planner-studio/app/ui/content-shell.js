@@ -4,7 +4,7 @@
   panel.id='contentWorkspace';panel.hidden=true;
   const frame=document.createElement('iframe');frame.title='기획 데이터 편집';panel.append(frame);original.after(panel);
   const settings=document.getElementById('contentWorkspaceButton');settings.lastChild.textContent='기본 설정';
-  for(const [id,label,icon]of [['enhancement','강화 밸런스','⌘'],['rewards','이벤트','▦'],['items','아이템 제작','◇']]){
+  for(const [id,label,icon]of [['enhancement','강화 밸런스','⌘'],['rewards','이벤트','▦'],['items','아이템 관리','◇']]){
     const b=document.createElement('button');b.className='nav-item';b.id=id+'WorkspaceButton';
     const span=document.createElement('span');span.className='nav-icon';span.textContent=icon;b.append(span,document.createTextNode(label));settings.before(b);
   }

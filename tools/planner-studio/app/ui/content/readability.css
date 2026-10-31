@@ -1,0 +1,16 @@
+.planner-content .form-grid>label,.planner-content .field-block>h3{font-size:14px;font-weight:600;color:var(--ink,#27354a)}
+.planner-content small,.planner-content .subtle,.planner-content .record-heading small{font-size:12px;color:var(--muted,#536177)}
+.planner-content input,.planner-content select,.planner-content textarea{font-size:14px}
+.planner-content .editor-note{line-height:1.65;font-size:13px}
+.planner-content .catalog-step{display:block;flex:1 1 100%;font-size:13px;line-height:1.6;color:var(--muted,#536177)}
+.planner-content .catalog-dialog .dialog-head{flex-wrap:wrap}
+.planner-content .catalog-dialog .form-grid{gap:18px}
+.planner-content .catalog-dialog button{min-height:38px}
+.planner-content .actions #save-state{font-size:12px;color:var(--muted,#536177)}
+.planner-content .catalog-search{display:grid;grid-template-columns:minmax(180px,1fr) minmax(140px,.45fr);gap:12px}
+.planner-content .catalog-search>input,.planner-content .catalog-search>select{width:100%;min-width:0}
+.planner-content .catalog-dialog .dialog-head h2{flex:1;margin:0}
+.planner-content .catalog-dialog .catalog-step{order:3}
+.planner-content .catalog-dialog .validation:empty{display:none}
+.planner-content .catalog-dialog .full-field>div{display:grid;grid-template-columns:minmax(120px,1fr) 120px auto;gap:12px;align-items:center;margin:8px 0}
+.planner-content .catalog-dialog .full-field>div input{width:100%;min-width:0}

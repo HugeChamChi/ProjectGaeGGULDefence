@@ -2,10 +2,19 @@
 system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-10-31
+commit: 685e94f5
 ---
 # 아웃게임 카드
+
+## 2026-10-31 차트 캐시
+공통 `BackendChartReader.ReadAsync`와 전투 설정 `BackendEndlessBalanceGateway.LoadAsync`는 CDN 목록 확인 후 SDK `Backend.CDN.Content.Local.Update`로 변경된 차트만 내려받아 영속 로컬 캐시를 갱신한다. SDK가 미적용 차트를 정리하므로 전체 목록을 전달하고, 동시 갱신은 직렬화한다. 요청 취소 후에도 SDK 콜백까지 잠금을 유지한다. 목록/갱신 실패는 오래된 데이터로 대체하지 않는다. 기존 `Chart`의 상점/가챠 조회와 확률 조회는 기존 방식 유지. Unity 컴파일 및 로그인 전/취소 4검사 통과; 실제 서버 변경·재실행·손상 캐시 시나리오는 로그인 후 별도 확인 필요.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/BackendCharts/BackendChartReader.cs` | SDK CDN 목록/변경 다운로드/영속 캐시 공통 진입점 |
+| `Assets/WorkSpace/USW/Scripts/Endless/Runtime/BackendEndlessBalanceGateway.cs` | 전투 밸런스의 공통 차트 로더 연결 |
+| `Tools/verification/BackendChartCacheChecks.cs` | 로그인 전 차단·취소 4검사; 서버/캐시 변경 없음 |
 
 **한 줄 요약**: 뒤끝(TheBackend) 기본 게스트/연동 후 자동 Google 로그인 뒤 `Player`(유저 데이터 매니저 묶음)·`Table`(마스터)이 초기화된다. 로비에서 파티(`PartyDataSO`: 유닛 명단 + 족장)를 고르고 스태미나를 써서 `IngameScene`으로 간다. 영구 강화(코드 이름 Research, 화면 이름 "강화")는 로비 강화 탭에 직접 표시하는 트리이며, 전투 시작 때 합계가 고정된다.
 
@@ -30,11 +39,17 @@ commit: de2cbd00
 6. 캐릭터 강화(별도 로컬 시안): LobbyLifetimeScope가 `DeckUpgradeService`/`IDeckUpgradeStore`를 등록하고 화면에 주입. `DroneUpgradeConceptScreen.BuildView`가 기본→목록→디자인을 명시 순서로 구성하며 `DeckUpgradePresenter`의 타입 데이터를 목록/상세/3탭에 직접 전달한다. 실제 계정/전투는 미연결, 기존 DeckUpgradePreview.v1 저장 유지. 과거 저장 씬의 RuntimeBindings는 Play 재생성 시 제거된다.
 
 ## 진입 파일
+
+2026-10-31 기획툴: 아이템 지급(`GrantItems`)과 종류별 초안 복원, 관리 탭/연속 생성, 편집용·뒤끝 업로드용 Excel 구분, 가독성 개선. 현재 계약으로 전체 Node 검사 17개 및 Electron UI31 시나리오 통과. 상세: `outputs/planner-audit/fixed/RESULT.md`.
+
 | 파일 | 역할 |
 |---|---|
 | `tools/planner-studio/app/ui/content/item-catalog.js` | 아이템→기능→선택목록→옵션 저작 스키마, 수치/참조/순환/동일 목록 검사. 게임 아이템 사용 실행은 미연결 |
 | `tools/planner-studio/app/ui/content/catalog-picker.js` | 공통 검색·종류 필터·중첩 즉시 추가·트랜잭션 취소·동일 선택 목록 재사용 UI |
 | `tools/planner-studio/ITEM-CATALOG.md` | 아이템 4개 표, ID/Value 규약, Excel 개별·합본과 게임 연동 경계 |
+| `tools/planner-studio/app/item-icons.cjs` | PNG 검증·자동 주소·Excel 동봉 PNG/목록 출력 |
+| `Assets/WorkSpace/USW/Scripts/Editor/PlannerItemIconImporter.cs` | 기획툴 아이콘 묶음 Sprite 임포트와 Addressables 등록 메뉴 |
+| `Tools/verification/PlannerItemIconChecks.cs` | 실제 Editor Sprite·주소·재임포트·변조 거절 검사 |
 | `Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs` | 결과창 재시작: 최신 설정·스태미나 예약 저장·연타 차단·실패 재시도 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Player.cs` | 유저 데이터 진입점(PlayerData·Profile·Mail·Character·Chief·Shop·Daily·Tutorial), 일괄/디바운스 저장 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Table.cs` | 공통 마스터 테이블(Addressables) |

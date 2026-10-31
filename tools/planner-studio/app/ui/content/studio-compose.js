@@ -19,8 +19,9 @@
       return features.reduce((row, feature) => feature.newRecord ? feature.newRecord(row, name, project) : row, core.newRecord(name, project));
     },
     update(project, name, index, key, value) {
+      const previous = project.tables[name][index][key];
       core.update(project, name, index, key, value);
-      for (const feature of features) feature.updated?.(project, name, index, key, value);
+      for (const feature of features) feature.updated?.(project, name, index, key, value, previous);
     },
     label(name, row) {
       return features.reduce((text, feature) => feature.label ? feature.label(text, name, row) : text, core.label(name, row));

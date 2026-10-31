@@ -36,6 +36,7 @@ function inspect(bytes){
     // Normalize old column names before validating, including ambiguous old/new duplicates.
     for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
+    if(name==='ItemFunction'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.key!=='FunctionDrafts');
     if(name==='Unit'&&![...headers.values()].includes('UnitKey'))fields=fields.filter(f=>!['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'].includes(f.key));
     if(name==='AttendancePlan')fields=fields.filter(f=>!['StartAt','EndAt','ClaimEndAt','RepeatMode','Enabled'].includes(f.key)||[...headers.values()].includes(f.key));
     if(name==='Party'&&![...headers.values()].includes('ChiefId'))fields=fields.filter(f=>f.key!=='ChiefId').concat(schema.fields.filter(f=>f.key==='ChiefAsset'));

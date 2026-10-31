@@ -4,6 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 exports.register = ({ handler, workspace, store, atomic }) => {
+  handler('content-icon-prepare',p=>{if(!Array.isArray(p.bytes)||p.bytes.length>1024*1024||p.bytes.some(n=>!Number.isInteger(n)||n<0||n>255))throw Error('PNG 파일을 확인하세요.');const result=require('./item-icons.cjs').prepare(p.name,p.bytes);if(require('electron').nativeImage.createFromBuffer(Buffer.from(p.bytes)).isEmpty())throw Error('PNG 이미지를 읽을 수 없습니다.');return result;});
   const draft = path.join(workspace, 'content-project-v2.json');
   const excel=require('./content-workbook.cjs');
   const current=()=>excel.engine().Studio.shape(fs.existsSync(draft)?JSON.parse(fs.readFileSync(draft,'utf8')):excel.engine().Studio.create());
@@ -16,6 +17,7 @@ exports.register = ({ handler, workspace, store, atomic }) => {
     const names=excel.bundles[p.bundle]||[p.table];
     const result=exportFile(p.bundle==='items'?'ItemCatalog_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='bonuses'?'UnitLevelBonuses_작성용_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='missions'?'MissionEvents.xlsx':p.bundle==='enhancement'?'EnhancementBalance.xlsx':p.bundle==='rewards'?'AttendanceEvent.xlsx':p.table+'.xlsx',excel.write(p.project,names));
     if(p.bundle==='items')result.tableFiles=names.map(name=>{const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,excel.write(p.project,[name]));return file;});
+    require('./item-icons.cjs').exportIcons(p.project,path.dirname(result.file));
     const parsed=excel.toRuntime(p.project,names);
     result.dataFile=result.file.replace(/\.xlsx$/,'.data.json');atomic(result.dataFile,JSON.stringify(parsed,null,2));
     result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));

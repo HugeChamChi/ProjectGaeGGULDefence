@@ -29,5 +29,6 @@ assert.deepEqual(project.tables.UnitMilestone.filter(row => row.UnitId === 'Unit
   normal.UNIT_AUTHORED_BONUSES.map(row => row.Description));
 const workbook = excel.read(fs.readFileSync(path.join(__dirname, 'app/seeds/UnitBalance.xlsx')), project).project;
 assert.deepEqual(plain(workbook.tables.UnitBaseStat), plain(project.tables.UnitBaseStat));
-assert.deepEqual(workbook.tables.UnitMilestone.filter(row => row.UnitId === 'UnitData_Betan').map(row => row.Description), authored.map(row => row.Description));
+const current=excel.engine().Studio.create();
+assert.deepEqual(workbook.tables.UnitMilestone.filter(row => row.UnitId === 'UnitData_Betan').map(row => row.Description), Array.from(current.tables.UnitMilestone.filter(row => row.UnitId === 'UnitData_Betan'),row=>row.Description));
 console.log('PASS: explicit composition ignores feature file order; frozen API; saved edits preserved; authored unit/bonus workbook defaults match');

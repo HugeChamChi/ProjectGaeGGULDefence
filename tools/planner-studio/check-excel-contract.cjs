@@ -54,7 +54,12 @@ require('./app/backend-deployment.cjs').register({
   exportFile: (name, value) => {const file = path.join(folder, name);fs.writeFileSync(file, value);return {file};},
 });
 for (const kind of ['missions', 'unitBaseStats']) {
-  const record = handlers.get('content-backend-prepare')({kind, project});
+  const readable = handlers.get('content-backend-prepare')({kind, project});
+  const readableBook=open(fs.readFileSync(readable.file)),readableSheet=[...readableBook.sheets.keys()][0];
+  const expectedTable=require('./app/readable-chart.cjs').table(kind==='missions'?excel.toRuntime(project,excel.bundles.missions):unitRuntime(project),kind);
+  const col=i=>{let s='';for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s;};
+  expectedTable.forEach((row,r)=>row.forEach((value,c)=>assert.equal(readableBook.get(readableSheet,col(c)+(r+1)).value,String(value),'readable chart cell')));
+  const record = handlers.get('content-backend-prepare')({kind, project, base64:true});
   const authoringBytes = fs.readFileSync(record.authoringFile);
   assert.equal(crypto.createHash('sha256').update(authoringBytes).digest('hex'), record.authoringSha256);
   const review = excel.read(authoringBytes, project).project;
