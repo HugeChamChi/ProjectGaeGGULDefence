@@ -14,7 +14,7 @@ globalThis.ItemCatalogFeature=({studio:C})=>{
  S.SelectionList={label:'선택 목록',keys:['SelectionListId'],fields:[f('SelectionListId','선택 목록 ID','id',{required:true}),f('Name','목록 이름','text',{required:true}),f('Description','설명','textarea')],note:'여러 아이템 기능이 같은 목록을 재사용할 수 있습니다. 포함 옵션·수량으로 검색해 중복 목록을 확인하세요.'};
  S.SelectionOption={label:'선택 옵션',keys:['OptionId'],fields:[f('OptionId','옵션 ID','id',{required:true}),ref('SelectionListId','소속 선택 목록','SelectionList'),f('Name','옵션 이름','text',{required:true}),f('OptionType','선택 결과','enum',{values:['Reward','Deck'],labels:{Reward:'아이템 지급',Deck:'덱 지급'}}),f('Rewards','지급 아이템','rewards',{allowEmpty:true}),ref('DeckId','지급 덱','Party')],note:'옵션 ID로 각 선택지를 식별합니다. 배열 순서에 의존하지 않습니다.'};
  for(const n of names)PlannerScope.active.add(n);
- STUDIO_NAV.splice(STUDIO_NAV.findIndex(n=>n.id==='attendance'),0,{id:'items',label:'아이템·기능',icon:'◇',tables:names});
+ STUDIO_NAV.splice(STUDIO_NAV.findIndex(n=>n.id==='attendance'),0,{id:'items',label:'아이템 제작',icon:'◇',tables:names});
  function prepare(p){const q=C.clone(p);for(const n of names)q.tables[n]??=[];for(const item of q.tables.Item)for(const key of ['Description','FunctionId','IconAddress'])item[key]??='';return q;}
  Object.assign(STUDIO_SEED,prepare(STUDIO_SEED));
  function id(p,table){const key=S[table].keys[0],prefix={Item:'item',ItemFunction:'function',SelectionList:'selection',SelectionOption:'option'}[table];let n=1;while(p.tables[table].some(r=>r[key]===prefix+'_'+String(n).padStart(4,'0')))n++;return prefix+'_'+String(n).padStart(4,'0');}

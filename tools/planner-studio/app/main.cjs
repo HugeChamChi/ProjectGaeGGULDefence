@@ -108,7 +108,7 @@ async function start() {
   });
   handler('open-exports', async () => { const folder = store.exportFolder(); if (store.excelFolder() && !fs.existsSync(store.excelFolder())) throw new Error('설정에서 엑셀 폴더를 다시 선택하세요.'); fs.mkdirSync(folder, { recursive: true }); const error = await shell.openPath(folder); if (error) throw new Error(error); return true; });
   handler('open-console', async () => { await shell.openExternal('https://console.thebackend.io/'); return true; });
-  await window.loadURL('ggd://app/index.html');
+  await window.loadURL('ggd://app/index.html'+(argument('--open-workspace')?'?workspace='+encodeURIComponent(argument('--open-workspace')):''));
   if (smokePath) await smoke();
   if (contentSmokePath) await require('./content-smoke.cjs')({window, app, store, workspace, resultPath:contentSmokePath, atomic});
 }
