@@ -12,14 +12,14 @@ public class GridManager : MonoBehaviour
     [SerializeField] private List<GridCell>   prebuiltCells = new List<GridCell>(); // 에디터에서 생성된 타일들
 
     private GridCell[,] _grid;
-    private UnitStatusOverlay _unitStatusOverlay;
-    [SerializeField, Tooltip("미지정 시 Resources/UnitStatus 공통 프리팹 사용")]
-    private UnitStatusGraphic _unitStatusPrefab;
+    private UnitStatusBadgeOverlay _unitStatusOverlay;
+    [SerializeField, Tooltip("미지정 시 Resources/UnitStatusBadge 공통 프리팹 사용")]
+    private UnitStatusBadge _unitStatusPrefab;
 
     /// <summary>유닛의 발밑 상태 표시를 그리드 수명의 공용 UI에 연결합니다.</summary>
     public void RegisterUnitStatus(UnitBase unit)
     {
-        if (_unitStatusOverlay == null) _unitStatusOverlay = UnitStatusOverlay.Create(transform, _unitStatusPrefab);
+        if (_unitStatusOverlay == null) _unitStatusOverlay = UnitStatusBadgeOverlay.Create(transform, _unitStatusPrefab);
         _unitStatusOverlay.Register(unit);
     }
 

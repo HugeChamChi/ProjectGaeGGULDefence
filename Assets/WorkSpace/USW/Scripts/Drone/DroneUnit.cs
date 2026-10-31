@@ -20,7 +20,7 @@ public class DroneUnit : MonoBehaviour
 
     public float   Atk            => _owner != null ? _owner.GetCombatDroneDamage(out _) : 0f;
     public float   AttackInterval => _owner != null ? _owner.GetCurrentAttackInterval()
-        / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f) : 1f;
+        / (1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f)) : 1f;
     /// <summary>선택지 대상 판별에 사용하는 소유 유닛.</summary>
     public UnitBase Owner => _owner;
     /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>
@@ -33,7 +33,7 @@ public class DroneUnit : MonoBehaviour
         ? Mathf.RoundToInt(_owner.GetCombatDroneDisplayDamage(false) * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>강화만 제외하고 전용 선택지와 군단 버프를 반영한 공격 간격.</summary>
     public float EffectiveAttackIntervalBeforeUpgrade => _owner != null ? _owner.GetAttackIntervalBeforeUpgrade()
-        / (_owner is Drone_Betan ? 1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f) : 1f)
+        / (1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f))
         / (_droneManager?.DroneSpeedMultiplier ?? 1f) : 0f;
     /// <summary>오너 위치와 현재 위상을 반영한 귀환/드래그 기준점.</summary>
     public Vector3 HomePosition => (_owner != null ? _owner.transform.position : _homePositionFallback)

@@ -88,3 +88,16 @@ Drone-only live check 2026-10-30 21:00 KST: DEV_UnitBaseStats file272692 has20ro
 - 테스트 종료 시 Unity 콘솔 Error 0건. 복사 LobbyScene Play 상태 유지. DOTween 참조 호환 경고 CS1701은 검사 스크립트 컴파일에서 발생했으며 실행은 통과.
 
 재현 순서: 복사 BootScene Play → LiveHtmlBonusChecks.Boot → LiveValueChartChecks.Run → UnitBonusTableChecks.RunRemote → LiveBonusDescriptionChecks.Run → LiveHtmlBonusChecks.Factory.
+
+
+## 2026-10-31 Develop 병합 검증
+
+origin/Develop 18f7ff50을 병합. 메타 이름 변경 충돌은 Develop 경로·GUID를 그대로 선택했다. 로컬 Unity가 재생성한 기존 아트 메타는 커밋 제외하고 importer 변동은 병합 인덱스로 복원했다.
+
+- .gitignore 양쪽 규칙 유지. 선택지 에셋1/2/3/15는 Develop 원본 선택: 10초 주기, 전체 전투 드론 공속20%, 20초 일제 출격, 소유 베탕 수리0.5초. 프리셋도 같은 수치다. 설명의 수치 참조 템플릿은 유지했다.
+- 베탕: 기본 자폭의 레벨 배율·충전 감소와 Develop의 소유자 생명주기 검사를 함께 유지.
+- 델탕: 압축 충전 기준→선택지 감소→레벨 감소(하한1), 생산량은 레벨 추가량을 포함해 압축 배율 적용.
+- 감망: Develop의 드론당 스택 피해 증가·상한 계산에 레벨 스택 피해 배율을 곱한다. 기본 스킬 피해 부분은 증가시키지 않는다.
+- 젤탕: Develop의 독립된 자체·함대 생산 구조, 초기화·정산을 유지하고 레벨 생산량·속도·5번째 배율·보스 식량을 연결. 중복 OnInitialized 통합.
+- 컴파일 통과. BonusModelV2Checks 1735개, UnitBonusTableChecks99개, DroneSelectionChecks, SelectionExpansionChecks 강화/식량28개, DevelopMergeChecks 복합 적용7개 통과. 선택지 편집 검사는 임시로 remoteRequired=false 후 복원하는 wrapper로 실행했다.
+- 복사 Boot Play→자동 로그인→원격 차트 로드→복사 Lobby 통과. 서버60행/780셀 동일, 부팅값1554 비교 통과. 설명/알팡 툴팁과 실제 UnitFactory20프리팹 통과. 계정 레벨 쓰기 없음. 종료 시 콘솔Error0, 복사 로비Play유지.

@@ -50,30 +50,32 @@ public static class DroneSelectionChecks
                 var drone=Component<DroneUnit>(); Set(drone,"_owner",beta); drone.gameObject.SetActive(true); drones.RegisterDrone(drone);
             }
             drones.TickSelections(20); Check(beta.Spawned==0,"No selection no extra bombs");
-            manager.ApplyEffect(cards[1]); drones.TickSelections(14); Check(beta.Spawned==0,"Normal waits");
+            manager.ApplyEffect(cards[1]); drones.TickSelections(9); Check(beta.Spawned==0,"Normal waits");
             var unrelated=Asset<LevelUpData>(); unrelated.chooseId=9199;
             unrelated.primaryEffect=LevelUpEffectType.ExpGainPercent; unrelated.primaryValue=10;
-            manager.ApplyEffect(unrelated); // Must not reset the fourteen seconds already accumulated.
-            drones.TickSelections(1); Check(beta.Spawned==1,"Normal one bomb at fifteen seconds");
-            manager.ApplyEffect(cards[3]); drones.TickSelections(60); Check(beta.Spawned==15,"Normal plus epic ten cap");
+            manager.ApplyEffect(unrelated); // Must not reset the nine seconds already accumulated.
+            drones.TickSelections(1); Check(beta.Spawned==1,"Normal one bomb at ten seconds");
+            manager.ApplyEffect(cards[3]); drones.TickSelections(20); Check(beta.Spawned==13,"Normal plus epic ten cap");
             manager.RemoveEffect(cards[1]);manager.RemoveEffect(cards[3]); drones.TickSelections(60);
-            Check(beta.Spawned==15,"Removed periodic effects stop");
+            Check(beta.Spawned==13,"Removed periodic effects stop");
             var ownDrone=drones.Drones[0];float interval=ownDrone.AttackInterval;
-            manager.ApplyEffect(cards[2]); Check(Mathf.Approximately(ownDrone.AttackInterval,interval/1.1f),"Betan speed plus ten percent");
+            manager.ApplyEffect(cards[2]); Check(Mathf.Approximately(ownDrone.AttackInterval,interval/1.2f),"Betan speed plus twenty percent");
             manager.RemoveEffect(cards[2]);Check(Mathf.Approximately(ownDrone.AttackInterval,interval),"Speed restored");
 
             var currency=Component<CurrencyManager>(); var zelta=Component<Drone_Zeltan>(); zelta.unitData=Asset<UnitData>();
             zelta.unitData.foodProduction.normal=4;zelta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration,CurrencyManager=currency });
             manager.ApplyEffect(cards[6]); var resource=zelta.GetComponent<UnitResourceComponent>();
-            resource.TickFoodProduction(2);Check(currency.Currency==0,"Air fryer holds two seconds");
-            resource.TickFoodProduction(1);Check(Mathf.Approximately(currency.Currency,14.4f),"Air fryer pays three seconds at 120 percent");
+            Set(zelta,"<currentCell>k__BackingField",cell);
+            resource.TickFoodProduction(3);Check(currency.Currency==0,"Air fryer bypasses separate resource payout");
+            zelta.TickBatchedFoodPayout(2);Check(currency.Currency==0,"Air fryer holds two seconds");
+            zelta.TickBatchedFoodPayout(1);Check(Mathf.Approximately(currency.Currency,14.4f),"Air fryer pays three seconds at 120 percent");
             Check(Mathf.Approximately(zelta.CurrentFoodProductionPerSecond,4.8f),"Food UI remains per second");
             manager.RemoveEffect(cards[6]);resource.TickFoodProduction(1);Check(Mathf.Approximately(currency.Currency,18.4f),"Food revert");
             var delta=Component<Drone_Deltan>();delta.unitData=Asset<UnitData>();delta.unitData.skillCooldown.normal=20;
             delta.unitData.Hacking=Asset<DroneHackingData>();delta.unitData.Hacking.AttacksToCharge.normal=6;
             delta.Init(new UnitDependencies { SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration });manager.ApplyEffect(cards[9]);
-            Check(delta.RequiredAttacks==6 && manager.Effects.HasGammanResidue && Mathf.Approximately(manager.Effects.GammanResidueRatio,.2f)
-                && Mathf.Approximately(manager.Effects.GammanResidueDuration,3f) && manager.Effects.GammanResidueTicks==6,"넹... residue settings, mana requirement unchanged");
+            Check(delta.RequiredAttacks==9 && !manager.Effects.HasGammanResidue
+                && manager.Effects.HackingCompressionMultiplier==2,"넹... compression charge and production");
             var alphaData=Asset<AlphanSkillData>(); alphaData.CooldownSeconds=20;
             using (var alpha=new AlphanActiveSkill(null,new[]{drones},manager.Effects,null,null))
             {
@@ -83,9 +85,9 @@ public static class DroneSelectionChecks
 
             var gamma=Component<Drone_Gamman>();gamma.unitData=Asset<UnitData>();gamma.Init(new UnitDependencies {SelectionCombat = manager.Effects, DroneEffects = manager.Effects, SelectionChanges = manager.Effects, CombatSettings = manager.CombatConfiguration});
             Set(gamma,"_droneManager",drones);manager.ApplyEffect(cards[4]);
-            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.036f),"Gamman stack damage twelve drones");
+            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.06f),"Gamman stack damage twelve drones");
             for(int i=0;i<20;i++) drones.RegisterDrone(Component<DroneUnit>());
-            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.09f),"Frequency nine percent cap");
+            Check(Mathf.Approximately(gamma.StackDamageMultiplier,1.16f),"Frequency thirty-two drones without cap");
             var gammaDrone=Component<DroneUnit>();Set(gammaDrone,"_owner",gamma);drones.RegisterDrone(gammaDrone);
             Set(gamma,"<currentCell>k__BackingField",cell);gamma.gameObject.SetActive(true);
             Set(drones,"_buffEndTime",-1f);manager.ApplyEffect(cards[5]);drones.ApplyEmergencyBuffs();

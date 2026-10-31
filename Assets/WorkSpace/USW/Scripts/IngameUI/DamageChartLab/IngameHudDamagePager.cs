@@ -21,6 +21,7 @@ public sealed class IngameHudDamagePager : MonoBehaviour
     private CanvasGroup _graphGroup;
     // The options button overlaps the graph's top-right corner, so it is hidden on the graph page.
     private CanvasGroup _menuButtonGroup;
+    private IngameHudMotion _hudMotion;
     private Tween _pop;
     private float _popScale = 1f;
     // +1: graph waits on the right of the buttons, -1: on the left. Set by the swipe direction.
@@ -50,6 +51,7 @@ public sealed class IngameHudDamagePager : MonoBehaviour
         _buttons = bar != null ? bar.Find("Buttons") as RectTransform : null;
         if (_buttons == null) return false;
         _chart = chart; _settings = settings;
+        _hudMotion = bar.GetComponentInChildren<IngameHudMotion>(true);
         var ui = new DamageChartUiFactory(font);
         SwipeArea = ui.Rect("CombatHudPager", bar, Vector2.zero, new Vector2(1f, 0f));
         SwipeArea.sizeDelta = new Vector2(0f, settings.HudHeight);
@@ -170,7 +172,7 @@ public sealed class IngameHudDamagePager : MonoBehaviour
         GraphPage.localScale = Vector3.one * (Mathf.Lerp(minScale, 1f, _progress) * (IsChartVisible ? _popScale : 1f));
         _buttonGroup.alpha = Mathf.Lerp(1f, minAlpha, _progress);
         _graphGroup.alpha = Mathf.Lerp(minAlpha, 1f, _progress);
-        if (_menuButtonGroup != null)
+        if (_menuButtonGroup != null && (_hudMotion == null || !_hudMotion.IsCaptured))
         {
             _menuButtonGroup.alpha = 1f - _progress;
             _menuButtonGroup.interactable = _menuButtonGroup.blocksRaycasts = _progress < .5f;

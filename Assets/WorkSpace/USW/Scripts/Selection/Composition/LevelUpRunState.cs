@@ -83,7 +83,10 @@ public sealed class LevelUpRunState
         _active.RemoveAt(index); _pendingLegendSources.Remove(cardId); Current = projected;
         return true;
     }
-    /// <summary>추첨 조정자가 기존 소비 시점에서 호출한다. 재계산으로 보장이 되살아나지 않는다.</summary>
+    /// <summary>유효한 레전더리 목록을 반환할 때까지 유지하는 다음 추첨 보장.</summary>
+    public bool HasLegendGuarantee => _pendingLegendSources.Count > 0;
+
+    /// <summary>추첨 조정자가 유효한 레전더리 목록을 만든 뒤 호출한다. 재계산으로 보장이 되살아나지 않는다.</summary>
     public bool ConsumeLegendGuarantee()
     {
         RequireRun();

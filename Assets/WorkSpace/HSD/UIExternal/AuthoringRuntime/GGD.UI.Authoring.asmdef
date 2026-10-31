@@ -1,0 +1,1 @@
+{"name":"GGD.UI.Authoring","rootNamespace":"GGD.UI.Authoring","references":["GGD.UI.DocumentCore","UnityEngine.UI","Unity.TextMeshPro"],"autoReferenced":true}

@@ -244,6 +244,7 @@ public class UnitSpawner : MonoBehaviour
         float startDelaySeconds, float? lineCurveHeight)
     {
         if (unit == null || cell == null) return;
+        var token = this.GetCancellationTokenOnDestroy();
         
         // 이펙트 재생 동안 유닛을 숨김
         unit.gameObject.SetActive(false);
@@ -251,8 +252,8 @@ public class UnitSpawner : MonoBehaviour
         if (startDelaySeconds > 0f)
         {
             bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: _tutorialSettings != null,
-                cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
-            if (canceled || unit == null || cell == null) return;
+                cancellationToken: token).SuppressCancellationThrow();
+            if (canceled || !CanCompleteSpawn(unit, cell)) return;
         }
         
         Transform lineParent = effectParent != null ? effectParent : transform;
@@ -302,9 +303,13 @@ public class UnitSpawner : MonoBehaviour
                 if (lineCurveHeight.HasValue) line.curveHeight = lineCurveHeight.Value;
                 line.UseUnscaledTime = _tutorialSettings != null;
                 line.Fire(startPos, endPos);
-                await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration), ignoreTimeScale: line.UseUnscaledTime);
+                bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration),
+                    ignoreTimeScale: line.UseUnscaledTime, cancellationToken: token).SuppressCancellationThrow();
+                if (canceled || !CanCompleteSpawn(unit, cell)) return;
             }
         }
+
+        if (!CanCompleteSpawn(unit, cell)) return;
 
         // 2. Particle Effect (World Space)
         if (spawnEffectPrefab != null)
@@ -338,6 +343,9 @@ public class UnitSpawner : MonoBehaviour
         }
     }
 
+    private bool CanCompleteSpawn(UnitBase unit, GridCell cell) =>
+        this != null && unit != null && cell != null && cell.OccupyingUnit == unit
+        && _gameManager?.IsFinished != true;
 
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>
     public void SellUnit(UnitBase unit)
@@ -411,7 +419,8 @@ public class UnitSpawner : MonoBehaviour
 
     private async Cysharp.Threading.Tasks.UniTaskVoid SpawnNormalUnitAfterSellAsync()
     {
-        await Cysharp.Threading.Tasks.UniTask.Yield();
+        if (await Cysharp.Threading.Tasks.UniTask.Yield(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow()) return;
+        if (this == null || _gameManager?.IsFinished == true || _gridManager == null) return;
         var empty = _gridManager.GetEmptyCells();
         if (empty.Count == 0) return;
 

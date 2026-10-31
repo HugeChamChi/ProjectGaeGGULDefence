@@ -15,6 +15,8 @@ public sealed class DebuffController
     private double _now;
     /// <summary>Combat time used for expiry; remains unchanged while combat is paused.</summary>
     public double CurrentTime => _now;
+    /// <summary>새 디버프가 처음 걸렸을 때(재부여·중첩 제외). 표시 전용.</summary>
+    public event Action<DebuffKind> OnStarted;
     /// <summary>디버그용 읽기 전용 활성 상태 목록.</summary>
     public IReadOnlyList<DebuffInstance> Active => _view;
     /// <summary>공통 피해 차감과 대상 생존 검사를 주입한다.</summary>
@@ -66,6 +68,9 @@ public sealed class DebuffController
                 _ => throw new ArgumentOutOfRangeException(nameof(definition))
             };
             _instances.Add(instance);
+            instance.Reapply(_now, context);
+            OnStarted?.Invoke(definition.Kind);
+            return true;
         }
         instance.Reapply(_now, context);
         return true;

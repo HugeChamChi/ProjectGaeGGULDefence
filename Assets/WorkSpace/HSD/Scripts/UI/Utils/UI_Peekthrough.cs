@@ -15,14 +15,27 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private Tween _fadeTween;
     private object _peekOwner;
+    private object _sessionOwner;
     private int? _pointerId;
     private BaseInput _input;
     private bool _selectionBlocked;
     private bool _restoreInteractable;
     private int _releaseAfterFrame;
+    private bool _backgroundPeekEnabled = true;
+
+    /// <summary>Disables blank-area presses while retaining card-owned unit previews.</summary>
+    public void SetBackgroundPeekEnabled(bool enabled) => _backgroundPeekEnabled = enabled;
 
     /// <summary>필드 보기와 복귀 중에는 모든 선택 입력을 잠근다.</summary>
     public bool BlocksSelection => _selectionBlocked;
+
+    /// <summary>Fade and initiating touch have both completed; shared by hold and toggle clients.</summary>
+    public bool IsSettled => (_fadeTween == null || !_fadeTween.IsActive() || !_fadeTween.IsPlaying()) &&
+        Time.frameCount > _releaseAfterFrame && !PointerHeld;
+
+    private bool PointerHeld => _input != null
+        ? _input.touchCount > 0 || _input.GetMouseButton(0)
+        : Input.touchCount > 0 || Input.GetMouseButton(0);
 
     /// <summary>패널의 입력 잠금 중에도 필드 보기를 시작한 카드의 홀드를 유지한다.</summary>
     public bool OwnsPeek(object owner) => owner != null && ReferenceEquals(_peekOwner, owner);
@@ -32,14 +45,14 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         if (!isActiveAndEnabled || _targetGroup == null || owner == null || _selectionBlocked ||
             !_targetGroup.interactable) return false;
-        _peekOwner = owner;
+        _peekOwner = _sessionOwner = owner;
+        _releaseAfterFrame = Time.frameCount;
         _input = EventSystem.current != null ? EventSystem.current.currentInputModule?.input : null;
         _restoreInteractable = _targetGroup.interactable;
         _selectionBlocked = true;
         // Raycasts stay blocked so the second finger cannot reach field units either.
         _targetGroup.interactable = false;
-        KillTween();
-        _fadeTween = _targetGroup.DOFade(_peekAlpha, _fadeDuration).SetUpdate(true);
+        FadeTo(_peekAlpha);
         return true;
     }
 
@@ -49,21 +62,30 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (!ReferenceEquals(_peekOwner, owner)) return;
         _peekOwner = null;
         _releaseAfterFrame = Time.frameCount;
+        FadeTo(1f);
+    }
+
+    private void FadeTo(float alpha)
+    {
         KillTween();
-        if (_targetGroup != null)
-            _fadeTween = _targetGroup.DOFade(1f, _fadeDuration).SetUpdate(true);
+        if (_targetGroup == null) return;
+        _fadeTween = _targetGroup.DOFade(alpha, _fadeDuration).SetUpdate(true).SetEase(Ease.InOutSine)
+            .OnComplete(() => _releaseAfterFrame = Time.frameCount);
     }
 
     private void LateUpdate()
     {
-        if (!_selectionBlocked || _peekOwner != null || Time.frameCount <= _releaseAfterFrame) return;
-        if (_fadeTween != null && _fadeTween.IsActive() && _fadeTween.IsPlaying()) return;
-        // A Button may still receive PointerClick after its original PointerDown was blocked.
-        // Wait for every touch and the release frame to finish before allowing a new tap.
-        bool pointerHeld = _input != null
-            ? _input.touchCount > 0 || _input.GetMouseButton(0)
-            : Input.touchCount > 0 || Input.GetMouseButton(0);
-        if (!pointerHeld) RestoreInput();
+        if (_selectionBlocked && _peekOwner == null && IsSettled) RestoreInput();
+    }
+
+    /// <summary>Immediately cancels only this client's transition, including a return already in progress.</summary>
+    public void CancelPeek(object owner)
+    {
+        if (!ReferenceEquals(_sessionOwner, owner)) return;
+        _peekOwner = null;
+        KillTween();
+        RestoreInput();
+        if (_targetGroup != null) _targetGroup.alpha = 1f;
     }
 
     private void RestoreInput()
@@ -71,6 +93,7 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (_selectionBlocked && _targetGroup != null)
             _targetGroup.interactable = _restoreInteractable;
         _selectionBlocked = false;
+        _sessionOwner = null;
         _input = null;
     }
 
@@ -85,7 +108,7 @@ public class UI_Peekthrough : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     /// </summary>
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Left && TryBeginPeek(this))
+        if (_backgroundPeekEnabled && eventData.button == PointerEventData.InputButton.Left && TryBeginPeek(this))
             _pointerId = eventData.pointerId;
     }
 

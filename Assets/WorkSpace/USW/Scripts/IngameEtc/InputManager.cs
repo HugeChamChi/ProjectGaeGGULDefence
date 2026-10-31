@@ -186,6 +186,7 @@ public class InputManager : MonoBehaviour
         {
             var occupant = pointerCell.OccupyingUnit != null ? pointerCell.OccupyingUnit.gameObject
                 : pointerCell.OccupyingTotem != null ? pointerCell.OccupyingTotem.gameObject : null;
+            if (occupant != null && !occupant.activeInHierarchy) return null;
             if (occupant != null && occupant.TryGetComponent<DragHandler>(out var occupiedDrag)) return occupiedDrag;
         }
 
@@ -259,6 +260,9 @@ public class InputManager : MonoBehaviour
     private void OnDisable() => CancelPointer();
     private void OnApplicationFocus(bool focused) { if (!focused) CancelPointer(); }
     private void OnApplicationPause(bool paused) { if (paused) CancelPointer(); }
+    /// <summary>Cancels the owned field press or drag without committing a drop or click.</summary>
+    public void CancelCurrentInteraction() => CancelPointer();
+
     private void CancelPointer()
     {
         var handler = _currentDraggable as DragHandler;

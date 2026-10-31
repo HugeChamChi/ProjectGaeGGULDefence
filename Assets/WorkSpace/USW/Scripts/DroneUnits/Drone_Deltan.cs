@@ -16,6 +16,7 @@ public class Drone_Deltan : HackingDroneSpawner
         {
             int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.AttacksToCharge.Get(currentTier) : 1);
             var effects = DroneEffects;
+            if (effects?.HackingCompressionRequiredAttacks > 0) baseline = effects.HackingCompressionRequiredAttacks;
             int selected = effects?.HasManaRequirementReduction != true ? baseline : baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction));
             return Mathf.Max(1, selected - Mathf.RoundToInt(LevelStat(UnitBonusStat.ChargeAttackReductionFlat)));
         }
@@ -26,6 +27,7 @@ public class Drone_Deltan : HackingDroneSpawner
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
     private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.StacksProduced.Get(currentTier) : 0)
         + LevelProductionBonus + (DroneEffects?.HackingProductionFlat ?? 0))
+        * (DroneEffects?.HackingCompressionMultiplier ?? 1)
         * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;
     /// <inheritdoc />
     public override bool UsesTimedSkillCharge => false;
@@ -59,7 +61,7 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <inheritdoc />
     protected override void OnHackingProduced(int requested,int accepted)
     {
-        AddMana((requested - accepted) * (DroneEffects?.OverflowManaPerStack ?? 0));
+        if (requested > accepted) AddMana(DroneEffects?.OverflowManaPerCast ?? 0);
     }
     /// <inheritdoc />
     protected override void OnUnitRemoved()

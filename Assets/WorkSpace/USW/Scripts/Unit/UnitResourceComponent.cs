@@ -8,17 +8,71 @@ public class UnitResourceComponent : MonoBehaviour
     private UnitBase _unit;
     private UnitDependencies _deps;
     private float _foodTimer;
+    // The normal timer freezes during batch mode, then resumes when the effect ends.
+    // Batch credit survives temporary removal/replacement on the same unit instance.
+    // Selling/merging destroys this component and discards unpaid credit, as before.
+    private float _batchTimer;
+    private float _pendingFood;
 
     public void Init(UnitBase unit, UnitDependencies deps)
     {
         _unit = unit;
         _deps = deps;
         _foodTimer = 0f;
+        _batchTimer = 0f;
+        _pendingFood = 0f;
+    }
+
+    /// <summary>
+    /// Accrues the producer's combined own/fleet rate and owns its payment clock.
+    /// Call only from the active producer's fleet tick. Stun affects the supplied rate,
+    /// while removal/seal pauses the clock. Ending batch mode flushes earned credit
+    /// on the next eligible tick; ending the run never pays further credit.
+    /// </summary>
+    public void TickBatchedFoodProduction(float deltaTime, float foodPerSecond)
+    {
+        if (_deps?.CurrencyManager == null || _deps.GameManager?.IsFinished == true || _unit == null) return;
+        if (!_unit.UsesExternalFoodPayout)
+        {
+            PayPendingFood();
+            _batchTimer = 0f;
+            return;
+        }
+        if (deltaTime <= 0f || _unit.currentCell == null || _unit.IsCellSealed) return;
+        float period = Mathf.Max(1f, _unit.FoodPayoutInterval);
+        while (deltaTime > 0f)
+        {
+            float step = Mathf.Min(deltaTime, period - _batchTimer);
+            _pendingFood += foodPerSecond * step;
+            _batchTimer += step;
+            deltaTime -= step;
+            if (_batchTimer >= period)
+            {
+                _batchTimer = 0f;
+                PayPendingFood();
+            }
+        }
+    }
+
+    private void PayPendingFood()
+    {
+        float amount = _pendingFood;
+        _pendingFood = 0f;
+        PayFood(amount);
+    }
+
+    private void PayFood(float amount)
+    {
+        if (amount <= 0f) return;
+        _deps.CurrencyManager.AddCurrency(amount);
+        _deps.CurrencyFloaterManager?.ReportFoodProduction(amount);
+        OnFoodProduced?.Invoke();
     }
 
     public void TickFoodProduction(float deltaTime)
     {
         if (_deps?.GameManager?.IsFinished == true) return;
+        if (_unit != null && _unit.UsesExternalFoodPayout) return;
         if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.IsCellSealed || _unit.unitData == null || deltaTime <= 0f) return;
 
         float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
@@ -51,10 +105,7 @@ public class UnitResourceComponent : MonoBehaviour
         {
             for (int i = 0; i < elapsedTicks; i++)
             {
-                float payout = amountPerTick * _unit.NextFoodPayoutMultiplier();
-                _deps.CurrencyManager.AddCurrency(payout);
-                _deps.CurrencyFloaterManager?.ReportFoodProduction(payout);
-                OnFoodProduced?.Invoke();
+                PayFood(amountPerTick * _unit.NextFoodPayoutMultiplier());
             }
         }
     }

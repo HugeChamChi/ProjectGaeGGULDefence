@@ -16,8 +16,13 @@ MonoBehaviour:
   CostMultiplier: 2
   AttackPercentPerLevel: 8
   AttackSpeedPercentPerLevel: 2
-  ZeltanFoodPerLevel: 0.4
-  ZeltanFoodPerDrone: 0.55
+  ZeltanFoodPerDronePerLevel: 0.04
+  ZeltanCosts:
+  - 100
+  - 400
+  - 800
+  - 1400
+  - 2300
   TargetKeys:
   - Deltan
   - Gammang

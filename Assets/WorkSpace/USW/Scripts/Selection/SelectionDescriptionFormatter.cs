@@ -54,6 +54,8 @@ public sealed class SelectionDescriptionFormatter
                 case HackingProductionRollDefinition d:
                     values["value"] = Percent(d.MinimumRatio); break;
                 case HackingProductionFlatDefinition d: values["Count"] = d.StackCount.ToString(CultureInfo.InvariantCulture); break;
+                case HackingCompressionDefinition d:
+                    values["count"] = Number(d.RequiredAttacks); values["value"] = Number(d.ProductionMultiplier); break;
                 case ManaRequirementDefinition d: values["ValuePercent"] = Percent(d.ReductionRatio); break;
                 case HackingProductionProcDefinition d:
                     values["value"] = Percent(d.Chance); values["count"] = d.Multiplier.ToString(CultureInfo.InvariantCulture); break;
@@ -74,13 +76,13 @@ public sealed class SelectionDescriptionFormatter
                 case ChiefVolleyDefinition d:
                     values["value"] = Percent(d.DamageRatio); values["count"] = Number(d.ShotCount); values["seconds"] = Number(d.ShotDelaySeconds); break;
                 case FoodProductionDefinition d: values["value"] = Percent(d.BonusRatio); break;
-                case FleetFoodProductionDefinition d: values["value"] = Percent(d.BonusRatio); break;
+                case WaveFoodDividendDefinition d: values["value"] = Percent(d.Ratio); break;
                 case RallyDamageDefinition d: values["value"] = Number(d.BonusRatio); break;
                 case ExplosionSkillRecoveryDefinition d: values["seconds"] = Number(d.Seconds); break;
                 case UpgradeDiscountDefinition d: values["value"] = Percent(d.Ratio); break;
                 case MergeSupportDefinition d: values["value"] = Percent(d.Chance); break;
                 case CombatDroneCapacityDefinition d: values["count"] = Number(d.Count); break;
-                case OverflowManaDefinition d: values["count"] = d.ManaPerStack.ToString(CultureInfo.InvariantCulture); break;
+                case OverflowManaDefinition d: values["count"] = d.ManaPerCast.ToString(CultureInfo.InvariantCulture); break;
                 case BombHackingDefinition d: values["count"] = d.StacksPerBomb.ToString(CultureInfo.InvariantCulture); break;
                 case HackingCarryoverDefinition d: values["value"] = Percent(d.Ratio); break;
                 case BonusManaDefinition d:

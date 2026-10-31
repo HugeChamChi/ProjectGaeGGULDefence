@@ -11,7 +11,10 @@ public class Drone_Gamman : HackingDroneSpawner
         get
         {
             var effects = DroneEffects;
-            return (1f + LevelStat(UnitBonusStat.HackingStackDamagePercent)) * (1f + (effects != null ? Mathf.Min(effects.MaximumStackSkillReduction, (_droneManager?.DroneCount ?? 0) * effects.StackSkillReduction) : 0f));
+            float levelMultiplier = 1f + LevelStat(UnitBonusStat.HackingStackDamagePercent);
+            if (effects == null) return levelMultiplier;
+            float bonus = (_droneManager?.DroneCount ?? 0) * effects.StackDamageBonusPerDrone;
+            return levelMultiplier * (1f + (effects.MaximumStackDamageBonus > 0f ? Mathf.Min(effects.MaximumStackDamageBonus, bonus) : bonus));
         }
     }
     /// <summary>SkillData 액션에서 현재 잔고를 확보하고 순간이동 기폭을 시작한다.</summary>
@@ -24,7 +27,7 @@ public class Drone_Gamman : HackingDroneSpawner
         float coefficient = data.BaseCoefficient.Get(currentTier)
             + reservation.Amount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
-        // 9109 넹...: 치명·편차가 정해진 기폭 피해에서 스택 추가분 비율만큼을 여운 총량으로 잡는다.
+        // Historical definition compatibility only; the authored 9109 now supplies Deltan compression.
         var effects = DroneEffects;
         float stackCoefficient = reservation.Amount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
         _pendingResidue = effects?.HasGammanResidue == true && reservation.Amount > 0 && coefficient > 0f

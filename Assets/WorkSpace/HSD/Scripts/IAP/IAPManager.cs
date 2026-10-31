@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Purchasing;
@@ -20,7 +22,7 @@ namespace GaeGGUL.IAP
         private readonly Dictionary<string, int> _diamondPayouts = new();
         private readonly List<Button> _spawnedButtons = new();
 
-        private async void Awake()
+        private void Awake()
         {
             productButtonTemplate.gameObject.SetActive(false);
             restoreButton.onClick.AddListener(OnRestoreClicked);
@@ -47,7 +49,13 @@ namespace GaeGGUL.IAP
             RefreshDiamondText();
             SetStatus("Connecting...");
             Log("스토어 연결 시도...");
-            await _store.Connect();
+            ConnectStoreAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        }
+
+        /// <summary>Connects the store; the result arrives through OnStoreConnected/OnStoreDisconnected.</summary>
+        private async UniTaskVoid ConnectStoreAsync(CancellationToken token)
+        {
+            await _store.Connect().AsUniTask().AttachExternalCancellation(token);
         }
 
         private void OnStoreConnected()

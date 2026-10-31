@@ -86,24 +86,28 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public int FleetBombCount { get; private set; } = 0;
     /// <summary>DroneAttackSpeedBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float DroneAttackSpeedBonus { get; private set; } = 0f;
-    /// <summary>StackSkillReduction의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public float StackSkillReduction { get; private set; } = 0f;
-    /// <summary>MaximumStackSkillReduction의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public float MaximumStackSkillReduction { get; private set; } = 0f;
+    /// <summary>전투 드론 1기당 감망 스택 추가 피해 증가 비율.</summary>
+    public float StackDamageBonusPerDrone { get; private set; } = 0f;
+    /// <summary>스택 추가 피해 증가 상한. 0이면 무상한.</summary>
+    public float MaximumStackDamageBonus { get; private set; } = 0f;
     /// <summary>HasEmptyStackDamage의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public bool HasEmptyStackDamage { get; private set; } = false;
-    /// <summary>HasFoodPayoutAnimation의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public bool HasFoodPayoutAnimation { get; private set; } = false;
+    /// <summary>젤탕 자체·군단 생산을 합쳐 누적 지급하는 경제 정책의 활성 여부.</summary>
+    public bool HasBatchedFoodPayout { get; private set; } = false;
     /// <summary>FoodPayoutInterval의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float FoodPayoutInterval { get; private set; } = 1f;
     /// <summary>FoodProductionBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float FoodProductionBonus { get; private set; } = 0f;
-    /// <summary>FleetFoodProductionBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public float FleetFoodProductionBonus { get; private set; } = 0f;
+    /// <summary>WaveFoodDividendRatio의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
+    public float WaveFoodDividendRatio { get; private set; } = 0f;
     /// <summary>HackingProductionFlat의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public int HackingProductionFlat { get; private set; } = 0;
     /// <summary>HackingProductionBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float HackingProductionBonus { get; private set; } = 0f;
+    /// <summary>압축 업로드의 기본 충전량. 0이면 미획득.</summary>
+    public int HackingCompressionRequiredAttacks { get; private set; }
+    /// <summary>압축 업로드 생산 배수.</summary>
+    public int HackingCompressionMultiplier { get; private set; } = 1;
     /// <summary>ManaRequirementReduction의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float ManaRequirementReduction { get; private set; } = 0f;
     /// <summary>마나 감소 기능의 활성 여부.</summary>
@@ -142,8 +146,8 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public float MergeSupportChance { get; private set; } = 0f;
     /// <summary>ExtraCombatDroneCount의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public int ExtraCombatDroneCount { get; private set; } = 0;
-    /// <summary>OverflowManaPerStack의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public int OverflowManaPerStack { get; private set; } = 0;
+    /// <summary>OverflowManaPerCast의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
+    public int OverflowManaPerCast { get; private set; } = 0;
     /// <summary>HasBombHacking의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public bool HasBombHacking { get; private set; } = false;
     /// <summary>HackingStacksPerBomb의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
@@ -182,9 +186,10 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
                     case PeriodicBombDefinition d: Once(effect); PeriodicBombInterval=d.PeriodSeconds; PeriodicBombCount=d.BombCount; break;
                     case DroneAttackSpeedDefinition d: DroneAttackSpeedBonus+=d.BonusRatio; break;
                     case FleetBombDefinition d: Once(effect); FleetBombInterval=d.PeriodSeconds; FleetBombCount=d.BombCount; break;
-                    case StackSkillFrequencyDefinition d: Once(effect); StackSkillReduction=d.ReductionPerStack; MaximumStackSkillReduction=d.MaximumReduction; break;
+                    case StackSkillFrequencyDefinition d: Once(effect); StackDamageBonusPerDrone=d.ReductionPerStack; MaximumStackDamageBonus=d.MaximumReduction; break;
                     case EmptyStackDamageDefinition d: HasEmptyStackDamage=true; break;
-                    case FoodPayoutDefinition d: Once(effect); HasFoodPayoutAnimation=true; FoodPayoutInterval=d.PeriodSeconds; FoodProductionBonus+=d.BonusRatio; break;
+                    case FoodPayoutDefinition d: Once(effect); HasBatchedFoodPayout=true; FoodPayoutInterval=d.PeriodSeconds; FoodProductionBonus+=d.BonusRatio; break;
+                    case HackingCompressionDefinition d: Once(effect); HackingCompressionRequiredAttacks=d.RequiredAttacks; HackingCompressionMultiplier=d.ProductionMultiplier; break;
                     case HackingProductionFlatDefinition d: HackingProductionFlat=checked(HackingProductionFlat+d.StackCount); break;
                     case HackingProductionRollDefinition d: if (d.MinimumRatio != d.MaximumRatio) throw new ArgumentException("Production roll must be resolved by Prepare."); HackingProductionBonus+=d.MinimumRatio; break;
                     case ManaRequirementDefinition d: Once(effect); HasManaRequirementReduction=true; ManaRequirementReduction=d.ReductionRatio; break;
@@ -195,12 +200,12 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
                     case ChiefHackingDetonationDefinition d: Once(effect); ChiefHackingDamagePerStack=d.DamageRatioPerStack; break;
                     case ChiefVolleyDefinition d: Once(effect); ChiefVolleyDelay=d.ShotDelaySeconds; ChiefVolleyDamageRatio=d.DamageRatio; ChiefVolleyCount=d.ShotCount; break;
                     case FoodProductionDefinition d: FoodProductionBonus+=d.BonusRatio; break;
-                    case FleetFoodProductionDefinition d: FleetFoodProductionBonus+=d.BonusRatio; break;
+                    case WaveFoodDividendDefinition d: Once(effect); WaveFoodDividendRatio=d.Ratio; break;
                     case RallyDamageDefinition d: HasRallyDamage=true; RallyDamageBonus+=d.BonusRatio; break;
                     case ExplosionSkillRecoveryDefinition d: ExplosionSkillRecoverySeconds+=d.Seconds; break;
                     case MergeSupportDefinition d: MergeSupportChance+=d.Chance; break;
                     case CombatDroneCapacityDefinition d: ExtraCombatDroneCount=checked(ExtraCombatDroneCount+d.Count); break;
-                    case OverflowManaDefinition d: Once(effect); OverflowManaPerStack=d.ManaPerStack; break;
+                    case OverflowManaDefinition d: Once(effect); OverflowManaPerCast=d.ManaPerCast; break;
                     case BombHackingDefinition d: Once(effect); HasBombHacking=true; HackingStacksPerBomb=d.StacksPerBomb; break;
                     case HackingCarryoverDefinition d: Once(effect); HackingCarryoverRatio=d.Ratio; break;
                     case BonusManaDefinition d: Once(effect); BonusManaChance=d.Chance; BonusManaCount=d.ManaCount; break;
@@ -251,11 +256,11 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
         Finite(PeriodicBombInterval);
         Finite(FleetBombInterval);
         Finite(DroneAttackSpeedBonus);
-        Finite(StackSkillReduction);
-        Finite(MaximumStackSkillReduction);
+        Finite(StackDamageBonusPerDrone);
+        Finite(MaximumStackDamageBonus);
         Finite(FoodPayoutInterval);
         Finite(FoodProductionBonus);
-        Finite(FleetFoodProductionBonus);
+        Finite(WaveFoodDividendRatio);
         Finite(HackingProductionBonus);
         Finite(ManaRequirementReduction);
         Finite(HackingProductionProcChance);

@@ -32,6 +32,7 @@ public class UnitFactory : MonoBehaviour
             Alphan = _resolver.Resolve<AlphanActiveSkill>(),
             BuffVisualSettings = _resolver.Resolve<UnitBuffVisualSettings>(),
             BuffFxPool = _resolver.Resolve<StatBuffFxPool>(),
+            StatusPopups = _resolver.Resolve<StatusPopupService>(),
             Timer = _resolver.Resolve<TimerController>(),
             Research = _resolver.Resolve<ResearchRunBonuses>(),
             GameManager = _resolver.Resolve<GameManager>(),

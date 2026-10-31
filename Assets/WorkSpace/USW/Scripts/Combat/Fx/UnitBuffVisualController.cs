@@ -108,6 +108,22 @@ public sealed class UnitBuffVisualController : MonoBehaviour
         foreach (var style in _release) { _deps.BuffFxPool.Return(_active[style]); _active.Remove(style); }
         bool firstIntro = first == settings.Disabled ? newDisabled : first == settings.Mixed ? newAttack || newSlow : newAttack;
         Show(first, firstTime, firstIntro); Show(second, secondTime, newSpeed);
+        if (!model.IsSealed) ShowNewPopups(model.TotemAttackDisabled, attack, speed, newAttack, newSpeed, newSlow, newDisabled);
+    }
+    // 이펙트 시작 고리가 뜨는 순간(새로 얻은 효과)에만 같은 색 문구를 띄운다. 이동·수치 갱신에서는 띄우지 않는다.
+    private void ShowNewPopups(bool disabled, float attack, float speed, bool newAttack, bool newSpeed, bool newSlow, bool newDisabled)
+    {
+        var popups = _deps.StatusPopups;
+        if (popups == null) return;
+        var target = _unit.transform;
+        if (disabled)
+        {
+            if (newDisabled) popups.Show(target, StatusPopupKind.AttackDisabled);
+            return;
+        }
+        if (newAttack && attack > 0f) popups.Show(target, StatusPopupKind.AttackUp);
+        if (newSpeed && speed > 0f) popups.Show(target, StatusPopupKind.SpeedUp);
+        if (newSlow && speed < 0f) popups.Show(target, StatusPopupKind.SpeedDown);
     }
     private void Show(StatBuffFxStyle style, float remaining, bool playIntro)
     {

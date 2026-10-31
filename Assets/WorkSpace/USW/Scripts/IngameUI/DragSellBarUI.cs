@@ -13,13 +13,7 @@ public sealed class DragSellBarUI : MonoBehaviour
 {
     [Inject] private DragSellService _service;
 
-    [Header("밀려날 버튼")]
-    [SerializeField] private RectTransform[] _slideDownTargets;
-    [SerializeField, Min(0f)] private float _slideDownDistance = 460f;
-    [Tooltip("버튼마다 시작 시차(초). 0이면 한꺼번에")]
-    [SerializeField, Min(0f)] private float _slideDownStagger = 0f;
-    [SerializeField] private RectTransform[] _slideRightTargets;
-    [SerializeField, Min(0f)] private float _slideRightDistance = 220f;
+    [SerializeField] private IngameHudMotion _hudMotion;
 
     [Header("판매 띠")]
     [SerializeField] private RectTransform _zoneRect;
@@ -41,8 +35,6 @@ public sealed class DragSellBarUI : MonoBehaviour
     [SerializeField, Min(0f)] private float _hoverDuration = 0.12f;
 
     private CanvasGroup _group;
-    private Vector2[] _downHome;
-    private Vector2[] _rightHome;
     private Vector2 _zoneHome;
     private Sequence _sequence;
     private Tween _hoverTween;
@@ -53,8 +45,6 @@ public sealed class DragSellBarUI : MonoBehaviour
         _group.alpha = 0f;
         _group.blocksRaycasts = false;
         _group.interactable = false;
-        _downHome = Capture(_slideDownTargets);
-        _rightHome = Capture(_slideRightTargets);
         if (_zoneRect != null) _zoneHome = _zoneRect.anchoredPosition;
         if (_zoneImage != null) { _zoneImage.color = _zoneColor; _zoneImage.raycastTarget = false; }
         if (_trashImage != null) { _trashImage.color = _trashColor; _trashImage.raycastTarget = false; }
@@ -89,8 +79,7 @@ public sealed class DragSellBarUI : MonoBehaviour
         }
         _sequence?.Kill();
         _hoverTween?.Kill();
-        Restore(_slideDownTargets, _downHome);
-        Restore(_slideRightTargets, _rightHome);
+        _hudMotion?.Release(this, false);
         if (_group != null) _group.alpha = 0f;
     }
 
@@ -114,24 +103,12 @@ public sealed class DragSellBarUI : MonoBehaviour
 
     private void HandleMoveDrag(bool moving)
     {
+        if (moving) _hudMotion?.Acquire(this);
+        else _hudMotion?.Release(this);
         _sequence?.Kill();
         _sequence = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
         if (moving)
         {
-            for (int i = 0; i < _slideDownTargets.Length; i++)
-            {
-                var t = _slideDownTargets[i];
-                if (t == null) continue;
-                _sequence.Insert(i * _slideDownStagger,
-                    t.DOAnchorPos(_downHome[i] + Vector2.down * _slideDownDistance, _hideDuration).SetEase(Ease.InBack));
-            }
-            for (int i = 0; i < _slideRightTargets.Length; i++)
-            {
-                var t = _slideRightTargets[i];
-                if (t == null) continue;
-                _sequence.Insert(i * _slideDownStagger,
-                    t.DOAnchorPos(_rightHome[i] + Vector2.right * _slideRightDistance, _hideDuration).SetEase(Ease.InBack));
-            }
             if (_zoneRect != null)
             {
                 _zoneRect.anchoredPosition = _zoneHome + Vector2.down * _zoneRise;
@@ -144,20 +121,7 @@ public sealed class DragSellBarUI : MonoBehaviour
             _sequence.Insert(0f, _group.DOFade(0f, _zoneFadeDuration));
             if (_zoneRect != null)
                 _sequence.Insert(0f, _zoneRect.DOAnchorPos(_zoneHome + Vector2.down * _zoneRise, _zoneFadeDuration).SetEase(Ease.InQuad));
-            for (int i = 0; i < _slideDownTargets.Length; i++)
-            {
-                var t = _slideDownTargets[i];
-                if (t == null) continue;
-                _sequence.Insert(_zoneFadeDuration * 0.5f + i * _slideDownStagger,
-                    t.DOAnchorPos(_downHome[i], _showDuration).SetEase(Ease.OutBack));
-            }
-            for (int i = 0; i < _slideRightTargets.Length; i++)
-            {
-                var t = _slideRightTargets[i];
-                if (t == null) continue;
-                _sequence.Insert(_zoneFadeDuration * 0.5f + i * _slideDownStagger,
-                    t.DOAnchorPos(_rightHome[i], _showDuration).SetEase(Ease.OutBack));
-            }
+
         }
     }
 
@@ -172,22 +136,4 @@ public sealed class DragSellBarUI : MonoBehaviour
         _hoverTween = seq;
     }
 
-    private static Vector2[] Capture(RectTransform[] targets)
-    {
-        var result = new Vector2[targets != null ? targets.Length : 0];
-        for (int i = 0; i < result.Length; i++)
-            if (targets[i] != null) result[i] = targets[i].anchoredPosition;
-        return result;
-    }
-
-    private static void Restore(RectTransform[] targets, Vector2[] home)
-    {
-        if (targets == null || home == null) return;
-        for (int i = 0; i < targets.Length && i < home.Length; i++)
-        {
-            if (targets[i] == null) continue;
-            targets[i].DOKill();
-            targets[i].anchoredPosition = home[i];
-        }
-    }
 }

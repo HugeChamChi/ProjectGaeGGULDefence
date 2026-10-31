@@ -30,6 +30,7 @@ public class WaveManager : MonoBehaviour
     private TimerController _timerManager;
     private UIManager _uiManager;
     private ExpManager _expManager;
+    private DroneManager _droneManager;
     private readonly EndlessRunLog _log = new EndlessRunLog();
 
     [SerializeField] private StageData stageData;
@@ -75,6 +76,7 @@ public class WaveManager : MonoBehaviour
         _timerManager = _resolver.Resolve<TimerController>();
         _uiManager = _resolver.Resolve<UIManager>();
         _resolver.TryResolve(out _expManager);
+        _resolver.TryResolve(out _droneManager);
         _run.OnFailed += HandleRunFailed;
         _run.OnPenaltyReserved += OnPenaltyReserved;
     }
@@ -158,7 +160,7 @@ public class WaveManager : MonoBehaviour
         if (!_run.IsActive) return;
         if (_pendingBosses.Count == 0)
         {
-            if (_run.TryCompleteRound(_run.RunId, _run.CurrentRound)) FinishRound(_run.RunId, _run.CurrentRound);
+            if (TryCompleteRound(_run.RunId, _run.CurrentRound)) FinishRound(_run.RunId, _run.CurrentRound);
             return;
         }
         SpawnNextBoss();
@@ -207,7 +209,8 @@ public class WaveManager : MonoBehaviour
         foreach (var cell in _gridManager.GetOccupiedCells())
         {
             if (!_run.Matches(runId, round)) return;
-            if (cell.OccupyingUnit == null) continue;
+            // The summon continuation owns the first OnPlaced after its arrival effect.
+            if (cell.OccupyingUnit == null || !cell.OccupyingUnit.gameObject.activeInHierarchy) continue;
             cell.OccupyingUnit.OnRemoved();
             cell.OccupyingUnit.OnPlaced(_currencyManager, mainBoss, cell);
         }
@@ -237,7 +240,7 @@ public class WaveManager : MonoBehaviour
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         if (_run.IsEndless) _log.BossDefeated(round, CurrentLevel, _run.AttackMultiplier, _run.AttackFrequencyMultiplier);
         // Reserve at combat completion, activate after the reward when entering the next round.
-        if (bossIndex == _pendingBosses.Count - 1 && !_run.TryCompleteRound(runId, round)) return;
+        if (bossIndex == _pendingBosses.Count - 1 && !TryCompleteRound(runId, round)) return;
         WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, role, bonusSeconds, _waveCts.Token).Forget();
     }
 
@@ -350,6 +353,13 @@ public class WaveManager : MonoBehaviour
             _timeScale.Release(this);
         }
         if(OwnsEncounter(runId,round,bossIndex,EncounterPhase.PresentingPenalty)) ContinueAfterReward(runId,round);
+    }
+
+    private bool TryCompleteRound(long runId, int round)
+    {
+        if (!_run.TryCompleteRound(runId, round)) return false;
+        _droneManager?.SettleWaveFoodDividend(runId, round);
+        return true;
     }
 
     private void FinishRound(long runId, int round)

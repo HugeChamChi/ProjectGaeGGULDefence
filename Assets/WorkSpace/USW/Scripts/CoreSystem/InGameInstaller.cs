@@ -13,6 +13,7 @@ public class InGameInstaller : MonoBehaviour
     [Inject] private MergeManager _mergeManager;
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
+    [Inject] private InputManager _inputManager;
     [Inject] private TotemSpawner _totemManager;
     [Inject] private ChieftainSelection _chieftainSelection;
     [Inject] private IChiefSelectionReader _chiefEffects;
@@ -94,6 +95,7 @@ public class InGameInstaller : MonoBehaviour
 
     private void DismissInformationForSelection()
     {
+        _inputManager?.CancelCurrentInteraction();
         _mergeManager?.ClearSelection();
         _totemActionPopup?.Hide();
         _gridManager?.ClearTotemRangePreview();

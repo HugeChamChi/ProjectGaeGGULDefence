@@ -21615,6 +21615,7 @@ GameObject:
   - component: {fileID: 2008345688}
   - component: {fileID: 2008345687}
   - component: {fileID: 2008345686}
+  - component: {fileID: 9876543210123}
   m_Layer: 0
   m_Name: DragSellZone
   m_TagString: Untagged
@@ -21654,16 +21655,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 111f997e30c3e014da5e07c892888d8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragSellBarUI
-  _slideDownTargets:
-  - {fileID: 1730280584}
-  - {fileID: 933521218}
-  - {fileID: 649629727}
-  _slideDownDistance: 460
-  _slideDownStagger: 0
-  _slideRightTargets:
-  - {fileID: 1737323130}
-  - {fileID: 67880461}
-  _slideRightDistance: 340
+  _hudMotion: {fileID: 9876543210123}
   _zoneRect: {fileID: 2008345685}
   _zoneImage: {fileID: 2008345688}
   _trashIcon: {fileID: 318886644}
@@ -26582,3 +26574,23 @@ SceneRoots:
   - {fileID: 85931106}
   - {fileID: 481491061}
   - {fileID: 1663726195}
+--- !u!114 &9876543210123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008345684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bcf153ed53341e1879c9b9e5c36bbbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IngameHudMotion
+  _buttons: {fileID: 1715269599}
+  _sideTargets:
+  - {fileID: 1737323130}
+  - {fileID: 67880461}
+  _downDistance: 600
+  _rightDistance: 340
+  _hideSeconds: 0.3
+  _showSeconds: 0.4

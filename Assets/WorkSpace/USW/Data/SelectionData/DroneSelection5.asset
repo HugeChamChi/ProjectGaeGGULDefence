@@ -28,9 +28,9 @@ MonoBehaviour:
   chooseName: "\uAE34\uAE09 \uAD50\uC2E0"
   tier: 1
   spawnRate: 1
-  description: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC, \uBCF4\uC2A4\uC5D0\uAC8C
-    \uC313\uC778 \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uBAA8\uB450 \uC18C\uBAA8\uD574
-    \uAE30\uD3ED\uD569\uB2C8\uB2E4."
+  description: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC \uC0AC\uC6A9 \uC2DC, \uBCF4\uC2A4\uC758
+    \uD574\uD0B9 \uC2A4\uD0DD\uC744 \uBAA8\uB450 \uC18C\uBAA8\uD574 \uC2A4\uD0DD
+    1\uAC1C\uB2F9 \uC2A4\uD0AC \uD53C\uD574\uAC00 {value}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
   simpleDescription: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uB85C \uBCF4\uC2A4\uC758 \uD574\uD0B9
     \uC2A4\uD0DD\uC744 \uBAA8\uB450 \uC18C\uBAA8\uD574 \uAE30\uD3ED\uD569\uB2C8\uB2E4."
   DescriptionTerms:
@@ -58,4 +58,4 @@ MonoBehaviour:
     - rid: 1000
       type: {class: ChiefHackingDetonationDefinition, ns: , asm: Assembly-CSharp}
       data:
-        DamageRatioPerStack: 0.01
+        DamageRatioPerStack: 0.03

@@ -156,3 +156,7 @@ Assets/WorkSpace/HSD/GEMINI.md.meta
 /Tools/verification/*
 !/Tools/verification/BetanLevelBonusAuthoring.cs
 !/Tools/verification/BetanLevelBonusChecks.cs
+
+# UI Studio distribution-only team client metadata and per-user OAuth config
+**/ArtTools/team.json
+**/art-rclone.conf
