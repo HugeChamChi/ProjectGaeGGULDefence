@@ -8,7 +8,7 @@ globalThis.ItemCatalogFeature=({studio:C})=>{
  };
  const names=['Item','ItemFunction','SelectionList','SelectionOption'];
  S.Item.label='아이템';S.Item.note='아이템 ID는 이름과 분리된 고유 키입니다. 기능이 없으면 기능 ID를 비워 둡니다. 기능의 게임 실행 지원은 별도로 연결합니다.';
- const kind=S.Item.fields.find(f=>f.key==='ItemType');kind.values=['Currency','Consumable','Material','CharacterShard','Character','ProfileIcon','ProfileFrame'];kind.labels={Currency:'재화',Consumable:'소비 아이템',Material:'재료',CharacterShard:'캐릭터 조각',Character:'캐릭터',ProfileIcon:'프로필 아이콘',ProfileFrame:'프로필 테두리'};
+ const kind=S.Item.fields.find(f=>f.key==='ItemType');kind.values=['Currency','Consumable','Material','Character','ProfileIcon','ProfileFrame'];kind.labels={Currency:'재화',Consumable:'소비 아이템',Material:'재료',Character:'캐릭터',ProfileIcon:'프로필 아이콘',ProfileFrame:'프로필 테두리'};
  S.Item.fields.splice(2,0,f('Description','설명','textarea'),ref('FunctionId','사용 기능','ItemFunction'),f('IconAddress','아이콘 Addressables 주소'));
  S.ItemFunction={label:'아이템 기능',keys:['FunctionId'],fields:[f('FunctionId','기능 ID','id',{required:true}),f('Name','기능 이름','text',{required:true}),f('FunctionType','기능 종류','enum',{values:Object.keys(definitions),labels:Object.fromEntries(Object.entries(definitions).map(([k,v])=>[k,v.label]))}),ref('SelectionListId','선택 목록','SelectionList'),f('Value','규약 값')],note:'Value에는 기능별 수치를 입력하고, 선택 기능은 선택 목록 ID를 별도로 연결합니다. 같은 기능을 여러 아이템이 재사용할 수 있습니다.'};
  S.SelectionList={label:'선택 목록',keys:['SelectionListId'],fields:[f('SelectionListId','선택 목록 ID','id',{required:true}),f('Name','목록 이름','text',{required:true}),f('Description','설명','textarea')],note:'여러 아이템 기능이 같은 목록을 재사용할 수 있습니다. 포함 옵션·수량으로 검색해 중복 목록을 확인하세요.'};
