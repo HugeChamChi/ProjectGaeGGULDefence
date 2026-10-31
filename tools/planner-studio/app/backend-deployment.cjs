@@ -10,6 +10,7 @@ function serializeTarget(project, kind) {
   project=excel.engine().Studio.shape(project);
   switch (kind) {
     case 'missions':
+      for(const mission of project.tables.Missions)for(const reward of mission.Rewards)if(!['Gold','Diamond','Stamina'].includes(reward.itemId))throw Error('현재 게임에 지급 처리가 연결되지 않은 아이템: '+reward.itemId+'. 아이템/기능 작성용 Excel로 먼저 관리하세요.');
       excel.write(project, excel.bundles.missions);
       return { chart: 'MissionEvents', authoring: 'MissionEvents', tables: excel.bundles.missions, config: excel.toRuntime(project, excel.bundles.missions) };
     case 'unitBaseStats':

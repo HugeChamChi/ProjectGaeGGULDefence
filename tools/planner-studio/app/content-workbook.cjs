@@ -5,10 +5,10 @@ const {open,hash}=require('./workbook.cjs');
 let context;
 function engine(){
   if(!context){context=vm.createContext({TextEncoder,TextDecoder,Uint8Array,Uint32Array,DataView,ArrayBuffer});
-    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
+    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
-const bundles={bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
+const bundles={items:['Item','ItemFunction','SelectionList','SelectionOption'],bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['AttendancePlan','Attendance'],missions:['DataBindings','MissionEvents','Missions','EventData','ExecutionHooks']};
 function write(project,names){
   const e=engine(),all=e.Studio.tables(project),files={};let index=0;
   names=[...new Set(names.flatMap(n=>e.UnitKeys.sheetFor[n]?Object.keys(e.UnitKeys.headers):e.AttendanceEvents.sheetFor[n]?Object.keys(e.AttendanceEvents.headers):[n]))];
@@ -128,7 +128,7 @@ function toRuntime(project,names){
   const result={schemaVersion:4};
   if(names.includes('BonusDefinition')||names.includes('BonusEffect')){result.bonusDefinitions=p.tables.BonusDefinition;result.bonusEffects=p.tables.BonusEffect;}
   if(names.includes('Attendance')||names.includes('AttendanceRewards'))result.attendanceEvents=p.tables.AttendancePlan.map(plan=>({eventKey:plan.AttendanceId,name:plan.Name,startAt:plan.StartAt,endAt:plan.EndAt,claimEndAt:plan.ClaimEndAt||plan.EndAt,enabled:plan.Enabled,repeatMode:plan.RepeatMode,cycleDays:plan.CycleDays,days:p.tables.Attendance.filter(r=>r.AttendanceId===plan.AttendanceId).sort((a,b)=>a.Day-b.Day).map(r=>({day:r.Day,rewards:r.Rewards.map(x=>({itemKey:x.itemId,amount:x.amount}))}))}));
-  for(const [table,key]of [['ResearchTree','researchTrees'],['ResearchNode','researchNodes'],['Tutorial','tutorialSteps'],['Party','parties'],['Profile','profiles'],['Economy','economy'],['AccountLevel','accountLevels'],['BattleReward','battleRewards'],['Item','items']])if(names.includes(table))result[key]=p.tables[table].map(r=>Object.fromEntries(e.STUDIO_SCHEMAS[table].fields.filter(f=>!f.hidden&&f.export!==false).map(f=>[f.key,r[f.key]])));
+  for(const [table,key]of [['ItemFunction','itemFunctions'],['SelectionList','selectionLists'],['SelectionOption','selectionOptions'],['ResearchTree','researchTrees'],['ResearchNode','researchNodes'],['Tutorial','tutorialSteps'],['Party','parties'],['Profile','profiles'],['Economy','economy'],['AccountLevel','accountLevels'],['BattleReward','battleRewards'],['Item','items']])if(names.includes(table))result[key]=p.tables[table].map(r=>Object.fromEntries(e.STUDIO_SCHEMAS[table].fields.filter(f=>!f.hidden&&f.export!==false).map(f=>[f.key,r[f.key]])));
   if(names.some(n=>e.UnitKeys.sheetFor[n]||e.UnitKeys.headers[n])){
     for(const [name,rows]of Object.entries(e.UnitKeys.tables(p)))result[{Units:'units',BaseStats:'baseStats',UpgradeStats:'upgradeStats',LevelBonuses:'levelBonuses'}[name]]=rows.slice(1).map(row=>Object.fromEntries(rows[0].map((key,i)=>[key,key==='Costs'?e.RewardCore.parseItems(row[i]).map(r=>({itemKey:r.itemId,amount:r.amount})):key==='EffectParams'?JSON.parse(row[i]):row[i]])));
   }

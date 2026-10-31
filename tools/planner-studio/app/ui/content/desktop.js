@@ -9,7 +9,7 @@
   }
   window.desktopContent = {
     async importWorkbook(file,project){return call('contentWorkbookImport',{bytes:Array.from(new Uint8Array(await file.arrayBuffer())),project});},
-    async exportWorkbook(project,workspace,table){await saveQueue;return call('contentWorkbookExport',{project,bundle:['BonusDefinition','BonusEffect'].includes(table)?'bonuses':MissionEvents.names.includes(table)?'missions':workspace==='enhancement'?'enhancement':workspace==='rewards'?'rewards':null,table});},
+    async exportWorkbook(project,workspace,table){await saveQueue;return call('contentWorkbookExport',{project,bundle:ItemCatalog.names.includes(table)?'items':['BonusDefinition','BonusEffect'].includes(table)?'bonuses':MissionEvents.names.includes(table)?'missions':workspace==='enhancement'?'enhancement':workspace==='rewards'?'rewards':null,table});},
     async restore(key) {
       try {
         const project = await call('contentLoad');

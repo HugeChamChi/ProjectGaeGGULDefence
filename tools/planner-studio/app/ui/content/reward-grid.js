@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let selected=0,paletteOpen=false,eventId='';
+  let selected=0,paletteOpen=false,eventId='',itemSearch='',itemType='';
   const image=key=>STUDIO_ICONS[key]?`<img src="${STUDIO_ICONS[key].data}" alt="">`:'<span>◇</span>';
   globalThis.RewardGrid={render(api){
     const {project:p,table,changed,render,toast}=api,attendance=table==='Attendance';
@@ -11,7 +11,7 @@
     const group=i=>rows[i];
     function ensure(i){return rows[i];}
     const cell=(g,i)=>`<div class="reward-cell ${selected===i?'selected':''}" data-reward-cell="${i}" tabindex="0" aria-label="보상 셀">${(g?.Rewards||[]).map((r,k)=>{const item=p.tables.Item.find(x=>x.ItemId===r.itemId);return `<div class="reward-token" draggable="true" data-token="${i}:${k}">${image(item?.IconKey)}<span>${esc(item?.Name||r.itemId)}</span><input type="number" min="1" step="1" value="${r.amount??''}" data-grid-amount="${i}:${k}" aria-label="${esc(item?.Name||r.itemId)} 수량"><button data-grid-remove="${i}:${k}" aria-label="보상 제거">×</button></div>`;}).join('')||'<span class="cell-empty">아이콘을 여기에 끌어놓으세요</span>'}</div>`;
-    document.getElementById('content').innerHTML=`<div class="reward-workbench"><section class="panel reward-sheet"><div class="panel-head"><div><h2>${attendance?'출석 일차별 보상':'보상 구성표'}</h2><small>한 셀에 여러 아이템 · 셀 선택 후 아이콘 클릭도 가능</small></div><button id="grid-add-row">＋ ${attendance?'일차':'보상'} 추가</button></div><table class="reward-table"><thead><tr><th>${attendance?'일차':'보상 이름'}</th><th>보상 셀</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${attendance?`<strong>${r.Day}일차</strong><small>${esc(plans.find(x=>x.AttendanceId===r.AttendanceId)?.Name||r.AttendanceId)}</small>`:`<input data-grid-name="${i}" value="${esc(r.Name)}" aria-label="보상 이름"><small>${esc(r.RewardGroupId)}</small>`}</td><td>${cell(group(i),i)}</td></tr>`).join('')}</tbody></table></section><section class="panel reward-palette"><div class="panel-head"><h2>우리 아이템</h2></div><div class="panel-body"><input id="grid-item-search" placeholder="아이템 검색" aria-label="아이템 검색"><p class="subtle">아이콘을 보상 셀로 드래그하세요.<br>클릭하면 선택한 셀에 추가됩니다.</p><div id="grid-item-list">${p.tables.Item.map(item=>`<button class="palette-item" draggable="true" data-palette-item="${esc(item.ItemId)}">${image(item.IconKey)}<span>${esc(item.Name)}<small>${esc(item.ItemId)}</small></span></button>`).join('')}</div></div></section></div>`;
+    document.getElementById('content').innerHTML=`<div class="reward-workbench"><section class="panel reward-sheet"><div class="panel-head"><div><h2>${attendance?'출석 일차별 보상':'보상 구성표'}</h2><small>한 셀에 여러 아이템 · 셀 선택 후 아이콘 클릭도 가능</small></div><button id="grid-add-row">＋ ${attendance?'일차':'보상'} 추가</button></div><table class="reward-table"><thead><tr><th>${attendance?'일차':'보상 이름'}</th><th>보상 셀</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${attendance?`<strong>${r.Day}일차</strong><small>${esc(plans.find(x=>x.AttendanceId===r.AttendanceId)?.Name||r.AttendanceId)}</small>`:`<input data-grid-name="${i}" value="${esc(r.Name)}" aria-label="보상 이름"><small>${esc(r.RewardGroupId)}</small>`}</td><td>${cell(group(i),i)}</td></tr>`).join('')}</tbody></table></section><section class="panel reward-palette"><div class="panel-head"><h2>우리 아이템</h2></div><div class="panel-body"><input id="grid-item-search" placeholder="이름 · ID · 설명 검색" aria-label="아이템 검색" value="${esc(itemSearch)}"><select id="grid-item-type"><option value="">전체 종류</option>${STUDIO_SCHEMAS.Item.fields.find(f=>f.key==='ItemType').values.map(t=>`<option value="${esc(t)}" ${t===itemType?'selected':''}>${esc(STUDIO_SCHEMAS.Item.fields.find(f=>f.key==='ItemType').labels?.[t]||t)}</option>`).join('')}</select><button id="grid-create-item">＋ 새 아이템</button><p class="subtle">아이콘을 보상 셀로 드래그하세요.<br>클릭하면 선택한 셀에 추가됩니다.</p><div id="grid-item-list">${p.tables.Item.map(item=>`<button class="palette-item" draggable="true" data-palette-item="${esc(item.ItemId)}">${image(item.IconKey)}<span>${esc(item.Name)}<small>${esc(item.ItemId)}</small></span></button>`).join('')}</div></div></section></div>`;
     const root=document.querySelector('.reward-workbench'),palette=root.querySelector('.reward-palette');
     root.querySelector('.reward-sheet .panel-head small').textContent='보상 추가 → 아이콘 선택 → 수량 입력';
     root.querySelectorAll('[data-reward-cell]').forEach(cell=>{
@@ -27,7 +27,8 @@
       target.textContent=rows[selected]?(attendance?`${rows[selected].Day}일차에 추가`:`${rows[selected].Name}에 추가`):'먼저 보상 행을 추가하세요';
       root.querySelectorAll('[data-reward-cell]').forEach(c=>c.classList.toggle('selected',Number(c.dataset.rewardCell)===selected));
     }
-    syncPalette();
+    function filter(){const ids=new Set(CatalogPicker.filtered(p,'Item',itemSearch,itemType).map(r=>r.ItemId));root.querySelectorAll('[data-palette-item]').forEach(b=>b.hidden=!ids.has(b.dataset.paletteItem));}
+    syncPalette();filter();
     const eventSelect=document.createElement('select');eventSelect.id='attendance-event-select';eventSelect.setAttribute('aria-label','출석 이벤트 선택');
     for(const plan of plans){const option=document.createElement('option');option.value=plan.AttendanceId;option.textContent=plan.Name+' · '+(plan.Enabled?'활성':'비활성');option.selected=plan.AttendanceId===eventId;eventSelect.append(option);}
     root.querySelector('.reward-sheet .panel-head').prepend(eventSelect);
@@ -50,6 +51,7 @@
       }catch{toast('아이템 목록의 아이콘을 끌어놓으세요.');}
     });
     root.addEventListener('click',e=>{
+      if(e.target.closest('#grid-create-item')){CatalogPicker.edit({project:p,table:'Item',initialName:itemSearch,changed,onSave:r=>add(selected,r.ItemId)});return;}
       const open=e.target.closest('[data-open-palette]');
       if(open){selected=Number(open.dataset.openPalette);paletteOpen=true;syncPalette();document.getElementById('grid-item-search').focus();return;}
       if(e.target.closest('#grid-toggle-palette')){paletteOpen=!paletteOpen;syncPalette();return;}
@@ -60,10 +62,11 @@
       if(c){selected=Number(c.dataset.rewardCell);syncPalette();}
     });
     root.addEventListener('input',e=>{
-      if(e.target.id==='grid-item-search'){const query=e.target.value.toLowerCase();root.querySelectorAll('[data-palette-item]').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(query));}
+      if(e.target.id==='grid-item-search'){itemSearch=e.target.value;filter();}
       if(e.target.dataset.gridAmount){const[i,k]=e.target.dataset.gridAmount.split(':').map(Number);ensure(i).Rewards[k].amount=e.target.value===''?null:Number(e.target.value);changed();}
       if(e.target.dataset.gridName!==undefined){rows[Number(e.target.dataset.gridName)].Name=e.target.value;changed();}
     });
+    root.addEventListener('change',e=>{if(e.target.id==='grid-item-type'){itemType=e.target.value;filter();}});
     document.getElementById('grid-add-row').onclick=()=>{
       if(attendance){if(!plans.length){toast('이벤트 설정을 먼저 추가하세요.');return;}const plan=plans.find(r=>r.AttendanceId===eventId);const day=1+Math.max(0,...rows.map(r=>r.Day));p.tables.Attendance.push({AttendanceId:plan.AttendanceId,Day:day,RewardGroupId:'',Rewards:[],Source:'기획작업실'});plan.CycleDays=day;}
       else groups.push(Studio.newRecord('RewardGroup',p));selected=rows.length-1;changed();render();

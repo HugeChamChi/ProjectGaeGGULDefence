@@ -107,7 +107,7 @@
           if(f.type==='icon'&&v&&!STUDIO_ICONS[v])add(name,index,f.key,'사용할 수 없는 아이콘 키입니다.');
           if(f.type==='datetime'&&v&&!Number.isFinite(Date.parse(v)))add(name,index,f.key,'날짜 형식을 확인하세요.');
           if(['rewards','costs'].includes(f.type)){
-            if(f.type==='rewards'&&!v.length)add(name,index,f.key,'지급 아이템이 필요합니다.');
+            if(f.type==='rewards'&&!f.allowEmpty&&!v.length)add(name,index,f.key,'지급 아이템이 필요합니다.');
             const ids=new Set();for(const a of v){
               if(!p.tables.Item.some(i=>i.ItemId===a.itemId))add(name,index,f.key,`알 수 없는 아이템: ${a.itemId}`);
               if(ids.has(a.itemId))add(name,index,f.key,'같은 아이템이 중복되었습니다.');ids.add(a.itemId);

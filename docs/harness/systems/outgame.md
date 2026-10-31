@@ -32,6 +32,9 @@ commit: de2cbd00
 ## 진입 파일
 | 파일 | 역할 |
 |---|---|
+| `tools/planner-studio/app/ui/content/item-catalog.js` | 아이템→기능→선택목록→옵션 저작 스키마, 수치/참조/순환/동일 목록 검사. 게임 아이템 사용 실행은 미연결 |
+| `tools/planner-studio/app/ui/content/catalog-picker.js` | 공통 검색·종류 필터·중첩 즉시 추가·트랜잭션 취소·동일 선택 목록 재사용 UI |
+| `tools/planner-studio/ITEM-CATALOG.md` | 아이템 4개 표, ID/Value 규약, Excel 개별·합본과 게임 연동 경계 |
 | `Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs` | 결과창 재시작: 최신 설정·스태미나 예약 저장·연타 차단·실패 재시도 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Player.cs` | 유저 데이터 진입점(PlayerData·Profile·Mail·Character·Chief·Shop·Daily·Tutorial), 일괄/디바운스 저장 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Table.cs` | 공통 마스터 테이블(Addressables) |

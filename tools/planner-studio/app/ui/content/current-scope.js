@@ -107,7 +107,7 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
     return `<div class="scope-heading"><h2>현재 기능 작업실</h2><p>왼쪽에서 기능을 고르고, 위쪽 세부 항목에서 편집하세요.</p></div>${groups.map(([label,ids])=>`<section class="panel scope-group"><div class="panel-head"><h2>${label}</h2></div><div class="workspace-grid">${ids.map(id=>{const n=STUDIO_NAV.find(n=>n.id===id);return `<button data-nav="${id}"><strong>${n.icon} ${n.label}</strong><small>${n.tables.map(t=>`${esc(S[t].label)} ${p.tables[t].length}`).join(' · ')}</small></button>`;}).join('')}</div></section>`).join('')}<div class="scope-note">현재 프로젝트에서 확인한 데이터만 표시합니다. 유닛강화는 기존 시안의 수치이며, Excel 추출 후 게임에 적용하는 연결은 별도입니다.</div>`;
   },workspace:'settings',renderTabs(section){
     const workspace=this.workspace;
-    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화']]:workspace==='rewards'?[['attendance','출석 이벤트'],['missions','미션 이벤트'],['dataBindings','데이터 연결']]:[];
+    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화']]:workspace==='rewards'?[['items','아이템·기능'],['attendance','출석 이벤트'],['missions','미션 이벤트'],['dataBindings','데이터 연결']]:[];
     document.getElementById('workspace-tabs').innerHTML=options.map(([id,label])=>`<button class="${section===id?'active':''}" data-workspace-section="${id}">${label}</button>`).join('');
     if(options.length)document.getElementById('page-title').textContent=workspace==='enhancement'?'강화 밸런스':'보상·출석';
     if(workspace==='rewards')document.getElementById('page-title').textContent='이벤트';

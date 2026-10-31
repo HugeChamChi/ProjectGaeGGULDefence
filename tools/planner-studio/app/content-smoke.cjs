@@ -175,7 +175,7 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-binding-hook="BattleEnd_Hard"]').click()`);
     assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-binding-field="DataKey"]').length`),2);
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-workspace-section="missions"]').click()`);
-    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-field="DataKey"]'))`));
+    assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-ref-field="DataKey"]'))`));
     assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-add="Rewards:Gold"]'))`));
     await new Promise(r=>setTimeout(r,500));
     atomic(resultPath.replace('.json','-missions.png'),(await window.webContents.capturePage()).toPNG());
@@ -191,6 +191,7 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     checks.push('mission export includes a single-sheet backend chart');
     checks.push('mission tabs, per-hook editing, reward icons and runtime JSON export');
     await run(`document.getElementById('balanceWorkspaceButton').click()`);assert(await run(`!document.querySelector('body > main').hidden`));
+    await require('./item-catalog-smoke.cjs')({run,window,atomic,resultPath,checks});
     checks.push('excluded menus absent; original balance editor retained');
     atomic(resultPath,JSON.stringify({ok:true,checks,workspace},null,2));app.exit(0);
   }catch(error){atomic(resultPath,JSON.stringify({ok:false,checks,error:error.stack},null,2));app.exit(1);}
