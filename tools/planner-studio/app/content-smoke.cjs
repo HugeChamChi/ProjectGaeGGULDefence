@@ -67,6 +67,9 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     await until(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]').length===2`);
     const tabs=await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]')).map(b=>b.textContent)`);
     assert.deepEqual(tabs,['유닛','영구강화']);checks.push('Enhancement balance has Unit / Permanent tabs');
+    const unitKeys=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.Unit.map(u=>u.UnitKey||u.UnitId).sort()`);
+    assert.deepEqual(unitKeys,['AlphanChief','UnitData_Betan','UnitData_Deltan','UnitData_Disigman','UnitData_Gamman','UnitData_Zeltan'].sort());
+    checks.push('unit editor contains only five drones and Alphan; no Frog units');
     await until(`Boolean(document.querySelector('iframe').contentDocument.querySelector('.unit-level-table'))`);
     await run(`document.querySelector('iframe').contentDocument.querySelector('[data-table="BonusDefinition"]').click()`);
     assert.equal(await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.BonusDefinition.length`),30);

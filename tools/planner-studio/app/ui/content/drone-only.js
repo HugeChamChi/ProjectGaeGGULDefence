@@ -2,6 +2,7 @@
 globalThis.DroneOnlyFeature=({studio})=>{
  const allowed=new Set(['UnitData_Betan','UnitData_Deltan','UnitData_Gamman','UnitData_Disigman','UnitData_Zeltan']);
  function trim(p){
+  if(p.meta?.sources)for(const source of Object.keys(p.meta.sources))if(/(?:^|[\\/])UD_Frog_[^\\/]+\.asset$/i.test(source))delete p.meta.sources[source];
   p.tables.Unit=p.tables.Unit.filter(u=>allowed.has(u.UnitId)||allowed.has(u.UnitKey)||allowed.has(String(u.Source||'').split(/[\\/]/).pop().replace(/\.asset$/,''))||u.UnitId==='AlphanChief');
   const ids=new Set(p.tables.Unit.map(u=>u.UnitId)),bases=new Set(p.tables.Unit.map(u=>u.BaseStatKey));
   for(const name of ['UnitUpgrade','UnitMilestone'])if(p.tables[name])p.tables[name]=p.tables[name].filter(r=>ids.has(r.UnitId));
