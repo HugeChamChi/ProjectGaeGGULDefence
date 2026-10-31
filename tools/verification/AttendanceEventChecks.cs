@@ -24,7 +24,7 @@ public static class AttendanceEventChecks {
   Check(restored.AttendanceCount==0,"legacy attendance isolation");
   var previous=AttendanceEventRuntime.Definitions;
   try {
-   AttendanceEventRuntime.Configure(System.IO.File.ReadAllText("outputs/attendance-event-integration/config.json"));
+   AttendanceEventRuntime.Configure(System.IO.File.ReadAllText("tools/planner-studio/tests/events/legacy-attendance.json"));
    Check(AttendanceEventRuntime.Definitions.Length==1,"planner export loaded");
    var exported=AttendanceEventRuntime.Definitions[0];var player=new PlayerData();
    Check(AttendanceEventRuntime.Claim(player,exported,DateTimeOffset.Parse(exported.startAt))==1,"planner reward claim");

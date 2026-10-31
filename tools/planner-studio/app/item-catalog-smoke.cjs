@@ -48,6 +48,10 @@ module.exports=async({run,window,atomic,resultPath,checks})=>{
   await new Promise(resolve=>setTimeout(resolve,300));
   assert(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('dialog[open]:last-of-type img[src^="data:image/png;base64,"]'))`));
   await save();p=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot()`);assert(p.tables.Item.find(i=>i.Name==='테스트 지급 상자').IconAddress.startsWith('ItemIcons/test_potion_'));
+  assert.equal(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-icon="IconKey"]'))`),false);
+  await set('[data-field="IconAddress"]','ItemIcons/custom_potion');
+  p=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot()`);assert.equal(p.tables.Item.find(i=>i.Name==='테스트 지급 상자').IconAddress,'ItemIcons/custom_potion');
+  assert.equal(await run(`document.querySelector('iframe').contentWindow.Studio.validate(document.querySelector('iframe').contentWindow.StudioUI.snapshot()).filter(i=>i.severity==='error').length`),0);
   const grant=p.tables.ItemFunction.find(f=>f.Name==='직접 아이템 지급');assert.equal(grant.FunctionType,'GrantItems');assert.deepEqual(grant.Rewards,[{itemId:'Stamina',amount:30},{itemId:'Gold',amount:500}]);
   checks.push('generic item grant configures Stamina 30 and Gold 500 through the shared item picker');
   await run(`document.getElementById('rewardsWorkspaceButton').click()`);

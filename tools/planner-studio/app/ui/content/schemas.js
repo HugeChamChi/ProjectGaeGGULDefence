@@ -7,7 +7,7 @@
   const source=f('Source','원본 / 기획 메모','text');
   const def=(label,keys,fields,note='')=>({label,keys,fields:[...fields,source],note});
   globalThis.STUDIO_SCHEMAS={
-    Item:def('아이템',['ItemId'],[id('ItemId','아이템 ID'),f('Name','이름','text',{required:true}),f('ItemType','종류','enum',{values:['Currency','Material','Character','ProfileIcon','ProfileFrame']}),f('IconKey','아이콘','icon'),f('BackendId','서버 대상 ID'),f('Note','메모')],'재화 외 아이템은 새 기획입니다. 저장소·지급 지원도 별도로 연결해야 합니다.'),
+    Item:def('아이템',['ItemId'],[id('ItemId','아이템 ID'),f('Name','이름','text',{required:true}),f('ItemType','종류','enum',{values:['Currency','Material','Character','ProfileIcon','ProfileFrame']}),f('IconKey','아이콘','icon'),f('Note','메모')],'재화 외 아이템은 새 기획입니다. 저장소·지급 지원도 별도로 연결해야 합니다.'),
     RewardGroup:def('보상 묶음',['RewardGroupId'],[id('RewardGroupId','보상 ID'),f('Name','이름','text',{required:true}),f('Rewards','지급 아이템','rewards')]),
     AttendancePlan:def('출석표 설정',['AttendanceId'],[id('AttendanceId','출석표 ID'),f('Name','이름','text',{required:true}),num('ResetHourKst','초기화 시각 (한국 시)',0,23),num('CycleDays','순환 일수',1,365)]),
     Attendance:def('출석 일차',['AttendanceId','Day'],[ref('AttendanceId','출석표','AttendancePlan',{required:true}),num('Day','일차',1,365),ref('RewardGroupId','보상 묶음','RewardGroup',{required:true})]),

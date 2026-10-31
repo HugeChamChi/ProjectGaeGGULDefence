@@ -8,7 +8,7 @@ public static class AttendanceMissionBindingChecks
   int checks=0;void Check(bool ok,string message){if(!ok)throw new Exception(message);checks++;}
   var oldEvents=EventMissions.Events;var oldMissions=EventMissions.Missions;
   try{
-   EventMissions.Configure(File.ReadAllText("outputs/event-missions-live/Events.server.json"),File.ReadAllText("outputs/event-missions-live/Missions.server.json"));
+   EventMissions.Configure(File.ReadAllText("tools/planner-studio/tests/events/Events.json"),File.ReadAllText("tools/planner-studio/tests/events/Missions.json"));
    var prefab=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/WorkSpace/USW/Prefabs/UI/AttendancePopup.prefab");
    Check(prefab!=null&&prefab.GetComponent<AttendancePopup>()!=null,"Existing attendance prefab reused");
    var slots=prefab.GetComponentsInChildren<AttendanceDaySlot>(true);Check(slots.Length==7,"Original seven reward slots");

@@ -10,7 +10,7 @@ public static class EventMissionIntegrationChecks
  {
   int checks=0;void Check(bool value,string message){if(!value)throw new Exception(message);checks++;}
   var oldEvents=EventMissions.Events;var oldMissions=EventMissions.Missions;
-  string events=File.ReadAllText("outputs/event-missions-no-version/Events.rows.json"),missions=File.ReadAllText("outputs/event-missions-no-version/Missions.rows.json");
+  string events=File.ReadAllText("tools/planner-studio/tests/events/Events.json"),missions=File.ReadAllText("tools/planner-studio/tests/events/Missions.json");
   try {
    EventMissions.Configure(events,missions);
    var e=EventMissions.Events.Single(x=>x.EventKey=="dev_attendance_7day_20261031");
