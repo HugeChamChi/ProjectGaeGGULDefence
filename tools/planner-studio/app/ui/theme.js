@@ -14,10 +14,10 @@
       button.setAttribute('aria-checked', String(theme === 'dark'));
     }
   }
-  apply(saved === 'dark' ? 'dark' : 'light');
+  apply(saved === 'light' ? 'light' : 'dark');
   document.addEventListener('DOMContentLoaded', () => {
     if (window.parent !== window) {
-      apply(window.parent.document.documentElement.dataset.theme || 'light');
+      apply(window.parent.document.documentElement.dataset.theme || 'dark');
       return;
     }
     const button = document.getElementById('themeToggle');

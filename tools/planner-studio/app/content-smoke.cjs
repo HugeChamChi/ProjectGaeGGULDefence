@@ -19,6 +19,13 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     assert(await run(`document.getElementById('integrationStatus').textContent.includes('서버 저장·복원·보상 지급 미연결')`));
     checks.push('settings explains per-feature integration limits for team handoff');
     assert.equal(await run(`document.querySelector('#settingsDialog #themeToggle').getAttribute('role')`),'switch');
+    assert.equal(await run(`document.documentElement.dataset.theme`),'dark');
+    await run(`document.getElementById('themeToggle').click()`);
+    assert.equal(await run(`document.documentElement.dataset.theme`),'light');
+    await window.webContents.reload();
+    await until(`Boolean(window.__studioReady) && Boolean(document.getElementById('themeToggle'))`);
+    assert.equal(await run(`document.documentElement.dataset.theme`),'light');
+    checks.push('fresh workspace defaults to dark; explicit light preference survives reload');
     await run(`document.getElementById('themeToggle').click()`);
     assert.equal(await run(`document.getElementById('themeToggle').getAttribute('aria-checked')`),'true');
     assert.equal(await run(`document.documentElement.dataset.theme`),'dark');
