@@ -1,11 +1,29 @@
 ---
 system: ui-authoring
 title: 실제 설정창 UI 제작실
-keywords: UI Authoring, ui-authoring, 제작실, UI 제작 도구, G06, 설정창 편집, XML 프리팹, 아트 루트, 아트 받기, rclone
+keywords: UI Authoring, ui-authoring, 제작실, UI 제작 도구, UI 시뮬레이터, UI 실험실, 폰트 실험, TTF, OTF, G06, 설정창 편집, XML 프리팹, 아트 루트, 아트 받기, rclone
 verified: 2026-10-30
 commit: de2cbd00
 ---
 # UI 제작실 — UI3030
+
+## 2026-10-30 정보창과 토글 복구 v1.11 (미커밋 추가)
+
+`UiLabExport`는 유닛/토템 정보창을 실제 `IngameScene`의 현재 인스턴스에서 가져온다. 기존 별도 유닛 prefab에는 연결이 없는 슬롯과 테스트 표시가 남아 있었다. 델탄 SO와 토템 SO를 원래 Presenter에 넣어 아이콘/기본 수치/설명을 채운다. `DescriptionToggleView`의 HideAndDontSave 런타임 스프라이트는 영구 asset으로 복사하고, `UiLabInfoPreview`가 원래 View에서 캡처한 간단히/자세히 문구/레이아웃/트랙/손잡이/라벨 상태만 표시한다. 게임 콜백은 제거한다. 두 정보창 ID에 `scene-info/`를 붙여 옛 인덱스별 실험값이 새 계층의 다른 요소에 적용되지 않게 한다. 원본 XML은 보존한다. Player 정보창33/기존170/상호작용42, 설치9 PASS. [근거/검사/제한](../../../outputs/ui-info-fix-verification/RESULT.md).
+
+## 2026-10-30 창 비율과 자동 반영 v1.10 (미커밋 추가)
+
+사용자 근거 `design/프로그램예시1.png`: 프로그램 창 비율에서 속성/버튼 잘림, 수동 적용의 불편, 미리보기 휠 줌과 스크롤바 정렬을 수정했다. `UiLabWindow.Interaction.cs`는 창 크기에 따른 GUI 좌표/픽셀 좌표, 휠 영역 판정/포인터 기준 줌/이동, 유효한 라이브 입력과 초안을 소유한다. `UiLabWorkspace.BeginLiveGroup/EndLiveGroup`이 연속 입력의 Undo를 묶고 폰트 변경 때 원래 아웃라인을 보존한다. 속성 패널 콘텐츠 폭을 고정하고 세로 스크롤만 사용한다. `UiLabTheme`의 가로 슬라이더 padding과 세로 트랙/손잡이 폭은 독립적으로 맞춘다. 실험 저장/게임 설치는 기존 경계를 유지한다. [사용법](../../technical/ui-authoring-studio.md), [근거/검사/제한](../../../outputs/ui-lab-live-verification/RESULT.md).
+
+## 2026-10-30 외형 정리 v1.9 (미커밋 추가)
+
+사용자가 시뮬레이터 프로그램 자체의 외형 변경을 요청했다. `UiLabTheme`의 소유하는 스킨/둥근 패널/버튼을 기존 제작실과 실험실에 적용하고, `UiLabWindow.Layout.cs`에서 라이브러리 3탭/속성 3탭/색상 견본과 RGBA/슬라이더/하단 타임라인을 정리했다. `UiLabFontPreview`는 선택 폰트를 카메라가 분리된 작은 RenderTexture에 그려 예문을 보여준다. 미리보기는 별도 RectMask2D와 확대/맞춤을 사용한다. UI-only 캡처는 이 마스크를 일시적으로 끄고 복원한다. 실험 XML과 게임 시각 스냅샷은 기존 계약을 유지한다. [현재 사용법](../../technical/ui-authoring-studio.md), [실제 화면/검사](../../../outputs/ui-lab-polish-verification/RESULT.md).
+
+## 2026-10-30 UI 실험실 v1.8 (미커밋 추가)
+
+사용자 지시로 별도 실험 모드를 추가했다. `commit`은 기존 기반 커밋이며 아래 코드는 이번 working tree에 추가됐고 커밋하지 않았다. `StudioWindow.OpenLab`이 기존 편집 상태를 보존하고 `UiLabWindow`를 연다. `UiLabWorkspace`가 외부 TTF/OTF와 실험 XML/Undo/머티리얼을 소유하고, `UiLabPlayback`이 원본 스케일 또는 실험 프리셋을 시간으로 평가한다. `UiLabTemplate`은 실제 표시 계층의 안정적인 참조다. `Tools/ui-authoring/UiLabExport.cs`는 preview scene에서 실제 레벨업/토템/정보창/강화/아웃게임 10개 표시를 캡처하며 런타임 생성 계층과 compact 패널 크기를 보존한다. `UiLabSmokeDriver.cs`가 독립 Player를 검증한다.
+
+실행기 `outputs/UI-Authoring-Kit/Start UI Lab.cmd`, 원본 `outputs/UI-Authoring-Kit/UILab/`의 폰트/experiment.xml, 내보내기 `outputs/ui-lab-content/lab.xml`. 게임 명령/서버/원본 자동 설치 없음. TTF/OTF 각170, Core107, 기존 제작실56/native16, 배포보존8, 설치9 통과. [현재 사용법](../../technical/ui-authoring-studio.md), [검증과 한계](../../../outputs/ui-lab-verification/RESULT.md). Android/원본 복합 연출 전체는 미검증/미지원이다.
 
 실제 공통 설정창 75요소·16그림·KCC-Ganpan SDF를 독립 Windows 도구에서 편집한다. DocumentCore/UGUI 렌더러를 게임과 공유한다. 전체 제품/Android 합격은 현재 안내와 TODO의 검증 경계를 따른다.
 
@@ -17,6 +35,24 @@ commit: de2cbd00
 ## 진입 파일
 | 파일 | 역할 |
 |---|---|
+| `Assets/WorkSpace/HSD/UIExternal/AuthoringRuntime/UiLabInfoPreview.cs` | 게임 서비스 없는 정보창 간단히/자세히 표시와 네이티브 토글 시각 상태 |
+| `Tools/ui-authoring/UiLabInfoSmokeDriver.cs` | 실제 씬 정보창, 번들 스프라이트, 토글 입력과 편집 보존 검사 |
+| `Tools/ui-authoring/UiLabInfoProbe.cs` | 샘플 SO 아이콘의 실제 로드 여부를 읽기 전용 확인 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabWindow.Interaction.cs` | 프로그램 창 비율 대응, 유효 입력 자동 반영/Undo 묶음과 포인터 휠/패닝 |
+| `Tools/ui-authoring/UiLabInteractionSmokeDriver.cs` | 5개 창 크기/비율, 컨트롤 잘림, 라이브 입력/Undo/휠 영역 검사 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabTheme.cs` | 기존 제작실/실험실의 데스크톱 스킨과 임시 텍스처 소유권 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabFontPreview.cs` | 실제 선택 폰트의 소형 TMP 예문 렌더링 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabWindow.Layout.cs` | 라이브러리/속성 탭, 조절 UI와 미리보기 도구/타임라인 |
+| `Tools/ui-authoring/UiLabShellSmokeDriver.cs` | 두 해상도의 실제 GUI 캡처와 외형 상태 불변 검사 |
+| `Assets/WorkSpace/HSD/UIExternal/AuthoringRuntime/UiLabTemplate.cs` | 실험실 실제 시각 스냅샷과 원본 스케일 연출 참조 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabWindow.cs` | 인게임/아웃게임 전환과 글자/외형/연출/A-B 실험 UI |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabWorkspace.cs` | 외부 폰트 파일, 상대 경로, 실험 저장/Undo와 머티리얼 소유권 |
+| `Assets/WorkSpace/HSD/UIExternal/Studio/UiLabPlayback.cs` | 결정적인 시간 평가, 배속/반복/정지 복원 |
+| `Tools/ui-authoring/UiLabExport.cs` | 실제 UI 10종과 런타임 생성 토템/강화 계층 캡처 |
+| `Tools/ui-authoring/UiLabSmokeDriver.cs` | Windows Player의 폰트/화면/저장/연출 검사 |
+| `Assets/WorkSpace/HSD/Scripts/Editor/UIAuthoring/NativeLobbyPrefabBridge.cs` | 우편함/출석/계정 원본 계층 번들, 인덱스 경로와 file ID로 왕복, 원본 충돌 차단 |
+| `Tools/ui-authoring/LobbyNativeChecks.cs` | 로비 3종 Unity 원본 적용/참조 보존/복원 검사 |
+| `Tools/ui-authoring/LobbyNativeSmokeDriver.cs` | 실제 독립 실행본의 로비 편집/게시/연출 검사 |
 | `Assets/WorkSpace/HSD/Scripts/Editor/UIAuthoring/NativeSettingsPrefabBridge.cs` | 원본 설정 prefab 내보내기/고정 ID 왕복/다음 리비전/백업 |
 | `Assets/WorkSpace/HSD/UIExternal/DocumentCore/NativePrefabContract.cs` | 원본 모드 지원 속성 및 구조 불변 검사 |
 | `Assets/WorkSpace/HSD/UIExternal/AuthoringRuntime/NativePrefabTemplate.cs` | 실제 계층 ID와 기존 연출 프로파일 |

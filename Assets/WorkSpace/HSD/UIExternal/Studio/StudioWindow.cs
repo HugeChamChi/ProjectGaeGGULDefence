@@ -47,6 +47,22 @@ namespace GGD.UI.Authoring.Studio
         private Dictionary<string, string> _gesture;
         private RectTransform _dragRect;
         private int _lastWidth, _lastHeight;
+        private UiLabWindow _lab;
+        private UiLabTheme _desktopTheme;
+
+        /// <summary>Independent visual laboratory, when opened.</summary>
+        public UiLabWindow Lab => _lab;
+
+        /// <summary>Opens isolated experiments without changing the current designer kit.</summary>
+        public void OpenLab()
+        {
+            if (_lab != null) return;
+            var host = new GameObject("UI Lab"); host.transform.SetParent(transform, false);
+            var lab = host.AddComponent<UiLabWindow>();
+            try { lab.Initialize(_editorFont, CloseLab); _lab = lab; _viewport.gameObject.SetActive(false); }
+            catch { Destroy(host); throw; }
+        }
+        private void CloseLab() { if (_lab != null) Destroy(_lab.gameObject); _lab = null; _viewport.gameObject.SetActive(true); }
 
         /// <summary>Current original documents; tests and developer tooling can inspect the same model used by GUI actions.</summary>
         public AuthoringWorkspace Workspace { get; private set; }
@@ -81,9 +97,11 @@ namespace GGD.UI.Authoring.Studio
             string[] args = Environment.GetCommandLineArgs(); for (int i = 0; i + 1 < args.Length; i++) if (args[i] == "--kit") directory = Path.GetFullPath(args[i + 1]);
             try { OpenKit(directory); } catch (Exception error) { _error = error.Message; Debug.LogError("STUDIO_START: " + error); }
             Application.wantsToQuit += CheckQuit;
+            if (args.Contains("--ui-lab")) { try { OpenLab(); } catch (Exception error) { _error = error.Message; Debug.LogError("UI_LAB_START: " + error); } }
         }
         private void Update()
         {
+            if (_lab != null) return;
             if (_viewport == null) return;
             if (_lastWidth != Screen.width || _lastHeight != Screen.height) { _lastWidth = Screen.width; _lastHeight = Screen.height; UpdateViewport(); }
             if (Workspace?.IsDirty == true && Time.unscaledTime > _nextRecovery)
@@ -206,8 +224,11 @@ namespace GGD.UI.Authoring.Studio
         }
         private void OnGUI()
         {
-            GUI.skin.font = _editorFont; GUI.skin.label.fontSize = 15; GUI.skin.button.fontSize = 15; GUI.skin.textField.fontSize = 15; GUI.skin.box.fontSize = 15;
+            if (_lab != null) return;
+            _desktopTheme ??= new UiLabTheme(GUI.skin, _editorFont); GUI.skin = _desktopTheme.Skin;
             GUI.skin.label.wordWrap = false;
+            GUI.Box(new Rect(6, HeaderHeight, LeftWidth - 6, Screen.height - HeaderHeight - FooterHeight), GUIContent.none, _desktopTheme.Panel);
+            GUI.Box(new Rect(Screen.width - RightWidth, HeaderHeight, RightWidth - 6, Screen.height - HeaderHeight - FooterHeight), GUIContent.none, _desktopTheme.Panel);
             DrawHeader();
             if (Workspace == null) { GUI.Label(new Rect(30, 150, Screen.width - 60, 250), "키트를 열어 주세요.\n" + _error); DrawDialog(); return; }
             GUI.Box(new Rect(0, HeaderHeight, LeftWidth, Screen.height - HeaderHeight - FooterHeight), "");
@@ -227,6 +248,7 @@ namespace GGD.UI.Authoring.Studio
             Button("저장", Save, 72); Button("다른 이름", SaveCopy, 100); Button("실행 취소", Undo, 100); Button("다시 실행", Redo, 100);
             Button("복구본", () => { Workspace.Recover(); Rebuild(); }, 80); Button("게시 / 게임 전달", () => Publish(), 150);
             if (GUILayout.Button(_testing ? "편집으로" : "▶ 테스트", GUILayout.Width(100))) SetTesting(!_testing);
+            Button("UI 실험실", OpenLab, 100);
             GUILayout.FlexibleSpace(); GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(); GUILayout.Label(Workspace?.CurrentPath ?? "", GUILayout.Width(320));
             if (GUILayout.Button(_ingame ? "인게임 상태" : "로비 상태", GUILayout.Width(115))) { _ingame = !_ingame; _bindings?.Reset(_ingame); }
@@ -666,6 +688,6 @@ namespace GGD.UI.Authoring.Studio
         private static RectTransform NewRect(string name, Transform parent) { var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>(); rect.SetParent(parent, false); return rect; }
         private static Rect Bounds(RectTransform rect)
         { var points = new Vector3[4]; rect.GetWorldCorners(points); return new Rect(points[0].x, Screen.height - points[1].y, points[2].x - points[0].x, points[1].y - points[0].y); }
-        private void OnDestroy() { Application.wantsToQuit -= CheckQuit; _view?.Dispose(); _nativeBundle?.Unload(false); }
+        private void OnDestroy() { Application.wantsToQuit -= CheckQuit; _desktopTheme?.Dispose(); _view?.Dispose(); _nativeBundle?.Unload(false); }
     }
 }

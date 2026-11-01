@@ -16,8 +16,8 @@ using UnityEngine.UI;
 /// <summary>One-way Unity-resolved extraction of the actual shared UI3030. Never parses prefab YAML.</summary>
 public static class SettingsAuthoringExporter
 {
-    private const string Source = "Assets/WorkSpace/HSD/Prefab/UI/InGame/InGame_Setting_Popup.prefab";
-    private const string Destination = "Data/UI/Authoring";
+    private static string Source = "Assets/WorkSpace/HSD/Prefab/UI/InGame/InGame_Setting_Popup.prefab";
+    private static string Destination = "Data/UI/Authoring";
     private static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
     private static readonly Dictionary<string, TMP_FontAsset> Fonts = new Dictionary<string, TMP_FontAsset>();
     private static readonly List<string> Report = new List<string>();
@@ -95,6 +95,35 @@ public static class SettingsAuthoringExporter
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
+    private static bool _nativeVisual;
+    /// <summary>Extracts visual properties from a lobby prefab; its native bundle preserves other components.</summary>
+    public static void ExportLobbyVisual(string source, string destination)
+    {
+        string oldSource = Source, oldDestination = Destination;
+        Source = source; Destination = destination; _nativeVisual = true;
+        Sprites.Clear(); Fonts.Clear(); Report.Clear();
+        Directory.CreateDirectory(destination + "/Screens"); Directory.CreateDirectory(destination + "/Images");
+        var root = PrefabUtility.LoadPrefabContents(source);
+        try
+        {
+            _root = root.transform;
+            _ids = root.GetComponentsInChildren<RectTransform>(true).ToDictionary(x => (Transform)x, x => Identity("#" + NativeIndexPath(x, _root)));
+            var nodes = Serialize((RectTransform)root.transform, null); nodes.SetAttributeValue("active", "true");
+            Save("Screens/UI3030.xml", new XElement("Screen", new XAttribute("schema", "2"), new XAttribute("key", root.name), new XAttribute("width", 1080), new XAttribute("height", 1920), nodes));
+            Save("kit.xml", new XElement("Kit", new XAttribute("schema", "2"), new XAttribute("runtime", "2"), new XAttribute("project", "GaeGGULDefence"), new XAttribute("id", Identity(source)), new XElement("Document", new XAttribute("path", "Screens/UI3030.xml"))));
+            Save("catalog.xml", new XElement("Catalog", new XAttribute("version", "2")));
+            Save("images.xml", new XElement("Images", Sprites.Select(x => ExportImage(x.Key, x.Value))));
+            Save("fonts.xml", new XElement("Fonts", Fonts.Select(x => new XElement("Font", new XAttribute("key", x.Key), new XAttribute("asset", AssetDatabase.GetAssetPath(x.Value))))));
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); Source = oldSource; Destination = oldDestination; _nativeVisual = false; }
+    }
+
+    private static string NativeIndexPath(Transform node, Transform root)
+    {
+        var indices = new Stack<int>();
+        while (node != root) { indices.Push(node.GetSiblingIndex()); node = node.parent; }
+        return string.Join("/", indices);
+    }
     private static XElement Serialize(RectTransform rect, Transform excluded)
     {
         if (rect == excluded) return null;
@@ -134,7 +163,7 @@ public static class SettingsAuthoringExporter
                 case ContentSizeFitter fitter: data = new XElement("SizeFitter"); A(data, "horizontal", (int)fitter.horizontalFit); A(data, "vertical", (int)fitter.verticalFit); break;
                 case UI_SettingPanel_Base _: case UI_SoundSettingSlot _: case UI_FrameRateSelector _: case GaeGGUL.Animation.Anim_InOutBase _:
                     Report.Add("ADAPTER " + AnimationUtility.CalculateTransformPath(rect, _root) + " : " + component.GetType().Name); break;
-                default: throw new FormatException("Blocked unsupported component " + component.GetType().FullName + " at " + rect.name);
+                default: if (_nativeVisual) break; throw new FormatException("Blocked unsupported component " + component.GetType().FullName + " at " + rect.name);
             }
             if (data != null) { node.Add(data); Report.Add("CONVERTED " + AnimationUtility.CalculateTransformPath(rect, _root) + " : " + data.Name); }
         }
@@ -192,7 +221,7 @@ public static class SettingsAuthoringExporter
         void Command(string key, string type) => catalog.Add(new XElement("Command", new XAttribute("key", key), new XAttribute("type", type)));
     }
     private static string SpriteKey(Sprite sprite)
-    { if (sprite == null) return ""; if (Sprites.TryGetValue(sprite.name, out var other) && other != sprite) throw new FormatException("Resource key collision " + sprite.name); Sprites[sprite.name] = sprite; return sprite.name; }
+    { if (sprite == null) return ""; if (_nativeVisual) { AssetDatabase.TryGetGUIDAndLocalFileIdentifier(sprite, out string guid, out long id); string key = guid + "_" + id; Sprites[key] = sprite; return key; } if (Sprites.TryGetValue(sprite.name, out var other) && other != sprite) throw new FormatException("Resource key collision " + sprite.name); Sprites[sprite.name] = sprite; return sprite.name; }
     private static XElement ExportImage(string key, Sprite sprite)
     {
         string file = "Images/" + Identity(AssetDatabase.GetAssetPath(sprite) + key) + ".png";
