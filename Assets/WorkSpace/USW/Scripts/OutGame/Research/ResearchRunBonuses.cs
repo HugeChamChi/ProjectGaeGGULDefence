@@ -43,6 +43,8 @@ public sealed class ResearchRunBonuses
             if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
             var session = _saves.GetSession(accountKey, tree, "OutgameUpgrade.");
             await session.LoadAsync(cancellationToken);
+            await session.FlushAsync(cancellationToken);
+            if (session.SaveError != null || Player.PlayerData.IsDirty) throw new InvalidOperationException("Upgrade progress is not confirmed by server.");
             if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
             foreach (ResearchStat stat in Enum.GetValues(typeof(ResearchStat)))
                 _values[(int)stat] = session.Progress.GetTotal(stat);

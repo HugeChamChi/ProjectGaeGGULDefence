@@ -3,6 +3,7 @@
 [System.Serializable]
 public class PlayerData
 {
+    public UpgradeProgressData UpgradeProgress = new();
     /// <summary>Last absolute snapshot identifier, for retry acknowledgement and local journal reconciliation.</summary>
     public string SaveId = string.Empty;
     public System.Collections.Generic.List<UnitLevelEntry> UnitLevels = new();

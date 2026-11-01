@@ -347,6 +347,22 @@ public class PlayerDataController : IDisposable, Global.IClearable
     /// <summary>Marks an existing direct data mutation at a legacy boundary as a durable change.</summary>
     public void MarkDirty() { if (IsReady) SaveAndRefresh(); }
 
+    public void SetUpgradeProgress(ResearchSaveData tree, string importId = null)
+    {
+        if (!IsReady) throw new InvalidOperationException("Upgrade account is unavailable.");
+        if (tree == null || string.IsNullOrWhiteSpace(tree.TreeKey)) throw new ArgumentException("Upgrade tree key required.");
+        tree.GetLevels(tree.TreeKey);
+        var next = JsonUtility.FromJson<ResearchSaveData>(JsonUtility.ToJson(tree));
+        var progress = _data.UpgradeProgress;
+        progress.Validate();
+        var existing = progress.Trees.Find(x => x.TreeKey == tree.TreeKey);
+        if (existing != null && JsonUtility.ToJson(existing) == JsonUtility.ToJson(next) && importId == null) return;
+        if (existing != null) progress.Trees.Remove(existing);
+        progress.Trees.Add(next); progress.Trees.Sort((a, b) => string.CompareOrdinal(a.TreeKey, b.TreeKey));
+        if (importId != null) progress.LocalImportId = importId;
+        SaveAndRefresh();
+    }
+
     public bool IsShopPurchased(string day, int id) => IsReady && _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id);
 
     /// <summary>Price, reward and daily receipt commit in one durable/account snapshot.</summary>

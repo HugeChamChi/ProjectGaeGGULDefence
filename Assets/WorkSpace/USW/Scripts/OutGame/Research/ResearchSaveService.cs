@@ -6,9 +6,14 @@ public sealed class ResearchSaveService : IDisposable
 {
     private readonly IResearchSaveStore _store;
     private readonly ResearchChartService _charts;
+    private readonly ResearchAccountContext _account;
     private readonly Dictionary<string, ResearchSaveSession> _sessions = new(StringComparer.Ordinal);
     /// <summary>저장 구현을 생성자 주입한다.</summary>
-    public ResearchSaveService(IResearchSaveStore store, ResearchChartService charts = null) { _store = store; _charts = charts; }
+    public ResearchSaveService(IResearchSaveStore store, ResearchChartService charts = null, ResearchAccountContext account = null)
+    {
+        _store = store; _charts = charts; _account = account;
+        if (_account != null) _account.OnAccountChanged += ClearSessions;
+    }
     public Cysharp.Threading.Tasks.UniTask<ResearchTreeData> ResolveTreeAsync(ResearchTreeData original, System.Threading.CancellationToken token) =>
         _charts != null ? _charts.ResolveAsync(original, token) : Cysharp.Threading.Tasks.UniTask.FromResult(original);
     /// <summary>호출 시 고정된 계정으로 진행을 얻는다. dirty 상태는 화면/계정 전환 후에도 유지한다.</summary>
@@ -25,6 +30,11 @@ public sealed class ResearchSaveService : IDisposable
     }
     /// <summary>루트 컨테이너가 종료될 때 모든 계정의 작업을 취소한다.</summary>
     public void Dispose()
+    {
+        if (_account != null) _account.OnAccountChanged -= ClearSessions;
+        ClearSessions();
+    }
+    private void ClearSessions()
     {
         foreach (var session in _sessions.Values) session.Dispose();
         _sessions.Clear();

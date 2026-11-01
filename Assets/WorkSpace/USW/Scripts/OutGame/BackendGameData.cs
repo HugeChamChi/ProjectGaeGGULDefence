@@ -212,6 +212,7 @@ public class BackendGameData
         }
         return new PlayerData
         {
+            UpgradeProgress = ParseUpgradeProgress(data.GetString("UpgradeProgressJson", "{\"SchemaVersion\":1,\"Trees\":[],\"LocalImportId\":\"\"}")),
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
             ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
@@ -252,7 +253,10 @@ public class BackendGameData
 
     private Param PlayerDataToParam(PlayerData data)
     {
+        data.UpgradeProgress.Validate();
         Param param = new Param();
+        // LitJson serializes ResearchSaveData.CurrentVersion (a const), then cannot deserialize it.
+        param.Add("UpgradeProgressJson", JsonUtility.ToJson(data.UpgradeProgress));
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
         param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
         param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
@@ -288,6 +292,18 @@ public class BackendGameData
         param.Add(COLUMN_SHOW_DAMAGE_NUMBERS, data.ShowDamageNumbers ? 1 : 0);
         param.Add(COLUMN_VIBRATION_ENABLED, data.VibrationEnabled ? 1 : 0);
         return param;
+    }
+
+    private static UpgradeProgressData ParseUpgradeProgress(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) throw new FormatException("Empty upgrade save.");
+        var root = JsonMapper.ToObject(json);
+        if (root == null || !root.IsObject || !root.ContainsKey("SchemaVersion") || !root.ContainsKey("Trees"))
+            throw new FormatException("Incomplete upgrade save.");
+        if (!root["SchemaVersion"].IsInt || root["Trees"] == null || !root["Trees"].IsArray)
+            throw new FormatException("Invalid upgrade save fields.");
+        var value = JsonUtility.FromJson<UpgradeProgressData>(json) ?? throw new FormatException("Null upgrade save.");
+        value.Validate(); return value;
     }
 
     // Installed LitJson cannot deserialize a top-level null token. Missing/empty legacy columns are an absent receipt.
