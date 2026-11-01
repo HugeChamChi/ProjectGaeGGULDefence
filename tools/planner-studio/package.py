@@ -34,7 +34,11 @@ def pack(source, target):
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary=target.with_suffix('.asar.tmp')
     temporary.write_bytes(struct.pack('<II', 4, len(pickle)) + pickle + b''.join(chunks))
-    os.replace(temporary,target)
+    try:
+        os.replace(temporary,target)
+    except PermissionError:
+        target.write_bytes(temporary.read_bytes())
+        temporary.unlink()
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
