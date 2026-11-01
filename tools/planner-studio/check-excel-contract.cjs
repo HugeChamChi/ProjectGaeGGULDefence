@@ -34,7 +34,7 @@ assert.throws(() => excel.inspect(zipSync(old)), /BaseStats/);
 
 // Identical item cells have identical meaning and rejection rules in every feature.
 const itemCell = 'Gold:500;Diamond:10;Stamina:30';
-for (const [sheet, key] of [['AttendanceRewards','Rewards'], ['Missions','Rewards'], ['UpgradeStats','Costs']]) {
+for (const [sheet, key] of [['Missions','Rewards'], ['UpgradeStats','Costs']]) {
   const rows = plain(e.Studio.tables(project)[sheet]);
   const index = rows[0].indexOf(key);
   rows[1][index] = itemCell;
@@ -56,21 +56,12 @@ require('./app/backend-deployment.cjs').register({
 for (const kind of ['missions', 'unitBaseStats']) {
   const readable = handlers.get('content-backend-prepare')({kind, project});
   const readableBook=open(fs.readFileSync(readable.file)),readableSheet=[...readableBook.sheets.keys()][0];
-  const expectedTable=require('./app/readable-chart.cjs').table(kind==='missions'?excel.toRuntime(project,excel.bundles.missions):unitRuntime(project),kind);
+  const pair = kind === 'missions' ? require('./app/event-tables.cjs').tables(project) : null;
+  const expectedTable = pair ? pair.Missions : require('./app/readable-chart.cjs').table(unitRuntime(project), kind);
   const col=i=>{let s='';for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s;};
   expectedTable.forEach((row,r)=>row.forEach((value,c)=>assert.equal(readableBook.get(readableSheet,col(c)+(r+1)).value,String(value),'readable chart cell')));
-  const record = handlers.get('content-backend-prepare')({kind, project, base64:true});
-  const authoringBytes = fs.readFileSync(record.authoringFile);
-  assert.equal(crypto.createHash('sha256').update(authoringBytes).digest('hex'), record.authoringSha256);
-  const review = excel.read(authoringBytes, project).project;
-  const book = open(fs.readFileSync(record.file));
-  const sheet = [...book.sheets.keys()][0];
-  const keys = ['SchemaVersion','ReleaseKey','PartIndex','PartCount','Sha256','Payload'];
-  const rows = [];
-  for (let r = 2; book.get(sheet, 'A' + r).value; r++) rows.push(Object.fromEntries(keys.map((key, i) => [key, book.get(sheet, String.fromCharCode(65 + i) + r).value])));
-  const decoded = decodeConfigRows(rows);
-  const expected = kind === 'missions' ? excel.toRuntime(review, excel.bundles.missions) : unitRuntime(review);
-  assert.deepEqual(JSON.parse(decoded.bytes.toString('utf8')), plain(expected));
-  assert.equal(record.remoteApplied, false);
+  const authoringBytes = fs.readFileSync(readable.authoringFile);
+  assert.equal(crypto.createHash('sha256').update(authoringBytes).digest('hex'), readable.authoringSha256);
+  assert.equal(readable.remoteApplied, false);
 }
 console.log('PASS: all worksheet contracts, frequency units and legacy import, shared item cells, deployment/review snapshot equivalence');

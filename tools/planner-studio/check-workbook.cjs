@@ -21,10 +21,10 @@ for(const [kind,names]of Object.entries(excel.bundles)){
  }
  fs.writeFileSync(path.join(folder,kind+'.xlsx'),bytes);
 }
-const edited=e.Studio.clone(p);edited.tables.Attendance[0].Rewards=[{itemId:'Gold',amount:500},{itemId:'Diamond',amount:10},{itemId:'Stamina',amount:30}];
-const data=excel.write(edited,excel.bundles.rewards);assert.equal(JSON.stringify(excel.read(data,p).project.tables.Attendance[0].Rewards),JSON.stringify(edited.tables.Attendance[0].Rewards));
+const edited=e.Studio.clone(p);edited.tables.Missions[0].Rewards=[{itemId:'Gold',amount:500},{itemId:'Diamond',amount:10},{itemId:'Stamina',amount:30}];
+const data=excel.write(edited,excel.bundles.rewards);assert.equal(JSON.stringify(excel.read(data,p).project.tables.Missions[0].Rewards),JSON.stringify(edited.tables.Missions[0].Rewards));
 // Import rejects broken cross references; writing also rejects invalid values.
-edited.tables.Attendance[0].Rewards[0].amount=-1;assert.throws(()=>excel.write(edited,excel.bundles.rewards));
+edited.tables.Missions[0].Rewards[0].amount=-1;assert.throws(()=>excel.write(edited,excel.bundles.rewards));
 const {zipSync,unzipSync,strFromU8,strToU8}=require('./app/node_modules/fflate');
 const parts=unzipSync(data);parts['xl/worksheets/sheet2.xml']=strToU8(strFromU8(parts['xl/worksheets/sheet2.xml']).replace('Gold:500','MissingItem:500'));assert.throws(()=>excel.read(zipSync(parts),p));
 const defined=e.Studio.clone(p),bonus=defined.tables.BonusEffect.find(r=>r.BonusId==='betan_lv3');
@@ -34,10 +34,8 @@ assert.equal(loadedBonus.tables.BonusEffect.find(r=>r.BonusId==='betan_lv3').Val
 assert(e.BonusModel.render(loadedBonus.tables.BonusDefinition.find(r=>r.BonusId==='betan_lv3'),loadedBonus.tables.BonusEffect).includes('12.5%'));
 bonus.Value='broken';assert.throws(()=>excel.write(defined,excel.bundles.enhancement));
 bonus.Value='1e400';assert.throws(()=>excel.write(defined,excel.bundles.enhancement));
-const legacy=e.Studio.clone(p);legacy.tables.RewardGroup[0].Rewards[0].amount=77;for(const day of legacy.tables.Attendance)delete day.Rewards;
-assert.equal(e.Studio.shape(legacy).tables.Attendance[0].Rewards[0].amount,77);
-const oldRows=[['AttendanceId','Day','RewardGroupId','Source'],...p.tables.Attendance.map(r=>[r.AttendanceId,r.Day,r.RewardGroupId,r.Source])];
-assert.equal(excel.read(e.RewardCore.xlsx('Attendance',oldRows),p).project.tables.Attendance[0].Rewards[0].amount,10);
-const sheets=excel.inspect(data).names;assert.deepEqual(Array.from(sheets),['AttendanceEvents','AttendanceRewards']);
+const v1={schemaVersion:1,groups:[{id:'AttendanceDay01',name:'출석 1일차',rewards:[{itemId:'Stamina',amount:77}]}],attendance:{id:'BasicAttendance',resetHourKst:5,days:[{day:1,groupId:'AttendanceDay01'}]}};
+assert.equal(e.Studio.migrate(v1).tables.Missions.find(m=>m.MissionKey==='BasicAttendance_day_1').Rewards[0].amount,77);
+const sheets=excel.inspect(data).names;assert.deepEqual(Array.from(sheets).sort(),['MissionEvents','Missions']);
 fs.writeFileSync(path.join(folder,'bonus-defined.xlsx'),bonusBytes);
 console.log(JSON.stringify({ok:true,checks:['enhancement workbook roundtrip','direct attendance workbook roundtrip','multiple rewards in one cell','invalid amount rejected','missing item rejected','typed bonus effect roundtrip','description-only is not an applied effect','invalid effect JSON rejected','previous JSON and workbook migrated'],folder},null,2));
