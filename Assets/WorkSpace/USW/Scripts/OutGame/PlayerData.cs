@@ -8,6 +8,13 @@ public class PlayerData
     public System.Collections.Generic.List<UnitLevelEntry> UnitLevels = new();
     [Serializable] public sealed class UnitLevelEntry { public string UnitKey; public int Level = 1; }
     public RewardInventory RewardInventory = new();
+    public string ShopPurchaseDay = string.Empty;
+    public System.Collections.Generic.List<int> ShopPurchases = new();
+    public System.Collections.Generic.List<string> CompletedTutorials = new();
+    // -1 means the legacy row is still the source for this selection.
+    public int SelectedChiefId = -1;
+    public int SelectedIconId = -1;
+    public int SelectedFrameId = -1;
     /// <summary>Paid entry reserved until a production battle actually starts.</summary>
     public string PendingEntryId = string.Empty;
     /// <summary>Cost already deducted for the pending entry.</summary>

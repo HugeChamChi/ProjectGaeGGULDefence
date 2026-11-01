@@ -37,8 +37,7 @@ public class UI_ProfilePresenter
 
     public void OnApplyClicked()
     {
-        Player.Profile.Data.CurrentIconId = _tempIconData.Id;
-        Player.Profile.Data.CurrentFrameId = _tempFrameData.Id;
+        if (!Player.Profile.TrySelect(_tempIconData.Id, _tempFrameData.Id)) return;
         
         // Player.Profile.Save(); // TODO: 저장 로직 활성화 시 주석 해제
         

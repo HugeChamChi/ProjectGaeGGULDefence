@@ -5,6 +5,7 @@ public class UI_GachaPresenter
 {
     private readonly UI_GachaPanel _view;
     private GachaSystem<ICharacterData> _gachaSystem;
+    private bool _buying;
 
     public UI_GachaPresenter(UI_GachaPanel view)
     {
@@ -33,31 +34,24 @@ public class UI_GachaPresenter
 
     public async UniTask StartGachaCycle(int count)
     {
-        if (_gachaSystem == null) return;
-
+        if (_gachaSystem == null || _buying || count <= 0 || !Player.PlayerData.IsReady) return;
+        long price = (long)_gachaSystem.Cost * count;
+        if (price <= 0 || price > int.MaxValue || Player.PlayerData.Data.Diamond < price) return;
+        _buying = true;
         _view.SetInteractable(false);
-
-        if (!Player.PlayerData.SpendDiamond(_gachaSystem.Cost * count))
+        var balances = Player.PlayerData;
+        var accountData = balances.Data;
+        try
         {
-            _view.SetInteractable(true);
-            return;
+            // Fetch a complete result before charging. A lost response cannot consume currency.
+            var results = await _gachaSystem.GetDatas(count);
+            if (!ReferenceEquals(accountData, balances.Data) || !balances.TryPurchaseCharacters((int)price, results)) return;
+            await balances.TrySaveAsync(); // Failed cloud sync retains the complete purchase in the local journal.
+            if (!balances.IsReady) return;
+            await _view.PlayProductionAsync(results);
+            _view.ShowResults(results);
+            RefreshButtons();
         }
-
-        // 다이아 차감을 먼저 서버에 확정한 뒤 캐릭터 획득을 저장한다.
-        // (역순이면 차감 전에 캐릭터 획득이 먼저 서버에 남아, 크래시 시 무료 획득이 발생할 수 있음)
-        await Player.PlayerData.SaveAsync();
-
-        var results = await _gachaSystem.GetDatas(count);
-
-        // 획득 처리 (Model Update)
-        Player.Character.AddCharacters(results);
-        Player.Character.SaveAsync().Forget();
-
-        // 연출 및 결과 표시 (View Update)
-        await _view.PlayProductionAsync(results);
-        _view.ShowResults(results);
-
-        RefreshButtons();
-        _view.SetInteractable(true);
+        finally { _buying = false; _view.SetInteractable(true); }
     }
 }
