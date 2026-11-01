@@ -54,7 +54,7 @@ public sealed class SettingsAuthoringBridge : IPreprocessBuildWithReport
     public static void Install(string directory)
     {
         directory = Path.GetFullPath(directory);
-        if (File.Exists(Path.Combine(directory, NativePrefabContract.Path))) { NativeSettingsPrefabBridge.Apply(directory); return; }
+        if (File.Exists(Path.Combine(directory, NativePrefabContract.Path))) { if ((string)NativePrefabContract.Read(AuthoringWorkspace.Open(directory)).Attribute("source") == NativeSettingsPrefabBridge.Source) NativeSettingsPrefabBridge.Apply(directory); else NativeLobbyPrefabBridge.Apply(directory); return; }
         var pointer = AuthoringWorkspace.Parse(File.ReadAllText(AuthoringWorkspace.SafePath(directory, "Published/current.xml")), "current.xml").Root;
         string version = AuthoringWorkspace.Required(pointer, "version");
         string root = AuthoringWorkspace.SafePath(directory, "Published/versions/" + version);

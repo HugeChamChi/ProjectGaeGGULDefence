@@ -76,6 +76,7 @@ namespace GGD.UI.Authoring
             {
                 view.Root = UnityEngine.Object.Instantiate(template.gameObject, parent, false); view.Root.SetActive(false);
                 var copy = view.Root.GetComponent<NativePrefabTemplate>();
+                foreach (var canvas in view.Root.GetComponentsInChildren<Canvas>(true)) canvas.overrideSorting = false;
                 for (int i = 0; i < copy.Ids.Length; i++) view.Elements.Add(copy.Ids[i], copy.Rects[i]);
                 if (view.Root.GetComponent<CanvasGroup>() == null) view.Root.AddComponent<CanvasGroup>();
                 foreach (var node in document.Root.Descendants("Element"))
@@ -158,7 +159,7 @@ namespace GGD.UI.Authoring
                         image.fillOrigin = (int)N(item, "fillOrigin"); image.fillClockwise = Boolean(item, "clockwise", true);
                         image.pixelsPerUnitMultiplier = N(item, "ppuMultiplier", 1); break;
                     case "Text":
-                        var text = (target.GetComponent<TextMeshProUGUI>() ?? target.AddComponent<TextMeshProUGUI>()); text.font = _resources.Font(AuthoringWorkspace.Required(item, "font"));
+                        var text = (target.GetComponent<TextMeshProUGUI>() ?? target.AddComponent<TextMeshProUGUI>()); if (Root.GetComponent<NativePrefabTemplate>() == null) text.font = _resources.Font(AuthoringWorkspace.Required(item, "font"));
                         text.text = (string)item.Attribute("text") ?? ""; text.fontSize = N(item, "size", 32); text.color = Color(item, "color", UnityEngine.Color.white);
                         text.alignment = (TextAlignmentOptions)(int)N(item, "alignment", (int)TextAlignmentOptions.Center);
                         text.fontStyle = (FontStyles)(int)N(item, "style"); text.enableAutoSizing = Boolean(item, "autoSize");
