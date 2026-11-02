@@ -42,8 +42,8 @@ public sealed class StatBuffMeshBatch : MonoBehaviour
     private bool _orthographic;
     private bool _visible = true, _glowVisible = true;
     public bool UseBatching { get; set; } = true;
-    /// <summary>공통 앞/뒤 정렬을 쓰는 실험에서만 파츠별 순서를 두 밴드로 합친다.</summary>
-    public bool MergeSharedLayers { get; set; }
+    /// <summary>공통 앞/뒤 정렬의 파츠를 일반/발광 밴드로 합친다.</summary>
+    public bool MergeSharedLayers { get; set; } = true;
     public int ActiveBatchCount { get; private set; }
     public int SubmittedSpriteCount { get; private set; }
     public int SubmittedVertexCount { get; private set; }

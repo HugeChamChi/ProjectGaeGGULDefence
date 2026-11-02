@@ -159,6 +159,7 @@ public sealed class StatBuffFx : MonoBehaviour
     /// <summary>유닛의 실제 레이어와 드래그 깊이를 따라간다.</summary>
     public void SetSorting(int layer, int front, int behind)
     {
+        if (_meshBatch != null && _meshBatch.MergeSharedLayers) { front = 30000; behind = -30000; }
         if (!_built || (_frontOrder == front && _behindOrder == behind && _sortingRenderers[0].sortingLayerID == layer)) return;
         _frontOrder = front; _behindOrder = behind;
         for (int i = 0; i < _sortingRenderers.Length; i++)
