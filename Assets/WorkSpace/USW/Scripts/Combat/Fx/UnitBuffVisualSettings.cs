@@ -9,6 +9,7 @@ public sealed class UnitBuffVisualSettings : ScriptableObject
     public StatBuffFxStyle Mixed;
     public StatBuffFxStyle Disabled;
     public Material AdditiveMaterial;
+    public Shader BatchShader;
     [Min(.1f)] public float PermanentSeconds = 1.5f;
     [Min(.05f)] public float Scale = .55f;
     public int FrontOffset = 3;

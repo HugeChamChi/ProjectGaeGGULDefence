@@ -68,6 +68,7 @@ public sealed class StatBuffFx : MonoBehaviour
     private int[] _sortingOffsets;
     private SpriteRenderer _unused;
     private System.Func<Sprite, Sprite> _spriteLookup;
+    private StatBuffMeshBatch _meshBatch;
     private Sprite Resolve(Sprite sprite) => _spriteLookup != null ? _spriteLookup(sprite) : sprite;
     private Transform _arcRoot;
     private SpriteRenderer _burst, _aura, _pillarBack, _pillarCore, _badgeGlow, _badgeOutline, _badgeFill;
@@ -135,11 +136,12 @@ public sealed class StatBuffFx : MonoBehaviour
     public void SetTint(Color? tint) => _tint = tint;
 
     /// <summary>인게임 풀 전용: 첫 Play 전에 필요한 시안 요소만 생성하도록 설정한다.</summary>
-    public void ConfigureCompact(Material additiveMaterial, System.Func<Sprite, Sprite> spriteLookup = null)
+    public void ConfigureCompact(Material additiveMaterial, System.Func<Sprite, Sprite> spriteLookup = null, StatBuffMeshBatch meshBatch = null)
     {
         if (_built) return;
         _compact = true; _additiveMaterial = additiveMaterial;
         _spriteLookup = spriteLookup;
+        _meshBatch = meshBatch;
     }
 
     /// <summary>외부 수명 안에서만 퇴장시킨다. 조각이 실제 버프 종료 뒤에 남지 않는다.</summary>
@@ -591,6 +593,7 @@ public sealed class StatBuffFx : MonoBehaviour
         sr.sortingLayerName = _sortingLayer;
         sr.sortingOrder = order;
         sr.enabled = false;
+        _meshBatch?.Register(sr, additive);
         return sr;
     }
 

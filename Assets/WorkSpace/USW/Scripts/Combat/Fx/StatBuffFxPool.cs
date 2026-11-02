@@ -9,6 +9,8 @@ public sealed class StatBuffFxPool : IDisposable
     private readonly Dictionary<StatBuffFxStyle, Stack<StatBuffFx>> _available = new();
     private Transform _root;
     private StatBuffSpriteAtlas _atlas;
+    private StatBuffMeshBatch _meshBatch;
+    public StatBuffMeshBatch MeshBatch => _meshBatch;
     /// <summary>저작된 시안 설정을 사용한다.</summary>
     public StatBuffFxPool(UnitBuffVisualSettings settings) => _settings = settings;
     /// <summary>같은 시안으로 준비된 인스턴스를 대여한다.</summary>
@@ -20,11 +22,16 @@ public sealed class StatBuffFxPool : IDisposable
         {
             var reused = items.Pop(); reused.gameObject.SetActive(true); return reused;
         }
-        if (_root == null) _root = new GameObject("UnitBuffFxPool").transform;
+        if (_root == null)
+        {
+            _root = new GameObject("UnitBuffFxPool").transform;
+            _meshBatch = _root.gameObject.AddComponent<StatBuffMeshBatch>();
+            _meshBatch.Initialize(_settings.BatchShader);
+        }
         var go = new GameObject("UnitBuff_" + style.name);
         go.transform.SetParent(_root, false);
         var fx = go.AddComponent<StatBuffFx>();
-        fx.ConfigureCompact(_settings.AdditiveMaterial, _atlas.Resolve);
+        fx.ConfigureCompact(_settings.AdditiveMaterial, _atlas.Resolve, _meshBatch);
         return fx;
     }
     /// <summary>표시를 즉시 정리하고 같은 시안 풀로 돌려준다.</summary>
@@ -43,6 +50,7 @@ public sealed class StatBuffFxPool : IDisposable
         _available.Clear();
         if (_root != null) UnityEngine.Object.Destroy(_root.gameObject);
         _root = null;
+        _meshBatch = null;
         _atlas?.Dispose(); _atlas = null;
     }
 }
