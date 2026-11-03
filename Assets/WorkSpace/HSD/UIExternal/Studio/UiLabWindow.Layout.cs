@@ -35,8 +35,14 @@ namespace GGD.UI.Authoring.Studio
             _theme ??= new UiLabTheme(GUI.skin, _editorFont); GUI.skin = _theme.Skin;
             if (Event.current.type == EventType.Repaint) _layoutOverflows.Clear();
             var previous = GUI.matrix; GUI.matrix = Matrix4x4.Scale(new Vector3(InterfaceScale, InterfaceScale, 1));
-            try { DrawShell(); DrawHeader(); DrawPreviewToolbar(); DrawLeft(); DrawRight(); DrawBottom(); DrawSelection(); }
-            finally { GUI.matrix = previous; }
+            bool enabled = GUI.enabled;
+            try
+            {
+                GUI.enabled = !_quitPrompt && !StudioFileDialog.Busy;
+                DrawShell(); DrawHeader(); DrawPreviewToolbar(); DrawLeft(); DrawRight(); DrawBottom(); DrawSelection();
+                GUI.enabled = enabled; if (_quitPrompt) DrawQuitPrompt();
+            }
+            finally { GUI.enabled = enabled; GUI.matrix = previous; }
         }
         private void DrawShell()
         {
@@ -103,7 +109,8 @@ namespace GGD.UI.Authoring.Studio
         }
         private void DrawFontLibrary()
         {
-            GUILayout.Space(10); Button("+  폰트 가져오기", () => { string path = StudioFileDialog.Open("폰트|*.ttf;*.otf", "실험할 폰트 선택"); if (path != null) RegisterFont(path); }, _theme.Primary);
+            GUILayout.Space(10);
+            Button(StudioFileDialog.Busy ? "파일 선택 창이 열려 있어요" : "+  폰트 가져오기", ImportFont, _theme.Primary);
             GUILayout.Label("TTF / OTF 파일을 바로 등록합니다", _theme.Note); GUILayout.Space(8);
             Button("원본 폰트", () => ChooseFont(""), _font == "" ? _theme.Selected : _theme.Row);
             foreach (var font in Workspace.Fonts)
@@ -240,6 +247,19 @@ namespace GGD.UI.Authoring.Studio
             GUILayout.EndVertical();
         }
         private float Channel(string label, float value) { GUILayout.BeginHorizontal(); GUILayout.Label(label, _theme.Note, GUILayout.Width(18)); float next = GUILayout.HorizontalSlider(value, 0, 1); GUILayout.Label(Mathf.RoundToInt(next * 255).ToString(), _theme.Note, GUILayout.Width(28)); GUILayout.EndHorizontal(); return next; }
+        private void DrawQuitPrompt()
+        {
+            GUI.Box(new Rect(0, 0, LayoutWidth, LayoutHeight), GUIContent.none);
+            GUILayout.BeginArea(new Rect((LayoutWidth - 460) / 2, (LayoutHeight - 190) / 2, 460, 190), _theme.Panel);
+            GUILayout.Space(14); GUILayout.Label("저장하지 않은 실험이 있어요", _theme.Section);
+            GUILayout.Label("종료하기 전에 실험을 저장할까요? 게임 원본에는 어느 쪽도 적용되지 않습니다.", _theme.Note);
+            if (_error != "") { var color = GUI.color; GUI.color = new Color(1, .53f, .48f); GUILayout.Label(_error, _theme.Note); GUI.color = color; }
+            GUILayout.FlexibleSpace(); GUILayout.BeginHorizontal();
+            Button("저장 후 종료", () => ResolveQuit(true, true), _theme.Primary, GUILayout.Height(36));
+            Button("저장 안 하고 종료", () => ResolveQuit(true, false), null, GUILayout.Height(36));
+            Button("취소", () => ResolveQuit(false, false), null, GUILayout.Height(36), GUILayout.Width(80));
+            GUILayout.EndHorizontal(); GUILayout.Space(10); GUILayout.EndArea();
+        }
         private static string RoleLabel(string role) => role == "title" ? "제목" : role == "number" ? "숫자" : role == "button" ? "버튼" : "본문";
         private void DrawSelection()
         {

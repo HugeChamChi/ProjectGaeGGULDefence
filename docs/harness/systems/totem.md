@@ -2,10 +2,13 @@
 system: totem
 title: 토템
 keywords: 토템, totem, td10, 인벤토리, 토템 배치, 토템 회전, 토템 판매, 토템 보상, 버프 셀, totemdata, 뿌리내림, 그림자 토템
-verified: 2026-10-30
+verified: 2026-11-01
 commit: de2cbd00
 ---
 # 토템 카드
+
+## 2026-11-01 종료 경합 수정 (미커밋)
+`TotemSpawner.CanPlaceTotems`는 씬과 GameManager가 살아 있고 `IsFinished`가 false일 때만 허용한다. Idle/LevelUp의 기존 배치 허용은 유지한다. 보관함의 사전 판정과 생성 서비스의 로딩 전후 및 확정 직전 판정에 공통 적용하며, 종료 뒤에는 기존 토템 제거와 인벤토리 소비 전에 false를 반환한다. `commit`은 기존 기준이며 이번 수정은 작업 트리 변경이다. 재현/검증 진입은 `Tools/verification/TotemEndRaceChecks.cs`, 결과는 [수정 재검증](../../../outputs/totem-end-race-fix-20261101/RESULT.md).
 
 **한 줄 요약**: 어려운 보스 구간을 완료하면 보상 3택 → 인벤토리(최대 5칸) → 배치·회전·이동·회수·맞교체. 효과는 "범위 안 셀에 버프를 칠하는" 방식으로만 적용된다.
 
@@ -72,6 +75,7 @@ commit: de2cbd00
 ## 검증
 | 파일 | 역할 |
 |---|---|
+| `Tools/verification/TotemEndRaceChecks.cs` | 지연 로딩 중 승리/패배의 배치·맞교체·직접 생성 거절과 정상 배치 대조, Play 6시나리오. 결과 `outputs/totem-end-race-fix-20261101/RESULT.md` |
 | `Tools/verification/TotemFullInventoryD13Checks.cs` | 만재5칸 닫기/취소 복원/배치 거절/성공 배치/맞교체/보상 좌우와 확정, 10-28 Play63검사 |
 | `Tools/verification/SelectionDragCancelChecks.cs` | 토템 보상/레벨업 진입 시 기존 필드 누르기·드래그 취소, 10-28 Play45검사 |
 | `Tools/verification/TotemTransferLiveChecks.cs` | 기존 IngameScene 서비스·UGUI 회수/맞교체·방향·취소·가득 참·성장 초기화 Play 검증 |

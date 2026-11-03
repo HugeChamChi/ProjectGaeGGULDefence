@@ -37,7 +37,8 @@ public sealed class TotemInventory
 
     /// <summary>Accepts an empty usable cell or an existing totem, never a unit or sealed cell.</summary>
     public bool CanPlaceAt(int index, GridCell cell)
-        => index >= 0 && index < _items.Count && cell != null && cell.Model != null && cell.Model.IsAvailable
+        => _spawner != null && _spawner.CanPlaceTotems
+            && index >= 0 && index < _items.Count && cell != null && cell.Model != null && cell.Model.IsAvailable
             && cell.OccupyingUnit == null && (cell.OccupyingTotem == null ||
                 cell.OccupyingTotem.IsPlaced && cell.OccupyingTotem.CurrentCell == cell)
             && (CanPlace == null || CanPlace(index, cell));
