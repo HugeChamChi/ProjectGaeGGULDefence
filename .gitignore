@@ -160,3 +160,4 @@ Assets/WorkSpace/HSD/GEMINI.md.meta
 # UI Studio distribution-only team client metadata and per-user OAuth config
 **/ArtTools/team.json
 **/art-rclone.conf
+/Tools

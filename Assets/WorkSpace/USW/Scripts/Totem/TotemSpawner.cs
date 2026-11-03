@@ -27,7 +27,11 @@ public class TotemSpawner : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private CurrencyManager _currencyManager;
     [Inject] private UnitFactory _unitFactory;
+    [Inject] private GameManager _gameManager;
     private CenterToast _centerToast;
+
+    /// <summary>Placement remains allowed during selection, but never after the scene or run ends.</summary>
+    public bool CanPlaceTotems => this != null && _gameManager != null && !_gameManager.IsFinished;
 
     [Inject]
     private void ConfigureToast(IObjectResolver resolver) => resolver.TryResolve(out _centerToast);
@@ -44,6 +48,7 @@ public class TotemSpawner : MonoBehaviour
     /// </summary>
     public async Cysharp.Threading.Tasks.UniTask<bool> SpawnTotemByData(TotemData data)
     {
+        if (!CanPlaceTotems) return false;
         if (data == null)
         {
             Debug.LogError("TotemSpawner: data null");
@@ -51,6 +56,7 @@ public class TotemSpawner : MonoBehaviour
         }
 
         await data.LoadAssetsAsync();
+        if (!CanPlaceTotems) return false;
         bool useGeneric = data.prefab == null;
         var  prefab     = useGeneric ? genericPrefab : data.prefab;
 
@@ -70,10 +76,10 @@ public class TotemSpawner : MonoBehaviour
     /// <summary>Places a stored totem in the requested empty cell; never chooses a random cell.</summary>
     public async UniTask<bool> PlaceTotemAtCellAsync(TotemData data, GridCell cell, CancellationToken token)
     {
-        if (data == null || cell == null || !cell.IsAvailable) return false;
+        if (!CanPlaceTotems || data == null || cell == null || !cell.IsAvailable) return false;
         await data.LoadAssetsAsync().AttachExternalCancellation(token);
         token.ThrowIfCancellationRequested();
-        if (cell == null || !cell.IsAvailable) return false;
+        if (!CanPlaceTotems || cell == null || !cell.IsAvailable) return false;
         var prefab = data.prefab != null ? data.prefab : genericPrefab;
         if (prefab == null) return false;
         return PlaceLoadedTotem(data, prefab, cell);
@@ -84,10 +90,10 @@ public class TotemSpawner : MonoBehaviour
         TotemBase expected, System.Func<bool> canCommit, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        if (data == null || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
+        if (!CanPlaceTotems || data == null || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
         await data.LoadAssetsAsync().AttachExternalCancellation(token);
         token.ThrowIfCancellationRequested();
-        if (!CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
+        if (!CanPlaceTotems || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
         var prefab = data.prefab != null ? data.prefab : genericPrefab;
         if (prefab == null) return false;
         var go = RM.Instantiate(prefab, transform);
@@ -95,7 +101,7 @@ public class TotemSpawner : MonoBehaviour
         var incoming = go.GetComponent<TotemBase>();
         if (incoming == null) { Destroy(go); return false; }
         incoming.SetTotemData(data);
-        if (token.IsCancellationRequested || !CanExchange(cell, expected) || canCommit?.Invoke() == false)
+        if (token.IsCancellationRequested || !CanPlaceTotems || !CanExchange(cell, expected) || canCommit?.Invoke() == false)
         { Destroy(go); token.ThrowIfCancellationRequested(); return false; }
 
         if (expected != null) { cell.RemoveTotem(); expected.OnRemoved(); }
@@ -130,6 +136,7 @@ public class TotemSpawner : MonoBehaviour
 
     private bool PlaceLoadedTotem(TotemData data, GameObject prefab, GridCell cell)
     {
+        if (!CanPlaceTotems || cell == null || !cell.IsAvailable) return false;
         var go    = RM.Instantiate(prefab, cell.transform);
         if (go == null) return false;
         var totem = go.GetComponent<TotemBase>();
@@ -142,7 +149,7 @@ public class TotemSpawner : MonoBehaviour
         }
 
         totem.SetTotemData(data);
-        if (!cell.TryPlaceTotem(totem))
+        if (!CanPlaceTotems || !cell.TryPlaceTotem(totem))
         {
             Destroy(go);
             return false;
