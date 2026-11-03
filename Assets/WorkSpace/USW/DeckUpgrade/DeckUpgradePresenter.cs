@@ -31,7 +31,7 @@ namespace GaeGGUL.DeckUpgrade
             {
                 Index = index, Name = index < 0 ? _chief.DisplayName : _units[index].unitName,
                 Level = _service.GetLevel(id), Gold = _service.Gold, Cost = _service.GetCost(id),
-                ChiefBonus = _service.ChiefBonus
+                ChiefBonus = _service.GetChiefBonus(GetId(-1))
             };
             if (data.IsChief) PopulateChief(data);
             else PopulateUnit(data, _units[index], id);
@@ -49,7 +49,8 @@ namespace GaeGGUL.DeckUpgrade
         private string GetId(int index)
         {
             if (index < -1 || index >= _units.Length) throw new ArgumentOutOfRangeException(nameof(index));
-            return index < 0 ? DeckUpgradeProgress.ChiefId : _units[index].name;
+            if (!_service.UsesAccountData) return index < 0 ? DeckUpgradeProgress.ChiefId : _units[index].name;
+            return index < 0 ? PlayerCharacterManager.ChiefId(_chief.ChieftainId) : PlayerCharacterManager.UnitId(_units[index].characterId.Get(Tier.Normal));
         }
 
         private void PopulateChief(DeckUpgradeItemViewData data)

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class UnitStatsModifier : MonoBehaviour
 {
@@ -25,7 +25,7 @@ public class UnitStatsModifier : MonoBehaviour
         ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
         : 1f;
 
-    private float UpgradedAtk => _unit.unitData.atk.Get(_unit.currentTier) * AtkUpgradeMultiplier;
+    private float UpgradedAtk => (_unit.unitData.atk.Get(_unit.currentTier) * _unit.AccountUpgradeMultiplier) * AtkUpgradeMultiplier;
 
     // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
     private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
@@ -40,7 +40,7 @@ public class UnitStatsModifier : MonoBehaviour
     public int GetNonCriticalAttackDamage() => ComputeDamage(UpgradedAtk, 1f, false, out _, true);
 
     /// <summary>현재 런타임 보정을 유지하고 인게임 강화만 제외한 표시용 공격력.</summary>
-    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(_unit.unitData.atk.Get(_unit.currentTier), 1f, false, out _, true);
+    public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage((_unit.unitData.atk.Get(_unit.currentTier) * _unit.AccountUpgradeMultiplier), 1f, false, out _, true);
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -182,9 +182,16 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         if (_spriteRenderer != null) _visual = new UnitVisualController(_spriteRenderer);
     }
 
+    public float AccountUpgradeMultiplier { get; private set; } = 1f;
+
     public void Init(UnitDependencies deps)
     {
         _deps = deps;
+        var characterId = unitData != null
+            ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
+        int level = Player.Characters.IsReady
+            ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
+        AccountUpgradeMultiplier = 1f + (level - 1) * GaeGGUL.DeckUpgrade.DeckUpgradeProgress.MultiplierPerLevel;
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
@@ -311,7 +318,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>

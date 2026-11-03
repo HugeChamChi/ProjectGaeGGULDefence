@@ -26,7 +26,7 @@ public class LobbyLifetimeScope : LifetimeScope
         builder.Register<ProfileNicknameGateway>(Lifetime.Scoped);
         builder.Register<ProfileNicknameService>(Lifetime.Scoped);
         SceneComponentRegistration.RegisterOptional<LobbyWebCouponAction>(builder, gameObject.scene);
-        builder.Register<GaeGGUL.DeckUpgrade.DeckUpgradePreviewStore>(Lifetime.Scoped)
+        builder.Register<GaeGGUL.DeckUpgrade.AccountDeckUpgradeStore>(Lifetime.Scoped)
             .As<GaeGGUL.DeckUpgrade.IDeckUpgradeStore>();
         builder.Register<GaeGGUL.DeckUpgrade.DeckUpgradeService>(Lifetime.Scoped);
         SceneComponentRegistration.RegisterOptional<GaeGGUL.DeckUpgrade.DroneUpgradeConceptScreen>(builder, gameObject.scene);

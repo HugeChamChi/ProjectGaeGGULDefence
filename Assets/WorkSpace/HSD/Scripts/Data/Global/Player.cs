@@ -16,6 +16,10 @@ public static class Player
     public static DailyManager Daily                { get; private set; } = new();
     public static GaeGGUL.Tutorial.PlayerTutorialManager Tutorial { get; private set; } = new();
 
+    public static AccountDocument<AccountCharacterData> Characters { get; } = new("PlayerCharacterData", AccountCharacterData.Validate);
+    public static AccountDocument<AccountLobbyData> LobbyProgress { get; } = new("PlayerLobbyData", AccountLobbyData.Validate);
+    public static event Action OnAccountCleared;
+    public static event Action OnAccountReady;
     private static BackendGameData _backendData;
     private static UniTaskCompletionSource _initialization;
     private static int _initializationGeneration;
@@ -47,6 +51,8 @@ public static class Player
         await PlayerData.InitalizeAsync();
         RequireCurrentInitialization(owner, generation);
         if (PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
+        await UniTask.WhenAll(Characters.InitializeAsync(), LobbyProgress.InitializeAsync());
+        RequireCurrentInitialization(owner, generation);
         await RoundRecords.InitializeAsync();
         RequireCurrentInitialization(owner, generation);
 
@@ -72,6 +78,7 @@ public static class Player
             await PlayerData.TrySaveAsync();
         }
         RequireCurrentInitialization(owner, generation);
+        OnAccountReady?.Invoke();
         completion.TrySetResult();
         }
         catch (OperationCanceledException) { completion.TrySetCanceled(); }
@@ -90,6 +97,8 @@ public static class Player
         _debounceCts?.Cancel();
         _debounceCts?.Dispose();
         _debounceCts = null;
+        Characters.Clear(); LobbyProgress.Clear(); GlobalData.SelectedParty = null;
+        OnAccountCleared?.Invoke();
         RoundRecords.Clear();
         PlayerData.Clear();
         Profile.Clear();
@@ -110,7 +119,7 @@ public static class Player
         var tasks = new System.Collections.Generic.List<UniTask>();
 
         Global.IClearable[] managers = {
-            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords
+            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, Characters, LobbyProgress
         };
 
         foreach (var manager in managers)
