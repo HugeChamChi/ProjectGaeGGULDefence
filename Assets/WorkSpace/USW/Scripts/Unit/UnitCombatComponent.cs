@@ -29,6 +29,8 @@ public class UnitCombatComponent : MonoBehaviour
     public event Action<BasicAttackReplay> OnBasicAttackStarted;
     /// <summary>동기 액션이 시작한 일반 공격 문맥. 연발 액션은 이를 캡처해 각 발사로 전달한다.</summary>
     public BasicAttackReplay CurrentBasicAttack { get; private set; }
+    public bool IsExecutingRegularBasic { get; private set; }
+    public float RegularBasicDamageMultiplier { get; private set; } = 1f;
 
     /// <summary>소환 드론의 일반 공격을 본체 셀의 디버프/그림자 구독에 전달한다. 본체 공격이나 스킬은 실행하지 않는다.</summary>
     public BasicAttackReplay BeginDroneBasicAttack(BossBase target, Transform visualSource, Func<bool> isSourceValid)
@@ -222,7 +224,9 @@ public class UnitCombatComponent : MonoBehaviour
             _deps?.TotemBuffManager?.ApplyAttackDebuff(_unit.currentCell, boss);
             var attackData = _unit.unitData.basicAttackData;
             var attackAction = attackData?.action;
-            CurrentBasicAttack = OnBasicAttackStarted != null ? new BasicAttackReplay(_unit, boss) : null;
+            IsExecutingRegularBasic = true;
+            RegularBasicDamageMultiplier = _unit is Disigman recovery ? recovery.ConsumeRecoveryShot(boss) : 1f;
+            CurrentBasicAttack = new BasicAttackReplay(_unit, boss) { RegularDamageMultiplier = RegularBasicDamageMultiplier };
             try
             {
                 if (CurrentBasicAttack != null) OnBasicAttackStarted?.Invoke(CurrentBasicAttack);
@@ -236,7 +240,7 @@ public class UnitCombatComponent : MonoBehaviour
                     LaunchAttackProjectile();
                 }
             }
-            finally { CurrentBasicAttack = null; }
+            finally { CurrentBasicAttack = null; IsExecutingRegularBasic = false; RegularBasicDamageMultiplier = 1f; }
 
             _unit.InvokeOnAttack();
             _hitCount++;
@@ -352,7 +356,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private void LaunchProjectileInternal(float sizeMultiplier, ProjectileData projectileData, Action<BossBase, Vector3> onHitApply, BasicAttackReplay replay = null)
     {
-        var boss = replay?.IsEnabled == true ? replay.Target : LiveBoss;
+        var boss = replay != null ? replay.Target : LiveBoss;
         var bossArea = boss?.GetComponent<BossAreaTarget>();
 
         if (gameObject == null || AttacksHeld) return;
@@ -369,7 +373,7 @@ public class UnitCombatComponent : MonoBehaviour
             {
                 if (boss != null && !boss.IsDead)
                 {
-                    boss.ApplyProjectileImpact(() => onHitApply(boss, targetPos));
+                    boss.ApplyProjectileImpact(() => ApplyBasicHit(replay, () => onHitApply(boss, targetPos)));
                 }
             };
             Action onHit = () =>
@@ -392,6 +396,19 @@ public class UnitCombatComponent : MonoBehaviour
 
             replay?.RecordShot(_deps.ProjectileManager, spawnPos, targetPos, projectileData, sizeMultiplier, shadowHit);
         }
+    }
+
+    // Hit effects calculate damage on impact. Carry the originating shot's context across flight/volley waits.
+    private void ApplyBasicHit(BasicAttackReplay replay, Action hit)
+    {
+        bool previous=IsExecutingRegularBasic; float multiplier=RegularBasicDamageMultiplier;
+        try
+        {
+            IsExecutingRegularBasic=replay != null;
+            RegularBasicDamageMultiplier=replay?.RegularDamageMultiplier ?? 1f;
+            hit();
+        }
+        finally { IsExecutingRegularBasic=previous; RegularBasicDamageMultiplier=multiplier; }
     }
 
     private void OnDestroy()

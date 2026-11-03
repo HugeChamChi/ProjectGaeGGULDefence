@@ -8,8 +8,6 @@ namespace GaeGGUL.DeckUpgrade
         private readonly DeckUpgradeService _service;
         private readonly UnitData[] _units;
         private readonly ChieftainData _chief;
-        // Preserve the existing preview's authored list convention; this is not a gameplay rule.
-        private const int PreviewProducerIndex = 2;
 
         /// <summary>Receives the scoped preview service and this screen's authored catalog.</summary>
         public DeckUpgradePresenter(DeckUpgradeService service, UnitData[] units, ChieftainData chief)
@@ -31,15 +29,18 @@ namespace GaeGGUL.DeckUpgrade
             {
                 Index = index, Name = index < 0 ? _chief.DisplayName : _units[index].unitName,
                 Level = _service.GetLevel(id), Gold = _service.Gold, Cost = _service.GetCost(id),
+                IsOwned = _service.IsOwned(id), IsBusy = _service.IsBusy || (_service.UsesAccountData && !Player.PlayerData.IsReady),
+                UpgradeStatus = _service.UsesAccountData && Player.PlayerData.HasSaveConflict ? "재접속 필요" : _service.IsBusy ? "저장 중…" : "",
                 ChiefBonus = _service.GetChiefBonus(GetId(-1))
             };
             if (data.IsChief) PopulateChief(data);
-            else PopulateUnit(data, _units[index], id);
+            else PopulateUnit(data, UnitBalanceRuntime.Resolve(_units[index]), id);
             return data;
         }
 
         /// <summary>Attempts the selected character's preview upgrade.</summary>
         public bool TryUpgrade(int index) => _service.TryUpgrade(GetId(index));
+        public Cysharp.Threading.Tasks.UniTask<bool> TryUpgradeAsync(int index) => _service.TryUpgradeAsync(GetId(index));
 
         /// <inheritdoc />
         public void Dispose() => _service.OnChanged -= HandleChanged;
@@ -66,18 +67,19 @@ namespace GaeGGUL.DeckUpgrade
 
         private void PopulateUnit(DeckUpgradeItemViewData data, UnitData unit, string id)
         {
+            data.Name = unit.unitName;
             data.SkillName = string.IsNullOrWhiteSpace(unit.SkillDisplayName) ? "유닛 특수 능력" : unit.SkillDisplayName;
             data.Description = unit.GetFormattedDescription(Tier.Normal);
-            bool producer = data.Index == PreviewProducerIndex;
+            bool producer = unit.foodProduction.Get(Tier.Normal) > 0;
             float basis = producer ? unit.foodProduction.Get(Tier.Normal) : unit.atk.Get(Tier.Normal);
             float multiplier = _service.GetMultiplier(id) * (1 + data.ChiefBonus);
             float nextMultiplier = (_service.GetMultiplier(id) + DeckUpgradeProgress.MultiplierPerLevel) * (1 + data.ChiefBonus);
             string next = data.IsMaxLevel ? "MAX" : (basis * nextMultiplier).ToString("0.#");
             data.CurrentStat = (producer ? "식량 생산   " : "공격력   ") + $"{basis * multiplier:0.#}";
             data.StatComparison = data.CurrentStat + $"  ›  <color=#91E6A6>{next}</color>";
-            float interval = unit.attackSpeed.Get(Tier.Normal);
-            float rate = interval > 0 ? multiplier / interval : 0;
-            string nextRate = data.IsMaxLevel ? "MAX" : (interval > 0 ? nextMultiplier / interval : 0).ToString("0.0");
+            float frequency = unit.attackSpeed.Get(Tier.Normal);
+            float rate = frequency * multiplier;
+            string nextRate = data.IsMaxLevel ? "MAX" : (frequency * nextMultiplier).ToString("0.0");
             data.CurrentSpeed = $"공격속도   {rate:0.0} 회/초";
             data.SpeedComparison = $"공격속도   {rate:0.0} → <color=#91E6A6>{nextRate}</color> <size=23>회/초</size>";
         }

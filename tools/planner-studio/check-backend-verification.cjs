@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {encodeConfigRows}=require('./app/chart-payload.cjs');
+const {comparePrepared}=require('./app/backend-verification.cjs');
+const table=encodeConfigRows({value:'검증'},'release-test');
+const rows=table.slice(1).map(r=>Object.fromEntries(table[0].map((key,i)=>[key,String(r[i])])));
+const record={targetChartName:'DEV_MissionEvents',releaseKey:'release-test',payloadSha256:rows[0].Sha256};
+const server={chartName:'DEV_MissionEvents',selectedChartFileId:'123',rows};
+const result=comparePrepared(record,server);
+assert.equal(result.serverFileMatches,true);assert.equal(result.gameplayVerified,false);
+assert.throws(()=>comparePrepared({...record,releaseKey:'other'},server));
+assert.throws(()=>comparePrepared({...record,payloadSha256:'wrong'},server));
+assert.throws(()=>comparePrepared(record,{...server,chartName:'LIVE_MissionEvents'}));
+assert.throws(()=>comparePrepared(record,{...server,selectedChartFileId:'0'}));
+assert.throws(()=>comparePrepared(record,{...server,rows:[]}));
+console.log('PASS: applied server snapshot comparison; wrong chart/version/hash/no applied file rejected; gameplay never claimed');

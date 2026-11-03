@@ -5,6 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "UpgradeTree", menuName = "USW/OutGame/Upgrade Tree Data")]
 public class ResearchTreeData : ScriptableObject
 {
+    [System.NonSerialized] public bool IsChartDefinition;
     /// <summary>저장과 엑셀의 고정 키. 파일명/표시명 변경 시에도 변경하지 않는다.</summary>
     public string TreeKey;
     /// <summary>무버전 저장 이관용 기존 파일명. 새 트리는 비우며 파일명 변경 시에도 유지한다.</summary>

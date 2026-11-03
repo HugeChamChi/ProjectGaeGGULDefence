@@ -2,10 +2,18 @@
 system: ui-authoring
 title: 실제 설정창 UI 제작실
 keywords: UI Authoring, ui-authoring, 제작실, UI 제작 도구, UI 시뮬레이터, UI 실험실, 폰트 실험, TTF, OTF, G06, 설정창 편집, XML 프리팹, 아트 루트, 아트 받기, rclone
-verified: 2026-10-30
+verified: 2026-11-01
 commit: de2cbd00
 ---
 # UI 제작실 — UI3030
+
+## 2026-11-01 폰트 편집 지연과 Undo 묶음 수정 (미커밋)
+
+`UiLabWindow.Interaction`은 프레임 정지를 입력 중단과 구분하고, 글자 속성 편집에 기존 계층을 재사용한다. `UiLabWorkspace.Apply`의 typographyOnly 경로는 외형 오버라이드를 누적하지 않으며 임시 머티리얼을 재사용/정리한다. `ImportFont()`는 UI 버튼과 선택창 등록의 공통 진입점이다. 최종 독립 Player 349 PASS(실험174/정보33/Arial43/맑은고딕43/제작실56), 실제 버튼부터 일반 폴더 TTF 선택/등록/제목 적용/저장/종료 PASS. [결과와 처리시간 및 검증 경계](../../../outputs/ui-studio-font-fix-20261101/RESULT.md). 고정 키트는 이번에 교체하지 않았다.
+
+## 2026-11-01 파일 선택 창과 종료 확인 v1.12 (미커밋)
+
+`StudioFileDialog`는 선택 창을 STA 스레드에서 열고 메인 스레드 콜백으로 결과를 준다. OnGUI 안 동기 `GetOpenFileName` 호출이 v1.11 Player에서 스택 오버플로를 냈고 폰트 등록이 실패했다. 모든 호출(실험실 폰트, 제작실 키트 열기/다른 이름/그림/아트 폴더)은 콜백 API를 쓴다. `UiLabWindow`는 미저장 종료 시 보이는 확인창(`QuitPromptVisible`, `ResolveQuit`)을 띄운다. 실험실이 열려 있으면 `StudioWindow.CheckQuit`은 복구본만 남기고 종료 판단을 넘긴다. 실험174/정보33/상호작용42/제작실56 PASS. [근거/검사/제한](../../../outputs/ui-lab-fix-verification/RESULT.md).
 
 ## 2026-10-30 정보창과 토글 복구 v1.11 (미커밋 추가)
 
@@ -35,6 +43,7 @@ commit: de2cbd00
 ## 진입 파일
 | 파일 | 역할 |
 |---|---|
+| `Assets/WorkSpace/HSD/UIExternal/Studio/StudioFileDialog.cs` | Windows 파일/폴더 선택 창을 STA 스레드에서 열고 메인 스레드 콜백으로 전달 |
 | `Assets/WorkSpace/HSD/UIExternal/AuthoringRuntime/UiLabInfoPreview.cs` | 게임 서비스 없는 정보창 간단히/자세히 표시와 네이티브 토글 시각 상태 |
 | `Tools/ui-authoring/UiLabInfoSmokeDriver.cs` | 실제 씬 정보창, 번들 스프라이트, 토글 입력과 편집 보존 검사 |
 | `Tools/ui-authoring/UiLabInfoProbe.cs` | 샘플 SO 아이콘의 실제 로드 여부를 읽기 전용 확인 |

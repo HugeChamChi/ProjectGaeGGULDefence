@@ -37,6 +37,7 @@ G01 단계2(10-21, 미커밋): 24장 콘셉트 분류만 별도 Excel→SO로 �
 ## 진입 파일
 | 파일 | 역할 |
 |---|---|
+| `tools/backnd-mcp/test/DevelopMergeChecks.cs` | Develop 선택지와 15레벨 보너스의 압축·스택 피해·자체/함대 식량 복합 적용 검사 |
 | `Assets/WorkSpace/USW/Scripts/DroneUnits/DroneSpawnerBase.cs` | 스포너 기반(UnitBase). CanBasicAttack=false, 드론 보충·반환, 등급 변화 반영, 선택지 구독 |
 | `Assets/WorkSpace/USW/Scripts/DroneUnits/HackingDroneSpawner.cs` | 감망·델탕의 기반. 해킹 시전·취소 |
 | `Assets/WorkSpace/USW/Scripts/DroneUnits/Drone_Betan.cs` | 베탕. 자폭 드론 예약·발사(Spine 이벤트 연동) |

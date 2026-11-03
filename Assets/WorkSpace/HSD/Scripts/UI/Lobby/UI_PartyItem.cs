@@ -23,7 +23,7 @@ public class UI_PartyItem : MonoBehaviour
             partyNameText.text = _partyData.partyName;
         }
 
-        if (_partyData.isUnlock)
+        if (_partyData.IsUnlocked)
         {
             lockObject.SetActive(false);
             selectButton.interactable = true;

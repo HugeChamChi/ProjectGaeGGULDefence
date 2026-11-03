@@ -107,6 +107,7 @@ public sealed class ResearchScreen : MonoBehaviour
         ResearchUi.Place((RectTransform)_retry.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(180f, 60f));
         _retry.onClick.AddListener(Retry);
         _account.OnAccountChanged += Reload;
+        Player.PlayerData.OnSaveStatusChanged += UpdateSaveStatus;
         if (!_embeddedInLobby)
         {
             _back = ResearchUi.NewButton(transform, "BackToLobby", _settings.RoundedFill, _settings.Soft, "로비로",
@@ -143,6 +144,8 @@ public sealed class ResearchScreen : MonoBehaviour
             for (int i = 0; i < _trees.Length; i++)
             {
                 if (_trees[i] == null || !keys.Add(_trees[i].TreeKey)) throw new InvalidOperationException("누락/중복 트리입니다.");
+                _trees[i] = await _saveService.ResolveTreeAsync(_trees[i], loading.Token);
+                if (request != _request || generation != _account.Generation) return;
                 sessions[i] = _saveService.GetSession(accountKey, _trees[i], _saveKeyPrefix);
                 await sessions[i].LoadAsync(loading.Token);
                 if (request != _request || generation != _account.Generation) return;
@@ -179,9 +182,10 @@ public sealed class ResearchScreen : MonoBehaviour
 
     private void UpdateSaveStatus()
     {
+        if (_status == null || _retry == null) return;
         bool failed = false;
         if (_sessions != null) foreach (var session in _sessions) failed |= session.SaveError != null;
-        _status.text = failed ? "저장에 실패했습니다. 다시 시도해 주세요." : string.Empty;
+        _status.text = failed ? "저장에 실패했습니다. 다시 시도해 주세요." : Player.PlayerData.SaveStatus;
         _retry.gameObject.SetActive(failed);
     }
 
@@ -202,6 +206,7 @@ public sealed class ResearchScreen : MonoBehaviour
     private void OnDestroy()
     {
         if (_account != null) _account.OnAccountChanged -= Reload;
+        Player.PlayerData.OnSaveStatusChanged -= UpdateSaveStatus;
         _loading?.Cancel();
         ReleaseViews();
     }

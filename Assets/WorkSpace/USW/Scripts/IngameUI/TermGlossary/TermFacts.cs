@@ -8,7 +8,7 @@ public static class TermFacts
     public static string FormatBody(string template, ScriptableObject source)
     {
         if (source is UnitData unit)
-            template = template.Replace("{coefficient}", Number(unit.SelfDestructAttackCoefficient));
+            template = template.Replace("{coefficient}", BombCoefficients(unit));
         if (source is DroneHackingData hacking)
             template = template.Replace("{capacity}", hacking.Capacity.ToString(CultureInfo.InvariantCulture));
         return template;
@@ -22,7 +22,7 @@ public static class TermFacts
             case TermFactKind.ChiefSkill when source is AlphanSkillData chief:
                 return $"기본 집결 피해 = 참가 드론 공격력 합 ×{Number(chief.RallyAttackCoefficient)}, 기본 쿨타임 {Number(chief.CooldownSeconds)}초";
             case TermFactKind.SelfDestruct when source is UnitData betan:
-                return $"기본 폭발 피해 = 베탕 공격력 ×{Number(betan.SelfDestructAttackCoefficient)}";
+                return $"기본 폭발 피해 = 베탕 공격력 ×{BombCoefficients(betan)} (일반/레어/에픽/전설)";
             case TermFactKind.HackStack when source is DroneHackingData hacking:
                 return $"보스 1마리당 최대 {hacking.Capacity}개";
             case TermFactKind.TimeRecovery when source is DisigmanData disigman:
@@ -43,4 +43,6 @@ public static class TermFacts
     }
 
     private static string Number(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string BombCoefficients(UnitData unit) =>
+        $"{Number(unit.GetSelfDestructCoefficient(Tier.Normal))} / {Number(unit.GetSelfDestructCoefficient(Tier.Rare))} / {Number(unit.GetSelfDestructCoefficient(Tier.Epic))} / {Number(unit.GetSelfDestructCoefficient(Tier.Legend))}";
 }

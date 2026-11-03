@@ -111,9 +111,9 @@ namespace GaeGGUL.DeckUpgrade
             skillContent.gameObject.SetActive(true); bonusContent.gameObject.SetActive(true);
             attackValue.text = data.CurrentStat;
             speedValue.text = data.CurrentSpeed;
-            upgradePrice.text = data.IsMaxLevel ? "MAX" : _useLobbyStyle ? data.Cost.ToString("N0")
+            upgradePrice.text = !data.IsOwned ? "미보유" : !string.IsNullOrEmpty(data.UpgradeStatus) ? data.UpgradeStatus : data.IsMaxLevel ? "MAX" : _useLobbyStyle ? data.Cost.ToString("N0")
                 : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
-            if (upgradeGauge != null) upgradeGauge.SetAmount(data.Gold, data.Cost, !data.IsMaxLevel);
+            if (upgradeGauge != null) upgradeGauge.SetAmount(data.Gold, data.Cost, data.CanUpgrade);
             RefreshTabColors();
         }
 

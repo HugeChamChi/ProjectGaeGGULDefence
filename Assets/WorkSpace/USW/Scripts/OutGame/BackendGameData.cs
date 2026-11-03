@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
@@ -23,10 +23,14 @@ public class BackendGameData
     private const string COLUMN_ATTENDANCE_LAST_DAY = "AttendanceLastDay";
     private string _inDate;
     private string _owner;
+    private string _serverSaveId;
+    private bool _hasSaveId;
+    private readonly System.Collections.Generic.HashSet<string> _submittedSaveIds = new();
+    public bool HasWriteConflict { get; private set; }
     private int _session;
 
     /// <summary>Invalidates a row from a previous account before starting a new session.</summary>
-    public void ClearSession() { _session++; _inDate = null; _owner = null; }
+    public void ClearSession() { _session++; _inDate = null; _owner = null; _serverSaveId = null; _hasSaveId = false; _submittedSaveIds.Clear(); HasWriteConflict = false; }
 
     // 기획 데이터(회복 주기/기본 최대치)는 Resources/StaminaConfig에서 읽어와 코드 수정 없이 조절 가능하게 한다.
     private static StaminaConfig _staminaConfig;
@@ -74,6 +78,8 @@ public class BackendGameData
                 catch (Exception error) { Debug.LogWarning("PlayerData format: " + error.GetType().Name + ": " + error.Message); onComplete?.Invoke(null); return; }
                 _inDate = rows[0]["inDate"].ToString();
                 _owner = owner;
+                _serverSaveId = data.SaveId ?? string.Empty;
+                _hasSaveId = rows[0].ContainsKey("PlayerSaveId");
                 onComplete?.Invoke(data);
             }
             else
@@ -117,6 +123,7 @@ public class BackendGameData
             {
                 _inDate = bro.GetInDate();
                 _owner = owner;
+                _serverSaveId = newData.SaveId ?? string.Empty; _hasSaveId = true;
                 Debug.Log("PlayerData 생성 성공");
                 onComplete?.Invoke(newData);
             }
@@ -133,7 +140,7 @@ public class BackendGameData
     // -------------------------
     public virtual void GameDataUpdate(PlayerData data, Action onComplete = null, Action<bool> onResult = null)
     {
-        if (data == null || string.IsNullOrEmpty(_inDate) || _owner != Backend.UserInDate)
+        if (data == null || HasWriteConflict || string.IsNullOrEmpty(_inDate) || _owner != Backend.UserInDate)
         {
             Debug.LogError("저장할 데이터가 없습니다");
             onComplete?.Invoke();
@@ -144,20 +151,44 @@ public class BackendGameData
         Param param = PlayerDataToParam(data);
         string owner = _owner;
         int session = _session;
-        Backend.GameData.UpdateV2(TABLE_NAME, _inDate, owner, param, bro =>
+        string expected = _serverSaveId;
+        _submittedSaveIds.Add(data.SaveId ?? string.Empty);
+        void Complete(bool saved)
         {
-            if (session != _session || owner != Backend.UserInDate) { onResult?.Invoke(false); onComplete?.Invoke(); return; }
+            bool current = session == _session && owner == Backend.UserInDate;
+            if (current && saved) { _serverSaveId = data.SaveId ?? string.Empty; _hasSaveId = true; _submittedSaveIds.Clear(); }
+            onComplete?.Invoke(); onResult?.Invoke(current && saved);
+        }
+        void OnUpdated(BackendReturnObject bro)
+        {
+            if (session != _session || owner != Backend.UserInDate) { Complete(false); return; }
             if (bro.IsSuccess())
             {
                 Debug.Log("PlayerData 저장 성공");
+                Complete(true);
             }
-            else
+            else if (bro.GetStatusCode() == "404")
             {
-                Debug.LogError("PlayerData 저장 실패 : " + bro);
+                // A lost ACK may mean this exact snapshot already committed. Never overwrite an unknown version.
+                Backend.GameData.GetMyData(TABLE_NAME, new Where(), read =>
+                {
+                    if (session != _session || owner != Backend.UserInDate || !read.IsSuccess()) { Complete(false); return; }
+                    var rows = read.FlattenRows();
+                    string remote = rows.Count == 1 ? rows[0].GetString("PlayerSaveId", "") : null;
+                    if (remote == data.SaveId) { Complete(true); return; }
+                    if (remote != null && _submittedSaveIds.Contains(remote)) _serverSaveId = remote;
+                    else if (remote != expected) HasWriteConflict = true;
+                    Complete(false);
+                });
             }
-            onComplete?.Invoke();
-            onResult?.Invoke(bro.IsSuccess());
-        });
+            else { Debug.LogWarning("PlayerData save failed: " + bro.GetStatusCode()); Complete(false); }
+        }
+        if (_hasSaveId)
+        {
+            var where = new Where(); where.Equal("PlayerSaveId", expected);
+            Backend.GameData.Update(TABLE_NAME, where, param, OnUpdated);
+        }
+        else Backend.GameData.UpdateV2(TABLE_NAME, _inDate, owner, param, OnUpdated); // One-time legacy column bootstrap.
     }
 
     // -------------------------
@@ -165,10 +196,33 @@ public class BackendGameData
     // -------------------------
     private PlayerData ParsePlayerData(JsonData data)
     {
+        // Missing legacy columns may use defaults; malformed existing amounts must never become zero saves.
+        foreach (string column in new[] { COLUMN_GOLD, COLUMN_DIAMOND, COLUMN_STAMINA, COLUMN_MAX_STAMINA,
+            COLUMN_PLAYER_LEVEL, COLUMN_PLAYER_EXP, COLUMN_MAX_EXP, COLUMN_ATTENDANCE_COUNT, "AttendancePendingDays", "PendingEntryCost" })
+        {
+            if (data.ContainsKey(column) && (!int.TryParse(data.GetString(column, null),
+                System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int number) || number < 0))
+                throw new FormatException("Invalid saved amount: " + column);
+        }
+        foreach (string column in new[] { COLUMN_LAST_STAMINA_RECOVERY_TIME, "AccountExperienceSequence" })
+        {
+            if (data.ContainsKey(column) && (!long.TryParse(data.GetString(column, null),
+                System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out long number) || number < 0))
+                throw new FormatException("Invalid saved counter: " + column);
+        }
         return new PlayerData
         {
+            UpgradeProgress = ParseUpgradeProgress(data.GetString("UpgradeProgressJson", "{\"SchemaVersion\":1,\"Trees\":[],\"LocalImportId\":\"\"}")),
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
+            ShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("ShopPurchases", "[]")),
+            CompletedTutorials = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("CompletedTutorials", "[]")),
+            SelectedChiefId = data.GetInt("SelectedChiefId", -1),
+            SelectedIconId = data.GetInt("SelectedIconId", -1),
+            SelectedFrameId = data.GetInt("SelectedFrameId", -1),
+            UnitLevels = JsonMapper.ToObject<System.Collections.Generic.List<PlayerData.UnitLevelEntry>>(data.GetString("UnitLevels", "[]")),
+            RewardInventory = JsonMapper.ToObject<RewardInventory>(data.GetString("RewardInventory", "{}")),
             AccountExperienceSequence = data.GetLong("AccountExperienceSequence", 0),
             AccountExperienceRunId = data.GetString("AccountExperienceRunId", string.Empty),
             AccountExperienceReceipt = ParseAccountExperienceReceipt(data.GetString("AccountExperienceReceipt", string.Empty)),
@@ -186,7 +240,12 @@ public class BackendGameData
             PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),
             MaxExp      = data.GetInt(COLUMN_MAX_EXP, 500),
             LastResetDate = data.GetString(COLUMN_LAST_RESET_DATE, string.Empty),
+            EventMissions = JsonMapper.ToObject<System.Collections.Generic.List<GGD.Events.SavedMission>>(data.GetString("EventMissions", "[]")),
+            EventMissionReceipts = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("EventMissionReceipts", "[]")),
+            EventAttendance = JsonMapper.ToObject<System.Collections.Generic.List<GGD.Events.AttendanceEventProgress>>(data.GetString("EventAttendance", "[]")),
             AttendanceCount = data.GetInt(COLUMN_ATTENDANCE_COUNT, 0),
+            AttendancePendingDays = data.GetInt("AttendancePendingDays", 0),
+            AttendanceLastVisitDay = data.GetString("AttendanceLastVisitDay", string.Empty),
             AttendanceLastDay = data.GetString(COLUMN_ATTENDANCE_LAST_DAY, string.Empty),
             ShowDamageNumbers = data.GetInt(COLUMN_SHOW_DAMAGE_NUMBERS, 1) != 0,
             VibrationEnabled = data.GetInt(COLUMN_VIBRATION_ENABLED, 1) != 0
@@ -195,8 +254,19 @@ public class BackendGameData
 
     private Param PlayerDataToParam(PlayerData data)
     {
+        data.UpgradeProgress.Validate();
         Param param = new Param();
+        // LitJson serializes ResearchSaveData.CurrentVersion (a const), then cannot deserialize it.
+        param.Add("UpgradeProgressJson", JsonUtility.ToJson(data.UpgradeProgress));
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
+        param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
+        param.Add("CompletedTutorials", JsonMapper.ToJson(data.CompletedTutorials));
+        param.Add("SelectedChiefId", data.SelectedChiefId);
+        param.Add("SelectedIconId", data.SelectedIconId);
+        param.Add("SelectedFrameId", data.SelectedFrameId);
+        param.Add("UnitLevels", JsonMapper.ToJson(data.UnitLevels ?? new System.Collections.Generic.List<PlayerData.UnitLevelEntry>()));
+        param.Add("RewardInventory", JsonMapper.ToJson(data.RewardInventory));
         param.Add("AccountExperienceSequence", data.AccountExperienceSequence);
         param.Add("AccountExperienceRunId", data.AccountExperienceRunId ?? string.Empty);
         param.Add("AccountExperienceReceipt", IsEmptyExperienceReceipt(data.AccountExperienceReceipt) ? string.Empty : JsonMapper.ToJson(data.AccountExperienceReceipt));
@@ -214,11 +284,28 @@ public class BackendGameData
         param.Add(COLUMN_PLAYER_EXP, data.PlayerExp);
         param.Add(COLUMN_MAX_EXP, data.MaxExp);
         param.Add(COLUMN_LAST_RESET_DATE, data.LastResetDate);
+        param.Add("EventMissions", JsonMapper.ToJson(data.EventMissions));
+        param.Add("EventMissionReceipts", JsonMapper.ToJson(data.EventMissionReceipts));
+        param.Add("EventAttendance", JsonMapper.ToJson(data.EventAttendance ?? new System.Collections.Generic.List<GGD.Events.AttendanceEventProgress>()));
         param.Add(COLUMN_ATTENDANCE_COUNT, data.AttendanceCount);
+        param.Add("AttendancePendingDays", data.AttendancePendingDays);
+        param.Add("AttendanceLastVisitDay", data.AttendanceLastVisitDay ?? string.Empty);
         param.Add(COLUMN_ATTENDANCE_LAST_DAY, data.AttendanceLastDay ?? string.Empty);
         param.Add(COLUMN_SHOW_DAMAGE_NUMBERS, data.ShowDamageNumbers ? 1 : 0);
         param.Add(COLUMN_VIBRATION_ENABLED, data.VibrationEnabled ? 1 : 0);
         return param;
+    }
+
+    private static UpgradeProgressData ParseUpgradeProgress(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) throw new FormatException("Empty upgrade save.");
+        var root = JsonMapper.ToObject(json);
+        if (root == null || !root.IsObject || !root.ContainsKey("SchemaVersion") || !root.ContainsKey("Trees"))
+            throw new FormatException("Incomplete upgrade save.");
+        if (!root["SchemaVersion"].IsInt || root["Trees"] == null || !root["Trees"].IsArray)
+            throw new FormatException("Invalid upgrade save fields.");
+        var value = JsonUtility.FromJson<UpgradeProgressData>(json) ?? throw new FormatException("Null upgrade save.");
+        value.Validate(); return value;
     }
 
     // Installed LitJson cannot deserialize a top-level null token. Missing/empty legacy columns are an absent receipt.

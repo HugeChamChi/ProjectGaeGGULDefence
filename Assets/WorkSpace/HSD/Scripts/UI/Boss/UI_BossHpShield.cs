@@ -135,6 +135,8 @@ public class UI_BossHpShield : MonoBehaviour
     public void ClearImmediate()
     {
         KillValueTweens();
+        // 비운 상태도 초기화로 친다. 새 보스의 첫 부여가 즉시 경로 대신 차오름 연출을 타게 한다.
+        _initialized = true;
         _target = 0m;
         _shown = 0f;
         _flash = 0f;

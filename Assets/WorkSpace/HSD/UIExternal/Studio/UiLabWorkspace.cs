@@ -15,6 +15,7 @@ namespace GGD.UI.Authoring.Studio
     {
         private readonly Dictionary<string, TMP_FontAsset> _fonts = new Dictionary<string, TMP_FontAsset>();
         private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
+        private readonly Dictionary<Material, Material> _materialSources = new Dictionary<Material, Material>();
         private readonly HashSet<string> _usedMaterials = new HashSet<string>();
         private readonly Stack<string> _undo = new Stack<string>(), _redo = new Stack<string>();
         private XDocument _catalog;
@@ -114,9 +115,9 @@ namespace GGD.UI.Authoring.Studio
             string text = Document.ToString(); AuthoringWorkspace.AtomicWrite(PresetPath, System.Text.Encoding.UTF8.GetBytes(text)); _disk = text; _saved = text;
         }
         /// <summary>Applies shared-role, screen-role and element overrides in precedence order.</summary>
-        public void Apply(UiLabTemplate template, XDocument source = null)
+        public void Apply(UiLabTemplate template, XDocument source = null, bool typographyOnly = false)
         {
-            _usedMaterials.Clear();
+            if (!typographyOnly) _usedMaterials.Clear();
             source ??= Document;
             for (int i = 0; i < template.Rects.Length; i++)
             {
@@ -143,24 +144,35 @@ namespace GGD.UI.Authoring.Studio
                     float width = values.TryGetValue("outline", out string outline) ? Number(outline) : originalOutline;
                     Color edge = values.TryGetValue("edge", out string edgeColor) ? ParseColor(edgeColor) : originalEdge;
                     float soft = values.TryGetValue("soft", out string softness) ? Number(softness) : originalSoftness;
-                    if (changedFont || values.ContainsKey("outline") || values.ContainsKey("edge") || values.ContainsKey("soft"))
+                    if ((changedFont || values.ContainsKey("outline") || values.ContainsKey("edge") || values.ContainsKey("soft")) &&
+                        (!typographyOnly || text.fontSharedMaterial.GetFloat("_OutlineWidth") != width || text.fontSharedMaterial.GetColor("_OutlineColor") != edge || text.fontSharedMaterial.GetFloat("_OutlineSoftness") != soft))
                     {
-                        string materialKey = text.fontSharedMaterial.GetInstanceID() + "|" + width + "|" + edge + "|" + soft;
+                        var baseMaterial = _materialSources.TryGetValue(text.fontSharedMaterial, out var originalMaterial) ? originalMaterial : text.fontSharedMaterial;
+                        string materialKey = baseMaterial.GetInstanceID() + "|" + width + "|" + edge + "|" + soft;
                         if (!_materials.TryGetValue(materialKey, out var material))
                         {
-                            material = new Material(text.fontSharedMaterial) { name = "Lab outline" }; material.SetFloat("_OutlineWidth", width); material.SetColor("_OutlineColor", edge); material.SetFloat("_OutlineSoftness", soft); _materials.Add(materialKey, material);
+                            material = new Material(baseMaterial) { name = "Lab outline" }; material.SetFloat("_OutlineWidth", width); material.SetColor("_OutlineColor", edge); material.SetFloat("_OutlineSoftness", soft); _materials.Add(materialKey, material);
+                            _materialSources.Add(material, baseMaterial);
                         }
                         _usedMaterials.Add(materialKey);
                         text.fontSharedMaterial = material;
                     }
                     text.UpdateMeshPadding();
                 }
+                if (typographyOnly) continue;
                 var image = rect.GetComponent<UnityEngine.UI.Image>();
                 if (image != null && values.TryGetValue("tint", out string tint)) image.color = ParseColor(tint);
                 if (values.TryGetValue("dx", out string dx)) rect.anchoredPosition += new Vector2(Number(dx), 0);
                 if (values.TryGetValue("dy", out string dy)) rect.anchoredPosition += new Vector2(0, Number(dy));
                 if (values.TryGetValue("width", out string w)) rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Number(w));
                 if (values.TryGetValue("height", out string h)) rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Number(h));
+            }
+            if (typographyOnly)
+            {
+                var activeMaterials = new HashSet<Material>(template.Rects.Select(rect => rect.GetComponent<TMP_Text>()).Where(text => text != null).Select(text => text.fontSharedMaterial));
+                _usedMaterials.Clear();
+                foreach (var pair in _materials) if (activeMaterials.Contains(pair.Value)) _usedMaterials.Add(pair.Key);
+                ReleaseUnusedMaterials();
             }
         }
         /// <summary>Classifies a captured text consistently without changing its name or gameplay data.</summary>
@@ -178,11 +190,11 @@ namespace GGD.UI.Authoring.Studio
         /// <summary>Parses a hex color with an explicit failure.</summary>
         public static Color ParseColor(string value) => ColorUtility.TryParseHtmlString(value, out var color) ? color : throw new FormatException("색상은 #RRGGBB 또는 #RRGGBBAA 형식입니다.");
         /// <summary>Releases temporary outline combinations after the previous visual was replaced.</summary>
-        public void ClearMaterials() { foreach (var material in _materials.Values) UnityEngine.Object.Destroy(material); _materials.Clear(); }
+        public void ClearMaterials() { foreach (var material in _materials.Values) UnityEngine.Object.Destroy(material); _materials.Clear(); _materialSources.Clear(); }
         /// <summary>Releases combinations no longer referenced after a successful visual replacement.</summary>
         public void ReleaseUnusedMaterials()
         {
-            foreach (string key in _materials.Keys.Where(x => !_usedMaterials.Contains(x)).ToArray()) { UnityEngine.Object.Destroy(_materials[key]); _materials.Remove(key); }
+            foreach (string key in _materials.Keys.Where(x => !_usedMaterials.Contains(x)).ToArray()) { _materialSources.Remove(_materials[key]); UnityEngine.Object.Destroy(_materials[key]); _materials.Remove(key); }
         }
         private static void DestroyFont(TMP_FontAsset font) { foreach (var atlas in font.atlasTextures) if (atlas != null) UnityEngine.Object.Destroy(atlas); if (font.material != null) UnityEngine.Object.Destroy(font.material); UnityEngine.Object.Destroy(font); }
         /// <summary>Releases only lab-owned font and material resources.</summary>

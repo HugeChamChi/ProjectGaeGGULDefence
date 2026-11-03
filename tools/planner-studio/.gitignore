@@ -1,0 +1,12 @@
+node_modules/
+GGD-Planner/
+tests/dark-runtime/
+backups/
+verification/
+original-app.asar
+installed-sha256.txt
+__pycache__/
+*.pyc
+bin/
+obj/
+!*.csproj

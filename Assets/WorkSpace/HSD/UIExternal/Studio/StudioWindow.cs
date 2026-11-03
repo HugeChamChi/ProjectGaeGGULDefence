@@ -244,7 +244,7 @@ namespace GGD.UI.Authoring.Studio
             GUI.Box(new Rect(0, 0, Screen.width, HeaderHeight), "");
             GUILayout.BeginArea(new Rect(10, 8, Screen.width - 20, 94));
             GUILayout.BeginHorizontal(); GUILayout.Label((NativeMode ? "UI 제작실 | 원본 프리팹" : "GaeGGUL  UI 제작실") + (Workspace?.IsDirty == true ? "  ● 미저장" : ""), GUILayout.Width(245));
-            Button("키트 열기", () => AskDiscard(() => { string path = StudioFileDialog.Open("제작 키트|kit.xml", "제작 키트 열기"); if (path != null) OpenKit(Path.GetDirectoryName(path)); }), 100);
+            Button("키트 열기", () => AskDiscard(() => StudioFileDialog.Open("제작 키트|kit.xml", "제작 키트 열기", path => { if (path != null) Try(() => OpenKit(Path.GetDirectoryName(path))); }, ReportDialogError)), 100);
             Button("저장", Save, 72); Button("다른 이름", SaveCopy, 100); Button("실행 취소", Undo, 100); Button("다시 실행", Redo, 100);
             Button("복구본", () => { Workspace.Recover(); Rebuild(); }, 80); Button("게시 / 게임 전달", () => Publish(), 150);
             if (GUILayout.Button(_testing ? "편집으로" : "▶ 테스트", GUILayout.Width(100))) SetTesting(!_testing);
@@ -303,7 +303,7 @@ namespace GGD.UI.Authoring.Studio
             GUILayout.Label("아트 루트 폴더 (이 PC 전용)");
             _artRootText = GUILayout.TextField(_artRootText);
             GUILayout.BeginHorizontal();
-            Button("찾기", () => { string root = StudioFileDialog.Folder(); if (root != null) SetArtRoot(root); }, 60);
+            Button("찾기", () => StudioFileDialog.Folder(root => { if (root != null) Try(() => SetArtRoot(root)); }, ReportDialogError), 60);
             Button("적용", () => SetArtRoot(_artRootText), 60);
             Button("해제", () => SetArtRoot(""), 60);
             Button("그림 새로고침", ReloadArt, 125);
@@ -516,9 +516,9 @@ namespace GGD.UI.Authoring.Studio
             _dialog = "공용 원본에 적용하면 " + uses + "개 사용처가 갱신됩니다. 인스턴스 오버라이드는 유지됩니다.";
             _confirmed = () => { PrefabEditing.ApplyToSource(Workspace, _selected); Rebuild(); };
         }
-        private void SaveCopy()
+        private void SaveCopy() => StudioFileDialog.Save("제작 키트|kit.xml", "새 키트 폴더에 kit.xml 저장", destination => { if (destination != null) Try(() => SaveCopyTo(destination)); }, ReportDialogError);
+        private void SaveCopyTo(string destination)
         {
-            string destination = StudioFileDialog.Save("제작 키트|kit.xml", "새 키트 폴더에 kit.xml 저장"); if (destination == null) return;
             string directory = Path.GetDirectoryName(destination);
             if (directory == Workspace.DirectoryPath) { Save(); return; }
             Directory.CreateDirectory(directory);
@@ -528,11 +528,8 @@ namespace GGD.UI.Authoring.Studio
             { string target = AuthoringWorkspace.SafePath(directory, pair.Key); Directory.CreateDirectory(Path.GetDirectoryName(target)); AuthoringWorkspace.AtomicWrite(target, Encoding.UTF8.GetBytes(AuthoringWorkspace.Serialize(pair.Value))); }
             OpenKit(directory); _message = "다른 이름으로 저장 완료";
         }
-        private void ImportImage()
-        {
-            string file = StudioFileDialog.Open("그림|*.png;*.jpg;*.jpeg", "PNG/JPG 가져오기"); if (file == null) return;
-            ImportImageFile(file);
-        }
+        private void ImportImage() => StudioFileDialog.Open("그림|*.png;*.jpg;*.jpeg", "PNG/JPG 가져오기", file => { if (file != null) Try(() => ImportImageFile(file)); }, ReportDialogError);
+        private void ReportDialogError(Exception error) { _error = error.Message; Debug.LogWarning("STUDIO: " + error.Message); }
         /// <summary>Imports a creator image into this kit and optionally assigns it to the selected Image in one undo action.</summary>
         public void ImportImageFile(string file)
         {
@@ -661,7 +658,10 @@ namespace GGD.UI.Authoring.Studio
         private void AskDiscard(Action action)
         { if (Workspace?.IsDirty != true) { Try(action); return; } _dialog = "저장하지 않은 변경이 있습니다. 계속하면 현재 편집 버퍼를 닫습니다. 저장하려면 취소 후 저장하세요."; _confirmed = action; }
         private bool CheckQuit()
-        { if (Workspace?.IsDirty != true) return true; _dialog = "미저장 변경이 있습니다. 종료하면 자동 복구본에 남깁니다. 저장 후 종료하려면 취소하세요."; _confirmed = () => { Workspace.SaveRecovery(); Application.wantsToQuit -= CheckQuit; Application.Quit(); }; return false; }
+        {
+            if (Workspace?.IsDirty != true) return true;
+            // The lab hides this window's dialog; keep the edit buffer recoverable and let the lab's own prompt decide.
+            if (_lab != null) { try { Workspace.SaveRecovery(); } catch (Exception error) { Debug.LogWarning("STUDIO: " + error.Message); } return true; } _dialog = "미저장 변경이 있습니다. 종료하면 자동 복구본에 남깁니다. 저장 후 종료하려면 취소하세요."; _confirmed = () => { Workspace.SaveRecovery(); Application.wantsToQuit -= CheckQuit; Application.Quit(); }; return false; }
         private void Button(string label, Action action, float width) { if (GUILayout.Button(label, GUILayout.Width(width))) Try(action); }
         private void Try(Action action)
         {

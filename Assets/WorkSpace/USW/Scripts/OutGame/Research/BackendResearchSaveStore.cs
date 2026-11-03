@@ -54,6 +54,16 @@ public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
         if (address.AccountKey == ResearchSaveAddress.LocalAccount) return await _local.LoadAsync(address, token);
         await EnsureLoaded(address, token);
         var tree = _document.Data.Trees.Find(x => x.TreeKey == address.TreeKey);
+        if (tree == null && Player.PlayerData.IsReady)
+        {
+            var legacy = Player.PlayerData.Data.UpgradeProgress.Trees.Find(x => x.TreeKey == address.TreeKey);
+            if (legacy != null)
+            {
+                legacy.GetLevels(address.TreeKey);
+                await SaveAsync(address, legacy, token);
+                tree = legacy;
+            }
+        }
         return tree == null ? new ResearchSaveData { TreeKey = address.TreeKey }
             : JsonConvert.DeserializeObject<ResearchSaveData>(JsonConvert.SerializeObject(tree));
     }

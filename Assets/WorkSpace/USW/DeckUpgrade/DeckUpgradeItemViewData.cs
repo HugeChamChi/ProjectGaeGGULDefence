@@ -16,7 +16,10 @@ namespace GaeGGUL.DeckUpgrade
         /// <summary>Whether the preview level limit has been reached.</summary>
         public bool IsMaxLevel => Level >= DeckUpgradeProgress.MaxLevel;
         /// <summary>Whether the next upgrade is currently affordable.</summary>
-        public bool CanUpgrade => !IsMaxLevel && Gold >= Cost;
+        public bool IsOwned { get; internal set; } = true;
+        public bool IsBusy { get; internal set; }
+        public string UpgradeStatus { get; internal set; } = "";
+        public bool CanUpgrade => IsOwned && !IsBusy && !IsMaxLevel && Gold >= Cost;
         /// <summary>Whether this entry is the chief.</summary>
         public bool IsChief => Index < 0;
         /// <summary>Current chief-wide preview bonus.</summary>

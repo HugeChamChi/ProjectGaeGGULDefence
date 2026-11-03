@@ -1,0 +1,11 @@
+{
+  "name": "ggd-planner-studio",
+  "version": "0.3.0",
+  "description": "GGD 기획 작업실 · 검색, 수치 편집, 개인 실험과 Excel 내보내기",
+  "main": "main.cjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "fast-xml-parser": "5.11.2",
+    "fflate": "0.8.3"
+  }
+}

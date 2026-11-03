@@ -5,6 +5,9 @@ using UnityEngine;
 public class PartyDataSO : ScriptableObject
 {
     public string partyName;
+    public int DeckId;
+    public bool IsUnlocked => isUnlock || (DeckId > 0 && Player.PlayerData.IsReady
+        && Player.PlayerData.Data.RewardInventory.Count(RewardType.DeckUnlock, DeckId) > 0);
     public bool isUnlock = true;
     public List<UnitData> unitDataList;
     /// <summary>Draw normal summons uniformly from this authored roster instead of G01 character weights.</summary>

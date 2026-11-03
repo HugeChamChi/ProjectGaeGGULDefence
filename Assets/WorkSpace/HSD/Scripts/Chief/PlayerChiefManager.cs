@@ -9,7 +9,8 @@ public class PlayerChiefManager : Global.IClearable
 {
     private const string TABLE_NAME = "PlayerChiefData";
     private const string DATA_KEY = "SelectedChiefId";
-    public bool IsDirty { get; set; }
+    public bool IsDirty { get => false; set { } }
+    private int _generation;
 
     public int SelectedChiefId
     {
@@ -23,8 +24,6 @@ public class PlayerChiefManager : Global.IClearable
         }
     }
     private int selectedChiefId;
-    private string _rowInDate = string.Empty;
-    private bool _loadSucceeded;
 
     public Action<int> ChangeSelectId;
     public ChiefData SelectChiefData => Table.Character.Chief.GetChief(selectedChiefId);
@@ -38,77 +37,33 @@ public class PlayerChiefManager : Global.IClearable
 
     public void Clear()
     {
+        _generation++;
         selectedChiefId = 0;
-        _rowInDate = string.Empty;
         IsDirty = false;
-        _loadSucceeded = false;
     }
 
     public void SetSelectedChief(int id)
     {
-        SelectedChiefId = id;
-        IsDirty = true;
+        if (Player.PlayerData.SelectChief(id)) SelectedChiefId = id;
     }
 
-    public async UniTask SaveAsync()
-    {
-        if (!IsDirty) return;
-        // A failed read must not turn an unknown existing row into a duplicate Insert.
-        if (!_loadSucceeded)
-        {
-            Debug.LogWarning("족장 데이터 로드가 완료되지 않아 저장을 보류합니다.");
-            return;
-        }
-
-        Param param = new Param();
-        param.Add(DATA_KEY, SelectedChiefId);
-        var tcs = new UniTaskCompletionSource();
-
-        if (string.IsNullOrEmpty(_rowInDate))
-        {
-            // 데이터가 없는 경우 최초 생성 (Insert)
-            Backend.GameData.Insert(TABLE_NAME, param, callback =>
-            {
-                if (callback.IsSuccess())
-                {
-                    _rowInDate = callback.GetInDate();
-                    Debug.Log("족장 데이터 최초 저장 성공");
-                    IsDirty = false;
-                }
-                else
-                {
-                    Debug.LogError($"족장 데이터 최초 저장 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
-                tcs.TrySetResult();
-            });
-        }
-        else
-        {
-            // 기존 데이터 업데이트 (Update)
-            Backend.GameData.UpdateV2(TABLE_NAME, _rowInDate, Backend.UserInDate, param, callback =>
-            {
-                if (callback.IsSuccess())
-                {
-                    Debug.Log("족장 데이터 업데이트 성공");
-                    IsDirty = false;
-                }
-                else
-                {
-                    Debug.LogError($"족장 데이터 업데이트 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
-                tcs.TrySetResult();
-            });
-        }
-        await tcs.Task;
-    }
+    public UniTask SaveAsync() => Player.PlayerData.SaveAsync();
 
     public void Load(Action onCompleted = null)
     {
-        _loadSucceeded = false;
+        int generation = ++_generation;
+        string owner = Backend.UserInDate;
+        if (Player.PlayerData.IsReady && Player.PlayerData.Data.SelectedChiefId >= 0)
+        {
+            SelectedChiefId = Player.PlayerData.Data.SelectedChiefId;
+            Player.Character.AddChief(SelectedChiefId);
+            onCompleted?.Invoke(); return;
+        }
         Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback =>
         {
             try
             {
+                if (generation != _generation || owner != Backend.UserInDate) return;
                 if (callback.IsSuccess())
                 {
                     ApplyLoadedRows(callback.FlattenRows());
@@ -133,10 +88,10 @@ public class PlayerChiefManager : Global.IClearable
 
     private void ApplyLoadedRows(JsonData rows)
     {
-        _loadSucceeded = false;
         if (rows == null || !rows.IsArray)
             throw new FormatException("PlayerChiefData rows must be an array.");
 
+        if (rows.Count > 1) throw new FormatException("Chief duplicate rows require repair.");
         string rowInDate = string.Empty;
         int chiefId = 0;
         if (rows.Count > 0)
@@ -162,10 +117,11 @@ public class PlayerChiefManager : Global.IClearable
         }
 
         // Commit only after the entire row is valid. Loading never writes defaults back to the server.
-        _rowInDate = rowInDate;
         IsDirty = false;
-        _loadSucceeded = true;
         SelectedChiefId = chiefId;
+        if (rows.Count > 0 && rows[0].ContainsKey(DATA_KEY) &&
+            int.TryParse(rows[0][DATA_KEY]?.ToString(), out int savedChief) && savedChief >= 0 && savedChief == chiefId)
+            Player.Character.AddChief(chiefId);
     }
 
     private void NotifySelectionChanged()

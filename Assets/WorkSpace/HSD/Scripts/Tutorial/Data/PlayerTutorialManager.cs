@@ -8,7 +8,15 @@ namespace GaeGGUL.Tutorial
         public TutorialData Data => new TutorialData { completedTutorials = Player.LobbyProgress.Data?.CompletedTutorials ?? new() };
         public bool IsDirty { get => Player.LobbyProgress.IsDirty; set => Player.LobbyProgress.IsDirty = value; }
         public UniTask InitializeAsync()
-        { if (!Player.LobbyProgress.IsReady) throw new InvalidOperationException("Tutorial progress is not loaded."); return UniTask.CompletedTask; }
+        { if (!Player.LobbyProgress.IsReady) throw new InvalidOperationException("Tutorial progress is not loaded."); if (Player.PlayerData.IsReady)
+          {
+              bool changed = false;
+              foreach (var id in Player.PlayerData.Data.CompletedTutorials)
+                  if (!Player.LobbyProgress.Data.CompletedTutorials.Contains(id))
+                  { Player.LobbyProgress.Data.CompletedTutorials.Add(id); changed = true; }
+              if (changed) Player.LobbyProgress.Changed();
+          }
+          return UniTask.CompletedTask; }
         public bool IsCompleted(string id) => Player.LobbyProgress.IsReady && Player.LobbyProgress.Data.CompletedTutorials.Contains(id);
         public void MarkAsCompleted(string id)
         {

@@ -11,6 +11,9 @@ namespace GaeGGUL.DeckUpgrade
         public Sprite attackIcon, attackSpeedIcon;
         private RectTransform page, banner, collection, grid;
         private RectTransform unownedHeader;
+        private bool _ownedOnly;
+        public int OwnedCount { get { int count = 0; for (int i = 0; i < unitCards.Count; i++) if (screen.IsOwned(i - 1)) count++; return count; } }
+        public bool IsOwnedCard(Transform card) { int index = unitCards.FindIndex(x => x == card); return index >= 0 && screen.IsOwned(index - 1); }
         private RectTransform detailChiefFrame, detailUnitFrame;
         private Image detailChiefPortrait, detailUnitPortrait;
         private TMP_Text detailName, detailLevel, requiredCost;
@@ -104,7 +107,7 @@ namespace GaeGGUL.DeckUpgrade
             var popupPrice = (RectTransform)page.Find("UnitDetailsPopup/UnitInfoDialog/PopupGoldGauge/UpgradeCost");
             CenterGaugeText(popupPrice, 606, 62);
             string[] examples = { "\uAC1C\uAD6C\uB9AC \uC871\uC7A5", "\uAC1C\uAD6C\uB9AC \uC804\uC0AC", "\uAC1C\uAD6C\uB9AC \uC220\uC0AC", "\uAE30\uC0AC \uC871\uC7A5", "\uAC80\uC0AC", "\uBC29\uD328\uBCD1" };
-            for (int i = 0; i < examples.Length; i++)
+            for (int i = 0; !screen.IsEmbeddedInLobby && i < examples.Length; i++)
             {
                 var card = Box("LockedUnit_" + i, grid, C("222836"), 0, 0, 232, 376);
                 Box("UnitFrame", card, C(i % 3 == 0 ? "D9950D" : "384C89"), 5, 5, 222, 282);
@@ -136,13 +139,14 @@ namespace GaeGGUL.DeckUpgrade
         /// <summary>Displays typed state supplied by the screen's presenter.</summary>
         public void Render(DeckUpgradeItemViewData chief, DeckUpgradeItemViewData selected)
         {
-            chiefCardLevel.text = "Lv." + chief.Level;
+            chiefCardLevel.text = chief.IsOwned ? "Lv." + chief.Level : "미보유";
             detailName.text = selected.Name;
-            detailLevel.text = "Lv." + selected.Level + "/" + DeckUpgradeProgress.MaxLevel;
-            requiredCost.text = selected.IsMaxLevel ? "MAX" : selected.Cost.ToString("N0");
+            detailLevel.text = selected.IsOwned ? "Lv." + selected.Level + "/" + DeckUpgradeProgress.MaxLevel : "미보유";
+            requiredCost.text = !selected.IsOwned ? "미보유" : !string.IsNullOrEmpty(selected.UpgradeStatus) ? selected.UpgradeStatus : selected.IsMaxLevel ? "MAX" : selected.Cost.ToString("N0");
             detailChiefFrame.gameObject.SetActive(selected.IsChief);
             detailUnitFrame.gameObject.SetActive(!selected.IsChief);
             if (!selected.IsChief) detailUnitPortrait.sprite = screen.units[selected.Index].icon;
+            FilterUnits(_ownedOnly);
         }
         private void ConfigureDetails()
         {
@@ -240,17 +244,19 @@ namespace GaeGGUL.DeckUpgrade
         }
         private void FilterUnits(bool ownedOnly)
         {
-            int ownedCount = screen.units.Length + 1;
+            _ownedOnly = ownedOnly;
+            int ownedCount = OwnedCount;
+            int ownedSlot = 0, unownedSlot = 0;
             float headerY = 40 + Mathf.CeilToInt(ownedCount / 3f) * 490;
             unownedHeader.anchoredPosition = new Vector2(25, -headerY);
             unownedHeader.gameObject.SetActive(!ownedOnly);
             for (int i = 0; i < unitCards.Count; i++)
             {
-                bool owned = i < ownedCount;
+                bool owned = screen.IsOwned(i - 1);
                 bool visible = !ownedOnly || owned; unitCards[i].gameObject.SetActive(visible);
                 if (!visible) continue;
                 var card = unitCards[i]; card.anchorMin = card.anchorMax = new Vector2(0, 1); card.pivot = new Vector2(0, 1);
-                int index = owned ? i : i - ownedCount;
+                int index = owned ? ownedSlot++ : unownedSlot++;
                 float top = owned ? 40 : headerY + 104;
                 card.anchoredPosition = new Vector2(47 + index % 3 * 330, -top - index / 3 * 490); card.localScale = Vector3.one * 1.2f;
             }

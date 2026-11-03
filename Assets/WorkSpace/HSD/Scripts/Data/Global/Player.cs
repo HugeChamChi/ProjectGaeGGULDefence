@@ -16,6 +16,9 @@ public static class Player
     public static DailyManager Daily                { get; private set; } = new();
     public static GaeGGUL.Tutorial.PlayerTutorialManager Tutorial { get; private set; } = new();
 
+    public static GGD.Periods.PeriodDataManager<GGD.Periods.DailyData> DailyData { get; } = new("DailyData", false);
+    public static GGD.Periods.PeriodDataManager<GGD.Periods.WeeklyData> WeeklyData { get; } = new("WeeklyData", true);
+
     public static AccountDocument<AccountCharacterData> Characters { get; } = new("PlayerCharacterData", AccountCharacterData.Validate);
     public static AccountDocument<AccountLobbyData> LobbyProgress { get; } = new("PlayerLobbyData", AccountLobbyData.Validate);
     public static event Action OnAccountCleared;
@@ -50,7 +53,7 @@ public static class Player
         // 1. 핵심 데이터(플레이어 정보) 먼저 초기화
         await PlayerData.InitalizeAsync();
         RequireCurrentInitialization(owner, generation);
-        if (PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
+        if (!PlayerData.IsReady) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했거나 저장 충돌 확인이 필요합니다.");
         await UniTask.WhenAll(Characters.InitializeAsync(), LobbyProgress.InitializeAsync());
         RequireCurrentInitialization(owner, generation);
         await RoundRecords.InitializeAsync();
@@ -59,8 +62,22 @@ public static class Player
         // 2. 서버 시간과 비교하여 새로운 날인지 판단
         await Daily.InitializeAsync();
         RequireCurrentInitialization(owner, generation);
+        await UniTask.WhenAll(DailyData.InitializeAsync(), WeeklyData.InitializeAsync());
+        RequireCurrentInitialization(owner, generation);
+        PlayerData.RegisterAttendanceVisit(ServerClock.UtcNow.AddHours(9 - DailyManager.ResetHourKst).ToString("yyyy-MM-dd"));
+        RequireCurrentInitialization(owner, generation);
+        await GGD.Events.EventChartLoader.InitializeAsync(owner);
+        RequireCurrentInitialization(owner, generation);
+        using (var unitChartTimeout = new CancellationTokenSource())
+        using (unitChartTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await UnitBalanceChartLoader.InitializeAsync(unitChartTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
 
         // 3. 나머지는 병렬로 초기화하되, IsNewDay 상태를 참조함
+        using (var bonusTimeout = new CancellationTokenSource())
+        using (bonusTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await UnitBonusChart.InitializeAsync(bonusTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
         await UniTask.WhenAll(
             Profile.InitalizeAsync(),
             Mail.InitalizeAsync(),
@@ -71,13 +88,15 @@ public static class Player
         );
         RequireCurrentInitialization(owner, generation);
 
-        // 4. 새로운 날이었다면 갱신된 LastResetDate를 포함해 서버에 저장
-        if (Daily.IsNewDay && _backendData != null)
-        {
-            PlayerData.MarkDirty();
-            await PlayerData.TrySaveAsync();
-        }
+        // Persist attendance/reset together after optional daily shop initialization finishes.
+        if (Daily.IsNewDay) PlayerData.MarkDirty();
+        await PlayerData.TrySaveAsync();
         RequireCurrentInitialization(owner, generation);
+        if (_autosaveCts == null)
+        {
+            _autosaveCts = new CancellationTokenSource();
+            AutosaveLoopAsync(_autosaveCts.Token).Forget();
+        }
         OnAccountReady?.Invoke();
         completion.TrySetResult();
         }
@@ -97,9 +116,13 @@ public static class Player
         _debounceCts?.Cancel();
         _debounceCts?.Dispose();
         _debounceCts = null;
+        _firstPendingSave = -1;
+        _autosaveCts?.Cancel(); _autosaveCts?.Dispose(); _autosaveCts = null;
         Characters.Clear(); LobbyProgress.Clear(); GlobalData.SelectedParty = null;
         OnAccountCleared?.Invoke();
         RoundRecords.Clear();
+        GGD.Events.EventChartLoader.Clear();
+        UnitBonusChart.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();
@@ -107,6 +130,8 @@ public static class Player
         Chief.Clear();
         Shop.Clear();
         Daily.Clear();
+        DailyData.Clear();
+        WeeklyData.Clear();
         Tutorial.Clear();
     }
 
@@ -119,7 +144,7 @@ public static class Player
         var tasks = new System.Collections.Generic.List<UniTask>();
 
         Global.IClearable[] managers = {
-            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, Characters, LobbyProgress
+            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, DailyData, WeeklyData, Characters, LobbyProgress
         };
 
         foreach (var manager in managers)
@@ -138,14 +163,17 @@ public static class Player
     }
 
     private static System.Threading.CancellationTokenSource _debounceCts;
-    private const int DebounceDelayMs = 3000; // 3초 뒤에 저장
+    private static CancellationTokenSource _autosaveCts;
+    private static double _firstPendingSave = -1;
+    private const int DebounceDelayMs = 30000;
 
     /// <summary>
-    /// 짧은 시간 내에 여러 번 호출되더라도, 마지막 호출 시점부터 3초(DebounceDelayMs)가 지난 후 단 한 번만 일괄 저장을 수행합니다.
+    /// Local journals are immediate. Cloud writes coalesce for 30 seconds, bounded by a 60-second flush.
     /// 유닛 연속 레벨업, 연속 골드 획득 등 잦은 상태 변화가 일어날 때 이 함수를 호출하세요.
     /// </summary>
     public static void RequestDebouncedSave()
     {
+        if (_firstPendingSave < 0) _firstPendingSave = UnityEngine.Time.realtimeSinceStartupAsDouble;
         _debounceCts?.Cancel();
         _debounceCts?.Dispose();
         _debounceCts = new System.Threading.CancellationTokenSource();
@@ -155,13 +183,26 @@ public static class Player
 
     private static async UniTaskVoid DebouncedSaveTask(System.Threading.CancellationToken token)
     {
-        // SuppressCancellationThrow()를 사용하여 취소되었을 때 예외를 뱉지 않고 true를 반환받음
-        bool isCancelled = await UniTask.Delay(DebounceDelayMs, cancellationToken: token).SuppressCancellationThrow();
+        int delay = (int)Math.Max(0, Math.Min(DebounceDelayMs,
+            60000 - (UnityEngine.Time.realtimeSinceStartupAsDouble - _firstPendingSave) * 1000));
+        bool isCancelled = await UniTask.Delay(delay, DelayType.Realtime, cancellationToken: token).SuppressCancellationThrow();
         
-        // 3초 내에 새로운 요청이 들어와서 취소되었다면 그대로 종료
         if (isCancelled) return;
-
-        // 3초 동안 추가 요청이 없었다면 묶어서 실제 업데이트 수행
+        _firstPendingSave = -1;
         await UpdateDirtyDataAsync();
+    }
+
+    private static async UniTaskVoid AutosaveLoopAsync(CancellationToken token)
+    {
+        try
+        {
+            while (true)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(60), DelayType.Realtime, cancellationToken: token);
+                try { await UpdateDirtyDataAsync(); }
+                catch (Exception error) { UnityEngine.Debug.LogWarning("[Save] Pending changes retained: " + error.Message); }
+            }
+        }
+        catch (OperationCanceledException) { }
     }
 }

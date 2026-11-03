@@ -3,9 +3,69 @@ system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
 verified: 2026-11-03
-commit: 316af03b
+commit: 996fd741
 ---
 # 아웃게임 카드
+
+## 2026-11-03 실제 로비 흐름 확인
+
+1080×1920 Play Mode에서 탭·카드·강화 포인터 입력, 연타 차단, 실제 골드/레벨 갱신, 계정 캐시 재조회, 저장 실패 안내, 로비 씬 재진입 복원을 통과했다. 계정 로드 전 DeckUpgradeService 생성과 서버 튜토리얼 복원 전 분기를 수정했다. 보유 필터는 실제 상태를 사용하며 현재 보이는 가격 표시까지 저장 상태를 전달한다. 임시 드론 보유/강화 fixture는 원복했다. 옛 개구리 시안 ID와 현재 드론 ID의 매핑은 없으며 초기 보유 정책 확인 전에는 변환하지 않는다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/DeckUpgrade/DeckUpgradeService.cs` | 계정 로드 완료 후 진행 갱신·구독 해제 |
+| `Assets/WorkSpace/HSD/Scripts/CoreSystem/AppLoadingScreen.cs` | 서버 복원 후 튜토리얼 완료 분기 |
+| `Assets/WorkSpace/USW/DeckUpgrade/DeckSelectorConcept.cs` | 실제 보유 필터 및 보이는 가격/실패 안내 |
+| `Assets/WorkSpace/USW/DeckUpgrade/DeckUpgradeStatsTabs.cs` | 최종 가격 표시에 저장 상태 유지 |
+| `Tools/verification/LobbyGoldFlow.cs` | 실제 로비 진입과 cold 서비스 검사 |
+| `Tools/verification/LobbyGoldUiChecks.cs` | 포인터·서버 갱신·실패·씬 재로드 검사와 fixture 원복 |
+| `docs/technical/lobby-gold-flow-validation-20261103.md` | 로비 검증 결과와 구형 ID/환경 경계 |
+
+## 2026-11-03 단일 보유와 골드 강화
+
+캐릭터는 종류별 0/1 보유다. 기존 보유 중복 행은 합집합으로 이관하고 원본은 보존한다. 본 로비 강화는 AccountDeckUpgradeStore에서 실제 PlayerData.Gold를 사용하며 비용은 기존 레벨×150, 최대 레벨20이다. PlayerData 골드/저장 버전과 PlayerCharacterData 레벨을 조건부 TransactionWriteV2로 함께 확정한다. 미보유·골드 부족·연타는 차단한다. 응답 불확실 시 추가 소비를 막고 재접속으로 서버 결과를 확인한다. 시안 UpgradeBalance는 제거했으며 단독 시안만 기존 로컬 money를 유지한다.
+
+영구 강화는 BackendResearchSaveStore → PlayerResearchData, 튜토리얼·파티·우편 읽음은 PlayerLobbyData다. 아래 11-01의 PlayerData 직접 저장 설명은 이전 구현이다. 기존 PlayerData 강화와 완료 기록은 새 저장으로 이관한다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/DeckUpgrade/AccountDeckUpgradeStore.cs` | 단일 보유 확인·실제 골드 강화 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/BackendGameData.cs` | 골드/강화 조건부 서버 트랜잭션 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/PlayerDataController.cs` | 강화 중 소비 잠금·확인 후 잔액 반영 |
+| `Tools/verification/GoldUpgradeChecks.cs` | 골드/단일 보유 격리 15검사 |
+| `Tools/verification/SingleOwnershipLive.cs` | 실제 이관·골드/레벨 왕복과 조건부 원복 |
+| `Tools/verification/GoldRollbackLive.cs` | 실제 버전 충돌 시 골드 차감 롤백 |
+| `docs/technical/account-save-schema.md` | 현재 테이블 및 단일 보유·골드 계약 |
+
+## 2026-11-01 강화 서버 연결
+RootLifetimeScope의 저장소는 AccountResearchSaveStore이다. PlayerData.UpgradeProgress/UpgradeProgressJson에 트리별 진행을 저장하고 기존 계정 저널과 서버 저장 큐를 공유한다. 무료 강화 변경은 즉시 checkpoint 후 묶음 저장하며 명시적 flush/출격은 서버 확인을 기다린다. ResearchAccountContext는 실제 로그인 계정을 구독하고 계정 변경 시 ResearchSaveService의 세션을 폐기한다. 계정별 로컬 키만 자동 이관하며 소유자 없는 local 원본은 보존한다. 컴파일·격리16검사·실제 서버 검증용 노드 저장/재조회/정리 PASS. [연결 결과](../../technical/upgrade-server-save-result.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/OutGame/Research/AccountResearchSaveStore.cs` | 계정 강화 저장소와 소유자가 확인된 로컬 데이터 이관 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/Research/UpgradeProgressData.cs` | 트리별 강화 snapshot 및 형식 검증 |
+| `tools/verification/UpgradeServerSaveChecks.cs` | 격리16검사 및 운영 DI/계정/실서버 노드 왕복·정리 |
+
+## 2026-11-01 저장 신뢰성/호출 비용
+PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK 콜백까지 쓰기 잠금을 유지한다. 일반 변경은 30초 디바운스/60초 flush, 실패는 30~300초 backoff. 버전 Where 조건으로 저장하고 모르는 서버 변경은 보존/차단한다. 구매 가격·보상·영수증, 새 캐릭터 획득·족장/프로필 선택·튜토리얼은 PlayerData snapshot으로 통합했다. 기존 캐릭터/소유권 행은 읽기 보존한다. Daily/Weekly는 저널과 조건부 갱신, clean 로그인 no-op, 계정 전환 저장 확인을 적용했다. Unity 컴파일·격리 44검사·실서버 현재 값 저장/재조회·구버전404·일/주 동일 카운터 저장 PASS. 동시 다기기 CAS 보장과 로컬 전용 영구강화의 서버 백업은 검증 범위 밖이다. [상세 결과/경계](../../technical/save-reliability-20261101.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/OutGame/PlayerDataJournal.cs` | 확정/전송 버전과 최신 snapshot의 계정별 복구 기록 |
+| `Assets/WorkSpace/USW/Scripts/PeriodData/PeriodDataManager.cs` | 일/주 기간 저장, Mutate/dirty checkpoint, 복구 및 충돌 차단 |
+| `Assets/WorkSpace/USW/Scripts/PeriodData/PeriodModels.cs` | 일/주 모델 기본값 및 KST05 기간 키 |
+| `Tools/verification/SaveReliabilityChecks.cs` | 가짜 서버의 지연/실패/재시작/구매 및 기간/형식 44검사 |
+| `Tools/verification/SaveReliabilityLiveChecks.cs` | 기존 로그인 계정의 값 유지 저장/재조회 및 stale 버전 거절 검사 |
+| `docs/technical/save-reliability-20261101.md` | 저장 보강 내역, 요청 비용 영향과 미검증 경계 |
+
+## 2026-10-31 차트 캐시
+공통 `BackendChartReader.ReadAsync`와 전투 설정 `BackendEndlessBalanceGateway.LoadAsync`는 CDN 목록 확인 후 SDK `Backend.CDN.Content.Local.Update`로 변경된 차트만 내려받아 영속 로컬 캐시를 갱신한다. SDK가 미적용 차트를 정리하므로 전체 목록을 전달하고, 동시 갱신은 직렬화한다. 요청 취소 후에도 SDK 콜백까지 잠금을 유지한다. 목록/갱신 실패는 오래된 데이터로 대체하지 않는다. 기존 `Chart`의 상점/가챠 조회와 확률 조회는 기존 방식 유지. Unity 컴파일 및 로그인 전/취소 4검사 통과; 실제 서버 변경·재실행·손상 캐시 시나리오는 로그인 후 별도 확인 필요.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/BackendCharts/BackendChartReader.cs` | SDK CDN 목록/변경 다운로드/영속 캐시 공통 진입점 |
+| `Assets/WorkSpace/USW/Scripts/Endless/Runtime/BackendEndlessBalanceGateway.cs` | 전투 밸런스의 공통 차트 로더 연결 |
+| `Tools/verification/BackendChartCacheChecks.cs` | 로그인 전 차단·취소 4검사; 서버/캐시 변경 없음 |
 
 **한 줄 요약**: 뒤끝(TheBackend) 기본 게스트/연동 후 자동 Google 로그인 뒤 `Player`(유저 데이터 매니저 묶음)·`Table`(마스터)이 초기화된다. 로비에서 파티(`PartyDataSO`: 유닛 명단 + 족장)를 고르고 스태미나를 써서 `IngameScene`으로 간다. 영구 강화(코드 이름 Research, 화면 이름 "강화")는 로비 강화 탭에 직접 표시하는 트리이며, 전투 시작 때 합계가 고정된다.
 
@@ -28,33 +88,6 @@ commit: 316af03b
 | `docs/technical/account-save-schema.md` | 추가 테이블·컬럼·이관·검증 경계 |
 | `Tools/verification/AccountPersistenceChecks.cs` | 실제 서버 요청 없는 격리 검사 |
 
-## 2026-11-03 일일·주간 상점 저장
-
-`Player.Shop.Daily`와 `Player.Shop.Weekly`는 기존 PlayerShopData 행에 기간별 상품 ID·상품 JSON·품절 ID·기간 키를 따로 저장한다. 각각 무료 다이아 10개 첫 칸과 기존 Shop_Daily 풀의 랜덤 5칸이다. 일일 KST 05시, 주간 월요일 05시이며 새 기간 접근 때 저장한다. 로비 준비 중 화면은 유지하며 기존 UI_ShopPanel은 `_weekly` 선택을 지원한다. Unity 컴파일 및 격리 저장 19검사 PASS. 실제 서버 컬럼/저장·구매 검증 및 중단 구매 영수증 복구는 미완료다.
-
-| 파일 | 역할 |
-|---|---|
-| `Assets/WorkSpace/HSD/Scripts/Shop/DailyShopManager.cs` | 기간 키·선정 상품 스냅샷·구매 ID 저장/복원, 6칸 추첨 |
-| `Assets/WorkSpace/HSD/Scripts/Shop/ShopDataManager.cs` | 일일/주간 같은 서버 행의 순차 초기화 |
-| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopPanel.cs` | 일일/주간 선택과 열린 화면의 기간 갱신 |
-| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopPresenter.cs` | 선택한 기간의 목록·구매 연결 |
-| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopItemSlot.cs` | 해당 기간의 품절·구매 가능 표시 |
-| `docs/technical/shop-persistence.md` | 서버 컬럼·이관·주간 기본값·검증 경계 |
-| `Tools/verification/ShopPersistenceChecks.cs` | 실제 계정 변경 없는 저장/복원·초기화 19검사 |
-
-## 2026-11-03 다이아 IAP 준비
-
-기존 diamond_100/550/1200/6500 소비형 4종의 ID·지급량·참고 가격은 유지하고 카탈로그 한글 이중 이스케이프를 수정했다. Google Play 경로는 영수증/계정 대조 → BACKND 검증 → PlayerData 다이아와 DiamondPurchases 동시 저장 → 구매 확정이다. 기존 무로그인 더미 지급은 제거했다. Unity 컴파일·격리 IAP 25검사·상점 19검사 PASS. 콘솔 등록/가격, 실기기 결제, 본 로비 연결, App Store와 검증 응답 유실 후 서버 복구는 별도다. 출시 완료를 뜻하지 않는다.
-
-| 파일 | 역할 |
-|---|---|
-| `Assets/Resources/IAPProductCatalog.json` | 기존 4종 소비형 다이아 상품·지급량, 정상 한글 표시 |
-| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondIapCatalog.cs` | 상품/지급량/스토어 ID 검증 |
-| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondPurchaseReceipt.cs` | 토큰 해시·상품 ID·다이아 지급 기록 |
-| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondPurchaseService.cs` | Google 영수증 대조·서버 검증·저장 확인 후 확정 허용 |
-| `docs/technical/diamond-iap.md` | 콘솔 설정·상품표·잔여 작업·복구 한계 |
-| `Tools/verification/DiamondIapChecks.cs` | 실제 결제/서버 쓰기 없는 IAP 격리 25검사 |
-
 ## 2026-10-30 정적 대조
 설정 호스트는 게시 자산의 BakedScreen 프리팹을 복제한다. NativeSourceInstalled이면 기존 프리팹 경로를 사용하며 XML 해석은 명시적 에디터 비교에만 남는다. Settings.asset의 구운 프리팹/아틀라스 참조와 IAP의 파괴 토큰 UniTaskVoid 연결을 대조했다.
 
@@ -67,13 +100,22 @@ commit: 316af03b
 1. 시작·로그인: [초기화 카드](init.md)의 `AppInitialization.InitializeAsync`(Backend → `Table.InitializeAsync` → `GameDataManager.LoadAllAsync` → `Player.InitializeAsync`) → LobbyScene.
 2. 로비: `LobbyLifetimeScope`가 `LobbyPresenter`·`UI_PartySelectPresenter`를 등록. 게임 시작 → `LobbyModeSelectView`에서 Normal/테스트 선택 → `GlobalData.SelectedParty` 설정 → (Normal만 튜토리얼 미완이면 튜토리얼로) → 양 모드 기존 NORMAL 원격 설정/설치 콘텐츠 검증 → `PlayerDataController.ReserveEntryAsync`로 스태미나 차감·예약 저장 → `SceneChangeManager.TransitionToSceneAsync`(Normal=`IngameScene`, 테스트=`HardIngameScene`). 기록도 기존 NORMAL을 공유한다. 이동 실패 후 재시도는 기존 예약을 재사용하며 실제 `GameManager.StartGame`에서 1회 소모한다. 10-22 미커밋 구현/검증은 `outputs/mode-integration-20261022/RESULT.md`.
 3. 인게임은 `GlobalData.SelectedParty`로 소환 명단(`UnitFactory`)과 족장(`ChieftainSelection`)을 정한다.
-4. 저장: 각 매니저는 `IClearable`(Clear/IsDirty/SaveAsync). 잦은 변경은 `Player.RequestDebouncedSave`(3초 디바운스), 중요한 시점은 `Player.UpdateDirtyDataAsync`.
-5. 영구 강화: LobbyScene의 강화 페이지에 배치된 `ResearchScreen`이 `ResearchTreeData` 트리를 코드로 그린다. `_embeddedInLobby`에서는 로비 상단/하단 메뉴를 사용하며 별도 진입 버튼/씬 이동/로비 복귀 버튼이 없다. 진행은 `ResearchSaveService` → `IResearchSaveStore`(현재 `PlayerPrefsResearchSaveStore`, 로컬). 전투 시작 전 `ResearchRunBonuses.LoadAsync`가 합계를 복사하고 `ResearchRunBonuses.Get`으로 읽는다(튜토리얼은 0). 단독 OutgameUpgrade 씬은 같은 트리/화면 설정으로 유지한다.
+4. 저장: 각 매니저는 `IClearable`(Clear/IsDirty/SaveAsync). 잦은 변경은 즉시 로컬 기록 후 `Player.RequestDebouncedSave`(30초 디바운스, 최대60초), 중요한 시점은 `Player.UpdateDirtyDataAsync`. 실패 재시도와 상세 경계는 위 저장 신뢰성 절을 따른다.
+5. 영구 강화: LobbyScene의 ResearchScreen이 트리를 그린다. 진행은 ResearchSaveService → IResearchSaveStore(AccountResearchSaveStore) → 계정 PlayerData. 전투 시작 전 ResearchRunBonuses.LoadAsync가 서버 저장을 확인하고 합계를 복사한다(튜토리얼은 0). UI 및 단독 OutgameUpgrade 씬 구성은 유지한다.
 6. 캐릭터 강화(별도 로컬 시안): LobbyLifetimeScope가 `DeckUpgradeService`/`IDeckUpgradeStore`를 등록하고 화면에 주입. `DroneUpgradeConceptScreen.BuildView`가 기본→목록→디자인을 명시 순서로 구성하며 `DeckUpgradePresenter`의 타입 데이터를 목록/상세/3탭에 직접 전달한다. 실제 계정/전투는 미연결, 기존 DeckUpgradePreview.v1 저장 유지. 과거 저장 씬의 RuntimeBindings는 Play 재생성 시 제거된다.
 
 ## 진입 파일
+
+2026-10-31 기획툴: 아이템 지급(`GrantItems`)과 종류별 초안 복원, 관리 탭/연속 생성, 편집용·뒤끝 업로드용 Excel 구분, 가독성 개선. 현재 계약으로 전체 Node 검사 17개 및 Electron UI31 시나리오 통과. 상세: `outputs/planner-audit/fixed/RESULT.md`.
+
 | 파일 | 역할 |
 |---|---|
+| `tools/planner-studio/app/ui/content/item-catalog.js` | 아이템→기능→선택목록→옵션 저작 스키마, 수치/참조/순환/동일 목록 검사. 게임 아이템 사용 실행은 미연결 |
+| `tools/planner-studio/app/ui/content/catalog-picker.js` | 공통 검색·종류 필터·중첩 즉시 추가·트랜잭션 취소·동일 선택 목록 재사용 UI |
+| `tools/planner-studio/ITEM-CATALOG.md` | 아이템 4개 표, ID/Value 규약, Excel 개별·합본과 게임 연동 경계 |
+| `tools/planner-studio/app/item-icons.cjs` | PNG 검증·자동 주소·Excel 동봉 PNG/목록 출력 |
+| `Assets/WorkSpace/USW/Scripts/Editor/PlannerItemIconImporter.cs` | 기획툴 아이콘 묶음 Sprite 임포트와 Addressables 등록 메뉴 |
+| `Tools/verification/PlannerItemIconChecks.cs` | 실제 Editor Sprite·주소·재임포트·변조 거절 검사 |
 | `Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs` | 결과창 재시작: 최신 설정·스태미나 예약 저장·연타 차단·실패 재시도 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Player.cs` | 유저 데이터 진입점(PlayerData·Profile·Mail·Character·Chief·Shop·Daily·Tutorial), 일괄/디바운스 저장 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Table.cs` | 공통 마스터 테이블(Addressables) |
@@ -168,7 +210,7 @@ commit: 316af03b
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/UI_SettingPanel_Base.cs` | 로비/인게임 공용 설정 호스트. 저작 자산이 있으면 게시 프리팹과 실제 설정 바인딩 사용 |
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/SettingsGameBindings.cs` | 설정 화면의 오디오/체크/씬 이동을 기존 Presenter·서비스에 연결 |
 | `Assets/WorkSpace/HSD/Resources/UiAuthoring/Settings.asset` | 현재 설정 화면 게시 자산·프리팹/리소스 참조, 상세는 UI 제작실 카드 |
-| `Assets/WorkSpace/HSD/Scripts/IAP/IAPManager.cs` | 기존 호스트의 인증된 Android Google Play 연결·현지 가격·보류 구매 처리. Editor/무로그인 더미 지급 없음, 본 로비 상품 화면 연결은 별도 |
+| `Assets/WorkSpace/HSD/Scripts/IAP/IAPManager.cs` | 기존 IAP 테스트 화면. 스토어 연결은 파괴 토큰을 받는 UniTaskVoid, 테스트 더미 데이터 경로를 운영 지급으로 오해하지 않음 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/Account/AccountDeletionPopup.cs` | 삭제 확인/결과. 캔버스125 > 계정120, Editor 실제 탈퇴 차단 |
 | `Assets/WorkSpace/USW/Scripts/OutGame/AccountDeletionService.cs` | 명시적 탈퇴·중복/지연 응답·계정 경계 |
 | `Assets/WorkSpace/USW/Scripts/OutGame/AccountDeletionGateway.cs` | 뒤끝 탈퇴 API와 성공 후 세션 정리 |
@@ -365,3 +407,15 @@ commit: 316af03b
 | `Assets/WorkSpace/USW/Scripts/OutGame/AttendanceRules.cs` | 누적 출석 수령 판정, 결석 유지와 7일 완료 후 재시작 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/Attendance/AttendanceDaySlot.cs` | 보상 칸의 아이콘/수량과 잠김/수령 가능/수령 완료 표시 |
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/LobbyDeviceSettingsView.cs` | 기기별 그래픽/언어 보조 설정 View |
+
+## 2026-10-31 ?? ??? ??
+`Assets/WorkSpace/USW/Scripts/Events/AttendanceEventRuntime.cs`? ??? attendanceEvents ??????? ??/??/?? ??? ????. EventChartLoader?? ?? ???? AttendanceService/AttendancePopup? ?? ??? ??? ??? ??? ????. PlayerData.EventAttendance? BackendGameData? ?? ???? ????. 14?? 7? ??? ?? ???? ????. ?? 3?? ???? ?? ?? ??/?? ? ?? ??? ???. `tools/verification/AttendanceEventChecks.cs` 26??? ?? ?? ?? ?? ? Unity ??? ??. ?? ??/???/?? ?? ??? ???. ??: `outputs/attendance-event-integration/RESULT.md`.
+
+## 2026-10-31 Events / Missions
+Current event authoring and deployment use two readable tables: Events and Missions. AttendanceDays is a mission condition. Runtime: `Assets/WorkSpace/USW/Scripts/Events/EventMissions.cs`, `EventMissionPanel.cs`, `EventChartLoader.cs`. Export: `tools/planner-studio/app/event-tables.cjs`. PlayerData.EventMissions and EventMissionReceipts are persisted by BackendGameData in the currency snapshot. Old EventAttendance claims are migrated conservatively. Events and Missions are independently editable and joined by EventKey. Unity 27 checks and Electron event/mission creation + two-file export passed; live server and mobile checks remain unexecuted. See `tools/planner-studio/EVENT-MISSIONS.md` and `outputs/event-missions-release/RESULT.md`.
+
+2026-10-31 follow-up: ConfigVersion column and equality checks removed. EventMissions.ForEvent is used by the game panel to fetch only the selected EventKey. Unity integration checks: 34 passed, including independent event updates, missing EventKey rejection and cross-event progress/claim isolation. Desktop two-chart files and the new planner runtime were refreshed.
+
+2026-10-31 MissionType follow-up: MissionType enum Normal/Event added. Normal requires an empty EventKey and progresses independently of event dates; Event requires a valid EventKey. Period uses Total/Daily/Weekly, with legacy Event converted to Total while preserving saved period identifiers. Game logic checks: 45 passed. Planner type selection/automatic event type/conditional event field/export checks passed; screenshot capture failed with UnknownVizError. Desktop charts and planner runtime refreshed.
+
+2026-10-31 attendance clarification: EventMissionPanel was removed. Existing AttendancePopup and original prefab slots now bind AttendanceDays missions through AttendanceMissionData; AttendanceService routes claims to the chosen mission. Explicit EventKey is required if multiple eligible attendance groups exist. Binding checks 9 + mission checks 45 passed, with no server writes in these checks. Prior live test granted Stamina 10 to the existing Editor test account; subsequent UI binding checks did not grant rewards.

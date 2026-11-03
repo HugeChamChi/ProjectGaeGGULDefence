@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Spine.Unity;
 using TMPro;
@@ -76,6 +76,7 @@ namespace GaeGGUL.DeckUpgrade
 
         public bool Expanded => expanded;
         public int Selected => selected;
+        public bool IsOwned(int index) => _presenter != null && index >= -1 && index < units.Length && _presenter.GetItem(index).IsOwned;
         public bool IsAnimating => motion != null;
         public bool IsPopupAnimating => popupMotion != null;
         public float PopupScale => detail.localScale.x;
@@ -395,9 +396,10 @@ namespace GaeGGUL.DeckUpgrade
             return Mathf.Lerp(1.06f, 1, Mathf.SmoothStep(0, 1, (t - .72f) / .28f));
         }
 
-        public void UpgradeSelected()
+        public async void UpgradeSelected()
         {
-            if (!_presenter.TryUpgrade(selected)) return;
+            int upgrading = selected;
+            if (!await _presenter.TryUpgradeAsync(upgrading) || this == null || selected != upgrading) return;
             _statsTabs?.ShowUpgradeResult();
             if (selected >= 0) popupPreview.PlayAction(attackAnimations[selected]);
 
@@ -423,7 +425,7 @@ namespace GaeGGUL.DeckUpgrade
             for (int i = 0; i < units.Length; i++)
             {
                 var item = _presenter.GetItem(i);
-                levels[i].text = "Lv." + item.Level;
+                levels[i].text = item.IsOwned ? "Lv." + item.Level : "미보유";
                 if (prices[i] != null) prices[i].text = item.IsMaxLevel ? "MAX" : item.Gold + "/" + item.Cost;
                 if (moneyGauges[i] != null) moneyGauges[i].SetAmount(item.Gold, item.Cost, !item.IsMaxLevel);
             }
@@ -435,7 +437,7 @@ namespace GaeGGUL.DeckUpgrade
             if (chiefCost != null) chiefCost.text = chiefData.IsMaxLevel ? "MAX" : chiefData.Gold + "/" + chiefData.Cost;
             if (chiefGauge != null) chiefGauge.SetAmount(chiefData.Gold, chiefData.Cost, !chiefData.IsMaxLevel);
             upgrade.interactable = data.CanUpgrade;
-            if (cost != null) cost.text = data.IsMaxLevel ? "MAX" : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
+            if (cost != null) cost.text = !data.IsOwned ? "미보유" : data.IsBusy ? (Player.PlayerData.HasSaveConflict ? "재접속 후 저장 확인" : "저장 중…") : data.IsMaxLevel ? "MAX" : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
             if (popupGauge != null) popupGauge.SetAmount(data.Gold, data.Cost, !data.IsMaxLevel);
             if (title != null) title.text = data.Name + "  Lv." + data.Level;
             skillName.text = data.SkillName;
@@ -478,7 +480,8 @@ namespace GaeGGUL.DeckUpgrade
             skillTabFace.color = index == 0 ? C("0094A6") : C("003B44");
             bonusTabFace.color = index == 1 ? C("0094A6") : C("003B44");
             int level = _presenter.GetItem(selected).Level;
-            bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName);
+            bonusContent.GetComponent<DeckUpgradeBonusView>().Refresh(selected < 0 ? "알팡" : units[selected].unitName,
+                selected < 0 ? null : UnitBalanceRuntime.Resolve(units[selected]));
             for (int i = 0; i < BonusLevels.Length; i++)
             {
                 bool locked = level < BonusLevels[i];

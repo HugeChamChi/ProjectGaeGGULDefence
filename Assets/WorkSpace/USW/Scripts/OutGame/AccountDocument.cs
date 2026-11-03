@@ -23,7 +23,8 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
     private UniTaskCompletionSource _save;
     public T Data { get; private set; }
     public bool IsDirty { get; set; }
-    public bool IsReady => Data != null && _owner == _ownerProvider();
+    public bool IsLocked { get; private set; }
+    public bool IsReady => !IsLocked && Data != null && _owner == _ownerProvider();
     public AccountDocument(string table, Action<T> validate, AccountJsonStore store = null, Func<string> ownerProvider = null, Action requestSave = null)
     { _table = table; _validate = validate; _store = store ?? new AccountJsonStore(); _ownerProvider = ownerProvider ?? (() => Backend.UserInDate); _requestSave = requestSave ?? Player.RequestDebouncedSave; }
     private string Key => "Account.Pending.v1." + _table + "." + _owner;
@@ -98,5 +99,23 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
         catch (Exception error) { if (generation == _generation) Debug.LogWarning("[AccountSave] " + _table + ": " + error.Message); }
         finally { done.TrySetResult(); if (ReferenceEquals(_save, done)) _save = null; }
     }
-    public void Clear() { _generation++; Data = null; _owner = null; _confirmed = ""; _attemptSaveId = ""; IsDirty = false; _save = null; }
+    public async UniTask<AccountJsonStore.Row> ReadCleanRowAsync(CancellationToken token)
+    {
+        if (!IsReady) throw new InvalidOperationException("Account document is not ready.");
+        await SaveAsync();
+        if (IsDirty) throw new InvalidOperationException("Account document save is pending.");
+        var row = await _store.ReadAsync(_table, _owner, token);
+        var remote = AccountJsonStore.Parse<T>(row.Json); _validate(remote);
+        if (!IsReady || remote.SaveId != Data.SaveId) throw new InvalidOperationException("Account document changed.");
+        return row;
+    }
+    public void Lock() { if (!IsReady || IsDirty) throw new InvalidOperationException("Account document is busy."); IsLocked = true; }
+    public void Unlock() => IsLocked = false;
+    public void ApplyCommitted(T value)
+    {
+        if (!IsLocked || _owner != _ownerProvider()) throw new InvalidOperationException("Account document changed.");
+        _validate(value); Data = value; _confirmed = value.SaveId; _attemptSaveId = "";
+        IsDirty = false; PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save();
+    }
+    public void Clear() { _generation++; IsLocked = false; Data = null; _owner = null; _confirmed = ""; _attemptSaveId = ""; IsDirty = false; _save = null; }
 }

@@ -4,15 +4,17 @@ using UnityEngine;
 public class Drone_Gamman : HackingDroneSpawner
 {
     private float _pendingResidue;
+    public int LevelConsumptionBonus => Mathf.RoundToInt(LevelStat(currentTier switch { Tier.Normal => UnitBonusStat.HackingConsumedNormal, Tier.Rare => UnitBonusStat.HackingConsumedRare, Tier.Epic => UnitBonusStat.HackingConsumedEpic, _ => UnitBonusStat.HackingConsumedLegend }));
     /// <summary>현재 드론 수/선택지를 반영한 스택 추가 피해 배율.</summary>
     public float StackDamageMultiplier
     {
         get
         {
             var effects = DroneEffects;
-            if (effects == null) return 1f;
+            float levelMultiplier = 1f + LevelStat(UnitBonusStat.HackingStackDamagePercent);
+            if (effects == null) return levelMultiplier;
             float bonus = (_droneManager?.DroneCount ?? 0) * effects.StackDamageBonusPerDrone;
-            return 1f + (effects.MaximumStackDamageBonus > 0f ? Mathf.Min(effects.MaximumStackDamageBonus, bonus) : bonus);
+            return levelMultiplier * (1f + (effects.MaximumStackDamageBonus > 0f ? Mathf.Min(effects.MaximumStackDamageBonus, bonus) : bonus));
         }
     }
     /// <summary>SkillData 액션에서 현재 잔고를 확보하고 순간이동 기폭을 시작한다.</summary>
@@ -20,7 +22,7 @@ public class Drone_Gamman : HackingDroneSpawner
     {
         if (!TryGetHackingTarget(out var runtime, out var target)) return;
         var data = unitData.Hacking;
-        var reservation = runtime.Reserve(target, data.MaxStacksConsumed.Get(currentTier));
+        var reservation = runtime.Reserve(target, data.MaxStacksConsumed.Get(currentTier) + LevelConsumptionBonus);
         if (reservation == null) return;
         float coefficient = data.BaseCoefficient.Get(currentTier)
             + reservation.Amount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
