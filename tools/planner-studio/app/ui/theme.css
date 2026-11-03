@@ -1,0 +1,70 @@
+[id="settingsDialog"] .theme-setting { display:flex; align-items:center; justify-content:space-between; }
+.theme-setting h3 { margin:0; }
+#themeToggle { min-width:76px; padding:8px 16px; border:1px solid #8793a5; border-radius:20px; background:#e9edf3; color:#344258; font-weight:700; cursor:pointer; }
+#themeToggle[aria-checked="true"] { background:#7562cb; border-color:#a697ed; color:#fff; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e0e7f2;
+  --muted: #a1afc2;
+  --line: #39465b;
+  --bg: #171e2a;
+  --blue: #b1a4ff;
+  --purple: #b1a4ff;
+  --green: #7dd4af;
+}
+html[data-theme="dark"], [data-theme="dark"] body {
+  background: #171e2a;
+  color: var(--ink);
+}
+[data-theme="dark"] :is(dialog, .results-panel, .editor-panel, .inspector-panel,
+  .panel, .card, .day, .result-card, .history-item, .import-choice,
+  .reward-chip, .reward-token, .reward-row, .composer, .metric-grid > div,
+  .unit-bonus-strip > div, .tutorial-rich-preview, .tree-scroll,
+  .search-wrap, .number-wrap, .folder-setting input,
+  .draftbar > input, input, select, textarea, button) {
+  background-color: #222d3e;
+  color: var(--ink);
+  border-color: var(--line);
+}
+[data-theme="dark"] :is(th, .metric, .example-box, .route-card, .domain-footnote,
+  .export-file, .stat, .guide-impact, .icon-button, .hash-pill) {
+  background-color: #2b3549;
+  color: #c5cfe0;
+}
+[data-theme="dark"] :is(.field-row, td, th, .editor-top, .graph-panel) {
+  border-color: var(--line);
+}
+[data-theme="dark"] :is(.field-row.focused, .field-row.changed .number-wrap,
+  .result-card.selected, .reward-cell.selected, .reward-cell.drag-over,
+  .unit-list button.active, .record-row.active,
+  .workspace-tabs button.active, .subnav button.active) {
+  background-color: #36304f;
+  border-color: #a697ed;
+  color: #d5ccff;
+}
+[data-theme="dark"] :is(.button.primary, button.primary) {
+  background-color: #7562cb;
+  color: #fff;
+}
+[data-theme="dark"] :is(.guide-description, .guide-properties dd, .example-box p,
+  dialog p, dialog li, .export-instruction, .result-key, .field-info code,
+  .baseline-number, .settings-path, .source-line, .graph-caption) {
+  color: var(--muted);
+}
+[data-theme="dark"] :is(.valid, .export-status, .destination-pill.green) {
+  background-color: #203d36;
+  color: #9ce0bd;
+}
+[data-theme="dark"] :is(.validation, .field-error, .danger) {
+  color: #ffadb9;
+}
+[data-theme="dark"] .validation { background-color: #492a36; }
+[data-theme="dark"] button:hover { border-color: #a697ed; }
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder { color: #97a5ba; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #4b5970; }
+[data-theme="dark"] #guideForm textarea { background: #222d3e; }
+[data-theme="dark"] .planner-content .overview-hero {
+  background: linear-gradient(120deg, #273448, #342e48);
+  color: var(--ink);
+}

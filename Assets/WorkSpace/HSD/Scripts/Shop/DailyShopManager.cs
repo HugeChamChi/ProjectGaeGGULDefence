@@ -18,6 +18,7 @@ namespace GaeGGUL.Shop
         private HashSet<int> _purchasedItemIDs = new HashSet<int>();
         private string _inDate = string.Empty;
         private string _owner;
+        private string _period;
         private int _generation;
         private bool _ready;
         private bool _buying;
@@ -34,7 +35,7 @@ namespace GaeGGUL.Shop
 
         public void Clear()
         {
-            _generation++; _owner = null; _ready = false; _buying = false;
+            _generation++; _owner = null; _period = null; _ready = false; _buying = false;
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
             _inDate = string.Empty;
@@ -53,7 +54,9 @@ namespace GaeGGUL.Shop
                 RequireCurrent(generation);
                 // Retain the existing row before rollover. A failed GET must never be interpreted as no row.
                 if (row != null) _inDate = row["inDate"].ToString();
-                if (IsNewDay || row == null)
+                _period = GGD.Periods.PeriodSerialization.Key(ServerClock.UtcNow, false);
+                string savedPeriod = row?.GetString("DailyPeriodKey", string.Empty);
+                if (row == null || (!string.IsNullOrEmpty(savedPeriod) ? savedPeriod != _period : IsNewDay))
                 {
                     GenerateDailyItems();
                     await SaveAsync();
@@ -144,6 +147,7 @@ namespace GaeGGUL.Shop
 
             List<int> purchasedIds = new List<int>(_purchasedItemIDs);
             param.Add(COLUMN_PURCHASED_ITEM_IDS, purchasedIds);
+            param.Add("DailyPeriodKey", _period);
 
             using var timeout = new CancellationTokenSource();
             using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(15), DelayType.Realtime);
@@ -174,52 +178,21 @@ namespace GaeGGUL.Shop
             if (!_ready || _buying || _owner != CurrentOwner || !Balances.IsReady) return false;
             var item = FindItem(shopID);
             if (item == null || !_dailyItems.Exists(value => value.ShopID == shopID)) return false;
-            if (_purchasedItemIDs.Contains(shopID)) return false;
+            if (IsSoldOut(shopID)) return false;
             _buying = true;
             int generation = _generation;
             var balances = Balances;
-            var snapshot = balances.Data;
             try
             {
-                bool success = false;
-                switch (item.CurrencyType)
-                {
-                    case CurrencyType.Free:
-                        success = true;
-                        break;
-                    case CurrencyType.Diamond:
-                        success = balances.SpendDiamond(item.Price);
-                        break;
-                    case CurrencyType.Gold:
-                        success = balances.SpendGold(item.Price);
-                        break;
-                }
-
-                if (success)
-                {
-                    // 재화 차감을 먼저 서버에 확정한 뒤 보상 지급/구매완료를 저장한다.
-                    // (역순이면 재화 차감 전에 구매완료가 먼저 서버에 남아, 크래시 시 무료 획득이 발생할 수 있음)
-                    bool paid = await balances.TrySaveAsync();
-                    RequireCurrent(generation);
-                    if (!ReferenceEquals(snapshot, balances.Data)) return false;
-                    if (!paid)
-                    {
-                        // No reward was issued. Compensate the locally reserved price, even if acknowledgement was lost.
-                        if (item.CurrencyType == CurrencyType.Diamond) balances.AddDiamond(item.Price);
-                        else if (item.CurrencyType == CurrencyType.Gold) balances.AddGold(item.Price);
-                        return false;
-                    }
-                    GrantReward(item);
-                    _purchasedItemIDs.Add(shopID);
-                    bool rewardSaved = await balances.TrySaveAsync();
-                    RequireCurrent(generation);
-                    if (!ReferenceEquals(snapshot, balances.Data)) return false;
-                    if (!rewardSaved) { _ready = false; return false; }
-                    await SaveAsync();
-                    return true;
-                }
-
-                return false;
+                if (!ServerClock.IsSynced) return false;
+                string day = GGD.Periods.PeriodSerialization.Key(ServerClock.UtcNow, false);
+                if (day != _period) { _ready = false; return false; }
+                if (!balances.TryPurchaseShopItem(item, day)) return false;
+                _purchasedItemIDs.Add(shopID);
+                // The receipt and inventory now live with the price in PlayerData. No second row write.
+                bool saved = await balances.TrySaveAsync();
+                RequireCurrent(generation);
+                return saved;
             }
             catch (Exception error)
             {
@@ -232,7 +205,8 @@ namespace GaeGGUL.Shop
 
         public bool IsSoldOut(int shopID)
         {
-            return _purchasedItemIDs.Contains(shopID);
+            return _purchasedItemIDs.Contains(shopID) || (ServerClock.IsSynced &&
+                Balances.IsShopPurchased(GGD.Periods.PeriodSerialization.Key(ServerClock.UtcNow, false), shopID));
         }
     }
 }

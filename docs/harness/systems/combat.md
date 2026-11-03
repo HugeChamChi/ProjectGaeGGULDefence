@@ -2,10 +2,32 @@
 system: combat
 title: 공격·스킬·생산 (유닛 전투 루프·피해 계산·투사체)
 keywords: 기본 공격, 스킬, skill, 스킬 게이지, 마나, 피해, 데미지, damage, 피해 계산, 치명, crit, 공격력, 공격 속도, 공속, 투사체, projectile, 발사체, 식량 생산, food, unitbase, unitcombat, unitstats, unitdata, skilldata, iskillaction, ieffect, 패시브, passive, 스탯 버프, buffmanager, 개구리, frog, 디시그망, disigman, 딜 그래프, 딜그래프, 하단 HUD, 스와이프, 딜표
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-01
+commit: 5d185465
 ---
 # 공격·스킬·생산 카드
+
+## 2026-11-01 버프 렌더 배칭
+- 추가 `MergeSharedLayers` 실험은 공통 정렬의 파츠별 순서를 일반/발광×앞/뒤 밴드로 합친다. 테스트20유닛·80연출에서 FX **3배치 고정**, 전체 평균약78/최대80. 기본값false로 본게임 정렬에는 적용하지 않는다. 파츠의 개수·스프라이트·색·변환은 유지하지만 일반/발광의 세부 겹침 순서는 달라질 수 있다. `BatchingAtlasExperiment`의 `FX <=4 BATCHES`와 전용 측정 버튼으로 비교한다. 원시 값/유닛·UI 기여도는 `outputs/four-batch-fx/RESULT.md`.
+- 테스트 씬은 `BatchingAtlasExperiment`로 유닛/활성 UI Image의 임시 공용 아틀라스와 렌더 기여도를 비교한다. `SharedFxLayers`는 테스트 전용 공통 앞/뒤 정렬(30000/-30000)이며 **본게임 유닛별 정렬 정책을 변경하지 않는다**. 원래 정렬을 유지한 아틀라스만으로는 약178→171, 공통 FX 레이어를 쓰면 약89, 유닛 그림자 패스까지 제외하면 약84 Batches. 20유닛·80연출/2초재발동, 테스트 IMGUI를 숨긴 Editor 측정이다. F8로 실험 버튼을 숨기거나 보인다. 원시 값/기여도는 `outputs/stat-buff-atlas-experiment/RESULT.md`를 본다.
+- `StatBuffFxPool`은 씬 공용 `StatBuffMeshBatch`에 도형을 등록한다. 원본 SpriteRenderer는 모션/색/정렬 계산을 유지하고 직접 출력은 끈다. 같은 레이어·sortingOrder·머티리얼·텍스처의 도형을 유닛/스타일 구분 없이 메시 하나로 합친다. 유닛 앞뒤 정렬과 일반/발광 구분은 유지하므로 전체가 항상 1배치가 되는 것은 아니다.
+- `UnitBuffVisualSettings.BatchShader`는 `Assets/WorkSpace/USW/Shaders/Fx/StatBuffBatch.shader`를 직접 참조한다. Shader.Find만으로 빌드 포함을 가정하지 않는다. 공용 URP/SRP 설정은 변경하지 않는다.
+- `Assets/Scenes/StatBuffBatchingTest.unity`는 5종 유닛 20개 × 공격/속도/혼합/공격불가 4종(80연출)을 2초마다 재발동하는 시각 스트레스 씬이다. 실제 전투의 상호 배타적인 버프 수치 정책은 바꾸지 않는다. `StatBuffBatchingTest`가 실제 유닛 렌더 정렬을 매 프레임 따라가며 버프 OFF/기존 SpriteRenderer/통합 메시를 120프레임씩 비교한다.
+- `Tools/verification/StatBuffBatchingTestAuthoring.cs`의 `CheckBatching`은 호환 키 수와 공용 메시 수 일치/중복 출력 방지/OFF 해제를, `CheckPoolLifecycle`은 4시안·반환·재사용·자연 종료·메시/머티리얼 해제를 검사한다. Editor 측정 결과는 `outputs/stat-buff-batching/OPTIMIZATION.md`를 본다. FPS/실기기 성능 보장은 별도다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/StatBuffMeshBatch.cs` | 공용 메시 생성·재사용·정렬·해제 |
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/StatBuffFxPool.cs` | 씬 공용 아틀라스와 메시 배처 소유 |
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/StatBuffFx.cs` | 기존 도형 모션과 색 계산, NewRenderer 등록 |
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/UnitBuffVisualSettings.cs` | 스타일/머티리얼/배칭 셰이더 참조 |
+| `Assets/WorkSpace/USW/Resources/UnitBuffVisualSettings.asset` | 본게임 공용 버프 설정 및 셰이더 연결 |
+| `Assets/WorkSpace/USW/Shaders/Fx/StatBuffBatch.shader` | 기존 일반/발광 블렌딩을 정점 색과 아틀라스로 출력 |
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/StatBuffBatchingTest.cs` | 20유닛·80연출 동시 재생과 기존/통합 A/B UI |
+| `Tools/verification/StatBuffBatchingTestAuthoring.cs` | 씬 저작·Play 검증·드로우콜 측정 도구 |
+| `Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/BatchingAtlasExperiment.cs` | 테스트 전용 런타임 유닛/UI 아틀라스, 8조합 기여도, 공통 FX 정렬/그림자 실험 |
+| `Tools/verification/BatchingAtlasExperimentChecks.cs` | 실험 조작·실제 공유 확인·제거 후 원복/텍스처 해제 검사 |
+| `Tools/verification/FourBatchFxChecks.cs` | 4배치 목표 검증·누락/중복/OFF 검사·동일 프레임 전후 캡처·프리뷰 조작 |
 
 **한 줄 요약**: 모든 유닛은 `UnitBase` + 세 컴포넌트(전투 루프 `UnitCombatComponent`, 수치 `UnitStatsModifier`, 식량 `UnitResourceComponent`)로 돈다. 기본 공격·스킬의 동작은 `UnitData`의 `SkillData`(행동 `ISkillAction` + 적중 효과 `IEffect`)로 조립하고, 배치·제거 같은 생애 주기 동작만 `UnitBase` 훅을 재정의한다.
 

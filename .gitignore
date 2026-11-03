@@ -112,6 +112,16 @@ production/session-state/active.md
 /Assets/Resources
 /Assets/_Recovery
 /Assets/AddressableAssetsData
+!/Assets/AddressableAssetsData/
+/Assets/AddressableAssetsData/*
+!/Assets/AddressableAssetsData/AssetGroups/
+/Assets/AddressableAssetsData/AssetGroups/*
+!/Assets/AddressableAssetsData/AssetGroups/ResearchIcons.asset
+!/Assets/AddressableAssetsData/AssetGroups/ResearchIcons.asset.meta
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/
+/Assets/AddressableAssetsData/AssetGroups/Schemas/*
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/ResearchIcons_*.asset
+!/Assets/AddressableAssetsData/AssetGroups/Schemas/ResearchIcons_*.asset.meta
 Assets/outputs.meta
 /apk파일모음
 
@@ -130,6 +140,22 @@ Assets/outputs.meta
 Assets/WorkSpace/HSD/GEMINI.md.meta
 /docs
 /GGD-Planner
+
+# Share planner/MCP source; keep other local tools and documentation ignored.
+!/Tools/
+/Tools/*
+!/Tools/planner-studio/
+!/Tools/backnd-mcp/
+!/docs/
+/docs/*
+!/docs/technical/
+/docs/technical/*
+!/docs/technical/unit-balance-runtime-integration-plan.md
+!/docs/technical/betan-level-bonus-runtime.md
+!/Tools/verification/
+/Tools/verification/*
+!/Tools/verification/BetanLevelBonusAuthoring.cs
+!/Tools/verification/BetanLevelBonusChecks.cs
 
 # UI Studio distribution-only team client metadata and per-user OAuth config
 **/ArtTools/team.json

@@ -21,7 +21,7 @@ public class AccountSwitchGateway
         if (!CanLeave) return false;
         await Player.UpdateDirtyDataAsync();
         Global.IClearable[] managers = { Player.PlayerData, Player.Profile, Player.Mail, Player.Character, Player.Chief,
-            Player.Shop, Player.Daily, Player.Tutorial, Player.RoundRecords };
+            Player.Shop, Player.Daily, Player.Tutorial, Player.RoundRecords, Player.DailyData, Player.WeeklyData };
         foreach (var manager in managers) if (manager.IsDirty) return false;
         return CanLeave;
     }

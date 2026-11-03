@@ -27,7 +27,8 @@ namespace GaeGGUL.DeckUpgrade
             var title = Label("EffectTitle", view.bubble, source, 22, 16, 656, 50, 32);
             title.text = "공격속도 증가"; title.color = new Color32(255, 226, 146, 255);
             var body = Label("EffectBody", view.bubble, source, 22, 84, 656, 120, 29);
-            view.Body = "5초간 전체 유닛 공격속도 15% 증가.\n중첩 없이 지속시간만 갱신.";
+            var bonuses = new UnitLevelBonusController(UnitBonusChart.Resolve("AlphanChief", new System.Collections.Generic.List<UnitLevelBonusDefinition>()), 12);
+            view.Body = $"{bonuses.GetStat(UnitBonusStat.ChiefSpeedDuration):0.##}초간 전체 유닛 공격속도 {bonuses.GetStat(UnitBonusStat.ChiefSpeedPercent)*100f:0.##}% 증가.\n중첩 없이 지속시간만 갱신.";
             body.text = DeckUpgradeBonusView.HighlightNumbers(view.Body);
             view.group = view.bubble.gameObject.AddComponent<CanvasGroup>();
             view.Hide(); return view;

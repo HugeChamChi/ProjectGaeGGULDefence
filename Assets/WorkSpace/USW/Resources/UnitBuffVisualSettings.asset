@@ -17,6 +17,7 @@ MonoBehaviour:
   Mixed: {fileID: 11400000, guid: 7a305d28854e2fd44b7e332569c5b6c2, type: 2}
   Disabled: {fileID: 11400000, guid: 1fca5b9a255ba054abc41a7d1025117d, type: 2}
   AdditiveMaterial: {fileID: 2100000, guid: 260f23e2645fb5d4ea147c72dd0d7479, type: 2}
+  BatchShader: {fileID: 4800000, guid: 1220e004d2cba9344bcb3ee69a5cee5d, type: 3}
   PermanentSeconds: 1.5
   Scale: 0.55
   FrontOffset: 3

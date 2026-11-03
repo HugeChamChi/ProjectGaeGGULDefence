@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     private int _bossKills;
     private string _recordAccount;
     private string _recordMode;
+    private string _eventRunKey;
     /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
     public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
     /// <summary>Snapshot captured before StopRun resets progression values.</summary>
@@ -113,6 +114,7 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentState = GameState.Playing;
+        _eventRunKey = IsProductionBattle ? Player.PlayerData.Data.PendingEntryId : null;
         if (IsProductionBattle) Player.PlayerData.ConsumeEntryReservation();
         // Only production endless battles contribute. Capture ownership before callbacks can outlive login.
         _recordAccount = IsProductionBattle && Player.RoundRecords.OwnsAccount ? Player.RoundRecords.Account : null;
@@ -169,6 +171,15 @@ public class GameManager : MonoBehaviour
     {
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
+        if (IsProductionBattle && _recordAccount == Player.RoundRecords.Account)
+        {
+            try
+            {
+                GGD.Events.EventDataBridge.BattleCompleted(_recordAccount, _eventRunKey,
+                    gameObject.scene.name == "HardIngameScene", _resultSnapshot.SurvivalSeconds, _resultSnapshot.Round);
+            }
+            catch (Exception error) { Debug.LogException(error); }
+        }
         var accountReceipt = _accountExperience.Finish(isWin);
         _resultSnapshot.AccountExperience = accountReceipt?.Experience ?? 0;
         _resultSnapshot.HasAccountExperience = accountReceipt != null;

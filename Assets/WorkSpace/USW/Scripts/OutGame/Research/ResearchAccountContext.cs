@@ -1,8 +1,11 @@
 using System;
 
 /// <summary>로그인 구현과 분리된 계정 전환 경계. 실제 인증 공급자는 후속 작업에서 연결한다.</summary>
-public sealed class ResearchAccountContext
+public sealed class ResearchAccountContext : IDisposable
 {
+    public ResearchAccountContext() { Player.PlayerData.OnUpdateUI += AccountUpdated; AccountUpdated(null); }
+    private void AccountUpdated(PlayerData data) => SetAccountKey(Player.PlayerData.IsReady ? BackEnd.Backend.UserInDate : ResearchSaveAddress.LocalAccount);
+    public void Dispose() => Player.PlayerData.OnUpdateUI -= AccountUpdated;
     /// <summary>기본값은 local이며 Google/뒤끝 로그인 상태를 추정하지 않는다.</summary>
     public string AccountKey { get; private set; } = ResearchSaveAddress.LocalAccount;
     /// <summary>A→B→A도 서로 다른 화면 요청으로 구별하는 세대 번호.</summary>

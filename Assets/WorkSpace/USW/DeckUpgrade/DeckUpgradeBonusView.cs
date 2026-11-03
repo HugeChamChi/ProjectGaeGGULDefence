@@ -9,7 +9,7 @@ namespace GaeGGUL.DeckUpgrade
     {
         private static readonly string[][] Labels =
         {
-            new[] { "스킬 쿨타임 20% 감소", "[자폭드론] 폭발 시 남은 쿨타임 5% 감소", "스킬 피해 20% 증가", "[자폭드론] 쿨타임 감소 효과 5% → 10%", "치명타 확률/피해 10% 증가." },
+            new string[5], // Authored bonuses come from UnitData; remaining rows are legacy previews.
             new[] { "[해킹] 최대 스택 +5", "스킬 사용 시 20% 확률로 [해킹] +1", "스킬 충전 공격 횟수 -1", "스킬 사용 시 [해킹] 추가 부여 확정", "[해킹] 최대 스택 추가 +10" },
             new[] { "공격력 10% 증가", "스킬 쿨타임 20% 감소", "스킬 피해 20% 증가", "스킬 사용 시 [해킹] 추가 소모 +1", "치명타 확률/피해 10% 증가." },
             new[] { "공격력 10% 증가", "스킬 충전 공격 횟수 -1", "공격속도 10% 증가", "일반공격 시 25% 확률로 추가 공격", "일반공격 피해 20% 증가" },
@@ -50,17 +50,23 @@ namespace GaeGGUL.DeckUpgrade
             }
         }
 
-        public void Refresh(string unitName)
+        public void Refresh(string unitName, UnitData data = null)
         {
             if (currentUnit != unitName) { popup?.HideImmediately(); effectTooltip?.Hide(); }
             currentUnit = unitName;
             int unit = unitName == "베탕" ? 0 : unitName == "델탕" ? 1 : unitName == "감망" ? 2 : unitName == "디시그망" ? 3 : unitName == "젤탕" ? 4 : 5;
             for (int i = 0; i < descriptions.Length; i++)
             {
-                string text = HighlightNumbers(Labels[unit][i]).Replace("[해킹]", Mark("해킹", "hack_stack"))
+                var presentation=UnitBonusChart.GetPresentation(data!=null?UnitBalanceRuntime.GetUnitKey(data.name):"AlphanChief",(i+1)*3);
+                string description = presentation?.Text ?? data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
+                    ?? Labels[unit][i] ?? string.Empty;
+                description=description.Replace("%p","%");
+                string text = presentation==null||presentation.HighlightNumbers?HighlightNumbers(description):description;
+                if(presentation==null||presentation.LinkTerms)text=text.Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))
                     .Replace("[액티브 스킬]", Mark("액티브 스킬", "chief_skill"));
-                if (unit == 5 && i == 3)
+                if (presentation?.EffectLink=="ChiefAttackSpeed")text=text.Replace("{공격속도효과}","<link=\""+AttackSpeedBuffId+"\"><color=#91E6A6>공격속도 증가</color></link>");
+                if (presentation==null && unit == 5 && i == 3)
                     text = text.Replace("공격속도 증가", "<link=\"" + AttackSpeedBuffId + "\"><color=#91E6A6>공격속도 증가</color></link>");
                 if (descriptions[i].text == text) continue;
                 descriptions[i].text = text; links[i].RefreshHitArea();

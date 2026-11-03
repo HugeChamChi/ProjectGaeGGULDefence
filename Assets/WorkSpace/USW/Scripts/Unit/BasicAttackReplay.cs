@@ -8,6 +8,7 @@ public sealed class BasicAttackReplay
     public UnitBase Source { get; }
     /// <summary>처음 지정한 대상. 다음 보스로 바꾸지 않는다.</summary>
     public BossBase Target { get; }
+    public float RegularDamageMultiplier { get; set; } = 1f;
     /// <summary>공격 시작 시 위치.</summary>
     public Vector3 Origin { get; }
     /// <summary>실제 공격 외형. 소환 드론은 본체 대신 드론을 복제한다.</summary>

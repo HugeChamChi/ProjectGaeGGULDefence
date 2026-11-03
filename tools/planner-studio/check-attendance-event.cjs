@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('node:assert/strict'),excel=require('./app/content-workbook.cjs'),e=excel.engine(),p=e.Studio.create();
+const attendanceMissions=p.tables.Missions.filter(m=>m.DataKey==='AttendanceDays');
+assert.equal(attendanceMissions.length,7);
+const plan=p.tables.MissionEvents.find(ev=>ev.EventKey==='BasicAttendance');
+assert(plan);assert.equal(plan.Enabled,false);
+const bytes=excel.write(p,excel.bundles.missions);
+assert.equal(excel.inspect(bytes).names.length,2);
+const restored=excel.read(bytes,p).project;
+assert.equal(restored.tables.Missions.filter(m=>m.DataKey==='AttendanceDays').length,7);
+console.log('Attendance event: unified event missions migration, 7-day attendance missions and disabled default passed');
