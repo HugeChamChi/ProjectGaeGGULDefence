@@ -34,13 +34,13 @@ public static class DroneSelectionPresets
                 card.chooseName="드론 생성 공정"; card.description="에픽 이상 베탕·감망·델탕의 전투 드론이 1기 추가됩니다. 추가 드론은 일반 공격과 알팡 액티브에 참여하며, 본체 스킬은 사용하지 않습니다.";
                 card.tier=Tier.Legend; e.Count=1; break;
             case DroneSelectionKind.BetanPeriodicBomb:
-                card.chooseName="만나서 반가워!"; card.description="10초마다 배치된 베탕 각각의 자폭 드론 1기를 추가 생성합니다.";
+                card.chooseName="만나서 반가워!"; card.description="{seconds}초마다 배치된 베탕 각각의 자폭 드론 {count}기를 추가 생성합니다.";
                 e.Interval=10; e.Count=1; break;
             case DroneSelectionKind.BetanAttackSpeed:
                 card.chooseName="다 쏴 제껴버려!!!!"; card.description="소유 유닛과 관계없이 모든 전투 드론의 공격 속도가 {value}% 증가합니다.";
                 card.tier=Tier.Epic; e.Value=0.2f; break;
             case DroneSelectionKind.BetanFleetBomb:
-                card.chooseName="슈슝 콰광!!!!!"; card.description="20초마다 필드에 있는 베탕의 전투 드론 수만큼 자폭 드론이 추가 생성됩니다 (최대 10기)";
+                card.chooseName="슈슝 콰광!!!!!"; card.description="{seconds}초마다 필드에 있는 베탕의 전투 드론 수만큼 자폭 드론이 추가 생성됩니다 (최대 {count}기)";
                 card.tier=Tier.Legend; e.Interval=20; e.Count=10; break;
             case DroneSelectionKind.GammanFrequency:
                 card.chooseName="주파수 동조"; card.description="전장에 있는 전투 드론 1기당 감망의 해킹 추가 피해가 {value}% 증가합니다.";

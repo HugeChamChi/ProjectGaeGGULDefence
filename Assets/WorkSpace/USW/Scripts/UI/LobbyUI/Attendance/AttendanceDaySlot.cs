@@ -29,6 +29,7 @@ public sealed class AttendanceDaySlot : MonoBehaviour
     public Button Button => _button;
     /// <summary>Current presentation state.</summary>
     public State Current => _state;
+    public void SetRewardText(string text) { if (_amount != null) _amount.text = text; }
 
     /// <summary>Shows the reward and state for one day.</summary>
     public void Bind(int day, Sprite icon, int amount, State state)

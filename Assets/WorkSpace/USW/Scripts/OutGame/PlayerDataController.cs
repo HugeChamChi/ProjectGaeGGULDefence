@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
@@ -18,6 +18,9 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private readonly string _journalPrefix;
     private string _account;
     private string _confirmedSaveId = "";
+    private readonly System.Collections.Generic.List<string> _attemptedSaveIds = new();
+    private double _retryAfter;
+    private int _failureCount;
     private int _generation;
     private long _revision;
     private AccountProgressionConfig _accountProgression;
@@ -86,6 +89,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
         _sessionCts?.Cancel(); _sessionCts?.Dispose(); _sessionCts = null;
         _save?.TrySetResult(false); _save = null;
         _data = null; _account = null; IsDirty = false; HasSaveConflict = false;
+        _attemptedSaveIds.Clear(); _failureCount = 0; _retryAfter = 0;
         _backendData?.ClearSession();
         SetStatus(""); RefreshUI(null); OnStaminaRecoveryTimer?.Invoke(0);
     }
@@ -117,9 +121,13 @@ public class PlayerDataController : IDisposable, Global.IClearable
                 PlayerDataJournal pending = null;
                 try { pending = JsonUtility.FromJson<PlayerDataJournal>(PlayerPrefs.GetString(JournalKey)); }
                 catch (ArgumentException) { HasSaveConflict = true; }
-                if (pending?.Data == null) HasSaveConflict = true;
+                if (pending?.Data == null || string.IsNullOrEmpty(pending.Data.SaveId)) HasSaveConflict = true;
                 else if (pending.Data.SaveId == _confirmedSaveId) DeleteJournal();
-                else if ((pending.BaseSaveId ?? "") == _confirmedSaveId) { _data = pending.Data; IsDirty = true; }
+                else if ((pending.BaseSaveId ?? "") == _confirmedSaveId || pending.AttemptedSaveIds?.Contains(_confirmedSaveId) == true)
+                {
+                    _data = pending.Data; IsDirty = true;
+                    if (pending.AttemptedSaveIds != null) _attemptedSaveIds.AddRange(pending.AttemptedSaveIds);
+                }
                 else HasSaveConflict = true;
             }
             if (!HasSaveConflict && _accountProgression != null)
@@ -141,6 +149,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public void AcceptServerAfterConflict()
     {
         if (!HasSaveConflict || _account != _accountProvider()) return;
+        if (_backendData.HasWriteConflict) { SetStatus("재접속하여 서버 기록을 먼저 확인해 주세요."); return; }
         _accountProgression?.Apply(_data.PlayerLevel, _data.PlayerExp, 0, out _, out _);
         DeleteJournal(); HasSaveConflict = false; IsDirty = false;
         NormalizeAccountProgression();
@@ -161,7 +170,6 @@ public class PlayerDataController : IDisposable, Global.IClearable
     { _data = data; OnUpdateUI?.Invoke(data); OnPlayerProfilePopupUpdated?.Invoke(data); OnPresentationSettingsChanged?.Invoke(); }
     private async UniTaskVoid RecoveryLoopAsync(int generation, CancellationToken token)
     {
-        long nextRetry = _clock() + RetryDelaySeconds;
         try
         {
             while (Matches(generation))
@@ -170,7 +178,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
                 RecoverStamina();
                 OnStaminaRecoveryTimer?.Invoke(ClockReady && _data != null && _data.Stamina < _data.MaxStamina
                     ? _backendData.GetTimeUntilNextStaminaRecovery(_data.LastStaminaRecoveryTime, _clock()) : 0);
-                if (IsDirty && _clock() >= nextRetry) { nextRetry = _clock() + RetryDelaySeconds; await TrySaveAsync(); }
+                if (IsDirty && _failureCount > 0 && Time.realtimeSinceStartupAsDouble >= _retryAfter) await TrySaveAsync();
                 await UniTask.Delay(TimeSpan.FromSeconds(1), DelayType.Realtime, cancellationToken: token);
             }
         }
@@ -223,12 +231,33 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     /// <summary>Claims today's attendance reward and records the day in the same durable snapshot.</summary>
     /// <returns>The claimed day (1-7), or 0 when nothing was granted.</returns>
+    public void VisitEventMissions(DateTimeOffset now) { if(IsReady && GGD.Events.EventMissions.Visit(_data,now))SaveAndRefresh(); }
+    public void RecordEventBattle(GGD.Events.DataOccurrence occurrence) { if(IsReady && GGD.Events.EventMissions.Battle(_data,occurrence))SaveAndRefresh(); }
+    public bool ClaimEventMission(string key,DateTimeOffset now) { if(!IsReady || !GGD.Events.EventMissions.Claim(_data,key,now))return false;SaveAndRefresh();return true; }
+    public int TryClaimAttendanceEvent(GGD.Events.AttendanceEventDefinition definition, DateTimeOffset now)
+    {
+        if (!IsReady) return 0;
+        int day = GGD.Events.AttendanceEventRuntime.Claim(_data, definition, now);
+        if (day > 0) SaveAndRefresh();
+        return day;
+    }
     public int TryClaimAttendance(AttendanceConfig config, string today)
     {
         if (!IsReady || config == null || !config.IsValid) return 0;
-        var status = AttendanceRules.Evaluate(_data.AttendanceCount, _data.AttendanceLastDay, today);
+        RegisterAttendanceVisit(today);
+        var status = AttendanceRules.Evaluate(_data, today);
         if (!status.CanClaim) return 0;
         var reward = config.Rewards[status.ClaimableDay - 1];
+        if (reward.Items != null && reward.Items.Length > 0)
+        {
+            var next = RewardInventory.Apply(_data, config.RewardCatalog, "attendance:" + Guid.NewGuid().ToString("N"), reward.Items);
+            next.AttendanceCount = status.ClaimableDay;
+            next.AttendanceLastDay = today;
+            next.AttendancePendingDays--;
+            _data = next;
+            SaveAndRefresh();
+            return status.ClaimableDay;
+        }
         int balance = reward.Currency switch
         {
             MailRewardConfig.Currency.Gold => _data.Gold,
@@ -243,7 +272,12 @@ public class PlayerDataController : IDisposable, Global.IClearable
             default: _data.Stamina += reward.Amount; break;
         }
         _data.AttendanceCount = status.ClaimableDay; _data.AttendanceLastDay = today;
+        _data.AttendancePendingDays--;
         SaveAndRefresh(); return status.ClaimableDay;
+    }
+    public void RegisterAttendanceVisit(string today)
+    {
+        if (IsReady && AttendanceRules.Accrue(_data, today)) SaveAndRefresh();
     }
     /// <summary>Reserves one paid entry. Failed navigation/retry reuses the reservation without charging twice.</summary>
     public async UniTask<bool> ReserveEntryAsync(int cost)
@@ -312,18 +346,143 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     /// <summary>Marks an existing direct data mutation at a legacy boundary as a durable change.</summary>
     public void MarkDirty() { if (IsReady) SaveAndRefresh(); }
+
+    public void SetUpgradeProgress(ResearchSaveData tree, string importId = null)
+    {
+        if (!IsReady) throw new InvalidOperationException("Upgrade account is unavailable.");
+        if (tree == null || string.IsNullOrWhiteSpace(tree.TreeKey)) throw new ArgumentException("Upgrade tree key required.");
+        tree.GetLevels(tree.TreeKey);
+        var next = JsonUtility.FromJson<ResearchSaveData>(JsonUtility.ToJson(tree));
+        var progress = _data.UpgradeProgress;
+        progress.Validate();
+        var existing = progress.Trees.Find(x => x.TreeKey == tree.TreeKey);
+        if (existing != null && JsonUtility.ToJson(existing) == JsonUtility.ToJson(next) && importId == null) return;
+        if (existing != null) progress.Trees.Remove(existing);
+        progress.Trees.Add(next); progress.Trees.Sort((a, b) => string.CompareOrdinal(a.TreeKey, b.TreeKey));
+        if (importId != null) progress.LocalImportId = importId;
+        SaveAndRefresh();
+    }
+
+    public bool IsShopPurchased(string day, int id) => IsReady && _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id);
+
+    /// <summary>Price, reward and daily receipt commit in one durable/account snapshot.</summary>
+    public bool TryPurchaseShopItem(ShopItemData item, string day)
+    {
+        if (!IsReady || item == null || item.ItemID < 0 || string.IsNullOrEmpty(day)) return false;
+        if (item.Type == ItemType.Character && item.ItemID == 0) return false;
+        if (IsShopPurchased(day, item.ShopID)) return true;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        if (!DeductPurchase(next, item.CurrencyType, item.Price) || item.Amount <= 0) return false;
+        try
+        {
+            if (item.Type == ItemType.Character) AddPurchasedUnit(next, item.ItemID, item.Amount);
+            else if (item.Type == ItemType.Currency && (CurrencyType)item.ItemID == CurrencyType.Gold) next.Gold = checked(next.Gold + item.Amount);
+            else if (item.Type == ItemType.Currency && (CurrencyType)item.ItemID == CurrencyType.Diamond) next.Diamond = checked(next.Diamond + item.Amount);
+            else return false; // Unsupported legacy item rewards must never charge the player.
+        }
+        catch (OverflowException) { return false; }
+        if (next.ShopPurchaseDay != day) { next.ShopPurchaseDay = day; next.ShopPurchases.Clear(); }
+        next.ShopPurchases.Add(item.ShopID);
+        _data = next; SaveAndRefresh(); return true;
+    }
+
+    public bool TryPurchaseCharacters(int price, ICharacterData[] characters)
+    {
+        if (!IsReady || characters == null || characters.Length == 0) return false;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        if (!DeductPurchase(next, CurrencyType.Diamond, price)) return false;
+        try
+        {
+            foreach (var character in characters)
+            {
+                if (character == null || character.Id <= 0) return false;
+                AddPurchasedUnit(next, character.Id, 1);
+            }
+        }
+        catch (OverflowException) { return false; }
+        _data = next; SaveAndRefresh(); return true;
+    }
+
+    private static bool DeductPurchase(PlayerData next, CurrencyType currency, int price)
+    {
+        if (price < 0) return false;
+        if (currency == CurrencyType.Free) return price == 0;
+        if (currency == CurrencyType.Gold && next.Gold >= price) { next.Gold -= price; return true; }
+        if (currency == CurrencyType.Diamond && next.Diamond >= price) { next.Diamond -= price; return true; }
+        return false;
+    }
+
+    private static void AddPurchasedUnit(PlayerData next, int id, int amount)
+    {
+        if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+        var owned = next.RewardInventory.Owned.Find(x => x.Type == RewardType.Unit && x.TargetId == id);
+        if (owned == null) { owned = new RewardOwnedEntry { Type = RewardType.Unit, TargetId = id }; next.RewardInventory.Owned.Add(owned); }
+        owned.Count = checked(owned.Count + amount);
+    }
+
+    public void CompleteTutorial(string id)
+    {
+        if (!IsReady || string.IsNullOrEmpty(id) || _data.CompletedTutorials.Contains(id)) return;
+        _data.CompletedTutorials.Add(id); SaveAndRefresh();
+    }
+
+    public bool SelectChief(int id)
+    {
+        if (!IsReady || id < 0) return false;
+        if (_data.SelectedChiefId != id) { _data.SelectedChiefId = id; SaveAndRefresh(); }
+        return true;
+    }
+    public bool SelectProfile(int icon, int frame)
+    {
+        if (!IsReady || icon < 0 || frame < 0) return false;
+        if (_data.SelectedIconId != icon || _data.SelectedFrameId != frame)
+        { _data.SelectedIconId = icon; _data.SelectedFrameId = frame; SaveAndRefresh(); }
+        return true;
+    }
+    public void AddOwnedCharacter(int id, int count)
+    {
+        if (!IsReady || id <= 0 || count == 0) return;
+        int existing = _data.RewardInventory.Count(RewardType.Unit, id);
+        if ((long)existing + count < 0 || (long)existing + count > int.MaxValue) return;
+        AddPurchasedUnit(_data, id, count); SaveAndRefresh();
+    }
+    public async UniTask<bool> GrantRewardAsync(RewardCatalog catalog, string grantId, RewardAmount[] rewards)
+    {
+        if (!IsReady) return false;
+        var next = RewardInventory.Apply(_data, catalog, grantId, rewards);
+        if (next != null) { _data = next; SaveAndRefresh(); }
+        return await TrySaveAsync();
+    }
     /// <inheritdoc />
     public async UniTask SaveAsync() { await TrySaveAsync(); }
     /// <summary>Serializes writes; only a confirmed matching revision clears dirty state.</summary>
     public async UniTask<bool> TrySaveAsync()
     {
         if (!IsReady || _backendData == null) return false;
-        if (_save != null) return await _save.Task;
         if (!IsDirty) return true;
-        var operation = _save = new UniTaskCompletionSource<bool>();
-        int generation = _generation; bool success = false;
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_sessionCts.Token);
+        if (_save == null)
+        {
+            if (Time.realtimeSinceStartupAsDouble < _retryAfter) return false;
+            var operation = _save = new UniTaskCompletionSource<bool>();
+            SaveCoreAsync(operation).Forget();
+            // A fake/local transport is allowed to complete synchronously.
+            return await WaitForSaveAsync(operation);
+        }
+        return await WaitForSaveAsync(_save);
+    }
+
+    private async UniTask<bool> WaitForSaveAsync(UniTaskCompletionSource<bool> operation)
+    {
+        using var timeout = new CancellationTokenSource();
         using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(SaveTimeoutSeconds), DelayType.Realtime);
+        try { return await operation.Task.AttachExternalCancellation(timeout.Token); }
+        catch (OperationCanceledException) { return false; }
+    }
+
+    private async UniTaskVoid SaveCoreAsync(UniTaskCompletionSource<bool> operation)
+    {
+        int generation = _generation; bool success = false;
+        var token = _sessionCts.Token;
         try
         {
             SetStatus("저장 중");
@@ -331,20 +490,31 @@ public class PlayerDataController : IDisposable, Global.IClearable
             {
                 long revision = _revision;
                 var snapshot = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+                if (!_attemptedSaveIds.Contains(snapshot.SaveId)) _attemptedSaveIds.Add(snapshot.SaveId);
+                PersistJournal(); // Persist ancestry BEFORE dispatch, including changes made during this write.
                 var completion = new UniTaskCompletionSource<bool>();
                 _backendData.GameDataUpdate(snapshot, onResult: saved => completion.TrySetResult(saved));
-                bool saved = await completion.Task.AttachExternalCancellation(timeout.Token);
-                if (!Matches(generation)) return false;
-                if (!saved) break;
+                // Caller timeout does not cancel the SDK request or release the write lock.
+                bool saved = await completion.Task.AttachExternalCancellation(token);
+                if (!Matches(generation)) return;
+                if (!saved) { HasSaveConflict = _backendData.HasWriteConflict; break; }
                 _confirmedSaveId = snapshot.SaveId;
+                _attemptedSaveIds.Clear();
                 if (revision == _revision) { IsDirty = false; DeleteJournal(); } else PersistJournal();
             }
-            success = !IsDirty; SetStatus(success ? "" : "저장 실패, 변경 내용 보관 중");
+            success = !IsDirty; SetStatus(HasSaveConflict ? "저장 충돌, 변경 내용 보관 중. 재접속 후 확인 필요" : success ? "" : "저장 실패, 변경 내용 보관 중");
         }
         catch (Exception error)
         { if (Matches(generation)) { SetStatus("저장 확인 대기, 재연결 후 재시도"); Debug.LogWarning("[PlayerData] " + error.Message); } }
-        finally { operation.TrySetResult(success); if (ReferenceEquals(_save, operation)) _save = null; }
-        return success;
+        finally
+        {
+            if (Matches(generation))
+            {
+                _failureCount = success ? 0 : Math.Min(_failureCount + 1, 5);
+                _retryAfter = success ? 0 : Time.realtimeSinceStartupAsDouble + Math.Min(300, RetryDelaySeconds * (1 << (_failureCount - 1)));
+            }
+            operation.TrySetResult(success); if (ReferenceEquals(_save, operation)) _save = null;
+        }
     }
     /// <summary>Refreshes clean data on foreground return without overwriting concurrent local changes.</summary>
     public async UniTask ResumeAsync()
@@ -373,7 +543,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     private bool Matches(int generation) => generation == _generation && _account == _accountProvider();
     private string JournalKey => _journalPrefix + _account;
-    private void PersistJournal() { PlayerPrefs.SetString(JournalKey, JsonUtility.ToJson(new PlayerDataJournal { BaseSaveId = _confirmedSaveId, Data = _data })); PlayerPrefs.Save(); }
+    private void PersistJournal() { PlayerPrefs.SetString(JournalKey, JsonUtility.ToJson(new PlayerDataJournal { BaseSaveId = _confirmedSaveId, AttemptedSaveIds = _attemptedSaveIds, Data = _data })); PlayerPrefs.Save(); }
     private void DeleteJournal() { PlayerPrefs.DeleteKey(JournalKey); PlayerPrefs.Save(); }
     private void SetStatus(string status) { SaveStatus = status; OnSaveStatusChanged?.Invoke(); }
 }

@@ -12,6 +12,22 @@ public class Drone_Zeltan : UnitBase
     [Inject] private UpgradeManager _upgradeManager;
     private SpineActorVisual _spineVisual;
     private UnitResourceComponent _foodResource;
+    private UnitDependencies _dependencies;
+    private int _payoutCount;
+    public override float NextFoodPayoutMultiplier()
+    {
+        _payoutCount++;
+        return _payoutCount % 5 == 0 ? Mathf.Max(1f, LevelStat(UnitBonusStat.FoodFifthMultiplier)) : 1f;
+    }
+    private void OnBossKilled()
+    {
+        if (currentCell == null || IsStunned || IsCellSealed || _dependencies?.GameManager?.IsFinished == true) return;
+        float amount=GetBaseFoodPerSecond() * (1f+LevelStat(UnitBonusStat.FoodSpeedPercent)) * LevelStat(UnitBonusStat.BossFoodSeconds);
+        if (amount <= 0f) return;
+        _dependencies?.CurrencyManager?.AddCurrency(amount);
+        _dependencies?.CurrencyFloaterManager?.ReportFoodProduction(amount);
+        PlayFoodPayoutVisual();
+    }
 
     protected override void Awake()
     {
@@ -47,6 +63,8 @@ public class Drone_Zeltan : UnitBase
     protected override void OnInitialized(UnitDependencies dependencies)
     {
         base.OnInitialized(dependencies);
+        _dependencies = dependencies;
+        _payoutCount = 0;
         _foodResource = GetComponent<UnitResourceComponent>();
     }
 
@@ -58,6 +76,8 @@ public class Drone_Zeltan : UnitBase
 
     protected override void OnUnitPlaced()
     {
+        BossBase.OnAnyBossDied -= OnBossKilled;
+        BossBase.OnAnyBossDied += OnBossKilled;
         if (_foodResource != null)
         {
             _foodResource.OnFoodProduced -= PlayFoodPayoutVisual;
@@ -69,9 +89,12 @@ public class Drone_Zeltan : UnitBase
 
     protected override void OnUnitRemoved()
     {
+        BossBase.OnAnyBossDied -= OnBossKilled;
         if (_foodResource != null) _foodResource.OnFoodProduced -= PlayFoodPayoutVisual;
         _droneManager?.UnregisterFoodProducer(this);
     }
+
+    private void OnDisable() => BossBase.OnAnyBossDied -= OnBossKilled;
 
     private void PlayFoodPayoutVisual()
     {
@@ -94,7 +117,7 @@ public class Drone_Zeltan : UnitBase
     /// <summary>저작된 등급별 자체 초당 생산에 선택지 배율을 적용한다. 인게임 강화는 기당 계수만 올린다.</summary>
     public override float GetBaseFoodPerSecond()
     {
-        return unitData != null ? unitData.foodProduction.Get(currentTier)
+        return unitData != null ? base.GetBaseFoodPerSecond()
             * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) : 0f;
     }
 }

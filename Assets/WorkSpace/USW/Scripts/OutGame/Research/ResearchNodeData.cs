@@ -14,6 +14,7 @@ public class ResearchNodeData
     public string Id;
     public ResearchStat Stat;
     public Sprite Icon;
+    public string IconAddress;
     public ResearchNodeShape Shape;
     [Min(1)] public int MaxLevel = 3;
     [Tooltip("레벨당 오르는 값. 3레벨이면 이 값 × 3")]

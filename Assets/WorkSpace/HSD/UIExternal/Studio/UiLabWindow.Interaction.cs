@@ -12,7 +12,7 @@ namespace GGD.UI.Authoring.Studio
         private readonly Dictionary<string, string> _pendingLiveStyle = new Dictionary<string, string>();
         private string _pendingStyleScreen, _pendingStyleScope;
         private bool _pendingLiveMotion, _panningPreview;
-        private float _lastLiveInput, _nextLiveApply;
+        private float _liveIdle, _nextLiveApply;
         private Vector2 _previewPan, _lastPanPoint;
         private bool _recordInspectorControls;
         private readonly List<string> _layoutOverflows = new List<string>();
@@ -59,7 +59,7 @@ namespace GGD.UI.Authoring.Studio
             if (_pendingLiveStyle.Count > 0 && (_pendingStyleScreen != screen || _pendingStyleScope != scope)) FinishLiveEdits();
             _pendingStyleScreen = screen; _pendingStyleScope = scope; _pendingLiveStyle[property] = value;
             if (property == "size") { _auto = false; _pendingLiveStyle["auto"] = "false"; }
-            _lastLiveInput = Time.unscaledTime; return true;
+            _liveIdle = 0; return true;
         }
         private void SetDraft(string key, string value)
         {
@@ -84,13 +84,18 @@ namespace GGD.UI.Authoring.Studio
                 if (UiLabWorkspace.Number(_duration) <= 0 || UiLabWorkspace.Number(_delay) < 0 || UiLabWorkspace.Number(_scale) < 0 || UiLabWorkspace.Number(_stagger) < 0) throw new FormatException();
             }
             catch { _message = "연출 수치가 완성되면 반영됩니다."; return; }
-            _pendingLiveMotion = true; _lastLiveInput = Time.unscaledTime;
+            _pendingLiveMotion = true; _liveIdle = 0;
         }
         private void ProcessLiveEdits()
         {
             if (Time.unscaledTime >= _nextLiveApply && (_pendingLiveStyle.Count > 0 || _pendingLiveMotion))
             { FlushLiveEdits(); _nextLiveApply = Time.unscaledTime + LiveApplyInterval; }
-            if (Time.unscaledTime - _lastLiveInput > LiveGestureGap && GUIUtility.hotControl == 0) Workspace.EndLiveGroup();
+            // Count responsive idle time, rather than treating a font/render stall as user inactivity.
+            if (_pendingLiveStyle.Count == 0 && !_pendingLiveMotion && GUIUtility.hotControl == 0)
+            {
+                _liveIdle += Mathf.Min(Time.unscaledDeltaTime, LiveApplyInterval);
+                if (_liveIdle > LiveGestureGap) Workspace.EndLiveGroup();
+            }
         }
         private void FlushLiveEdits()
         {
@@ -98,7 +103,16 @@ namespace GGD.UI.Authoring.Studio
             if (_pendingLiveStyle.Count > 0)
             {
                 var values = new Dictionary<string, string>(_pendingLiveStyle); _pendingLiveStyle.Clear();
-                try { Workspace.BeginLiveGroup(); Workspace.Edit(_pendingStyleScreen, _pendingStyleScope, values); _showA = false; Rebuild(); _message = "변경 즉시 반영됨 (파일 저장은 상단 실험 저장)"; }
+                try
+                {
+                    Workspace.BeginLiveGroup(); Workspace.Edit(_pendingStyleScreen, _pendingStyleScope, values);
+                    bool typographyOnly = !_showA && values.Keys.All(key => key == "size" || key == "auto" || key == "color" || key == "outline" || key == "edge" || key == "soft" || key == "spacing" || key == "line" || key == "text");
+                    _showA = false;
+                    if (typographyOnly) { Workspace.Apply(_template, typographyOnly: true); ApplyMockState(_template); }
+                    else Rebuild();
+                    _liveIdle = 0;
+                    _message = "변경 즉시 반영됨 (파일 저장은 상단 실험 저장)";
+                }
                 catch (Exception error) { _error = error.Message; }
             }
             if (_pendingLiveMotion)

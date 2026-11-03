@@ -31,7 +31,7 @@ namespace GGD.UI.Authoring.Studio
         private string _size = "36", _outline = "0.15", _soft = "0", _spacing = "0", _line = "0", _dx = "0", _dy = "0", _width = "100", _height = "100";
         private string _duration = ".35", _delay = "0", _scale = ".8", _distance = "160", _stagger = ".1";
         private int _kind, _ease = 3, _state;
-        private bool _auto, _shared, _showA, _closing, _original, _loop;
+        private bool _auto, _shared, _showA, _closing, _original, _loop, _quitPrompt, _quitApproved;
         private float _speed = 1, _ratioHeight = 1920, _background = .08f;
         private Vector2 _leftScroll, _rightScroll;
         private XDocument _a;
@@ -65,7 +65,23 @@ namespace GGD.UI.Authoring.Studio
             _backgroundImage = _frame.GetComponent<Image>(); _backgroundImage.color = new Color(_background, _background, _background); _backgroundImage.raycastTarget = false;
             OpenScreen(ScreenKeys.First()); Application.wantsToQuit += CheckQuit;
         }
-        private bool CheckQuit() { FinishLiveEdits(); if (Workspace?.IsDirty != true) return true; _error = "저장되지 않은 실험이 있습니다. 저장 후 종료하거나 원본으로 되돌려 주세요."; return false; }
+        private bool CheckQuit()
+        {
+            if (_quitApproved) return true;
+            try { FinishLiveEdits(); } catch (Exception error) { Debug.LogWarning("UI_LAB: " + error.Message); }
+            if (Workspace?.IsDirty != true) return true;
+            // Never block quitting silently: ask with a visible save / discard / cancel prompt.
+            _quitPrompt = true; return false;
+        }
+        /// <summary>Whether the unsaved-changes quit prompt is showing.</summary>
+        public bool QuitPromptVisible => _quitPrompt;
+        /// <summary>Resolves the quit prompt: save then quit, quit without saving, or keep working.</summary>
+        public void ResolveQuit(bool quit, bool save)
+        {
+            if (!quit) { _quitPrompt = false; return; }
+            if (save) Save();
+            _quitPrompt = false; _quitApproved = true; Application.Quit();
+        }
         /// <summary>Switches real screens while retaining all unsaved per-screen experiment deltas.</summary>
         public void OpenScreen(string key)
         {
@@ -76,6 +92,8 @@ namespace GGD.UI.Authoring.Studio
         }
         /// <summary>Registers a portable font through the same path used by the GUI.</summary>
         public string RegisterFont(string path) { ChooseFont(Workspace.RegisterFont(path)); _message = "폰트 등록: " + Path.GetFileName(path); return _font; }
+        /// <summary>Opens the native font picker and registers its selected file on the Unity thread.</summary>
+        public void ImportFont() => StudioFileDialog.Open("폰트|*.ttf;*.otf", "실험할 폰트 선택", path => { if (this != null && path != null) Run(() => RegisterFont(path)); }, error => { if (this != null) Report(error); });
         /// <summary>Applies explicitly chosen style values as one undoable edit.</summary>
         public void ApplyStyle(string scope, IDictionary<string, string> values, bool shared = false)
         { ValidateStyleValues(values); Workspace.Edit(shared ? "*" : _screen, scope, values); _showA = false; Rebuild(); }
@@ -193,7 +211,7 @@ namespace GGD.UI.Authoring.Studio
             if (Input.GetMouseButtonDown(2) && viewport.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y))) { _panningPreview = true; _lastPanPoint = Input.mousePosition; }
             if (_panningPreview && Input.GetMouseButton(2)) { PanPreview((Vector2)Input.mousePosition - _lastPanPoint); _lastPanPoint = Input.mousePosition; }
             if (Input.GetMouseButtonUp(2)) _panningPreview = false;
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && !_quitPrompt && !StudioFileDialog.Busy)
             {
                 Vector2 point = Input.mousePosition;
                 if (viewport.Contains(new Vector2(point.x, Screen.height - point.y)))
@@ -230,7 +248,9 @@ namespace GGD.UI.Authoring.Studio
             finally { RenderTexture.active = oldActive; _previewMask.enabled = oldMask; _canvas.GetComponent<Canvas>().renderMode = oldMode; _canvas.GetComponent<Canvas>().worldCamera = oldCamera; _frame.localScale = oldScale; _frame.anchoredPosition = oldPosition; Destroy(texture); Destroy(image); Destroy(cameraObject); }
         }
         private void Field(string label, ref string value) { GUILayout.BeginHorizontal(); GUILayout.Label(label, GUILayout.Width(110)); value = GUILayout.TextField(value, GUILayout.MinWidth(0), GUILayout.ExpandWidth(true)); RecordInspectorControl(label); GUILayout.EndHorizontal(); }
-        private void Button(string label, Action action, GUIStyle style = null, params GUILayoutOption[] options) { bool clicked = GUILayout.Button(label, style ?? GUI.skin.button, options); RecordInspectorControl(label); if (clicked) { try { action(); _error = ""; } catch (Exception error) { _error = error.Message; Debug.LogWarning("UI_LAB: " + error.Message); } } }
+        private void Button(string label, Action action, GUIStyle style = null, params GUILayoutOption[] options) { bool clicked = GUILayout.Button(label, style ?? GUI.skin.button, options); RecordInspectorControl(label); if (clicked) Run(action); }
+        private void Run(Action action) { try { action(); _error = ""; } catch (Exception error) { Report(error); } }
+        private void Report(Exception error) { _error = error.Message; Debug.LogWarning("UI_LAB: " + error.Message); }
         private static string F(float value) => value.ToString("0.###", CultureInfo.InvariantCulture);
         private void OnDestroy() { Application.wantsToQuit -= CheckQuit; _theme?.Dispose(); _fontSpecimen?.Dispose(); if (_canvas != null) Destroy(_canvas); Workspace?.Dispose(); if (_bundle != null) _bundle.Unload(true); }
     }

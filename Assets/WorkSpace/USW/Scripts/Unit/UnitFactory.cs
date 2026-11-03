@@ -20,10 +20,16 @@ public class UnitFactory : MonoBehaviour
     public UnitData[] UnitDataList => unitDataList;
     private UnitDependencies _deps;
 
-    public void Init()
+    public void Init() => Init(new UnitLevelSnapshot((Player.PlayerData.Data?.UnitLevels ?? new System.Collections.Generic.List<PlayerData.UnitLevelEntry>())
+        .Select(entry => new System.Collections.Generic.KeyValuePair<string,int>(entry.UnitKey, entry.Level))));
+
+    /// <summary>Account integration supplies one immutable level snapshot before spawning any units.</summary>
+    public void Init(UnitLevelSnapshot unitLevels)
     {
         _deps = new UnitDependencies
         {
+            UnitLevels = unitLevels,
+            Alphan = _resolver.Resolve<AlphanActiveSkill>(),
             BuffVisualSettings = _resolver.Resolve<UnitBuffVisualSettings>(),
             BuffFxPool = _resolver.Resolve<StatBuffFxPool>(),
             StatusPopups = _resolver.Resolve<StatusPopupService>(),
@@ -53,6 +59,7 @@ public class UnitFactory : MonoBehaviour
             unitDataList = GlobalData.SelectedParty.unitDataList.ToArray();
             _useUniformSummonPool = GlobalData.SelectedParty.UseUniformSummonPool;
         }
+        _deps.Alphan.ConfigureLevel(unitLevels);
         ValidateUnitDataList();
 
         LoadAllUnitAssetsAsync().Forget();
@@ -182,6 +189,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
+        var runtimeData = UnitBalanceRuntime.Resolve(data);
         var go   = RM.Instantiate(data.prefab);
         var unit = go.GetComponent<UnitBase>();
 
@@ -192,7 +200,7 @@ public class UnitFactory : MonoBehaviour
             return null;
         }
 
-        unit.unitData = data;
+        unit.unitData = runtimeData;
         unit.currentTier = tier;
         unit.animator?.Initialize(unit);
 

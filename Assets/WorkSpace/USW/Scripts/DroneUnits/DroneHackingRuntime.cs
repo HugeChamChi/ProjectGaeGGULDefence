@@ -11,6 +11,13 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     public int PendingCarry => _carry;
     private BossBase _target;
     private DroneHackingData _data;
+    private readonly System.Collections.Generic.Dictionary<UnitBase,int> _capacityBonuses = new();
+    private int Capacity { get { int bonus=0; foreach (var pair in _capacityBonuses) if (pair.Key != null) bonus=Mathf.Max(bonus,pair.Value); return (_data != null ? _data.Capacity : 1)+bonus; } }
+    public void SetCapacityBonus(UnitBase owner, int bonus)
+    {
+        if (bonus > 0) _capacityBonuses[owner]=bonus; else _capacityBonuses.Remove(owner);
+        Ledger.Resize(Capacity); RefreshVisual();
+    }
     private HackingBossVisual _visual;
     /// <summary>현재 보스의 공유 잔고.</summary>
     public HackingStackLedger Ledger { get; } = new HackingStackLedger();
@@ -30,7 +37,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     {
         if (data == null || _data == data) return;
         _data = data;
-        Ledger.Reset(data.Capacity);
+        Ledger.Reset(Capacity);
         Synchronize();
     }
     private BossBase _residueTarget;
@@ -89,7 +96,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         if (_target != null) _target.OnDeath -= OnTargetDied;
         _target = current;
         if (_target != null) _target.OnDeath += OnTargetDied;
-        Ledger.Reset(_data != null ? _data.Capacity : 1);
+        Ledger.Reset(Capacity);
         if (_visual != null) Destroy(_visual.gameObject);
         _visual = null;
         if (_target != null && _carry > 0)
@@ -105,7 +112,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
             ? Mathf.FloorToInt((Ledger.Available + Ledger.Reserved) * carry) : 0;
         if (_target != null) _target.OnDeath -= OnTargetDied;
         _target = null;
-        Ledger.Reset(_data != null ? _data.Capacity : 1);
+        Ledger.Reset(Capacity);
         if (_visual != null) Destroy(_visual.gameObject);
         _visual = null;
     }

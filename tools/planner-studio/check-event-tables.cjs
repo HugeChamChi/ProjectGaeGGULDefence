@@ -1,0 +1,23 @@
+'use strict';
+const assert=require('node:assert/strict'),w=require('./app/content-workbook.cjs'),e=w.engine(),{tables}=require('./app/event-tables.cjs');
+const p=e.Studio.create(),again=e.Studio.shape(p);
+assert.equal(p.tables.AttendancePlan.length,0);
+assert.deepEqual(JSON.parse(JSON.stringify(again.tables.Missions)),JSON.parse(JSON.stringify(p.tables.Missions)));
+const pair=tables(p);assert.deepEqual(Object.keys(pair),['Events','Missions']);
+assert(pair.Events[0].includes('ClaimEndAt'));assert(pair.Missions[0].includes('Rewards'));
+assert(!pair.Missions[0].includes('RecordType'));assert(!pair.Missions[0].includes('Payload'));
+assert(pair.Missions.some(row=>row.includes('AttendanceDays')));
+assert(!pair.Events[0].includes('ConfigVersion')&&!pair.Missions[0].includes('ConfigVersion'));
+const eventKeys=new Set(pair.Events.slice(1).map(row=>row[pair.Events[0].indexOf('EventKey')]));
+assert(pair.Missions.slice(1).every(row=>eventKeys.has(row[pair.Missions[0].indexOf('EventKey')])));
+const restored=w.read(w.write(p,w.bundles.missions),p).project;
+assert.equal(restored.tables.Missions.length,p.tables.Missions.length);
+assert.equal(restored.tables.MissionEvents.length,p.tables.MissionEvents.length);
+assert(!e.STUDIO_NAV.some(n=>n.id==='attendance'||n.id==='dataBindings'));
+const normal=e.Studio.clone(p.tables.Missions[0]);Object.assign(normal,{MissionKey:'normal_test',MissionType:'Normal',EventKey:'',Period:'Total'});
+const normalProject=e.Studio.clone(p);normalProject.tables.Missions.push(normal);
+assert(!e.Studio.validate(normalProject).some(i=>i.severity==='error'));
+const loaded=w.read(w.write(normalProject,w.bundles.missions),normalProject).project;
+assert(loaded.tables.Missions.some(m=>m.MissionKey==='normal_test'&&m.MissionType==='Normal'&&m.EventKey===''));
+for(const [MissionType,EventKey]of [['Event',''],['Event','missing'],['Normal',p.tables.MissionEvents[0].EventKey]]){const bad=e.Studio.clone(normalProject);Object.assign(bad.tables.Missions.at(-1),{MissionType,EventKey});assert(e.Studio.validate(bad).some(i=>i.severity==='error'&&i.field==='EventKey'));}
+console.log('PASS: two readable tables without version, EventKey mapping, attendance migration/idempotence, authoring roundtrip and unified navigation');

@@ -187,7 +187,7 @@ public class ResearchViewSettings : ScriptableObject
     /// <summary>해당 트리·노드의 화면 검토용 항목. 미등록이면 기존 스탯을 표시한다.</summary>
     public PreviewInfo GetPreview(ResearchTreeData tree, ResearchNodeData node)
     {
-        if (tree == null || node == null || tree.TreeKey != PreviewTreeKey) return null;
+        if (tree == null || tree.IsChartDefinition || node == null || tree.TreeKey != PreviewTreeKey) return null;
         foreach (var item in PreviewItems)
             if (item != null && item.NodeId == node.Id) return item;
         return null;
