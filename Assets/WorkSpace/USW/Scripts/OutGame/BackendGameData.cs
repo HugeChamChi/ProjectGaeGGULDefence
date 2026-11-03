@@ -175,6 +175,7 @@ public class BackendGameData
             PendingEntryId = data.GetString("PendingEntryId", string.Empty),
             PendingEntryCost = data.GetInt("PendingEntryCost", 0),
             CouponHistory = ParseCouponHistory(data.GetString("CouponHistory", "[]")),
+            DiamondPurchases = ParseDiamondPurchases(data.GetString("DiamondPurchases", "[]")),
             PlayerName = data.GetString(COLUMN_PLAYER_NAME, "유저"),
             Gold       = data.GetInt(COLUMN_GOLD, 0),
             Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
@@ -202,6 +203,7 @@ public class BackendGameData
         param.Add("PendingEntryId", data.PendingEntryId ?? string.Empty);
         param.Add("PendingEntryCost", data.PendingEntryCost);
         param.Add("CouponHistory", JsonMapper.ToJson(data.CouponHistory ?? new System.Collections.Generic.List<CouponReceipt>()));
+        param.Add("DiamondPurchases", JsonMapper.ToJson(data.DiamondPurchases ?? new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>()));
         param.Add(COLUMN_PLAYER_NAME, data.PlayerName);
         param.Add(COLUMN_GOLD, data.Gold);
         param.Add(COLUMN_DIAMOND, data.Diamond);
@@ -245,6 +247,19 @@ public class BackendGameData
         foreach (var receipt in history)
             if (receipt == null || string.IsNullOrEmpty(receipt.Id) || receipt.Gold < 0 || receipt.Diamond < 0 || receipt.Stamina < 0)
                 throw new FormatException("Invalid coupon history entry; existing deduplication history must be repaired.");
+        return history;
+    }
+
+    private static System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt> ParseDiamondPurchases(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null") return new();
+        var history = JsonMapper.ToObject<System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>>(json);
+        if (history == null) throw new FormatException("Invalid diamond purchase history.");
+        var ids = new System.Collections.Generic.HashSet<string>();
+        foreach (var receipt in history)
+            if (receipt == null || string.IsNullOrWhiteSpace(receipt.Id) || string.IsNullOrWhiteSpace(receipt.ProductId)
+                || receipt.Diamond <= 0 || !ids.Add(receipt.Id))
+                throw new FormatException("Invalid diamond purchase history; existing grants must be preserved.");
         return history;
     }
 

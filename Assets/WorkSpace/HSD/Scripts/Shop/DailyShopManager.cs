@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
@@ -11,8 +12,32 @@ namespace GaeGGUL.Shop
     public class DailyShopManager
     {
         private const string PLAYER_SHOP_DATA_TABLE = "PlayerShopData";
-        private const string COLUMN_DAILY_ITEM_IDS = "DailyItemIDs";
-        private const string COLUMN_PURCHASED_ITEM_IDS = "PurchasedItemIDs";
+        private readonly bool _weekly;
+        private string ItemIdsColumn => _weekly ? "WeeklyItemIDs" : "DailyItemIDs";
+        private string PurchasedColumn => _weekly ? "WeeklyPurchasedItemIDs" : "PurchasedItemIDs";
+        private string PeriodColumn => _weekly ? "WeeklyPeriodKey" : "DailyPeriodKey";
+        private string ItemsColumn => _weekly ? "WeeklyItemsJson" : "DailyItemsJson";
+        private string _periodKey;
+
+        public DailyShopManager(bool weekly = false) { _weekly = weekly; }
+
+        public static string GetPeriodKey(DateTime utc, bool weekly)
+        {
+            DateTime date = utc.AddHours(9 - 5).Date;
+            if (weekly) date = date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+            return date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+
+        protected virtual string CurrentPeriodKey
+        {
+            get
+            {
+                if (!ServerClock.IsSynced) throw new InvalidOperationException("Shop requires server time.");
+                return GetPeriodKey(ServerClock.UtcNow, _weekly);
+            }
+        }
+
+        protected virtual IEnumerable<ShopItemData> ItemPool => Table.Shop.Daily.AllItems;
 
         private List<ShopItemData> _dailyItems = new List<ShopItemData>();
         private HashSet<int> _purchasedItemIDs = new HashSet<int>();
@@ -21,6 +46,7 @@ namespace GaeGGUL.Shop
         private int _generation;
         private bool _ready;
         private bool _buying;
+        private bool _initializing;
 
         /// <summary>Current session identity; override only for isolated store verification.</summary>
         protected virtual string CurrentOwner => Backend.UserInDate;
@@ -31,6 +57,7 @@ namespace GaeGGUL.Shop
 
         public List<ShopItemData> DailyItems => _dailyItems;
         public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
+        public bool IsReady => _ready;
 
         public void Clear()
         {
@@ -38,45 +65,72 @@ namespace GaeGGUL.Shop
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
             _inDate = string.Empty;
+            _periodKey = null;
         }
 
         public async UniTask InitializeAsync()
         {
+            if (_initializing || _buying) return;
+            _initializing = true;
             Clear(); _owner = CurrentOwner;
-            if (string.IsNullOrEmpty(_owner)) throw new InvalidOperationException("Daily shop requires login.");
             int generation = _generation;
             using var timeout = new CancellationTokenSource();
             using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(15), DelayType.Realtime);
             try
             {
+                if (string.IsNullOrEmpty(_owner)) throw new InvalidOperationException("Daily shop requires login.");
                 var row = await ReadRowAsync(timeout.Token);
                 RequireCurrent(generation);
                 // Retain the existing row before rollover. A failed GET must never be interpreted as no row.
                 if (row != null) _inDate = row["inDate"].ToString();
-                if (IsNewDay || row == null)
+                string period = CurrentPeriodKey;
+                bool hasPeriod = row != null && row.ContainsKey(PeriodColumn);
+                bool hasItems = row != null && row.ContainsKey(ItemIdsColumn);
+                if (!hasItems || (hasPeriod ? row[PeriodColumn].ToString() != period : IsNewDay))
                 {
                     GenerateDailyItems();
+                    _periodKey = period;
                     await SaveAsync();
                     RequireCurrent(generation);
                 }
                 else
                 {
                     _dailyItems.Clear();
-                    JsonData dailyItemIds = row[COLUMN_DAILY_ITEM_IDS];
-                    for (int i = 0; i < dailyItemIds.Count; i++)
+                    JsonData dailyItemIds = row[ItemIdsColumn];
+                    if (row.ContainsKey(ItemsColumn))
                     {
-                        int id = int.Parse(dailyItemIds[i].ToString());
-                        var item = FindItem(id);
-                        if (item != null) _dailyItems.Add(item);
+                        var savedItems = JsonMapper.ToObject<List<ShopItemData>>(row[ItemsColumn].ToString());
+                        if (savedItems == null || savedItems.Count != dailyItemIds.Count)
+                            throw new InvalidOperationException("Invalid saved shop items.");
+                        for (int i = 0; i < savedItems.Count; i++)
+                            if (savedItems[i].ShopID != int.Parse(dailyItemIds[i].ToString()))
+                                throw new InvalidOperationException("Saved shop item IDs do not match.");
+                        _dailyItems = savedItems;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < dailyItemIds.Count; i++)
+                        {
+                            int id = int.Parse(dailyItemIds[i].ToString());
+                            var item = id == 1001
+                                ? new ShopItemData(1001, ItemType.Currency, (int)CurrencyType.Diamond, 10, CurrencyType.Free, 0)
+                                : FindItem(id);
+                            if (item == null) throw new InvalidOperationException("Saved shop item is missing from chart.");
+                            _dailyItems.Add(item);
+                        }
                     }
 
                     _purchasedItemIDs.Clear();
-                    JsonData purchasedIds = row[COLUMN_PURCHASED_ITEM_IDS];
+                    JsonData purchasedIds = row[PurchasedColumn];
                     for (int i = 0; i < purchasedIds.Count; i++)
                     {
                         _purchasedItemIDs.Add(int.Parse(purchasedIds[i].ToString()));
                     }
+                    _periodKey = period;
+                    // Preserve legacy purchases while adding an independent period stamp and item snapshot.
+                    if (!hasPeriod || !row.ContainsKey(ItemsColumn)) await SaveAsync();
                 }
+                RequireCurrent(generation);
                 _ready = true;
             }
             catch (Exception error)
@@ -87,6 +141,15 @@ namespace GaeGGUL.Shop
                 _ready = false;
                 UnityEngine.Debug.LogWarning("Daily shop unavailable: " + error.Message);
             }
+            finally { _initializing = false; }
+        }
+
+        public async UniTask<bool> RefreshIfNeededAsync()
+        {
+            if (_initializing || _buying || string.IsNullOrEmpty(CurrentOwner) || !ServerClock.IsSynced) return false;
+            if (_ready && _periodKey == CurrentPeriodKey) return false;
+            await InitializeAsync();
+            return _ready;
         }
 
         /// <summary>Reads one existing row; failed or ambiguous reads stop initialization without writing.</summary>
@@ -110,24 +173,22 @@ namespace GaeGGUL.Shop
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
 
-            var mandatoryFreeItem = Table.Shop.Daily.GetItem(1001);
-            if (mandatoryFreeItem != null)
-            {
-                _dailyItems.Add(mandatoryFreeItem);
-            }
+            _dailyItems.Add(new ShopItemData(1001, ItemType.Currency, (int)CurrencyType.Diamond, 10, CurrencyType.Free, 0));
 
             List<ShopItemData> pool = new List<ShopItemData>();
-            foreach (var item in Table.Shop.Daily.AllItems)
+            foreach (var item in ItemPool)
             {
                 if (item.ShopID == 1001) continue;
                 pool.Add(item);
             }
 
             int itemsToPick = 5;
+            if (pool.Count < itemsToPick) throw new InvalidOperationException("Shop needs at least five random products.");
             for (int i = 0; i < itemsToPick && pool.Count > 0; i++)
             {
                 int index = Random.Range(0, pool.Count);
-                _dailyItems.Add(pool[index]);
+                var item = pool[index];
+                _dailyItems.Add(new ShopItemData(item.ShopID, item.Type, item.ItemID, item.Amount, item.CurrencyType, item.Price));
                 pool.RemoveAt(index);
             }
         }
@@ -140,10 +201,12 @@ namespace GaeGGUL.Shop
             
             List<int> dailyIds = new List<int>();
             foreach (var item in _dailyItems) dailyIds.Add(item.ShopID);
-            param.Add(COLUMN_DAILY_ITEM_IDS, dailyIds);
+            param.Add(ItemIdsColumn, dailyIds);
+            param.Add(PeriodColumn, _periodKey);
+            param.Add(ItemsColumn, JsonMapper.ToJson(_dailyItems));
 
             List<int> purchasedIds = new List<int>(_purchasedItemIDs);
-            param.Add(COLUMN_PURCHASED_ITEM_IDS, purchasedIds);
+            param.Add(PurchasedColumn, purchasedIds);
 
             using var timeout = new CancellationTokenSource();
             using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(15), DelayType.Realtime);
@@ -172,8 +235,11 @@ namespace GaeGGUL.Shop
         public async UniTask<bool> BuyItem(int shopID)
         {
             if (!_ready || _buying || _owner != CurrentOwner || !Balances.IsReady) return false;
-            var item = FindItem(shopID);
-            if (item == null || !_dailyItems.Exists(value => value.ShopID == shopID)) return false;
+            // An open shop must not sell the previous period's stock after the reset boundary.
+            if (!ServerClock.IsSynced) return false;
+            if (_periodKey != CurrentPeriodKey) { await InitializeAsync(); return false; }
+            var item = _dailyItems.Find(value => value.ShopID == shopID);
+            if (item == null) return false;
             if (_purchasedItemIDs.Contains(shopID)) return false;
             _buying = true;
             int generation = _generation;

@@ -221,6 +221,21 @@ public class PlayerDataController : IDisposable, Global.IClearable
         _data.Gold += receipt.Gold; _data.Diamond += receipt.Diamond; _data.Stamina += receipt.Stamina;
         _data.CouponHistory.Add(receipt); SaveAndRefresh(); return true;
     }
+    /// <summary>Applies a verified store purchase and its deduplication ID to one durable balance snapshot.</summary>
+    public bool TryApplyDiamondPurchase(GaeGGUL.IAP.DiamondPurchaseReceipt receipt)
+    {
+        if (!IsReady || receipt == null || string.IsNullOrWhiteSpace(receipt.Id)
+            || string.IsNullOrWhiteSpace(receipt.ProductId) || receipt.Diamond <= 0) return false;
+        _data.DiamondPurchases ??= new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>();
+        var previous = _data.DiamondPurchases.Find(value => value.Id == receipt.Id);
+        if (previous != null) return previous.ProductId == receipt.ProductId && previous.Diamond == receipt.Diamond;
+        if (!CanAdd(_data.Diamond, receipt.Diamond)) return false;
+        _data.Diamond += receipt.Diamond;
+        _data.DiamondPurchases.Add(new GaeGGUL.IAP.DiamondPurchaseReceipt
+            { Id = receipt.Id, ProductId = receipt.ProductId, Diamond = receipt.Diamond });
+        SaveAndRefresh(); return true;
+    }
+
     /// <summary>Claims today's attendance reward and records the day in the same durable snapshot.</summary>
     /// <returns>The claimed day (1-7), or 0 when nothing was granted.</returns>
     public int TryClaimAttendance(AttendanceConfig config, string today)

@@ -11,6 +11,8 @@ public class PlayerData
     public int PendingEntryCost;
     /// <summary>Account coupon history; saved in the same snapshot as its currency grants.</summary>
     public System.Collections.Generic.List<CouponReceipt> CouponHistory = new();
+    /// <summary>Paid diamond grants, saved atomically with the balance for redelivery deduplication.</summary>
+    public System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt> DiamondPurchases = new();
     public string PlayerUid;
     public string PlayerName;
     public int Gold;

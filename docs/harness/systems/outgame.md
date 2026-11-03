@@ -2,8 +2,8 @@
 system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-03
+commit: 316af03b
 ---
 # 아웃게임 카드
 
@@ -12,6 +12,48 @@ commit: de2cbd00
 2026-10-20 L31 글씨 기준 확대와 로비 이름·레벨·추가 표시 칸 보정을 적용했다. 저장된 UI 시각 복사본의 프로젝트 스크립트를 활성화 전에 제거해 3화면비를 확인했으며 로그인/계정 흐름을 다시 검증했다는 뜻은 아니다. [글씨·화면비 검증](../../../outputs/touch-typography-20261020/RESULT.md).
 
 2026-10-22 로비 햄버거 메뉴: TMP 누락 수정 후 사용자 요청으로 각 정사각 타일의 아이콘+제목(+공지 상태) 묶음을 가로·세로 가운데로 정돈했다. 타일184/행간196/시트616, 아이콘 실제 그림의 긴 변52, 제목 고정34/영역152×64, 상태28/영역152×48. 투명 여백을 보정해 계정 아이콘도 중앙이다. 실제 Play44검사(전체 glyph·중앙·칸 내부·포인터/닫기) PASS. [현재 결과](../../../outputs/lobby-menu-polish-20261022/RESULT.md), [이전 잘림 원인·원격23검사](../../../outputs/lobby-menu-text-20261022/RESULT.md).
+
+## 2026-11-03 계정 서버 저장
+
+본 로비의 유닛·족장 보유/성장은 PlayerCharacterData, 영구 강화는 PlayerResearchData, 튜토리얼·마지막 파티·우편 읽음은 PlayerLobbyData를 사용한다. 각 테이블은 Data JSON 문자열 하나를 저장한다. 아래 날짜별 로컬 설명은 과거 기록이다. 단독 강화 시안과 시안 재화 규칙은 유지한다. 실제 골드 차감·전투 성장 적용은 별도다. Unity 컴파일 및 격리 저장 검사 15개 PASS, 실제 서버 검증은 테이블 생성 후 필요하다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/OutGame/AccountJsonStore.cs` | 계정 소유 JSON 행 조회/생성/수정 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/AccountDocument.cs` | 계정 세대·journal·SaveId 재시도 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/AccountCharacterData.cs` | 공통 유닛/족장 보유와 성장 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/AccountLobbyData.cs` | 튜토리얼·파티·우편 읽음 |
+| `Assets/WorkSpace/USW/DeckUpgrade/AccountDeckUpgradeStore.cs` | 본 로비 강화 저장 연결 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/Research/BackendResearchSaveStore.cs` | 별도 영구 강화 서버 저장 |
+| `docs/technical/account-save-schema.md` | 추가 테이블·컬럼·이관·검증 경계 |
+| `Tools/verification/AccountPersistenceChecks.cs` | 실제 서버 요청 없는 격리 검사 |
+
+## 2026-11-03 일일·주간 상점 저장
+
+`Player.Shop.Daily`와 `Player.Shop.Weekly`는 기존 PlayerShopData 행에 기간별 상품 ID·상품 JSON·품절 ID·기간 키를 따로 저장한다. 각각 무료 다이아 10개 첫 칸과 기존 Shop_Daily 풀의 랜덤 5칸이다. 일일 KST 05시, 주간 월요일 05시이며 새 기간 접근 때 저장한다. 로비 준비 중 화면은 유지하며 기존 UI_ShopPanel은 `_weekly` 선택을 지원한다. Unity 컴파일 및 격리 저장 19검사 PASS. 실제 서버 컬럼/저장·구매 검증 및 중단 구매 영수증 복구는 미완료다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/HSD/Scripts/Shop/DailyShopManager.cs` | 기간 키·선정 상품 스냅샷·구매 ID 저장/복원, 6칸 추첨 |
+| `Assets/WorkSpace/HSD/Scripts/Shop/ShopDataManager.cs` | 일일/주간 같은 서버 행의 순차 초기화 |
+| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopPanel.cs` | 일일/주간 선택과 열린 화면의 기간 갱신 |
+| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopPresenter.cs` | 선택한 기간의 목록·구매 연결 |
+| `Assets/WorkSpace/HSD/Scripts/UI/Shop/UI_ShopItemSlot.cs` | 해당 기간의 품절·구매 가능 표시 |
+| `docs/technical/shop-persistence.md` | 서버 컬럼·이관·주간 기본값·검증 경계 |
+| `Tools/verification/ShopPersistenceChecks.cs` | 실제 계정 변경 없는 저장/복원·초기화 19검사 |
+
+## 2026-11-03 다이아 IAP 준비
+
+기존 diamond_100/550/1200/6500 소비형 4종의 ID·지급량·참고 가격은 유지하고 카탈로그 한글 이중 이스케이프를 수정했다. Google Play 경로는 영수증/계정 대조 → BACKND 검증 → PlayerData 다이아와 DiamondPurchases 동시 저장 → 구매 확정이다. 기존 무로그인 더미 지급은 제거했다. Unity 컴파일·격리 IAP 25검사·상점 19검사 PASS. 콘솔 등록/가격, 실기기 결제, 본 로비 연결, App Store와 검증 응답 유실 후 서버 복구는 별도다. 출시 완료를 뜻하지 않는다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/Resources/IAPProductCatalog.json` | 기존 4종 소비형 다이아 상품·지급량, 정상 한글 표시 |
+| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondIapCatalog.cs` | 상품/지급량/스토어 ID 검증 |
+| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondPurchaseReceipt.cs` | 토큰 해시·상품 ID·다이아 지급 기록 |
+| `Assets/WorkSpace/HSD/Scripts/IAP/DiamondPurchaseService.cs` | Google 영수증 대조·서버 검증·저장 확인 후 확정 허용 |
+| `docs/technical/diamond-iap.md` | 콘솔 설정·상품표·잔여 작업·복구 한계 |
+| `Tools/verification/DiamondIapChecks.cs` | 실제 결제/서버 쓰기 없는 IAP 격리 25검사 |
 
 ## 2026-10-30 정적 대조
 설정 호스트는 게시 자산의 BakedScreen 프리팹을 복제한다. NativeSourceInstalled이면 기존 프리팹 경로를 사용하며 XML 해석은 명시적 에디터 비교에만 남는다. Settings.asset의 구운 프리팹/아틀라스 참조와 IAP의 파괴 토큰 UniTaskVoid 연결을 대조했다.
@@ -126,7 +168,7 @@ commit: de2cbd00
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/UI_SettingPanel_Base.cs` | 로비/인게임 공용 설정 호스트. 저작 자산이 있으면 게시 프리팹과 실제 설정 바인딩 사용 |
 | `Assets/WorkSpace/HSD/Scripts/UI/Setting/SettingsGameBindings.cs` | 설정 화면의 오디오/체크/씬 이동을 기존 Presenter·서비스에 연결 |
 | `Assets/WorkSpace/HSD/Resources/UiAuthoring/Settings.asset` | 현재 설정 화면 게시 자산·프리팹/리소스 참조, 상세는 UI 제작실 카드 |
-| `Assets/WorkSpace/HSD/Scripts/IAP/IAPManager.cs` | 기존 IAP 테스트 화면. 스토어 연결은 파괴 토큰을 받는 UniTaskVoid, 테스트 더미 데이터 경로를 운영 지급으로 오해하지 않음 |
+| `Assets/WorkSpace/HSD/Scripts/IAP/IAPManager.cs` | 기존 호스트의 인증된 Android Google Play 연결·현지 가격·보류 구매 처리. Editor/무로그인 더미 지급 없음, 본 로비 상품 화면 연결은 별도 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/Account/AccountDeletionPopup.cs` | 삭제 확인/결과. 캔버스125 > 계정120, Editor 실제 탈퇴 차단 |
 | `Assets/WorkSpace/USW/Scripts/OutGame/AccountDeletionService.cs` | 명시적 탈퇴·중복/지연 응답·계정 경계 |
 | `Assets/WorkSpace/USW/Scripts/OutGame/AccountDeletionGateway.cs` | 뒤끝 탈퇴 API와 성공 후 세션 정리 |

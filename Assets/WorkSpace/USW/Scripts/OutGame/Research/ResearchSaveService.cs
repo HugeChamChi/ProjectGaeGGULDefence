@@ -7,7 +7,22 @@ public sealed class ResearchSaveService : IDisposable
     private readonly IResearchSaveStore _store;
     private readonly Dictionary<string, ResearchSaveSession> _sessions = new(StringComparer.Ordinal);
     /// <summary>저장 구현을 생성자 주입한다.</summary>
-    public ResearchSaveService(IResearchSaveStore store) => _store = store;
+    public ResearchSaveService(IResearchSaveStore store) { _store = store; Player.OnAccountCleared += ClearSessions; }
+    private void ClearSessions()
+    {
+        foreach (var session in _sessions.Values) session.Dispose();
+        _sessions.Clear();
+    }
+    public async Cysharp.Threading.Tasks.UniTask<bool> FlushAllAsync()
+    {
+        var sessions = new System.Collections.Generic.List<ResearchSaveSession>(_sessions.Values);
+        foreach (var session in sessions)
+        {
+            await session.FlushAsync(System.Threading.CancellationToken.None);
+            if (session.IsDirty) return false;
+        }
+        return true;
+    }
     /// <summary>호출 시 고정된 계정으로 진행을 얻는다. dirty 상태는 화면/계정 전환 후에도 유지한다.</summary>
     public ResearchSaveSession GetSession(string accountKey, ResearchTreeData tree, string legacyPrefix)
     {
@@ -23,7 +38,7 @@ public sealed class ResearchSaveService : IDisposable
     /// <summary>루트 컨테이너가 종료될 때 모든 계정의 작업을 취소한다.</summary>
     public void Dispose()
     {
-        foreach (var session in _sessions.Values) session.Dispose();
-        _sessions.Clear();
+        Player.OnAccountCleared -= ClearSessions;
+        ClearSessions();
     }
 }

@@ -16,6 +16,8 @@ public class UI_ShopItemSlot : UI_SlotBase<ShopItemData>
     [SerializeField] private Button buyButton;
 
     private Action<ShopItemData> _onBuyRequest;
+    private GaeGGUL.Shop.DailyShopManager _shop;
+    public void SetShop(GaeGGUL.Shop.DailyShopManager shop) { _shop = shop; RefreshStatus(); }
 
     private void Awake()
     {
@@ -41,7 +43,7 @@ public class UI_ShopItemSlot : UI_SlotBase<ShopItemData>
                 itemName = Table.Character.GetCharacterData(_data.ItemID).Name;
                 break;
             case ItemType.Currency:
-                itemName = _data.CurrencyType.ToString();
+                itemName = ((CurrencyType)_data.ItemID).ToString();
                 break;
         }
 
@@ -68,8 +70,9 @@ public class UI_ShopItemSlot : UI_SlotBase<ShopItemData>
     public void RefreshStatus()
     {
         if (_data == null) return;
-        bool isSoldOut = Player.Shop.Daily.IsSoldOut(_data.ShopID);
+        var shop = _shop ?? Player.Shop.Daily;
+        bool isSoldOut = shop.IsSoldOut(_data.ShopID);
         if (soldOutObject != null) soldOutObject.SetActive(isSoldOut);
-        if (buyButton != null) buyButton.interactable = !isSoldOut;
+        if (buyButton != null) buyButton.interactable = shop.IsReady && !isSoldOut;
     }
 }

@@ -16,12 +16,14 @@ public class AccountSwitchGateway
     /// <summary>Whether current data is loaded and has no conflict or pending reward.</summary>
     public virtual bool CanLeave => Backend.IsLogin && Player.PlayerData.IsReady && !Player.Mail.IsBusy && !Player.Mail.HasRecoverableClaim;
     /// <summary>Saves every existing Player manager before any session mutation.</summary>
+    [VContainer.Inject] public ResearchSaveService ResearchSaves { get; set; }
     public virtual async UniTask<bool> SaveAsync()
     {
         if (!CanLeave) return false;
+        if (ResearchSaves != null && !await ResearchSaves.FlushAllAsync()) return false;
         await Player.UpdateDirtyDataAsync();
         Global.IClearable[] managers = { Player.PlayerData, Player.Profile, Player.Mail, Player.Character, Player.Chief,
-            Player.Shop, Player.Daily, Player.Tutorial, Player.RoundRecords };
+            Player.Shop, Player.Daily, Player.Tutorial, Player.RoundRecords, Player.Characters, Player.LobbyProgress };
         foreach (var manager in managers) if (manager.IsDirty) return false;
         return CanLeave;
     }

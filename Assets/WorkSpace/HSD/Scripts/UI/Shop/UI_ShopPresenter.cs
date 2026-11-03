@@ -12,12 +12,13 @@ public class UI_ShopPresenter
 
     public void Initialize()
     {
-        _view.SetupShopList(Player.Shop.Daily.DailyItems);
+        _view.SetupShopList(_view.Shop.DailyItems);
     }
 
     public async UniTask BuyItem(ShopItemData data)
     {
-        bool success = await Player.Shop.Daily.BuyItem(data.ShopID);
+        bool success = await _view.Shop.BuyItem(data.ShopID);
+        _view.SetupShopList(_view.Shop.DailyItems);
         if (success)
         {
             _view.RefreshList();
