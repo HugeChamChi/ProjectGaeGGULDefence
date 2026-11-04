@@ -2,9 +2,16 @@
 system: totem
 title: 토템
 keywords: 토템, totem, td10, 인벤토리, 토템 배치, 토템 회전, 토템 판매, 토템 보상, 버프 셀, totemdata, 뿌리내림, 그림자 토템
-verified: 2026-11-01
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 시간 금고 중 토템 보상/보관함/배치/이동/회전/판매를 차단한다. TotemInventory도 Spawner의 CanPlaceTotems를 검사하므로 UI 외 직접 배치도 거절한다. 금고 임시 Legend는 TD1005 소유등급/출처를 보존하며 봉인을 해제하지 않는다. 차단 연출은 기존 TODO G08에 남아 있다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 토템 카드
 
 ## 2026-11-01 종료 경합 수정 (미커밋)

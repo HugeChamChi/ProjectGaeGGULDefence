@@ -2,12 +2,26 @@
 system: grid
 title: 그리드·소환·합성·판매
 keywords: 그리드, grid, gridcell, 셀, 칸, 빈칸, 소환, summon, spawn, 소환 비용, 합성, merge, 머지, 와일드카드, wildcard, 조커, 판매, sell, 드래그, drag, 이동, 봉인, seal, unitfactory, unitspawner, mergemanager
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 금고 중 출격/판매/합성/월드 조작을 공통 상태와 직접 진입점 양쪽에서 차단하고 진행 중 드래그를 취소한다. 합성은 소유 등급 기준이며 9133 과부하 합성의0.25초/20%는 SO에서 읽는다. 비용>=잔액이면 실제 잔액만 지불하고 재료/결과/보상 없이 종료 또는 금고로 진입한다. UnitFactory는 GlitchEffects를 UnitDependencies에 주입하고 GameDataManager는 더 이상 주입하지 않는다. 드래그 비용 UI는 미채택 제안이다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
+
+11-04 시간 금고 조작 정책 확정/구현: 유예 중 월드 조작, 출격/판매/합성, 강화창/결제, 족장 발동, 토템/선택지 보관함 진입을 차단한다. 햄버거의 딜표와 설정은 유지한다. 진행 중 드래그를 취소하고 열린 강화창도 닫는다. 조작 불가 연출은 TODO G08 후속이다. 실제 씬23 PASS. [결과](../../../outputs/time-vault-input-20261104/RESULT.md).
+
 # 그리드·소환·합성 카드
 
 **한 줄 요약**: 고정 격자(크기는 GameConfig `gridColumns`×`gridRows`)의 각 `GridCell`이 유닛 1기 또는 토템 1개를 점유한다. 소환 버튼은 식량을 쓰고 빈 칸 하나에 노말 유닛을 놓으며, 같은 유닛·같은 등급 2기를 드래그로 겹치면 다음 등급 랜덤 유닛 1기가 된다.
+
+## 과부하 합성 운영 연결 (2026-11-03, HEAD 위 미커밋)
+
+9133 과부하 합성은 `IGlitchEffectReader`로 획득/0.25초/20%를 읽는다. 노말/레어 재료 합성은 실패도 비용을 지불하고, 에픽재료→통상Legend는 무료/추첨 제외다. `MergeManager`는 유효성 검증과 결과 준비 뒤 재료를 제거하기 전에 지불하며, 비용 이하 잔고에서는 시간초과를 전달하고 재료/결과/합성보상 없이 취소한다. 지출은 `Elapsed`를 진행하지 않는다. 재진입/종료 후 요청은 거절한다. 음수 글리치는 결과 유닛에 귀속하고, 생성 연출 중인 소각 신관 발사만 배치 완료까지 기다린다. [Edit22/Play85/전체 회귀](../../../outputs/overload-merge-20261103/RESULT.md). 기본 합성/해킹29장 보존. 드래그 비용 표시 UI는 제안 상태이며 미구현이다.
 
 ## 2026-10-30 정적 대조
 GridManager는 UnitStatusBadgeOverlay와 Resources/UnitStatusBadge를 사용한다. 승인된 등급색 숫자/반짝임과 레전드 금별/빛 쓸기 설정은 PR 병합에서도 Develop 값을 유지했다. 선택 화면 Opening은 InputManager.CancelCurrentInteraction으로 기존 필드 입력을 취소한다. 배지 폴더의 Lab 하위는 비교 시안이며 실제 게임 연결과 구분한다.
@@ -56,7 +70,7 @@ GridManager는 UnitStatusBadgeOverlay와 Resources/UnitStatusBadge를 사용한�
 - 유닛을 칸에서 뺄 때는 `OnRemoved` → `GridCell.RemoveUnit` → 파괴 순서를 지킨다(효과·구독 정리). 보스가 바뀌면 `WaveManager`가 배치 유닛을 `OnRemoved`/`OnPlaced`로 다시 묶는다.
 - 봉인된 칸(`GridCellModel.IsSealed`)은 합성 결과를 받지 않는다. 영구 봉인은 런 패널티(`GridCellModel.SetPermanentSeal`).
 - 위치 보정은 `UnitFactory.InitUnitTransform`/`UnitFactory.InitTotemTransform` 하나로 통일. 개별 코드에서 Y값을 따로 넣지 않는다.
-- 레거시 시트: 소환 비용 증가·판매가·소환 확률은 `GameDataManager`(Google Sheets CSV)가 로드됐을 때 그 값을 쓰고, 아니면 기본값(20/5)으로 대체한다. 수정 시 SO 우선 정책(AGENTS.md)에 맞춰 이관 범위를 확인한다.
+- 소환 비용: 튜토리얼 설정이 없으면 첫 비용 20, 성공마다 +20(`UnitSpawner` 상수, 시트 제거 전 운영값과 같음). 판매 환급은 없다(시트 제거 전에도 운영에서는 0이었음). 본게임 소환은 균등 풀(`_useUniformSummonPool`). 2026-11-04 잔존 구글 시트 런타임 다운로드(`GameDataManager`) 제거.
 - 족장은 그리드 유닛이 아니다. 칸 점유·소환·판매·합성에 연결하지 않는다.
 - 소환음은 궤적 출발에서 한 번 재생한다. 05원본1.8초 연속 샘플을 소환마다 통째로 붙이지 않는다. 파생본을 쓰며 빠른 요청은 최대2보이스 안에서 가장 오래된 소환음 꼬리를 교체한다([수정·36검증](../../../outputs/summon-audio-fix-20261020/RESULT.md)).
 
@@ -82,7 +96,7 @@ L24의 잡기/놓기 거리와 L31 글씨 확대는 2e76748e에 포함됐다. [�
 |---|---|
 | `design/gdd/grid-system.md` | 그리드 GDD |
 | `design/gdd/unit-system.md` | 유닛·등급·합성 GDD |
-| `docs/technical/server-client-data-architecture.md` | 잔존 시트(GameDataManager) 경계 |
+| `docs/technical/server-client-data-architecture.md` | 앱/씬 초기화와 데이터 원본 경계 |
 
 ## 보완 진입 파일
 | 파일 | 역할 |

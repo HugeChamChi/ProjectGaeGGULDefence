@@ -2,9 +2,16 @@
 system: unity-tools
 title: Unity 명령·검증 도구
 keywords: unity command, run_script, recompile, editor_status, pipeline, 유니티 명령, 리컴파일, 컴파일, compile, 콘솔 오류, play 검증, 플레이모드, batchmode, unity-cli, 에디터 연결, 하네스, harness, 팀원 공유, 공유 zip
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 현재 Player bundleVersion은1.0062, LobbyScene과 빌드 설정은 HEAD ef31f410 및 현재 작업 트리 기준으로 확인했다. 하네스 검사 자체는 Unity를 실행하지 않는다. 실험실/캡처/임시 로그는 공유 설치 필수 파일과 분리해 분류하며 없는 일회성 검증 파일을 복원하거나 실행하지 않는다. 미커밋 소스 변경은 카드 설명을 갱신해도 check의 변경 경고에 계속 나타난다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # Unity 도구 카드
 
 **한 줄 요약**: Unity Editor는 Pipeline 패키지(Editor HTTP 서버)로 제어한다. 샌드박스 안에서는 `Tools/verification/unity-pipeline.ps1`을 쓰고, 일회성 검증·저작은 `Tools/verification/*.cs`를 `run_script`로 실행한다.
@@ -136,3 +143,47 @@ Editor 포트는 7800~7849에서 배정된다. 루트/실험실 모두 각 프�
    "sync_hint": "VERSION.md와 AGENTS.md 엔진 버전 갱신"}
 ]
 ```
+
+## 보완 진입 파일 (11-04 대조)
+
+| 파일 | 역할 |
+|---|---|
+| `docs/TODO.md` | 프로젝트 후속 작업과 사용자 결정 대기함 정본 |
+
+## 로컬 생성 파일 (실험실과 작업별 증거, 공유 설치 검사 제외)
+
+루트 게임의 출시 진입 파일과 구분한다. 실험실 파일은 해당 체크아웃에서만 존재할 수 있고, 캡처/당시 검사 사본은 역사 증거다. 임시 경로/누락 별칭은 [분류 기록](../refresh-20261104.md)에 보존한다. 아래 코드/이미지는 파일 역할만 확인했으며 이번에 Unity 실행이나 화면 평가를 하지 않았다.
+
+| 파일 | 역할 |
+|---|---|
+| `outputs/unit-level-bonus-request-20261029/p1-list.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/p2-tab0.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/p2-tab2.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/n1-list.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/n2-detail.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/n3-bonus.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/unit-level-bonus-request-20261029/n4-stat.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/runtime-atlas-20261030/ingame-atlas-compare.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/boss-shield-ui-20261101/live-checks.txt` | 해당 작업의 검증 결과 원문, 이번 실행 결과가 아님 |
+| `outputs/boss-shield-ui-20261101/02-shield-10pct.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/boss-shield-ui-20261101/04-breaking.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/BattlefieldTransition/Lab/Textures/BattlefieldTransitionLab_FieldA.jpg` | 전장 전환 실험실의 임시 배경 이미지, 출시 게임 아트 아님 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/BattlefieldTransition/Lab/Textures/BattlefieldTransitionLab_FieldB_Lava.jpg` | 전장 전환 실험실의 임시 배경 이미지, 출시 게임 아트 아님 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/BattlefieldSide.cs` | 어려움 난이도 "본진 + 스토리존" 구조 실험 (2026-11-02, 원랜디 스토리존 참고). |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/TwinBattlefieldView.cs` | 두 카메라/RenderTexture로 실험실 두 전장을 렌더하고 현재 전장 보기만 전환 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/Lab/TwinBattlefieldLabMode.cs` | 두 전장 실험실에서 비교하는 "스토리존에 전력을 보내는 방식". |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/Lab/TwinBattlefieldLab.cs` | 두 전장/스토리존 실험실 대역 구동기, 실제 게임에 미채택 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/Editor/Fx/TwinBattlefieldLabBuilder.cs` | M1 칸 파견/M2 드론 파견/M3 원정 실험실 씬 빌더 |
+| `outputs/workspaces/unity-ui/Tools/verification/unity-pipeline.ps1` | 실험실 체크아웃의 Pipeline 래퍼, 루트 연결과 구분 |
+| `outputs/twin-battlefield-20261102/sheet_m2.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/twin-battlefield-20261102/sheet_m3.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/Lab/TwinBattlefieldAltMode.cs` | 두 전장 대안 시안 (스토리존 없이 두 전장을 살리는 방식, 2026-11-02). |
+| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/TwinBattlefield/Lab/TwinBattlefieldAltLab.cs` | S1 보스 추격/S2 양면 협공/S3 두 진영 운영의 실험실 대역 구동기 |
+| `outputs/twin-battlefield-20261102/sheet_s1.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/twin-battlefield-20261102/sheet_s2.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/twin-battlefield-20261102/sheet_s3.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/twin-battlefield-20261102/sheet_s3hop.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/bottom-hud-alphan-20261012/hud-final.png` | 해당 작업의 캡처/비교 이미지, 현재 게임 설치 필수 파일 아님 |
+| `outputs/new-choice-fixes-20261104/run-checks.ps1` | 해당 작업 당시 검사 호출 스크립트, 현재 유지 검사는 Tools/verification에서 확인 |
+| `outputs/counter-bomb-20261104/run-checks.ps1` | 해당 작업 당시 검사 호출 스크립트, 현재 유지 검사는 Tools/verification에서 확인 |
+| `outputs/counter-bomb-20261104/checks/BombTenChecks.cs` | 해당 작업의 검증 코드 보존 사본, 현재 유지 검사와 구분 |

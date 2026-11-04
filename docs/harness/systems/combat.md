@@ -2,9 +2,16 @@
 system: combat
 title: 공격·스킬·생산 (유닛 전투 루프·피해 계산·투사체)
 keywords: 기본 공격, 스킬, skill, 스킬 게이지, 마나, 피해, 데미지, damage, 피해 계산, 치명, crit, 공격력, 공격 속도, 공속, 투사체, projectile, 발사체, 식량 생산, food, unitbase, unitcombat, unitstats, unitdata, skilldata, iskillaction, ieffect, 패시브, passive, 스탯 버프, buffmanager, 개구리, frog, 디시그망, disigman, 딜 그래프, 딜그래프, 하단 HUD, 스와이프, 딜표
-verified: 2026-11-02
-commit: 441b6124
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 공격력 기반 계산에는 제물과 오류 누적의 합산 배율을 한 번 적용하고 연구/승천 배율은 별도로 유지한다. 가속 운전은 공통 공격 간격에 적용한다. UI_UnitInfoPresenter도 감망 최대 소비/공유 해킹 상한을 런타임 값으로 표시한다. 버프 메시 배칭의 공통 정렬은 현재 코드에 반영됐으며 아래 수치는 과거 Editor 측정이다. 현재 없는 일회성 검증 스크립트는 실행 입구에서 제외하고 과거 결과 링크를 보존한다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 공격·스킬·생산 카드
 
 ## 2026-11-01 버프 렌더 배칭
@@ -24,10 +31,7 @@ commit: 441b6124
 | `Assets/WorkSpace/USW/Resources/UnitBuffVisualSettings.asset` | 본게임 공용 버프 설정 및 셰이더 연결 |
 | `Assets/WorkSpace/USW/Shaders/Fx/StatBuffBatch.shader` | 기존 일반/발광 블렌딩을 정점 색과 아틀라스로 출력 |
 | `Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/StatBuffBatchingTest.cs` | 20유닛·80연출 동시 재생과 기존/통합 A/B UI |
-| `Tools/verification/StatBuffBatchingTestAuthoring.cs` | 씬 저작·Play 검증·드로우콜 측정 도구 |
 | `Assets/WorkSpace/USW/Scripts/Combat/Fx/Lab/BatchingAtlasExperiment.cs` | 테스트 전용 런타임 유닛/UI 아틀라스, 8조합 기여도, 공통 FX 정렬/그림자 실험 |
-| `Tools/verification/BatchingAtlasExperimentChecks.cs` | 실험 조작·실제 공유 확인·제거 후 원복/텍스처 해제 검사 |
-| `Tools/verification/FourBatchFxChecks.cs` | 4배치 목표 검증·누락/중복/OFF 검사·동일 프레임 전후 캡처·프리뷰 조작 |
 
 **한 줄 요약**: 모든 유닛은 `UnitBase` + 세 컴포넌트(전투 루프 `UnitCombatComponent`, 수치 `UnitStatsModifier`, 식량 `UnitResourceComponent`)로 돈다. 기본 공격·스킬의 동작은 `UnitData`의 `SkillData`(행동 `ISkillAction` + 적중 효과 `IEffect`)로 조립하고, 배치·제거 같은 생애 주기 동작만 `UnitBase` 훅을 재정의한다.
 
@@ -154,3 +158,9 @@ UnitDependencies가 StatusPopupService를 전달하고 UnitBuffVisualController�
 | `Assets/WorkSpace/HSD/Scripts/Effects/StatusPopup/StatusPopupSpawner.cs` | 몸통 추적 팝업 묶음 풀과 행 추가 |
 | `Assets/WorkSpace/HSD/Scripts/Effects/StatusPopup/StatusPopupCatalog.cs` | 효과별 문구/색/배율 카탈로그 SO |
 | `Assets/WorkSpace/USW/Scripts/Combat/Fx/UnitBuffVisualController.cs` | 새 토템 효과의 외형과 상태 문구 진입 |
+
+## 과거 참조 (현재 체크아웃에 없음)
+
+- `Tools/verification/StatBuffBatchingTestAuthoring.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+- `Tools/verification/BatchingAtlasExperimentChecks.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+- `Tools/verification/FourBatchFxChecks.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.

@@ -2,10 +2,101 @@
 system: levelup
 title: EXP·선택지 (경험치·레벨업·카드 추첨·효과 적용)
 keywords: expmanager, exp 구슬, 경험치, 레벨업, levelup, level up, 선택지, 카드 효과, 선택 카드, choice, 추첨, 재추첨, reroll, levelupdata, levelupmanager, selection, 획득 선택지, 보관함, 설명 문구, 용어, 오버드라이브, particleimage, quaternion, aabb, assertion
-verified: 2026-10-30
-commit: 2f719c91
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 현재 운영47장/글리치8장이다. 9125~9127 반응3종과 9133~9137 원천/완성 카드의 운영 SO/풀/문구/분류 연결을 완료했다. LevelUpRunState는 제물/오류 누적의 이미 적립한 가산을 활성 카드 제거로 소급 회수하지 않는다. 시간 금고 조작 차단은 완료했고 G08은 연출만 남는다. 오버드라이브 GDD §10은 구현 답변16개/범위 밖 후보4개로 정리해 TODO D02를 닫았다. 아래 날짜별30/34/37장 및 미편입 문구는 당시 기록이다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
+
+11-04 결함 수정(현재): 시간 금고 유예 중 실제 전투 경과와 화상/방어감소/딜표 이벤트가 진행된다. 처치 보너스는 AddBossKillTime으로 제물을 숫자와 무관하게 정산한다. 과열 넘침 나머지는 같은 보스에서 누적, 보스 변경 시 초기화한다. 해킹 표식은 런타임 상한까지 확장하고 5스택당 한 묶음의 과열 비율을 색에 반영한다. 수리 키트는 빗나간 폭발에도 원 발사자에게 한 번 적용한다. 조작 차단 구현 완료, 차단 연출 TODO G08. [수정과 검증](../../../outputs/new-choice-fixes-20261104/RESULT.md).
+
+
+11-04 시간 금고 조작 정책 확정/구현: 유예 중 월드 조작, 출격/판매/합성, 강화창/결제, 족장 발동, 토템/선택지 보관함 진입을 차단한다. 햄버거의 딜표와 설정은 유지한다. 진행 중 드래그를 취소하고 열린 강화창도 닫는다. 조작 불가 연출은 TODO G08 후속이다. 실제 씬23 PASS. [결과](../../../outputs/time-vault-input-20261104/RESULT.md).
+
 # EXP·선택지 카드
+
+## 9143 일제 기동 규칙 변경 (2026-11-04)
+
+사용자 결정: 패턴 차단 성공 시 배치된 베탕마다 기본 스킬 1회분 대신 자폭 드론 1기만 발사한다. `Drone_Betan.FireCounterSkill`은 전투 드론 소환, 9138 추가탄, 9139 재무장 소비, 기본 스킬 강화 순번을 건드리지 않는다(`CounterBombsPerBetan`). 문구는 `Data/Text/SelectionDescriptions.xlsx`와 `DroneSelection43.asset`을 같이 바꿨다. BombTenChecks 기대는 24베탕 기준 58/82기. 검증 상태는 [결과](../../../outputs/counter-bomb-20261104/RESULT.md).
+
+## 신규23장 독립 검증 (수정 전 역사 기록)
+
+[수정 전 결함과 재현](../../../outputs/new-choice-verify-20261104/RESULT.md). 당시 결함과 검사 기대값은 위 수정으로 해소했다.
+
+## 자폭 신규10장 운영 구현 (2026-11-04)
+
+현재 운영47장(ID9101~9147), 자폭14장. 사용자 미정 수치/세부 규칙 위임으로9138~9147을 SO/문구 Excel/분류/풀에 편입했다. 기본 추가탄/자기적중 재무장/직접 자폭 소량 스택소비/감망 운반 대체/베탕 준비배율/패턴 차단 즉시 발사/한발강화/일시 방어감소/낮은HP 마무리/적중 식량을 구현했다. 감망 예약은 유효 적중1회 소비, 취소/발사자 수명 변경 시 환불. B23은 실제 OnPatternCountered 구독, 같은 프레임 다중 차단1회, 충전 보존. Edit59/실제비행Play29/실제차단59/공통전체회귀 PASS. 아래 운영37장 등은 이전 단계 기록이다. [적용 수치와 검증](../../../outputs/bomb-ten-20261104/RESULT.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Tools/verification/InstallBombTen.cs` | 승인10장 SO/풀/공식 문구/분류 importer |
+| `Tools/verification/BombTenChecks.cs` | 운영47장/피해/예약/실제 자폭/실제 차단/프레임 기록 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/BombRearmDefinition.cs` | 자기 원 자폭 적중 후 다음 기본 스킬 보너스 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/GammanBombDefinition.cs` | 감망의 소비 공격을 공유 자폭 프리팹으로 운반 |
+
+
+## 글리치 반응3종 운영 편입 (2026-11-04)
+
+직전 단계 운영37장(ID9101~9137). 기존 기능에 9125 복구 패킷(디시그망 회복당 해킹1스택, Rare), 9126 소각 신관(원인 유닛 자폭1기, Epic), 9127 오류 누적(회당 공격력0.025%, 최대1000회/25%, Rare)의 SO/문구 Excel/분류/풀을 연결했다. 카드별 spawnRate1, 기존 등급 가중치 유지, 세 장 모두 글리치 단일 테마. 아래11-03/직전 작업의 운영30/34장과 미편입 표기는 당시 기록이며 이 항목이 현재 상태다. [현재 결과](../../../outputs/glitch-reactions-operational-20261104/RESULT.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection25.asset` | 9125 복구 패킷 운영 카드 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection26.asset` | 9126 소각 신관 운영 카드 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection27.asset` | 9127 오류 누적 운영 카드 |
+| `Tools/verification/InstallGlitchReactions.cs` | 실제 공유 해킹/자폭 참조와 SO/풀/공식 importer 연결 |
+| `Tools/verification/GlitchReactionCardsChecks.cs` | 실제 운영3장 추첨/획득/동시발동 검증 |
+
+## 글리치 테마 미구현4종 운영 반영 (2026-11-04)
+
+운영34장(기존30+9134~9137). 9134 가속 운전은 남은 시간만1.1배 감소/공속 임시+20%, 9135 제물은 실제 처치+30 뒤-10 별도 표시/런 공격력+2% 가산, 9136 시간 금고는 런1회15초 유예/임시 Legend/회복·토템·선택 차단/보스 전환3초만 정지, 9137 과열 압축은 초과5개/0.5초로 일반1→과열1(감망 피해7.5개분)이다. 임시 등급은 실제 소유등급과 기존 TD1005 출처를 유지한다. 반응3종 9125~9127의 운영 SO/풀은 여전히 미반영이다. [구현/검증/참조 파일](../../../outputs/overdrive-four-20261104/RESULT.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/IOverdriveEffectReader.cs` | 네 카드의 불변 설정과 제물 적립 조회 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/AcceleratedDriveDefinition.cs` | 가속 운전의 시간 감소/공속 SO 정의 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/SacrificeDefinition.cs` | 제물의 비용/공격력 SO 정의 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/TimeVaultDefinition.cs` | 시간 금고 유예 SO 정의 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/OverheatCompressionDefinition.cs` | 과열 생산량/비용/피해 가중치 SO 정의 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection34.asset` | 9134 가속 운전 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection35.asset` | 9135 제물 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection36.asset` | 9136 시간 금고 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection37.asset` | 9137 과열 압축 |
+| `Tools/verification/InstallOverdriveFour.cs` | 신규4장 SO/풀과 공식 Excel importer 실행 |
+| `Tools/verification/OverdriveFourChecks.cs` | 원장/시계/실제 프레임/실제 인게임 씬 검증 |
+
+## 과부하 합성 운영 카드 (2026-11-03, HEAD 위 미커밋)
+
+사용자 확정 C04 과부하 합성을9133/에픽/가중치1/글리치 단일 태그로 추가했다. 운영30장/해킹14장, 기존29장 SO 해시와 Excel 기존 셀/서식 보존. 비용0.25초/추가승급20%, 에픽재료 합성 제외, 실패도 지불. 시간 차감과 결과 유닛의 글리치 귀속은 그리드 카드와 [구현 결과](../../../outputs/overload-merge-20261103/RESULT.md)를 따른다. 반응3종의 운영 풀 편입은 아직 별도 미완료다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/OverloadMergeDefinition.cs` | 과부하 비용/확률의 조합형 저작 데이터 |
+| `Assets/WorkSpace/USW/Data/SelectionData/DroneSelection33.asset` | 9133 과부하 합성 운영 SO |
+| `Tools/verification/InstallOverloadMerge.cs` | 단일 카드 저작/운영 풀 연결/정식 Excel importer |
+| `Tools/verification/OverloadMergeChecks.cs` | 운영 카탈로그와 실제 합성/시간지출/소각 신관 Play 검사 |
+
+## 신규 해킹 효과 기반 (2026-11-03, HEAD 위 미커밋)
+
+`HackingOverflowDamageDefinition`/`HackingConsumptionDefinition`/`HackingCapacityDefinition`/`BetanAttackPenaltyDefinition`의 검증, 복사, 스냅샷 집계, 읽기와 설명 토큰을 추가했다. 델탕 넘침 피해, 감망 소비 한도/스택 추가분 배율, 공유 장부 상한과 베탕 공격력 감소에 연결했다. 기존9장은 유지하고 승인된 신규9128~9132 운영 SO/풀/Excel 편입 완료. 전체29/해킹14, 기존24장 해시 동일. 계수0.5/스택추가피해2배, 소비카드 동시획득 허용. [Edit31/운영50/실제Play21/전체회귀 및 변경](../../../outputs/hacking-choices-20261103/RESULT.md).
+
+## 글리치 반응 기능 (2026-11-03, HEAD 위 미커밋)
+
+확정 감지/반응 3종부터 구현하고 미정 원천 정책과 운영 카드 저작은 대기한다. 초기 구현 원천은 `Disigman.TryCast`의 회복이었다. 현재는 위 과부하 합성의 음수 글리치도 발행한다. 보스 보너스/자연 감소/표시용 Hack 태그는 제외한다. `GlitchReactionBinding`은 드론 씬 수명에 구독하고 원인 유닛/원래 보스에 반응을 귀속한다. C10은 1회 1스택 확정. 오류 누적은 최대1000회/25%, 고정피해 제외, 새 런에서 초기화한다. 반응3종 운영 풀 편입과 나머지 원천4종/시간 금고 차단은 미완료다. 반응 설정은 원천 문서§1.3에 확정돼 있으며 당시 운영30장은 위 항목을 따른다. [구현 및 검증](../../../outputs/glitch-reactions-20261103/RESULT.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Scripts/Selection/GlitchReactionBinding.cs` | 실제 시간 변경에 반응하여 해킹/원인 유닛 자폭/런 공격력 적립 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/RecoveryHackingDefinition.cs` | C10 복구 패킷의 회복당 스택과 공유 해킹 SO |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/GlitchBombDefinition.cs` | G10 소각 신관의 공유 자폭 프리팹 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/GlitchAttackDefinition.cs` | 오류 누적의 회당 비율과 상한 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/IGlitchEffectReader.cs` | 반응 설정과 런 공격력 조회 |
+| `Tools/verification/GlitchReactionChecks.cs` | 격리 조합형 획득/디시그망 회복/반응/실제 자폭 Play 검사 |
 
 ## J 추천 뱃지 표시부 (2026-10-30)
 사용자 확정 J 빼꼼 개구리(개구리가 살짝 내다보는 추천 뱃지)를 공용 카드에 연결했다. `LevelUpCardUI.SetRecommended(bool)`는 외부 판정의 표시만 담당하며 `LevelUpCardUI.IsRecommended`로 표시 상태를 읽는다. `Setup`마다 숨김으로 초기화하며 자동 추천 판정은 아직 없다. 첫 카드에만 예시 표시한 [인게임 캡처와 Play12/전체 회귀 결과](../../../outputs/choice-j-ingame-20261030/RESULT.md). 사용자는 기존 분류를 이용한 테마별 추천을 원하지만 실제 시스템 설계는 Claude와 별도로 진행하기로 했다. 아래 G01 기록의 분류 데이터 연결과 추천 판단 구현 완료를 혼동하지 않는다.
@@ -114,7 +205,7 @@ Opening의 필드 입력 취소가 커밋에 포함됐다. 선택 효과를 확�
 - 획득 이력은 효과를 제거해도 남는다(`LevelUpManager.RemoveEffect`는 활성 기여만 뺀다). 같은 카드는 한 런에 한 번.
 - 적용 중 다시 적용 요청이 오면 큐에 넣는다. 게임 종료 후 요청은 거절한다.
 - 카드 ID·GUID·직렬화 enum 값은 바꾸지 않는다(풀·튜토리얼·씬이 참조).
-- 오버드라이브(시간 소비) 카드는 설계만 있고 미구현이다([오버드라이브 덱](../../../design/gdd/overdrive-deck.md)).
+- 과부하 합성, 나머지 글리치 테마4종과 반응3종은 모두 운영 편입했다. 현재 상태는 위11-04 최신 항목을 따른다([오버드라이브 덱](../../../design/gdd/overdrive-deck.md)).
 
 ## 검증
 | 파일 | 역할 |
@@ -156,7 +247,17 @@ Opening의 필드 입력 취소가 커밋에 포함됐다. 선택 효과를 확�
 |---|---|
 | `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scene/FxLab_FieldView.unity` | 실제 IngameScene 복사본, Play 자동 준비·6유닛·기존 선택지 |
 | `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/LevelUpPresentation/Fx/Lab/FieldViewFxLab.cs` | 실험실 전용 버튼 전환·정지·입력 실드 |
-| `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/LevelUpPresentation/Fx/Lab/FieldViewEye.cs` | 작은 눈 아이콘 벡터 Graphic |
 | `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/Editor/Fx/FieldViewLabBuilder.cs` | Tools/USW/Fx/Build Field View Lab. 원본 씬 저장 없이 복사 씬만 생성 |
 | `outputs/workspaces/unity-ui/Tools/verification/FieldViewChecks.cs` | targeted Play 검증24개, 두 상태·복귀 캡처 |
 | `outputs/workspaces/unity-ui/outputs/field-view-20261027/RESULT.md` | 결과·시연법·범위·변경/참조 파일 목록 |
+| `Tools/verification/NewChoiceRegressionChecks.cs` | 신규 선택지 시계/디버프/집계/누적/표시 집중 회귀 |
+
+## 과거 참조 (현재 체크아웃에 없음)
+
+- `outputs/workspaces/unity-ui/Assets/WorkSpace/USW/Scripts/IngameUI/LevelUpPresentation/Fx/Lab/FieldViewEye.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+
+## 보완 진입 파일 (11-04 대조)
+
+| 파일 | 역할 |
+|---|---|
+| `design/gdd/overdrive-deck.md` | 글리치8장과 시간 지출/금고/과열 질문별 처리 정본 |

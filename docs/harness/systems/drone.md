@@ -2,10 +2,36 @@
 system: drone
 title: 드론 (베탕·감망·델탕·젤탕, 해킹)
 keywords: 드론, drone, 베탕, betan, betang, 감망, gamman, 델탕, deltan, 젤탕, zeltan, 자폭, 해킹, hacking, 해킹 스택, 궤도, orbit, 집결, rally
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 운영47장 중 자폭14장/해킹14장/글리치8장이다(공용/복수 태그 때문에 단순 합계와 다름). 시간 금고 중 조작 차단 완료, 후속 G08은 연출만이다. 과열 나머지1~4는 같은 보스에서 공유 누적하며 보스 변경 시 초기화한다. 예약은 일반/과열 종류와 피해 가중치를 보존한다. 수리 키트는 빗나간 폭발에도 원 베탕에1회 적용한다. 9143 일제 기동은 차단 성공 시 배치 베탕당 자폭1기만 발사하고 기본 스킬 추가탄/재무장 순번을 소비하지 않는다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
+
+11-04 결함 수정(현재): 시간 금고 유예 중 실제 전투 경과와 화상/방어감소/딜표 이벤트가 진행된다. 처치 보너스는 AddBossKillTime으로 제물을 숫자와 무관하게 정산한다. 과열 넘침 나머지는 같은 보스에서 누적, 보스 변경 시 초기화한다. 해킹 표식은 런타임 상한까지 확장하고 5스택당 한 묶음의 과열 비율을 색에 반영한다. 수리 키트는 빗나간 폭발에도 원 발사자에게 한 번 적용한다. 조작 차단 구현 완료, 차단 연출 TODO G08. [수정과 검증](../../../outputs/new-choice-fixes-20261104/RESULT.md).
+
 # 드론 카드
+
+## 자폭 신규10장 운영 구현 (2026-11-04)
+
+현재 운영47장(ID9101~9147), 자폭14장. 사용자 미정 수치/세부 규칙 위임으로9138~9147을 SO/문구 Excel/분류/풀에 편입했다. 기본 추가탄/자기적중 재무장/직접 자폭 소량 스택소비/감망 운반 대체/베탕 준비배율/패턴 차단 즉시 발사/한발강화/일시 방어감소/낮은HP 마무리/적중 식량을 구현했다. 감망 예약은 유효 적중1회 소비, 취소/발사자 수명 변경 시 환불. B23은 실제 OnPatternCountered 구독, 같은 프레임 다중 차단1회, 충전 보존. Edit59/실제비행Play29/실제차단59/공통전체회귀 PASS. 아래 운영37장 등은 이전 단계 기록이다. [적용 수치와 검증](../../../outputs/bomb-ten-20261104/RESULT.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Tools/verification/InstallBombTen.cs` | 승인10장 SO/풀/공식 문구/분류 importer |
+| `Tools/verification/BombTenChecks.cs` | 운영47장/피해/예약/실제 자폭/실제 차단/프레임 기록 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/BombRearmDefinition.cs` | 자기 원 자폭 적중 후 다음 기본 스킬 보너스 |
+| `Assets/WorkSpace/USW/Scripts/Selection/Composition/GammanBombDefinition.cs` | 감망의 소비 공격을 공유 자폭 프리팹으로 운반 |
+
+
+11-04 과열 압축: `HackingStackLedger`가 일반/과열과 예약의 종류/피해 가중치를 보존한다. 델탕 생산의 초과5개마다0.5초를 지불하고 사용 가능한 일반1칸을 과열1칸으로 치환한다. 감망은 물리칸 한도로 확보하고 피해만 일반7.5개분으로 계산한다. 기존 상한 증가/백도어/과충전 방출은 유지한다. 비용 부족/유예 중은 추가 결제하지 않는다. [구현/검증](../../../outputs/overdrive-four-20261104/RESULT.md).
+
+11-03 신규 해킹 효과 기반(HEAD 위 미커밋): `HackingOverflowDamageDefinition`은 델탕 원래 보스의 실제 넘침 피해, `HackingConsumptionDefinition`은 감망 최대 소비/스택 피해 배율, `HackingCapacityDefinition`은 공유 상한 가산, `BetanAttackPenaltyDefinition`은 베탕 공격력 기반 피해 감소를 제공한다. `MaximumStacksConsumed`/`SharedStackCapacity`를 정보창도 읽는다. 사용자 승인으로 9128~9132 운영 SO/Excel/풀 편입 완료(전체29/해킹14). 계수0.5/스택추가피해2배, 소비카드 동시획득 허용. Edit31/운영50/실제 운영Play21/최종 전체회귀 PASS, 환경 복원/Unity오류0. [결과와 미확정 경계](../../../outputs/hacking-choices-20261103/RESULT.md).
 
 10-24 젤탕 검증 후속 완료: 구형 강화 검사3종을 최신 SO/5단계로 갱신, Edit152·Play67·FGT48 PASS. 기절은 자체분만 멈추며 비례분 유지, 봉인은 해당 젤탕 자체/기당 몫0. 유효 젤탕0이면 독립 기본 드론생산0.15 유지. 실제 지급·열린 정보창·버튼 MAX·여러 젤탕 합산·9106/9112 자연3초 지급 확인. [결과·검사 입력·한계](../../../outputs/zeltan-verification-20261024/RESULT.md).
 
@@ -121,3 +147,4 @@ G01 단계2(10-21, 미커밋): 24장 콘셉트 분류만 별도 Excel→SO로 �
 | 파일 | 역할 |
 |---|---|
 | `Assets/WorkSpace/USW/Scripts/Combat/Fx/BombHackFeedbackSettings.cs` | 9122 해킹 자폭의 글리치 흡수 표시 설정, 스택 수치 정책과 분리 |
+| `Assets/WorkSpace/USW/Scripts/DroneUnits/HackingBossVisual.cs` | 런타임 상한까지 생성하는 5스택 묶음 표식과 과열 비율 색상 |
