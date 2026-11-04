@@ -2,10 +2,19 @@
 system: boss
 title: 보스·디버프 (보스 스폰·피해 적용·패턴·디버프)
 keywords: 보스, boss, bossbase, bossdata, bossmanager, 보스 체력, 보스 hp, 보스 방어, 방어력, defense, 보스 패턴, 패턴, pattern, 지진, 예고, telegraph, 기절, stun, 디버프, debuff, 화상, burn, 아머, armor, 받피증, 받는 피해, 보스 등장, 도마뱀, lizard, 위협, 가시방벽, 잠복
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: BossManager의 잔존 시트 조회를 제거했다. 유한 웨이브는 BossEntry/BossData, 운영 무한모드는 RuntimeBossStats의 원격 스냅샷을 사용한다. DebuffSettings는 SO 정의만 읽는다. BossBase의 CanReceiveProjectileImpact는 사망/무적/타깃/전투 상태를 함께 확인한다. 자폭 방어 감소는 별도 만료 상태로 갱신하며 기존 방어 감소와 곱으로 합산, Clear에서 제거한다. 보호막 UI는 비운 상태도 초기화로 처리해 새 보스의 첫 부여에 차오름 연출을 적용한다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 보스·디버프 카드
+
+11-04 자폭 신규10장 연결: `BossBase.CanReceiveProjectileImpact`는 `ApplyProjectileImpact` 안에서 직접/해킹 자폭의 유효 착탄, 스택 소비와 적중 보상을 함께 판정한다. 선택 유예 중 기존 투사체 착탄은 허용하고 무적/대상불가/종료는 거절한다. `DebuffController.RefreshBombArmor`는 독립3초/20% 방어력 감소 슬롯이며 기존 TD1006의 q를 변경하지 않고 다른 방어 감소와 곱한다. 자폭 동기59/실제비행29/실제차단59 및 공통전체회귀 검증. 이 추가 범위는 HEAD `ef31f410` 위 미커밋이다. [결과](../../../outputs/bomb-ten-20261104/RESULT.md).
 
 **한 줄 요약**: 한 번에 보스 1마리. `BossManager`가 소환하고 디버프·피해 집계를 연결한다. 모든 피해는 `BossBase`에서 방어력·디버프·영구 강화를 반영해 고정소수 HP에서 차감된다. 디버프는 보스가 소유한 `DebuffController`가 전투 시간 기준으로 관리한다.
 
@@ -48,7 +57,7 @@ commit: de2cbd00
 | `Assets/WorkSpace/USW/Scripts/Combat/Debuff/DebuffCatalog.cs` | 디버프 정의 조회(루트 등록, 검증 후 원자적 교체) |
 | `Assets/WorkSpace/USW/Scripts/Combat/Debuff/DebuffBinding.cs` | 스킬·토템이 거는 디버프 연결(ID·시점·스택) |
 | `Assets/WorkSpace/USW/Scripts/Combat/Debuff/DebuffKind.cs` | 종류: 화상·아머 브레이크·받피증 |
-| `Assets/WorkSpace/USW/Scripts/Combat/Debuff/DebuffSettings.cs` | 정의 목록 SO(시트 GID는 비어 있으면 SO만 사용) |
+| `Assets/WorkSpace/USW/Scripts/Combat/Debuff/DebuffSettings.cs` | 정의 목록 SO 전용, 잔존 시트 GID/파서 제거 |
 | `Assets/WorkSpace/USW/Scripts/Combat/Debuff/BurnDebuff.cs` | 화상 틱 |
 | `Assets/WorkSpace/USW/Scripts/IngameUI/DebuffInfoPresenter.cs` | 보스 디버프 정보 표시 |
 
@@ -80,7 +89,7 @@ commit: de2cbd00
 - 선택 화면 유예 중에는 실제 발사된 투사체의 착탄 콜백 안에서만 피해·디버프가 허용된다.
 - 같은 종류·중첩 그룹은 정의 하나만 허용한다(`DebuffCatalog.Validate`). 다른 정의가 같은 슬롯을 차지하려 하면 거부된다.
 - 토템 공격 디버프는 토템이 겹쳐도 공격 시도당 1스택([토템 카드](totem.md)).
-- 레거시: `DebuffSettings`에 시트 GID가 있으면 `GameDataManager`가 CSV로 정의를 교체한다. 현재 비어 있어 SO만 쓴다. 유한 스테이지 보스 HP·EXP도 시트 경로가 남아 있다.
+- 2026-11-04 잔존 구글 시트 런타임 다운로드(`GameDataManager`) 제거. 디버프 정의는 `DebuffSettings` SO만 쓴다. 보스 HP·방어·EXP는 무한모드면 뒤끝 차트 스냅샷(`RuntimeBossStats`), 그 외 유한 웨이브(튜토리얼)는 `BossEntry`(BossData SO 우선)다.
 
 ## 검증
 | 파일 | 역할 |

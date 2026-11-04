@@ -2,14 +2,21 @@
 system: ui-authoring
 title: 실제 설정창 UI 제작실
 keywords: UI Authoring, ui-authoring, 제작실, UI 제작 도구, UI 시뮬레이터, UI 실험실, 폰트 실험, TTF, OTF, G06, 설정창 편집, XML 프리팹, 아트 루트, 아트 받기, rclone
-verified: 2026-11-01
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: UiLabWindow.Interaction.cs는 partial 클래스 파일이며 Interaction이라는 멤버가 아니다. 입력 중단 없이 프레임 정지 상태에서 글자 속성을 갱신하고 typographyOnly 경로와 Undo 묶음을 유지한다. NativeLobbyPrefabBridge/SettingsAuthoringBridge의 현재 게시 경로와 구운 프리팹 진입을 대조했다. 아래 과거 Player 검사 횟수는 이번 재실행 결과가 아니다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # UI 제작실 — UI3030
 
 ## 2026-11-01 폰트 편집 지연과 Undo 묶음 수정 (미커밋)
 
-`UiLabWindow.Interaction`은 프레임 정지를 입력 중단과 구분하고, 글자 속성 편집에 기존 계층을 재사용한다. `UiLabWorkspace.Apply`의 typographyOnly 경로는 외형 오버라이드를 누적하지 않으며 임시 머티리얼을 재사용/정리한다. `ImportFont()`는 UI 버튼과 선택창 등록의 공통 진입점이다. 최종 독립 Player 349 PASS(실험174/정보33/Arial43/맑은고딕43/제작실56), 실제 버튼부터 일반 폴더 TTF 선택/등록/제목 적용/저장/종료 PASS. [결과와 처리시간 및 검증 경계](../../../outputs/ui-studio-font-fix-20261101/RESULT.md). 고정 키트는 이번에 교체하지 않았다.
+`UiLabWindow.Interaction.cs`의 partial 구현은 프레임 정지를 입력 중단과 구분하고, 글자 속성 편집에 기존 계층을 재사용한다. `UiLabWorkspace.Apply`의 typographyOnly 경로는 외형 오버라이드를 누적하지 않으며 임시 머티리얼을 재사용/정리한다. `ImportFont()`는 UI 버튼과 선택창 등록의 공통 진입점이다. 최종 독립 Player 349 PASS(실험174/정보33/Arial43/맑은고딕43/제작실56), 실제 버튼부터 일반 폴더 TTF 선택/등록/제목 적용/저장/종료 PASS. [결과와 처리시간 및 검증 경계](../../../outputs/ui-studio-font-fix-20261101/RESULT.md). 고정 키트는 이번에 교체하지 않았다.
 
 ## 2026-11-01 파일 선택 창과 종료 확인 v1.12 (미커밋)
 

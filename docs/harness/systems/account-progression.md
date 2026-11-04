@@ -2,9 +2,16 @@
 system: account-progression
 title: 계정 경험치·계정 레벨업
 keywords: 계정 경험치, 계정 레벨, 계정레벨, account.xlsx, accountprogression, accountexperience, playerexp, maxexp, 전투 경험치, 지급 영수증
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 계정 EXP 지급/영수증은 기존 PlayerData snapshot 저장을 유지한다. Root/씬 등록에서 GameDataManager를 제거했고, BossManager의 유한 웨이브는 BossEntry/SO를 읽는다. 운영 NORMAL 원격 밸런스 스냅샷 계약은 유지한다. PlayerData의 저널/서버 저장과 영구 강화 서버 연결은 아웃게임 카드와 저장 원본을 따른다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 계정 경험치 카드
 
 **한 줄 요약**: 보스별 초기 최대 HP 대비 최고 감소 비율을 합산해 승패 결과에서 계정 경험치를 지급한다. 전투 ExpManager와 별도다. 수치/종료 정책은 시험값이다. 10-28에 HEAD 151a2427의 시작/결과·직렬화 경계를 대조했으며, 아래 과거 검증을 새로 실행한 것은 아니다.

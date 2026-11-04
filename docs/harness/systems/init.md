@@ -2,9 +2,16 @@
 system: init
 title: 초기화 (DI 범위·앱 시작·씬 초기화)
 keywords: 초기화, 이니셜, initializ, lifetimescope, 라이프타임, vcontainer, 의존성 주입, di 등록, bootscene, 부트, appinitialization, gameinitializer, 씬 전환, scenechange, 로딩 화면
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: AppInitialization은 Backend 인증→Table→Player→ResearchChartService 준비 순서다. GameDataManager 등록/주입/런타임 시트 다운로드 단계를 제거했다. InGameLifetimeScope는 TutorialWaveFlow를 Scoped로, 드론 씬의 GlitchReactionBinding을 entry point로, IngameHudMenu를 optional 컴포넌트로 등록한다. ResearchRunBonuses는 씬 로드 뒤 LoadAsync에서 튜토리얼 여부를 판별해 강화 차트 로드를 생략한다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 초기화 카드
 
 **한 줄 요약**: 앱 전역 서비스는 `RootLifetimeScope`(VContainerSettings의 루트 프리팹), 씬 매니저는 `InGameLifetimeScope`에 등록한다. 인게임 매니저는 `GameInitializer`(USW)의 `Initialize()`가 정해진 순서로 `Init()`을 부르고, `StartAsync()`가 끝나야 `IsReady`가 된다.
@@ -16,17 +23,17 @@ InGameLifetimeScope는 Resources/StatusPopupCatalog가 없으면 초기화를 �
 
 ## 흐름
 1. APK 시작: 일반 Player 씬은 `BootScene` 하나. `AppLoadingScreen`은 `IngameTutorialProgress.IsCompleted`가 false면 Addressables `TutorialScene`, true면 `AppInitialization.InitializeAsync` 완료 후 Addressables `LobbyScene`을 연다. 완료 기록은 기존 기기 키이며 서버 튜토리얼 저장과 별개다. 실패는 로딩 커버의 재시도로 남긴다.
-2. 튜토리얼 완료 → `IngameTutorialDirector`가 beforeLoad에서 `AppInitialization.InitializeAsync`를 기다린 뒤 LobbyScene으로 간다(Title 진입도 같은 서비스). 순서: Backend 초기화·미연동 게스트/연동 Google 자동 로그인 → `Table.InitializeAsync` → `GameDataManager.LoadAllAsync` → `Player.InitializeAsync`.
+2. 튜토리얼 완료 → `IngameTutorialDirector`가 beforeLoad에서 `AppInitialization.InitializeAsync`를 기다린 뒤 LobbyScene으로 간다(Title 진입도 같은 서비스). 순서: Backend 초기화·미연동 게스트/연동 Google 자동 로그인 → `Table.InitializeAsync` → `Player.InitializeAsync`(시트 다운로드 단계는 2026-11-04 제거).
 3. 인게임 씬: `InGameLifetimeScope.Configure`가 씬 매니저를 `RegisterComponentInHierarchy`로 등록하고 `GameInitializer`·`AlphanActiveSkill`·`IngameAudioBinding`을 entry point로 등록한다.
    계정 성장 설정 SO/PlayerDataController는 Root에, 보스 진행 AccountExperienceRun은 씬에 둔다. Root는 Player 로드 전 현재 곡선을 전달한다([계정 경험치 카드](account-progression.md), 현재 미커밋 구현).
-4. `GameInitializer` `Initialize()`: GameDataManager → Currency → Exp → Grid → TotemBuff → Buff → Merge → LevelUp → Upgrade → GameManager → Wave → Timer → TotemSpawner → Boss → CurrencyFloater → UnitFactory → UnitSpawner → ChieftainSelection.
+4. `GameInitializer` `Initialize()`: Currency → Exp → Grid → TotemBuff → Buff → Merge → LevelUp → Upgrade → GameManager → Wave → Timer → TotemSpawner → Boss → CurrencyFloater → UnitFactory → UnitSpawner → ChieftainSelection.
 5. `GameInitializer` `StartAsync()`: 투사체 테이블 → `ResearchRunBonuses.LoadAsync` → 모드의 `RequiresRemoteBalance`가 참이면 `EndlessBalanceService.PrepareSceneAsync`(입장 전 확보한 동일 스냅샷 인계) → 오디오 프리로드 → LastPostLateUpdate → 전환 완료/페이드 해제 → `IsReady`. **IngameScene과 HardIngameScene 모두** `GameManager.StartGame(true)`를 자동 호출한다. 준비 예외는 취소를 제외하고 `GameManager.FailPreparation`으로 Faulted와 실패 안내를 남긴다. 튜토리얼과 독립 실험실은 각자 시작 순서를 유지한다.
 
 ## 진입 파일
 | 파일 | 역할 |
 |---|---|
-| `Assets/WorkSpace/HSD/Scripts/CoreSystem/RootLifetimeScope.cs` | 앱 전역 등록(Backend·AppInitialization·GameDataManager·Audio·SceneChange·Research 저장·Debuff 카탈로그·튜토리얼 진행). 정적 주입 콜백(UI_Base, Player) |
-| `Assets/WorkSpace/HSD/Scripts/CoreSystem/AppInitialization.cs` | 기본 게스트, 연동 후 저장된 Google 세션 자동 로그인(실패 시 새 게스트 금지)→테이블→게임 데이터→Player. 계정 변경은 인증된 새 계정 데이터를 로드하고 로비 재생성 |
+| `Assets/WorkSpace/HSD/Scripts/CoreSystem/RootLifetimeScope.cs` | 앱 전역 등록(Backend·AppInitialization·Audio·SceneChange·Research 저장·Debuff 카탈로그·튜토리얼 진행). 정적 주입 콜백(UI_Base, Player) |
+| `Assets/WorkSpace/HSD/Scripts/CoreSystem/AppInitialization.cs` | 기본 게스트, 연동 후 저장된 Google 세션 자동 로그인(실패 시 새 게스트 금지)→Table→Player→강화 차트 준비. 계정 변경은 인증된 새 계정 데이터를 로드하고 로비 재생성 |
 | `Assets/WorkSpace/HSD/Scripts/CoreSystem/AppLoadingScreen.cs` | BootScene 로딩 커버, 튜토리얼 완료 여부로 첫 실행/복귀 분기·실패 재시도 |
 | `Assets/WorkSpace/USW/Tutorial/Scripts/IngameTutorialProgress.cs` | 모든 수업 성공 후 즉시 기기 완료 저장; 재실행 생략 분기 |
 | `Assets/WorkSpace/HSD/Prefab/UI/AppLoadingScreen.prefab` | 로딩 커버·재시도·튜토리얼/로비 씬 주소와 문구 |
@@ -71,3 +78,10 @@ InGameLifetimeScope는 Resources/StatusPopupCatalog가 없으면 초기화를 �
 | `docs/technical/server-client-data-architecture.md` | DI 범위·초기화 순서·데이터 진입점(Player/Table/Chart/RM)·잔존 시트 원본 |
 | `docs/technical/ingame-tutorial.md` | APK 시작 → 튜토리얼 → 로비 흐름 |
 | `docs/technical/player-data-architecture.md` | PlayerData 변경·저장 |
+
+## 보완 진입 파일 (11-04 대조)
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Tutorial/Scripts/TutorialWaveFlow.cs` | 튜토리얼 유한 웨이브의 소환/보상/최종 완료, 씬 Scoped 서비스 |
+| `Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchRunBonuses.cs` | 씬 로드 후 튜토리얼 판별 및 전투 강화 snapshot |

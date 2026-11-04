@@ -2,9 +2,16 @@
 system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
-verified: 2026-11-01
-commit: 5c048cf0
+verified: 2026-11-04
+commit: ef31f410
 ---
+
+## 2026-11-04 현재 코드 대조
+
+확인함: 영구 강화는 AccountResearchSaveStore를 통해 PlayerData.UpgradeProgress를 서버 snapshot에 저장한다. 로컬 PlayerPrefs는 미확인 변경 복구/기존 진행 이관용이며 서버 미연결이라는 옛 설명은 현재 상태가 아니다. ResearchRunBonuses는 LoadAsync 때 튜토리얼을 판별한다. AppInitialization의 GameDataManager 경로는 제거됐다. 과거 일회성 검증 스크립트와 누락 아트 원본을 현재 실행 입구에서 제외하고 당시 결과를 보존한다.
+
+기준 커밋 ef31f410과 미커밋 작업 트리를 정적으로 대조했다. Unity/서버/Android 재실행 없음. 이전 날짜 설명과 충돌하면 이 항목이 우선한다. [대조 결과와 미등록 분류](../refresh-20261104.md).
+
 # 아웃게임 카드
 
 ## 2026-11-01 강화 서버 연결
@@ -17,7 +24,7 @@ RootLifetimeScope의 저장소는 AccountResearchSaveStore이다. PlayerData.Upg
 | `tools/verification/UpgradeServerSaveChecks.cs` | 격리16검사 및 운영 DI/계정/실서버 노드 왕복·정리 |
 
 ## 2026-11-01 저장 신뢰성/호출 비용
-PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK 콜백까지 쓰기 잠금을 유지한다. 일반 변경은 30초 디바운스/60초 flush, 실패는 30~300초 backoff. 버전 Where 조건으로 저장하고 모르는 서버 변경은 보존/차단한다. 구매 가격·보상·영수증, 새 캐릭터 획득·족장/프로필 선택·튜토리얼은 PlayerData snapshot으로 통합했다. 기존 캐릭터/소유권 행은 읽기 보존한다. Daily/Weekly는 저널과 조건부 갱신, clean 로그인 no-op, 계정 전환 저장 확인을 적용했다. Unity 컴파일·격리 44검사·실서버 현재 값 저장/재조회·구버전404·일/주 동일 카운터 저장 PASS. 동시 다기기 CAS 보장과 로컬 전용 영구강화의 서버 백업은 검증 범위 밖이다. [상세 결과/경계](../../technical/save-reliability-20261101.md).
+PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK 콜백까지 쓰기 잠금을 유지한다. 일반 변경은 30초 디바운스/60초 flush, 실패는 30~300초 backoff. 버전 Where 조건으로 저장하고 모르는 서버 변경은 보존/차단한다. 구매 가격·보상·영수증, 새 캐릭터 획득·족장/프로필 선택·튜토리얼은 PlayerData snapshot으로 통합했다. 기존 캐릭터/소유권 행은 읽기 보존한다. Daily/Weekly는 저널과 조건부 갱신, clean 로그인 no-op, 계정 전환 저장 확인을 적용했다. Unity 컴파일·격리 44검사·실서버 현재 값 저장/재조회·구버전404·일/주 동일 카운터 저장 PASS. 이 검증 당시에는 강화가 로컬 전용이었다. 이후 서버 연결은 현재 코드 대조와 강화 서버 연결 결과를 따른다. 동시 다기기 CAS 보장은 이 기록의 검증 범위 밖이다. [상세 결과/경계](../../technical/save-reliability-20261101.md).
 
 | 파일 | 역할 |
 |---|---|
@@ -35,7 +42,6 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 |---|---|
 | `Assets/WorkSpace/USW/Scripts/BackendCharts/BackendChartReader.cs` | SDK CDN 목록/변경 다운로드/영속 캐시 공통 진입점 |
 | `Assets/WorkSpace/USW/Scripts/Endless/Runtime/BackendEndlessBalanceGateway.cs` | 전투 밸런스의 공통 차트 로더 연결 |
-| `Tools/verification/BackendChartCacheChecks.cs` | 로그인 전 차단·취소 4검사; 서버/캐시 변경 없음 |
 
 **한 줄 요약**: 뒤끝(TheBackend) 기본 게스트/연동 후 자동 Google 로그인 뒤 `Player`(유저 데이터 매니저 묶음)·`Table`(마스터)이 초기화된다. 로비에서 파티(`PartyDataSO`: 유닛 명단 + 족장)를 고르고 스태미나를 써서 `IngameScene`으로 간다. 영구 강화(코드 이름 Research, 화면 이름 "강화")는 로비 강화 탭에 직접 표시하는 트리이며, 전투 시작 때 합계가 고정된다.
 
@@ -52,7 +58,7 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 
 10-28 정적 대조: 아래10-22의 모드 통합은 HEAD에 포함된다. 현재 미커밋 공용 설정 화면은 `UI_SettingPanel_Base` → `SettingsGameBindings`와 UiAuthoring/Settings 자산에서 시작하며, 자세한 제작/게시 경로는 [UI 제작실 카드](ui-authoring.md)를 따른다. 기존 설정 프리팹이 진입 호스트이고 기본 표시 경로는 게시된 프리팹이다. 이번 대조는 로그인/결제/서버 요청을 실행하지 않았다.
 2026-10-20 결과창 재시작 계약을 확인·수정했다(미커밋). 운영 다시하기도 서버 설정 조회 → authored 스태미나 예약 저장 → 재입장이며, 예약 없는 운영 시작은 차단한다. 다른 기능의 검증 날짜를 갱신한 의미는 아니다. [검증](../../../outputs/ingame-qa-followup-20261020/RESULT.md).
-1. 시작·로그인: [초기화 카드](init.md)의 `AppInitialization.InitializeAsync`(Backend → `Table.InitializeAsync` → `GameDataManager.LoadAllAsync` → `Player.InitializeAsync`) → LobbyScene.
+1. 시작·로그인: [초기화 카드](init.md)의 `AppInitialization.InitializeAsync`(Backend → `Table.InitializeAsync` → `Player.InitializeAsync`) → LobbyScene.
 2. 로비: `LobbyLifetimeScope`가 `LobbyPresenter`·`UI_PartySelectPresenter`를 등록. 게임 시작 → `LobbyModeSelectView`에서 Normal/테스트 선택 → `GlobalData.SelectedParty` 설정 → (Normal만 튜토리얼 미완이면 튜토리얼로) → 양 모드 기존 NORMAL 원격 설정/설치 콘텐츠 검증 → `PlayerDataController.ReserveEntryAsync`로 스태미나 차감·예약 저장 → `SceneChangeManager.TransitionToSceneAsync`(Normal=`IngameScene`, 테스트=`HardIngameScene`). 기록도 기존 NORMAL을 공유한다. 이동 실패 후 재시도는 기존 예약을 재사용하며 실제 `GameManager.StartGame`에서 1회 소모한다. 10-22 미커밋 구현/검증은 `outputs/mode-integration-20261022/RESULT.md`.
 3. 인게임은 `GlobalData.SelectedParty`로 소환 명단(`UnitFactory`)과 족장(`ChieftainSelection`)을 정한다.
 4. 저장: 각 매니저는 `IClearable`(Clear/IsDirty/SaveAsync). 잦은 변경은 즉시 로컬 기록 후 `Player.RequestDebouncedSave`(30초 디바운스, 최대60초), 중요한 시점은 `Player.UpdateDirtyDataAsync`. 실패 재시도와 상세 경계는 위 저장 신뢰성 절을 따른다.
@@ -70,7 +76,6 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 | `tools/planner-studio/ITEM-CATALOG.md` | 아이템 4개 표, ID/Value 규약, Excel 개별·합본과 게임 연동 경계 |
 | `tools/planner-studio/app/item-icons.cjs` | PNG 검증·자동 주소·Excel 동봉 PNG/목록 출력 |
 | `Assets/WorkSpace/USW/Scripts/Editor/PlannerItemIconImporter.cs` | 기획툴 아이콘 묶음 Sprite 임포트와 Addressables 등록 메뉴 |
-| `Tools/verification/PlannerItemIconChecks.cs` | 실제 Editor Sprite·주소·재임포트·변조 거절 검사 |
 | `Assets/WorkSpace/USW/Scripts/IngameUI/UIManager.cs` | 결과창 재시작: 최신 설정·스태미나 예약 저장·연타 차단·실패 재시도 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Player.cs` | 유저 데이터 진입점(PlayerData·Profile·Mail·Character·Chief·Shop·Daily·Tutorial), 일괄/디바운스 저장 |
 | `Assets/WorkSpace/HSD/Scripts/Data/Global/Table.cs` | 공통 마스터 테이블(Addressables) |
@@ -282,7 +287,6 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 | `Assets/WorkSpace/USW/Scripts/OutGame/Research/ResearchScreen.cs` | 로비 강화 화면·선택·기존 저장 경로, 알림도 검토용 표시와 일치 |
 | `Assets/WorkSpace/USW/Data/OutgameUpgrade/UpgradeFont_WhiteBlack.mat` | KCC-Ganpan 강화 전용: 흰 face, 검은 outline 0.4, face dilation 0.18. 공용 원본 폰트 미변경 |
 | `Assets/Imports/Font/KCC-Ganpan SDF.asset` | 사용자 지정 기존 글꼴·atlas 원본 |
-| `design/1080_x_1921.png` | 사용자가 지정한 KHJ 하단 아트·색·배치 기준 |
 | `Assets/Imports/GGD_ArtWork/KHJ_Artwork/Out-game/SPR_UI3600_CardBg.png` | 잎 장식·노랑/주황 제목 띠·남색 정보판 원본 |
 | `Assets/Imports/GGD_ArtWork/KHJ_Artwork/Out-game/SPR_UI3600_IconFrame.png` | 하단 금색 아이콘 프레임 원본 |
 | `Assets/Imports/GGD_ArtWork/KHJ_Artwork/Out-game/SPR_UI3600_UpgradeButton.png` | 파란 강화/MAX 버튼 원본 |
@@ -295,7 +299,7 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 - 2026-10-18 빌드 전 수정: 기본값 EXP 영수증이 PlayerData 전체 파싱을 막던 문제, 손상 로컬 저널의 변경 허용, 오래된 계정 조회의 닉네임 덮어쓰기를 수정했다. 일일 상점은 기존 행을 확보한 뒤 갱신하고 조회 실패/중복 행에서는 쓰기·구매를 막되 나머지 로비 초기화는 계속한다. 일일 초기화는 동기화된 ServerClock만 사용한다. 기존 중복 행은 삭제·병합하지 않았으며 상점 복구는 별도다. [검증 근거](../../../outputs/outgame-prebuild-20261018/RESULT.md).
 - Player/Table/Chart/RM은 정적 진입점이지만 없앤 Manager 파사드와 별개다. 주입·초기화·정리 계약(`Player.Inject`, `Player.ClearAll`)을 유지한다.
 - 유저 데이터를 바꾸면 해당 매니저의 IsDirty를 켜고 저장 경로를 탄다. 뒤끝을 직접 호출하지 않는다.
-- 영구 강화는 재화를 쓰지 않는다. 저장은 지금 **로컬 PlayerPrefs**뿐이다(서버 저장 아님). 트리 `TreeKey`는 저장 키라서 파일명이 바뀌어도 바꾸지 않는다.
+- 영구 강화는 재화를 쓰지 않는다. 저장은 현재 **PlayerData snapshot 서버 저장**이며 PlayerPrefs는 복구/이관에 사용한다. 트리 `TreeKey`는 저장 키라서 파일명이 바뀌어도 바꾸지 않는다.
 - 2026-10-17 화면 검토용 항목은 `ResearchViewSettings.PreviewItems`에만 작성. 사용자 요청으로 게임 효과 미연결. 기존 트리의 Stat/ValuePerLevel·저장 키·ResearchRunBonuses는 변경하지 않았으며 화면 예시 수치를 실제 전투 수치로 해석하지 않는다.
 - 전투 중 강화 화면·저장이 바뀌어도 진행 중인 전투 수치는 바뀌지 않는다(시작 때 고정). 로드 전에는 `GameManager.StartGame`이 시작을 막는다.
 - 혼동 주의: 인게임 식량 강화는 `UpgradeManager`(USW/Upgrade, 씬마다 0강 시작)이고 영구 강화가 아니다.
@@ -374,3 +378,16 @@ Current event authoring and deployment use two readable tables: Events and Missi
 2026-10-31 MissionType follow-up: MissionType enum Normal/Event added. Normal requires an empty EventKey and progresses independently of event dates; Event requires a valid EventKey. Period uses Total/Daily/Weekly, with legacy Event converted to Total while preserving saved period identifiers. Game logic checks: 45 passed. Planner type selection/automatic event type/conditional event field/export checks passed; screenshot capture failed with UnknownVizError. Desktop charts and planner runtime refreshed.
 
 2026-10-31 attendance clarification: EventMissionPanel was removed. Existing AttendancePopup and original prefab slots now bind AttendanceDays missions through AttendanceMissionData; AttendanceService routes claims to the chosen mission. Explicit EventKey is required if multiple eligible attendance groups exist. Binding checks 9 + mission checks 45 passed, with no server writes in these checks. Prior live test granted Stamina 10 to the existing Editor test account; subsequent UI binding checks did not grant rewards.
+
+## 과거 참조 (현재 체크아웃에 없음)
+
+- `Tools/verification/BackendChartCacheChecks.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+- `Tools/verification/PlannerItemIconChecks.cs`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+- `design/1080_x_1921.png`: 당시 참조 이름만 보존. 현재 실행/설치 필수 파일이 아니다.
+
+## 보완 진입 파일 (11-04 대조)
+
+| 파일 | 역할 |
+|---|---|
+| `Data/UI/unit-level-bonus-20261029/01_UI3200_유닛강화패널.md` | 유닛 강화 패널 아트 요청 원본 |
+| `docs/technical/upgrade-server-save-result.md` | 강화 서버 연결 결과와 검증 경계 |
