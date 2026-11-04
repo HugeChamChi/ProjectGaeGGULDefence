@@ -94,7 +94,6 @@ public class RootLifetimeScope : LifetimeScope
         builder.RegisterInstance(debuffSettings);
         builder.Register<DebuffCatalog>(Lifetime.Singleton);
         builder.Register<DebuffInfoPresenter>(Lifetime.Singleton);
-        builder.Register<GameDataManager>(Lifetime.Singleton);
 
         // 정적 주입 (UI_Base 전체가 하나의 AudioManager를 공유하도록 명시적 주입)
         builder.RegisterBuildCallback(resolver =>

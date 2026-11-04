@@ -3,11 +3,10 @@ using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
 
-/// <summary>앱 부팅의 게스트/연동 로그인 → Table → 게임 데이터 → Player 순서를 소유한다.</summary>
+/// <summary>앱 부팅의 게스트/연동 로그인 → Table → Player 순서를 소유한다.</summary>
 public sealed class AppInitialization : IDisposable
 {
     private readonly BackendGameData _backendData;
-    private readonly GameDataManager _gameData;
     private readonly GoogleIdentityAuth _identity;
     private readonly ResearchChartService _researchCharts;
     private readonly CancellationTokenSource _lifetime = new();
@@ -16,8 +15,8 @@ public sealed class AppInitialization : IDisposable
     public bool IsReady { get; private set; }
 
     /// <summary>루트 서비스만 의존하며 로비 컴포넌트보다 먼저 Player를 주입한다.</summary>
-    public AppInitialization(BackendGameData backendData, GameDataManager gameData, GoogleIdentityAuth identity, ResearchChartService researchCharts)
-    { _backendData = backendData; _gameData = gameData; _identity = identity; _researchCharts = researchCharts; Player.Inject(backendData); }
+    public AppInitialization(BackendGameData backendData, GoogleIdentityAuth identity, ResearchChartService researchCharts)
+    { _backendData = backendData; _identity = identity; _researchCharts = researchCharts; Player.Inject(backendData); }
 
     /// <summary>중복 시작은 합치고 실패 후에는 다시 시도할 수 있다.</summary>
     public async UniTask InitializeAsync(CancellationToken cancellationToken)
@@ -99,7 +98,6 @@ public sealed class AppInitialization : IDisposable
             Player.ClearAll();
             Player.Inject(_backendData);
             await Table.InitializeAsync().AttachExternalCancellation(token);
-            await _gameData.LoadAllAsync(token);
             await Player.InitializeAsync().AttachExternalCancellation(token);
             await _researchCharts.PrepareAsync(token);
             if (Player.PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
@@ -117,7 +115,6 @@ public sealed class AppInitialization : IDisposable
         if (!Backend.IsLogin) throw new InvalidOperationException("로그인이 필요합니다.");
         Player.Inject(_backendData);
         await Table.InitializeAsync().AttachExternalCancellation(token);
-        if (!_gameData.IsLoaded) await _gameData.LoadAllAsync(token);
         await Player.InitializeAsync().AttachExternalCancellation(token);
         await _researchCharts.PrepareAsync(token);
         if (!Player.PlayerData.IsReady) throw new InvalidOperationException("선택한 계정 데이터를 불러오지 못했습니다.");

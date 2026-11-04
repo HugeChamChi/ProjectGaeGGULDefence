@@ -10,6 +10,7 @@ using VContainer;
 public sealed class TotemInventoryUI : MonoBehaviour
 {
     [Inject] private TotemInventory _inventory;
+    [Inject] private TimerController _vaultTimer;
     [Inject] private GridManager _gridManager;
     [Inject] private WorldInteractionSettings _interactionSettings;
     [SerializeField] private GameObject _panel;
@@ -57,6 +58,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
 
     private void Start()
     {
+        if (_vaultTimer != null) _vaultTimer.OnTimeVaultChanged += OnTimeVaultChanged;
         _camera = Camera.main;
         _panelGroup = _panel.GetComponent<CanvasGroup>();
         if (_panelGroup == null) _panelGroup = _panel.AddComponent<CanvasGroup>();
@@ -80,6 +82,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private void OnDestroy()
     {
+        if (_vaultTimer != null) _vaultTimer.OnTimeVaultChanged -= OnTimeVaultChanged;
         if (_inventory != null) _inventory.OnChanged -= Refresh;
         if (_toggleButton != null) _toggleButton.onClick.RemoveListener(Toggle);
         if (_closeButton != null) _closeButton.onClick.RemoveListener(CloseInventory);
@@ -111,8 +114,21 @@ public sealed class TotemInventoryUI : MonoBehaviour
         if (_panel.activeSelf) CloseInventory();
         else OpenInventory();
     }
+    private void OnTimeVaultChanged(bool active)
+    {
+        if (!active) return;
+        CancelDrag(keepOpen:false);
+        EndFieldDrag(_fieldDragTotem);
+        _panelTransitionVersion++;
+        _closing = false;
+        _panelAnim?.Stop();
+        if (_panel != null) _panel.SetActive(false);
+        if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(false);
+    }
+
     private void OpenInventory()
     {
+        if (_vaultTimer?.TimeVaultActive == true) return;
         _panelTransitionVersion++;
         _closing = false;
         _panelAnim?.Stop();
@@ -288,6 +304,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     /// <summary>Opens the existing drawer as a recall target while a placed totem is moved.</summary>
     public bool BeginFieldDrag(TotemBase totem)
     {
+        if (_vaultTimer?.TimeVaultActive == true) return false;
         if (_inventory == null || _inventory.CanPlace != null || totem == null || !totem.IsPlaced
             || !AllowClose || IsDraggingOrPlacing || !isActiveAndEnabled) return false;
         _fieldDragTotem = totem;

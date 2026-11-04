@@ -78,13 +78,33 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public bool IsFirstPlacement { get; private set; } = true;
 
     private bool _hasTemporaryTier;
+    private bool _hasTimeVaultTier;
+    private Tier _preVaultTier;
+    /// <summary>시간 금고의 전투 등급만 Legend로 덮는다. 소유 등급/기존 임시 출처는 보존한다.</summary>
+    public void SetTimeVaultTier(bool active)
+    {
+        if (active == _hasTimeVaultTier || unitData == null) return;
+        if (active)
+        {
+            _preVaultTier = currentTier;
+            _hasTimeVaultTier = true;
+            currentTier = Tier.Legend;
+        }
+        else
+        {
+            _hasTimeVaultTier = false;
+            currentTier = _preVaultTier;
+        }
+        _visual?.UpdateVisual(currentTier);
+        OnCombatTierChanged();
+    }
     private UnityEngine.Object _temporaryTierSource;
     private UnitData _originalData;
     private Tier _originalTier;
     /// <summary>조커형 노말 합성 재료인지 여부.</summary>
     public virtual bool IsWildcardMergeUnit => false;
     /// <summary>합성/판매에 사용하는 실제 소유 등급.</summary>
-    public Tier OriginalTier => _hasTemporaryTier ? _originalTier : currentTier;
+    public Tier OriginalTier => _hasTemporaryTier ? _originalTier : _hasTimeVaultTier ? _preVaultTier : currentTier;
     /// <summary>합성/판매에 사용하는 실제 소유 데이터.</summary>
     public UnitData OriginalData => _hasTemporaryTier ? _originalData : unitData;
     /// <summary>범위 효과에 의해 임시 등급을 사용 중인지 여부.</summary>
@@ -111,7 +131,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         if (!_hasTemporaryTier || !ReferenceEquals(_temporaryTierSource, source)) return;
         unitData = _originalData;
-        currentTier = _originalTier;
+        if (_hasTimeVaultTier) _preVaultTier = _originalTier;
+        else currentTier = _originalTier;
         _hasTemporaryTier = false;
         _temporaryTierSource = null;
         _originalData = null;
@@ -123,7 +144,11 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     protected virtual void OnCombatTierChanged() { }
 
     /// <summary>판매/영구 제거 직전에 원래 전투 데이터를 복구한다.</summary>
-    public void RestoreOriginalTier() => RemoveTemporaryTier(_temporaryTierSource);
+    public void RestoreOriginalTier()
+    {
+        SetTimeVaultTier(false);
+        RemoveTemporaryTier(_temporaryTierSource);
+    }
 
     private UnitStatsModifier _stats;
     private UnitCombatComponent _combat;

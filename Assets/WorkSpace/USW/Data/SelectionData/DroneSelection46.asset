@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection46
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects:
+    - rid: 5227033296472375390
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
+  chooseId: 9146
+  chooseName: "\uCC98\uD615 \uC7A5\uC57D"
+  tier: 1
+  spawnRate: 1
+  description: "\uC801\uC911 \uC2DC \uBCF4\uC2A4 \uCCB4\uB825\uC774 {value}% \uC774\uD558\uC774\uBA74
+    \uC9C1\uC811 \uC790\uD3ED \uD53C\uD574\uAC00 {secondary}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uCCB4\uB825\uC774 \uB0AE\uC740 \uBCF4\uC2A4\uC5D0\uAC8C \uC9C1\uC811
+    \uC790\uD3ED \uD53C\uD574\uAC00 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  DescriptionTerms: []
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 0
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 0
+  icon: {fileID: 21300000, guid: b1f1cc16bfe6bec488b841704062de38, type: 3}
+  animationFrames: []
+  frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 5227033296472375390
+      type: {class: BombExecutionDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        HpThreshold: 0.3
+        DamageBonus: 0.2

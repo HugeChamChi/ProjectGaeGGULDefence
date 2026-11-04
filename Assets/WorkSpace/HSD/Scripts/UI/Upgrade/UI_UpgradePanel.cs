@@ -3,11 +3,43 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 namespace HSD.UI.Upgrade
 {
     public class UI_UpgradePanel : UI_Base
     {
+        private GameManager _gameManager;
+        private TimerController _vaultTimer;
+
+        /// <summary>유예 진입 시 열려 있던 강화창도 닫고 모든 열기 경로를 제한한다.</summary>
+        [VContainer.Inject]
+        public void ConfigureTimeVault(GameManager gameManager, TimerController timer)
+        {
+            if (_vaultTimer != null) _vaultTimer.OnTimeVaultChanged -= OnTimeVaultChanged;
+            _gameManager = gameManager;
+            _vaultTimer = timer;
+            _vaultTimer.OnTimeVaultChanged += OnTimeVaultChanged;
+            if (_vaultTimer.TimeVaultActive) OnTimeVaultChanged(true);
+        }
+
+        /// <summary>마지막 유예 중에는 강화창을 열지 않는다.</summary>
+        public override void Open()
+        {
+            if (_gameManager?.IsTimeVaultActive == true) return;
+            base.Open();
+        }
+
+        /// <summary>비동기 직접 호출에도 같은 유예 제한을 적용한다.</summary>
+        public override UniTask OpenAsync() => _gameManager?.IsTimeVaultActive == true
+            ? UniTask.CompletedTask : base.OpenAsync();
+
+        private void OnTimeVaultChanged(bool active)
+        {
+            if (!active) return;
+            CloseStatFeedback();
+            gameObject.SetActive(false);
+        }
         /// <summary>Matches UI_Base's Canvas-based visibility instead of GameObject activity.</summary>
         public bool IsOpen => gameObject.activeInHierarchy && (_canvas == null || _canvas.enabled);
         [Header("Currency")]
@@ -69,6 +101,7 @@ namespace HSD.UI.Upgrade
 
         private void OnDestroy()
         {
+            if (_vaultTimer != null) _vaultTimer.OnTimeVaultChanged -= OnTimeVaultChanged;
             _presenter?.Dispose();
             if (upgradeModel != null)
             {

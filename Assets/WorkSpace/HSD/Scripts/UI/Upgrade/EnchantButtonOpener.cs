@@ -10,6 +10,7 @@ using HSD.UI.Upgrade;
 public class EnchantButtonOpener : MonoBehaviour
 {
     private UI_UpgradePanel _panel;
+    [VContainer.Inject] private GameManager _gameManager;
 
     /// <summary>씬에 등록된 강화 패널을 주입받는다.</summary>
     [VContainer.Inject]
@@ -24,6 +25,7 @@ public class EnchantButtonOpener : MonoBehaviour
 
     private void OpenUpgradePanel()
     {
+        if (_gameManager?.IsTimeVaultActive == true) return;
         var panel = _panel;
         if (panel == null)
         {

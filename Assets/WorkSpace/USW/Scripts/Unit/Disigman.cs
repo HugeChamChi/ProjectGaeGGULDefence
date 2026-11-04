@@ -79,7 +79,7 @@ public sealed class Disigman : UnitBase
             || target == null || target.IsDead || _dependencies?.Timer == null) return false;
         _chargedAttacks = 0;
         // Commit immediately. The scene presentation follows the skill's actual impact and shard arrival.
-        _dependencies.Timer.AddTime(SecondsRecovered, TimeAddSource.Hack, transform.position);
+        _dependencies.Timer.AddTimeFromDisigman(SecondsRecovered, this, target);
         ClearRecoveryShot();
         if (LevelStat(UnitBonusStat.RecoveryNextBasicPercent) > 0f)
         { _recoveryShotTarget = target; target.OnDeath += ClearRecoveryShot; }

@@ -106,6 +106,8 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     private UnitBase  _unit;
     private TotemBase _totem;
+    /// <summary>입력 조정자가 토템 전용 상호작용 제한을 적용할 수 있는 캐시된 종류.</summary>
+    public bool IsTotem => _totem != null;
     private SpriteRenderer _spriteRenderer;
     private GridCell _dropPreviewCell;
     private readonly List<RaycastHit2D> _dropHits = new List<RaycastHit2D>();

@@ -299,6 +299,74 @@ public static class SelectionDefinitionReader
             case OverflowManaDefinition d:
                 Positive(d.ManaPerCast, nameof(d.ManaPerCast));
                 return new OverflowManaDefinition { ManaPerCast = d.ManaPerCast };
+            case HackingOverflowDamageDefinition d:
+                Positive(d.AttackCoefficient, nameof(d.AttackCoefficient));
+                return new HackingOverflowDamageDefinition { AttackCoefficient=d.AttackCoefficient };
+            case HackingConsumptionDefinition d:
+                Positive(d.ConsumptionMultiplier, nameof(d.ConsumptionMultiplier));
+                Positive(d.StackDamageMultiplier, nameof(d.StackDamageMultiplier));
+                return new HackingConsumptionDefinition { ConsumptionMultiplier=d.ConsumptionMultiplier, StackDamageMultiplier=d.StackDamageMultiplier };
+            case BasicBombCountDefinition d:
+                Positive(d.ExtraBombs, nameof(d.ExtraBombs));
+                return new BasicBombCountDefinition { ExtraBombs=d.ExtraBombs };
+            case BombRearmDefinition d:
+                Positive(d.HitsRequired, nameof(d.HitsRequired)); Positive(d.ExtraBombs, nameof(d.ExtraBombs));
+                return new BombRearmDefinition { HitsRequired=d.HitsRequired, ExtraBombs=d.ExtraBombs };
+            case BombStackFuseDefinition d:
+                Positive(d.MaximumStacks, nameof(d.MaximumStacks)); Positive(d.BonusPerStack, nameof(d.BonusPerStack));
+                return new BombStackFuseDefinition { MaximumStacks=d.MaximumStacks, BonusPerStack=d.BonusPerStack };
+            case GammanBombDefinition d:
+                if (d.Prefab == null) throw new ArgumentException("Gamman delivery prefab required");
+                return new GammanBombDefinition { Prefab=d.Prefab };
+            case BetanCycleDefinition d:
+                Positive(d.TimeMultiplier, nameof(d.TimeMultiplier));
+                return new BetanCycleDefinition { TimeMultiplier=d.TimeMultiplier };
+            case CounterBombDefinition: return new CounterBombDefinition();
+            case BombWarheadDefinition d:
+                Positive(d.DamageMultiplier, nameof(d.DamageMultiplier)); Positive(d.CycleMultiplier, nameof(d.CycleMultiplier));
+                return new BombWarheadDefinition { DamageMultiplier=d.DamageMultiplier, CycleMultiplier=d.CycleMultiplier };
+            case BombArmorDefinition d:
+                Ratio(d.ReductionRatio, nameof(d.ReductionRatio)); Positive(d.DurationSeconds, nameof(d.DurationSeconds));
+                return new BombArmorDefinition { ReductionRatio=d.ReductionRatio, DurationSeconds=d.DurationSeconds };
+            case BombExecutionDefinition d:
+                Ratio(d.HpThreshold, nameof(d.HpThreshold)); Positive(d.DamageBonus, nameof(d.DamageBonus));
+                return new BombExecutionDefinition { HpThreshold=d.HpThreshold, DamageBonus=d.DamageBonus };
+            case BombSalvageDefinition d:
+                Positive(d.HitsRequired, nameof(d.HitsRequired)); Positive(d.FoodAmount, nameof(d.FoodAmount));
+                return new BombSalvageDefinition { HitsRequired=d.HitsRequired, FoodAmount=d.FoodAmount };
+            case HackingCapacityDefinition d:
+                Positive(d.AdditionalCapacity, nameof(d.AdditionalCapacity));
+                return new HackingCapacityDefinition { AdditionalCapacity=d.AdditionalCapacity };
+            case BetanAttackPenaltyDefinition d:
+                Ratio(d.ReductionRatio, nameof(d.ReductionRatio));
+                return new BetanAttackPenaltyDefinition { ReductionRatio=d.ReductionRatio };
+            case AcceleratedDriveDefinition d:
+                Positive(d.ExtraDrainRatio, nameof(d.ExtraDrainRatio)); NonNegative(d.AttackSpeedBonus, nameof(d.AttackSpeedBonus));
+                return new AcceleratedDriveDefinition { ExtraDrainRatio=d.ExtraDrainRatio, AttackSpeedBonus=d.AttackSpeedBonus };
+            case SacrificeDefinition d:
+                Positive(d.CostSeconds, nameof(d.CostSeconds)); Positive(d.AttackBonusPerPayment, nameof(d.AttackBonusPerPayment));
+                return new SacrificeDefinition { CostSeconds=d.CostSeconds, AttackBonusPerPayment=d.AttackBonusPerPayment };
+            case TimeVaultDefinition d:
+                Positive(d.GraceSeconds, nameof(d.GraceSeconds));
+                return new TimeVaultDefinition { GraceSeconds=d.GraceSeconds };
+            case OverheatCompressionDefinition d:
+                Positive(d.OverflowPerStack, nameof(d.OverflowPerStack)); Positive(d.CostSeconds, nameof(d.CostSeconds)); Positive(d.DamageWeight, nameof(d.DamageWeight));
+                return new OverheatCompressionDefinition { OverflowPerStack=d.OverflowPerStack, CostSeconds=d.CostSeconds, DamageWeight=d.DamageWeight };
+            case OverloadMergeDefinition d:
+                Positive(d.CostSeconds, nameof(d.CostSeconds));
+                Ratio(d.UpgradeChance, nameof(d.UpgradeChance));
+                return new OverloadMergeDefinition { CostSeconds = d.CostSeconds, UpgradeChance = d.UpgradeChance };
+            case RecoveryHackingDefinition d:
+                Positive(d.StacksPerRecovery, nameof(d.StacksPerRecovery));
+                if (d.HackingData == null) throw new ArgumentException("Recovery hacking data is required.");
+                return new RecoveryHackingDefinition { StacksPerRecovery = d.StacksPerRecovery, HackingData = d.HackingData };
+            case GlitchBombDefinition d:
+                if (d.Prefab == null) throw new ArgumentException("Glitch bomb prefab is required.");
+                return new GlitchBombDefinition { Prefab = d.Prefab };
+            case GlitchAttackDefinition d:
+                NonNegative(d.BonusPerGlitch, nameof(d.BonusPerGlitch));
+                Positive(d.MaximumTriggers, nameof(d.MaximumTriggers));
+                return new GlitchAttackDefinition { BonusPerGlitch = d.BonusPerGlitch, MaximumTriggers = d.MaximumTriggers };
             case BombHackingDefinition d:
                 Positive(d.StacksPerBomb, nameof(d.StacksPerBomb));
                 return new BombHackingDefinition { StacksPerBomb = d.StacksPerBomb };

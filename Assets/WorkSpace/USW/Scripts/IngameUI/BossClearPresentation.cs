@@ -70,7 +70,7 @@ public sealed class BossClearPresentation : MonoBehaviour
         if (!isActiveAndEnabled || _fusion == null || _stage == null || _timer == null)
         {
             token.ThrowIfCancellationRequested();
-            if (pending && seconds > 0f) _timer?.AddTime(seconds);
+            if (pending && seconds > 0f) _timer?.AddBossKillTime(seconds);
             return;
         }
         if (seconds <= 0f) return;
@@ -87,7 +87,7 @@ public sealed class BossClearPresentation : MonoBehaviour
             {
                 await UniTask.WaitUntil(() => _fusion.HasReachedImpact || !_fusion.IsPresenting, cancellationToken: cts.Token);
                 cts.Token.ThrowIfCancellationRequested();
-                _timer.AddTime(seconds);
+                _timer.AddBossKillTime(seconds);
                 _fusion.NotifyBonusApplied();
             }
             await UniTask.WaitUntil(() => _fusion.IsBonusCountComplete || !_fusion.IsPresenting, cancellationToken: cts.Token);

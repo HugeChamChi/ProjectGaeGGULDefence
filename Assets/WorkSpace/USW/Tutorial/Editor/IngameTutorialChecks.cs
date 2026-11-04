@@ -80,9 +80,11 @@ public static class IngameTutorialChecks
                 EventSystem.current.RaycastAll(pointer,hits);
                 var target=hits.Count>0 ? ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject) : null;
                 Check(target==button.gameObject,"Actual UI raycast reaches "+button.name);
+                pointer.eligibleForClick=true;
                 ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerDownHandler);
                 ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerUpHandler);
-                ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerClickHandler);
+                if(pointer.eligibleForClick)
+                    ExecuteEvents.Execute(target,pointer,ExecuteEvents.pointerClickHandler);
             }
             async UniTask Acknowledge()
             {
@@ -311,6 +313,8 @@ public static class IngameTutorialChecks
             Check(!level.DescriptionBlocksInput,"Tapping a term selects the required card without reopening its explanation");
             await Stage(IngameTutorialStage.ChiefSkill);
             Check(Get<GameObject>(director,"_optionsButton").activeSelf,"Options appear after reaching the level-up choices");
+            // Stage changes before the level-up close animation restores parent CanvasGroups.
+            await UniTask.WaitUntil(()=>upgrade.IsInteractable(),cancellationToken:token);
             Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
             var patterns=Get<BossPatternController>(director,"_patterns");
             await UniTask.WaitUntil(()=>patterns.IsCounterablePattern(boss.CurrentBoss),cancellationToken:token);

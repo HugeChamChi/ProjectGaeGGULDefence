@@ -35,6 +35,7 @@ public class InGameLifetimeScope : LifetimeScope
         builder.Register<EndlessRunService>(Lifetime.Scoped).AsSelf().As<IRunStatModifiers>();
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<WaveManager>();
+        builder.Register<TutorialWaveFlow>(Lifetime.Scoped);
         builder.RegisterComponentInHierarchy<TimerController>();
         SceneComponentRegistration.RegisterOptional<DisigmanGlitchLinkPresentation>(builder, gameObject.scene);
 
@@ -108,6 +109,7 @@ public class InGameLifetimeScope : LifetimeScope
         SceneComponentRegistration.RegisterOptional<HSD.InGameDebug.UI_OpenDebugButton>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<HSD.UI.Upgrade.UI_UpgradePanel>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<EnchantButtonOpener>(builder, gameObject.scene);
+        SceneComponentRegistration.RegisterOptional<IngameHudMenu>(builder, gameObject.scene);
         builder.RegisterComponentInHierarchy<CurrencyFloaterManager>();
 
         builder.RegisterComponentInHierarchy<ProjectilePool>();
@@ -127,6 +129,7 @@ public class InGameLifetimeScope : LifetimeScope
         if (isDron)
         {
             builder.RegisterComponentInHierarchy<DroneManager>();
+            builder.RegisterEntryPoint<GlitchReactionBinding>();
         }
 
         builder.RegisterEntryPoint<AlphanActiveSkill>(Lifetime.Scoped).AsSelf();

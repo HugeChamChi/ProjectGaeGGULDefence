@@ -10,7 +10,7 @@ public sealed class ResearchRunBonuses
     private readonly ResearchAccountContext _account;
     private readonly ResearchTreeData _tree;
     private readonly float[] _values = new float[Enum.GetValues(typeof(ResearchStat)).Length];
-    private readonly bool _enabled;
+    private readonly SceneComponentCollection _scene;
     /// <summary>강화 로드가 끝나기 전에는 전투 시작을 허용하지 않는다.</summary>
     public bool IsReady { get; private set; }
 
@@ -28,14 +28,16 @@ public sealed class ResearchRunBonuses
         ResearchTreeData tree, SceneComponentCollection scene)
     {
         _saves = saves; _account = account; _tree = tree;
-        _enabled = !scene.Enumerate<GaeGGUL.Tutorial.IngameTutorialDirector>().Any();
+        _scene = scene;
     }
 
     /// <summary>게임 시작 전에 모든 합계를 복사한다. 이후 화면/저장 변경이 현재 전투를 바꾸지 않는다.</summary>
     public async UniTask LoadAsync(CancellationToken cancellationToken)
     {
         if (IsReady) return;
-        if (_enabled)
+        // Scope construction runs before scene.isLoaded. Detect the tutorial after loading,
+        // when scene components can actually be enumerated, rather than caching a false negative.
+        if (!_scene.Enumerate<GaeGGUL.Tutorial.IngameTutorialDirector>().Any())
         {
             if (_tree == null) throw new InvalidOperationException("영구 강화 트리 미연결");
             string accountKey = _account.AccountKey;

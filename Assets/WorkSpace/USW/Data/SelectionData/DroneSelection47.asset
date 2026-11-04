@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection47
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects:
+    - rid: 5227033296472375391
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
+  chooseId: 9147
+  chooseName: "\uC794\uD574 \uD68C\uC218"
+  tier: 1
+  spawnRate: 1
+  description: "\uC9C1\uC811 \uD53C\uD574\uC640 \uD574\uD0B9 \uC790\uD3ED\uC744 \uD569\uCCD0
+    {value}\uD68C \uC801\uC911\uD560 \uB54C\uB9C8\uB2E4 \uC2DD\uB7C9 {secondary}\uC744
+    \uC5BB\uC2B5\uB2C8\uB2E4. \uAC10\uB9DD \uC6B4\uBC18\uD0C4\uC744 \uD3EC\uD568\uD558\uBA70
+    \uAE30\uCCB4\uB2F9 \uD55C \uBC88\uB9CC \uC9D1\uACC4\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uC790\uD3ED \uC801\uC911\uC744 \uBAA8\uC544 \uC2DD\uB7C9\uC744
+    \uC5BB\uC2B5\uB2C8\uB2E4."
+  DescriptionTerms: []
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 0
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 0
+  icon: {fileID: 21300000, guid: b1f1cc16bfe6bec488b841704062de38, type: 3}
+  animationFrames: []
+  frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 5227033296472375391
+      type: {class: BombSalvageDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        HitsRequired: 10
+        FoodAmount: 10

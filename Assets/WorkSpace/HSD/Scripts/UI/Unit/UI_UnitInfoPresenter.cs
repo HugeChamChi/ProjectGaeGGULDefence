@@ -135,10 +135,10 @@ namespace GaeGGUL.UI.Unit
                 float perStack = hacking.CoefficientPerStack.Get(tier) * (_unit is Drone_Gamman gamma ? gamma.StackDamageMultiplier : 1f);
                 string description = !_detailed
                     ? (producer ? $"드론이 {attacks}회 공격하면 해킹 스택 {production}개를 만듭니다."
-                        : $"해킹 스택을 최대 {hacking.MaxStacksConsumed.Get(tier)}개 소모해 강력한 공격을 합니다.")
+                        : $"해킹 스택을 최대 {(_unit is Drone_Gamman consumer ? consumer.MaximumStacksConsumed : hacking.MaxStacksConsumed.Get(tier))}개 소모해 강력한 공격을 합니다.")
                     : producer
-                    ? $"소유 드론 일반공격 {attacks}회마다 해킹 스킬을 사용합니다. 다음 생산 {production}스택. 보스 공유 상한 {hacking.Capacity}."
-                    : $"기본 피해 계수 {hacking.BaseCoefficient.Get(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {hacking.MaxStacksConsumed.Get(tier)}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
+                    ? $"소유 드론 일반공격 {attacks}회마다 해킹 스킬을 사용합니다. 다음 생산 {production}스택. 보스 공유 상한 {(_unit is HackingDroneSpawner spawner ? spawner.SharedStackCapacity : hacking.Capacity)}."
+                    : $"기본 피해 계수 {hacking.BaseCoefficient.Get(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {(_unit is Drone_Gamman consumerDetail ? consumerDetail.MaximumStacksConsumed : hacking.MaxStacksConsumed.Get(tier))}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
                 _view.UpdateSkillInfo(producer ? "해킹" : "해킹 기폭", description,
                     producer ? $"공격 {attacks}회 충전" : $"{cooldown:F1}초");
             }

@@ -25,6 +25,7 @@ public class UpgradeManager : MonoBehaviour
     [Inject] private AudioManager _audioManager;
     [Inject] private UpgradeKeyOverrides _keyOverrides;
     [Inject] private UpgradeSettings _settings;
+    [Inject] private GameManager _gameManager;
 
     public bool   IsLoaded { get; private set; }
     public event Action OnLoaded;
@@ -151,6 +152,7 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>식량을 결제하고 한 단계 강화한다. 유효하지 않은 비용이나 재화 부족이면 false.</summary>
     public bool TryUpgrade(string upgradeTarget)
     {
+        if (_gameManager?.IsTimeVaultActive == true) return false;
         float cost = GetUpgradeCost(upgradeTarget);
         if (cost < 0 || float.IsNaN(cost) || float.IsInfinity(cost)
             || GetUpgradeLevel(upgradeTarget) == int.MaxValue || float.IsInfinity(TotalSpent + cost)) return false;

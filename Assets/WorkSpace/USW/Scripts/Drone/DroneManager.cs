@@ -19,12 +19,13 @@ public class DroneManager : MonoBehaviour
             if (_hacking == null)
             {
                 _hacking = gameObject.AddComponent<DroneHackingRuntime>();
-                _hacking.Initialize(_bossManager, _gameManager, _effects);
+                _hacking.Initialize(_bossManager, _gameManager, _effects, _timerController);
             }
             return _hacking;
         }
     }
     [VContainer.Inject] private BossManager _bossManager;
+    [VContainer.Inject] private TimerController _timerController;
     [VContainer.Inject] private CurrencyManager _currencyManager;
     [VContainer.Inject] private TotemBuffManager _totemBuffManager;
     [VContainer.Inject] private GridManager _gridManager;
@@ -32,6 +33,46 @@ public class DroneManager : MonoBehaviour
     [VContainer.Inject] private IChiefSelectionReader _chiefEffects;
     [VContainer.Inject] private GameManager _gameManager;
     [VContainer.Inject] private FieldPauseVisuals _fieldPause;
+    [VContainer.Inject] private BossPatternController _patterns;
+    private int _salvageHits;
+    private int _counterFrame = -1;
+    private void Start() { if (_patterns != null) _patterns.OnPatternCountered += OnPatternCountered; }
+    private void OnDestroy() { if (_patterns != null) _patterns.OnPatternCountered -= OnPatternCountered; }
+    private void OnPatternCountered(BossBase boss, BossPatternData pattern)
+    {
+        if (_effects?.HasCounterBomb != true || _counterFrame == Time.frameCount || _gameManager?.IsFinished == true) return;
+        _counterFrame = Time.frameCount;
+        if (_gridManager == null) return;
+        var owners = new HashSet<Drone_Betan>();
+        foreach (var cell in _gridManager.GetOccupiedCells())
+            if (cell.OccupyingUnit is Drone_Betan owner) owners.Add(owner);
+        foreach (var owner in owners) owner.FireCounterSkill();
+    }
+    /// <summary>직접 자폭의 유효 적중에서만 소량 스택을 즉시 확보/소비하여 자기 피해를 강화한다.</summary>
+    public decimal GetBombImpactDamage(BossBase boss, int damage, bool allowFuse = true)
+    {
+        decimal result = damage * (decimal)(_effects?.BombDamageMultiplier ?? 1f);
+        if (boss != null && boss.MaxHp > 0 && boss.CurrentHp / boss.MaxHp <= (decimal)(_effects?.BombExecutionThreshold ?? 0f))
+            result *= 1m + (decimal)(_effects?.BombExecutionBonus ?? 0f);
+        int stacks = _effects?.BombFuseStacks ?? 0;
+        if (allowFuse && stacks > 0 && Hacking.Target == boss && Hacking.Ledger.Available > 0)
+        {
+            var reservation = Hacking.Reserve(boss, stacks);
+            if (reservation != null && Hacking.Commit(boss, reservation))
+                result *= 1m + (decimal)(reservation.DamageAmount * (_effects?.BombFuseBonusPerStack ?? 0f));
+        }
+        return result;
+    }
+    /// <summary>직접/해킹/운반 자폭 한 기의 유효 접촉 후 공용 지원을 한 번 집계한다.</summary>
+    public void RecordBombImpact(BossBase boss, Drone_Betan owner, int lifetime)
+    {
+        owner?.RecordBombHit(lifetime);
+        if ((_effects?.BombArmorDuration ?? 0f) > 0f)
+            boss?.Debuffs?.RefreshBombArmor(_effects.BombArmorReduction, _effects.BombArmorDuration);
+        int required = _effects?.BombSalvageHits ?? 0;
+        if (required <= 0) { _salvageHits = 0; return; }
+        if (++_salvageHits >= required) { _salvageHits -= required; _currencyManager?.AddCurrency(_effects.BombSalvageFood); }
+    }
     private float _betanNormalTimer, _betanEpicTimer;
     private (float Interval, int Count) _normalEffect, _epicEffect;
     private readonly List<Drone_Betan> _betans = new();

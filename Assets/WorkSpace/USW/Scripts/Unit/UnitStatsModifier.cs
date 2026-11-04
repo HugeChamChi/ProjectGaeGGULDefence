@@ -94,6 +94,7 @@ public class UnitStatsModifier : MonoBehaviour
 
         float damage = (baseDamage + flatAttackBonus)
                      * (1f + cellAttackBonus)
+                     * (attackBased && _unit is Drone_Betan ? 1f - (_deps?.DroneEffects?.BetanAttackReductionRatio ?? 0f) : 1f)
                      * cellModifier
                      * totemModifier
                      * rowModifier
@@ -115,6 +116,8 @@ public class UnitStatsModifier : MonoBehaviour
             critical = true;
         }
 
+        if (attackBased) damage *= 1f + (_deps?.GlitchEffects?.GlitchAttackBonus ?? 0f)
+            + ((_deps?.GlitchEffects as IOverdriveEffectReader)?.SacrificeAttackBonus ?? 0f);
         if (attackBased) damage *= 1f + (_deps?.Research?.Get(ResearchStat.AttackPercent) ?? 0f);
         if (attackBased && _deps?.RunStatModifiers != null)
         {
@@ -149,6 +152,7 @@ public class UnitStatsModifier : MonoBehaviour
         frequency *= 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.BasicAttackFrequencyPercent) ?? 0f);
         frequency *= 1f + _unit.LevelAttackSpeedBonus;
         frequency *= 1f + (_deps?.Alphan?.AttackSpeedBonus ?? 0f);
+        frequency *= 1f + ((_deps?.GlitchEffects as IOverdriveEffectReader)?.AcceleratedAttackSpeedBonus ?? 0f);
         float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 

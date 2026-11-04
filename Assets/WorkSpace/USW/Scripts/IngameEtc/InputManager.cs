@@ -56,6 +56,8 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         if (_gameManager?.IsFinished == true) { if (_pointerDown) CancelPointer(); return; }
+        if (_gameManager?.IsTimeVaultActive == true)
+        { CancelPointer(); return; }
         if (_mainCamera == null)
         {
             _mainCamera = Camera.main;
@@ -145,6 +147,7 @@ public class InputManager : MonoBehaviour
 
     private void ProcessPointerDown(Vector2 screenPos)
     {
+        if (_gameManager?.IsTimeVaultActive == true) { CancelPointer(); return; }
         _pointerDownScreenPos = screenPos;
         _pointerDownPos = GetWorldPos(screenPos);
         _pointerDown = true;
@@ -206,6 +209,7 @@ public class InputManager : MonoBehaviour
 
     private void ProcessPointerMove(Vector2 screenPos)
     {
+        if (_gameManager?.IsTimeVaultActive == true) { CancelPointer(); return; }
         Vector2 currentPos = GetWorldPos(screenPos);
 
         if (!_isDragging && _interactionSettings != null
@@ -226,6 +230,7 @@ public class InputManager : MonoBehaviour
 
     private void ProcessPointerUp(Vector2 screenPos)
     {
+        if (_gameManager?.IsTimeVaultActive == true) { CancelPointer(); return; }
         // 한 프레임 안에 Began→Ended가 와도 마지막 위치로 이동 의도를 판별한다.
         ProcessPointerMove(screenPos);
         Vector2 currentPos = GetWorldPos(screenPos);

@@ -6,6 +6,51 @@ using UnityEngine;
 /// <summary>활성 카드의 불변 계산 결과. 생성 후 쓰기 API나 가변 효과 정의를 노출하지 않는다.</summary>
 public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffectReader, ISelectionEconomyReader, IChiefSelectionReader
 {
+    /// <summary>감망 운반 자폭 프리팹.</summary>
+    public SelfDestructDrone GammanBombPrefab { get; private set; }
+    /// <summary>BasicSkillExtraBombs 선택지 기여.</summary>
+    public int BasicSkillExtraBombs { get; private set; } = 0;
+    /// <summary>BombRearmHits 선택지 기여.</summary>
+    public int BombRearmHits { get; private set; } = 0;
+    /// <summary>BombRearmExtraBombs 선택지 기여.</summary>
+    public int BombRearmExtraBombs { get; private set; } = 0;
+    /// <summary>BombFuseStacks 선택지 기여.</summary>
+    public int BombFuseStacks { get; private set; } = 0;
+    /// <summary>BombFuseBonusPerStack 선택지 기여.</summary>
+    public float BombFuseBonusPerStack { get; private set; } = 0;
+    /// <summary>HasGammanBomb 선택지 기여.</summary>
+    public bool HasGammanBomb { get; private set; } = false;
+    /// <summary>BetanCycleMultiplier 선택지 기여.</summary>
+    public float BetanCycleMultiplier { get; private set; } = 1f;
+    /// <summary>HasCounterBomb 선택지 기여.</summary>
+    public bool HasCounterBomb { get; private set; } = false;
+    /// <summary>BombDamageMultiplier 선택지 기여.</summary>
+    public float BombDamageMultiplier { get; private set; } = 1f;
+    /// <summary>BombWarheadCycleMultiplier 선택지 기여.</summary>
+    public float BombWarheadCycleMultiplier { get; private set; } = 1f;
+    /// <summary>BombArmorReduction 선택지 기여.</summary>
+    public float BombArmorReduction { get; private set; } = 0;
+    /// <summary>BombArmorDuration 선택지 기여.</summary>
+    public float BombArmorDuration { get; private set; } = 0;
+    /// <summary>BombExecutionThreshold 선택지 기여.</summary>
+    public float BombExecutionThreshold { get; private set; } = 0;
+    /// <summary>BombExecutionBonus 선택지 기여.</summary>
+    public float BombExecutionBonus { get; private set; } = 0;
+    /// <summary>BombSalvageHits 선택지 기여.</summary>
+    public int BombSalvageHits { get; private set; } = 0;
+    /// <summary>BombSalvageFood 선택지 기여.</summary>
+    public float BombSalvageFood { get; private set; } = 0;
+
+    /// <summary>HackingOverflowAttackCoefficient 선택지 기여.</summary>
+    public float HackingOverflowAttackCoefficient { get; private set; } = 0f;
+    /// <summary>HackingConsumptionMultiplier 선택지 기여.</summary>
+    public float HackingConsumptionMultiplier { get; private set; } = 1f;
+    /// <summary>HackingStackDamageMultiplier 선택지 기여.</summary>
+    public float HackingStackDamageMultiplier { get; private set; } = 1f;
+    /// <summary>HackingCapacityBonus 선택지 기여.</summary>
+    public int HackingCapacityBonus { get; private set; } = 0;
+    /// <summary>BetanAttackReductionRatio 선택지 기여.</summary>
+    public float BetanAttackReductionRatio { get; private set; } = 0f;
     /// <summary>AttackBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float AttackBonus { get; private set; } = 0f;
     /// <summary>AttackSpeedBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
@@ -158,6 +203,38 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public float BonusManaChance { get; private set; } = 0f;
     /// <summary>BonusManaCount의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public int BonusManaCount { get; private set; } = 0;
+    /// <summary>과부하 합성 획득 여부.</summary>
+    /// <summary>가속 운전의 추가 타이머 감소율.</summary>
+    public float ExtraTimeDrainRatio { get; private set; }
+    /// <summary>가속 운전의 공속 가산.</summary>
+    public float AcceleratedAttackSpeedBonus { get; private set; }
+    /// <summary>제물 지출 초.</summary>
+    public float SacrificeCostSeconds { get; private set; }
+    /// <summary>제물 지출당 공격력 가산.</summary>
+    public float SacrificeAttackPerPayment { get; private set; }
+    /// <summary>시간 금고 유예 초.</summary>
+    public float TimeVaultSeconds { get; private set; }
+    /// <summary>과열당 초과 스택 수.</summary>
+    public int OverheatOverflowPerStack { get; private set; }
+    /// <summary>과열당 지출 초.</summary>
+    public float OverheatCostSeconds { get; private set; }
+    /// <summary>과열의 일반 스택 대비 피해 가중치.</summary>
+    public float OverheatDamageWeight { get; private set; }
+    public bool HasOverloadMerge { get; private set; }
+    /// <summary>과부하 합성 시간 비용.</summary>
+    public float OverloadMergeCostSeconds { get; private set; }
+    /// <summary>과부하 합성 추가 승급 확률.</summary>
+    public float OverloadMergeUpgradeChance { get; private set; }
+    /// <summary>복구 패킷의 회복당 스택.</summary>
+    public int RecoveryHackingStacks { get; private set; }
+    /// <summary>복구 패킷 공유 해킹 설정.</summary>
+    public DroneHackingData RecoveryHackingData { get; private set; }
+    /// <summary>소각 신관 공유 자폭 프리팹.</summary>
+    public SelfDestructDrone GlitchBombPrefab { get; private set; }
+    /// <summary>오류 누적 1회당 가산 비율.</summary>
+    public float GlitchAttackPerTrigger { get; private set; }
+    /// <summary>오류 누적 최대 횟수.</summary>
+    public int GlitchAttackMaximumTriggers { get; private set; }
     private readonly List<int> _hitPeriods = new();
     private readonly Dictionary<int,float> _upgradeDiscounts = new();
     private readonly HashSet<Type> _singleConfigurations = new();
@@ -183,6 +260,16 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
                     case UpgradeDiscountDefinition d:
                         if (_upgradeDiscounts.ContainsKey(card.CardId)) throw new ArgumentException("Multiple upgrade discounts on one card.");
                         _upgradeDiscounts.Add(card.CardId,d.Ratio); break;
+                    case BasicBombCountDefinition d: Once(effect); BasicSkillExtraBombs=d.ExtraBombs; break;
+                    case BombRearmDefinition d: Once(effect); BombRearmHits=d.HitsRequired; BombRearmExtraBombs=d.ExtraBombs; break;
+                    case BombStackFuseDefinition d: Once(effect); BombFuseStacks=d.MaximumStacks; BombFuseBonusPerStack=d.BonusPerStack; break;
+                    case GammanBombDefinition d: Once(effect); HasGammanBomb=true; GammanBombPrefab=d.Prefab; break;
+                    case BetanCycleDefinition d: Once(effect); BetanCycleMultiplier=d.TimeMultiplier; break;
+                    case CounterBombDefinition d: Once(effect); HasCounterBomb=true; break;
+                    case BombWarheadDefinition d: Once(effect); BombDamageMultiplier=d.DamageMultiplier; BombWarheadCycleMultiplier=d.CycleMultiplier; break;
+                    case BombArmorDefinition d: Once(effect); BombArmorReduction=d.ReductionRatio; BombArmorDuration=d.DurationSeconds; break;
+                    case BombExecutionDefinition d: Once(effect); BombExecutionThreshold=d.HpThreshold; BombExecutionBonus=d.DamageBonus; break;
+                    case BombSalvageDefinition d: Once(effect); BombSalvageHits=d.HitsRequired; BombSalvageFood=d.FoodAmount; break;
                     case PeriodicBombDefinition d: Once(effect); PeriodicBombInterval=d.PeriodSeconds; PeriodicBombCount=d.BombCount; break;
                     case DroneAttackSpeedDefinition d: DroneAttackSpeedBonus+=d.BonusRatio; break;
                     case FleetBombDefinition d: Once(effect); FleetBombInterval=d.PeriodSeconds; FleetBombCount=d.BombCount; break;
@@ -206,6 +293,18 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
                     case MergeSupportDefinition d: MergeSupportChance+=d.Chance; break;
                     case CombatDroneCapacityDefinition d: ExtraCombatDroneCount=checked(ExtraCombatDroneCount+d.Count); break;
                     case OverflowManaDefinition d: Once(effect); OverflowManaPerCast=d.ManaPerCast; break;
+                    case HackingOverflowDamageDefinition d: HackingOverflowAttackCoefficient+=d.AttackCoefficient; break;
+                    case HackingConsumptionDefinition d: HackingConsumptionMultiplier*=d.ConsumptionMultiplier; HackingStackDamageMultiplier*=d.StackDamageMultiplier; break;
+                    case HackingCapacityDefinition d: HackingCapacityBonus=checked(HackingCapacityBonus+d.AdditionalCapacity); break;
+                    case BetanAttackPenaltyDefinition d: BetanAttackReductionRatio=1f-(1f-BetanAttackReductionRatio)*(1f-d.ReductionRatio); break;
+                    case AcceleratedDriveDefinition d: Once(effect); ExtraTimeDrainRatio=d.ExtraDrainRatio; AcceleratedAttackSpeedBonus=d.AttackSpeedBonus; break;
+                    case SacrificeDefinition d: Once(effect); SacrificeCostSeconds=d.CostSeconds; SacrificeAttackPerPayment=d.AttackBonusPerPayment; break;
+                    case TimeVaultDefinition d: Once(effect); TimeVaultSeconds=d.GraceSeconds; break;
+                    case OverheatCompressionDefinition d: Once(effect); OverheatOverflowPerStack=d.OverflowPerStack; OverheatCostSeconds=d.CostSeconds; OverheatDamageWeight=d.DamageWeight; break;
+                    case OverloadMergeDefinition d: Once(effect); HasOverloadMerge=true; OverloadMergeCostSeconds=d.CostSeconds; OverloadMergeUpgradeChance=d.UpgradeChance; break;
+                    case RecoveryHackingDefinition d: Once(effect); RecoveryHackingStacks=d.StacksPerRecovery; RecoveryHackingData=d.HackingData; break;
+                    case GlitchBombDefinition d: Once(effect); GlitchBombPrefab=d.Prefab; break;
+                    case GlitchAttackDefinition d: Once(effect); GlitchAttackPerTrigger=d.BonusPerGlitch; GlitchAttackMaximumTriggers=d.MaximumTriggers; break;
                     case BombHackingDefinition d: Once(effect); HasBombHacking=true; HackingStacksPerBomb=d.StacksPerBomb; break;
                     case HackingCarryoverDefinition d: Once(effect); HackingCarryoverRatio=d.Ratio; break;
                     case BonusManaDefinition d: Once(effect); BonusManaChance=d.Chance; BonusManaCount=d.ManaCount; break;
@@ -229,6 +328,9 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
             }
         }
         Finite(AttackBonus);
+        Finite(HackingOverflowAttackCoefficient);
+        Finite(HackingConsumptionMultiplier);
+        Finite(HackingStackDamageMultiplier);
         Finite(AttackSpeedBonus);
         Finite(TotemEfficiencyBonus);
         Finite(CritChance);

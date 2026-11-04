@@ -1,6 +1,51 @@
 /// <summary>drone 선택지 효과의 읽기 계약. 획득/해제/추첨 권한을 제공하지 않는다.</summary>
 public interface IDroneEffectReader
 {
+    /// <summary>감망 운반 자폭 프리팹.</summary>
+    SelfDestructDrone GammanBombPrefab { get; }
+    /// <summary>BasicSkillExtraBombs 선택지 기여.</summary>
+    int BasicSkillExtraBombs { get; }
+    /// <summary>BombRearmHits 선택지 기여.</summary>
+    int BombRearmHits { get; }
+    /// <summary>BombRearmExtraBombs 선택지 기여.</summary>
+    int BombRearmExtraBombs { get; }
+    /// <summary>BombFuseStacks 선택지 기여.</summary>
+    int BombFuseStacks { get; }
+    /// <summary>BombFuseBonusPerStack 선택지 기여.</summary>
+    float BombFuseBonusPerStack { get; }
+    /// <summary>HasGammanBomb 선택지 기여.</summary>
+    bool HasGammanBomb { get; }
+    /// <summary>BetanCycleMultiplier 선택지 기여.</summary>
+    float BetanCycleMultiplier { get; }
+    /// <summary>HasCounterBomb 선택지 기여.</summary>
+    bool HasCounterBomb { get; }
+    /// <summary>BombDamageMultiplier 선택지 기여.</summary>
+    float BombDamageMultiplier { get; }
+    /// <summary>BombWarheadCycleMultiplier 선택지 기여.</summary>
+    float BombWarheadCycleMultiplier { get; }
+    /// <summary>BombArmorReduction 선택지 기여.</summary>
+    float BombArmorReduction { get; }
+    /// <summary>BombArmorDuration 선택지 기여.</summary>
+    float BombArmorDuration { get; }
+    /// <summary>BombExecutionThreshold 선택지 기여.</summary>
+    float BombExecutionThreshold { get; }
+    /// <summary>BombExecutionBonus 선택지 기여.</summary>
+    float BombExecutionBonus { get; }
+    /// <summary>BombSalvageHits 선택지 기여.</summary>
+    int BombSalvageHits { get; }
+    /// <summary>BombSalvageFood 선택지 기여.</summary>
+    float BombSalvageFood { get; }
+
+    /// <summary>HackingOverflowAttackCoefficient 선택지 기여.</summary>
+    float HackingOverflowAttackCoefficient { get; }
+    /// <summary>HackingConsumptionMultiplier 선택지 기여.</summary>
+    float HackingConsumptionMultiplier { get; }
+    /// <summary>HackingStackDamageMultiplier 선택지 기여.</summary>
+    float HackingStackDamageMultiplier { get; }
+    /// <summary>HackingCapacityBonus 선택지 기여.</summary>
+    int HackingCapacityBonus { get; }
+    /// <summary>BetanAttackReductionRatio 선택지 기여.</summary>
+    float BetanAttackReductionRatio { get; }
     /// <summary>PeriodicBombInterval 선택지 기여.</summary>
     float PeriodicBombInterval { get; }
     /// <summary>PeriodicBombCount 선택지 기여.</summary>

@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection29
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects:
+    - rid: 5227033231819276375
+    Feedback:
+    - Target: 2
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
+  chooseId: 9129
+  chooseName: "\uD655\uC7A5 \uC18C\uCF13"
+  tier: 1
+  spawnRate: 1
+  description: "\uAC10\uB9DD\uC758 1\uD68C \uCD5C\uB300 \uD574\uD0B9 \uC2A4\uD0DD
+    \uC18C\uBE44\uB7C9\uC774 {consumption}%\uAC00 \uB429\uB2C8\uB2E4. \uC2A4\uD0DD\uC774
+    \uBD80\uC871\uD558\uBA74 \uB0A8\uC740 \uB9CC\uD07C\uB9CC \uC18C\uBE44\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uAC10\uB9DD\uC774 \uD55C \uBC88\uC5D0 \uC18C\uBE44\uD560 \uC218
+    \uC788\uB294 \uD574\uD0B9 \uC2A4\uD0DD\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  DescriptionTerms:
+  - hack_stack
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 0
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 0
+  icon: {fileID: 21300000, guid: a7455f25c75038f499302ebff214515d, type: 3}
+  animationFrames: []
+  frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 5227033231819276375
+      type: {class: HackingConsumptionDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        ConsumptionMultiplier: 1.5
+        StackDamageMultiplier: 1

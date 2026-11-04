@@ -5,13 +5,14 @@ using UnityEngine;
 using VContainer;
 using Cysharp.Threading.Tasks;
 
-/// <summary>Owns encounter/reward sequencing; EndlessRunService owns run identity and round transitions.</summary>
+/// <summary>Sequences endless encounters and forwards tutorial progression to TutorialWaveFlow.</summary>
 public class WaveManager : MonoBehaviour
 {
     private enum EncounterPhase { Idle, Spawning, Fighting, RewardDelay, AwaitingReward, PresentingPenalty }
     private const int RewardDelayMilliseconds = 1000;
 
     [Inject] private IObjectResolver _resolver;
+    private TutorialWaveFlow _tutorialFlow;
     [Inject] private EndlessRunService _run;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private FieldPauseVisuals _fieldPause;
@@ -20,9 +21,12 @@ public class WaveManager : MonoBehaviour
     private BossClearPresentation _clearPresentation;
 
     /// <summary>Uses the scene installer's existing presentation reference, preserving finite/tutorial fallback.</summary>
-    public void ConfigureBossClearPresentation(BossClearPresentation presentation) => _clearPresentation = presentation;
+    public void ConfigureBossClearPresentation(BossClearPresentation presentation)
+    {
+        _clearPresentation = presentation;
+        _tutorialFlow?.Configure(stageData, config, presentation, this.GetCancellationTokenOnDestroy());
+    }
 
-    private GameDataManager _gameDataManager;
     private BossManager _bossManager;
     private GridManager _gridManager;
     private CurrencyManager _currencyManager;
@@ -56,8 +60,8 @@ public class WaveManager : MonoBehaviour
     public event Action<Action> OnTotemSelectionRequested;
     /// <summary>Invalidates scene UI selections whenever this run stops, including faults.</summary>
     public event Action OnRunStopped;
-    /// <summary>Legacy zero-based index; converted only in SyncWaveIndex.</summary>
-    public int CurrentWave { get; private set; }
+    /// <summary>Zero-based HUD/lesson index from the selected progression owner.</summary>
+    public int CurrentWave => _endlessMode == null ? (_tutorialFlow?.CurrentWave ?? 0) : Math.Max(0, _run.CurrentRound - 1);
     /// <summary>Authored finite wave count; zero means no finite endpoint in endless mode.</summary>
     public int TotalWaves => _endlessMode != null ? 0 : (stageData?.waves?.Length ?? 0);
     /// <summary>Selected explicit mode, including invalid drafts that cannot start.</summary>
@@ -68,7 +72,6 @@ public class WaveManager : MonoBehaviour
 
     private void Start()
     {
-        _gameDataManager = _resolver.Resolve<GameDataManager>();
         _bossManager = _resolver.Resolve<BossManager>();
         _gridManager = _resolver.Resolve<GridManager>();
         _currencyManager = _resolver.Resolve<CurrencyManager>();
@@ -77,6 +80,15 @@ public class WaveManager : MonoBehaviour
         _uiManager = _resolver.Resolve<UIManager>();
         _resolver.TryResolve(out _expManager);
         _resolver.TryResolve(out _droneManager);
+        _tutorialFlow = _resolver.Resolve<TutorialWaveFlow>();
+        _tutorialFlow.Configure(stageData, config, _clearPresentation, this.GetCancellationTokenOnDestroy());
+        _tutorialFlow.OnWaveChanged += round => OnWaveChanged?.Invoke(round);
+        _tutorialFlow.OnBossDefeated += () => OnBossDefeated?.Invoke();
+        _tutorialFlow.OnTotemSelectionRequested += done =>
+        {
+            if (OnTotemSelectionRequested == null) _run.Fail("TutorialWaveFlow: no totem reward UI is connected.");
+            else OnTotemSelectionRequested.Invoke(done);
+        };
         _run.OnFailed += HandleRunFailed;
         _run.OnPenaltyReserved += OnPenaltyReserved;
     }
@@ -92,6 +104,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>Validates and resets run state before GameManager enters Playing, including delayed tutorial waves.</summary>
     public bool TryPrepareRun(out string error)
     {
+        if (_endlessMode == null) return _tutorialFlow.TryPrepareRun(out error);
         if (_endlessMode != null && _endlessMode.RequiresRemoteBalance && _balanceService?.IsRefreshing == true)
         { error = "Balance settings are still loading."; return false; }
         var balance = _endlessMode != null && _endlessMode.RequiresRemoteBalance ? _balanceService?.Current : null;
@@ -105,7 +118,6 @@ public class WaveManager : MonoBehaviour
         if (_gridManager != null) foreach (var cell in _gridManager.AllCells()) cell.Model.SetPermanentSeal(false);
         _waveStarted = false;
         _timerStarted = false;
-        SyncWaveIndex();
         if (_run.IsEndless)
         {
             _log.BeginRun(_run.RunId, _endlessMode.Key);
@@ -117,6 +129,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>Starts the prepared run's first wave once. Tutorials may call this after the first summon.</summary>
     public void StartWave()
     {
+        if (_endlessMode == null) { _tutorialFlow.StartWave(); return; }
         if (_waveStarted || !_run.IsActive) return;
         _waveStarted = true;
         SpawnWaveBosses();
@@ -128,32 +141,16 @@ public class WaveManager : MonoBehaviour
         LogRunEnd(_gameManager != null ? _gameManager.CurrentState.ToString() : "Stopped");
         _run?.Stop();
         _balanceSnapshot = null;
+        _tutorialFlow?.CancelFlow();
         CancelFlow();
         OnRunStopped?.Invoke();
     }
 
-    private void SyncWaveIndex() => CurrentWave = _run.CurrentRound - 1;
-
     private void SpawnWaveBosses()
     {
         if (!_run.IsActive) return;
-        SyncWaveIndex();
         _pendingBosses.Clear();
-        if (_run.IsEndless)
-        {
-            _pendingBosses.Add(new BossEntry { Data = _run.BossStats.Source });
-        }
-        else
-        {
-            if (stageData?.waves == null || CurrentWave >= stageData.waves.Length)
-            { _run.Fail("WaveManager: StageData/waves is missing or out of range."); return; }
-            var wave = stageData.waves[CurrentWave];
-            if (wave?.bosses != null)
-                foreach (var entry in wave.bosses)
-                    if (entry?.Prefab != null) _pendingBosses.Add(entry);
-            // Legacy sheet lookup is confined to finite stages.
-            _gameDataManager?.SetCurrentBossRound(100 + CurrentWave);
-        }
+        _pendingBosses.Add(new BossEntry { Data = _run.BossStats.Source });
 
         _bossIndex = 0;
         OnWaveChanged?.Invoke(_run.CurrentRound);
@@ -183,6 +180,7 @@ public class WaveManager : MonoBehaviour
         }
         _timerManager?.StopTimer();
         float remainingDelay = gameConfig.bossSpawnDelaySeconds;
+        _timerManager?.SetVaultIntermission(true);
         while (remainingDelay > 0f)
         {
             _uiManager?.UpdateTimerUI(remainingDelay, true);
@@ -190,17 +188,14 @@ public class WaveManager : MonoBehaviour
             remainingDelay -= Time.deltaTime;
         }
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Spawning)) return;
+        _timerManager?.SetVaultIntermission(false);
         _phase = EncounterPhase.Fighting;
         BossBase encounterBoss = null;
         Action defeated = () => OnSingleBossDefeated(runId, round, bossIndex,
             encounterBoss != null ? (Vector3?)encounterBoss.transform.position : null);
-        if (_run.IsEndless)
-        {
-            if (!_bossManager.TrySpawnSingleBoss(_run.BossStats, defeated, out string error))
-            { _run.Fail(error); return; }
-            _log.BossSpawned(round, _run.BossStats);
-        }
-        else _bossManager.SpawnSingleBoss(_pendingBosses[bossIndex], defeated);
+        if (!_bossManager.TrySpawnSingleBoss(_run.BossStats, defeated, out string error))
+        { _run.Fail(error); return; }
+        _log.BossSpawned(round, _run.BossStats);
 
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _timerManager?.ResumeTimer();
@@ -246,6 +241,13 @@ public class WaveManager : MonoBehaviour
 
     private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, EndlessBossRole role, float bonusSeconds, CancellationToken token)
     {
+        if (_timerManager?.TimeVaultActive == true)
+        {
+            if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
+            _phase = EncounterPhase.AwaitingReward;
+            OnRewardDone(runId, round, bossIndex);
+            return;
+        }
         try
         {
             // Finish an already open choice; don't cover it with the clear presentation.
@@ -258,7 +260,7 @@ public class WaveManager : MonoBehaviour
                 float before = _timerManager != null ? _timerManager.RemainingTime : 0f;
                 if (gameConfig != null && _clearPresentation != null && _clearPresentation.isActiveAndEnabled)
                     await _clearPresentation.PlayBossClearAsync(bonusSeconds, bossPosition, gameConfig, token);
-                else if (gameConfig != null) _timerManager?.AddTime(bonusSeconds);
+                else if (gameConfig != null) _timerManager?.AddBossKillTime(bonusSeconds);
                 if (EndlessRunLog.Enabled && _run.IsEndless && OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay))
                     Debug.Log($"[EndlessBalance] run={_log.RunLabel} service_run={runId} round={round} role={role} " +
                         $"bonus={bonusSeconds} timer_before={before:R} timer_after={_timerManager?.RemainingTime:R}");
@@ -276,7 +278,7 @@ public class WaveManager : MonoBehaviour
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         _phase = EncounterPhase.AwaitingReward;
-        if (!GrantsTotemReward(round, bossIndex))
+        if (_timerManager?.TimeVaultActive == true || !GrantsTotemReward(round, bossIndex))
         {
             OnRewardDone(runId, round, bossIndex);
             return;
@@ -289,6 +291,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>어려운 보스 구간 완료 시 한 번만 토템을 지급한다. 일반 구간도 패널티/다음 웨이브 처리는 유지한다.</summary>
     public bool GrantsTotemReward(int round, int bossIndex)
     {
+        if (_endlessMode == null) return _tutorialFlow != null && _tutorialFlow.GrantsTotemReward(round, bossIndex);
         if (round < 1 || bossIndex != _pendingBosses.Count - 1) return false;
         if (_endlessMode != null)
         {
@@ -297,13 +300,13 @@ public class WaveManager : MonoBehaviour
                 if (slot.Position == position) return slot.Role == EndlessBossRole.Hard;
             return false;
         }
-        var gameConfig = config != null ? config : _gameManager?.Config;
-        return gameConfig != null && gameConfig.GrantsFiniteTotemReward(round);
+        return false;
     }
 
     private void OnRewardDone(long runId, int round, int bossIndex)
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.AwaitingReward)) return;
+        if (_timerManager?.TimeVaultActive == true) _run.SkipPendingPenalty();
         if (_run.AwaitingPenaltyChoice)
         {
             _phase = EncounterPhase.PresentingPenalty;
@@ -365,12 +368,6 @@ public class WaveManager : MonoBehaviour
     private void FinishRound(long runId, int round)
     {
         if (!_run.Matches(runId, round)) return;
-        if (!_run.IsEndless && round >= TotalWaves)
-        {
-            StopRun();
-            _gameManager.OnAllWavesCleared();
-            return;
-        }
         if (_run.TryAdvanceRound(runId, round))
         {
             if (_run.HasPermanentSeal && !_sealApplied)
@@ -388,6 +385,7 @@ public class WaveManager : MonoBehaviour
 
     private void HandleRunFailed(string error)
     {
+        _tutorialFlow?.CancelFlow();
         LogRunEnd("Faulted: " + error);
         CancelFlow();
     }
@@ -424,6 +422,7 @@ public class WaveManager : MonoBehaviour
 
     private void CancelFlow()
     {
+        _timerManager?.SetVaultIntermission(false);
         _fieldPause?.Exit(this, false);
         var cts = _waveCts;
         _waveCts = null;

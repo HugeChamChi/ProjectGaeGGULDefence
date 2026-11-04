@@ -192,7 +192,7 @@ public class TotemSpawner : MonoBehaviour
         if (cell != null) cell.RemoveTotem();
         Destroy(totem.gameObject);
 
-        // 환급금: 추후 GameDataManager 또는 TotemData에 sellPrice 필드 추가 후 교체
+        // 환급금: 추후 TotemData에 sellPrice 필드 추가 후 교체
         float refund = 0f;
         if (refund > 0f)
             _currencyManager.AddCurrency(refund);

@@ -21,12 +21,17 @@ public sealed class CombatCountdown
         Remaining = seconds; Elapsed = 0; IsRunning = true;
     }
     /// <summary>남은 시간을 넘겨 진행하지 않는다. 콜백에서 Stop하면 막판 처치가 우선한다.</summary>
-    public void Advance(double delta)
+    public void Advance(double delta) => Advance(delta, 1d);
+
+    /// <summary>전투 경과는 실제 dt로 유지하고 남은 시간의 감소 속도만 변경한다.</summary>
+    public void Advance(double delta, double drainMultiplier)
     {
         Validate(delta);
+        Validate(drainMultiplier);
+        if (drainMultiplier < 1d) throw new ArgumentOutOfRangeException(nameof(drainMultiplier));
         if (!IsRunning || delta == 0) return;
-        double step = Math.Min(delta, Remaining);
-        Remaining -= step; Elapsed += step;
+        double step = Math.Min(delta, Remaining / drainMultiplier);
+        Remaining = Math.Max(0, Remaining - step * drainMultiplier); Elapsed += step;
         OnAdvanced?.Invoke(Elapsed);
         if (IsRunning && Remaining <= 0)
         { IsRunning = false; OnTimeUp?.Invoke(); }
@@ -41,6 +46,19 @@ public sealed class CombatCountdown
         Validate(seconds);
         if (double.IsInfinity(Remaining + seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
         Remaining += seconds;
+    }
+    /// <summary>전투 경과를 진행하지 않고 실제 잔고만 지불한다. 확정 콜백 뒤 시간초과를 한 번 알린다.</summary>
+    public double Spend(double seconds, Action<double> onSpent = null)
+    {
+        Validate(seconds);
+        if (seconds == 0 || Remaining <= 0) return 0;
+        double actual = Math.Min(seconds, Remaining);
+        Remaining -= actual;
+        bool expired = Remaining <= 0;
+        if (expired) IsRunning = false;
+        try { onSpent?.Invoke(actual); }
+        finally { if (expired) OnTimeUp?.Invoke(); }
+        return actual;
     }
     private static void Validate(double value)
     { if (value < 0 || double.IsNaN(value) || double.IsInfinity(value)) throw new ArgumentOutOfRangeException(nameof(value)); }
