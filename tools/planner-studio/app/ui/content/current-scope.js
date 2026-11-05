@@ -8,10 +8,11 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
     {id:'attendance',label:'출석',icon:'▦',tables:['Attendance','AttendancePlan']},
     {id:'party',label:'파티·덱',icon:'◇',tables:['Party']},
     {id:'economy',label:'재화·스태미나',icon:'◉',tables:['Economy']},
-    {id:'account',label:'계정 성장',icon:'↗',tables:['AccountLevel','BattleReward']},
     {id:'profile',label:'프로필',icon:'◎',tables:['Profile']},
     {id:'tutorial',label:'튜토리얼',icon:'▤',tables:['Tutorial']}
   ];
+  // AccountProgression.xlsx is the game-backed account source. Keep the old
+  // AccountLevel/BattleReward rows in project JSON only, without editing/exporting them.
   const active = new Set(STUDIO_NAV.flatMap(n=>n.tables));
   const chiefPaths=new Map();
   for(const party of STUDIO_SEED.tables.Party)if(party.ChiefAsset){
@@ -102,7 +103,7 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   globalThis.PlannerScope={active,chiefPaths,overview(p){
     const groups=[
       ['강화 밸런스',['units','research']],['출석',['missions']],
-      ['기본 설정',['party','economy','account','profile','tutorial']]
+      ['기본 설정',['shops','party','economy','profile','tutorial']]
     ];
     return `<div class="scope-heading"><h2>현재 기능 작업실</h2><p>왼쪽에서 기능을 고르고, 위쪽 세부 항목에서 편집하세요.</p></div>${groups.map(([label,ids])=>`<section class="panel scope-group"><div class="panel-head"><h2>${label}</h2></div><div class="workspace-grid">${ids.map(id=>{const n=STUDIO_NAV.find(n=>n.id===id);return `<button data-nav="${id}"><strong>${n.icon} ${n.label}</strong><small>${n.tables.map(t=>`${esc(S[t].label)} ${p.tables[t].length}`).join(' · ')}</small></button>`;}).join('')}</div></section>`).join('')}<div class="scope-note">현재 프로젝트에서 확인한 데이터만 표시합니다. 유닛강화는 기존 시안의 수치이며, Excel 추출 후 게임에 적용하는 연결은 별도입니다.</div>`;
   },workspace:'settings',renderTabs(section){

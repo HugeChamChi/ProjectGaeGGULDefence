@@ -21,6 +21,10 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>스킬 디버프가 적용될 현재 보스.</summary>
     protected BossBase SkillDebuffTarget => _deps?.BossManager?.CurrentBoss;
     public UnitData unitData;
+    public UnitLevelBonusController LevelBonuses { get; private set; }
+    public float LevelStat(UnitBonusStat stat) => LevelBonuses?.GetStat(stat) ?? 0f;
+    public virtual float LevelAttackSpeedBonus => 0f;
+    public virtual float NextFoodPayoutMultiplier() => 1f;
     public Tier currentTier = Tier.Normal;
     public UnityEvent onSkillFull;
     public UnityEvent onAttack;
@@ -95,7 +99,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _originalTier = currentTier;
         _temporaryTierSource = source;
         _hasTemporaryTier = true;
-        unitData = upgradedData != null ? upgradedData : unitData;
+        unitData = upgradedData != null ? UnitBalanceRuntime.Resolve(upgradedData) : unitData;
         currentTier = (Tier)((int)_originalTier + 1);
         _visual?.UpdateVisual(currentTier);
         OnCombatTierChanged();
@@ -186,12 +190,12 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
 
     public void Init(UnitDependencies deps)
     {
+        unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
-        var characterId = unitData != null
-            ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
-        int level = Player.Characters.IsReady
-            ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
+        var characterId = unitData != null ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
+        int level = Player.Characters.IsReady ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
         AccountUpgradeMultiplier = 1f + (level - 1) * GaeGGUL.DeckUpgrade.DeckUpgradeProgress.MultiplierPerLevel;
+        LevelBonuses = new UnitLevelBonusController(unitData.LevelBonuses, deps.UnitLevels?.GetLevel(UnitBalanceRuntime.GetUnitKey(unitData.name)) ?? 1);
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
@@ -318,7 +322,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
@@ -342,12 +346,14 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>정보창의 기본 공격 간격. 실제 보정과 속도 상한을 유지한다.</summary>
     public virtual float GetDisplayAttackIntervalBeforeUpgrade() => GetAttackIntervalBeforeUpgrade();
     public float GetUpgradedAtk() => _stats?.GetUpgradedAtk() ?? 0f;
+    public int GetCombatDroneDamage(out bool critical) => _stats.GetCombatDroneDamage(out critical);
+    public int GetCombatDroneDisplayDamage(bool includeUpgrade = true) => _stats?.GetCombatDroneDisplayDamage(includeUpgrade) ?? 0;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>
-    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+    public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
     {
         critical = false;
-        return _stats != null ? _stats.ComputeAttackDamageFrom(baseDamage, projAtkBonusMultiplier, out critical) : 0;
+        return _stats != null ? _stats.ComputeAttackDamageFrom(baseDamage, projAtkBonusMultiplier, out critical, damageMultiplier) : 0;
     }
     /// <summary>Attack-coefficient damage using the ordinary projectile bonus.</summary>
     public int ComputeAttackDamageFrom(float baseDamage) => ComputeAttackDamageFrom(baseDamage, 1f, out _);

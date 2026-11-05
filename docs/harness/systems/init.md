@@ -2,10 +2,14 @@
 system: init
 title: 초기화 (DI 범위·앱 시작·씬 초기화)
 keywords: 초기화, 이니셜, initializ, lifetimescope, 라이프타임, vcontainer, 의존성 주입, di 등록, bootscene, 부트, appinitialization, gameinitializer, 씬 전환, scenechange, 로딩 화면
-verified: 2026-10-30
-commit: de2cbd00
+verified: 2026-11-04
+commit: eefb644f
 ---
 # 초기화 카드
+
+## 2026-11-04 로비 선행 로딩 분리
+
+AppInitialization의 전투 시트·강화 차트/아이콘 대기를 제거했다. 로그인→Table→Player 후 로비를 준비하고, GameInitializer.PrepareAsync에서 전투 시트를 준비한다. 강화는 기존 화면/전투 ResearchChartService 요청에서 로드한다. 실제 로비 준비 시 전투 시트/강화 아이콘 미로드, 실제 NORMAL 진입 후 데이터 준비·Playing·첫 보스 PASS. 내부 AAB는 비디버그+INTERNAL_TEST_BUILD 정의로 DEV 차트를 사용하며 서명 비밀번호 입력 대기 중이다. [준비 결과](../../technical/internal-play-preparation-20261104.md).
 
 **한 줄 요약**: 앱 전역 서비스는 `RootLifetimeScope`(VContainerSettings의 루트 프리팹), 씬 매니저는 `InGameLifetimeScope`에 등록한다. 인게임 매니저는 `GameInitializer`(USW)의 `Initialize()`가 정해진 순서로 `Init()`을 부르고, `StartAsync()`가 끝나야 `IsReady`가 된다.
 

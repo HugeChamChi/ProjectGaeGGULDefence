@@ -194,6 +194,28 @@ public class BackendGameData
     // -------------------------
     // 파싱 헬퍼
     // -------------------------
+    public virtual async UniTask<bool> CommitCharacterUpgradeAsync(PlayerData next, string expectedSaveId, AccountJsonStore.Row row, string json)
+    {
+        string owner = _owner; int session = _session;
+        if (string.IsNullOrEmpty(_inDate) || owner != Backend.UserInDate || string.IsNullOrEmpty(row.InDate) || expectedSaveId != _serverSaveId) return false;
+        var playerWhere = new Where(); playerWhere.Equal("PlayerSaveId", expectedSaveId);
+        var characterWhere = new Where(); characterWhere.Equal("Data", row.Json);
+        var playerParam = new Param(); playerParam.Add("Gold", next.Gold); playerParam.Add("PlayerSaveId", next.SaveId);
+        var characterParam = new Param(); characterParam.Add("Data", json);
+        var writes = new System.Collections.Generic.List<TransactionValue>
+        {
+            TransactionValue.SetUpdate("PlayerData", playerWhere, playerParam),
+            TransactionValue.SetUpdate("PlayerCharacterData", characterWhere, characterParam)
+        };
+        var done = new UniTaskCompletionSource<bool>();
+        Backend.GameData.TransactionWriteV2(writes, result => done.TrySetResult(result.IsSuccess()));
+        bool saved = await done.Task;
+        if (session != _session || owner != Backend.UserInDate) return false;
+        if (saved) { _serverSaveId = next.SaveId; _hasSaveId = true; _submittedSaveIds.Clear(); }
+        else HasWriteConflict = true;
+        return saved;
+    }
+
     private PlayerData ParsePlayerData(JsonData data)
     {
         // Missing legacy columns may use defaults; malformed existing amounts must never become zero saves.
@@ -215,6 +237,8 @@ public class BackendGameData
             UpgradeProgress = ParseUpgradeProgress(data.GetString("UpgradeProgressJson", "{\"SchemaVersion\":1,\"Trees\":[],\"LocalImportId\":\"\"}")),
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            WeeklyShopPurchasePeriod = data.GetString("WeeklyShopPurchasePeriod", string.Empty),
+            WeeklyShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("WeeklyShopPurchases", "[]")),
             ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
             ShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("ShopPurchases", "[]")),
             CompletedTutorials = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("CompletedTutorials", "[]")),
@@ -259,6 +283,8 @@ public class BackendGameData
         // LitJson serializes ResearchSaveData.CurrentVersion (a const), then cannot deserialize it.
         param.Add("UpgradeProgressJson", JsonUtility.ToJson(data.UpgradeProgress));
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("WeeklyShopPurchasePeriod", data.WeeklyShopPurchasePeriod ?? string.Empty);
+        param.Add("WeeklyShopPurchases", JsonMapper.ToJson(data.WeeklyShopPurchases));
         param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
         param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
         param.Add("CompletedTutorials", JsonMapper.ToJson(data.CompletedTutorials));

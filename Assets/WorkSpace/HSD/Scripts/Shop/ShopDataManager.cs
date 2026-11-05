@@ -3,6 +3,7 @@ using GaeGGUL.Shop;
 
 public class ShopDataManager : Global.IClearable
 {
+    public bool IsInitialized { get; private set; }
     public bool IsDirty { get; set; }
 
     public async Cysharp.Threading.Tasks.UniTask SaveAsync()
@@ -25,10 +26,12 @@ public class ShopDataManager : Global.IClearable
         await Daily.InitializeAsync();
         if (Daily.IsReady) await Weekly.InitializeAsync();
         await Dynamic.InitializeAsync();
+        IsInitialized = true;
     }
 
     public void Clear()
     {
+        IsInitialized = false;
         Daily.Clear();
         Weekly.Clear();
         Dynamic.Clear();

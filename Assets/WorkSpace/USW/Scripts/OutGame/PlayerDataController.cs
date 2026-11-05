@@ -383,14 +383,16 @@ public class PlayerDataController : IDisposable, Global.IClearable
         SaveAndRefresh();
     }
 
-    public bool IsShopPurchased(string day, int id) => IsReady && _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id);
+    public bool IsShopPurchased(string day, int id, bool weekly = false) => IsReady && (weekly
+        ? _data.WeeklyShopPurchasePeriod == day && _data.WeeklyShopPurchases.Contains(id)
+        : _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id));
 
-    /// <summary>Price, reward and daily receipt commit in one durable/account snapshot.</summary>
-    public bool TryPurchaseShopItem(ShopItemData item, string day)
+    /// <summary>Price, reward and period receipt commit in one durable/account snapshot.</summary>
+    public bool TryPurchaseShopItem(ShopItemData item, string day, bool weekly = false, bool repeatable = false)
     {
         if (!IsReady || item == null || item.ItemID < 0 || string.IsNullOrEmpty(day)) return false;
         if (item.Type == ItemType.Character && item.ItemID == 0) return false;
-        if (IsShopPurchased(day, item.ShopID)) return true;
+        if (!repeatable && IsShopPurchased(day, item.ShopID, weekly)) return true;
         var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
         if (!DeductPurchase(next, item.CurrencyType, item.Price) || item.Amount <= 0) return false;
         try
@@ -401,8 +403,19 @@ public class PlayerDataController : IDisposable, Global.IClearable
             else return false; // Unsupported legacy item rewards must never charge the player.
         }
         catch (OverflowException) { return false; }
-        if (next.ShopPurchaseDay != day) { next.ShopPurchaseDay = day; next.ShopPurchases.Clear(); }
-        next.ShopPurchases.Add(item.ShopID);
+        if (!repeatable)
+        {
+            if (weekly)
+            {
+                if (next.WeeklyShopPurchasePeriod != day) { next.WeeklyShopPurchasePeriod = day; next.WeeklyShopPurchases.Clear(); }
+                next.WeeklyShopPurchases.Add(item.ShopID);
+            }
+            else
+            {
+                if (next.ShopPurchaseDay != day) { next.ShopPurchaseDay = day; next.ShopPurchases.Clear(); }
+                next.ShopPurchases.Add(item.ShopID);
+            }
+        }
         _data = next; SaveAndRefresh(); return true;
     }
 

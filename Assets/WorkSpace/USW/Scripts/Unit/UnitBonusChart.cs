@@ -14,7 +14,7 @@ public static class UnitBonusChart
     public sealed class Presentation { public string Text, EffectLink; public bool HighlightNumbers, LinkTerms; }
     static Dictionary<string,Presentation> presentations=new();
     public static Presentation GetPresentation(string key,int level)=>presentations.TryGetValue(key+"/"+level,out var value)?value:null;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
     public const string ChartName="DEV_UnitLevelBonuses";
 #else
     public const string ChartName="LIVE_UnitLevelBonuses";

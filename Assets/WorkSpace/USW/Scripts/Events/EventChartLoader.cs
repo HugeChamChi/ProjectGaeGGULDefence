@@ -9,7 +9,7 @@ namespace GGD.Events
 {
     public static class EventChartLoader
     {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
         public const string ChartName = "DEV_MissionEvents";
 #else
         public const string ChartName = "LIVE_MissionEvents";
