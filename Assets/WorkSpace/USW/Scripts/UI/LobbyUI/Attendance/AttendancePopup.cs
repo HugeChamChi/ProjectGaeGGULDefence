@@ -118,6 +118,7 @@ public sealed class AttendancePopup : UI_Base
     private void Render()
     {
         if(MissionMode){RenderMissions();return;}
+        if (_footer != null && _config != null) _footer.text = _config.Footer;
         var status = CurrentStatus();
         _renderedDay = _timeReady && _config != null ? _config.DayKey(Service.EstimatedServerUtc) : null;
         for (int i = 0; i < _slots.Length; i++)
@@ -139,6 +140,7 @@ public sealed class AttendancePopup : UI_Base
 
     private void RenderMissions()
     {
+        if (_footer != null) _footer.text = "완료한 출석 보상은 수령 즉시 지급됩니다.";
         if(!_timeReady){SetStatus("서버 시간을 확인하는 중입니다.");return;}
         var now=new DateTimeOffset(Service.EstimatedServerUtc,TimeSpan.Zero);
         _renderedDay=AttendanceEventRuntime.DayKey(now);
@@ -150,7 +152,8 @@ public sealed class AttendancePopup : UI_Base
             var state=saved?.claimed==true?AttendanceDaySlot.State.Claimed:(saved?.progress??0)>=m.Target?AttendanceDaySlot.State.Claimable:AttendanceDaySlot.State.Locked;
             var reward=m.Rewards[0];var currency=reward.itemId=="Gold"?MailRewardConfig.Currency.Gold:reward.itemId=="Diamond"?MailRewardConfig.Currency.Diamond:MailRewardConfig.Currency.Stamina;
             slot.Bind((int)m.Target,IconFor(currency),reward.amount,state);
-            slot.SetRewardText(string.Join("\n",m.Rewards.Select(r=>r.itemId+" x"+r.amount)));
+            if (m.Rewards.Length > 1)
+                slot.SetRewardText(string.Join("\n", m.Rewards.Select(r => $"{MissionRewardName(r.itemId)} {r.amount:N0}")));
         }
         SetStatus(_notice??(_missions.Length==0?"연결된 출석 미션이 없습니다.":"완료한 일차를 눌러 출석 보상을 받으세요."));
     }
@@ -187,12 +190,20 @@ public sealed class AttendancePopup : UI_Base
 
     private string RewardText(int day)
     {
-        if(MissionMode)return string.Join(" + ",_missions[day-1].Rewards.Select(r=>r.itemId+" x"+r.amount));
+        if(MissionMode)return string.Join(" + ",_missions[day-1].Rewards.Select(r=>$"{MissionRewardName(r.itemId)} {r.amount:N0}"));
         var reward = _config.Rewards[day - 1];
         if (reward.Items != null && reward.Items.Length > 0) return DescribeItems(reward.Items);
         string name = reward.Currency switch { MailRewardConfig.Currency.Gold => "골드", MailRewardConfig.Currency.Diamond => "다이아", _ => "스태미나" };
         return $"{name} {reward.Amount:N0}";
     }
+    private static string MissionRewardName(string itemId) => itemId switch
+    {
+        "Gold" => "골드",
+        "Diamond" => "다이아",
+        "Stamina" => "스태미나",
+        _ => itemId
+    };
+
     private string DescribeItems(RewardAmount[] items)
     {
         var text = new System.Text.StringBuilder();

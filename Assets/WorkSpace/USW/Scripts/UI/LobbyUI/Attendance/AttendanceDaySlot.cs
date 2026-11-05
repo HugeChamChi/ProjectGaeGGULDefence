@@ -36,7 +36,11 @@ public sealed class AttendanceDaySlot : MonoBehaviour
     {
         _state = state;
         if (_icon != null) { _icon.sprite = icon; _icon.enabled = icon != null; _icon.preserveAspect = true; }
-        if (_amount != null) _amount.text = "x" + amount.ToString("N0");
+        if (_amount != null)
+        {
+            _amount.alignment = TextAlignmentOptions.Bottom;
+            _amount.text = "x" + amount.ToString("N0");
+        }
         if (_claimedMark != null) _claimedMark.SetActive(state == State.Claimed);
         if (_dayPill != null) _dayPill.color = state == State.Claimable ? PillToday : state == State.Claimed ? PillClaimed : PillLocked;
         if (_dayLabel != null)
