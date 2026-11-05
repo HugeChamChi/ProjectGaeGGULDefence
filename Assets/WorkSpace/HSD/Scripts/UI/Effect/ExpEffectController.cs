@@ -8,6 +8,7 @@ using VContainer;
 [DefaultExecutionOrder(-100)]
 public class ExpEffectController : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private const int SampleCount = 96;
     private const float ParticleEndPadding = 0.05f;
     private const string TargetName = "ExpRouteFollower";
@@ -233,7 +234,7 @@ public class ExpEffectController : MonoBehaviour
 
     private void BakeRandomRoute(Flight flight, Vector2 start, Vector2 end)
     {
-        bool right = Random.Range(0, 2) == 1;
+        bool right = _presentationRandom.Range(0, 2) == 1;
         Bake(right && !_mirrorRight ? _rightRoute : _leftRoute, right && _mirrorRight,
             start, end, flight.Samples, flight.Distances);
     }

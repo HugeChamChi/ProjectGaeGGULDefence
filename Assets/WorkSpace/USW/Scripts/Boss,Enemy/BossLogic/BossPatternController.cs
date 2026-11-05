@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 보스별 쿨타임과 우선순위를 관리하며 한 보스는 한 패턴만 시전한다.
@@ -37,6 +38,7 @@ public class BossPatternController : MonoBehaviour
         public StunVisualSettings Visual;
         public bool ImpactApplied, UseShake;
         public int PendingImpactFrame = -1;
+        public int CastVersion;
         public Action<decimal, decimal> HpHandler;
         public IBossPatternRuntime Runtime;
         public PatternState Requested;
@@ -236,7 +238,9 @@ public class BossPatternController : MonoBehaviour
         entry.Runtime?.AdvancePatternEffects(deltaTime);
         entry.Placement?.Advance(deltaTime);
         foreach (var state in entry.Patterns)
-            if (state.Timed || state.Remaining > 0f) state.Remaining = Mathf.Max(0f, state.Remaining - deltaTime);
+            if (state.Timed || state.Remaining > 0f)
+                // Preserve this frame's overshoot, but never bank time while another cast blocks a ready pattern.
+                state.Remaining = state.Remaining > 0f ? state.Remaining - deltaTime : 0f;
         if (entry.Casting != null)
         {
             entry.Elapsed += deltaTime;
@@ -244,11 +248,7 @@ public class BossPatternController : MonoBehaviour
             {
                 // 판정 도래 프레임의 모든 피해/전투 종료 처리를 먼저 끝낸다.
                 if (entry.PendingImpactFrame < 0) entry.PendingImpactFrame = Time.frameCount;
-                else if (Time.frameCount > entry.PendingImpactFrame)
-                {
-                    entry.ImpactApplied = true;
-                    ApplyEarthquake(entry);
-                }
+                ApplyEarthquakeAtFrameEndAsync(boss, entry, entry.CastVersion).Forget();
             }
             if (entry.Casting is PlacementBossPatternData placement)
             {
@@ -271,7 +271,8 @@ public class BossPatternController : MonoBehaviour
         { next.Remaining = Mathf.Max(MinimumInterval, data.RetryDelay); return; }
         if (data.patternType == BossPatternType.Earthquake && !HasTarget())
         { next.Remaining = Mathf.Max(MinimumInterval, data.RetryDelay); return; }
-        next.Remaining = Mathf.Max(MinimumInterval, data.interval);
+        float overshoot = next.Timed && entry.Requested == null ? Mathf.Min(0f, next.Remaining) : 0f;
+        next.Remaining = Mathf.Max(0f, Mathf.Max(MinimumInterval, data.interval) + overshoot);
         if (entry.Requested == null && hasPhase) entry.PhaseQueue.Dequeue();
         entry.Requested = null;
         next.PhaseReady = false;
@@ -295,6 +296,15 @@ public class BossPatternController : MonoBehaviour
             if (IsValid(cell?.OccupyingUnit)) return true;
         return false;
     }
+    private async UniTask ApplyEarthquakeAtFrameEndAsync(BossBase boss, BossPatternEntry entry, int version)
+    {
+        bool cancelled = await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+        if (cancelled || boss == null || boss.IsDead || entry.CastVersion != version || entry.Casting == null || entry.ImpactApplied
+            || !_entries.TryGetValue(boss, out var current) || !ReferenceEquals(current, entry)) return;
+        if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing || _fieldPause?.AttacksHeld == true) return;
+        entry.ImpactApplied = true;
+        ApplyEarthquake(entry);
+    }
     private static bool IsValid(UnitBase unit) => unit != null && unit.isActiveAndEnabled && unit.currentCell != null;
     private void ApplyEarthquake(BossPatternEntry entry)
     {
@@ -314,7 +324,7 @@ public class BossPatternController : MonoBehaviour
     /// <summary>시전을 취소하고, 판정 전 예고 중이었으면 셀 텔레그래프도 끈다 (보스 사망/해제 시 잔상 방지).</summary>
     private void CancelCast(BossPatternEntry entry)
     {
-        bool wasTelegraphing = IsCounterable(entry);
+        bool wasTelegraphing = entry.Casting != null && entry.Casting.patternType == BossPatternType.Earthquake && !entry.ImpactApplied || IsCounterable(entry);
         entry.Runtime?.ClearPatternEffects();
         entry.Placement?.ResetAll();
         entry.SpineAnimator?.ReturnToIdle();
@@ -323,6 +333,7 @@ public class BossPatternController : MonoBehaviour
     }
     private static void ResetCast(BossPatternEntry entry)
     {
+        entry.CastVersion++;
         entry.Casting = null;
         entry.Visual = null;
         entry.Elapsed = 0f;

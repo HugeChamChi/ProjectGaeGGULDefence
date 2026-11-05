@@ -29,29 +29,31 @@ public class SpawnLine : MonoBehaviour
         SetWidthCurve();
     }
 
-    public void Fire(Vector3 from, Vector3 to)
+    /// <summary>소환 경로를 재생한다. 선행 단계의 초과 시간은 같은 예정 도착 시각에 맞춰 반영한다.</summary>
+    public void Fire(Vector3 from, Vector3 to, float elapsedSeconds = 0f)
     {
         startPos = from;
         endPos = to;
 
         controlPoint = Vector3.Lerp(from, to, 0.5f) + Vector3.up * curveHeight;
 
-        StartCoroutine(AnimateLine());
+        StartCoroutine(AnimateLine(Mathf.Max(0f, elapsedSeconds)));
     }
 
-    private IEnumerator AnimateLine()
+    private IEnumerator AnimateLine(float elapsedSeconds)
     {
-        float elapsed = 0f;
+        double started = UseUnscaledTime ? Time.unscaledTimeAsDouble : Time.timeAsDouble;
+        float elapsed = elapsedSeconds;
         lr.enabled = true;
 
         while (elapsed < duration)
         {
-            elapsed += UseUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             float headT = Mathf.Clamp01(elapsed / duration);
             float tailT = Mathf.Clamp01(headT - lineLength);
 
             DrawLineBetween(tailT, headT);
             yield return null;
+            elapsed = elapsedSeconds + (float)((UseUnscaledTime ? Time.unscaledTimeAsDouble : Time.timeAsDouble) - started);
         }
 
         RM.Destroy(gameObject);

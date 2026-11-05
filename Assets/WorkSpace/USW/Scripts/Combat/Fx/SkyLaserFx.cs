@@ -23,6 +23,7 @@ public enum SkyLaserMode
 /// </summary>
 public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     [VContainer.Inject] private AudioManager _audioManager;
     /// <summary>발사판 하나와 그 빔.</summary>
     [Serializable]
@@ -354,7 +355,7 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
             rig.Firing = true;
         }
 
-        float seed = UnityEngine.Random.value * 10f;
+        float seed = _presentationRandom.Value * 10f;
         _audioManager?.SetLaserActive(this, true);
         await TweenAsync(_sustainExtend, p =>
         {
@@ -424,7 +425,7 @@ public class SkyLaserFx : MonoBehaviour, IFxLabPlayable
         _hitTime = _clock;
         _hitScale = scale;
         if (sparks > 0) EmitSparks(sparks);
-        if (_impactFlare != null) _impactFlare.transform.localRotation = Quaternion.Euler(0f, 0f, UnityEngine.Random.Range(-25f, 25f));
+        if (_impactFlare != null) _impactFlare.transform.localRotation = Quaternion.Euler(0f, 0f, _presentationRandom.Range(-25f, 25f));
     }
 
     private void EmitSparks(int count)

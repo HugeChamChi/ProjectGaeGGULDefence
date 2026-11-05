@@ -16,6 +16,7 @@ using UnityEngine.UI;
 /// </summary>
 public class PenaltyRevealFx : MonoBehaviour, IFxLabPlayable
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private static readonly int QuadSizeId = Shader.PropertyToID("_QuadSize");
     private static readonly int BoxHalfId = Shader.PropertyToID("_BoxHalf");
     private static readonly int GrayId = Shader.PropertyToID("_Gray");
@@ -303,7 +304,7 @@ public class PenaltyRevealFx : MonoBehaviour, IFxLabPlayable
         if (_rollCandidates == null || _rollCandidates.Length == 0) return string.Empty;
         for (int tries = 0; tries < 4; tries++)
         {
-            string pick = _rollCandidates[UnityEngine.Random.Range(0, _rollCandidates.Length)];
+            string pick = _rollCandidates[_presentationRandom.Range(0, _rollCandidates.Length)];
             if (pick != avoid) return pick;
         }
         return _rollCandidates[0];

@@ -11,6 +11,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasRenderer))]
 public class UiFxParticleEmitter : MaskableGraphic
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private struct Particle
     {
         public Vector2 Position;
@@ -127,7 +128,7 @@ public class UiFxParticleEmitter : MaskableGraphic
         _emitting = true;
         _emitElapsed = 0f;
         _emitAccumulator = 0f;
-        for (int i = 0; i < _prewarmCount; i++) Spawn(Random.value);
+        for (int i = 0; i < _prewarmCount; i++) Spawn(_presentationRandom.Value);
         Emit(_burst);
     }
 
@@ -200,16 +201,16 @@ public class UiFxParticleEmitter : MaskableGraphic
     {
         if (_count >= _particles.Length) return;
         var rect = rectTransform.rect;
-        float angle = (_direction + Random.Range(-_spread, _spread)) * Mathf.Deg2Rad;
-        float speed = Random.Range(_speed.x, _speed.y);
-        Vector2 position = new Vector2(Random.Range(rect.xMin, rect.xMax), Random.Range(rect.yMin, rect.yMax));
+        float angle = (_direction + _presentationRandom.Range(-_spread, _spread)) * Mathf.Deg2Rad;
+        float speed = _presentationRandom.Range(_speed.x, _speed.y);
+        Vector2 position = new Vector2(_presentationRandom.Range(rect.xMin, rect.xMax), _presentationRandom.Range(rect.yMin, rect.yMax));
         Vector2 velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
-        float lifetime = Mathf.Max(0.01f, Random.Range(_lifetime.x, _lifetime.y));
+        float lifetime = Mathf.Max(0.01f, _presentationRandom.Range(_lifetime.x, _lifetime.y));
         if (_converge)
         {
-            float a = Random.value * Mathf.PI * 2f;
+            float a = _presentationRandom.Value * Mathf.PI * 2f;
             var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-            float r = Random.Range(_convergeRadius.x, _convergeRadius.y);
+            float r = _presentationRandom.Range(_convergeRadius.x, _convergeRadius.y);
             position = rect.center + dir * r;
             velocity = -dir * speed;
             lifetime = Mathf.Max(0.01f, r / Mathf.Max(speed, 1f));
@@ -219,14 +220,14 @@ public class UiFxParticleEmitter : MaskableGraphic
             Position = position,
             Velocity = velocity,
             Lifetime = lifetime,
-            Size = Random.Range(_size.x, _size.y),
-            Color = _startColor.Evaluate(Random.value),
-            SwayPhase = Random.value * Mathf.PI * 2f,
-            SwayFrequency = Random.Range(_swayFrequency.x, _swayFrequency.y),
-            TwinklePhase = Random.value * Mathf.PI * 2f,
-            TwinkleSpeed = Random.Range(_twinkleSpeed.x, _twinkleSpeed.y),
-            Rotation = Random.value * 360f,
-            AngularVelocity = Random.Range(_angularVelocity.x, _angularVelocity.y),
+            Size = _presentationRandom.Range(_size.x, _size.y),
+            Color = _startColor.Evaluate(_presentationRandom.Value),
+            SwayPhase = _presentationRandom.Value * Mathf.PI * 2f,
+            SwayFrequency = _presentationRandom.Range(_swayFrequency.x, _swayFrequency.y),
+            TwinklePhase = _presentationRandom.Value * Mathf.PI * 2f,
+            TwinkleSpeed = _presentationRandom.Range(_twinkleSpeed.x, _twinkleSpeed.y),
+            Rotation = _presentationRandom.Value * 360f,
+            AngularVelocity = _presentationRandom.Range(_angularVelocity.x, _angularVelocity.y),
         };
         p.Age = p.Lifetime * Mathf.Clamp01(startAge01);
         p.Position += p.Velocity * p.Age;

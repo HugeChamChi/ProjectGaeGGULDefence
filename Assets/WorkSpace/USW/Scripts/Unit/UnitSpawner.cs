@@ -217,13 +217,16 @@ public class UnitSpawner : MonoBehaviour
     {
         if (unit == null || cell == null) return;
         var token = this.GetCancellationTokenOnDestroy();
+        bool unscaled = _tutorialSettings != null;
+        double Clock() => unscaled ? Time.unscaledTimeAsDouble : Time.timeAsDouble;
+        double arrival = Clock() + System.Math.Max(0f, startDelaySeconds);
         
         // 이펙트 재생 동안 유닛을 숨김
         unit.gameObject.SetActive(false);
 
         if (startDelaySeconds > 0f)
         {
-            bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(startDelaySeconds), ignoreTimeScale: _tutorialSettings != null,
+            bool canceled = await UniTask.WaitUntil(() => Clock() >= arrival,
                 cancellationToken: token).SuppressCancellationThrow();
             if (canceled || !CanCompleteSpawn(unit, cell)) return;
         }
@@ -274,9 +277,10 @@ public class UnitSpawner : MonoBehaviour
 
                 if (lineCurveHeight.HasValue) line.curveHeight = lineCurveHeight.Value;
                 line.UseUnscaledTime = _tutorialSettings != null;
-                line.Fire(startPos, endPos);
-                bool canceled = await UniTask.Delay(System.TimeSpan.FromSeconds(line.duration),
-                    ignoreTimeScale: line.UseUnscaledTime, cancellationToken: token).SuppressCancellationThrow();
+                line.Fire(startPos, endPos, (float)System.Math.Max(0, Clock() - arrival));
+                arrival += System.Math.Max(0f, line.duration);
+                bool canceled = await UniTask.WaitUntil(() => Clock() >= arrival,
+                    cancellationToken: token).SuppressCancellationThrow();
                 if (canceled || !CanCompleteSpawn(unit, cell)) return;
             }
         }

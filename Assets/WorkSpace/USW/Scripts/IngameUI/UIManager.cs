@@ -403,7 +403,7 @@ public class UIManager : MonoBehaviour
         target.DOKill(true);
 
         // UI 요소이므로 DOShakeAnchorPos 사용
-        target.DOShakeAnchorPos(0.2f, bossBarShakePower, bossBarShakeVibrato, 90, false, true)
+        PresentationRandom.CreateTween(() => target.DOShakeAnchorPos(0.2f, bossBarShakePower, bossBarShakeVibrato, 90, false, true))
             .SetLink(target.gameObject);
     }
 

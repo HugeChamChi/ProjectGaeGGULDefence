@@ -225,8 +225,8 @@ public class SelfDestructDrone : MonoBehaviour
         _chargeSequence = DOTween.Sequence()
             .Append(transform.DOScale(_baseScale, _popInDuration).SetEase(Ease.OutBack))
             .Join(transform.DOMove(start + away * _windUpDistance, duration).SetEase(Ease.OutQuad))
-            .Insert(_popInDuration, transform.DOShakeRotation(Mathf.Max(0.01f, duration - _popInDuration),
-                new Vector3(0f, 0f, _chargeShakeAngle), 30, 90f, false))
+            .Insert(_popInDuration, PresentationRandom.CreateTween(() => transform.DOShakeRotation(Mathf.Max(0.01f, duration - _popInDuration),
+                new Vector3(0f, 0f, _chargeShakeAngle), 30, 90f, false)))
             .SetLink(gameObject);
 
         if (_spriteRenderer != null)

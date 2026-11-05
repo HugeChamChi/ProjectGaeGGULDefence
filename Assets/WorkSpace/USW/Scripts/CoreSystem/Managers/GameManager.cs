@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     [Inject] private ResearchRunBonuses _research;
     [Inject] private AccountExperienceRun _accountExperience;
     private CancellationTokenSource _endingCts;
+    private readonly object _applicationPauseOwner = new object();
+    private int _applicationPauseVersion;
     private ResultScreenData _resultSnapshot;
     private float _survivalSeconds;
     private int _bossKills;
@@ -282,6 +284,7 @@ public class GameManager : MonoBehaviour
         CancelEndPresentation();
         UnsubscribeGameplay();
         _timeScale?.Release(this);
+        _timeScale?.Release(_applicationPauseOwner);
     }
 
     private void StopAllUnits()
@@ -293,6 +296,9 @@ public class GameManager : MonoBehaviour
 
     private void OnApplicationPause(bool pauseStatus)
     {
+        int version = ++_applicationPauseVersion;
+        if (pauseStatus) _timeScale?.Pause(_applicationPauseOwner);
+        else ResumeCombatAfterPauseAsync(version).Forget();
         if (IsEditorPreview) return;
         if (pauseStatus)
         {
@@ -300,6 +306,13 @@ public class GameManager : MonoBehaviour
             UnityEngine.Debug.Log("[GameManager] 앱 백그라운드 전환 감지. 데이터 강제 업데이트 진행...");
             Player.UpdateDirtyDataAsync().Forget();
         }
+    }
+
+    private async UniTask ResumeCombatAfterPauseAsync(int version)
+    {
+        // Keep every scaled combat clock paused through the first resumed frame.
+        await UniTask.NextFrame(cancellationToken: this.GetCancellationTokenOnDestroy());
+        if (version == _applicationPauseVersion) _timeScale?.Release(_applicationPauseOwner);
     }
 
     private void OnApplicationQuit()

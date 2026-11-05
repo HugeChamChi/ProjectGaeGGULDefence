@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
@@ -14,7 +14,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private readonly Func<string> _accountProvider;
     private readonly Func<long> _clock;
     private readonly bool _externalClock;
-    private long _nextClockSync;
+    private double _nextClockSync;
     private readonly string _journalPrefix;
     private string _account;
     private string _confirmedSaveId = "";
@@ -40,7 +40,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private async UniTask SyncClockAsync()
     {
         if (_externalClock) return;
-        _nextClockSync = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ClockRetrySeconds;
+        _nextClockSync = Time.realtimeSinceStartupAsDouble + ClockRetrySeconds;
         try { await ServerClock.SyncAsync(_sessionCts?.Token ?? CancellationToken.None); }
         catch (OperationCanceledException) { }
     }
@@ -174,7 +174,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
         {
             while (Matches(generation))
             {
-                if (!ClockReady && DateTimeOffset.UtcNow.ToUnixTimeSeconds() >= _nextClockSync) await SyncClockAsync();
+                if (!ClockReady && Time.realtimeSinceStartupAsDouble >= _nextClockSync) await SyncClockAsync();
                 RecoverStamina();
                 OnStaminaRecoveryTimer?.Invoke(ClockReady && _data != null && _data.Stamina < _data.MaxStamina
                     ? _backendData.GetTimeUntilNextStaminaRecovery(_data.LastStaminaRecoveryTime, _clock()) : 0);

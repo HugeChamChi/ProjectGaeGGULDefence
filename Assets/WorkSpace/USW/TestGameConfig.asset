@@ -26,6 +26,7 @@ MonoBehaviour:
   baseCritChance: 0
   damageVariance: 0
   critDamageVariance: 0
+  maxAttackSpeedMultiplier: 8
   tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
   _defeatDuration: 0.8
   _defeatTimeScale: 0.2

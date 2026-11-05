@@ -144,6 +144,9 @@ public class UnitStatsModifier : MonoBehaviour
     /// <summary>같은 런타임 보정에서 인게임 강화 포함 여부를 지정해 공격 간격을 계산한다.</summary>
     public float GetCurrentAttackInterval(bool includeUpgrade)
     {
+        if (_unit.IsTimeVaultAttackSpeedActive && CappedAttackInterval() > 0f)
+            return GetMinimumAttackInterval();
+
         int row = _unit.currentCell?.GridPosition.y ?? 0;
         float rowSpeedMult   = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
         
@@ -156,21 +159,45 @@ public class UnitStatsModifier : MonoBehaviour
         float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
         float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
 
+        float cellModifier = _unit.currentCell?.Model.SpeedModifier ?? 1f;
         float interval = baseInterval
                        * cellSpeedBonusMult
-                       * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
+                       * Mathf.Min(1f, cellModifier)
                        * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
                        / rowSpeedMult;
         interval /= 1f + (_deps?.Research?.Get(ResearchStat.AttackSpeedPercent) ?? 0f);
         float baseline = Mathf.Max(interval, 0.05f);
-        try { return RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d)
-            / Mathf.Max(0.01f, _unit.PatternAttackSpeedMultiplier); }
+        try
+        {
+            float scaled = RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d);
+            // Boss slows apply after the cap so a capped unit still feels them.
+            return Mathf.Max(scaled, CappedAttackInterval()) * BossSlowFactor();
+        }
         catch (System.OverflowException error)
         {
             _deps?.ReportRunStatFailure?.Invoke(error.Message);
             return float.PositiveInfinity; // Diagnostic sentinel; the progression owner stops/pauses the run.
         }
     }
+
+    /// <summary>
+    /// 공속 배율 상한이 허용하는 가장 짧은 공격 간격 (보스 감속 포함).
+    /// 전투 드론처럼 본체 간격을 다시 나누는 경로가 같은 상한을 지키도록 공개한다. 기본 공속이 없으면 0.
+    /// </summary>
+    public float GetMinimumAttackInterval() => CappedAttackInterval() * BossSlowFactor();
+
+    // The cap follows the current combat tier, including a separate temporary totem tier.
+    private float CappedAttackInterval()
+    {
+        float baseFrequency = _unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 0f;
+        if (!(baseFrequency > 0f)) return 0f;
+        float cap = _deps?.CombatSettings?.MaxAttackSpeedMultiplier ?? CombatSettings.DefaultMaxAttackSpeedMultiplier;
+        return 1f / (baseFrequency * cap);
+    }
+
+    // Cell slow from boss patterns (>1 slows) and the lizard pattern multiplier (<1 slows).
+    private float BossSlowFactor() => Mathf.Max(1f, _unit.currentCell?.Model.SpeedModifier ?? 1f)
+        / Mathf.Max(0.01f, _unit.PatternAttackSpeedMultiplier);
 
     public float GetCurrentSkillInterval()
     {

@@ -11,6 +11,7 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class UnitMorph : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     [Serializable]
     public class MorphState
     {
@@ -64,7 +65,7 @@ public class UnitMorph : MonoBehaviour
         _currentStateName = stateName;
 
         int startFrame = (_randomizeIdleStart && stateName == _idleStateName)
-            ? UnityEngine.Random.Range(0, state.frames.Length)
+            ? _presentationRandom.Range(0, state.frames.Length)
             : 0;
 
         PlayStateAsync(state, startFrame, holdSeconds, _playCts.Token).Forget();

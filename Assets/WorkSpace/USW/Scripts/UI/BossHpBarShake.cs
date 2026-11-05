@@ -97,8 +97,8 @@ public class BossHpBarShake : MonoBehaviour
         KillShake();
 
         _shakeTarget.anchoredPosition = _basePos;
-        _shakeTween = _shakeTarget
-            .DOShakeAnchorPos(_duration, _strength, _vibrato, _randomness, false, true)
+        _shakeTween = PresentationRandom.CreateTween(() => _shakeTarget
+            .DOShakeAnchorPos(_duration, _strength, _vibrato, _randomness, false, true))
             .SetUpdate(true) // 타임스케일 영향 안 받게 (일시정지 중에도 연출)
             .OnComplete(() => _shakeTarget.anchoredPosition = _basePos);
     }

@@ -4,6 +4,7 @@
 using UnityEngine;
 using System;
 using VContainer;
+using Cysharp.Threading.Tasks;
 
 [DefaultExecutionOrder(-100)]
 public class TimerController : MonoBehaviour
@@ -21,11 +22,13 @@ public class TimerController : MonoBehaviour
     private double _vaultRemaining;
     private double _vaultElapsed;
     private bool _applicationPaused, _skipResumeFrame;
+    private bool _advancingFrame, _spendingTime;
+    private int _expiryVersion;
     /// <summary>런 1회 마지막 유예가 진행 중인지 여부.</summary>
     public bool TimeVaultActive { get; private set; }
     /// <summary>제물의 실제 지출을 +30초 지급과 별도로 표시한다.</summary>
     public event Action<float> OnSacrificePaid;
-    /// <summary>시간 금고 시작/종료 시 UI와 전투 등급을 동기화한다.</summary>
+    /// <summary>시간 금고 시작/종료 시 UI와 공속 효과을 동기화한다.</summary>
     public event Action<bool> OnTimeVaultChanged;
     public void Init()
     {
@@ -56,25 +59,33 @@ public class TimerController : MonoBehaviour
             OnTimerTick?.Invoke(RemainingTime);
         };
         _countdown.OnTimeUp += HandleCountdownExpired;
-        UnitBase.OnAnyUnitChanged += RefreshVaultTiers;
+        UnitBase.OnAnyUnitChanged += RefreshVaultAttackSpeed;
     }
 
     private void Update()
     {
+        if (_applicationPaused) return;
+        if (_skipResumeFrame) { _skipResumeFrame = false; return; }
         if (TimeVaultActive)
         {
             if (_game?.IsFinished == true) { CancelTimeVault(); return; }
-            if (_applicationPaused) return;
-            if (_skipResumeFrame) { _skipResumeFrame = false; return; }
-            if (!_vaultIntermission) AdvanceTimeVault(Time.unscaledDeltaTime);
+            if (!_vaultIntermission && _fieldPause?.AttacksHeld != true)
+            {
+                _advancingFrame = true;
+                try { AdvanceTimeVault(Time.deltaTime); }
+                finally { _advancingFrame = false; }
+            }
             return;
         }
         if (_fieldPause?.AttacksHeld == true) return;
-        _countdown.Advance(Time.deltaTime, 1d + (_overdrive?.ExtraTimeDrainRatio ?? 0f));
+        _advancingFrame = true;
+        try { _countdown.Advance(Time.deltaTime, 1d + (_overdrive?.ExtraTimeDrainRatio ?? 0f)); }
+        finally { _advancingFrame = false; }
     }
 
     public void StartTimer(float seconds)
     {
+        _expiryVersion++;
         CancelTimeVault();
         _vaultUsed = false;
         _vaultIntermission = false;
@@ -83,7 +94,7 @@ public class TimerController : MonoBehaviour
         OnTimerTick?.Invoke(RemainingTime);
     }
 
-    public void StopTimer()   => _countdown.Stop();
+    public void StopTimer() { if (!TimeVaultActive) _expiryVersion++; _countdown.Stop(); }
     /// <summary>다음 보스 등장 전의 대기에서만 유예 시계를 정지한다.</summary>
     public void SetVaultIntermission(bool paused) => _vaultIntermission = paused;
 
@@ -95,12 +106,22 @@ public class TimerController : MonoBehaviour
 
     private void HandleCountdownExpired()
     {
+        if (_advancingFrame && !_spendingTime)
+        {
+            ResolveFrameExpiryAsync(false, ++_expiryVersion).Forget();
+            return;
+        }
+        CompleteCountdownExpiry();
+    }
+
+    private void CompleteCountdownExpiry()
+    {
         if (!_vaultUsed && (_overdrive?.TimeVaultSeconds ?? 0f) > 0f && _game?.IsFinished != true)
         {
             _vaultUsed = true;
             TimeVaultActive = true;
             _vaultRemaining = _overdrive.TimeVaultSeconds;
-            RefreshVaultTiers();
+            RefreshVaultAttackSpeed();
             OnTimeVaultChanged?.Invoke(true);
             OnTimerTick?.Invoke(RemainingTime);
             return;
@@ -108,7 +129,23 @@ public class TimerController : MonoBehaviour
         OnTimeUp?.Invoke();
     }
 
-    /// <summary>유예는 일반 회복/시간 지출과 분리된 실제 경과 시계다.</summary>
+    // Timer Update precedes unit/projectile Update. Give all due damage in this frame
+    // the same last-hit priority already granted to OnCombatTimeAdvanced damage.
+    private async UniTask ResolveFrameExpiryAsync(bool vault, int version)
+    {
+        bool cancelled = await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+        if (cancelled || version != _expiryVersion || _game?.IsFinished == true) return;
+        if (vault)
+        {
+            if (!TimeVaultActive || _vaultRemaining > 0) return;
+            CancelTimeVault();
+            OnTimeUp?.Invoke();
+        }
+        else if (_countdown.Remaining > 0) _countdown.Resume();
+        else CompleteCountdownExpiry();
+    }
+
+    /// <summary>유예는 공격과 같은 전투 시계를 쓰며 일반 회복/시간 지출과 분리한다.</summary>
     public void AdvanceTimeVault(double delta)
     {
         if (delta < 0 || double.IsNaN(delta) || double.IsInfinity(delta)) throw new ArgumentOutOfRangeException(nameof(delta));
@@ -121,26 +158,32 @@ public class TimerController : MonoBehaviour
         if (!TimeVaultActive) return;
         OnTimerTick?.Invoke(RemainingTime);
         if (_vaultRemaining > 0) return;
+        if (_advancingFrame)
+        {
+            ResolveFrameExpiryAsync(true, ++_expiryVersion).Forget();
+            return;
+        }
         CancelTimeVault();
         OnTimeUp?.Invoke();
     }
 
-    /// <summary>런 종료 시 유예와 임시 등급을 정리한다. 사용 횟수는 새 런에서만 복구한다.</summary>
+    /// <summary>런 종료 시 유예와 공속 효과을 정리한다. 사용 횟수는 새 런에서만 복구한다.</summary>
     public void CancelTimeVault()
     {
         if (!TimeVaultActive) return;
+        _expiryVersion++;
         TimeVaultActive = false;
         _vaultRemaining = 0;
-        RefreshVaultTiers();
+        RefreshVaultAttackSpeed();
         OnTimeVaultChanged?.Invoke(false);
     }
 
-    private void RefreshVaultTiers()
+    private void RefreshVaultAttackSpeed()
     {
         if (!TimeVaultActive)
         {
             foreach (var unit in new System.Collections.Generic.List<UnitBase>(_vaultUnits))
-                if (unit != null) unit.SetTimeVaultTier(false);
+                if (unit != null) unit.SetTimeVaultAttackSpeed(false);
             _vaultUnits.Clear();
             return;
         }
@@ -150,7 +193,7 @@ public class TimerController : MonoBehaviour
             var unit = cell.OccupyingUnit;
             if (unit == null) continue;
             _vaultUnits.Add(unit);
-            unit.SetTimeVaultTier(true);
+            unit.SetTimeVaultAttackSpeed(true);
         }
     }
 
@@ -158,7 +201,7 @@ public class TimerController : MonoBehaviour
     public bool TryPayOverheat(float seconds, UnitBase actor, BossBase target, Action commit = null)
     {
         if (TimeVaultActive || !CanSurviveTimeCost(seconds) || _game?.IsFinished == true) return false;
-        _countdown.Spend(seconds, paid => { commit?.Invoke(); PublishGlitch(actor, target, -paid, false); });
+        SpendCountdown(seconds, paid => { commit?.Invoke(); PublishGlitch(actor, target, -paid, false); });
         OnTimerTick?.Invoke(RemainingTime);
         return true;
     }
@@ -171,7 +214,7 @@ public class TimerController : MonoBehaviour
     {
         if (TimeVaultActive) return false;
         if (!(seconds > 0f) || float.IsInfinity(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
-        double actual = _countdown.Spend(seconds, paid => PublishGlitch(result, target, -paid, false));
+        double actual = SpendCountdown(seconds, paid => PublishGlitch(result, target, -paid, false));
         OnTimerTick?.Invoke(RemainingTime);
         return actual > 0 && _countdown.Remaining > 0;
     }
@@ -213,7 +256,7 @@ public class TimerController : MonoBehaviour
         if (bossKill && (_overdrive?.SacrificeCostSeconds ?? 0f) > 0f)
         {
             float cost = _overdrive.SacrificeCostSeconds;
-            _countdown.Spend(cost, paid =>
+            SpendCountdown(cost, paid =>
             {
                 if (paid == cost) _selections?.RecordSacrifice();
                 PublishGlitch(null, null, -paid, false);
@@ -233,9 +276,17 @@ public class TimerController : MonoBehaviour
             catch (Exception error) { Debug.LogException(error); }
     }
 
+    private double SpendCountdown(double seconds, Action<double> committed)
+    {
+        bool previous = _spendingTime;
+        _spendingTime = true;
+        try { return _countdown.Spend(seconds, committed); }
+        finally { _spendingTime = previous; }
+    }
+
     private void OnDestroy()
     {
-        UnitBase.OnAnyUnitChanged -= RefreshVaultTiers;
+        UnitBase.OnAnyUnitChanged -= RefreshVaultAttackSpeed;
         CancelTimeVault();
     }
 }

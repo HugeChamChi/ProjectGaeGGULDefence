@@ -18,6 +18,7 @@ using UnityEngine.UI;
 /// </summary>
 public class TierRevealFx : MonoBehaviour, IFxLabPlayable
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     /// <summary>등급 하나의 색과 강도.</summary>
     [Serializable]
     public class TierStyle
@@ -156,7 +157,7 @@ public class TierRevealFx : MonoBehaviour, IFxLabPlayable
         CacheBokeh();
         var style = StyleOf(tier);
         // 반전은 빛기둥 2단 연출이 있는 등급에서만, 항상(UpgradeFromEpic) 또는 확률(UpgradeChance)로
-        bool upgrade = style.Columns && (DebugForceUpgrade ?? (style.UpgradeFromEpic || UnityEngine.Random.value < style.UpgradeChance));
+        bool upgrade = style.Columns && (DebugForceUpgrade ?? (style.UpgradeFromEpic || _presentationRandom.Value < style.UpgradeChance));
         LastPlayUpgraded = upgrade;
         var first = upgrade ? _epic : style;
 

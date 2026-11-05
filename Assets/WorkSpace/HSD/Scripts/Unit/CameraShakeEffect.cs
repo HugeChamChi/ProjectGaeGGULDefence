@@ -23,6 +23,6 @@ public class CameraShakeEffect : IAdditionalEffect
         if (cam == null) return;
 
         cam.DOKill(true);
-        cam.DOShakePosition(duration, strength, vibrato, 90, false, true);
+        PresentationRandom.CreateTween(() => cam.DOShakePosition(duration, strength, vibrato, 90, false, true));
     }
 }

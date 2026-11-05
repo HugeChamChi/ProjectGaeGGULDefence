@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public class DroneHoverAnimation : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     [Header("부유 (상하)")]
     [Tooltip("월드 단위(Unit) 이동 폭")]
     [SerializeField] private float _hoverAmplitude = 0.08f;
@@ -60,7 +61,7 @@ public class DroneHoverAnimation : MonoBehaviour
         _hoverTween?.Kill();
         _tiltTween?.Kill();
 
-        float phaseDelay = _randomPhase ? Random.Range(0f, _hoverDuration) : 0f;
+        float phaseDelay = _randomPhase ? _presentationRandom.Range(0f, _hoverDuration) : 0f;
         Vector3 basePos  = _tr.localPosition;
 
         // DOTween Sequence 안에서는 SetLoops(-1) 금지 — 두 트윈을 독립 실행

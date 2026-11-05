@@ -16,6 +16,7 @@ using static TimerBonusEase;
 /// </summary>
 public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
 {
+    private static readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private const int KeyKill = 1;
     private const int KeyBossBurst = 2;
     private const int KeyBeatBase = 2000;
@@ -496,7 +497,7 @@ public sealed class TimerBonusLab : MonoBehaviour, IFxLabPlayable
     /// <summary>이번 반복에서 처음이면 true (한 번만 터지는 이벤트).</summary>
     internal bool Once(int key) => _fired.Add(key);
 
-    internal static float Rnd(float min, float max) => Random.Range(min, max);
+    internal static float Rnd(float min, float max) => _presentationRandom.Range(min, max);
 
     /// <summary>파티클 하나 (캔버스 단위 그대로).</summary>
     internal void Emit(TimerBonusParticles.Particle p) => _particles.Emit(p);

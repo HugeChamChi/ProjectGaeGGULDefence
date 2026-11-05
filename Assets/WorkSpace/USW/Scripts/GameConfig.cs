@@ -74,6 +74,9 @@ public class GameConfig : ScriptableObject
     [Tooltip("치명타 배율 편차 (0.1 = 치명 배율 × 0.9~1.1, 평균 유지). 치명타 숫자끼리도 매번 달라진다.\n" +
              "엑셀 GameBalance.xlsx CombatCommon!critDamageVariancePct → Tools/USW/Balance/CombatCommon Excel Import")]
     [Range(0f, 0.5f)] public float critDamageVariance = 0f;
+    [Tooltip("현재 등급 기본 공속 대비 최종 공격 빈도의 최대 배율. 유닛과 전투 드론에 같이 적용하고, 보스 패턴 감속은 상한 뒤에 곱한다.\n" +
+             "사용자 결정 2026-11-05: 8배 (델탕 전설 1.8회 × 8 = 초당 14.4회, 30fps 한계 15회 아래)")]
+    [Min(1f)] public float maxAttackSpeedMultiplier = 8f;
 
     [Header("Visuals")]
     public UnitTierPalette tierPalette; // 등급별 비주얼 설정

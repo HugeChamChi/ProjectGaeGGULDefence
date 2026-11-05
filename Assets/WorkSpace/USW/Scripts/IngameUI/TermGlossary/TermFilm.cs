@@ -11,6 +11,7 @@ using UnityEngine.Video;
 /// </summary>
 public sealed class TermFilm : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private static readonly Color FrameColor = new Color(0.09f, 0.09f, 0.12f, 1f);
     private static readonly Color HoleColor = new Color(0.32f, 0.3f, 0.27f, 1f);
 
@@ -125,7 +126,7 @@ public sealed class TermFilm : MonoBehaviour
     {
         if (_noise == null || !_noise.gameObject.activeSelf) return;
         // 지지직 — 매 프레임 노이즈 무늬 위치를 무작위로 옮긴다.
-        _noise.uvRect = new Rect(Random.value, Random.value, 1.6f, 1.6f);
+        _noise.uvRect = new Rect(_presentationRandom.Value, _presentationRandom.Value, 1.6f, 1.6f);
         if (!_noiseFading && _prepared && _player.frame > 0 && Time.unscaledTime - _shownAt >= _minNoiseSeconds)
         {
             _noiseFading = true;
@@ -206,7 +207,7 @@ public sealed class TermFilm : MonoBehaviour
         _player.prepareCompleted += OnPrepared;
     }
 
-    private static Texture2D MakeNoise(int size)
+    private Texture2D MakeNoise(int size)
     {
         var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
         {
@@ -216,7 +217,7 @@ public sealed class TermFilm : MonoBehaviour
         var pixels = new Color32[size * size];
         for (int i = 0; i < pixels.Length; i++)
         {
-            byte v = (byte)Random.Range(20, 200);
+            byte v = (byte)_presentationRandom.Range(20, 200);
             pixels[i] = new Color32(v, v, v, 255);
         }
         texture.SetPixels32(pixels);

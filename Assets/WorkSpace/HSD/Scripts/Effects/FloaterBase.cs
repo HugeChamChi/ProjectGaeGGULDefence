@@ -8,6 +8,7 @@ using DG.Tweening;
 /// </summary>
 public abstract class FloaterBase : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     [Header("Base Components")]
     [SerializeField] protected TextMeshProUGUI _tmp;
     
@@ -39,8 +40,8 @@ public abstract class FloaterBase : MonoBehaviour
         }
 
         // 2. 랜덤 오프셋
-        float randomX = Random.Range(-style.randomizeOffsetX, style.randomizeOffsetX);
-        float randomY = Random.Range(-style.randomizeOffsetY, style.randomizeOffsetY);
+        float randomX = _presentationRandom.Range(-style.randomizeOffsetX, style.randomizeOffsetX);
+        float randomY = _presentationRandom.Range(-style.randomizeOffsetY, style.randomizeOffsetY);
         transform.localPosition += new Vector3(randomX, randomY, 0);
     }
 

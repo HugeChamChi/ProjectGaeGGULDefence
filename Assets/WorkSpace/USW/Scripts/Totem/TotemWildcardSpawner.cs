@@ -46,7 +46,7 @@ public sealed class TotemWildcardSpawner : RangedBuffTotemBase
             CurrentCell == null || CurrentCell.Model.IsSealed) return;
         double interval = Data.WildcardSpawn.IntervalSeconds;
         _charge.Advance(Time.deltaTime, interval);
-        if (_charge.IsReady(interval) && TrySpawn()) _charge.Consume();
+        while (_charge.IsReady(interval) && TrySpawn()) _charge.Consume();
         OnGaugeChanged?.Invoke(GaugeProgress);
     }
 

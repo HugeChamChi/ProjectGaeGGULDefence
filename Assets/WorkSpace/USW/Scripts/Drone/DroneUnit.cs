@@ -26,15 +26,17 @@ public class DroneUnit : MonoBehaviour
     /// <summary>본체 보정과 군단 버프를 반영한 드론 1기의 비치명타 공격력.</summary>
     public int NonCriticalAttackDamage => _owner != null
         ? Mathf.RoundToInt(_owner.GetCombatDroneDisplayDamage() * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
-    /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격.</summary>
-    public float EffectiveAttackInterval => AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
+    /// <summary>전용 선택지와 군단 속도 버프까지 반영한 실제 공격간격. 본체와 같은 공속 배율 상한을 지킨다.</summary>
+    public float EffectiveAttackInterval => _owner != null
+        ? Mathf.Max(AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f), _owner.GetMinimumAttackInterval())
+        : AttackInterval / (_droneManager?.DroneSpeedMultiplier ?? 1f);
     /// <summary>강화만 제외하고 소유자 보정과 군단 버프를 반영한 비치명타 공격력.</summary>
     public int NonCriticalAttackDamageBeforeUpgrade => _owner != null
         ? Mathf.RoundToInt(_owner.GetCombatDroneDisplayDamage(false) * (_droneManager?.DroneAtkMultiplier ?? 1f)) : 0;
     /// <summary>강화만 제외하고 전용 선택지와 군단 버프를 반영한 공격 간격.</summary>
-    public float EffectiveAttackIntervalBeforeUpgrade => _owner != null ? _owner.GetAttackIntervalBeforeUpgrade()
+    public float EffectiveAttackIntervalBeforeUpgrade => _owner != null ? Mathf.Max(_owner.GetAttackIntervalBeforeUpgrade()
         / (1f + (_owner.DroneEffects?.DroneAttackSpeedBonus ?? 0f))
-        / (_droneManager?.DroneSpeedMultiplier ?? 1f) : 0f;
+        / (_droneManager?.DroneSpeedMultiplier ?? 1f), _owner.GetMinimumAttackInterval()) : 0f;
     /// <summary>오너 위치와 현재 위상을 반영한 귀환/드래그 기준점.</summary>
     public Vector3 HomePosition => (_owner != null ? _owner.transform.position : _homePositionFallback)
         + (UsesOrbit ? OrbitOffset : (Vector3)_spawnOffset);
@@ -460,30 +462,42 @@ public class DroneUnit : MonoBehaviour
 
     // ── 공격 루프 ───────────────────────────────────────────────────
 
+    /// <summary>렉 걸린 한 프레임에서 밀린 발을 몰아 쏠 수 있는 최대 수. 프로젝타일이 한 번에 쏟아지지 않게 제한한다.</summary>
+    private const int MaxShotsPerFrame = 3;
+
+    // Frame-independent cadence: leftover time carries into the next shot, so 30/60 fps and frame drops
+    // give the same shots per second. Time saved while unable to fire is capped at one shot (no burst).
     private async UniTaskVoid AttackLoopAsync(CancellationToken token)
     {
+        float timer = 0f;
         while (!token.IsCancellationRequested)
         {
-            if (_gameManager?.IsFinished == true)
-            {
-                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
-                continue;
-            }
-            int delayMs;
-            try { delayMs = RunStatMath.ToDelayMilliseconds(EffectiveAttackInterval); }
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+            if (_gameManager?.IsFinished == true) continue;
+
+            float interval = EffectiveAttackInterval;
+            try { RunStatMath.ToDelayMilliseconds(interval); }
             catch (System.OverflowException error) { _run.Fail(error.Message); return; }
 
-            if (await UniTask.Delay(delayMs, cancellationToken: token).SuppressCancellationThrow())
-                return;
-            while (_attackHeld)
-                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+            timer += Time.deltaTime;
+            if (timer < interval) continue;
 
             var boss = _bossManager?.CurrentBoss;
-            if (boss == null || !boss.IsTargetable) continue;
-            bool critical = false;
-            int ownerDamage = _owner != null ? _owner.GetCombatDroneDamage(out critical) : 0;
-            float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
-            LaunchProjectile(Mathf.RoundToInt(dmg), critical);
+            if (_attackHeld || boss == null || !boss.IsTargetable)
+            {
+                timer = interval;
+                continue;
+            }
+            // A slow frame longer than the interval fires the shots it owes (bounded), then keeps one interval at most.
+            for (int shot = 0; shot < MaxShotsPerFrame && timer >= interval; shot++)
+            {
+                timer -= interval;
+                bool critical = false;
+                int ownerDamage = _owner != null ? _owner.GetCombatDroneDamage(out critical) : 0;
+                float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
+                LaunchProjectile(Mathf.RoundToInt(dmg), critical);
+            }
+            timer = Mathf.Min(timer, interval);
         }
     }
 

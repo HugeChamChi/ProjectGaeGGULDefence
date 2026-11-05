@@ -9,6 +9,7 @@ using static TimerBonusEase;
 /// </summary>
 public sealed class TimerBonusDash : ITimerBonusConcept
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private const int KeyGo = 100;
     private const int KeySnap = 101;
     private const float BarWidthPx = 184f;
@@ -151,7 +152,7 @@ public sealed class TimerBonusDash : ITimerBonusConcept
     private void EmitStreak(Vector2 timer, float px)
     {
         Vector2 half = _lab.StageSize * 0.5f;
-        bool near = Random.value < NearStreakChance;
+        bool near = _presentationRandom.Value < NearStreakChance;
         float y = near ? timer.y + TimerBonusLab.Rnd(-60f, 50f) * px : TimerBonusLab.Rnd(-half.y + 20f * px, half.y - 10f * px);
         _lab.Emit(new TimerBonusParticles.Particle
         {
@@ -161,7 +162,7 @@ public sealed class TimerBonusDash : ITimerBonusConcept
             Length = TimerBonusLab.Rnd(40f, 150f) * px,
             Size = TimerBonusLab.Rnd(1f, 2.6f) * px,
             MaxLife = TimerBonusLab.Rnd(0.26f, 0.42f),
-            Color = Random.value < CyanStreakChance ? _lab.Settings.CyanColor : Color.white,
+            Color = _presentationRandom.Value < CyanStreakChance ? _lab.Settings.CyanColor : Color.white,
             Alpha = near ? 0.85f : 0.35f,
         });
     }

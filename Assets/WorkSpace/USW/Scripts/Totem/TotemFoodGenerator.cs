@@ -1,9 +1,6 @@
 using UnityEngine;
 using VContainer;
-using System;
-using System.Threading;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 끝없는 수확 토템 — 배치되어 있는 동안 일정 주기마다 토템 스스로 식량을 생성한다.
@@ -16,7 +13,9 @@ public class TotemFoodGenerator : TotemBase
 {
     [Inject] private CurrencyManager _currencyManager;
 
-    private CancellationTokenSource _genCts;
+    private bool _generating;
+    private double _elapsed;
+    private const float MinimumInterval = 0.1f;
 
     protected override void ApplyBuff()
     {
@@ -26,44 +25,28 @@ public class TotemFoodGenerator : TotemBase
             Debug.LogWarning($"TotemFoodGenerator({name}): FoodGeneratorFunction이 없거나 amount = 0. TotemData를 확인하세요.");
             return;
         }
-        StartGeneration();
+        _elapsed = 0;
+        _generating = true;
     }
 
     protected override void RemoveBuff()
     {
-        StopGeneration();
+        _generating = false;
+        _elapsed = 0;
     }
 
-    private void StartGeneration()
+    private void Update()
     {
-        StopGeneration();
-        _genCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-        GenerateLoopAsync(_genCts.Token).Forget();
-    }
-
-    private void StopGeneration()
-    {
-        _genCts?.Cancel();
-        _genCts?.Dispose();
-        _genCts = null;
-    }
-
-    private async UniTaskVoid GenerateLoopAsync(CancellationToken token)
-    {
-        var   gen      = totemData?.GetFoodGenerator();
-        float interval = Mathf.Max(0.1f, gen != null ? gen.interval : 10f);
-        try
+        if (!_generating) return;
+        var gen = totemData?.GetFoodGenerator();
+        if (gen == null) return;
+        double interval = Mathf.Max(MinimumInterval, gen.interval);
+        _elapsed += Time.deltaTime;
+        while (_generating && _elapsed >= interval)
         {
-            while (true)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
-
-                float amount = totemData?.GetFoodGenerator()?.amount ?? 0f;
-                if (amount > 0f)
-                    _currencyManager?.AddCurrency(amount);
-            }
+            _elapsed -= interval;
+            if (gen.amount > 0f) _currencyManager?.AddCurrency(gen.amount);
         }
-        catch (OperationCanceledException) { }
     }
 
     // 셀 버프가 없는 토템 — 영향 칸 없음.

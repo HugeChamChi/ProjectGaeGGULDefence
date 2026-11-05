@@ -14,6 +14,7 @@ using UnityEngine;
 /// </summary>
 public sealed class ChiefConvergeBeamFx : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private static readonly int ColorId = Shader.PropertyToID("_Color");
     private static readonly int LengthId = Shader.PropertyToID("_Length");
     private static readonly int AlphaId = Shader.PropertyToID("_Alpha");
@@ -136,7 +137,7 @@ public sealed class ChiefConvergeBeamFx : MonoBehaviour
             foreach (var m in muzzles) if (m != null && _muzzles.Count < MaxDrones) _muzzles.Add(m);
         _target = target;
         _scale = Mathf.Max(0.05f, scale);
-        _seed = UnityEngine.Random.value * 100f;
+        _seed = _presentationRandom.Value * 100f;
         _t = 0f;
         _fired = false;
         _holdExtra = 0f;
@@ -283,8 +284,8 @@ public sealed class ChiefConvergeBeamFx : MonoBehaviour
     {
         int i = _nextSpark;
         _nextSpark = (_nextSpark + 1) % _sparks.Length;
-        Vector2 r = UnityEngine.Random.insideUnitCircle.normalized;
-        Vector3 v = new Vector3(r.x, r.y, 0f) * UnityEngine.Random.Range(0.4f, 1f) * _sparkSpeed * _scale;
+        Vector2 r = _presentationRandom.InsideUnitCircle.normalized;
+        Vector3 v = new Vector3(r.x, r.y, 0f) * _presentationRandom.Range(0.4f, 1f) * _sparkSpeed * _scale;
         v -= against * _sparkSpeed * 0.3f * _scale; // 빔 반대쪽으로 더 튄다
         _sparkVel[i] = v;
         _sparkBorn[i] = _t;
@@ -310,7 +311,7 @@ public sealed class ChiefConvergeBeamFx : MonoBehaviour
         if (_cam == null || _shake <= 0f) return;
         if (since > _shakeSeconds) { _cam.position = _camHome; return; }
         float k = 1f - since / _shakeSeconds;
-        Vector2 r = UnityEngine.Random.insideUnitCircle * (_shake * k);
+        Vector2 r = _presentationRandom.InsideUnitCircle * (_shake * k);
         _cam.position = _camHome + new Vector3(r.x, r.y, 0f);
     }
 

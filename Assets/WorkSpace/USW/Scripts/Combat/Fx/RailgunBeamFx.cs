@@ -11,6 +11,7 @@ using UnityEngine;
 /// </summary>
 public class RailgunBeamFx : MonoBehaviour
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private static readonly int ColorId  = Shader.PropertyToID("_Color");
     private static readonly int LengthId = Shader.PropertyToID("_Length");
     private static readonly int AlphaId  = Shader.PropertyToID("_Alpha");
@@ -149,7 +150,7 @@ public class RailgunBeamFx : MonoBehaviour
         _to = to;
         _chargeSeconds = Mathf.Max(0f, chargeSeconds);
         _scale = Mathf.Max(0.01f, scale);
-        _seed = Random.value * 10f;
+        _seed = _presentationRandom.Value * 10f;
         _time = 0f;
         _fired = false;
         _playing = true;
@@ -163,20 +164,20 @@ public class RailgunBeamFx : MonoBehaviour
         _muzzleFlash.transform.position = from;
         _impactFlash.transform.position = _impactFlare.transform.position = _linger.transform.position = to;
         foreach (var r in _impactRings) r.transform.position = to;
-        _impactFlare.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f));
+        _impactFlare.transform.rotation = Quaternion.Euler(0f, 0f, _presentationRandom.Range(-25f, 25f));
 
         // 알갱이: 고르게 흩어진 방향에서 시차를 두고 출발 (마지막 알갱이도 차지 끝에 도착)
         for (int i = 0; i < _motes.Length; i++)
         {
-            float ang = (i + Random.Range(-0.35f, 0.35f)) / _motes.Length * Mathf.PI * 2f;
+            float ang = (i + _presentationRandom.Range(-0.35f, 0.35f)) / _motes.Length * Mathf.PI * 2f;
             _moteDirs[i] = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f);
-            _moteStart[i] = Random.Range(0f, 1f - MoteTravelShare);
+            _moteStart[i] = _presentationRandom.Range(0f, 1f - MoteTravelShare);
         }
         // 파편: 위쪽 반원 위주로 튄다
         for (int i = 0; i < _debrisQuads.Length; i++)
         {
-            float ang = Random.Range(-0.15f, 1.15f) * Mathf.PI;
-            _debrisVel[i] = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * Random.Range(_debrisSpeed.x, _debrisSpeed.y) * _scale;
+            float ang = _presentationRandom.Range(-0.15f, 1.15f) * Mathf.PI;
+            _debrisVel[i] = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * _presentationRandom.Range(_debrisSpeed.x, _debrisSpeed.y) * _scale;
         }
         Tick();
     }

@@ -3,6 +3,7 @@ using UnityEngine;
 using BackEnd;
 using LitJson;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 public class BackendGameData
 {
@@ -28,6 +29,10 @@ public class BackendGameData
     private readonly System.Collections.Generic.HashSet<string> _submittedSaveIds = new();
     public bool HasWriteConflict { get; private set; }
     private int _session;
+    /// <summary>Authenticated owner, overridable by isolated transport tests.</summary>
+    protected virtual string CurrentOwner => Backend.UserInDate;
+    /// <summary>Maximum wait for a conditional write response. Its CAS remains valid after this deadline.</summary>
+    protected virtual TimeSpan WriteResponseTimeout => TimeSpan.FromSeconds(15);
 
     /// <summary>Invalidates a row from a previous account before starting a new session.</summary>
     public void ClearSession() { _session++; _inDate = null; _owner = null; _serverSaveId = null; _hasSaveId = false; _submittedSaveIds.Clear(); HasWriteConflict = false; }
@@ -79,7 +84,7 @@ public class BackendGameData
                 _inDate = rows[0]["inDate"].ToString();
                 _owner = owner;
                 _serverSaveId = data.SaveId ?? string.Empty;
-                _hasSaveId = rows[0].ContainsKey("PlayerSaveId");
+                _hasSaveId = rows[0].ContainsKey("PlayerSaveId") && rows[0]["PlayerSaveId"] != null;
                 onComplete?.Invoke(data);
             }
             else
@@ -116,6 +121,9 @@ public class BackendGameData
         };
 
         Param param = PlayerDataToParam(newData);
+        // Initial columns belong to insertion only. Ordinary saves must not overwrite records.
+        param.Add("BestRound_NORMAL", 0);
+        param.Add("BestRound_HARD", 0);
         Backend.GameData.Insert(TABLE_NAME, param, bro =>
         {
             if (session != _session || owner != Backend.UserInDate) { onComplete?.Invoke(null); return; }
@@ -140,7 +148,7 @@ public class BackendGameData
     // -------------------------
     public virtual void GameDataUpdate(PlayerData data, Action onComplete = null, Action<bool> onResult = null)
     {
-        if (data == null || HasWriteConflict || string.IsNullOrEmpty(_inDate) || _owner != Backend.UserInDate)
+        if (data == null || HasWriteConflict || string.IsNullOrEmpty(_inDate) || _owner != CurrentOwner)
         {
             Debug.LogError("저장할 데이터가 없습니다");
             onComplete?.Invoke();
@@ -152,43 +160,82 @@ public class BackendGameData
         string owner = _owner;
         int session = _session;
         string expected = _serverSaveId;
+        bool conditional = _hasSaveId;
+        bool completed = false;
+        var deadline = conditional ? new CancellationTokenSource() : null;
         _submittedSaveIds.Add(data.SaveId ?? string.Empty);
         void Complete(bool saved)
         {
-            bool current = session == _session && owner == Backend.UserInDate;
+            if (completed) return;
+            completed = true;
+            deadline?.Cancel();
+            bool current = session == _session && owner == CurrentOwner;
             if (current && saved) { _serverSaveId = data.SaveId ?? string.Empty; _hasSaveId = true; _submittedSaveIds.Clear(); }
             onComplete?.Invoke(); onResult?.Invoke(current && saved);
         }
-        void OnUpdated(BackendReturnObject bro)
+        void OnUpdated(bool success, string status)
         {
-            if (session != _session || owner != Backend.UserInDate) { Complete(false); return; }
-            if (bro.IsSuccess())
+            if (completed) return;
+            if (session != _session || owner != CurrentOwner) { Complete(false); return; }
+            if (success)
             {
                 Debug.Log("PlayerData 저장 성공");
                 Complete(true);
             }
-            else if (bro.GetStatusCode() == "404")
+            else if (status == "404")
             {
                 // A lost ACK may mean this exact snapshot already committed. Never overwrite an unknown version.
-                Backend.GameData.GetMyData(TABLE_NAME, new Where(), read =>
+                ReadRemoteSaveId((readSuccess, remote) =>
                 {
-                    if (session != _session || owner != Backend.UserInDate || !read.IsSuccess()) { Complete(false); return; }
-                    var rows = read.FlattenRows();
-                    string remote = rows.Count == 1 ? rows[0].GetString("PlayerSaveId", "") : null;
+                    if (completed) return;
+                    if (session != _session || owner != CurrentOwner || !readSuccess) { Complete(false); return; }
                     if (remote == data.SaveId) { Complete(true); return; }
                     if (remote != null && _submittedSaveIds.Contains(remote)) _serverSaveId = remote;
                     else if (remote != expected) HasWriteConflict = true;
                     Complete(false);
                 });
             }
-            else { Debug.LogWarning("PlayerData save failed: " + bro.GetStatusCode()); Complete(false); }
+            else { Debug.LogWarning("PlayerData save failed: " + status); Complete(false); }
         }
-        if (_hasSaveId)
+        // Only CAS writes can safely release an unacknowledged request. A late old
+        // request cannot overwrite a newer version; a late callback is ignored above.
+        if (conditional) ExpireConditionalWriteAsync(deadline, () => Complete(false)).Forget();
+        try { SendUpdate(param, expected, conditional, OnUpdated); }
+        catch { Complete(false); throw; }
+    }
+
+    private async UniTask ExpireConditionalWriteAsync(CancellationTokenSource deadline, Action expire)
+    {
+        try
+        {
+            await UniTask.Delay(WriteResponseTimeout, ignoreTimeScale: true, cancellationToken: deadline.Token);
+            expire();
+        }
+        catch (OperationCanceledException) { }
+        finally { deadline.Dispose(); }
+    }
+
+    /// <summary>SDK adapter; conditional writes always compare the previously confirmed save ID.</summary>
+    protected virtual void SendUpdate(Param param, string expected, bool conditional, Action<bool, string> callback)
+    {
+        void Completed(BackendReturnObject response) => callback(response.IsSuccess(), response.GetStatusCode());
+        if (conditional)
         {
             var where = new Where(); where.Equal("PlayerSaveId", expected);
-            Backend.GameData.Update(TABLE_NAME, where, param, OnUpdated);
+            Backend.GameData.Update(TABLE_NAME, where, param, Completed);
         }
-        else Backend.GameData.UpdateV2(TABLE_NAME, _inDate, owner, param, OnUpdated); // One-time legacy column bootstrap.
+        else Backend.GameData.UpdateV2(TABLE_NAME, _inDate, _owner, param, Completed); // One-time legacy column bootstrap until the server migration (TODO Q-G09-LEGACY).
+    }
+
+    /// <summary>Read-only reconciliation after a conditional write conflict.</summary>
+    protected virtual void ReadRemoteSaveId(Action<bool, string> callback)
+    {
+        Backend.GameData.GetMyData(TABLE_NAME, new Where(), response =>
+        {
+            if (!response.IsSuccess()) { callback(false, null); return; }
+            var rows = response.FlattenRows();
+            callback(true, rows.Count == 1 ? rows[0].GetString("PlayerSaveId", "") : null);
+        });
     }
 
     // -------------------------

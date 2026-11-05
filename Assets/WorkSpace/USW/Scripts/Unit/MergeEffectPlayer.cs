@@ -14,6 +14,7 @@ using UnityEngine;
 /// </summary>
 public sealed class MergeEffectPlayer : IDisposable
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     private readonly MergeEffectSettings _settings;
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
     private readonly Stack<SpriteRenderer> _pool = new Stack<SpriteRenderer>();
@@ -129,10 +130,10 @@ public sealed class MergeEffectPlayer : IDisposable
         if (sprites != null && sprites.Length > 0)
         {
             int count = _settings.PuffCount;
-            float baseAngle = UnityEngine.Random.Range(0f, 360f);
+            float baseAngle = _presentationRandom.Range(0f, 360f);
             for (int i = 0; i < count; i++)
             {
-                float angle = (baseAngle + 360f * i / count + UnityEngine.Random.Range(-18f, 18f)) * Mathf.Deg2Rad;
+                float angle = (baseAngle + 360f * i / count + _presentationRandom.Range(-18f, 18f)) * Mathf.Deg2Rad;
                 var dir = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle) * 0.7f, 0f); // 바닥 원근감으로 세로를 눌러준다
                 AnimatePuffAsync(PickSprite(sprites), center, center + dir * _settings.PuffSpread,
                     _settings.SidePuffSize, _settings.SortingOrder, token).Forget();
@@ -144,10 +145,10 @@ public sealed class MergeEffectPlayer : IDisposable
         if (_settings.TickSprite != null)
         {
             int ticks = _settings.TickCount;
-            float baseAngle = UnityEngine.Random.Range(0f, 360f);
+            float baseAngle = _presentationRandom.Range(0f, 360f);
             for (int i = 0; i < ticks; i++)
             {
-                float angle = baseAngle + 360f * i / ticks + UnityEngine.Random.Range(-12f, 12f);
+                float angle = baseAngle + 360f * i / ticks + _presentationRandom.Range(-12f, 12f);
                 AnimateTickAsync(center, angle, token).Forget();
             }
         }
@@ -158,8 +159,8 @@ public sealed class MergeEffectPlayer : IDisposable
     {
         var sr = Rent(sprite, order);
         float fit = FitScale(sprite, worldSize);
-        float spin = UnityEngine.Random.Range(-25f, 25f);
-        bool flip = UnityEngine.Random.value < 0.5f;
+        float spin = _presentationRandom.Range(-25f, 25f);
+        bool flip = _presentationRandom.Value < 0.5f;
         sr.flipX = flip;
         try
         {
@@ -288,7 +289,7 @@ public sealed class MergeEffectPlayer : IDisposable
         return _root;
     }
 
-    private static Sprite PickSprite(Sprite[] sprites) => sprites[UnityEngine.Random.Range(0, sprites.Length)];
+    private Sprite PickSprite(Sprite[] sprites) => sprites[_presentationRandom.Range(0, sprites.Length)];
 
     private static float FitScale(Sprite sprite, float worldSize, bool useHeight = false)
     {

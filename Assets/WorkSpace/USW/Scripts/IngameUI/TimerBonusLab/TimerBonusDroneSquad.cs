@@ -11,6 +11,7 @@ using Object = UnityEngine.Object;
 /// </summary>
 public sealed class TimerBonusDroneSquad : IDisposable
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     /// <summary>드론 한 종. 빌더가 드론 프리팹에서 레이저·공격 프레임을 읽어 채운다.</summary>
     [Serializable]
     public class Entry
@@ -119,7 +120,7 @@ public sealed class TimerBonusDroneSquad : IDisposable
         Vector3 origin = d.Body.position;
         origin.z = 0f;
         float worldPerPx = _target.lossyScale.x;
-        Vector3 target = _target.position + (Vector3)(UnityEngine.Random.insideUnitCircle * (AimRadiusPx * _settings.PxScale * worldPerPx));
+        Vector3 target = _target.position + (Vector3)(_presentationRandom.InsideUnitCircle * (AimRadiusPx * _settings.PxScale * worldPerPx));
         target.z = 0f;
         // 풀(RM)을 쓰지 않는다: 이 인스턴스에만 피격 이펙트 없는 데이터를 넣고 끝나면 버린다.
         var laser = Object.Instantiate(d.Entry.LaserPrefab, origin, Quaternion.identity);

@@ -15,6 +15,7 @@ using UnityEngine;
 /// </summary>
 public sealed class TimerBonusHackStack : ITimerBonusConcept
 {
+    private readonly PresentationRandom _presentationRandom = new PresentationRandom();
     /// <summary>겹침 처리 규칙.</summary>
     public enum Mode { Restart, Queue, Merge, MergeMini }
 
@@ -166,7 +167,7 @@ public sealed class TimerBonusHackStack : ITimerBonusConcept
                 {
                     Kind = TimerBonusParticles.Kind.Home,
                     Position = from,
-                    Velocity = Random.insideUnitCircle * 120f * _lab.Px,
+                    Velocity = _presentationRandom.InsideUnitCircle * 120f * _lab.Px,
                     Size = TimerBonusLab.Rnd(2f, 3.5f) * _lab.Px,
                     MaxLife = lead + 0.1f,
                     HomeDelay = 0f,

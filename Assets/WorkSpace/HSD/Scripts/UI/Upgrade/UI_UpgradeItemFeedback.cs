@@ -78,7 +78,7 @@ namespace HSD.UI.Upgrade
                 _card.DOKill(true);
                 _card.localRotation = Quaternion.identity;
                 // 레이아웃 그룹이 위치를 관리하므로 위치 대신 회전으로 흔든다.
-                _card.DOShakeRotation(_shakeDuration, new Vector3(0f, 0f, _shakeAngle), 18, 0f, true, ShakeRandomnessMode.Harmonic)
+                PresentationRandom.CreateTween(() => _card.DOShakeRotation(_shakeDuration, new Vector3(0f, 0f, _shakeAngle), 18, 0f, true, ShakeRandomnessMode.Harmonic))
                     .SetUpdate(true).SetLink(gameObject)
                     .OnComplete(() => { if (_card != null) _card.localRotation = Quaternion.identity; });
             }

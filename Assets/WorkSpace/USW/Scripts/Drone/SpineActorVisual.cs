@@ -93,18 +93,32 @@ public sealed class SpineActorVisual : MonoBehaviour, IPauseIdleVisual
         if (current != null && current.Animation.Name == _skill && !current.IsComplete) return;
         if (Has(_attack))
         {
-            state.SetAnimation(0, _attack, false);
+            RestartAttack(state, _attack);
             QueueIdle();
             _attackSpeed?.Refresh();
             return;
         }
         if (!Has(_attackStart)) return;
-        state.SetAnimation(0, _attackStart, false);
+        RestartAttack(state, _attackStart);
         if (Has(_attackLoop)) state.AddAnimation(0, _attackLoop, false, 0f);
         if (Has(_attackEnd)) state.AddAnimation(0, _attackEnd, false, 0f);
         QueueIdle();
         _attackSpeed?.Refresh();
     }
+
+    private void RestartAttack(Spine.AnimationState state, string animation)
+    {
+        var current = state.GetTrack(0);
+        // Repeated attacks can arrive before a mix finishes. Spine retains the
+        // interrupted mixing chain, which otherwise grows on every fast shot.
+        // Retire only an already interrupted basic attack; skills retain their
+        // authored tracks/events and an ordinary transition still blends normally.
+        if (current?.MixingFrom != null && IsAttack(current.Animation.Name)) state.ClearTrack(0);
+        state.SetAnimation(0, animation, false);
+    }
+
+    private bool IsAttack(string animation) => animation == _attack || animation == _attackStart
+        || animation == _attackLoop || animation == _attackEnd;
 
     /// <summary>Plays the authored skill once, then returns to idle without changing skill effects or timing.</summary>
     public void PlaySkill()

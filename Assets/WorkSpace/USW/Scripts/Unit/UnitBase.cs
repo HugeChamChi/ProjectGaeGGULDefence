@@ -78,33 +78,17 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public bool IsFirstPlacement { get; private set; } = true;
 
     private bool _hasTemporaryTier;
-    private bool _hasTimeVaultTier;
-    private Tier _preVaultTier;
-    /// <summary>시간 금고의 전투 등급만 Legend로 덮는다. 소유 등급/기존 임시 출처는 보존한다.</summary>
-    public void SetTimeVaultTier(bool active)
-    {
-        if (active == _hasTimeVaultTier || unitData == null) return;
-        if (active)
-        {
-            _preVaultTier = currentTier;
-            _hasTimeVaultTier = true;
-            currentTier = Tier.Legend;
-        }
-        else
-        {
-            _hasTimeVaultTier = false;
-            currentTier = _preVaultTier;
-        }
-        _visual?.UpdateVisual(currentTier);
-        OnCombatTierChanged();
-    }
+    /// <summary>시간 금고가 현재 전투 등급의 공속 상한을 적용하는지 여부.</summary>
+    public bool IsTimeVaultAttackSpeedActive { get; private set; }
+    /// <summary>등급, 공격력, 소환물 수를 바꾸지 않고 시간 금고의 공속 효과를 전환한다.</summary>
+    public void SetTimeVaultAttackSpeed(bool active) => IsTimeVaultAttackSpeedActive = active;
     private UnityEngine.Object _temporaryTierSource;
     private UnitData _originalData;
     private Tier _originalTier;
     /// <summary>조커형 노말 합성 재료인지 여부.</summary>
     public virtual bool IsWildcardMergeUnit => false;
     /// <summary>합성/판매에 사용하는 실제 소유 등급.</summary>
-    public Tier OriginalTier => _hasTemporaryTier ? _originalTier : _hasTimeVaultTier ? _preVaultTier : currentTier;
+    public Tier OriginalTier => _hasTemporaryTier ? _originalTier : currentTier;
     /// <summary>합성/판매에 사용하는 실제 소유 데이터.</summary>
     public UnitData OriginalData => _hasTemporaryTier ? _originalData : unitData;
     /// <summary>범위 효과에 의해 임시 등급을 사용 중인지 여부.</summary>
@@ -131,8 +115,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         if (!_hasTemporaryTier || !ReferenceEquals(_temporaryTierSource, source)) return;
         unitData = _originalData;
-        if (_hasTimeVaultTier) _preVaultTier = _originalTier;
-        else currentTier = _originalTier;
+        currentTier = _originalTier;
         _hasTemporaryTier = false;
         _temporaryTierSource = null;
         _originalData = null;
@@ -146,7 +129,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>판매/영구 제거 직전에 원래 전투 데이터를 복구한다.</summary>
     public void RestoreOriginalTier()
     {
-        SetTimeVaultTier(false);
+        SetTimeVaultAttackSpeed(false);
         RemoveTemporaryTier(_temporaryTierSource);
     }
 
@@ -400,6 +383,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public void LaunchProjectile(int damage) => _combat?.LaunchProjectile(damage);
 
     public float GetCurrentAttackInterval() => _stats?.GetCurrentAttackInterval() ?? 1f;
+    /// <summary>공속 배율 상한이 허용하는 가장 짧은 공격 간격 (보스 감속 포함).</summary>
+    public float GetMinimumAttackInterval() => _stats?.GetMinimumAttackInterval() ?? 0f;
     public float GetCurrentSkillInterval() => _stats?.GetCurrentSkillInterval() ?? 1f;
     
     public float _skillTimer 

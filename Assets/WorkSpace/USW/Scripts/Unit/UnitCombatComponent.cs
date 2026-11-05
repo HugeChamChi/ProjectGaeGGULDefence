@@ -152,6 +152,7 @@ public class UnitCombatComponent : MonoBehaviour
 
             if (_unit.IsStunned)
             {
+                ClampIdleTimers();
                 if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
                 continue;
             }
@@ -171,34 +172,40 @@ public class UnitCombatComponent : MonoBehaviour
             if (_unit.CanUseSkill && _unit.CanAutoSkill && _unit.IsSkillChargeReady(_skillTimer, skillInterval) && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Skilling);
-                _skillTimer = 0f;
-                
+                // Carry the overshoot so the skill rate does not depend on frame rate or attack waits.
+                _skillTimer = _unit.UsesTimedSkillCharge ? Mathf.Min(_skillTimer - skillInterval, skillInterval) : 0f;
+
                 ExecuteSkill();
-                
-                if (_unit.animator != null) 
+
+                if (_unit.animator != null)
                 {
                     _unit.animator.SetSpeed(1f);
                     await _unit.animator.PlaySkillAsync(token);
+                    // Basic attacks blocked by the skill animation resume with one attack, not a burst.
+                    _attackTimer = Mathf.Min(_attackTimer, _stats.GetCurrentAttackInterval());
                 }
             }
             else if (_unit.CanBasicAttack && _attackTimer >= attackInterval && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Attacking);
-                _attackTimer = 0f;
-                
+                // Carry the overshoot (frame remainder or one hitch) instead of resetting to zero,
+                // so 30/60 fps and frame drops give the same attacks per second.
+                _attackTimer = Mathf.Min(_attackTimer - attackInterval, attackInterval);
+
                 ExecuteAttack();
-                
-                if (_unit.animator != null) 
+
+                if (_unit.animator != null)
                 {
-                    await _unit.animator.PlayAttackAsync(token, attackInterval);
+                    await _unit.animator.PlayAttackAsync(token, Mathf.Max(attackInterval - _attackTimer, Time.deltaTime));
                 }
                 else
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(attackInterval), cancellationToken: token);
+                    await WaitForNextAttackAsync(token);
                 }
             }
             else
             {
+                ClampIdleTimers();
                 if (_unit.CurrentState != UnitBase.UnitState.Idle)
                 {
                     _unit.SetState(UnitBase.UnitState.Idle);
@@ -209,6 +216,21 @@ public class UnitCombatComponent : MonoBehaviour
                     return;
             }
         }
+    }
+
+    // Waits on the carried attack timer rather than a fixed Delay, which would round every attack up to a frame.
+    private async UniTask WaitForNextAttackAsync(CancellationToken token)
+    {
+        while (_attackTimer < _stats.GetCurrentAttackInterval() && !AttacksHeld && !_unit.IsStunned && _unit.CanBasicAttack
+               && _deps?.GameManager?.IsFinished != true && !(_unit.currentCell != null && _unit.currentCell.Model.IsSealed))
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+    }
+
+    // Time saved while unable to act may cover at most one action, never a burst.
+    private void ClampIdleTimers()
+    {
+        _attackTimer = Mathf.Min(_attackTimer, _stats.GetCurrentAttackInterval());
+        if (_unit.UsesTimedSkillCharge) _skillTimer = Mathf.Min(_skillTimer, _stats.GetCurrentSkillInterval());
     }
 
     private void ExecuteAttack()

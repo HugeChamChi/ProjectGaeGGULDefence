@@ -44,6 +44,7 @@ public sealed class RoundRecordBackendStore : IRoundRecordStore
             var completion = new UniTaskCompletionSource<BackendReturnObject>();
             // IsNull does not match absent columns on the live backend. First use adds the column
             // on the known row; subsequent writes use a lower-value condition.
+            // Legacy bootstrap race is accepted until the server migration (TODO Q-G09-LEGACY, 2026-11-06).
             if (hasColumn) Backend.GameData.Update(TableName, where, param, result => completion.TrySetResult(result));
             else Backend.GameData.UpdateV2(TableName, row["inDate"].ToString(), account, param, result => completion.TrySetResult(result));
             var response = await completion.Task.AttachExternalCancellation(token);
