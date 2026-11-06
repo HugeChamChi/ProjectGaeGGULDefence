@@ -11,7 +11,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 /// <summary>App-owned definitions and icon handles. One snapshot is shared by UI and saved progression until restart.</summary>
 public sealed class ResearchChartService : IDisposable
 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
     public const string ChartName = "DEV_ResearchBalance";
 #else
     public const string ChartName = "LIVE_ResearchBalance";

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
 using LitJson;
-using Random = UnityEngine.Random;
+using System.Linq;
 
 namespace GaeGGUL.Shop
 {
@@ -37,7 +37,9 @@ namespace GaeGGUL.Shop
             }
         }
 
-        protected virtual IEnumerable<ShopItemData> ItemPool => Table.Shop.Daily.AllItems;
+        protected virtual IEnumerable<ShopItemData> ItemPool => Table.Shop.Catalog.IsReady
+            ? Table.Shop.Catalog.Products(_weekly ? ShopCategory.Weekly : ShopCategory.Daily).Select(p => p.Item)
+            : throw new InvalidOperationException("ShopCatalog chart is not available.");
 
         private List<ShopItemData> _dailyItems = new List<ShopItemData>();
         private HashSet<int> _purchasedItemIDs = new HashSet<int>();
@@ -54,6 +56,7 @@ namespace GaeGGUL.Shop
         protected virtual bool IsNewDay => Player.Daily.IsNewDay;
         /// <summary>Current account balances.</summary>
         protected virtual PlayerDataController Balances => Player.PlayerData;
+        protected virtual bool HasTrustedTime => ServerClock.IsSynced;
 
         public List<ShopItemData> DailyItems => _dailyItems;
         public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
@@ -85,10 +88,11 @@ namespace GaeGGUL.Shop
                 if (row != null) _inDate = row["inDate"].ToString();
                 string period = CurrentPeriodKey;
                 bool hasPeriod = row != null && row.ContainsKey(PeriodColumn);
-                bool hasItems = row != null && row.ContainsKey(ItemIdsColumn);
+                bool hasItems = row != null && row.ContainsKey(ItemIdsColumn) && (hasPeriod || row[ItemIdsColumn].Count > 0);
                 if (!hasItems || (hasPeriod ? row[PeriodColumn].ToString() != period : IsNewDay))
                 {
-                    GenerateDailyItems();
+                    await GenerateDailyItemsAsync(timeout.Token);
+                    RequireCurrent(generation);
                     _periodKey = period;
                     await SaveAsync();
                     RequireCurrent(generation);
@@ -131,6 +135,9 @@ namespace GaeGGUL.Shop
                     if (!hasPeriod || !row.ContainsKey(ItemsColumn)) await SaveAsync();
                 }
                 RequireCurrent(generation);
+                // Recover a purchase whose account save succeeded before the stock row write.
+                foreach (var item in _dailyItems)
+                    if (Balances.IsShopPurchased(_periodKey, item.ShopID, _weekly)) _purchasedItemIDs.Add(item.ShopID);
                 _ready = true;
             }
             catch (Exception error)
@@ -156,41 +163,53 @@ namespace GaeGGUL.Shop
         protected virtual async UniTask<JsonData> ReadRowAsync(CancellationToken token)
         {
             var completion = new UniTaskCompletionSource<BackendReturnObject>();
-            Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where(), result => completion.TrySetResult(result));
+            Backend.GameData.GetMyData(PLAYER_SHOP_DATA_TABLE, new Where(), 100, result => completion.TrySetResult(result));
             var response = await completion.Task.AttachExternalCancellation(token);
             if (!response.IsSuccess()) throw new InvalidOperationException("Daily shop read failed: " + response.GetStatusCode());
             var rows = response.FlattenRows();
-            if (rows.Count > 1) throw new InvalidOperationException("Daily shop duplicate rows require repair.");
-            return rows.Count == 0 ? null : rows[0];
+            return SelectSavedRow(rows);
+        }
+
+        public static JsonData SelectSavedRow(JsonData rows)
+        {
+            // The old implementation inserted empty rows repeatedly. Preserve them, but do not
+            // let them hide one real stock row. Multiple populated rows remain ambiguous.
+            if (rows.Count >= 100) throw new InvalidOperationException("Shop row query reached its limit; repair required.");
+            JsonData selected = null, legacy = null;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                bool emptyLegacy = row.ContainsKey("DailyItemIDs") && row["DailyItemIDs"].IsArray && row["DailyItemIDs"].Count == 0 &&
+                    row.ContainsKey("PurchasedItemIDs") && row["PurchasedItemIDs"].IsArray && row["PurchasedItemIDs"].Count == 0 &&
+                    !row.ContainsKey("DailyPeriodKey") && !row.ContainsKey("WeeklyPeriodKey") &&
+                    !row.ContainsKey("DailyItemsJson") && !row.ContainsKey("WeeklyItemsJson") &&
+                    !row.ContainsKey("WeeklyItemIDs") && !row.ContainsKey("WeeklyPurchasedItemIDs");
+                if (emptyLegacy)
+                {
+                    if (legacy == null || string.CompareOrdinal(row["inDate"].ToString(), legacy["inDate"].ToString()) > 0) legacy = row;
+                }
+                else
+                {
+                    if (selected != null) throw new InvalidOperationException("Daily shop duplicate populated rows require repair.");
+                    selected = row;
+                }
+            }
+            return selected ?? legacy;
         }
 
         /// <summary>Looks up an authored daily item.</summary>
-        protected virtual ShopItemData FindItem(int id) => Table.Shop.Daily.GetItem(id);
+        protected virtual ShopItemData FindItem(int id) => ItemPool.FirstOrDefault(item => item.ShopID == id);
 
         /// <summary>Creates the authored daily selection after a confirmed read.</summary>
-        protected virtual void GenerateDailyItems()
+        protected virtual async UniTask GenerateDailyItemsAsync(CancellationToken token)
         {
+            if (!Table.Shop.Catalog.IsReady) throw new InvalidOperationException("ShopCatalog chart is not available.");
+            var items = await ShopStockSelection.DrawAsync(Table.Shop.Catalog.Products(_weekly ? ShopCategory.Weekly : ShopCategory.Daily),
+                _weekly ? ShopCategory.Weekly : ShopCategory.Daily, token);
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
-
-            _dailyItems.Add(new ShopItemData(1001, ItemType.Currency, (int)CurrencyType.Diamond, 10, CurrencyType.Free, 0));
-
-            List<ShopItemData> pool = new List<ShopItemData>();
-            foreach (var item in ItemPool)
-            {
-                if (item.ShopID == 1001) continue;
-                pool.Add(item);
-            }
-
-            int itemsToPick = 5;
-            if (pool.Count < itemsToPick) throw new InvalidOperationException("Shop needs at least five random products.");
-            for (int i = 0; i < itemsToPick && pool.Count > 0; i++)
-            {
-                int index = Random.Range(0, pool.Count);
-                var item = pool[index];
+            foreach (var item in items)
                 _dailyItems.Add(new ShopItemData(item.ShopID, item.Type, item.ItemID, item.Amount, item.CurrencyType, item.Price));
-                pool.RemoveAt(index);
-            }
         }
 
         public async UniTask SaveAsync()
@@ -229,14 +248,11 @@ namespace GaeGGUL.Shop
         private void RequireCurrent(int generation)
         { if (generation != _generation || string.IsNullOrEmpty(_owner) || _owner != CurrentOwner) throw new OperationCanceledException("Daily shop account changed."); }
 
-        /// <summary>Grants the selected authored reward after confirmed payment.</summary>
-        protected virtual void GrantReward(ShopItemData item) => item.GetReward()?.GetReward();
-
         public async UniTask<bool> BuyItem(int shopID)
         {
             if (!_ready || _buying || _owner != CurrentOwner || !Balances.IsReady) return false;
             // An open shop must not sell the previous period's stock after the reset boundary.
-            if (!ServerClock.IsSynced) return false;
+            if (!HasTrustedTime) return false;
             if (_periodKey != CurrentPeriodKey) { await InitializeAsync(); return false; }
             var item = _dailyItems.Find(value => value.ShopID == shopID);
             if (item == null) return false;
@@ -244,48 +260,16 @@ namespace GaeGGUL.Shop
             _buying = true;
             int generation = _generation;
             var balances = Balances;
-            var snapshot = balances.Data;
             try
             {
-                bool success = false;
-                switch (item.CurrencyType)
-                {
-                    case CurrencyType.Free:
-                        success = true;
-                        break;
-                    case CurrencyType.Diamond:
-                        success = balances.SpendDiamond(item.Price);
-                        break;
-                    case CurrencyType.Gold:
-                        success = balances.SpendGold(item.Price);
-                        break;
-                }
-
-                if (success)
-                {
-                    // 재화 차감을 먼저 서버에 확정한 뒤 보상 지급/구매완료를 저장한다.
-                    // (역순이면 재화 차감 전에 구매완료가 먼저 서버에 남아, 크래시 시 무료 획득이 발생할 수 있음)
-                    bool paid = await balances.TrySaveAsync();
-                    RequireCurrent(generation);
-                    if (!ReferenceEquals(snapshot, balances.Data)) return false;
-                    if (!paid)
-                    {
-                        // No reward was issued. Compensate the locally reserved price, even if acknowledgement was lost.
-                        if (item.CurrencyType == CurrencyType.Diamond) balances.AddDiamond(item.Price);
-                        else if (item.CurrencyType == CurrencyType.Gold) balances.AddGold(item.Price);
-                        return false;
-                    }
-                    GrantReward(item);
-                    _purchasedItemIDs.Add(shopID);
-                    bool rewardSaved = await balances.TrySaveAsync();
-                    RequireCurrent(generation);
-                    if (!ReferenceEquals(snapshot, balances.Data)) return false;
-                    if (!rewardSaved) { _ready = false; return false; }
-                    await SaveAsync();
-                    return true;
-                }
-
-                return false;
+                // Payment, reward and deduplication receipt share the same account snapshot.
+                if (!balances.TryPurchaseShopItem(item, _periodKey, _weekly)) return false;
+                _purchasedItemIDs.Add(shopID);
+                if (!await balances.TrySaveAsync()) { _ready = false; return false; }
+                RequireCurrent(generation);
+                await SaveAsync();
+                RequireCurrent(generation);
+                return true;
             }
             catch (Exception error)
             {

@@ -25,8 +25,8 @@ public sealed class LobbyCurrencyNavigation : MonoBehaviour
     private void OpenShop(string currency)
     {
         _tabs?.SelectButton(ShopTab);
-        // The current shop page is a placeholder. No prices, products or rewards are invented here.
-        if (_shopStatus != null) _shopStatus.text = currency + " 상품 준비 중";
+        var page = _tabs?.panelButtons[ShopTab]._panel.GetComponentInChildren<GaeGGUL.Shop.UI.ShopPageView>(true);
+        if (page != null) page.scroll.verticalNormalizedPosition = currency == "Dia" ? 0f : .3f;
     }
     private void OnDestroy()
     {

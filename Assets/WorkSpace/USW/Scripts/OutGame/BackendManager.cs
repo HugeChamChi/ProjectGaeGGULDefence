@@ -43,7 +43,13 @@ public class BackendManager : MonoBehaviour
         // 타이틀 씬의 TitlePresenter가 하는 것과 동일하게 데이터 주입 + 초기화까지 진행한다.
         if (_backendData == null) { Debug.LogError("[BackendManager] Missing injected backend data."); return; }
         Player.Inject(_backendData);
-        Player.InitializeAsync().Forget(e => Debug.LogException(e));
+        InitializeEditorDataAsync().Forget(e => Debug.LogException(e));
+    }
+
+    private async UniTask InitializeEditorDataAsync()
+    {
+        await Table.InitializeAsync();
+        await Player.InitializeAsync();
     }
 #endif
 

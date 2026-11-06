@@ -11,6 +11,95 @@ namespace GaeGGUL.Build.Editor
     {
         private const string KeystorePasswordEnvVar = "GAEGGUL_KEYSTORE_PASS";
         private const string OutputDirectory = "Builds/Android";
+        private const string InternalOutput = "Builds/InternalTest/GaeGGUL-Internal.aab";
+        private const string InternalResult = "outputs/internal-release-prep/build-result.json";
+        private static bool _internalQueued;
+
+        private static string SigningPassword() => Environment.GetEnvironmentVariable(KeystorePasswordEnvVar)
+            ?? Environment.GetEnvironmentVariable(KeystorePasswordEnvVar, EnvironmentVariableTarget.User);
+
+        [MenuItem("GaeGGUL/Build/Android AAB (Internal Test)")]
+        public static void BuildInternalAab() => QueueInternalAab();
+
+        public static string QueueInternalAab()
+        {
+            if (_internalQueued || EditorApplication.isPlaying || EditorApplication.isCompiling || BuildPipeline.isBuildingPlayer)
+                throw new InvalidOperationException("Stop Play and wait for compilation/build to finish.");
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+                throw new InvalidOperationException("Switch the active build target to Android first.");
+            string password = SigningPassword();
+            if (!string.IsNullOrEmpty(password))
+            { PlayerSettings.Android.keystorePass = password; PlayerSettings.Android.keyaliasPass = password; }
+            if (string.IsNullOrEmpty(PlayerSettings.Android.keystorePass) || string.IsNullOrEmpty(PlayerSettings.Android.keyaliasPass))
+                throw new InvalidOperationException("Configure the upload key password locally or in Publishing Settings.");
+            if (!File.Exists(PlayerSettings.Android.keystoreName)) throw new FileNotFoundException("Upload keystore missing.");
+            Directory.CreateDirectory(Path.GetDirectoryName(InternalOutput));
+            Directory.CreateDirectory(Path.GetDirectoryName(InternalResult));
+            _internalQueued = true;
+            EditorApplication.update += RunInternalAab;
+            return "Queued signed internal AAB: BootScene, non-debuggable, DEV charts.";
+        }
+
+        [Serializable]
+        private sealed class InternalReport
+        {
+            public string result, output, environment;
+            public ulong bytes;
+            public int errors, warnings;
+            public bool development;
+            public string[] messages;
+        }
+
+        private static void RunInternalAab()
+        {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+            EditorApplication.update -= RunInternalAab;
+            _internalQueued = false;
+            bool bundle = EditorUserBuildSettings.buildAppBundle, development = EditorUserBuildSettings.development,
+                debugging = EditorUserBuildSettings.allowDebugging, customKey = PlayerSettings.Android.useCustomKeystore;
+            try
+            {
+                EditorUserBuildSettings.buildAppBundle = true;
+                EditorUserBuildSettings.development = false;
+                EditorUserBuildSettings.allowDebugging = false;
+                PlayerSettings.Android.useCustomKeystore = true;
+                PlayerSettings.Android.bundleVersionCode = Math.Max(2, PlayerSettings.Android.bundleVersionCode);
+                AssetDatabase.SaveAssets();
+                File.WriteAllText(InternalResult, "{\"result\":\"Building\"}");
+                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
+                    scenes = new[] { "Assets/Scenes/BootScene.unity" },
+                    locationPathName = InternalOutput,
+                    target = BuildTarget.Android,
+                    targetGroup = BuildTargetGroup.Android,
+                    options = BuildOptions.DetailedBuildReport,
+                    extraScriptingDefines = new[] { "INTERNAL_TEST_BUILD" }
+                });
+                var summary = report.summary;
+                File.WriteAllText(InternalResult, JsonUtility.ToJson(new InternalReport
+                {
+                    result = summary.result.ToString(), output = Path.GetFullPath(InternalOutput),
+                    environment = "DEV via INTERNAL_TEST_BUILD", bytes = summary.totalSize,
+                    errors = (int)summary.totalErrors, warnings = (int)summary.totalWarnings,
+                    development = (summary.options & BuildOptions.Development) != 0,
+                    messages = report.steps.SelectMany(s => s.messages)
+                        .Where(m => m.type == LogType.Error || m.type == LogType.Exception).Select(m => m.content).ToArray()
+                }, true));
+            }
+            catch (Exception error)
+            {
+                File.WriteAllText(InternalResult, JsonUtility.ToJson(new InternalReport { result = "Failed", messages = new[] { error.Message } }, true));
+                Debug.LogException(error);
+            }
+            finally
+            {
+                EditorUserBuildSettings.buildAppBundle = bundle;
+                EditorUserBuildSettings.development = development;
+                EditorUserBuildSettings.allowDebugging = debugging;
+                PlayerSettings.Android.useCustomKeystore = customKey;
+                AssetDatabase.SaveAssets();
+            }
+        }
 
         [MenuItem("GaeGGUL/Build/Android AAB (Signed)")]
         public static void BuildAab() => Build(buildAppBundle: true, outputPath: $"{OutputDirectory}/GaeGGUL.aab");
@@ -27,7 +116,7 @@ namespace GaeGGUL.Build.Editor
 
         private static void Build(bool buildAppBundle, string outputPath)
         {
-            string password = Environment.GetEnvironmentVariable(KeystorePasswordEnvVar);
+            string password = SigningPassword();
             if (string.IsNullOrEmpty(password))
             {
                 Debug.LogError($"[AndroidBuildPipeline] 환경변수 '{KeystorePasswordEnvVar}'가 설정되어 있지 않아 빌드를 중단합니다.");

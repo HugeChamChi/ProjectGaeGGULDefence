@@ -2,10 +2,52 @@
 system: outgame
 title: 아웃게임 (로그인·로비·파티·유저 데이터·영구 강화)
 keywords: 계정 경험치, 계정 레벨, 전투 경험치, AccountProgression.xlsx, 로컬 알림, 알림, notification, 아웃게임, 출석, attendance, 계정, account, 회원코드, 구글 연동, 푸시, outgame, 로비, lobby, 로그인, login, 뒤끝, backend, 파티, party, 파티 선택, 출격, 스태미나, stamina, 유저 데이터, playerdata, 유저 저장, 데이터 저장, 영구 강화, 강화 트리, research, 우편, mail, 쿠폰, 프로필, 상점, shop, 가챠, gacha, 일일 초기화
-verified: 2026-11-03
-commit: 996fd741
+verified: 2026-11-04
+commit: eefb644f
 ---
 # 아웃게임 카드
+
+## 2026-11-04 내부 테스트 로비 통합
+
+현재 기기 테스트 로비를 정식 LobbyScene에 반영하고 임시 ShopDeviceTest 씬/진입 코드를 제거했다. BootScene·튜토리얼·실제 게임 출격을 사용한다. 로비 선행 전투/강화 로딩을 분리해 실제 NORMAL 진입까지 검증했다. 다른 미커밋 변경은 정리 범위 확인 전이라 보존했다. 서명된 비디버그 AAB는 INTERNAL_TEST_BUILD로 DEV 차트를 사용하도록 준비했으며 업로드 키 비밀번호가 없어 빌드 대기 중이다. [범위·검증](../../technical/internal-play-preparation-20261104.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Tools/verification/InternalPlayBuild.cs` | BootScene·DEV 데이터·비디버그 서명 AAB 빌드 |
+| `Tools/verification/InternalLobbyPromotionAuthoring.cs` | 테스트 로비를 정식 로비에 반영하고 임시 기기 씬 제거 |
+| `Tools/verification/LobbyDeferredLoadingChecks.cs` | 전투/강화 로딩이 로비를 막지 않는지 검증 |
+| `Tools/verification/InternalGameEntryChecks.cs` | 실제 NORMAL 출격·데이터 준비·Playing·첫 보스 검사 |
+
+## 2026-11-04 로비 상점 실제 구매
+
+IAP 진단 후속: IAPManager는 초기화·연결·가격 조회 단계를 분리하고 SDK 연결 실패 원문/재시도 가능 여부·상품 조회 실패 원문/ID를 보존한다. AccountShopHost가 인앱 구역 제목 아래 진단 문구를 표시하며, 가격 미수신 버튼에는 현재 단계가 나온다. 모든 가격 수신 시 진단 문구는 숨긴다. `Tools/verification/StoreDiagnosticChecks.cs`에서 모의 연결/조회 실패 원문·ID·UI 잘림·구매 비활성화를 확인했다. 실제 Google Play 응답 원인은 폰 진단 화면으로 확인해야 한다.
+
+실행 미표시 후속: 공용 ShopPage의 AccountShopHost가 미리보기를 덮어쓰던 충돌을 수정해 호스트를 로비 인스턴스로 이동했다. BackendManager의 에디터 직접 실행은 Table→Player 순서로 초기화한다. Shop 데이터는 최대100행에서 빈 구형 행을 보존하며 실제 진열1개를 선택하고, 여러 실제 진열/조회 한도는 차단한다. 미리보기·로비 단독 Play 모두6/6/3/4 상품 표시 PASS, 구매 없음. 기존 상점 저장 검사는24개로 확장 PASS.
+
+로비 탭0에 AccountShopHost와 ShopPage를 배치했다. 차트 가격·실제 계정 진열을 표시하고 일일/주간 구매는 차감·보상·구매 기록을 한 PlayerData snapshot에 저장한다. 주간은 WeeklyShopPurchasePeriod/WeeklyShopPurchases 문자열 컬럼을 추가했다. 계정 기록으로 상점 품절 저장 실패를 복구하며 골드 교환은 반복 구매한다. 인앱 가격/구매는 IAPManager에 연결하고 미연결 시 구매를 막는다. 격리25 + 기존20/27검사 PASS. 부팅 게스트 계정에서 일일 무료 골드100·주간 무료 골드1000 실제 수령 및 서버 재조회 후 품절 복원 PASS, 보상1100 유지. 다이아/현금 소비 없음. Android 현금 구매와 가격 수신은 미검증. [구현·검증 범위](../../technical/shop-purchase-20261104.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Shop/AccountShopHost.cs` | 로비 상품 갱신·실제 구매·연타 차단·결과 안내 |
+| `Assets/WorkSpace/USW/Shop/ShopProductSources.cs` | 계정 진열·차트 가격·품절·스토어 가격 표시 데이터 |
+| `Assets/WorkSpace/HSD/Scripts/Shop/ShopDataManager.cs` | 상점 초기화 완료 상태·일일/주간 순차 로드 |
+| `Tools/verification/ShopPurchaseChecks.cs` | 격리25 구매·저장·UI 바인딩 검사 |
+| `Tools/verification/ShopAccountAuthoring.cs` | 상점 프리팹과 로비 배치 저작 |
+| `Tools/verification/ShopLobbyVisualChecks.cs` | 로비 표시 확인 및 명시적 FreePurchases 진입점의 실제 무료 수령·서버 재조회 |
+
+## 2026-11-03 상점 차트·기획툴 편집
+
+`feature/shop-chart`에서 기획툴 가중치 편집과 목록/ID 확률표 분리 추출을 연결했다. ShopDailyList/ShopWeeklyList 차트와 ShopDailyProbability/ShopWeeklyProbability 확률을 사용하고 ShopCatalog 차트는 골드/인앱이다. 기간마다 무료 고정1개 + 가중치 중복제외 추첨5개를 저장한다. 확률 percent는 합계100%·최대7자리로 변환한다. 사용자 콘솔 적용 후 실서버33검사에서 차트25상품·확률 ID/비율·실제 추첨과 화면 표시를 통과했다. 실제 구매·재화 차감·상품 저장 쓰기는 수행하지 않았다. [규약·검증 범위](../../technical/shop-catalog.md).
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Shop/ShopCatalogTable.cs` | CDN ShopCatalog 해석·검증·고정 무료 우선 정렬 |
+| `Assets/WorkSpace/USW/Shop/ShopStockSelection.cs` | 무료 고정·로컬 가중치 추첨·뒤끝 ID 추첨의 중복 제외 |
+| `Assets/WorkSpace/HSD/Scripts/Shop/DailyShopManager.cs` | 일일/주간 차트 목록 snapshot과 기간별 구매 기록 |
+| `tools/planner-studio/app/ui/content/shop-catalog.js` | 상점 편집 규약·예시·검증 |
+| `tools/planner-studio/check-shop-catalog.cjs` | 목록/무료 고정/엑셀 왕복 검사 |
+| `Tools/verification/ShopChartEditorChecks.cs` | 프레임 적용·로컬 차트 화면 검증 |
+| `Tools/verification/ShopLiveChecks.cs` | 실서버 차트/확률 대조·실제 ID 추첨·테스트 화면 표시 |
 
 ## 2026-11-03 실제 로비 흐름 확인
 
@@ -88,6 +130,21 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 | `docs/technical/account-save-schema.md` | 추가 테이블·컬럼·이관·검증 경계 |
 | `Tools/verification/AccountPersistenceChecks.cs` | 실제 서버 요청 없는 격리 검사 |
 
+## 2026-11-03 독립 테스트 상점 씬
+
+Test_ShopScene에 세로 스크롤 일일6 → 주간6 → 골드3 → 다이아4를 작성했다. 각 구역은 판/테두리 없이 제목과 최대3열×2행 슬롯이다. 골드는 다이아 결제 표시이며 교환 수치는 미정, 다이아는 기존4종 ID/수량이다. 무료 외 일일/주간 슬롯은 자리표시자다. ShopPage 프리팹에는 Canvas/카메라/테스트 호스트가 없고 운영 연결은 후속이다. 단독 Play35검사·재로드 Edit33검사·3화면비 렌더 PASS. 서버/스토어 쓰기 없음. 이전 미저장 씬은 outputs/shop-preview/session-backup에 복사 후 에디터에는 상점 씬만 남겼다.
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/WorkSpace/USW/Shop/Test_ShopScene.unity` | 상점만 단독 실행하는 테스트 씬 |
+| `Assets/WorkSpace/USW/Shop/Prefabs/ShopPage.prefab` | 로비 중앙에 옮길 Canvas 없는 스크롤 본문 |
+| `Assets/WorkSpace/USW/Shop/ShopPageView.cs` | 4구역 데이터 주입·최대6칸·구매 요청 이벤트 |
+| `Assets/WorkSpace/USW/Shop/ShopProductSlot.cs` | 상품 ID/가격 재화·수량·품절 표시 |
+| `Assets/WorkSpace/USW/Shop/ShopPreviewHost.cs` | 계정/스토어 없는 로컬 품절·초기화 미리보기 |
+| `Tools/verification/ShopSceneAuthoring.cs` | Unity API로 씬/프리팹 작성 및 기존 미저장 씬 보존 |
+| `Tools/verification/ShopPreviewSceneChecks.cs` | raycast/포인터 클릭/드래그·재로드·배치·렌더 검사 |
+| `docs/technical/shop-preview.md` | 테스트 범위·로비 이식·미정 상품·기존 씬 복구 |
+
 ## 2026-10-30 정적 대조
 설정 호스트는 게시 자산의 BakedScreen 프리팹을 복제한다. NativeSourceInstalled이면 기존 프리팹 경로를 사용하며 XML 해석은 명시적 에디터 비교에만 남는다. Settings.asset의 구운 프리팹/아틀라스 참조와 IAP의 파괴 토큰 UniTaskVoid 연결을 대조했다.
 
@@ -163,7 +220,7 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 | `Tools/verification/ProfilePopupAuthoring.cs` | GIF 배치 참고·우리 로비 스타일 프로필 프리팹 저작·헤더 배선·관련 없는 레이아웃 값 복원 |
 | `Tools/verification/ProfilePopupChecks.cs` | 저장 참조/실제 포인터/스크롤/격리 닉네임과 선택 검사. 실제 닉네임·프로필 저장 소비 없음 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/LobbyHeaderLayout.cs` | 직렬화한 탭 참조로 햄버거를 전투(index2)의 전환 완료 상태에서만 표시. 프로필/재화는 공용, 배치는 씬 앵커/LayoutGroup 소유 |
-| `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/LobbyCurrencyNavigation.cs` | 씬 참조 기반 재화 터치: 스태미나 충전창, Gold/Dia 기존 상점 탭. 실제 상품 구역은 준비 중 |
+| `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/LobbyCurrencyNavigation.cs` | 스태미나 충전창·실제 로비 상점 Gold/Dia 구역 이동 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/LobbyUtilityMenu.cs` | 보조 메뉴 DOTween 열기/닫기. SetAvailable로 전투 외 트리거 숨김/직접 열기 차단/즉시 닫기. 기능은 각 칸 실행 컴포넌트 |
 | `Assets/WorkSpace/USW/DeckUpgrade/README.md` | 단독 프리팹과 로비 01 Clean 원본의 구별 및 로컬 시안/계정 미연결 경계 |
 | `Assets/WorkSpace/USW/DeckUpgrade/Prefabs/UnitUpgradeUI.prefab` | 별도 유닛 강화 프리팹. 사용자 정정에 따라 로비에서는 사용하지 않음 |
@@ -236,7 +293,7 @@ PlayerData는 계정 저널에 전송 버전 이력을 보관하고 실제 SDK �
 | `Assets/WorkSpace/USW/Scripts/Editor/UI/LobbyPopupAuthoring.cs` | 공용 팔레트 상수를 참조하는 계정/출석 팝업 저작 도구. 기존 색상 값 유지 |
 | `Assets/WorkSpace/USW/Scripts/UI/LobbyUI/LobbyUtilityAssets.cs` | 설정 프리팹·아이콘 참조 SO |
 | `Assets/WorkSpace/USW/Resources/LobbyUtilityAssets.asset` | 실제 인게임 설정 프리팹과 8개 기존 아이콘 참조 |
-| `Assets/Scenes/LobbyScene.unity` | 한 줄 프로필/스태미나/Gold/Dia 상단·햄버거 메뉴·충전창이 직접 배치된 씬. 하단은 상점·캐릭터 강화·전투·강화·길드. 길드 봉인 유지, 실제 Gold/Dia 상품 구역은 준비 중 |
+| `Assets/Scenes/LobbyScene.unity` | 한 줄 프로필/스태미나/Gold/Dia 상단·햄버거 메뉴·충전창과 실제 계정 상점 배치. 하단은 상점·캐릭터 강화·전투·강화·길드, 길드 봉인 유지 |
 | `Assets/Imports/Background2.png` | 로비 전투 탭의 구름 배경 원본. Sprite Single, 기존 GUID 1d66a2a2db9cfb643b4f28f30e31c1a7 유지 |
 | `Assets/Imports/Background2.png.meta` | 배경 Sprite 임포트·기존 씬 참조 GUID. 새 GUID/Default texture로 초기화하면 로비 배경 누락 |
 | `Assets/Imports/background1.png` | Crocus 깊이 실험실 전경 원본. Sprite Single, 기존 GUID f09fee835b5cd584f9b0074c76a08ce7 유지 |

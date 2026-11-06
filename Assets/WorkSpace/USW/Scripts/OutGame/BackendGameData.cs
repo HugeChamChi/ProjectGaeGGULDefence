@@ -237,6 +237,8 @@ public class BackendGameData
             UpgradeProgress = ParseUpgradeProgress(data.GetString("UpgradeProgressJson", "{\"SchemaVersion\":1,\"Trees\":[],\"LocalImportId\":\"\"}")),
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            WeeklyShopPurchasePeriod = data.GetString("WeeklyShopPurchasePeriod", string.Empty),
+            WeeklyShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("WeeklyShopPurchases", "[]")),
             ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
             ShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("ShopPurchases", "[]")),
             CompletedTutorials = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("CompletedTutorials", "[]")),
@@ -281,6 +283,8 @@ public class BackendGameData
         // LitJson serializes ResearchSaveData.CurrentVersion (a const), then cannot deserialize it.
         param.Add("UpgradeProgressJson", JsonUtility.ToJson(data.UpgradeProgress));
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("WeeklyShopPurchasePeriod", data.WeeklyShopPurchasePeriod ?? string.Empty);
+        param.Add("WeeklyShopPurchases", JsonMapper.ToJson(data.WeeklyShopPurchases));
         param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
         param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
         param.Add("CompletedTutorials", JsonMapper.ToJson(data.CompletedTutorials));
