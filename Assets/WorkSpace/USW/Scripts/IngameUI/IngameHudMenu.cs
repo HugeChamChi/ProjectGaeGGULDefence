@@ -6,6 +6,7 @@ using UnityEngine.UI;
 /// <summary>Expands the HUD menu above its button without changing combat or selection state.</summary>
 public sealed class IngameHudMenu : MonoBehaviour
 {
+    [VContainer.Inject] private GameManager _gameManager;
     [SerializeField] private Button _menuButton;
     [SerializeField] private Image _closedIcon;
     [SerializeField] private Image _openIcon;
@@ -84,7 +85,11 @@ public sealed class IngameHudMenu : MonoBehaviour
 
     private void Toggle() => SetExpanded(!_expanded);
     private void Close() => SetExpanded(false);
-    private void RequestSelectionList() { Close(); _onSelectionListRequested.Invoke(); }
+    private void RequestSelectionList()
+    {
+        if (_gameManager?.IsTimeVaultActive == true) return;
+        Close(); _onSelectionListRequested.Invoke();
+    }
     private void RequestDamageChart() { Close(); _onDamageChartRequested.Invoke(); }
     private void OpenSettings() { Close(); if (_settingsPanel != null) _settingsPanel.Open(); }
 

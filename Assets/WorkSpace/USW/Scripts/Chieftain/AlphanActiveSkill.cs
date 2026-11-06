@@ -78,7 +78,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     /// <inheritdoc />
     public int MaximumCharges => Mathf.Max(1, _effects?.ChiefChargeCapacity ?? 1);
     /// <inheritdoc />
-    public bool CanActivate => IsAvailable && IsPlaying && !_casting && !_drones.IsRallying
+    public bool CanActivate => _game?.IsTimeVaultActive != true && IsAvailable && IsPlaying && !_casting && !_drones.IsRallying
         && _drones.RallyAvailableDroneCount > 0 && AvailableCharges > 0;
 
     /// <summary>초기화는 GameInitializer의 족장 선택보다 먼저 실행된다.</summary>

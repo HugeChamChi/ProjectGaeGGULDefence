@@ -64,6 +64,15 @@ public class Drone_Deltan : HackingDroneSpawner
         if (requested > accepted) AddMana(DroneEffects?.OverflowManaPerCast ?? 0);
     }
     /// <inheritdoc />
+    protected override void OnHackingOverflow(BossBase target, int overflow)
+    {
+        float coefficient = DroneEffects?.HackingOverflowAttackCoefficient ?? 0f;
+        if (overflow <= 0 || coefficient <= 0f || target == null || !target.IsTargetable
+            || _droneManager?.Hacking.Target != target) return;
+        int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * overflow * coefficient, 1f, out bool critical);
+        target.TakeDamage(damage, target.transform.position, critical ? BossDamageKind.Critical : BossDamageKind.Normal, unitData);
+    }
+    /// <inheritdoc />
     protected override void OnUnitRemoved()
     {
         if (Combat != null) Combat.OnBasicAttackStarted -= Charge;

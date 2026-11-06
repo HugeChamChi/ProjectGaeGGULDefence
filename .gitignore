@@ -146,12 +146,6 @@ Assets/WorkSpace/HSD/GEMINI.md.meta
 /Tools/*
 !/Tools/planner-studio/
 !/Tools/backnd-mcp/
-!/docs/
-/docs/*
-!/docs/technical/
-/docs/technical/*
-!/docs/technical/unit-balance-runtime-integration-plan.md
-!/docs/technical/betan-level-bonus-runtime.md
 !/Tools/verification/
 /Tools/verification/*
 !/Tools/verification/BetanLevelBonusAuthoring.cs

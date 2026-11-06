@@ -69,6 +69,9 @@ public abstract class BossBase : MonoBehaviour
         finally { _projectileImpactDepth--; }
     }
 
+    /// <summary>착탄 콜백 안에서 소비/적중 부가 효과를 확정할 수 있는지 반환한다.</summary>
+    public bool CanReceiveProjectileImpact => !IsDead && !Invincible && IsTargetable && CombatAllowsDamage;
+
     /// <summary>보류 시점부터 보스 패턴 외형을 멈추고, 해제 때 기존 속도를 복원한다.</summary>
     public void SetPatternHold(bool on)
     {

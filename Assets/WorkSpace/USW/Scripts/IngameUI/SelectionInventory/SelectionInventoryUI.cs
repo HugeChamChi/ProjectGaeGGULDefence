@@ -100,6 +100,7 @@ public sealed class SelectionInventoryUI : MonoBehaviour
     [SerializeField, Min(0.01f)] private float _popSeconds = 0.3f;
 
     [Inject] private LevelUpManager _levelUp;
+    [Inject] private TimerController _timeVaultTimer;
     [Inject] private TimeScaleService _timeScale;
     [Inject] private DescriptionDisplaySettings _descriptionSettings;
     [Inject] private ChieftainSelection _chieftainSelection;
@@ -153,6 +154,7 @@ public sealed class SelectionInventoryUI : MonoBehaviour
     /// <summary>주어진 칸들로 연다 (실험실·검사용). 마지막 칸이 처음 선택된다.</summary>
     public void Show(IReadOnlyList<SelectionInventoryItem> items)
     {
+        if (_timeVaultTimer?.TimeVaultActive == true) return;
         EnsureInitialized();
         _termPopup?.HideImmediately();
         _chiefCard.SetActive(false);

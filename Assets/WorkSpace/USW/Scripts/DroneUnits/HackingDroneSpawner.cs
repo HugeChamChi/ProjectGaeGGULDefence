@@ -10,6 +10,9 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
     private HackingCastVisual _castVisual;
     /// <summary>현재 시전 중에는 같은 개체의 중복 시전을 막는다.</summary>
     public bool IsHacking { get; private set; }
+    /// <summary>공유 장부의 실제 상한. 연구와 선택지 보너스를 포함한다.</summary>
+    public int SharedStackCapacity => _droneManager != null ? _droneManager.Hacking.Ledger.Capacity
+        : (unitData?.Hacking?.Capacity ?? 0) + (DroneEffects?.HackingCapacityBonus ?? 0);
     /// <inheritdoc />
     public override bool CanUseSkill => unitData?.Hacking != null && unitData.skillData != null;
     /// <inheritdoc />
@@ -63,7 +66,12 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
             if ((runtime.Target != target || runtime.Ledger.Generation != generation) || target == null || !target.IsTargetable || !CanContinue()) return;
-            if (reservation == null) OnHackingProduced(produced, runtime.Add(target, produced));
+            if (reservation == null)
+            {
+                int accepted = runtime.Produce(target, produced, this);
+                OnHackingProduced(produced, accepted);
+                OnHackingOverflow(target, Mathf.Max(0, produced - accepted));
+            }
             else if (runtime.Commit(target, reservation))
             {
                 committed = true;
@@ -102,6 +110,8 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase
     protected virtual void OnHackingCommitted(DroneHackingRuntime runtime, BossBase target) { }
     /// <summary>생산자 자신이 만든 초과 생산분의 후속 효과.</summary>
     protected virtual void OnHackingProduced(int requested, int accepted) { }
+    /// <summary>생산자가 원래 보스에서 실제로 넘친 스택을 후속 처리한다.</summary>
+    protected virtual void OnHackingOverflow(BossBase target, int overflow) { }
     private void CancelHacking()
     {
         var source = _castCts;

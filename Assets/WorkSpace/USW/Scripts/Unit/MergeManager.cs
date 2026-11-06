@@ -37,6 +37,11 @@ public class MergeManager : MonoBehaviour
     [Inject] private UnitSpawner _spawnerManager;
     [Inject] private GridManager _gridManager;
     [Inject] private MergeEffectPlayer _mergeEffect;
+    [Inject] private IGlitchEffectReader _glitchEffects;
+    [Inject] private TimerController _timer;
+    [Inject] private GameManager _gameManager;
+    [Inject] private BossManager _bossManager;
+    private bool _mergeInProgress;
 
     public event Action<UnitBase, bool> OnUnitSelected;
     public event Action                 OnSelectionCleared;
@@ -49,6 +54,7 @@ public class MergeManager : MonoBehaviour
     /// <summary>DragHandler.OnPointerClick에서 호출</summary>
     public void OnUnitClicked(UnitBase unit)
     {
+        if (_gameManager?.IsTimeVaultActive == true) return;
         if (_selectedUnit == unit) { ClearSelection(); return; }
 
         _selectedUnit = unit;
@@ -61,6 +67,8 @@ public class MergeManager : MonoBehaviour
     /// </summary>
     public bool TryMergeByDrag(UnitBase dragged, UnitBase target)
     {
+        if (_gameManager?.IsTimeVaultActive == true) return false;
+        if (_mergeInProgress || _gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return false;
         if (dragged == null || target == null || dragged.IsStunned || target.IsStunned) return false;
         if (!UnitMergeRules.CanPair(dragged, target)) return false;
         var sourceCell = dragged.currentCell;
@@ -68,17 +76,41 @@ public class MergeManager : MonoBehaviour
         if (sourceCell == null || targetCell == null || sourceCell == targetCell ||
             sourceCell.OccupyingUnit != dragged || targetCell.OccupyingUnit != target ||
             targetCell.Model.IsSealed) return false;
-        return MergeTargets(new List<(UnitBase unit, GridCell cell)>
-            { (dragged, sourceCell), (target, targetCell) }, targetCell, (Tier)((int)dragged.OriginalTier + 1));
+        _mergeInProgress = true;
+        try
+        {
+            return MergeTargets(new List<(UnitBase unit, GridCell cell)>
+                { (dragged, sourceCell), (target, targetCell) }, targetCell, (Tier)((int)dragged.OriginalTier + 1));
+        }
+        finally { _mergeInProgress = false; }
     }
 
     private bool MergeTargets(List<(UnitBase unit, GridCell cell)> targets, GridCell spawnCell, Tier nextTier)
     {
         if (_unitFactoryManager == null || _spawnerManager == null) return false;
+        bool overload = _glitchEffects?.HasOverloadMerge == true && nextTier < Tier.Legend;
+        float cost = overload ? _glitchEffects.OverloadMergeCostSeconds : 0f;
+        if (overload)
+        {
+            if (_timer == null) return false;
+            if (!_timer.CanSurviveTimeCost(cost))
+            {
+                _timer.SpendTimeFromMerge(cost, null, _bossManager?.CurrentBoss);
+                return false;
+            }
+            if (UnityEngine.Random.value < _glitchEffects.OverloadMergeUpgradeChance)
+                nextTier = (Tier)((int)nextTier + 1);
+        }
         var newUnit = _tutorialSettings != null
             ? _unitFactoryManager.CreateUnitFromData(_tutorialSettings.MergeUnit, nextTier)
             : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return false;
+        // Existing factory preparation failure remains free. Materials are still intact here.
+        if (overload && !_timer.SpendTimeFromMerge(cost, newUnit, _bossManager?.CurrentBoss))
+        {
+            UnityEngine.Object.Destroy(newUnit.gameObject);
+            return false;
+        }
 
         ClearSelection();
 
@@ -138,6 +170,7 @@ public class MergeManager : MonoBehaviour
 
     public bool CanMerge(UnitBase unit)
     {
+        if (_gameManager?.IsTimeVaultActive == true) return false;
         if (unit?.unitData == null) return false;
         if (unit.OriginalTier == Tier.Legend) return false;
         return GetMergeTargets(unit).Count >= 2;

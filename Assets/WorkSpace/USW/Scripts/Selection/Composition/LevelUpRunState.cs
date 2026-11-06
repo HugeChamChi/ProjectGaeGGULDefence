@@ -4,7 +4,24 @@ using System.Collections.Generic;
 /// <summary>씬의 단일 카드 런 기록. 외부 지급/연출/전투 실행과 변경 알림은 조정자가 담당한다.</summary>
 public sealed class LevelUpRunState
 {
+    /// <summary>이미 지불한 제물 공격력 가산. 새 런에서만 초기화한다.</summary>
+    public float SacrificeAttackBonus { get; private set; }
+    /// <summary>자동 지출이 성공한 뒤 한 번만 공격력을 적립한다.</summary>
+    public void RecordSacrifice() { if (_started) SacrificeAttackBonus += Current.SacrificeAttackPerPayment; }
     private float _baseCritChance;
+    private double _glitchAttackBonus;
+    /// <summary>오류 누적 횟수. 새 런에서만 초기화한다.</summary>
+    public int GlitchAttackTriggers { get; private set; }
+    /// <summary>이미 획득한 영구 공격력. 효과 제거나 보스 교체로 소급 회수하지 않는다.</summary>
+    public float GlitchAttackBonus => (float)_glitchAttackBonus;
+    /// <summary>카드 획득 후 발생한 실제 글리치만 상한까지 적립한다.</summary>
+    public void RecordGlitch()
+    {
+        if (!_started || Current.GlitchAttackPerTrigger <= 0f
+            || GlitchAttackTriggers >= Current.GlitchAttackMaximumTriggers) return;
+        GlitchAttackTriggers++;
+        _glitchAttackBonus += Current.GlitchAttackPerTrigger;
+    }
     private readonly Dictionary<int, SelectionCardSnapshot> _prepared = new();
     private readonly List<SelectionCardSnapshot> _active = new();
     private readonly List<SelectionCardSnapshot> _history = new();
@@ -44,6 +61,7 @@ public sealed class LevelUpRunState
     {
         if (_started && RunId == runId) return false;
         RunId = runId; _started = true;
+        GlitchAttackTriggers = 0; _glitchAttackBonus = 0; SacrificeAttackBonus = 0;
         _prepared.Clear(); _active.Clear(); _history.Clear(); _results.Clear(); _everAcquired.Clear(); _pendingLegendSources.Clear();
         Current = SelectionEffectProjector.Project(_active, _baseCritChance);
         return true;

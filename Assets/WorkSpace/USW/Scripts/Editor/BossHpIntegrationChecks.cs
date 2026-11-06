@@ -74,12 +74,10 @@ public static class BossHpIntegrationChecks
             Set(data, "_defense", 100d); Set(data, "_hpLineCount", 50);
             var manager = root.AddComponent<BossManager>();
             Set(manager, "_debuffSettings", settings); Set(manager, "_uiManager", ui);
-            var sheets = new GameDataManager(null, settings);
-            typeof(GameDataManager).GetMethod("ParseBossData", Flags).Invoke(sheets, new object[] { "id,round,name,hp,expPerHp,exp,defense\n1,100,SheetBoss,999999,0.01,100,9999" });
-            typeof(GameDataManager).GetProperty("IsLoaded", Flags).SetValue(sheets, true);
-            Set(manager, "_gameDataManager", sheets);
-            Set(manager, "_waveManager", root.AddComponent<WaveManager>());
-            Check(sheets.IsLoaded && sheets.GetBossMaxHp(100) == 999999, "Conflicting loaded sheet supplied for priority check");
+            // This isolated preview owns no production reward or player account.
+            var accountExperience = new AccountExperienceRun(null, null);
+            accountExperience.Begin(false);
+            Set(manager, "_accountExperience", accountExperience);
             manager.SpawnSingleBoss(new BossEntry { Data = data, hp = 7, Defense = 999 }, null);
             var boss = manager.CurrentBoss;
             Check(boss.MaxHp == 1000 && bar.LineCount == 50 && bar.CurrentLine == 50, "Real spawn uses BossData instead of fallback fields");
@@ -90,6 +88,7 @@ public static class BossHpIntegrationChecks
             float total = .8818768f;
             Check(Mathf.Abs(mask.anchorMax.x - total * (total * 50f - 44f)) < .00001f, "Real damage scales current line inside total HP span");
             Check(Mathf.Abs(((RectTransform)Get(bar, "_nextLineMask")).anchorMax.x - total) < .00001f, "Real damage shrinks next line layer to total HP ratio");
+            Check(accountExperience.Finish(false) == null, "Preview damage grants no account experience");
             boss.ClearListeners();
 
             var stage = AssetDatabase.LoadAssetAtPath<StageData>("Assets/WorkSpace/USW/Data/WaveData/StageData.asset");

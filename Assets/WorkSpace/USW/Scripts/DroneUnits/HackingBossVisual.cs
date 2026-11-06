@@ -27,6 +27,10 @@ public sealed class HackingBossVisual : MonoBehaviour
     private Sprite _spriteFrame;
     private int _setupFrame, _visible;
     private float _ratio;
+    private int _overheated;
+    private int _capacity;
+    /// <summary>과열 스택이 존재하는 표식은 일반 파란 표식과 다른 빨강으로 표시한다.</summary>
+    public void SetOverheated(int count) => _overheated = Mathf.Max(0, count);
 
     /// <summary>보스 메시 갱신 뒤 몸에 표식을 고정한다.</summary>
     public void Initialize(BossBase boss, DroneHackingData data)
@@ -40,6 +44,17 @@ public sealed class HackingBossVisual : MonoBehaviour
         int perMark = _data != null ? Mathf.Max(1, _data.StacksPerMark) : 5;
         _ratio = Mathf.Clamp01(stacks / (float)Mathf.Max(1, capacity));
         _visible = Mathf.Clamp(stacks, 0, capacity) / perMark;
+        _capacity = Mathf.Max(1, capacity);
+        if (_marks != null && _marks.Length < _capacity / perMark)
+        {
+            foreach (var mark in _marks)
+            {
+                Hide(mark);
+                Destroy(mark.Glow.gameObject); Destroy(mark.Core.gameObject); Destroy(mark.Ring.gameObject);
+            }
+            _marks = null;
+            _spriteFrame = null;
+        }
     }
 
     /// <summary>소비로 사라진 묶음만 차례로 터뜨리고 나머지 빛점은 유지한다.</summary>
@@ -70,7 +85,7 @@ public sealed class HackingBossVisual : MonoBehaviour
         Vector3 center = centerBone != null ? centerBone.GetWorldPosition(_skeleton.transform) : bounds.center;
         center.z = _boss.transform.position.z - .65f;
         _block = new MaterialPropertyBlock();
-        _marks = new Mark[Mathf.Max(1, _data.Capacity / Mathf.Max(1, _data.StacksPerMark))];
+        _marks = new Mark[Mathf.Max(1, Mathf.Max(_capacity, _data.Capacity) / Mathf.Max(1, _data.StacksPerMark))];
         int order = Mathf.Max(54, renderer.sortingOrder + 2);
         for (int i = 0; i < _marks.Length; i++)
         {
@@ -80,7 +95,7 @@ public sealed class HackingBossVisual : MonoBehaviour
                 Core = Quad("HackCore" + i, _data.MarkGlowMaterial, order + 1),
                 Ring = Quad("HackRing" + i, _data.MarkRingMaterial, order + 2)
             };
-            int slot = i * 7 % _marks.Length;
+            int slot = i;
             float radius = Mathf.Sqrt((slot + .5f) / _marks.Length);
             float angle = (slot * GoldenAngle + 20f) * Mathf.Deg2Rad;
             Vector3 world = center + new Vector3(Mathf.Cos(angle) * bounds.extents.x * .55f * radius,
@@ -171,6 +186,9 @@ public sealed class HackingBossVisual : MonoBehaviour
         for (int i = 0; i < _marks.Length; i++)
         {
             var mark = _marks[i];
+            int perMark = Mathf.Max(1, _data.StacksPerMark);
+            float heat = Mathf.Clamp01((_overheated - i * perMark) / (float)perMark);
+            Color markTint = Color.Lerp(tint, Color.red, heat);
             if (i < _visible && !mark.Attached)
             {
                 mark.Attached = true; mark.BornAt = now; mark.PopAt = -1f;
@@ -183,9 +201,9 @@ public sealed class HackingBossVisual : MonoBehaviour
             {
                 float q = Mathf.Clamp01((now - mark.PopAt) / PopDuration);
                 float fade = 1f - q, ease = 1f - Mathf.Pow(1f - q, 3);
-                Draw(mark.Glow, mark.PopPosition, _data.MarkGlowSize * (1f + ease), tint, fade * fade);
+                Draw(mark.Glow, mark.PopPosition, _data.MarkGlowSize * (1f + ease), markTint, fade * fade);
                 Draw(mark.Core, mark.PopPosition, _data.MarkCoreSize * (1f + ease), Color.white, fade);
-                Draw(mark.Ring, mark.PopPosition, Mathf.Lerp(.15f, 1.05f, ease), tint, fade);
+                Draw(mark.Ring, mark.PopPosition, Mathf.Lerp(.15f, 1.05f, ease), markTint, fade);
                 if (q >= 1f) mark.PopAt = -1f;
                 continue;
             }
@@ -194,7 +212,7 @@ public sealed class HackingBossVisual : MonoBehaviour
             float born = Mathf.Clamp01((now - mark.BornAt) / AttachDuration);
             float pulse = .5f + .5f * Mathf.Sin(now * 5f + i * GoldenAngle);
             float popScale = 1f + .7f * (1f - born) * (1f - born);
-            Color color = _ratio >= 1f ? Color.Lerp(tint, Color.white, pulse * .5f) : tint;
+            Color color = _ratio >= 1f ? Color.Lerp(markTint, Color.white, pulse * .5f) : markTint;
             Draw(mark.Glow, position, (_data.MarkGlowSize + .15f * pulse) * popScale, color, .75f + .2f * pulse);
             Draw(mark.Core, position, (_data.MarkCoreSize + .05f * pulse) * popScale, Color.white * 1.2f, .95f);
             Draw(mark.Ring, position, Mathf.Lerp(.12f, .55f, 1f - (1f - born) * (1f - born)), color, 1f - born);
