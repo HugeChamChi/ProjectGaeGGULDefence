@@ -22,7 +22,7 @@ public static class UnitBonusChart
     public static bool IsLoaded=>definitions!=null;
     public static async UniTask InitializeAsync(CancellationToken token)
     {
-        if(definitions!=null || !UnitBalanceRuntime.RequiresRemote)return;
+        if(definitions!=null)return;
         var rows=await BackendChartReader.ReadAsync(ChartName,token);
         var parsed=Parse(rows);var text=ParsePresentations(rows);token.ThrowIfCancellationRequested();definitions=parsed;presentations=text;
     }

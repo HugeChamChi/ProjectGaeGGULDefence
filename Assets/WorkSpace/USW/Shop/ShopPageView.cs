@@ -37,6 +37,18 @@ namespace GaeGGUL.Shop.UI
             for (int i = 0; i < sections.Length; i++) SetProducts(sections[i].Kind, products[i]);
         }
 
+        public void ScrollToSection(ShopSection kind)
+        {
+            var section = Array.Find(sections, value => value.Kind == kind);
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
+            float range = scroll.content.rect.height - scroll.viewport.rect.height;
+            float top = scroll.content.rect.yMax - scroll.content.InverseTransformPoint(
+                section.Root.TransformPoint(new Vector3(0, section.Root.rect.yMax, 0))).y;
+            scroll.StopMovement();
+            scroll.verticalNormalizedPosition = range > 0 ? 1f - Mathf.Clamp01(top / range) : 1f;
+        }
+
         public void BindAuthoredProducts()
         {
             foreach (var section in sections)
