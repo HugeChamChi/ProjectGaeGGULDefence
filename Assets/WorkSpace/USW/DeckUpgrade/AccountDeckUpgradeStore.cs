@@ -38,14 +38,15 @@ namespace GaeGGUL.DeckUpgrade
             var entry = next.Characters.Find(x => x.Id == id);
             if (entry == null) { entry = new AccountCharacterData.Entry { Id = id, Count = 1 }; next.Characters.Add(entry); }
             if (entry.Level >= DeckUpgradeProgress.MaxLevel) return false;
-            int cost = checked(150 * entry.Level);
-            if (Player.PlayerData.Data.Gold < cost) return false;
+            var price = UnitBalanceRuntime.UpgradeCost(id, entry.Level + 1);
+            int cost = price.Amount;
+            if (DeckUpgradeCurrency.Balance(Player.PlayerData.Data, price.ItemId) < cost) return false;
             entry.Count = 1; entry.Level++; next.SaveId = Guid.NewGuid().ToString("N");
             AccountCharacterData.Validate(next);
             document.Lock();
             try
             {
-                bool saved = await Player.PlayerData.TryCommitCharacterUpgradeAsync(cost, row, JsonConvert.SerializeObject(next));
+                bool saved = await Player.PlayerData.TryCommitCharacterUpgradeAsync(cost, row, JsonConvert.SerializeObject(next), price.ItemId);
                 if (!saved || _generation != document.Generation) return false;
                 document.ApplyCommitted(next); return true;
             }

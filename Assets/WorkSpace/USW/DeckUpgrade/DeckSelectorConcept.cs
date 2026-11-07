@@ -36,7 +36,7 @@ namespace GaeGGUL.DeckUpgrade
         }
         private void BuildBanner()
         {
-            banner = Box("CollectionBanner", page, C("705247"), 0, 112, 1080, 400);
+            banner = Box("CollectionBanner", page, C("705247"), 0, screen.IsEmbeddedInLobby ? -80 : 112, 1080, 400);
             for (int i = 0; i < 5; i++) Box("ArtworkPanel_" + i, banner, C("86634F"), i * 238 - 40, 290 + i % 2 * 20, 206, 82);
             var host = Box("BannerChief", banner, Color.clear, 342, 10, 396, 380);
             host.gameObject.AddComponent<DroneSpinePreview>().Show(screen.chiefSpine, screen.chiefIdle, screen.spineMaterial, screen.spineBlendMaterials, screen.chief.Icon);
@@ -51,9 +51,10 @@ namespace GaeGGUL.DeckUpgrade
 
         private void BuildCollection()
         {
-            collection = Box("DeckCollection", page, Color.clear, 0, 534, 1032, 100);
+            float top = screen.IsEmbeddedInLobby ? 342 : 534;
+            collection = Box("DeckCollection", page, Color.clear, 0, top, 1032, 100);
             collection.anchorMin = Vector2.zero; collection.anchorMax = Vector2.one;
-            collection.offsetMin = new Vector2(24, 28); collection.offsetMax = new Vector2(-24, -534);
+            collection.offsetMin = new Vector2(24, 28); collection.offsetMax = new Vector2(-24, -top);
             var summary = Box("DeckSummaryStrip", collection, C("17232B"), 0, 0, 1032, 64);
             Label("CollectionTitle", "<b>\uC804\uCCB4 \uC720\uB2DB</b>", summary, 24, 0, 280, 64, 29, Color.white);
             Label("CollectionCount", "<b>\uBCF4\uC720 6 / 12</b>", summary, 356, 0, 320, 64, 29, C("FFCE54"), TextAlignmentOptions.Center);
@@ -139,6 +140,7 @@ namespace GaeGGUL.DeckUpgrade
         /// <summary>Displays typed state supplied by the screen's presenter.</summary>
         public void Render(DeckUpgradeItemViewData chief, DeckUpgradeItemViewData selected)
         {
+            page.Find("DeckCollection/DeckSummaryStrip/CollectionCount").GetComponent<TMP_Text>().text = $"<b>보유 {OwnedCount} / {unitCards.Count}</b>";
             chiefCardLevel.text = chief.IsOwned ? "Lv." + chief.Level : "미보유";
             detailName.text = selected.Name;
             detailLevel.text = selected.IsOwned ? "Lv." + selected.Level + "/" + DeckUpgradeProgress.MaxLevel : "미보유";

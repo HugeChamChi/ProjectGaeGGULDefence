@@ -28,7 +28,7 @@ namespace GaeGGUL.DeckUpgrade
             var data = new DeckUpgradeItemViewData
             {
                 Index = index, Name = index < 0 ? _chief.DisplayName : _units[index].unitName,
-                Level = _service.GetLevel(id), Gold = _service.Gold, Cost = _service.GetCost(id),
+                Level = _service.GetLevel(id), Gold = _service.GetBalance(id), Currency = _service.GetCurrency(id), Cost = _service.GetCost(id),
                 IsOwned = _service.IsOwned(id), IsBusy = _service.IsBusy || (_service.UsesAccountData && !Player.PlayerData.IsReady),
                 UpgradeStatus = _service.UsesAccountData && Player.PlayerData.HasSaveConflict ? "재접속 필요" : _service.IsBusy ? "저장 중…" : "",
                 ChiefBonus = _service.GetChiefBonus(GetId(-1))

@@ -122,7 +122,8 @@ public static class UnitBonusChart
         var result=new Dictionary<string,Presentation>();
         foreach(JsonData row in rows)if(Text(row,"RecordType")=="Description"){
             string key=Text(row,"UnitKey"),text=Text(row,"Description"),link=Text(row,"EffectLink");int level=Integer(row,"Level");
-            if(string.IsNullOrWhiteSpace(key)||level<1||string.IsNullOrWhiteSpace(text)||text.Contains("<")||text.Contains(">")||!(link=="None"||link=="ChiefAttackSpeed")||link=="ChiefAttackSpeed"&&key!="AlphanChief")throw new FormatException("Bonus description");
+            bool validLink = link=="None" || link=="ChiefAttackSpeed"&&key=="AlphanChief" || link=="HackingProduction"&&key=="UnitData_Deltan" || link=="HackingConsumption"&&key=="UnitData_Gamman";
+            if(string.IsNullOrWhiteSpace(key)||level<1||string.IsNullOrWhiteSpace(text)||text.Contains("<")||text.Contains(">")||!validLink)throw new FormatException("Bonus description");
             result.Add(key+"/"+level,new Presentation {Text=text,EffectLink=link,HighlightNumbers=Boolean(row,"HighlightNumbers"),LinkTerms=Boolean(row,"LinkTerms")});
         }
         return result;

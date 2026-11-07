@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
@@ -200,7 +200,7 @@ public class BackendGameData
         if (string.IsNullOrEmpty(_inDate) || owner != Backend.UserInDate || string.IsNullOrEmpty(row.InDate) || expectedSaveId != _serverSaveId) return false;
         var playerWhere = new Where(); playerWhere.Equal("PlayerSaveId", expectedSaveId);
         var characterWhere = new Where(); characterWhere.Equal("Data", row.Json);
-        var playerParam = new Param(); playerParam.Add("Gold", next.Gold); playerParam.Add("PlayerSaveId", next.SaveId);
+        var playerParam = new Param(); playerParam.Add("Gold", next.Gold); playerParam.Add("Diamond", next.Diamond); playerParam.Add("RewardInventory", JsonMapper.ToJson(next.RewardInventory)); playerParam.Add("PlayerSaveId", next.SaveId);
         var characterParam = new Param(); characterParam.Add("Data", json);
         var writes = new System.Collections.Generic.List<TransactionValue>
         {

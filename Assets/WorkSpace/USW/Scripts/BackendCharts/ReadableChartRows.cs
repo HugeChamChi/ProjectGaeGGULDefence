@@ -26,8 +26,15 @@ namespace GGD.BackendCharts
         static string Units(JsonData rows)
         {
             var units=new Dictionary<string,Dictionary<string,object>>();
+            var costs=new List<object>();
             foreach(JsonData row in rows)
             {
+                if(Text(row,"RecordType")=="UpgradeCost")
+                {
+                    costs.Add(new {Id=Text(row,"CharacterKey"),TargetLevel=Index(row,"TargetLevel"),ItemId=Text(row,"ItemKey"),Amount=Index(row,"Amount")});
+                    continue;
+                }
+                if(Text(row,"RecordType")!="" && Text(row,"RecordType")!="Stat")throw new FormatException("Unknown unit row type");
                 string key=Text(row,"UnitKey");
                 if(!units.TryGetValue(key,out var unit)) {unit=Strings(row,"UnitKey","AssetKey","Name");unit["Stats"]=new List<object>();units.Add(key,unit);}
                 if((string)unit["AssetKey"]!=Text(row,"AssetKey") || (string)unit["Name"]!=Text(row,"Name"))throw new FormatException("Mixed unit metadata");
@@ -35,7 +42,7 @@ namespace GGD.BackendCharts
                 var count=Number(row,"MaxDroneCount");if(count!=Math.Truncate(count)||count<0||count>int.MaxValue)throw new FormatException("MaxDroneCount");stat["MaxDroneCount"]=(int)count;
                 ((List<object>)unit["Stats"]).Add(stat);
             }
-            return JsonMapper.ToJson(new {SchemaVersion=1,Units=new List<Dictionary<string,object>>(units.Values)});
+            return JsonMapper.ToJson(new {SchemaVersion=1,Units=new List<Dictionary<string,object>>(units.Values),UpgradeCosts=costs});
         }
         static string Missions(JsonData rows)
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using BackEnd;
 using Cysharp.Threading.Tasks;
@@ -453,13 +453,36 @@ public class PlayerDataController : IDisposable, Global.IClearable
         owned.Count = amount > 0 ? 1 : owned.Count;
     }
 
-    public async UniTask<bool> TryCommitCharacterUpgradeAsync(int cost, AccountJsonStore.Row characterRow, string characterJson)
+    public async UniTask<bool> TryCommitCharacterUpgradeAsync(int cost, AccountJsonStore.Row characterRow, string characterJson, string currency = "Gold")
     {
         if (IsReady && string.IsNullOrEmpty(_confirmedSaveId)) MarkDirty();
-        if (cost <= 0 || !IsReady || _backendData == null || !await TrySaveAsync() || !IsReady || _data.Gold < cost) return false;
-        int generation = _generation;
+        if (cost <= 0 || !IsReady || _backendData == null || !await TrySaveAsync() || !IsReady || GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(_data, currency) < cost) return false;
         var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
-        next.Gold -= cost; next.SaveId = Guid.NewGuid().ToString("N");
+        GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Spend(next, currency, cost); next.SaveId = Guid.NewGuid().ToString("N");
+        return await CommitCharacterChangeAsync(next, characterRow, characterJson);
+    }
+
+    public async UniTask<bool> TryCommitTestCharacterOwnershipAsync(AccountJsonStore.Row characterRow, string characterJson, int[] unitIds, bool owned)
+    {
+        if (IsReady && string.IsNullOrEmpty(_confirmedSaveId)) MarkDirty();
+        if (!IsReady || _backendData == null || !await TrySaveAsync() || !IsReady) return false;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        if (owned)
+        {
+            foreach (int id in unitIds) AddPurchasedUnit(next, id, 1);
+        }
+        else
+        {
+            foreach (var entry in next.RewardInventory.Owned)
+                if (entry.Type == RewardType.Unit) entry.Count = 0;
+        }
+        next.SaveId = Guid.NewGuid().ToString("N");
+        return await CommitCharacterChangeAsync(next, characterRow, characterJson);
+    }
+
+    private async UniTask<bool> CommitCharacterChangeAsync(PlayerData next, AccountJsonStore.Row characterRow, string characterJson)
+    {
+        int generation = _generation;
         _characterPurchase = true;
         try
         {

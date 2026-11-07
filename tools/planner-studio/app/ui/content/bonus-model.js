@@ -52,7 +52,8 @@
    if(!bonus.UnitKey||!Number.isInteger(bonus.Level)||bonus.Level<1||!bonus.DescriptionTemplate?.trim())throw Error('보너스 대상·레벨·설명을 입력하세요.');
    const slot=bonus.UnitKey+'/'+bonus.Level;if(slots.has(slot))throw Error('같은 유닛·해금 레벨은 보너스 하나로 묶으세요: '+slot);slots.add(slot);
    if(!effects.some(r=>r.BonusId===bonus.BonusId))throw Error('보너스에 효과를 하나 이상 추가하세요: '+bonus.BonusId);
-   if(!['None','ChiefAttackSpeed'].includes(bonus.EffectLink)||bonus.EffectLink==='ChiefAttackSpeed'&&bonus.UnitKey!=='AlphanChief')throw Error('알팡 전용 효과 링크를 확인하세요.');
+   const linkOwners={ChiefAttackSpeed:'AlphanChief',HackingProduction:'UnitData_Deltan',HackingConsumption:'UnitData_Gamman'};
+   if(bonus.EffectLink!=='None'&&linkOwners[bonus.EffectLink]!==bonus.UnitKey)throw Error('보너스 효과 링크와 대상 유닛을 확인하세요.');
    render(bonus,effects);
   }
   for(const effect of effects){
