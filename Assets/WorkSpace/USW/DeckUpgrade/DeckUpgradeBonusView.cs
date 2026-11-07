@@ -25,6 +25,8 @@ namespace GaeGGUL.DeckUpgrade
         private DeckUpgradeEffectTooltip effectTooltip;
         private string currentUnit;
         private const string AttackSpeedBuffId = "upgrade:chief_attack_speed";
+        private const string ProductionId = "upgrade:hacking_production";
+        private const string ConsumptionId = "upgrade:hacking_consumption";
         public TermPopup Popup => popup;
         public DeckUpgradeEffectTooltip EffectTooltip => effectTooltip;
 
@@ -60,12 +62,14 @@ namespace GaeGGUL.DeckUpgrade
                 var presentation=UnitBonusChart.GetPresentation(data!=null?UnitBalanceRuntime.GetUnitKey(data.name):"AlphanChief",(i+1)*3);
                 string description = presentation?.Text ?? data?.LevelBonuses?.Find(bonus => bonus.Level == (i + 1) * 3)?.Description
                     ?? Labels[unit][i] ?? string.Empty;
-                description=description.Replace("%p","%");
+                description=Regex.Replace(description.Replace("%p","%").Replace("액티브 스킬", "족장스킬"), @"\s*\([^)]*\)", "");
                 string text = presentation==null||presentation.HighlightNumbers?HighlightNumbers(description):description;
                 if(presentation==null||presentation.LinkTerms)text=text.Replace("[해킹]", Mark("해킹", "hack_stack"))
                     .Replace("[자폭드론]", Mark("자폭드론", "self_destruct_drone"))
-                    .Replace("[액티브 스킬]", Mark("액티브 스킬", "chief_skill"));
+                    .Replace("[족장스킬]", Mark("족장스킬", "chief_skill"));
                 if (presentation?.EffectLink=="ChiefAttackSpeed")text=text.Replace("{공격속도효과}","<link=\""+AttackSpeedBuffId+"\"><color=#91E6A6>공격속도 증가</color></link>");
+                if (presentation?.EffectLink=="HackingProduction")text=text.Replace("추가 생산량", "<link=\""+ProductionId+"\"><color=#91E6A6>추가 생산량</color></link>");
+                if (presentation?.EffectLink=="HackingConsumption")text=text.Replace("추가 소모 한도", "<link=\""+ConsumptionId+"\"><color=#91E6A6>추가 소모 한도</color></link>");
                 if (presentation==null && unit == 5 && i == 3)
                     text = text.Replace("공격속도 증가", "<link=\"" + AttackSpeedBuffId + "\"><color=#91E6A6>공격속도 증가</color></link>");
                 if (descriptions[i].text == text) continue;
@@ -84,10 +88,12 @@ namespace GaeGGUL.DeckUpgrade
         private void ShowTerm(TermLinkTapTarget target, string id)
         {
             if (popup != null && popup.BlocksOwnerInput) return;
-            if (id == AttackSpeedBuffId)
+            if (id == AttackSpeedBuffId || id == ProductionId || id == ConsumptionId)
             {
                 if (effectTooltip == null) effectTooltip = DeckUpgradeEffectTooltip.Create(popupParent, descriptions[0], viewStyle);
-                effectTooltip.Show(target, id); return;
+                string effect = id == ProductionId ? "HackingProduction" : id == ConsumptionId ? "HackingConsumption" : "ChiefAttackSpeed";
+                int level = (System.Array.IndexOf(links, target) + 1) * 3;
+                effectTooltip.Show(target, id, effect, level); return;
             }
             if (id.StartsWith(TermLinker.LinkPrefix)) id = id.Substring(TermLinker.LinkPrefix.Length);
             ShowEntry(id);
@@ -96,6 +102,12 @@ namespace GaeGGUL.DeckUpgrade
         {
             if (glossarySettings == null || glossarySettings.Glossary == null) return;
             if (!glossarySettings.Glossary.TryFind(id, out var entry)) return;
+            if (id == "chief_skill")
+            {
+                entry = JsonUtility.FromJson<TermEntry>(JsonUtility.ToJson(entry));
+                entry.DisplayName = "족장스킬";
+                entry.ClipCaption = entry.ClipCaption?.Replace("액티브 스킬", "족장스킬");
+            }
             if (popup == null)
             {
                 popup = TermPopup.Create(popupParent, descriptions[0], viewStyle.RoundedFill, glossarySettings.BlurShader);

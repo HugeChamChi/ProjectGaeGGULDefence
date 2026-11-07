@@ -7,7 +7,7 @@ using UnityEngine;
 // Base-stat definitions only. Account levels, purchases and preview growth are separate.
 public sealed class UnitBalanceSnapshot : IDisposable
 {
-    [Serializable] public sealed class Config { public int SchemaVersion; public Definition[] Units; }
+    [Serializable] public sealed class Config { public int SchemaVersion; public Definition[] Units; public UpgradePrice[] UpgradeCosts; }
     [Serializable] public sealed class Definition { public string UnitKey, AssetKey, Name; public Stats[] Stats; }
     [Serializable] public sealed class Stats
     {
@@ -15,6 +15,11 @@ public sealed class UnitBalanceSnapshot : IDisposable
         public float Attack, AttackFrequency, SkillCooldown, FoodProduction;
         public int MaxDroneCount;
     }
+    [Serializable] public sealed class UpgradePrice { public string Id, ItemId; public int TargetLevel, Amount; }
+    private readonly Dictionary<string, UpgradePrice> prices = new();
+    public UpgradePrice UpgradeCost(string id, int target) => prices.Count == 0
+        ? new UpgradePrice { Id = id, TargetLevel = target, ItemId = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Token, Amount = target - 1 }
+        : prices.TryGetValue(id + "/" + target, out var price) ? price : throw new InvalidOperationException("Missing upgrade cost: " + id + "/" + target);
     private readonly Dictionary<string, Definition> definitions = new(StringComparer.Ordinal);
     private readonly Dictionary<UnitData, UnitData> copies = new();
     private readonly HashSet<UnitData> resolved = new();
@@ -35,7 +40,7 @@ public sealed class UnitBalanceSnapshot : IDisposable
             units.Add(new Definition { UnitKey = Text(unit, "UnitKey"), AssetKey = Text(unit, "AssetKey"),
                 Name = Text(unit, "Name"), Stats = stats.ToArray() });
         }
-        return new Config { SchemaVersion = Integer(root, "SchemaVersion"), Units = units.ToArray() };
+        return new Config { SchemaVersion = Integer(root, "SchemaVersion"), Units = units.ToArray(), UpgradeCosts = root.ContainsKey("UpgradeCosts") ? Newtonsoft.Json.JsonConvert.DeserializeObject<UpgradePrice[]>(root["UpgradeCosts"].ToJson()) : null };
     }
 
     private static JsonData Field(JsonData row, string key)
@@ -67,6 +72,10 @@ public sealed class UnitBalanceSnapshot : IDisposable
     {
         if (config == null || config.SchemaVersion != 1 || config.Units == null || config.Units.Length == 0)
             throw new ArgumentException("Invalid unit base-stat configuration");
+        foreach (var price in config.UpgradeCosts ?? System.Array.Empty<UpgradePrice>())
+        {
+            if (price == null || string.IsNullOrEmpty(price.Id) || price.TargetLevel < 2 || price.Amount <= 0 || (price.ItemId != "Gold" && price.ItemId != "Diamond" && price.ItemId != "UpgradeTokenA") || !prices.TryAdd(price.Id + "/" + price.TargetLevel, price)) throw new ArgumentException("Invalid upgrade cost");
+        }
         var keys = new HashSet<string>(StringComparer.Ordinal);
         foreach (var unit in config.Units)
         {

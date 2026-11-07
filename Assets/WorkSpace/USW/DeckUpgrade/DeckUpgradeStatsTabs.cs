@@ -53,6 +53,7 @@ namespace GaeGGUL.DeckUpgrade
             costText.anchoredPosition = Vector2.zero; costText.sizeDelta = new Vector2(468, 40);
             var buttonGauge = (RectTransform)costText.parent; buttonGauge.anchoredPosition = new Vector2(100, -72); buttonGauge.sizeDelta = new Vector2(480, 40);
             upgradePrice = costText.GetComponent<TMP_Text>();
+            upgradePrice.alignment = TextAlignmentOptions.Midline;
             if (showUpgradeGauge) upgradeGauge = UpgradeCostGauge.Create(buttonGauge, style.RoundedFill, style.UpgradeArrow);
             costText.SetAsLastSibling();
             var scrollRoot = dialog.Find("SpecialAbilityScroll");
@@ -113,8 +114,27 @@ namespace GaeGGUL.DeckUpgrade
             speedValue.text = data.CurrentSpeed;
             upgradePrice.text = !data.IsOwned ? "미보유" : !string.IsNullOrEmpty(data.UpgradeStatus) ? data.UpgradeStatus : data.IsMaxLevel ? "MAX" : _useLobbyStyle ? data.Cost.ToString("N0")
                 : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
-            if (upgradeGauge != null) upgradeGauge.SetAmount(data.Gold, data.Cost, data.CanUpgrade);
+            CenterUpgradePrice();
+            if (upgradeGauge != null) upgradeGauge.SetCurrency(data.Currency);
+            if (upgradeGauge != null) upgradeGauge.SetAmount(data.Gold, data.Cost, data.CanUpgrade, data.IsOwned);
             RefreshTabColors();
+        }
+
+        private void CenterUpgradePrice()
+        {
+            var plate = (RectTransform)upgradePrice.transform.parent;
+            var icon = plate.Find("GoldIcon") as RectTransform;
+            if (icon == null) return;
+            float gap = 8f, iconSize = icon.sizeDelta.x;
+            float width = Mathf.Min(upgradePrice.GetPreferredValues(upgradePrice.text).x, plate.rect.width - iconSize - gap);
+            float left = (plate.rect.width - iconSize - gap - width) * .5f;
+            icon.anchorMin = icon.anchorMax = icon.pivot = new Vector2(0, .5f);
+            icon.anchoredPosition = new Vector2(left, 0);
+            var text = upgradePrice.rectTransform;
+            text.anchorMin = text.anchorMax = text.pivot = new Vector2(0, .5f);
+            text.anchoredPosition = new Vector2(left + iconSize + gap, 0);
+            text.sizeDelta = new Vector2(width, plate.rect.height);
+            upgradePrice.alignment = TextAlignmentOptions.Midline;
         }
 
         private void RefreshTabColors()

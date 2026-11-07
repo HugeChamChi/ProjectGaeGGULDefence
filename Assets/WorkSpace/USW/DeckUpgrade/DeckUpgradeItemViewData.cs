@@ -11,6 +11,7 @@ namespace GaeGGUL.DeckUpgrade
         public int Level { get; internal set; }
         /// <summary>Current preview balance.</summary>
         public int Gold { get; internal set; }
+        public string Currency { get; internal set; } = "Gold";
         /// <summary>Numeric cost of the next level.</summary>
         public int Cost { get; internal set; }
         /// <summary>Whether the preview level limit has been reached.</summary>

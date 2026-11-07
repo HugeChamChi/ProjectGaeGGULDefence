@@ -23,6 +23,10 @@ using UnityEngine;
                     case 1: next.Gold=checked(next.Gold+amount); break;
                     case 2: next.Diamond=checked(next.Diamond+amount); break;
                     case 3: next.Stamina=checked(next.Stamina+amount); break;
+                    case 4:
+                        var token = next.RewardInventory.Owned.Find(x => x.Type == RewardType.Currency && x.TargetId == 4);
+                        if (token == null) { token = new RewardOwnedEntry { Type = RewardType.Currency, TargetId = 4 }; next.RewardInventory.Owned.Add(token); }
+                        token.Count = checked(token.Count + amount); break;
                     default: throw new ArgumentException("Unsupported currency");
                 }
             } else {
