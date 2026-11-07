@@ -37,9 +37,11 @@ namespace GaeGGUL.Shop
             try
             {
                 var combined = new JsonData(); combined.SetJsonType(JsonType.Array);
-                foreach (string name in new[] { "ShopDailyList", "ShopWeeklyList", ChartName })
+                var names = new[] { "ShopDailyList", "ShopWeeklyList", ChartName };
+                var charts = await BackendChartReader.ReadManyAsync(names, timeout.Token);
+                foreach (string name in names)
                 {
-                    var rows = await BackendChartReader.ReadAsync(name, timeout.Token);
+                    var rows = charts[name];
                     for (int i = 0; i < rows.Count; i++)
                     {
                         string section = rows[i]["Section"].ToString();
