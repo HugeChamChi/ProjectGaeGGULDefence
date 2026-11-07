@@ -11,6 +11,7 @@ const argument = name => process.argv.find(a => a.startsWith(name + '='))?.slice
 const smokePath = argument('--smoke');
 const contentSmokePath = argument('--content-smoke');
 const eventMissionSmokePath = argument('--event-missions-smoke');
+const shopSmokePath = argument('--shop-smoke');
 const workspace = path.resolve(argument('--workspace') || app.getPath('userData'));
 app.setPath('userData', workspace);
 app.setPath('sessionData', path.join(workspace, 'browser-cache'));
@@ -21,7 +22,7 @@ if (!gotLock) app.quit();
 else {
   app.on('second-instance', () => { if (window) { window.restore(); window.focus(); } });
   app.whenReady().then(start).catch(error => {
-    if (smokePath || contentSmokePath || eventMissionSmokePath) atomic(smokePath || contentSmokePath || eventMissionSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
+    if (smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath) atomic(smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
     else dialog.showErrorBox('기획 작업실을 열 수 없습니다', error.message);
     app.exit(1);
   });
@@ -42,7 +43,7 @@ async function start() {
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   session.defaultSession.setPermissionCheckHandler(() => false);
   window = new BrowserWindow({ width: 1540, height: 990, minWidth: 1180, minHeight: 760,
-    backgroundColor: '#f7f8fb', title: 'GGD 기획 작업실', show: !smokePath && !contentSmokePath && argument('--qa') !== '1', autoHideMenuBar: true,
+    backgroundColor: '#f7f8fb', title: 'GGD 기획 작업실', show: !shopSmokePath && !smokePath && !contentSmokePath && argument('--qa') !== '1', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, backgroundThrottling: !smokePath && !contentSmokePath && argument('--qa') !== '1' } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -112,6 +113,7 @@ async function start() {
   await window.loadURL('ggd://app/index.html'+(argument('--open-workspace')?'?workspace='+encodeURIComponent(argument('--open-workspace')):''));
   if (smokePath) await smoke();
   if(eventMissionSmokePath)await require('./event-missions-smoke.cjs')({window,app,resultPath:eventMissionSmokePath,workspace,store});
+  if (shopSmokePath) await require('./shop-smoke.cjs')({window,app,store,workspace,resultPath:shopSmokePath,atomic});
   if (contentSmokePath) await require('./content-smoke.cjs')({window, app, store, workspace, resultPath:contentSmokePath, atomic});
 }
 

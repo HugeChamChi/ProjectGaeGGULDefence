@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Spine.Unity;
 using TMPro;
@@ -76,6 +76,7 @@ namespace GaeGGUL.DeckUpgrade
 
         public bool Expanded => expanded;
         public int Selected => selected;
+        public bool IsOwned(int index) => _presenter != null && index >= -1 && index < units.Length && _presenter.GetItem(index).IsOwned;
         public bool IsAnimating => motion != null;
         public bool IsPopupAnimating => popupMotion != null;
         public float PopupScale => detail.localScale.x;
@@ -176,6 +177,7 @@ namespace GaeGGUL.DeckUpgrade
                 _selector.BuildView();
                 if (design != null) { design.Apply(); _statsTabs = design.Tabs; }
             }
+            BuildTestTokenButton(page);
             _presenter.OnChanged += Refresh;
             Refresh(); ForceText();
         }
@@ -191,6 +193,58 @@ namespace GaeGGUL.DeckUpgrade
             builder.Register<DeckUpgradeService>(Lifetime.Scoped);
             _previewScope = builder.Build();
             _service = _previewScope.Resolve<DeckUpgradeService>();
+        }
+
+        private Button testTokenButton;
+        private TMP_Text testTokenLabel;
+        private Button testUnlockButton, testDeleteButton;
+        private TMP_Text testUnlockLabel, testDeleteLabel;
+        private void BuildTestTokenButton(RectTransform page)
+        {
+            var panel = Box("TestTokenGrant", page, C("254A55"), style.RoundedFill);
+            Place(panel, 710, _embeddedInLobby ? 32 : 224, 330, 62);
+            panel.GetComponent<Image>().raycastTarget = true;
+            testTokenButton = panel.gameObject.AddComponent<Button>();
+            testTokenButton.onClick.AddListener(GrantTestTokens);
+            testTokenLabel = Text("Label", "강화석 획득 +10 (테스트)", panel, 8, 0, 314, 62, 24, Color.white, TextAlignmentOptions.Center);
+            testUnlockButton = BuildOwnershipButton(page, "TestUnlockAll", "전체 해금", 710, C("254A55"), () => SetTestOwnership(true), out testUnlockLabel);
+            testDeleteButton = BuildOwnershipButton(page, "TestDeleteAll", "전체 삭제", 880, C("663A46"), () => SetTestOwnership(false), out testDeleteLabel);
+            page.Find("UnitDetailsPopup").SetAsLastSibling();
+        }
+
+        private Button BuildOwnershipButton(RectTransform page, string name, string label, float x, Color color, UnityEngine.Events.UnityAction action, out TMP_Text text)
+        {
+            var panel = Box(name, page, color, style.RoundedFill);
+            Place(panel, x, _embeddedInLobby ? -38 : 154, 160, 62);
+            panel.GetComponent<Image>().raycastTarget = true;
+            var button = panel.gameObject.AddComponent<Button>(); button.onClick.AddListener(action);
+            text = Text("Label", label, panel, 4, 0, 152, 62, 24, Color.white, TextAlignmentOptions.Center);
+            text.enableAutoSizing = true; text.fontSizeMin = 16; text.fontSizeMax = 24;
+            return button;
+        }
+
+        private async void SetTestOwnership(bool owned)
+        {
+            if (_service.IsBusy) return;
+            var ids = new List<string>();
+            foreach (var data in units) ids.Add(PlayerCharacterManager.UnitId(data.characterId.Get(Tier.Normal)));
+            ids.Add(PlayerCharacterManager.ChiefId(chief.ChieftainId));
+            var label = owned ? testUnlockLabel : testDeleteLabel;
+            label.text = "저장 중…";
+            bool saved = await _service.SetTestCharacterOwnershipAsync(ids.ToArray(), owned);
+            if (this == null) return;
+            label.text = saved ? (owned ? "전체 해금" : "전체 삭제") : "저장 확인 필요";
+        }
+
+        private async void GrantTestTokens()
+        {
+            if (_service.IsBusy) return;
+            testTokenButton.interactable = false;
+            testTokenLabel.text = "지급 중…";
+            bool saved = await _service.GrantTestTokensAsync();
+            if (this == null) return;
+            testTokenLabel.text = saved ? "강화석 획득 +10 (테스트)" : "저장 확인 필요 · 재접속";
+            testTokenButton.interactable = saved;
         }
 
         private void OnDestroy()
@@ -395,9 +449,10 @@ namespace GaeGGUL.DeckUpgrade
             return Mathf.Lerp(1.06f, 1, Mathf.SmoothStep(0, 1, (t - .72f) / .28f));
         }
 
-        public void UpgradeSelected()
+        public async void UpgradeSelected()
         {
-            if (!_presenter.TryUpgrade(selected)) return;
+            int upgrading = selected;
+            if (!await _presenter.TryUpgradeAsync(upgrading) || this == null || selected != upgrading) return;
             _statsTabs?.ShowUpgradeResult();
             if (selected >= 0) popupPreview.PlayAction(attackAnimations[selected]);
 
@@ -420,12 +475,19 @@ namespace GaeGGUL.DeckUpgrade
 
         private void Refresh()
         {
+            if (testUnlockButton != null)
+            {
+                bool ready = !_service.IsBusy && _service.UsesAccountData && Player.PlayerData.IsReady && Player.Characters.IsReady;
+                testUnlockButton.interactable = testDeleteButton.interactable = ready;
+                testTokenButton.interactable = !_service.IsBusy && (!_service.UsesAccountData || Player.PlayerData.IsReady);
+            }
             for (int i = 0; i < units.Length; i++)
             {
                 var item = _presenter.GetItem(i);
-                levels[i].text = "Lv." + item.Level;
+                levels[i].text = item.IsOwned ? "Lv." + item.Level : "미보유";
                 if (prices[i] != null) prices[i].text = item.IsMaxLevel ? "MAX" : item.Gold + "/" + item.Cost;
-                if (moneyGauges[i] != null) moneyGauges[i].SetAmount(item.Gold, item.Cost, !item.IsMaxLevel);
+                if (moneyGauges[i] != null) moneyGauges[i].SetCurrency(item.Currency);
+                if (moneyGauges[i] != null) moneyGauges[i].SetAmount(item.Gold, item.Cost, item.CanUpgrade, item.IsOwned);
             }
             var chiefData = _presenter.GetItem(-1);
             var data = _presenter.GetItem(selected);
@@ -433,10 +495,15 @@ namespace GaeGGUL.DeckUpgrade
             if (chiefLevel != null) chiefLevel.text = chiefData.Name + "  Lv." + chiefData.Level;
             if (chiefBonus != null) chiefBonus.text = $"전체 유닛 능력치 +{chiefData.ChiefBonus * 100:0}%";
             if (chiefCost != null) chiefCost.text = chiefData.IsMaxLevel ? "MAX" : chiefData.Gold + "/" + chiefData.Cost;
-            if (chiefGauge != null) chiefGauge.SetAmount(chiefData.Gold, chiefData.Cost, !chiefData.IsMaxLevel);
+            if (chiefGauge != null) chiefGauge.SetCurrency(chiefData.Currency);
+            if (chiefGauge != null) chiefGauge.SetAmount(chiefData.Gold, chiefData.Cost, chiefData.CanUpgrade, chiefData.IsOwned);
             upgrade.interactable = data.CanUpgrade;
-            if (cost != null) cost.text = data.IsMaxLevel ? "MAX" : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
-            if (popupGauge != null) popupGauge.SetAmount(data.Gold, data.Cost, !data.IsMaxLevel);
+            UpgradeCostGauge.SetLocked(upgradeRect, !data.IsOwned);
+            foreach (var image in GetComponentsInChildren<Image>(true))
+                    if (image.name == "GoldIcon" || image.name == "Gold") image.sprite = data.Currency == "Gold" ? style.GoldIcon : DeckUpgradeCurrency.Icon;
+            if (cost != null) cost.text = !data.IsOwned ? "미보유" : data.IsBusy ? (Player.PlayerData.HasSaveConflict ? "재접속 후 저장 확인" : "저장 중…") : data.IsMaxLevel ? "MAX" : data.Gold.ToString("N0") + " / " + data.Cost.ToString("N0");
+            if (popupGauge != null) popupGauge.SetCurrency(data.Currency);
+            if (popupGauge != null) popupGauge.SetAmount(data.Gold, data.Cost, data.CanUpgrade, data.IsOwned);
             if (title != null) title.text = data.Name + "  Lv." + data.Level;
             skillName.text = data.SkillName;
             description.text = data.Description;

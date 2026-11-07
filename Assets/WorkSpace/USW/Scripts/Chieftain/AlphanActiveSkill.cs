@@ -17,13 +17,21 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     private Sprite _fallbackIcon;
     private float _elapsed;
     private UnitLevelBonusController _bonuses;
+    private UnitLevelSnapshot _levels;
     private float _speedRemaining;
     private float Bonus(UnitBonusStat stat) => _bonuses?.GetStat(stat) ?? 0f;
     public float GlobalAttackBonus => IsAvailable ? Bonus(UnitBonusStat.ChiefGlobalAttackPercent) : 0f;
     public float AttackSpeedBonus => IsAvailable && _speedRemaining > 0f ? Bonus(UnitBonusStat.ChiefSpeedPercent) : 0f;
     public void ConfigureLevel(UnitLevelSnapshot levels)
     {
-        _bonuses = new UnitLevelBonusController(UnitBonusChart.Resolve("AlphanChief", new List<UnitLevelBonusDefinition>()), levels?.GetLevel("AlphanChief") ?? 1);
+        _levels = levels;
+        RefreshLevelBonuses();
+    }
+    private void RefreshLevelBonuses()
+    {
+        var chief = _selector?.SelectedChieftain;
+        int level = chief != null ? _levels?.GetLevel(PlayerCharacterManager.ChiefId(chief.ChieftainId)) ?? 1 : 1;
+        _bonuses = new UnitLevelBonusController(UnitBonusChart.Resolve("AlphanChief", new List<UnitLevelBonusDefinition>()), level);
     }
     private void OnRallyImpact(BossBase boss)
     {
@@ -86,7 +94,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     {
         if (_disposed || _initialized || _selector == null) return;
         _initialized = true;
-        ConfigureLevel(new UnitLevelSnapshot((Player.PlayerData.Data?.UnitLevels ?? new List<PlayerData.UnitLevelEntry>()).ConvertAll(entry => new KeyValuePair<string,int>(entry.UnitKey, entry.Level))));
+        ConfigureLevel(UnitLevelSnapshot.FromAccount());
         if (_drones != null) _drones.OnRallyImpact += OnRallyImpact;
         _selector.OnAlphanSkillSelected += Configure;
         Configure(_selector.SelectedAlphanSkill, _selector.SelectedAlphanIcon);
@@ -96,6 +104,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     {
         if (_disposed) return;
         CancelCast();
+        RefreshLevelBonuses();
         _data=data; _fallbackIcon=fallbackIcon; _elapsed=0; _speedRemaining=0;
         _charges=Bonus(UnitBonusStat.ChiefStartsReady)>0f ? 1 : 0;
         if (_selector != null) _selector.SetActiveSkill(IsAvailable ? this : null);

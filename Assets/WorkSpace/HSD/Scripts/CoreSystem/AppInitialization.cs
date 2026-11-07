@@ -8,7 +8,6 @@ public sealed class AppInitialization : IDisposable
 {
     private readonly BackendGameData _backendData;
     private readonly GoogleIdentityAuth _identity;
-    private readonly ResearchChartService _researchCharts;
     private readonly CancellationTokenSource _lifetime = new();
     private UniTaskCompletionSource _operation;
     /// <summary>로그인과 모든 Player 초기화가 성공했을 때만 true.</summary>
@@ -99,7 +98,6 @@ public sealed class AppInitialization : IDisposable
             Player.Inject(_backendData);
             await Table.InitializeAsync().AttachExternalCancellation(token);
             await Player.InitializeAsync().AttachExternalCancellation(token);
-            await _researchCharts.PrepareAsync(token);
             if (Player.PlayerData.Data == null) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했습니다.");
             IsReady = true;
             completion.TrySetResult();
@@ -116,7 +114,6 @@ public sealed class AppInitialization : IDisposable
         Player.Inject(_backendData);
         await Table.InitializeAsync().AttachExternalCancellation(token);
         await Player.InitializeAsync().AttachExternalCancellation(token);
-        await _researchCharts.PrepareAsync(token);
         if (!Player.PlayerData.IsReady) throw new InvalidOperationException("선택한 계정 데이터를 불러오지 못했습니다.");
         IsReady = true;
     }
@@ -125,7 +122,7 @@ public sealed class AppInitialization : IDisposable
     private static string DescribeLoginFailure(BackendReturnObject response)
     {
         var text = $"로그인 실패: {response.GetStatusCode()} / {response.GetErrorCode()} / {response.GetMessage()}";
-#if DEVELOPMENT_BUILD && UNITY_ANDROID && !UNITY_EDITOR
+#if (DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD) && UNITY_ANDROID && !UNITY_EDITOR
         // 뒤끝 콘솔에 등록된 구글 해시키와 비교하기 위한 개발 빌드 전용 진단.
         text += " / googleHash=" + Backend.Utils.GetGoogleHash();
 #endif

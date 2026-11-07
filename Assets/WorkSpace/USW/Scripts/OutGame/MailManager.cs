@@ -109,7 +109,7 @@ public class MailManager : Global.IClearable
                     foreach (JsonData entry in json["postList"])
                     {
                         var post = MailParser.Parse(entry, type, _config);
-                        post.IsRead = PlayerPrefs.GetInt(ReadKey(owner, post.Key), 0) != 0;
+                        post.IsRead = Player.LobbyProgress.IsReady && Player.LobbyProgress.Data.ReadMail.Contains(post.Key);
                         if (_gateway.Balances.Data.CouponHistory?.Exists(receipt => receipt.Id == post.Key) == true) continue;
                         if (!loaded.Exists(item => item.Key == post.Key)) loaded.Add(post);
                     }
@@ -129,13 +129,16 @@ public class MailManager : Global.IClearable
         catch (Exception error) { if (Current(owner, generation)) { Debug.LogWarning("[Mail] " + error.GetType().Name); Publish("우편 정보를 불러오지 못했습니다."); } }
         finally { if (Current(owner, generation)) { _busy = false; OnChanged?.Invoke(); } }
     }
-    /// <summary>Records a detail view as read, scoped to the account on this device.</summary>
+    /// <summary>Records a detail view as read in account lobby progress.</summary>
     public void MarkRead(Post post)
     {
         if (!EnsureOwner() || post == null || !_posts.Contains(post)) return;
-        post.IsRead = true; PlayerPrefs.SetInt(ReadKey(_owner, post.Key), 1); PlayerPrefs.Save(); OnChanged?.Invoke();
+        if (!Player.LobbyProgress.IsReady) return;
+        post.IsRead = true;
+        if (!Player.LobbyProgress.Data.ReadMail.Contains(post.Key))
+        { Player.LobbyProgress.Data.ReadMail.Add(post.Key); Player.LobbyProgress.Changed(); }
+        OnChanged?.Invoke();
     }
-    private static string ReadKey(string owner, string id) => "Mail.Read.v1." + owner + "." + id;
     /// <summary>Compatibility index boundary with negative-index/type validation.</summary>
     public void ReceivePost(PostType type, int index)
     { var posts = GetCurrentPostList(); if (index >= 0 && index < posts.Count && posts[index].Type == type) ClaimAsync(posts[index]).Forget(); }

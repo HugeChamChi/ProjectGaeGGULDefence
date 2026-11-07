@@ -12,7 +12,17 @@ public sealed class ResearchSaveService : IDisposable
     public ResearchSaveService(IResearchSaveStore store, ResearchChartService charts = null, ResearchAccountContext account = null)
     {
         _store = store; _charts = charts; _account = account;
-        if (_account != null) _account.OnAccountChanged += ClearSessions;
+        Player.OnAccountCleared += ClearSessions;
+    }
+    public async Cysharp.Threading.Tasks.UniTask<bool> FlushAllAsync()
+    {
+        var sessions = new System.Collections.Generic.List<ResearchSaveSession>(_sessions.Values);
+        foreach (var session in sessions)
+        {
+            await session.FlushAsync(System.Threading.CancellationToken.None);
+            if (session.IsDirty) return false;
+        }
+        return true;
     }
     public Cysharp.Threading.Tasks.UniTask<ResearchTreeData> ResolveTreeAsync(ResearchTreeData original, System.Threading.CancellationToken token) =>
         _charts != null ? _charts.ResolveAsync(original, token) : Cysharp.Threading.Tasks.UniTask.FromResult(original);
@@ -31,7 +41,7 @@ public sealed class ResearchSaveService : IDisposable
     /// <summary>루트 컨테이너가 종료될 때 모든 계정의 작업을 취소한다.</summary>
     public void Dispose()
     {
-        if (_account != null) _account.OnAccountChanged -= ClearSessions;
+        Player.OnAccountCleared -= ClearSessions;
         ClearSessions();
     }
     private void ClearSessions()

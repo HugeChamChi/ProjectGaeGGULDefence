@@ -15,11 +15,20 @@ exports.register = ({ handler, workspace, store, atomic }) => {
   require('./backend-deployment.cjs').register({handler,workspace,atomic,exportFile,getCurrentProject:current});
   handler('content-workbook-export',p=>{
     const names=excel.bundles[p.bundle]||[p.table];
-    const result=exportFile(p.bundle==='items'?'ItemCatalog_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='bonuses'?'UnitLevelBonuses_작성용_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='missions'?'MissionEvents.xlsx':p.bundle==='enhancement'?'EnhancementBalance.xlsx':p.bundle==='rewards'?'AttendanceEvent.xlsx':p.table+'.xlsx',excel.write(p.project,names));
+    const result=exportFile(p.table==='ShopCatalog'?'ShopCatalog_Editing.xlsx':p.bundle==='items'?'ItemCatalog_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='bonuses'?'UnitLevelBonuses_작성용_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='missions'?'MissionEvents.xlsx':p.bundle==='enhancement'?'EnhancementBalance.xlsx':p.bundle==='rewards'?'AttendanceEvent.xlsx':p.table+'.xlsx',excel.write(p.project,names));
     if(p.bundle==='items')result.tableFiles=names.map(name=>{const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,excel.write(p.project,[name]));return file;});
     require('./item-icons.cjs').exportIcons(p.project,path.dirname(result.file));
     const parsed=excel.toRuntime(p.project,names);
     result.dataFile=result.file.replace(/\.xlsx$/,'.data.json');atomic(result.dataFile,JSON.stringify(parsed,null,2));
+    if(p.table==='ShopCatalog'){
+      result.previewFile=result.file.replace(/\.xlsx$/,'.editor-preview.json');atomic(result.previewFile,JSON.stringify(parsed.shopProducts,null,2));
+      result.probabilityFiles=Object.entries(excel.engine().ShopCatalogTools.probabilityTables(excel.engine().Studio.shape(p.project))).map(([name,rows])=>{
+        const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;
+      });
+      result.chartFiles=Object.entries(excel.engine().ShopCatalogTools.listTables(excel.engine().Studio.shape(p.project))).map(([name,rows])=>{
+        const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;
+      });
+    }
     result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));
     if(p.bundle==='missions'){
       const pair=require('./event-tables.cjs').tables(excel.engine().Studio.shape(p.project));

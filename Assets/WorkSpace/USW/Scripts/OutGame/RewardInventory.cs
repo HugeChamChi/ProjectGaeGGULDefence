@@ -8,7 +8,7 @@ using UnityEngine;
 {
     public List<RewardOwnedEntry> Owned = new();
     public List<RewardGrantReceipt> Receipts = new();
-    public int Count(RewardType type,int target) => Owned.Find(x=>x.Type==type && x.TargetId==target)?.Count ?? 0;
+    public int Count(RewardType type,int target) { int count = Owned.Find(x=>x.Type==type && x.TargetId==target)?.Count ?? 0; return type == RewardType.Unit && count > 0 ? 1 : count; }
 
     // Apply to a detached snapshot first: any invalid item leaves the original untouched.
     public static PlayerData Apply(PlayerData current,RewardCatalog catalog,string grantId,RewardAmount[] rewards)
@@ -23,12 +23,16 @@ using UnityEngine;
                     case 1: next.Gold=checked(next.Gold+amount); break;
                     case 2: next.Diamond=checked(next.Diamond+amount); break;
                     case 3: next.Stamina=checked(next.Stamina+amount); break;
+                    case 4:
+                        var token = next.RewardInventory.Owned.Find(x => x.Type == RewardType.Currency && x.TargetId == 4);
+                        if (token == null) { token = new RewardOwnedEntry { Type = RewardType.Currency, TargetId = 4 }; next.RewardInventory.Owned.Add(token); }
+                        token.Count = checked(token.Count + amount); break;
                     default: throw new ArgumentException("Unsupported currency");
                 }
             } else {
                 var item=next.RewardInventory.Owned.Find(x=>x.Type==definition.Type && x.TargetId==definition.TargetId);
                 if(item==null) {item=new RewardOwnedEntry {Type=definition.Type,TargetId=definition.TargetId};next.RewardInventory.Owned.Add(item);}
-                item.Count=definition.Type==RewardType.Unit ? checked(item.Count+amount) : 1;
+                item.Count=1;
             }
         }
         var saved=new RewardAmount[rewards.Length];

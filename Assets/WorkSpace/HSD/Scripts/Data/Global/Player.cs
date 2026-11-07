@@ -19,6 +19,10 @@ public static class Player
     public static GGD.Periods.PeriodDataManager<GGD.Periods.DailyData> DailyData { get; } = new("DailyData", false);
     public static GGD.Periods.PeriodDataManager<GGD.Periods.WeeklyData> WeeklyData { get; } = new("WeeklyData", true);
 
+    public static AccountDocument<AccountCharacterData> Characters { get; } = new("PlayerCharacterData", AccountCharacterData.Validate);
+    public static AccountDocument<AccountLobbyData> LobbyProgress { get; } = new("PlayerLobbyData", AccountLobbyData.Validate);
+    public static event Action OnAccountCleared;
+    public static event Action OnAccountReady;
     private static BackendGameData _backendData;
     private static UniTaskCompletionSource _initialization;
     private static int _initializationGeneration;
@@ -50,6 +54,8 @@ public static class Player
         await PlayerData.InitalizeAsync();
         RequireCurrentInitialization(owner, generation);
         if (!PlayerData.IsReady) throw new InvalidOperationException("플레이어 데이터를 불러오지 못했거나 저장 충돌 확인이 필요합니다.");
+        await UniTask.WhenAll(Characters.InitializeAsync(), LobbyProgress.InitializeAsync());
+        RequireCurrentInitialization(owner, generation);
         await RoundRecords.InitializeAsync();
         RequireCurrentInitialization(owner, generation);
 
@@ -91,6 +97,7 @@ public static class Player
             _autosaveCts = new CancellationTokenSource();
             AutosaveLoopAsync(_autosaveCts.Token).Forget();
         }
+        OnAccountReady?.Invoke();
         completion.TrySetResult();
         }
         catch (OperationCanceledException) { completion.TrySetCanceled(); }
@@ -111,6 +118,8 @@ public static class Player
         _debounceCts = null;
         _firstPendingSave = -1;
         _autosaveCts?.Cancel(); _autosaveCts?.Dispose(); _autosaveCts = null;
+        Characters.Clear(); LobbyProgress.Clear(); GlobalData.SelectedParty = null;
+        OnAccountCleared?.Invoke();
         RoundRecords.Clear();
         GGD.Events.EventChartLoader.Clear();
         UnitBonusChart.Clear();
@@ -135,7 +144,7 @@ public static class Player
         var tasks = new System.Collections.Generic.List<UniTask>();
 
         Global.IClearable[] managers = {
-            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, DailyData, WeeklyData
+            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, DailyData, WeeklyData, Characters, LobbyProgress
         };
 
         foreach (var manager in managers)

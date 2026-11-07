@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class UnitStatsModifier : MonoBehaviour
 {
@@ -28,7 +28,7 @@ public class UnitStatsModifier : MonoBehaviour
     private float LevelAttackMultiplier => (1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f)) * (1f + (_deps?.Alphan?.GlobalAttackBonus ?? 0f));
     private float BasicDamageMultiplier => (1f + LevelStat(UnitBonusStat.BasicDamagePercent)) * (_unit.Combat?.RegularBasicDamageMultiplier ?? 1f);
     private float LevelStat(UnitBonusStat stat) => _unit.LevelBonuses?.GetStat(stat) ?? 0f;
-    private float LevelBaseAtk => (_unit.unitData.atk.Get(_unit.currentTier) + LevelStat(UnitBonusStat.AttackFlat)) * LevelAttackMultiplier;
+    private float LevelBaseAtk => (_unit.unitData.atk.Get(_unit.currentTier) * _unit.AccountUpgradeMultiplier + LevelStat(UnitBonusStat.AttackFlat)) * LevelAttackMultiplier;
     private float UpgradedAtk => LevelBaseAtk * AtkUpgradeMultiplier;
 
     // UnitData.attackSpeed is attacks per second; upgrades increase frequency.

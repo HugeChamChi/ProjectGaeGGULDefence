@@ -56,6 +56,7 @@ public class PlayerChiefManager : Global.IClearable
         if (Player.PlayerData.IsReady && Player.PlayerData.Data.SelectedChiefId >= 0)
         {
             SelectedChiefId = Player.PlayerData.Data.SelectedChiefId;
+            Player.Character.AddChief(SelectedChiefId);
             onCompleted?.Invoke(); return;
         }
         Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback =>
@@ -118,6 +119,9 @@ public class PlayerChiefManager : Global.IClearable
         // Commit only after the entire row is valid. Loading never writes defaults back to the server.
         IsDirty = false;
         SelectedChiefId = chiefId;
+        if (rows.Count > 0 && rows[0].ContainsKey(DATA_KEY) &&
+            int.TryParse(rows[0][DATA_KEY]?.ToString(), out int savedChief) && savedChief >= 0 && savedChief == chiefId)
+            Player.Character.AddChief(chiefId);
     }
 
     private void NotifySelectionChanged()

@@ -63,11 +63,11 @@ public sealed class AppLoadingScreen : MonoBehaviour
             Show(StartupMessage);
             // Render the small boot cover before loading/activating the battle scene.
             await UniTask.NextFrame(cancellationToken: token);
+            // Tutorial completion is account-owned and cannot be decided before account restore.
+            await _initialization.InitializeAsync(token);
+            ReportProgress(_initializedProgress);
             if (_tutorialProgress.IsCompleted)
             {
-                // Restore the existing guest/linked session and Player before any lobby view binds.
-                await _initialization.InitializeAsync(token);
-                ReportProgress(_initializedProgress);
                 await _scenes.TransitionToSceneAsync(_lobbyScene).AttachExternalCancellation(token);
                 Hide();
             }

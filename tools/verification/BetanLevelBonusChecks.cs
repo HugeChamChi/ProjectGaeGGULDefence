@@ -51,7 +51,7 @@ public static class BetanLevelBonusChecks
             {
                 var betan = go.AddComponent<Drone_Betan>();
                 betan.unitData = data;
-                var levels = new UnitLevelSnapshot(new Dictionary<string, int> { [data.name] = level });
+                var levels = new UnitLevelSnapshot(new Dictionary<string, int> { [PlayerCharacterManager.UnitId(data.characterId.Get(Tier.Normal))] = level });
                 betan.Init(new UnitDependencies { UnitLevels = levels });
                 var bonus = betan.LevelBonuses;
                 Near(bonus.GetStat(UnitBonusStat.AttackPercent), level >= 3 ? .05f : 0f, "attack unlock");

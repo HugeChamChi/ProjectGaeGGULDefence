@@ -31,3 +31,9 @@ MonoBehaviour:
     Name: "\uC2A4\uD0DC\uBBF8\uB098"
     Icon: {fileID: 0}
     Contents: []
+  - RewardId: 10004
+    Type: 1
+    TargetId: 4
+    Name: UpgradeTokenA
+    Icon: {fileID: 21300000, guid: ad8e841b110bc7c45acb9b9e8f5e7055, type: 3}
+    Contents: []

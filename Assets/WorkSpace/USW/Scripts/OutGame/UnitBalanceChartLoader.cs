@@ -7,7 +7,7 @@ using GGD.BackendCharts;
 
 public static class UnitBalanceChartLoader
 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
     public const string ChartName = "DEV_UnitBaseStats";
 #else
     public const string ChartName = "LIVE_UnitBaseStats";

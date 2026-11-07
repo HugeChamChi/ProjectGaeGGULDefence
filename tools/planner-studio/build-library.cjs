@@ -7,9 +7,10 @@ const definitions={
  'PermanentUpgrade.xlsx':['ResearchTree','ResearchNode'],
  'MissionEvents.xlsx':['MissionEvents','Missions'],
  'Party.xlsx':['Party'],
- 'AccountSettings.xlsx':['Economy','AccountLevel','BattleReward'],
+ 'AccountSettings.xlsx':['Economy'],
  'Profile.xlsx':['Profile'],
- 'Tutorial.xlsx':['Tutorial']
+ 'Tutorial.xlsx':['Tutorial'],
+ 'ShopCatalog.xlsx':['ShopCatalog']
 };
 const manifestFile=path.join(__dirname,'app/seeds/project-library-manifest.json');
 const prior=fs.existsSync(manifestFile)?JSON.parse(fs.readFileSync(manifestFile,'utf8')):{files:{}};

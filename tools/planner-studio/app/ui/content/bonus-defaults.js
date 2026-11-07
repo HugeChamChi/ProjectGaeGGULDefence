@@ -13,7 +13,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "betan_lv6",
       "UnitKey": "UnitData_Betan",
       "Level": 6,
-      "DescriptionTemplate": "매 {cycle.Every}번째 기본 [자폭드론] 피해 +{cycle.DamageBonusPercent}% (선택지 추가 자폭 제외)",
+      "DescriptionTemplate": "매 {cycle.Every}번째 기본 [자폭드론] 피해 +{cycle.DamageBonusPercent}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -31,7 +31,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "betan_lv12",
       "UnitKey": "UnitData_Betan",
       "Level": 12,
-      "DescriptionTemplate": "매 {cycle.Every}번째 기본 [자폭드론] 충전시간 -{cycle.ChargeReductionPercent}% (선택지 추가 자폭 제외)",
+      "DescriptionTemplate": "매 {cycle.Every}번째 기본 [자폭드론] 충전시간 -{cycle.ChargeReductionPercent}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -76,16 +76,16 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "deltan_lv12",
       "UnitKey": "UnitData_Deltan",
       "Level": 12,
-      "DescriptionTemplate": "스킬 사용 시 [해킹] 추가 생산: 노말 {hackingProducedNormal.Normal} / 레어 {hackingProducedNormal.Rare} / 에픽 {hackingProducedNormal.Epic} / 전설 {hackingProducedNormal.Legend}",
+      "DescriptionTemplate": "스킬 사용 시 [해킹] 추가 생산량 증가",
       "HighlightNumbers": true,
       "LinkTerms": true,
-      "EffectLink": "None"
+      "EffectLink": "HackingProduction"
     },
     {
       "BonusId": "deltan_lv15",
       "UnitKey": "UnitData_Deltan",
       "Level": 15,
-      "DescriptionTemplate": "[해킹] 스킬 사용 후 {hackingPostSpeed.Duration}초간 자신의 공격속도 +{hackingPostSpeed.Value}% (재발동 시 시간 갱신)",
+      "DescriptionTemplate": "[해킹] 스킬 사용 후 {hackingPostSpeed.Duration}초간 자신의 공격속도 +{hackingPostSpeed.Value}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -121,10 +121,10 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "gamman_lv12",
       "UnitKey": "UnitData_Gamman",
       "Level": 12,
-      "DescriptionTemplate": "[해킹] 추가 소모 한도: 노말 {hackingConsumedNormal.Normal} / 레어 {hackingConsumedNormal.Rare} / 에픽 {hackingConsumedNormal.Epic} / 전설 {hackingConsumedNormal.Legend}",
+      "DescriptionTemplate": "[해킹] 추가 소모 한도 증가",
       "HighlightNumbers": true,
       "LinkTerms": true,
-      "EffectLink": "None"
+      "EffectLink": "HackingConsumption"
     },
     {
       "BonusId": "gamman_lv15",
@@ -148,7 +148,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "disigman_lv6",
       "UnitKey": "UnitData_Disigman",
       "Level": 6,
-      "DescriptionTemplate": "시간 회복 후 다음 정규 일반공격 피해 +{recoveryNextBasic.Value}% (1회 저장, 중첩 없음)",
+      "DescriptionTemplate": "시간 회복 후 다음 정규 일반공격 피해 +{recoveryNextBasic.Value}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -229,7 +229,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "alphan_lv3",
       "UnitKey": "AlphanChief",
       "Level": 3,
-      "DescriptionTemplate": "[액티브 스킬] 쿨타임 -{chiefCooldown.Value}%",
+      "DescriptionTemplate": "[족장스킬] 쿨타임 -{chiefCooldown.Value}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -238,7 +238,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "alphan_lv6",
       "UnitKey": "AlphanChief",
       "Level": 6,
-      "DescriptionTemplate": "전투 시작 시 [액티브 스킬] {chiefStartsReady.Value}회 충전 완료",
+      "DescriptionTemplate": "전투 시작 시 [족장스킬] {chiefStartsReady.Value}회 충전 완료",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -247,7 +247,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "alphan_lv9",
       "UnitKey": "AlphanChief",
       "Level": 9,
-      "DescriptionTemplate": "전체 유닛 공격력 +{chiefGlobalAttack.Value}% (족장 고정 집결 피해·식량 제외)",
+      "DescriptionTemplate": "전체 유닛 공격력 +{chiefGlobalAttack.Value}%",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "None"
@@ -256,7 +256,7 @@ globalThis.UNIT_BONUS_MODEL_DEFAULTS={
       "BonusId": "alphan_lv12",
       "UnitKey": "AlphanChief",
       "Level": 12,
-      "DescriptionTemplate": "[액티브 스킬] 사용 시 {chiefSpeed.Duration}초간 전체 유닛 {공격속도효과} +{chiefSpeed.Value}% (시간 갱신)",
+      "DescriptionTemplate": "[족장스킬] 사용 시 전체 유닛 {공격속도효과}",
       "HighlightNumbers": true,
       "LinkTerms": true,
       "EffectLink": "ChiefAttackSpeed"

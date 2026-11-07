@@ -9,6 +9,8 @@ public class PlayerData
     public System.Collections.Generic.List<UnitLevelEntry> UnitLevels = new();
     [Serializable] public sealed class UnitLevelEntry { public string UnitKey; public int Level = 1; }
     public RewardInventory RewardInventory = new();
+    public string WeeklyShopPurchasePeriod = string.Empty;
+    public System.Collections.Generic.List<int> WeeklyShopPurchases = new();
     public string ShopPurchaseDay = string.Empty;
     public System.Collections.Generic.List<int> ShopPurchases = new();
     public System.Collections.Generic.List<string> CompletedTutorials = new();
@@ -22,6 +24,8 @@ public class PlayerData
     public int PendingEntryCost;
     /// <summary>Account coupon history; saved in the same snapshot as its currency grants.</summary>
     public System.Collections.Generic.List<CouponReceipt> CouponHistory = new();
+    /// <summary>Paid diamond grants, saved atomically with the balance for redelivery deduplication.</summary>
+    public System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt> DiamondPurchases = new();
     public string PlayerUid;
     public string PlayerName;
     public int Gold;

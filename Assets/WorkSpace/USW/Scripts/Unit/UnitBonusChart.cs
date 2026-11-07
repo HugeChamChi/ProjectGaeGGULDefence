@@ -14,7 +14,7 @@ public static class UnitBonusChart
     public sealed class Presentation { public string Text, EffectLink; public bool HighlightNumbers, LinkTerms; }
     static Dictionary<string,Presentation> presentations=new();
     public static Presentation GetPresentation(string key,int level)=>presentations.TryGetValue(key+"/"+level,out var value)?value:null;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
     public const string ChartName="DEV_UnitLevelBonuses";
 #else
     public const string ChartName="LIVE_UnitLevelBonuses";
@@ -22,7 +22,7 @@ public static class UnitBonusChart
     public static bool IsLoaded=>definitions!=null;
     public static async UniTask InitializeAsync(CancellationToken token)
     {
-        if(definitions!=null || !UnitBalanceRuntime.RequiresRemote)return;
+        if(definitions!=null)return;
         var rows=await BackendChartReader.ReadAsync(ChartName,token);
         var parsed=Parse(rows);var text=ParsePresentations(rows);token.ThrowIfCancellationRequested();definitions=parsed;presentations=text;
     }
@@ -122,7 +122,8 @@ public static class UnitBonusChart
         var result=new Dictionary<string,Presentation>();
         foreach(JsonData row in rows)if(Text(row,"RecordType")=="Description"){
             string key=Text(row,"UnitKey"),text=Text(row,"Description"),link=Text(row,"EffectLink");int level=Integer(row,"Level");
-            if(string.IsNullOrWhiteSpace(key)||level<1||string.IsNullOrWhiteSpace(text)||text.Contains("<")||text.Contains(">")||!(link=="None"||link=="ChiefAttackSpeed")||link=="ChiefAttackSpeed"&&key!="AlphanChief")throw new FormatException("Bonus description");
+            bool validLink = link=="None" || link=="ChiefAttackSpeed"&&key=="AlphanChief" || link=="HackingProduction"&&key=="UnitData_Deltan" || link=="HackingConsumption"&&key=="UnitData_Gamman";
+            if(string.IsNullOrWhiteSpace(key)||level<1||string.IsNullOrWhiteSpace(text)||text.Contains("<")||text.Contains(">")||!validLink)throw new FormatException("Bonus description");
             result.Add(key+"/"+level,new Presentation {Text=text,EffectLink=link,HighlightNumbers=Boolean(row,"HighlightNumbers"),LinkTerms=Boolean(row,"LinkTerms")});
         }
         return result;
