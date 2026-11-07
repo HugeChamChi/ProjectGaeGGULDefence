@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection43
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects:
+    - rid: 5227033296472375387
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
+  chooseId: 9143
+  chooseName: "\uC77C\uC81C \uAE30\uB3D9"
+  tier: 2
+  spawnRate: 1
+  description: "\uC871\uC7A5 \uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC774 \uBCF4\uC2A4 \uD328\uD134 \uCC28\uB2E8\uC5D0 \uC131\uACF5\uD558\uBA74 \uBC30\uCE58\uB41C \uBCA0\uD0D5\uB9C8\uB2E4 \uC790\uD3ED \uB4DC\uB860\uC744 1\uAE30\uC529 \uC989\uC2DC \uBC1C\uC0AC\uD569\uB2C8\uB2E4. \uAC19\uC740 \uD504\uB808\uC784\uC758 \uB2E4\uC911 \uCC28\uB2E8\uC740 \uD55C \uBC88\uC73C\uB85C \uC9D1\uACC4\uD558\uBA70 \uC9C4\uD589 \uC911 \uCDA9\uC804\uC740 \uC720\uC9C0\uD569\uB2C8\uB2E4."
+  simpleDescription: "\uBCF4\uC2A4 \uD328\uD134 \uCC28\uB2E8\uC5D0 \uC131\uACF5\uD558\uBA74 \uBCA0\uD0D5\uB9C8\uB2E4 \uC790\uD3ED \uB4DC\uB860\uC744 1\uAE30\uC529 \uBC1C\uC0AC\uD569\uB2C8\uB2E4."
+  DescriptionTerms:
+  - chief_skill
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 0
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 0
+  icon: {fileID: 21300000, guid: b1f1cc16bfe6bec488b841704062de38, type: 3}
+  animationFrames: []
+  frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 5227033296472375387
+      type: {class: CounterBombDefinition, ns: , asm: Assembly-CSharp}
+      data: 

@@ -14,8 +14,8 @@ public sealed class AppInitialization : IDisposable
     public bool IsReady { get; private set; }
 
     /// <summary>루트 서비스만 의존하며 로비 컴포넌트보다 먼저 Player를 주입한다.</summary>
-    public AppInitialization(BackendGameData backendData, GoogleIdentityAuth identity)
-    { _backendData = backendData; _identity = identity; Player.Inject(backendData); }
+    public AppInitialization(BackendGameData backendData, GoogleIdentityAuth identity, ResearchChartService researchCharts)
+    { _backendData = backendData; _identity = identity; _researchCharts = researchCharts; Player.Inject(backendData); }
 
     /// <summary>중복 시작은 합치고 실패 후에는 다시 시도할 수 있다.</summary>
     public async UniTask InitializeAsync(CancellationToken cancellationToken)

@@ -12,11 +12,12 @@ public class UnitDependencies
     public StatusPopupService StatusPopups { get; set; }
     /// <summary>Scene countdown used by time-recovery skills.</summary>
     public TimerController Timer { get; set; }
+    /// <summary>글리치로 적립한 현재 런 공격력.</summary>
+    public IGlitchEffectReader GlitchEffects { get; set; }
     /// <summary>현재 전투에 고정된 영구 강화 수치.</summary>
     public ResearchRunBonuses Research { get; set; }
     /// <summary>Scene terminal state, shared by food production and combat callbacks.</summary>
     public GameManager GameManager { get; set; }
-    public GameDataManager GameDataManager { get; set; }
     public GridManager GridManager { get; set; }
     public UpgradeManager UpgradeManager { get; set; }
     /// <summary>선택지의 읽기 전용 전투 보정.</summary>

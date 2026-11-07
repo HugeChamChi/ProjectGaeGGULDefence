@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>DroneManager가 소유하는 씬 수명 해킹 자원과 보스 표시. 보스 변경 시 잔고/예약을 버린다.</summary>
@@ -6,13 +7,18 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     private BossManager _bosses;
     private GameManager _game;
     private IDroneEffectReader _effects;
+    private IOverdriveEffectReader _overdrive;
+    private TimerController _timer;
     private int _carry;
+    private int _overheatedCarry;
+    private float _carryWeight;
+    private int _overflowRemainder;
     /// <summary>사망한 보스로부터 다음 보스 한 번에 적용할 잔고.</summary>
     public int PendingCarry => _carry;
     private BossBase _target;
     private DroneHackingData _data;
     private readonly System.Collections.Generic.Dictionary<UnitBase,int> _capacityBonuses = new();
-    private int Capacity { get { int bonus=0; foreach (var pair in _capacityBonuses) if (pair.Key != null) bonus=Mathf.Max(bonus,pair.Value); return (_data != null ? _data.Capacity : 1)+bonus; } }
+    private int Capacity { get { int bonus=0; foreach (var pair in _capacityBonuses) if (pair.Key != null) bonus=Mathf.Max(bonus,pair.Value); return (_data != null ? _data.Capacity : 1)+bonus+(_effects?.HackingCapacityBonus ?? 0); } }
     public void SetCapacityBonus(UnitBase owner, int bonus)
     {
         if (bonus > 0) _capacityBonuses[owner]=bonus; else _capacityBonuses.Remove(owner);
@@ -30,14 +36,23 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     /// <summary>현재 잔고가 귀속된 보스.</summary>
     public BossBase Target { get { Synchronize(); return _target; } }
     /// <summary>생성 직후 씬 주입 의존성을 연결한다.</summary>
-    public void Initialize(BossManager bosses, GameManager game, IDroneEffectReader effects = null)
-    { _bosses = bosses; _game = game; _effects = effects; }
+    public void Initialize(BossManager bosses, GameManager game, IDroneEffectReader effects = null, TimerController timer = null)
+    {
+        if (_effects is ISelectionEffectChanges oldChanges) oldChanges.OnEffectsChanged -= RefreshCapacity;
+        _bosses = bosses; _game = game; _effects = effects;
+        _overdrive = effects as IOverdriveEffectReader;
+        _timer = timer;
+        if (_effects is ISelectionEffectChanges changes) changes.OnEffectsChanged += RefreshCapacity;
+        RefreshCapacity();
+    }
+    private void RefreshCapacity() { Ledger.Resize(Capacity); RefreshVisual(); }
     /// <summary>동일 저작 데이터를 사용하는 생산자/소비자를 연결한다.</summary>
     public void Configure(DroneHackingData data)
     {
         if (data == null || _data == data) return;
         _data = data;
         Ledger.Reset(Capacity);
+        _overflowRemainder = 0;
         Synchronize();
     }
     private BossBase _residueTarget;
@@ -87,7 +102,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     }
     private void Synchronize()
     {
-        if (_game != null && _game.IsFinished) _carry = 0;
+        if (_game != null && _game.IsFinished) { _carry = 0; _overheatedCarry = 0; }
         if (_target != null && _target.IsDead) OnTargetDied();
         var current = _game != null && _game.IsFinished ? null : _bosses != null ? _bosses.CurrentBoss : null;
         if (current != null && current.IsDead) current = null;
@@ -95,13 +110,16 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         ClearResidue();
         if (_target != null) _target.OnDeath -= OnTargetDied;
         _target = current;
+        _overflowRemainder = 0;
         if (_target != null) _target.OnDeath += OnTargetDied;
         Ledger.Reset(Capacity);
         if (_visual != null) Destroy(_visual.gameObject);
         _visual = null;
         if (_target != null && _carry > 0)
         {
-            Ledger.Add(_carry); _carry=0; RefreshVisual();
+            Ledger.Add(_carry - _overheatedCarry);
+            Ledger.AddOverheated(_overheatedCarry, _carryWeight);
+            _carry=0; _overheatedCarry=0; RefreshVisual();
         }
     }
     private void OnTargetDied()
@@ -110,13 +128,20 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         float carry = _effects?.HackingCarryoverRatio ?? 0f;
         _carry = carry > 0f && (_game == null || !_game.IsFinished)
             ? Mathf.FloorToInt((Ledger.Available + Ledger.Reserved) * carry) : 0;
+        _overheatedCarry = Math.Min(_carry, Mathf.FloorToInt((Ledger.Overheated + Ledger.ReservedOverheated) * carry));
+        _carryWeight = Ledger.OverheatedDamageWeight;
         if (_target != null) _target.OnDeath -= OnTargetDied;
         _target = null;
+        _overflowRemainder = 0;
         Ledger.Reset(Capacity);
         if (_visual != null) Destroy(_visual.gameObject);
         _visual = null;
     }
-    private void OnDestroy() { if (_target != null) _target.OnDeath -= OnTargetDied; }
+    private void OnDestroy()
+    {
+        if (_target != null) _target.OnDeath -= OnTargetDied;
+        if (_effects is ISelectionEffectChanges changes) changes.OnEffectsChanged -= RefreshCapacity;
+    }
     private void RefreshVisual()
     {
         if (_target == null || _data == null) return;
@@ -128,6 +153,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
             _visual.Initialize(_target, _data);
         }
         _visual?.SetStacks(Ledger.Available + Ledger.Reserved, Ledger.Capacity);
+        _visual?.SetOverheated(Ledger.Overheated + Ledger.ReservedOverheated);
     }
     /// <summary>생산 효과는 원래 대상이 여전히 현재 보스일 때만 적용한다.</summary>
     public int Add(BossBase target, int amount)
@@ -136,6 +162,24 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         int added = Ledger.Add(amount);
         RefreshVisual();
         return added;
+    }
+    /// <summary>델탕 초과5개마다 일반1칸을 과열로 치환하고 원인 유닛에 시간 지출을 귀속한다.</summary>
+    public int Produce(BossBase target, int amount, UnitBase producer)
+    {
+        int accepted = Add(target, amount);
+        int perStack = _overdrive?.OverheatOverflowPerStack ?? 0;
+        if (perStack <= 0 || _timer == null || producer == null || Target != target) return accepted;
+        long overflow = (long)_overflowRemainder + Math.Max(0, amount - accepted);
+        long batches = overflow / perStack;
+        _overflowRemainder = (int)(overflow % perStack);
+        for (int i = 0; i < batches; i++)
+        {
+            if (Target != target || target.IsDead || Ledger.Available <= Ledger.Overheated) break;
+            if (!_timer.TryPayOverheat(_overdrive.OverheatCostSeconds, producer, target,
+                () => Ledger.TryOverheat(_overdrive.OverheatDamageWeight))) break;
+        }
+        RefreshVisual();
+        return accepted;
     }
     /// <summary>해킹 자폭 적중 위치·실제 수용량(용량 초과 시 0)·적중 직후 잔고. 표시 전용 알림이다.</summary>
     public event System.Action<Vector3, int, int> OnBombStacksAccepted;
@@ -160,6 +204,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         TotalConsumed += reservation.Amount;
         ConsumptionVersion++;
         _visual?.Detonate(Ledger.Available + Ledger.Reserved, Ledger.Capacity, reservation.Amount);
+        _visual?.SetOverheated(Ledger.Overheated + Ledger.ReservedOverheated);
         return true;
     }
     /// <summary>접촉 전 취소는 동일 보스에게만 반환한다.</summary>

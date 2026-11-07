@@ -83,6 +83,26 @@ public sealed class SelectionDescriptionFormatter
                 case MergeSupportDefinition d: values["value"] = Percent(d.Chance); break;
                 case CombatDroneCapacityDefinition d: values["count"] = Number(d.Count); break;
                 case OverflowManaDefinition d: values["count"] = d.ManaPerCast.ToString(CultureInfo.InvariantCulture); break;
+                case HackingOverflowDamageDefinition d: values["coefficient"] = Number(d.AttackCoefficient); break;
+                case HackingConsumptionDefinition d:
+                    values["consumption"] = Percent(d.ConsumptionMultiplier); values["damage"] = Number(d.StackDamageMultiplier); break;
+                case BasicBombCountDefinition d: values["value"] = Number(d.ExtraBombs); break;
+                case BombRearmDefinition d: values["value"] = Number(d.HitsRequired); values["secondary"] = Number(d.ExtraBombs); break;
+                case BombStackFuseDefinition d: values["value"] = Number(d.MaximumStacks); values["secondary"] = Percent(d.BonusPerStack); break;
+                case BetanCycleDefinition d: values["value"] = Number(d.TimeMultiplier); break;
+                case BombWarheadDefinition d: values["value"] = Number(d.DamageMultiplier); values["secondary"] = Number(d.CycleMultiplier); break;
+                case BombArmorDefinition d: values["value"] = Percent(d.ReductionRatio); values["secondary"] = Number(d.DurationSeconds); break;
+                case BombExecutionDefinition d: values["value"] = Percent(d.HpThreshold); values["secondary"] = Percent(d.DamageBonus); break;
+                case BombSalvageDefinition d: values["value"] = Number(d.HitsRequired); values["secondary"] = Number(d.FoodAmount); break;
+                case HackingCapacityDefinition d: values["capacity"] = Number(d.AdditionalCapacity); break;
+                case BetanAttackPenaltyDefinition d: values["penalty"] = Percent(d.ReductionRatio); break;
+                case AcceleratedDriveDefinition d: values["drain"] = Percent(d.ExtraDrainRatio); values["value"] = Percent(d.AttackSpeedBonus); break;
+                case SacrificeDefinition d: values["seconds"] = Number(d.CostSeconds); values["value"] = Percent(d.AttackBonusPerPayment); break;
+                case TimeVaultDefinition d: values["seconds"] = Number(d.GraceSeconds); break;
+                case OverheatCompressionDefinition d: values["count"] = Number(d.OverflowPerStack); values["seconds"] = Number(d.CostSeconds); values["weight"] = Number(d.DamageWeight); break;
+                case OverloadMergeDefinition d: values["seconds"] = Number(d.CostSeconds); values["value"] = Percent(d.UpgradeChance); break;
+                case RecoveryHackingDefinition d: values["count"] = Number(d.StacksPerRecovery); break;
+                case GlitchAttackDefinition d: values["value"] = (d.BonusPerGlitch * 100f).ToString("0.###", CultureInfo.InvariantCulture); values["count"] = Number(d.MaximumTriggers); break;
                 case BombHackingDefinition d: values["count"] = d.StacksPerBomb.ToString(CultureInfo.InvariantCulture); break;
                 case HackingCarryoverDefinition d: values["value"] = Percent(d.Ratio); break;
                 case BonusManaDefinition d:

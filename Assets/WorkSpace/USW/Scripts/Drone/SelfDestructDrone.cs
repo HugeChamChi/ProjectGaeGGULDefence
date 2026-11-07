@@ -64,6 +64,25 @@ public class SelfDestructDrone : MonoBehaviour
     private Drone_Betan _repairOwner;
     private int _repairOwnerLifetime;
     private bool _explosionNotified;
+    private DroneHackingRuntime _deliveryRuntime;
+    private HackingStackLedger.Reservation _deliveryReservation;
+    private BossBase _deliveryTarget;
+    private int _deliveryGeneration;
+    private Drone_Gamman _deliveryOwner;
+    private int _deliveryOwnerLifetime;
+    private System.Action _deliveryCommitted;
+    /// <summary>풀에서 다른 발사에 재사용되기 전까지 이 감망이 소유한 운반 요청인지 확인한다.</summary>
+    public bool IsDeliveryFrom(Drone_Gamman owner, int lifetime) => isActiveAndEnabled
+        && _deliveryOwner == owner && _deliveryOwnerLifetime == lifetime && _deliveryReservation != null;
+    /// <summary>감망의 이미 계산된 공격 한 번을 운반한다. 스택/피해 이중 적용을 하지 않는다.</summary>
+    public void InitializeDelivery(int damage, bool critical, BossBase target, UnitData source,
+        DroneHackingRuntime runtime, HackingStackLedger.Reservation reservation, System.Action committed, Drone_Gamman owner)
+    {
+        Initialize(damage, critical, target, source);
+        _deliveryRuntime = runtime; _deliveryReservation = reservation; _deliveryTarget = target; _deliveryCommitted = committed;
+        _deliveryGeneration = runtime.Ledger.Generation; _deliveryOwner = owner;
+        _deliveryOwnerLifetime = owner != null ? owner.DeliveryLifetime : 0;
+    }
 
     private void Awake()
     {
@@ -152,6 +171,11 @@ public class SelfDestructDrone : MonoBehaviour
         ReturnToPool();
     }
 
+    private bool DeliveryCurrent(BossBase boss) => _deliveryRuntime == null ||
+        (_deliveryRuntime.Target == boss && _deliveryGeneration == _deliveryRuntime.Ledger.Generation
+        && _deliveryOwner != null && _deliveryOwner.DeliveryLifetime == _deliveryOwnerLifetime
+        && _deliveryOwner.isActiveAndEnabled && _deliveryOwner.currentCell != null);
+
     private bool TryGetTarget(Shot shot, out Vector3 target)
     {
         if (_previewTarget.HasValue)
@@ -163,6 +187,7 @@ public class SelfDestructDrone : MonoBehaviour
         target = default;
         var boss = shot.Target;
         if (boss == null || boss.IsDead) return false;
+        if (!DeliveryCurrent(boss)) return false;
         if (shot.Hacking != null && (shot.Hacking.Target != boss || shot.Hacking.Ledger.Generation != shot.Generation)) return false;
 
         var bossArea = boss.GetComponent<BossAreaTarget>();
@@ -279,19 +304,34 @@ public class SelfDestructDrone : MonoBehaviour
 
     private void Explode(Shot shot, Vector3 target)
     {
+        if (_explosionNotified) return;
         var boss = _previewTarget.HasValue ? null : shot.Target;
         if (shot.Hacking != null)
         {
-            if(boss!=null && !boss.IsDead && shot.Hacking.Target==boss && shot.Hacking.Ledger.Generation==shot.Generation)
+            if(boss!=null && shot.Hacking.Target==boss && shot.Hacking.Ledger.Generation==shot.Generation)
             {
-                shot.Hacking.AddFromBomb(boss,shot.Stacks,target);
-                NotifyExplosionOnce();
+                boss.ApplyProjectileImpact(() =>
+                {
+                    if (!boss.CanReceiveProjectileImpact) return;
+                    shot.Hacking.AddFromBomb(boss,shot.Stacks,target);
+                    _droneManager?.RecordBombImpact(boss, _repairOwner, _repairOwnerLifetime);
+                });
             }
+            if (!_previewTarget.HasValue) NotifyExplosionOnce();
             return;
         }
-        if (boss != null && !boss.IsDead)
-            boss.ApplyProjectileImpact(() => boss.TakeDamage(shot.Damage, target,
-                shot.Critical ? BossDamageKind.Critical : BossDamageKind.Normal, _damageSource));
+        if (boss != null && boss.IsTargetable && !boss.Invincible && DeliveryCurrent(boss))
+            boss.ApplyProjectileImpact(() =>
+            {
+                if (!boss.CanReceiveProjectileImpact) return;
+                bool delivery = _deliveryReservation != null;
+                if (delivery && !_deliveryRuntime.Commit(boss, _deliveryReservation)) return;
+                _deliveryReservation = null;
+                decimal damage = _droneManager != null ? _droneManager.GetBombImpactDamage(boss, shot.Damage, !delivery) : shot.Damage;
+                boss.TakeDamage(damage, target, shot.Critical ? BossDamageKind.Critical : BossDamageKind.Normal, _damageSource);
+                _deliveryCommitted?.Invoke(); _deliveryCommitted = null;
+                _droneManager?.RecordBombImpact(boss, _repairOwner, _repairOwnerLifetime);
+            });
 
         var explosionPrefab = _previewExplosion != null ? _previewExplosion : _explosionPrefab;
         if (explosionPrefab != null)
@@ -319,6 +359,9 @@ public class SelfDestructDrone : MonoBehaviour
 
     private void StopSequence()
     {
+        if (_deliveryReservation != null) _deliveryRuntime?.Refund(_deliveryTarget, _deliveryReservation);
+        _deliveryReservation = null; _deliveryRuntime = null; _deliveryTarget = null; _deliveryCommitted = null;
+        _deliveryOwner = null;
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;

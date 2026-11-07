@@ -13,6 +13,14 @@ public sealed class DebuffController
     private readonly Func<bool> _alive;
     private bool _advancing;
     private double _now;
+    private double _bombArmorUntil, _bombArmorRatio;
+    /// <summary>자폭 방어 감소는 중첩 없이 현재 전투 시각부터 갱신한다.</summary>
+    public void RefreshBombArmor(double ratio, double seconds)
+    {
+        if (double.IsNaN(ratio) || double.IsNaN(seconds) || ratio < 0 || ratio > 1 || seconds <= 0 || double.IsInfinity(seconds)) throw new ArgumentOutOfRangeException();
+        if (!_alive()) return;
+        _bombArmorRatio = ratio; _bombArmorUntil = _now + seconds;
+    }
     /// <summary>Combat time used for expiry; remains unchanged while combat is paused.</summary>
     public double CurrentTime => _now;
     /// <summary>새 디버프가 처음 걸렸을 때(재부여·중첩 제외). 표시 전용.</summary>
@@ -83,7 +91,7 @@ public sealed class DebuffController
     /// <summary>받피증 스킬에 동반된 방어력 감소율. 해당 디버프와 함께 만료된다.</summary>
     public double DefenseReduction
     {
-        get { double remaining=1; foreach (var x in _instances) if (x is DamageTakenIncreaseDebuff damage) remaining *= 1-damage.DefenseReduction; return 1-remaining; }
+        get { double remaining=_now < _bombArmorUntil ? 1-_bombArmorRatio : 1; foreach (var x in _instances) if (x is DamageTakenIncreaseDebuff damage) remaining *= 1-damage.DefenseReduction; return 1-remaining; }
     }
     /// <summary>아머 방어 약화 계수 q.</summary>
     public double ArmorFactor
@@ -91,5 +99,5 @@ public sealed class DebuffController
         get { foreach (var x in _instances) if (x is ArmorBreakDebuff) return 1 + x.Definition.ArmorStrength * x.Stacks / x.Definition.MaxStacks; return 1; }
     }
     /// <summary>사망·웨이브 종료·재초기화 시 호출한다.</summary>
-    public void Clear() => _instances.Clear();
+    public void Clear() { _instances.Clear(); _bombArmorUntil = _bombArmorRatio = 0; }
 }

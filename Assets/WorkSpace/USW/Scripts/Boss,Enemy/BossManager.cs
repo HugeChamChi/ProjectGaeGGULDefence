@@ -17,8 +17,6 @@ public class BossManager : MonoBehaviour
         _uiManager?.ConfigureBossDebuffs(this, _debuffSettings);
     }
 
-    [Inject] private GameDataManager _gameDataManager;
-    [Inject] private WaveManager _waveManager;
     [Inject] private UIManager _uiManager;
     [Inject] private GameManager _gameManager;
     [Inject] private DebuffCatalog _debuffCatalog;
@@ -89,11 +87,10 @@ public class BossManager : MonoBehaviour
             return false;
         }
 
-        // BossData가 지정되면 해당 SO가 수치의 원본. 기존 웨이브만 시트 우선 경로를 유지한다.
-        bool useSheet = !runtime.HasValue && entry.Data == null && _gameDataManager != null && _gameDataManager.IsLoaded && _waveManager != null;
-        decimal hp = runtime?.MaxHp ?? (useSheet ? _gameDataManager.GetBossMaxHp(100 + _waveManager.CurrentWave, entry.MaxHp) : entry.MaxHp);
-        double defense = runtime?.Defense ?? (useSheet ? _gameDataManager.GetBossDefense(100 + _waveManager.CurrentWave, entry.BaseDefense) : entry.BaseDefense);
-        float expMultiplier = useSheet ? _gameDataManager.GetExpMultiplierForRound(100 + _waveManager.CurrentWave) : entry.ExpMultiplier;
+        // 무한모드는 뒤끝 차트 스냅샷, 그 외(튜토리얼 등 유한 웨이브)는 BossEntry(BossData SO 우선)가 수치의 원본.
+        decimal hp = runtime?.MaxHp ?? entry.MaxHp;
+        double defense = runtime?.Defense ?? entry.BaseDefense;
+        float expMultiplier = entry.ExpMultiplier;
         boss.ConfigureDebuffs(_debuffCatalog, _debuffSettings, _gameManager, defense, _combatTimer, _fieldPause, _research);
         boss.ConfigureDamageLedger(_damageLedger);
         boss.Init(hp);

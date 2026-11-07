@@ -10,8 +10,6 @@ public class UnitSpawner : MonoBehaviour
     [Inject] private IObjectResolver _resolver;
     [Inject] private AudioManager _audioManager;
 
-    private UpgradeManager _upgradeManager;
-    private GameDataManager _gameDataManager;
     private GameManager _gameManager;
     private ISelectionEconomyReader _selectionEconomy;
     private CurrencyManager _currencyManager;
@@ -30,6 +28,10 @@ public class UnitSpawner : MonoBehaviour
     [SerializeField] private Vector3 spawnScale = new Vector3(0.5f, 0.5f, 0.5f);
 
     public float CurrentCost { get; private set; }
+    /// <summary>튜토리얼 설정이 없을 때 첫 소환 비용(식량).</summary>
+    private const float DefaultInitialCost = 20f;
+    /// <summary>튜토리얼 설정이 없을 때 소환 성공마다 오르는 비용(식량).</summary>
+    private const float DefaultCostIncrease = 20f;
     [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     /// <summary>Successful paid summons, excluding bonus and merge spawns.</summary>
     public int SuccessfulSpawnCount { get; private set; }
@@ -91,8 +93,6 @@ public class UnitSpawner : MonoBehaviour
 
     public void Init()
     {
-        _upgradeManager = _resolver.Resolve<UpgradeManager>();
-        _gameDataManager = _resolver.Resolve<GameDataManager>();
         _gameManager = _resolver.Resolve<GameManager>();
         _selectionEconomy = _resolver.Resolve<ISelectionEconomyReader>();
         _currencyManager = _resolver.Resolve<CurrencyManager>();
@@ -101,26 +101,7 @@ public class UnitSpawner : MonoBehaviour
         _bossManager = _resolver.Resolve<BossManager>();
         _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
 
-        // GameDataManager 로드 전에는 시트 기본값(20)으로 시작, 로드 후 동기화
-        CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : 20f;
-        if (_tutorialSettings == null && _gameDataManager != null)
-        {
-            if (_gameDataManager.IsLoaded)
-            {
-                SyncInitialCost();
-            }
-            else
-            {
-                _gameDataManager.OnLoaded += SyncInitialCost;
-            }
-        }
-    }
-
-    private void SyncInitialCost()
-    {
-        if (_tutorialSettings != null) return;
-        CurrentCost = _gameDataManager.SummonInitialCost;
-        OnCostChanged?.Invoke(CurrentCost);
+        CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : DefaultInitialCost;
     }
 
     /// <summary>Optional scene-owned permission checked before spending currency or creating a unit.</summary>
@@ -128,6 +109,7 @@ public class UnitSpawner : MonoBehaviour
 
     public void OnSpawnButtonPressed()
     {
+        if (_gameManager?.IsTimeVaultActive == true) return;
         if (CanPlayerSummon != null && !CanPlayerSummon()) return;
         if (_gameManager.CurrentState != GameManager.GameState.Playing)
         {
@@ -180,13 +162,6 @@ public class UnitSpawner : MonoBehaviour
             unit = _unitFactory.CreateUnitFromData(_tutorialSettings.SpawnUnits[SuccessfulSpawnCount]);
         else if (_tutorialSettings == null && _unitFactory.UsesUniformSummonPool)
             unit = _unitFactory.CreateRandomNormalUnit();
-        else if (_tutorialSettings == null && _gameDataManager != null && _gameDataManager.IsLoaded)
-        {
-            int charId = _gameDataManager.GetRandomSpawnCharacterId();
-            unit = charId >= 0
-                ? _unitFactory.CreateUnitByCharacterId(charId)
-                : _unitFactory.CreateRandomNormalUnit();
-        }
         else
         {
             unit = _unitFactory.CreateRandomNormalUnit();
@@ -203,10 +178,7 @@ public class UnitSpawner : MonoBehaviour
         LastSpawnedUnit = unit;
         SuccessfulSpawnCount++;
 
-        // 소환 성공 시 비용 증가 (시트 값 우선, 폴백 20)
-        float increment = _tutorialSettings != null ? _tutorialSettings.CostIncrease : _gameDataManager != null && _gameDataManager.IsLoaded
-            ? _gameDataManager.SummonCostIncrease
-            : 20f;
+        float increment = _tutorialSettings != null ? _tutorialSettings.CostIncrease : DefaultCostIncrease;
         CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
     }
@@ -350,25 +322,13 @@ public class UnitSpawner : MonoBehaviour
     /// <summary>특정 유닛을 판매합니다. SellButtonUI에서 호출</summary>
     public void SellUnit(UnitBase unit)
     {
+        if (_gameManager?.IsTimeVaultActive == true) return;
         if (unit == null) return;
 
         var cell = FindCellByUnit(unit);
         if (cell == null) return;
 
         unit.RestoreOriginalTier();
-
-        // 강화 레벨 조회 (UpgradeManager 기준)
-        int charId  = unit.OriginalData != null ? unit.OriginalData.characterId.Get(unit.OriginalTier) : -1;
-        string jobType = unit.OriginalData != null
-            ? _upgradeManager?.GetJobType(charId) ?? string.Empty
-            : string.Empty;
-        int upgradeLevel = _upgradeManager != null && !string.IsNullOrEmpty(jobType)
-            ? _upgradeManager.GetJobLevel(jobType) + 1 // 판매 테이블은 기존 1 기반 레벨 계약 유지
-            : 1;
-
-        float refund = _gameDataManager != null && _gameDataManager.IsLoaded && charId >= 0
-            ? _gameDataManager.GetSellPrice(charId, upgradeLevel)
-            : 5f;
 
         // 판매 시 보스 피해 (자폭병 레벨업 효과) - 유닛 제거 전에 데미지를 미리 계산해야 토템/위치 효과가 적용됨
         var lu = _selectionEconomy;
@@ -381,9 +341,6 @@ public class UnitSpawner : MonoBehaviour
         cell.RemoveUnit();
         unit.OnRemoved();
         Destroy(unit.gameObject);
-
-        if (refund > 0f)
-            _currencyManager.AddCurrency(refund);
 
         // 판매 보너스 식량 (서비스 레벨업 효과)
         float bonusFood = _selectionEconomy?.SellBonusFoodAmount ?? 0f;

@@ -17,15 +17,20 @@ public class Drone_Betan : DroneSpawnerBase
     [SerializeField] private SelfDestructDrone _skillSelfDestructPrefab;
     [Inject] private FieldPauseVisuals _fieldPause;
     [Inject] private GameManager _gameManager;
+    private int _rearmHits;
+    private bool _rearmReady;
     private int _bombRequestLifetime;
     private int _bombOwnerLifetime;
     private int _pendingSkillBombs;
     private BossBase _pendingSkillBoss;
     private float _pendingSkillDamageMultiplier = 1f;
     private int _fleetVolleyIndex = -1;
+    /// <summary>9143 일제 기동이 차단 성공 때 배치된 베탕 한 마리당 발사하는 자폭 드론 수.</summary>
+    private const int CounterBombsPerBetan = 1;
 
     public enum SelfDestructOrigin { BasicSkill, PeriodicSelection, FleetSelection }
     public override float SkillCooldownMultiplier => base.SkillCooldownMultiplier
+        * (DroneEffects?.BetanCycleMultiplier ?? 1f) * (DroneEffects?.BombWarheadCycleMultiplier ?? 1f)
         * (LevelBonuses?.PeekCycle(UnitLevelBonusController.BasicSkillCycle).ChargeTimeMultiplier ?? 1f);
     /// <summary>발사자 개체 수명을 확인한다. 이동·교환은 유지하고 제거 중·비활성화·풀 재사용은 환급하지 않는다.</summary>
     public bool IsBombOwnerCurrent(int lifetime) => lifetime == _bombOwnerLifetime && isActiveAndEnabled && currentCell != null;
@@ -35,14 +40,40 @@ public class Drone_Betan : DroneSpawnerBase
         SpawnOneDrone();
         // A completed charge owns its ordinal even if the following animation is interrupted.
         float damageMultiplier = LevelBonuses?.CompleteCycle(UnitLevelBonusController.BasicSkillCycle).DamageMultiplier ?? 1f;
+        int bombs = TakeBasicSkillBombCount();
         if (_skillVisual != null && _skillVisual.HasSkillLaunchEvent)
         {
-            _pendingSkillBombs = selfDestructCount;
+            _pendingSkillBombs = bombs;
             _pendingSkillBoss = SkillDebuffTarget;
             _pendingSkillDamageMultiplier = damageMultiplier;
         }
-        else SpawnBombs(selfDestructCount, selfDestructPrefab, null, SelfDestructOrigin.BasicSkill, damageMultiplier);
+        else SpawnBombs(bombs, selfDestructPrefab, null, SelfDestructOrigin.BasicSkill, damageMultiplier);
         FlashOwnedDrones();
+    }
+
+    /// <summary>자기 원 자폭 적중만 누적한다. 최대 한 번분 저장하며 초과분은 버린다.</summary>
+    public void RecordBombHit(int lifetime)
+    {
+        if (!IsBombOwnerCurrent(lifetime)) return;
+        int required = DroneEffects?.BombRearmHits ?? 0;
+        if (required <= 0) { _rearmHits = 0; _rearmReady = false; return; }
+        if (!_rearmReady && ++_rearmHits >= required) { _rearmReady = true; _rearmHits = 0; }
+    }
+    private int TakeBasicSkillBombCount()
+    {
+        int extra = _rearmReady ? DroneEffects?.BombRearmExtraBombs ?? 0 : 0;
+        _rearmReady = false;
+        return selfDestructCount + (DroneEffects?.BasicSkillExtraBombs ?? 0) + extra;
+    }
+    /// <summary>
+    /// 차단 성공 보상. 자폭 드론 1기만 즉시 발사한다. 기본 스킬이 아니므로 충전/모션, 전투 드론 소환,
+    /// 추가탄(9138), 재무장(9139), 기본 스킬 강화 순번을 건드리지 않는다.
+    /// </summary>
+    public void FireCounterSkill()
+    {
+        if (!isActiveAndEnabled || currentCell == null || IsStunned || IsCellSealed || SkillDebuffTarget == null
+            || currentCell.Model.IsAttackDisabled || currentCell.Model.TotemAttackDisabled) return;
+        SpawnBombs(CounterBombsPerBetan, selfDestructPrefab, SkillDebuffTarget, SelfDestructOrigin.PeriodicSelection, 1f);
     }
 
     /// <summary>선택지 추가 자폭. 기본 스킬의 순번과 보너스를 사용하지 않는다.</summary>
@@ -146,6 +177,7 @@ public class Drone_Betan : DroneSpawnerBase
 
     protected override void OnDisable()
     {
+        _rearmHits = 0; _rearmReady = false;
         _bombOwnerLifetime++;
         _bombRequestLifetime++;
         CancelPendingSkillBombs();

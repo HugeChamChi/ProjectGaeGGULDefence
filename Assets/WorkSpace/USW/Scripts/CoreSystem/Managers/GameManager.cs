@@ -31,6 +31,8 @@ public class GameManager : MonoBehaviour
     private string _eventRunKey;
     /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
     public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
+    /// <summary>마지막 유예 동안 딜표와 설정 외 플레이어 조작을 차단하는 공통 상태.</summary>
+    public bool IsTimeVaultActive => _timerManager != null && _timerManager.TimeVaultActive;
     /// <summary>Snapshot captured before StopRun resets progression values.</summary>
     public ResultScreenData ResultSnapshot => _resultSnapshot;
     /// <summary>True only for direct Editor preview play; always false in Player builds.</summary>
@@ -135,6 +137,7 @@ public class GameManager : MonoBehaviour
 
     private void HandleLevelUp()
     {
+        if (IsTimeVaultActive) return;
         if (CurrentState != GameState.Playing) return;
         if (disableLevelUp) return; // 레벨은 오르되 선택 UI는 띄우지 않고 Playing 상태를 유지한다.
 
@@ -169,6 +172,7 @@ public class GameManager : MonoBehaviour
 
     private void EndGame(bool isWin)
     {
+        _timerManager?.CancelTimeVault();
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
         if (IsProductionBattle && _recordAccount == Player.RoundRecords.Account)

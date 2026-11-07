@@ -12,7 +12,6 @@ public class GameInitializer : IInitializable, IAsyncStartable
     public UniTask Preparation => _preparation.Task;
     [Inject] private SceneChangeManager _sceneChangeManager;
     [Inject] private GlobalUIManager _globalUIManager;
-    [Inject] private GameDataManager _gameDataManager;
     [Inject] private AudioManager _audioManager;
     [Inject] private ProjectilePool _projectilePool;
     [Inject] private CurrencyManager _currencyManager;
@@ -49,7 +48,6 @@ public class GameInitializer : IInitializable, IAsyncStartable
             _research.PrepareEditorPreview();
         }
 #endif
-        if (_gameDataManager != null) _gameDataManager.Init();
         if (_currencyManager != null) _currencyManager.Init();
         if (_expManager != null) _expManager.Init();
         if (_gridManager != null) _gridManager.Init();

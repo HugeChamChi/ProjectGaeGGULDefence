@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3baba42e99aa5647b9b6d58913dd32e, type: 3}
+  m_Name: DroneSelection42
+  m_EditorClassIdentifier: Assembly-CSharp::LevelUpData
+  EffectSchemaVersion: 1
+  Composition:
+    ExclusiveGroups: []
+    Effects:
+    - rid: 5227033296472375386
+    Feedback:
+    - Target: 1
+      Row: 0
+      Tribes: 
+      RequiresHighOwnedTier: 0
+    Commands: []
+  chooseId: 9142
+  chooseName: "\uACFC\uD68C\uC804 \uBAA8\uD130"
+  tier: 1
+  spawnRate: 1
+  description: "\uBCA0\uD0D5\uC758 \uAE30\uBCF8 \uC2A4\uD0AC \uC900\uBE44 \uC2DC\uAC04\uC774
+    {value}\uBC30\uAC00 \uB429\uB2C8\uB2E4. \uB3C5\uB9BD \uC8FC\uAE30 \uC790\uD3ED
+    \uBC1C\uC0AC\uB294 \uBCC0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+  simpleDescription: "\uBCA0\uD0D5\uC758 \uAE30\uBCF8 \uC2A4\uD0AC \uC900\uBE44\uAC00
+    \uBE68\uB77C\uC9D1\uB2C8\uB2E4."
+  DescriptionTerms: []
+  applicableTribes: 
+  primaryEffect: 0
+  primaryValue: 0
+  secondaryEffect: 0
+  secondaryValue: 0
+  specialEffect: 0
+  specialValue: 0
+  droneEffect:
+    Kind: 0
+    Interval: 0
+    Value: 0
+    MaxValue: 0
+    Count: 0
+  icon: {fileID: 21300000, guid: b1f1cc16bfe6bec488b841704062de38, type: 3}
+  animationFrames: []
+  frameRate: 12
+  references:
+    version: 2
+    RefIds:
+    - rid: 5227033296472375386
+      type: {class: BetanCycleDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        TimeMultiplier: 0.8
