@@ -17,7 +17,8 @@ public static class BonusTooltipTextChecks
  {
   const string folder="outputs/bonus-description-20261107";var log=new System.Collections.Generic.List<string>();
   void Check(bool ok,string label){if(!ok)throw new Exception(label);log.Add("PASS "+label);}
-  var rows=JsonMapper.ToObject(File.ReadAllText(folder+"/runtime-rows.json"));
+  Directory.CreateDirectory(folder);
+  var rows=JsonMapper.ToObject(File.ReadAllText("tools/verification/fixtures/unit-bonus-tooltips.json"));
   var parsed=UnitBonusChart.Parse(rows);var presentations=UnitBonusChart.ParsePresentations(rows);
   Check(parsed.Count==6&&parsed.Values.Sum(v=>v.Count)==30&&presentations.Count==30,"real game parser accepts all 30 bonuses and descriptions");
   var df=typeof(UnitBonusChart).GetField("definitions",BindingFlags.Static|BindingFlags.NonPublic);var pf=typeof(UnitBonusChart).GetField("presentations",BindingFlags.Static|BindingFlags.NonPublic);
