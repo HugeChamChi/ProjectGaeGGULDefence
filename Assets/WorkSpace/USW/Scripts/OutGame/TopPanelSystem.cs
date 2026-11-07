@@ -116,7 +116,8 @@ public class TopPanelSystem : MonoBehaviour
     }
     private void OnApplicationPause(bool paused)
     {
-        if (paused) Player.UpdateDirtyDataAsync().Forget();
-        else Player.PlayerData.ResumeAsync().Forget();
+        Player.SetApplicationPaused(paused);
     }
+
+    private void OnApplicationQuit() => Player.UpdateDirtyDataAsync().Forget();
 }

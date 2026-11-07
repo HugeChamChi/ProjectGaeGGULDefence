@@ -39,7 +39,7 @@ public class UI_PartySelectPresenter
     private void OnPartySelected(PartyDataSO partyData)
     {
         _selectedParty = partyData;
-        if (Player.LobbyProgress.IsReady)
+        if (Player.LobbyProgress.IsReady && Player.LobbyProgress.Data.LastParty != partyData.name)
         {
             Player.LobbyProgress.Data.LastParty = partyData.name;
             Player.LobbyProgress.Changed();

@@ -117,6 +117,10 @@ public static class Player
         _debounceCts?.Dispose();
         _debounceCts = null;
         _firstPendingSave = -1;
+        _lastPendingSave = -1;
+        IsBattleActive = false;
+        _paused = false;
+        _flush = null;
         _autosaveCts?.Cancel(); _autosaveCts?.Dispose(); _autosaveCts = null;
         Characters.Clear(); LobbyProgress.Clear(); GlobalData.SelectedParty = null;
         OnAccountCleared?.Invoke();
@@ -139,33 +143,91 @@ public static class Player
     /// IsDirty가 true인 매니저들만 추출하여 뒤끝 DB에 부분 업데이트(UpdateV2)를 수행합니다.
     /// 게임 중 주요 시점에 동기적으로 바로 저장해야 할 때 호출합니다.
     /// </summary>
-    public static async UniTask UpdateDirtyDataAsync()
+    public static UniTask UpdateDirtyDataAsync()
     {
-        var tasks = new System.Collections.Generic.List<UniTask>();
-
-        Global.IClearable[] managers = {
-            PlayerData, Profile, Mail, Character, Chief, Shop, Daily, Tutorial, RoundRecords, DailyData, WeeklyData, Characters, LobbyProgress
-        };
-
-        foreach (var manager in managers)
-        {
-            if (manager.IsDirty)
-            {
-                tasks.Add(manager.SaveAsync());
-            }
-        }
-
-        if (tasks.Count > 0)
-        {
-            await UniTask.WhenAll(tasks);
-            UnityEngine.Debug.Log($"[Backend DB] 저장 요청 처리. 미확인 변경은 각 매니저에 보관됩니다. 요청 수: {tasks.Count}");
-        }
+        if (_flush != null) { _flushRequested = true; return _flush.Task; }
+        CancelDebouncedSave();
+        var completion = _flush = new UniTaskCompletionSource();
+        FlushDirtyDataAsync(completion).Forget();
+        return completion.Task;
     }
 
+    private static async UniTaskVoid FlushDirtyDataAsync(UniTaskCompletionSource completion)
+    {
+        try
+        {
+            do
+            {
+                _flushRequested = false;
+                var tasks = new System.Collections.Generic.List<UniTask>();
+
+                // Character and Tutorial are aliases of these canonical account documents.
+                Global.IClearable[] managers = {
+                    PlayerData, Mail, Shop, Daily, RoundRecords, DailyData, WeeklyData, Characters, LobbyProgress
+                };
+
+                foreach (var manager in managers)
+                    if (manager.IsDirty) tasks.Add(manager.SaveAsync());
+
+                if (tasks.Count > 0)
+                {
+                    await UniTask.WhenAll(tasks);
+                    UnityEngine.Debug.Log($"[Backend DB] 저장 요청 처리. 미확인 변경은 각 매니저에 보관됩니다. 요청 수: {tasks.Count}");
+                }
+            }
+            while (ReferenceEquals(_flush, completion) && _flushRequested);
+            completion.TrySetResult();
+        }
+        catch (Exception error) { completion.TrySetException(error); }
+        finally { if (ReferenceEquals(_flush, completion)) _flush = null; }
+    }
+
+    private static UniTaskCompletionSource _flush;
+    private static bool _flushRequested;
     private static System.Threading.CancellationTokenSource _debounceCts;
     private static CancellationTokenSource _autosaveCts;
     private static double _firstPendingSave = -1;
+    private static double _lastPendingSave = -1;
+    private static bool _paused;
+    private static double _pausedAt;
+    /// <summary>Battle deltas stay in memory until settlement; explicit transactions still save immediately.</summary>
+    public static bool IsBattleActive { get; private set; }
     private const int DebounceDelayMs = 30000;
+
+    public static void BeginBattle()
+    {
+        IsBattleActive = true;
+        CancelDebouncedSave();
+    }
+
+    public static void EndBattle()
+    {
+        if (!IsBattleActive) return;
+        IsBattleActive = false;
+        UpdateDirtyDataAsync().Forget();
+    }
+
+    /// <summary>Both lobby and battle HUDs may receive the same pause callback.</summary>
+    public static void SetApplicationPaused(bool paused)
+    {
+        if (_paused == paused) return;
+        _paused = paused;
+        if (paused)
+        {
+            _pausedAt = UnityEngine.Time.realtimeSinceStartupAsDouble;
+            UpdateDirtyDataAsync().Forget();
+        }
+        else if (UnityEngine.Time.realtimeSinceStartupAsDouble - _pausedAt >= 60)
+            PlayerData.ResumeAsync().Forget();
+    }
+
+    private static void CancelDebouncedSave()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = null;
+        _firstPendingSave = _lastPendingSave = -1;
+    }
 
     /// <summary>
     /// Local journals are immediate. Cloud writes coalesce for 30 seconds, bounded by a 60-second flush.
@@ -173,9 +235,10 @@ public static class Player
     /// </summary>
     public static void RequestDebouncedSave()
     {
-        if (_firstPendingSave < 0) _firstPendingSave = UnityEngine.Time.realtimeSinceStartupAsDouble;
-        _debounceCts?.Cancel();
-        _debounceCts?.Dispose();
+        if (IsBattleActive) return;
+        _lastPendingSave = UnityEngine.Time.realtimeSinceStartupAsDouble;
+        if (_firstPendingSave >= 0) return;
+        _firstPendingSave = _lastPendingSave;
         _debounceCts = new System.Threading.CancellationTokenSource();
 
         DebouncedSaveTask(_debounceCts.Token).Forget();
@@ -183,12 +246,16 @@ public static class Player
 
     private static async UniTaskVoid DebouncedSaveTask(System.Threading.CancellationToken token)
     {
-        int delay = (int)Math.Max(0, Math.Min(DebounceDelayMs,
-            60000 - (UnityEngine.Time.realtimeSinceStartupAsDouble - _firstPendingSave) * 1000));
-        bool isCancelled = await UniTask.Delay(delay, DelayType.Realtime, cancellationToken: token).SuppressCancellationThrow();
-        
-        if (isCancelled) return;
-        _firstPendingSave = -1;
+        // One timer per batch. Later changes extend the quiet period without allocating a CTS each time.
+        while (true)
+        {
+            double now = UnityEngine.Time.realtimeSinceStartupAsDouble;
+            int delay = (int)Math.Ceiling(Math.Max(0, Math.Min(
+                DebounceDelayMs - (now - _lastPendingSave) * 1000,
+                60000 - (now - _firstPendingSave) * 1000)));
+            if (delay <= 0) break;
+            if (await UniTask.Delay(delay, DelayType.Realtime, cancellationToken: token).SuppressCancellationThrow()) return;
+        }
         await UpdateDirtyDataAsync();
     }
 
@@ -199,7 +266,7 @@ public static class Player
             while (true)
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(60), DelayType.Realtime, cancellationToken: token);
-                try { await UpdateDirtyDataAsync(); }
+                try { if (!IsBattleActive && _firstPendingSave < 0) await UpdateDirtyDataAsync(); }
                 catch (Exception error) { UnityEngine.Debug.LogWarning("[Save] Pending changes retained: " + error.Message); }
             }
         }

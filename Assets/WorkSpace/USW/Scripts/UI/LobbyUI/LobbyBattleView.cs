@@ -175,7 +175,7 @@ public sealed class LobbyBattleView : MonoBehaviour
 
     private void OnApplicationPause(bool paused)
     {
-        if (!paused) RetryRecords();
+        if (!paused && !string.IsNullOrEmpty(Player.RoundRecords.Status)) RetryRecords();
     }
 
     private void StartBattle()
