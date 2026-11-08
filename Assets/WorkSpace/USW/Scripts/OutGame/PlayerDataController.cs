@@ -533,6 +533,13 @@ public class PlayerDataController : IDisposable, Global.IClearable
         if ((long)existing + count < 0 || (long)existing + count > int.MaxValue) return;
         AddPurchasedUnit(_data, id, count); SaveAndRefresh();
     }
+    public async UniTask<bool> ClaimRoundRewardAsync(RoundReachRewards.Definition reward)
+    {
+        if (!IsReady || !Player.RoundRecords.OwnsAccount || Player.RoundRecords.Account != _account) return false;
+        if (!RoundReachRewards.Apply(_data, reward, Player.RoundRecords.GetBest("NORMAL"))) return false;
+        SaveAndRefresh();
+        return await TrySaveAsync();
+    }
     public async UniTask<bool> GrantRewardAsync(RewardCatalog catalog, string grantId, RewardAmount[] rewards)
     {
         if (!IsReady) return false;

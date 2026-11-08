@@ -23,7 +23,11 @@ public static class Chart
         _probDataCache.Clear();
 
         // 1. 차트 리스트 로드
-        var chartBro = Backend.Chart.GetChartListV2();
+        var charts = new UniTaskCompletionSource<BackendReturnObject>();
+        var probabilities = new UniTaskCompletionSource<BackendReturnObject>();
+        Backend.Chart.GetChartListV2(result => charts.TrySetResult(result));
+        Backend.Probability.GetProbabilityCardListV2(result => probabilities.TrySetResult(result));
+        var (chartBro, probBro) = await UniTask.WhenAll(charts.Task, probabilities.Task);
         if (chartBro.IsSuccess())
         {
             JsonData rows = chartBro.FlattenRows();
@@ -40,7 +44,6 @@ public static class Chart
         }
 
         // 2. 확률 리스트 로드
-        var probBro = Backend.Probability.GetProbabilityCardListV2();
         if (probBro.IsSuccess())
         {
             JsonData rows = probBro.FlattenRows();
@@ -62,7 +65,7 @@ public static class Chart
     /// <summary>
     /// 차트 이름으로 실제 데이터(JsonData)를 가져옵니다.
     /// </summary>
-    public static JsonData GetChartByName(string chartName)
+    public static async UniTask<JsonData> GetChartByNameAsync(string chartName)
     {
         if (!_chartNameIdMap.TryGetValue(chartName, out string chartId))
         {
@@ -73,7 +76,9 @@ public static class Chart
         if (_chartDataCache.TryGetValue(chartId, out JsonData cachedData))
             return cachedData;
 
-        var bro = Backend.Chart.GetChartContents(chartId);
+        var completion = new UniTaskCompletionSource<BackendReturnObject>();
+        Backend.Chart.GetChartContents(chartId, result => completion.TrySetResult(result));
+        var bro = await completion.Task;
         if (bro.IsSuccess())
         {
             JsonData data = bro.FlattenRows();
@@ -88,7 +93,7 @@ public static class Chart
     /// <summary>
     /// 확률 테이블 이름으로 실제 데이터(JsonData)를 가져옵니다.
     /// </summary>
-    public static JsonData GetProbabilityDataByName(string probName)
+    public static async UniTask<JsonData> GetProbabilityDataByNameAsync(string probName)
     {
         if (!_probNameIdMap.TryGetValue(probName, out string probId))
         {
@@ -99,7 +104,9 @@ public static class Chart
         if (_probDataCache.TryGetValue(probId, out JsonData cachedData))
             return cachedData;
 
-        var bro = Backend.Probability.GetProbabilityContents(probId);
+        var completion = new UniTaskCompletionSource<BackendReturnObject>();
+        Backend.Probability.GetProbabilityContents(probId, result => completion.TrySetResult(result));
+        var bro = await completion.Task;
         if (bro.IsSuccess())
         {
             JsonData data = bro.FlattenRows();

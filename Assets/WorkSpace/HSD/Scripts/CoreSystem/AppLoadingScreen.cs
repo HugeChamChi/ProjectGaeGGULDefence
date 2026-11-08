@@ -33,19 +33,41 @@ public sealed class AppLoadingScreen : MonoBehaviour
     [Inject] private AppInitialization _initialization;
     [Inject] private IngameTutorialProgress _tutorialProgress;
     private bool _loading;
+    private bool _shopTest;
     private float _progress;
     private float _reportedProgress;
 
     private void Awake()
     {
+        _shopTest = SceneManager.GetActiveScene().name == "ShopTestTitle";
+        if (_shopTest)
+        {
+            _lobbyScene = "ShopTestLobby";
+            _startupMessage = _returningMessage = "상점 테스트 준비 중…";
+            foreach (var image in _cover.GetComponentsInChildren<Image>(true))
+                if (image.name == "LobbyBackground")
+                { image.sprite = null; image.color = new Color(.18f, .06f, .32f, 1f); }
+            var title = new GameObject("ShopTestBuildLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+            title.transform.SetParent(_cover.transform, false);
+            var text = title.GetComponent<TextMeshProUGUI>();
+            text.font = _message.font;
+            text.text = "SHOP TEST\n" + Application.version;
+            text.fontSize = 56;
+            text.alignment = TextAlignmentOptions.Center;
+            text.raycastTarget = false;
+            var rect = title.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(.1f, .7f);
+            rect.anchorMax = new Vector2(.9f, .9f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+        }
         if (_retryButton != null) _retryButton.onClick.AddListener(BeginStartup);
-        if (SceneManager.GetActiveScene().name == BootSceneName) Show(StartupMessage);
+        if (_shopTest || SceneManager.GetActiveScene().name == BootSceneName) Show(StartupMessage);
         else Hide();
     }
 
     private void Start()
     {
-        if (SceneManager.GetActiveScene().name == BootSceneName) BeginStartup();
+        if (_shopTest || SceneManager.GetActiveScene().name == BootSceneName) BeginStartup();
     }
 
     private string StartupMessage => _tutorialProgress != null && _tutorialProgress.IsCompleted ? _returningMessage : _startupMessage;
@@ -66,22 +88,33 @@ public sealed class AppLoadingScreen : MonoBehaviour
             // Tutorial completion is account-owned and cannot be decided before account restore.
             await _initialization.InitializeAsync(token);
             ReportProgress(_initializedProgress);
-            if (_tutorialProgress.IsCompleted)
+            if (_shopTest || _tutorialProgress.IsCompleted)
             {
-                await _scenes.TransitionToSceneAsync(_lobbyScene).AttachExternalCancellation(token);
-                Hide();
+                await _scenes.TransitionToSceneAsync(_lobbyScene, afterLoad: () =>
+                {
+                    ReportProgress(1f);
+                    Hide();
+                    return UniTask.CompletedTask;
+                }).AttachExternalCancellation(token);
             }
             else
             {
-                await _scenes.TransitionToSceneAsync(_tutorialScene).AttachExternalCancellation(token);
-                ReportProgress(_sceneLoadedProgress);
-                // The tutorial releases the cover after its initializer and unit preloads finish.
+                await _scenes.TransitionToSceneAsync(_tutorialScene, afterLoad: async () =>
+                {
+                    ReportProgress(_sceneLoadedProgress);
+                    var tutorial = FindFirstObjectByType<IngameTutorialDirector>();
+                    if (tutorial == null) throw new InvalidOperationException("Tutorial director missing.");
+                    await tutorial.EntryPreparation.AttachExternalCancellation(token);
+                    ReportProgress(1f);
+                    // Remove the boot cover while the persistent transition is still opaque.
+                    Hide();
+                }).AttachExternalCancellation(token);
             }
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
         {
-            Show(_failureMessage);
+            Show(_shopTest ? "상점 테스트 로딩 실패\n" + error.Message : _failureMessage);
             if (_progressBar != null) _progressBar.SetActive(false);
             if (_retryButton != null) _retryButton.gameObject.SetActive(true);
             Debug.LogWarning("[AppLoadingScreen] Startup preparation failed: " + error.Message);

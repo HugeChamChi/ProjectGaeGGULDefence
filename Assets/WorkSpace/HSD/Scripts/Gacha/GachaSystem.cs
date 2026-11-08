@@ -54,7 +54,7 @@ public class GachaSystem<T> where T : IGachaData
     {
         try
         {
-            JsonData rows = Chart.GetChartByName(_costChartName);
+            JsonData rows = await Chart.GetChartByNameAsync(_costChartName);
             if (rows != null)
             {
                 for (int i = 0; i < rows.Count; i++)

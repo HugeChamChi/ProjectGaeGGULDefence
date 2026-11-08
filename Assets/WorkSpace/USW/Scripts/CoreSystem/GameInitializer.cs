@@ -100,8 +100,6 @@ public class GameInitializer : IInitializable, IAsyncStartable
 
     private async UniTask PrepareAsync(System.Threading.CancellationToken cancellation)
     {
-        // Combat sheets do not block login/lobby. Load them before any battle starts.
-        if (!_gameDataManager.IsLoaded) await _gameDataManager.LoadAllAsync(cancellation);
         // Direct in-game/tutorial entry can skip the title's Table initialization.
         await Table.Projectile.InitializeAsync().AttachExternalCancellation(cancellation);
         _globalUIManager.ReportLoadingProgress(0.65f, "전투 데이터 준비 중");

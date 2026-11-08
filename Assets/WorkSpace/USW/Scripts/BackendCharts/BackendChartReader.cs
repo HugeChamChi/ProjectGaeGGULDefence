@@ -13,17 +13,34 @@ namespace GGD.BackendCharts
     public static class BackendChartReader
     {
         private static readonly SemaphoreSlim CacheGate = new SemaphoreSlim(1, 1);
+        private static Dictionary<string, JsonData> sessionCharts;
 
-        public static async UniTask<JsonData> ReadAsync(string chartName, CancellationToken token)
+        // Feature loaders keep their definitions until restart; share the same CDN snapshot.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetSession() => sessionCharts = null;
+
+        private static Dictionary<string, JsonData> SelectCharts(string[] names)
         {
-            var charts = await ReadManyAsync(new[] { chartName }, token);
+            var selected = new Dictionary<string, JsonData>();
+            foreach (string name in names)
+            {
+                if (!sessionCharts.TryGetValue(name, out var rows))
+                    throw new InvalidOperationException("Chart contents unavailable: " + name);
+                selected.Add(name, rows);
+            }
+            return selected;
+        }
+
+        public static async UniTask<JsonData> ReadAsync(string chartName, CancellationToken token, bool refresh = false)
+        {
+            var charts = await ReadManyAsync(new[] { chartName }, token, refresh);
             return charts[chartName];
         }
 
-        public static UniTask<Dictionary<string, JsonData>> ReadManyAsync(string[] chartNames, CancellationToken token)
-            => ReadCoreAsync(chartNames, token).AttachExternalCancellation(token);
+        public static UniTask<Dictionary<string, JsonData>> ReadManyAsync(string[] chartNames, CancellationToken token, bool refresh = false)
+            => ReadCoreAsync(chartNames, token, refresh).AttachExternalCancellation(token);
 
-        private static async UniTask<Dictionary<string, JsonData>> ReadCoreAsync(string[] chartNames, CancellationToken token)
+        private static async UniTask<Dictionary<string, JsonData>> ReadCoreAsync(string[] chartNames, CancellationToken token, bool refresh)
         {
             token.ThrowIfCancellationRequested();
             string requestedCharts = string.Join(", ", chartNames);
@@ -32,6 +49,7 @@ namespace GGD.BackendCharts
             try
             {
                 token.ThrowIfCancellationRequested();
+                if (!refresh && sessionCharts != null) return SelectCharts(chartNames);
                 var listing = new UniTaskCompletionSource<BackendContentTableReturnObject>();
                 Backend.CDN.Content.Table.Get(response => listing.TrySetResult(response));
                 var list = await listing.Task;
@@ -74,6 +92,20 @@ namespace GGD.BackendCharts
                         throw new InvalidOperationException("Chart contents unavailable: " + pair.Key);
                     charts.Add(pair.Key, content.contentJson);
                 }
+                // Update already returned all applied charts, so later feature reads need no
+                // additional list request or cache update. Exclude invalid/ambiguous entries.
+                var snapshot = new Dictionary<string, JsonData>();
+                var seen = new HashSet<string>();
+                foreach (var table in tables)
+                {
+                    if (!seen.Add(table.chartName)) { snapshot.Remove(table.chartName); continue; }
+                    if (contentsById.TryGetValue(table.chartId, out var content)
+                        && content.selectedChartFileId == table.selectedChartFileId
+                        && !string.IsNullOrEmpty(table.selectedChartFileId) && table.selectedChartFileId != "0"
+                        && string.IsNullOrEmpty(content.errorString))
+                        snapshot.Add(table.chartName, content.contentJson);
+                }
+                sessionCharts = snapshot;
                 Debug.Log(downloadCount == 0
                     ? $"[BackendChart] 변경사항이 없어 기존 데이터를 적용합니다. (요청 차트: {requestedCharts})"
                     : $"[BackendChart] 신규 또는 변경된 차트 {downloadCount}개를 다운로드했습니다. 데이터를 적용합니다. (요청 차트: {requestedCharts})");

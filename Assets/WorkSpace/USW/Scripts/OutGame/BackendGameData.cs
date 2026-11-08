@@ -241,6 +241,7 @@ public class BackendGameData
             WeeklyShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("WeeklyShopPurchases", "[]")),
             ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
             ShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("ShopPurchases", "[]")),
+            RoundRewardClaims = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("RoundRewardClaims", "[]")) ?? new(),
             CompletedTutorials = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("CompletedTutorials", "[]")),
             SelectedChiefId = data.GetInt("SelectedChiefId", -1),
             SelectedIconId = data.GetInt("SelectedIconId", -1),
@@ -287,6 +288,7 @@ public class BackendGameData
         param.Add("WeeklyShopPurchases", JsonMapper.ToJson(data.WeeklyShopPurchases));
         param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
         param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
+        param.Add("RoundRewardClaims", JsonMapper.ToJson(data.RoundRewardClaims));
         param.Add("CompletedTutorials", JsonMapper.ToJson(data.CompletedTutorials));
         param.Add("SelectedChiefId", data.SelectedChiefId);
         param.Add("SelectedIconId", data.SelectedIconId);

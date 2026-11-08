@@ -3,6 +3,8 @@
 [System.Serializable]
 public class PlayerData
 {
+    /// <summary>Stable chart reward keys, saved atomically with the granted balances.</summary>
+    public System.Collections.Generic.List<string> RoundRewardClaims = new();
     public UpgradeProgressData UpgradeProgress = new();
     /// <summary>Last absolute snapshot identifier, for retry acknowledgement and local journal reconciliation.</summary>
     public string SaveId = string.Empty;

@@ -24,20 +24,13 @@ public sealed class LobbyBattleView : MonoBehaviour
     [SerializeField] private Sprite[] _bossSprites;
     [SerializeField] private Sprite _goldIcon;
     [SerializeField] private Sprite _diamondIcon;
-    [Tooltip("Placeholder reach rewards shown on the track (gold/diamond only). Claiming is not implemented.")]
-    [SerializeField] private List<LobbyBattleMilestone> _milestoneRewards = new List<LobbyBattleMilestone>
-    {
-        new LobbyBattleMilestone(10, LobbyBattleRewardKind.Gold, 1000),
-        new LobbyBattleMilestone(20, LobbyBattleRewardKind.Diamond, 50),
-        new LobbyBattleMilestone(30, LobbyBattleRewardKind.Gold, 3000),
-        new LobbyBattleMilestone(40, LobbyBattleRewardKind.Diamond, 100),
-        new LobbyBattleMilestone(50, LobbyBattleRewardKind.Gold, 5000),
-        new LobbyBattleMilestone(60, LobbyBattleRewardKind.Diamond, 200),
-        new LobbyBattleMilestone(70, LobbyBattleRewardKind.Gold, 10000),
-        new LobbyBattleMilestone(80, LobbyBattleRewardKind.Diamond, 300),
-        new LobbyBattleMilestone(90, LobbyBattleRewardKind.Gold, 20000),
-        new LobbyBattleMilestone(100, LobbyBattleRewardKind.Diamond, 500),
-    };
+    private RoundReachRewards.Definition[] _roundRewards = System.Array.Empty<RoundReachRewards.Definition>();
+    private readonly List<GameObject> _rewardBubbles = new();
+    private readonly List<System.Action> _refreshRewards = new();
+    private System.Threading.CancellationTokenSource _rewardLoad;
+    private bool _claimingReward;
+    private bool _rewardsReady;
+    private string _rewardStatus = "보상 불러오는 중";
     [SerializeField] private Button _bestButton;
     [SerializeField] private TMP_Text _bestValue;
     [SerializeField] private Button _startButton;
@@ -120,11 +113,13 @@ public sealed class LobbyBattleView : MonoBehaviour
         _playerData = Player.PlayerData;
         if (_playerData != null) _playerData.OnUpdateUI += RefreshStamina;
         RefreshStamina(_playerData?.Data);
+        LoadRewardsAsync().Forget();
         if (_built) StartHover();
     }
 
     private void OnDisable()
     {
+        _rewardLoad?.Cancel(); _rewardLoad?.Dispose(); _rewardLoad = null;
         Player.RoundRecords.OnChanged -= RefreshRecord;
         if (_playerData != null) _playerData.OnUpdateUI -= RefreshStamina;
         _playerData = null;
@@ -157,14 +152,17 @@ public sealed class LobbyBattleView : MonoBehaviour
 
     private void RefreshRecord()
     {
+        RefreshRewards();
         int? best = Player.RoundRecords.GetBest(RecordMode);
         if (!_built || best != _bestRound) ShowBestRound(best);
         if (!_built) return;
         _positionLabel.text = best.HasValue ? $"{best.Value} 라운드" : "도전 준비";
         if (!string.IsNullOrEmpty(Player.RoundRecords.Status))
             _positionLabel.text += "\n<size=65%>" + Player.RoundRecords.Status + "</size>";
+        if (!string.IsNullOrEmpty(_rewardStatus))
+            _positionLabel.text += "\n<size=65%>" + _rewardStatus + "</size>";
         ((RectTransform)_positionLabel.transform.parent).sizeDelta = new Vector2(340f,
-            string.IsNullOrEmpty(Player.RoundRecords.Status) ? 58f : 88f);
+            string.IsNullOrEmpty(Player.RoundRecords.Status) && string.IsNullOrEmpty(_rewardStatus) ? 58f : 110f);
     }
 
     private void RetryRecords()
@@ -185,6 +183,7 @@ public sealed class LobbyBattleView : MonoBehaviour
 
     private void RefreshStamina(PlayerData data)
     {
+        RefreshRewards();
         if (_staminaCostText == null) return;
         if (_staminaConfig == null) { _staminaCostText.text = "—"; return; }
         _staminaCostText.text = _staminaConfig.stageEntryCost.ToString();
@@ -286,6 +285,7 @@ public sealed class LobbyBattleView : MonoBehaviour
             if (round % _milestoneStep == 0) BuildMilestone(round);
         }
         BuildChief();
+        foreach (var reward in _roundRewards) BuildRewardBubble(reward);
     }
 
     private void BuildMilestone(int round)
@@ -295,24 +295,99 @@ public sealed class LobbyBattleView : MonoBehaviour
         var boss = Image("Boss" + round, _content, sprite, index == 0 ? Color.white : new Color(0.09f, 0.07f, 0.15f, 0.7f));
         boss.preserveAspect = true;
         PlaceRound(boss.rectTransform, round, new Vector2(0f, 118f), new Vector2(174f, 174f));
-        BuildRewardBubble(round);
+
     }
 
     // Reward card at the boss's upper right, between this round's dashes and the next marker.
-    private void BuildRewardBubble(int round)
+    private void BuildRewardBubble(RoundReachRewards.Definition reward)
     {
-        LobbyBattleMilestone reward = _milestoneRewards.Find(m => m.Round == round);
-        if (reward == null) return;
+        int round = reward.Round;
         var bubble = new GameObject("Milestone" + round, typeof(RectTransform)).GetComponent<RectTransform>();
         bubble.SetParent(_content, false);
+        _rewardBubbles.Add(bubble.gameObject);
         PlaceRound(bubble, round, BubbleOffset, BubbleSize);
         BubblePart("BodyOutline", bubble, BubbleOutline, BubbleSize + Vector2.one * BubbleBorder * 2f);
         BubblePart("BodyFill", bubble, BubbleFill, BubbleSize);
-        var icon = Image("RewardIcon", bubble, reward.Kind == LobbyBattleRewardKind.Diamond ? _diamondIcon : _goldIcon, Color.white);
+        var icon = Image("RewardIcon", bubble, reward.Currency == "Diamond" ? _diamondIcon : _goldIcon, Color.white);
         icon.preserveAspect = true;
         Center(icon.rectTransform, new Vector2(0f, 16f), new Vector2(76f, 76f));
         var amount = Text("Amount", bubble, reward.Amount.ToString("N0"), _labelFont, 26f, BubbleOutline);
         Center(amount.rectTransform, new Vector2(0f, -38f), new Vector2(BubbleSize.x, 32f));
+        var status = Text("ClaimStatus", bubble, "", _labelFont, 22f, Color.white);
+        Center(status.rectTransform, new Vector2(0f, -82f), new Vector2(220f, 40f));
+        var hit = Image("ClaimHit", bubble, null, new Color(1, 1, 1, 0));
+        Center(hit.rectTransform, Vector2.zero, BubbleSize);
+        var button = hit.gameObject.AddComponent<Button>();
+        button.targetGraphic = hit;
+        button.onClick.AddListener(() => ClaimRewardAsync(reward, status).Forget());
+        _refreshRewards.Add(() => {
+            bool claimed = _playerData?.Data?.RoundRewardClaims?.Contains(reward.RewardKey) == true;
+            bool ready = _rewardsReady && _playerData?.IsReady == true && (Player.RoundRecords.GetBest(RecordMode) ?? 0) >= round;
+            button.interactable = !claimed && ready && !_claimingReward;
+            status.text = claimed ? (_playerData.IsDirty ? "저장 대기" : "수령 완료") : ready ? "수령하기" : round + "R 도달 시";
+        });
+        RefreshRewards();
+    }
+
+    private void RefreshRewards()
+    {
+        foreach (var refresh in _refreshRewards) refresh();
+    }
+
+    private async UniTaskVoid LoadRewardsAsync()
+    {
+        _rewardsReady = false;
+        _rewardStatus = "보상 불러오는 중";
+        RefreshRecord();
+        _rewardLoad?.Cancel(); _rewardLoad?.Dispose();
+        _rewardLoad = new System.Threading.CancellationTokenSource();
+        var source = _rewardLoad;
+        var token = source.Token;
+        try
+        {
+            source.CancelAfterSlim(System.TimeSpan.FromSeconds(30), DelayType.Realtime);
+            var rewards = await RoundReachRewards.LoadAsync(token);
+            token.ThrowIfCancellationRequested();
+            _roundRewards = rewards;
+            await UniTask.WaitUntil(() => _built, cancellationToken: token);
+            _refreshRewards.Clear();
+            foreach (var bubble in _rewardBubbles) {
+                _roundMarkers.RemoveAll(m => m.Rect == bubble.transform);
+                Destroy(bubble);
+            }
+            _rewardBubbles.Clear();
+            foreach (var reward in rewards) {
+                _maxRound = Mathf.Max(_maxRound, reward.Round);
+                BuildRewardBubble(reward);
+            }
+            UpdateTrackLayout();
+            _rewardsReady = true; _rewardStatus = "";
+            RefreshRecord();
+        }
+        catch (System.OperationCanceledException) {
+            if (source == _rewardLoad && isActiveAndEnabled) {
+                _rewardStatus = "보상 조회 시간 초과 · 탭을 다시 열어 주세요";
+                RefreshRecord();
+            }
+        }
+        catch (System.Exception error) {
+            _rewardStatus = "보상 조회 실패 · 탭을 다시 열어 주세요";
+            RefreshRecord();
+            Debug.LogWarning("[RoundRewards] " + error.Message);
+        }
+    }
+
+    private async UniTaskVoid ClaimRewardAsync(RoundReachRewards.Definition reward, TMP_Text status)
+    {
+        if (_claimingReward || _playerData == null) return;
+        _claimingReward = true; RefreshRewards();
+        try {
+            bool saved = await _playerData.ClaimRoundRewardAsync(reward);
+            RefreshRewards();
+            if (!saved && status != null) status.text = "저장 확인 후 재시도";
+        }
+        catch (System.Exception error) { Debug.LogWarning("[RoundRewards] " + error.Message); }
+        finally { _claimingReward = false; RefreshRewards(); }
     }
 
     private void BubblePart(string name, RectTransform parent, Color color, Vector2 size)
