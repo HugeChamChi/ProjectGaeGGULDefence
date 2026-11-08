@@ -177,7 +177,6 @@ namespace GaeGGUL.DeckUpgrade
                 _selector.BuildView();
                 if (design != null) { design.Apply(); _statsTabs = design.Tabs; }
             }
-            BuildTestTokenButton(page);
             _presenter.OnChanged += Refresh;
             Refresh(); ForceText();
         }
@@ -193,58 +192,6 @@ namespace GaeGGUL.DeckUpgrade
             builder.Register<DeckUpgradeService>(Lifetime.Scoped);
             _previewScope = builder.Build();
             _service = _previewScope.Resolve<DeckUpgradeService>();
-        }
-
-        private Button testTokenButton;
-        private TMP_Text testTokenLabel;
-        private Button testUnlockButton, testDeleteButton;
-        private TMP_Text testUnlockLabel, testDeleteLabel;
-        private void BuildTestTokenButton(RectTransform page)
-        {
-            var panel = Box("TestTokenGrant", page, C("254A55"), style.RoundedFill);
-            Place(panel, 710, _embeddedInLobby ? 32 : 224, 330, 62);
-            panel.GetComponent<Image>().raycastTarget = true;
-            testTokenButton = panel.gameObject.AddComponent<Button>();
-            testTokenButton.onClick.AddListener(GrantTestTokens);
-            testTokenLabel = Text("Label", "강화석 획득 +10 (테스트)", panel, 8, 0, 314, 62, 24, Color.white, TextAlignmentOptions.Center);
-            testUnlockButton = BuildOwnershipButton(page, "TestUnlockAll", "전체 해금", 710, C("254A55"), () => SetTestOwnership(true), out testUnlockLabel);
-            testDeleteButton = BuildOwnershipButton(page, "TestDeleteAll", "전체 삭제", 880, C("663A46"), () => SetTestOwnership(false), out testDeleteLabel);
-            page.Find("UnitDetailsPopup").SetAsLastSibling();
-        }
-
-        private Button BuildOwnershipButton(RectTransform page, string name, string label, float x, Color color, UnityEngine.Events.UnityAction action, out TMP_Text text)
-        {
-            var panel = Box(name, page, color, style.RoundedFill);
-            Place(panel, x, _embeddedInLobby ? -38 : 154, 160, 62);
-            panel.GetComponent<Image>().raycastTarget = true;
-            var button = panel.gameObject.AddComponent<Button>(); button.onClick.AddListener(action);
-            text = Text("Label", label, panel, 4, 0, 152, 62, 24, Color.white, TextAlignmentOptions.Center);
-            text.enableAutoSizing = true; text.fontSizeMin = 16; text.fontSizeMax = 24;
-            return button;
-        }
-
-        private async void SetTestOwnership(bool owned)
-        {
-            if (_service.IsBusy) return;
-            var ids = new List<string>();
-            foreach (var data in units) ids.Add(PlayerCharacterManager.UnitId(data.characterId.Get(Tier.Normal)));
-            ids.Add(PlayerCharacterManager.ChiefId(chief.ChieftainId));
-            var label = owned ? testUnlockLabel : testDeleteLabel;
-            label.text = "저장 중…";
-            bool saved = await _service.SetTestCharacterOwnershipAsync(ids.ToArray(), owned);
-            if (this == null) return;
-            label.text = saved ? (owned ? "전체 해금" : "전체 삭제") : "저장 확인 필요";
-        }
-
-        private async void GrantTestTokens()
-        {
-            if (_service.IsBusy) return;
-            testTokenButton.interactable = false;
-            testTokenLabel.text = "지급 중…";
-            bool saved = await _service.GrantTestTokensAsync();
-            if (this == null) return;
-            testTokenLabel.text = saved ? "강화석 획득 +10 (테스트)" : "저장 확인 필요 · 재접속";
-            testTokenButton.interactable = saved;
         }
 
         private void OnDestroy()
@@ -475,12 +422,6 @@ namespace GaeGGUL.DeckUpgrade
 
         private void Refresh()
         {
-            if (testUnlockButton != null)
-            {
-                bool ready = !_service.IsBusy && _service.UsesAccountData && Player.PlayerData.IsReady && Player.Characters.IsReady;
-                testUnlockButton.interactable = testDeleteButton.interactable = ready;
-                testTokenButton.interactable = !_service.IsBusy && (!_service.UsesAccountData || Player.PlayerData.IsReady);
-            }
             for (int i = 0; i < units.Length; i++)
             {
                 var item = _presenter.GetItem(i);
