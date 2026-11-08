@@ -1,7 +1,17 @@
 'use strict';
 globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   const S = STUDIO_SCHEMAS;
+  S.RoundRewards = {label:'라운드 도달 보상',keys:['RewardKey'],note:'NORMAL 최고 도달 라운드 기준 계정당 1회 수령. 지급 후 RewardKey를 변경하면 새 보상으로 간주합니다. 뒤끝 DEV_RoundRewards / LIVE_RoundRewards에 업로드하세요.',fields:[
+    {key:'RewardKey',label:'보상 고유 키',type:'id',required:true},
+    {key:'Round',label:'도달 라운드',type:'int',min:1,max:2147483647},
+    {key:'Currency',label:'보상 재화',type:'enum',values:['Gold','Diamond']},
+    {key:'Amount',label:'지급 수량',type:'int',min:1,max:2147483647}
+  ]};
+  const roundDefaults = [1000,50,3000,100,5000,200,10000,300,20000,500].map((Amount,i)=>({RewardKey:'normal_round_'+((i+1)*10),Round:(i+1)*10,Currency:i%2?'Diamond':'Gold',Amount}));
+  STUDIO_SEED.tables.RoundRewards = roundDefaults;
+
   globalThis.STUDIO_NAV = [
+    {id:'roundRewards',label:'라운드 도달 보상',icon:'★',tables:['RoundRewards']},
     {id:'overview',label:'작업 안내',icon:'◈',tables:[]},
     {id:'research',label:'영구강화',icon:'⌘',tables:['ResearchNode','ResearchTree']},
     {id:'units',label:'유닛강화',icon:'⬡',tables:['Unit','UnitUpgrade','UnitMilestone']},
@@ -29,6 +39,7 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   function upgrade(p){
     if(!p?.tables?.Attendance)return p;
     const copy=Studio.clone(p);
+    copy.tables.RoundRewards ??= Studio.clone(roundDefaults);
     for(const party of copy.tables.Party||[])if(!Object.hasOwn(party,'ChiefId'))party.ChiefId=chiefKey(party.ChiefAsset);
     for(const r of copy.tables.Attendance)if(!Object.hasOwn(r,'Rewards')){
       const group=copy.tables.RewardGroup?.find(g=>g.RewardGroupId===r.RewardGroupId);
@@ -91,6 +102,8 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   }
   function validate(p){
     const issues=[];
+    const rounds=new Set();
+    (p.tables.RoundRewards||[]).forEach((r,index)=>{if(rounds.has(r.Round))issues.push({table:'RoundRewards',index,field:'Round',message:'같은 라운드의 보상은 한 행으로 설정하세요.',severity:'error'});rounds.add(r.Round);});
     p.tables.UnitMilestone.forEach((b,index)=>{
       const add=(field,message)=>issues.push({table:'UnitMilestone',index,field,message,severity:'error'});
       let params;try{params=JSON.parse(b.EffectParams);if(!params||Array.isArray(params)||typeof params!=='object')throw Error();JSON.stringify(params,(_,v)=>{if(typeof v==='number'&&!Number.isFinite(v))throw Error();return v;});}catch{add('EffectParams','효과 수치는 유한한 숫자를 사용하는 JSON 객체여야 합니다. 예: {"percent":20}');}
@@ -103,15 +116,15 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   globalThis.PlannerScope={active,chiefPaths,overview(p){
     const groups=[
       ['강화 밸런스',['units','research']],['출석',['missions']],
-      ['기본 설정',['shops','party','economy','profile','tutorial']]
+      ['기본 설정',['roundRewards','shops','party','economy','profile','tutorial']]
     ];
-    return `<div class="scope-heading"><h2>현재 기능 작업실</h2><p>왼쪽에서 기능을 고르고, 위쪽 세부 항목에서 편집하세요.</p></div>${groups.map(([label,ids])=>`<section class="panel scope-group"><div class="panel-head"><h2>${label}</h2></div><div class="workspace-grid">${ids.map(id=>{const n=STUDIO_NAV.find(n=>n.id===id);return `<button data-nav="${id}"><strong>${n.icon} ${n.label}</strong><small>${n.tables.map(t=>`${esc(S[t].label)} ${p.tables[t].length}`).join(' · ')}</small></button>`;}).join('')}</div></section>`).join('')}<div class="scope-note">현재 프로젝트에서 확인한 데이터만 표시합니다. 유닛강화는 기존 시안의 수치이며, Excel 추출 후 게임에 적용하는 연결은 별도입니다.</div>`;
+    return `<div class="scope-heading"><h2>현재 기능 작업실</h2><p>왼쪽에서 기능을 고르고, 위쪽 세부 항목에서 편집하세요.</p></div>${groups.map(([label,ids])=>`<section class="panel scope-group"><div class="panel-head"><h2>${label}</h2></div><div class="workspace-grid">${ids.map(id=>{const n=STUDIO_NAV.find(n=>n.id===id);return `<button data-nav="${id}"><strong>${n.icon} ${n.label}</strong><small>${n.tables.map(t=>`${esc(S[t].label)} ${p.tables[t].length}`).join(' · ')}</small></button>`;}).join('')}</div></section>`).join('')}<div class="scope-note">계정 경험치와 전투 EXP는 밸런스 편집 → 계정 성장에서 관리합니다. 기본 설정의 이전 계정 표는 JSON에 보존되며 편집·Excel 출력에서 제외됩니다. 게임 적용은 기능별 절차를 따릅니다.</div>`;
   },workspace:'settings',renderTabs(section){
     const workspace=this.workspace;
-    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화']]:workspace==='rewards'?[['missions','이벤트 · 미션']]:[];
+    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화']]:workspace==='rewards'?[['missions','이벤트 · 미션'],['roundRewards','라운드 도달 보상']]:[];
     document.getElementById('workspace-tabs').innerHTML=options.map(([id,label])=>`<button class="${section===id?'active':''}" data-workspace-section="${id}">${label}</button>`).join('');
     if(options.length)document.getElementById('page-title').textContent=workspace==='enhancement'?'강화 밸런스':'보상·출석';
-    if(workspace==='rewards')document.getElementById('page-title').textContent='이벤트';
+    if(workspace==='rewards')document.getElementById('page-title').textContent=section==='roundRewards'?'라운드 도달 보상':'이벤트';
   }};
   return {
     prepare:upgrade, decorate, validationProject:current, validate,

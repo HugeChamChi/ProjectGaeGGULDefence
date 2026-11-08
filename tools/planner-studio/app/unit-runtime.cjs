@@ -20,6 +20,13 @@ function unitRuntime(project) {
     };
   });
   if (!units.length || new Set(units.map(u => u.AssetKey)).size !== units.length) throw Error('유닛 매핑이 없거나 중복됩니다.');
-  return {SchemaVersion:1, Units:units};
+  const UpgradeCosts = shaped.tables.Unit.flatMap(u => {
+    const mapping = JSON.parse(u.BackendIds), key = u.Kind === 'Chief' ? 'chief:' + mapping : 'unit:' + mapping.normal;
+    return shaped.tables.UnitUpgrade.filter(r => r.UnitId === u.UnitId).map(r => {
+      if (r.Costs.length !== 1 || !['Gold','Diamond','UpgradeTokenA'].includes(r.Costs[0].itemId) || !Number.isSafeInteger(r.Costs[0].amount) || r.Costs[0].amount <= 0 || r.Costs[0].amount > 2147483647) throw Error('강화 비용은 Gold, Diamond, UpgradeTokenA 중 하나와 양의 정수 수량을 설정하세요.');
+      return {Id:key, TargetLevel:r.TargetLevel, ItemId:r.Costs[0].itemId, Amount:r.Costs[0].amount};
+    });
+  });
+  return {SchemaVersion:1, Units:units, UpgradeCosts};
 }
 module.exports = {unitRuntime};

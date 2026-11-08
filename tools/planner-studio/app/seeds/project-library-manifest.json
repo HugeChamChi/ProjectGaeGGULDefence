@@ -44,10 +44,11 @@
       ]
     },
     "AccountSettings.xlsx": {
-      "fingerprint": "77b9236f30b0d7cb59cc1794cd69901e11fb1423d1dc83609ca4784c1fed97c0",
+      "fingerprint": "dd6a41c5bb645c2e0419cee2b4f7e8f41560b064ca5a9484ea9770a37f09cba8",
       "previousFingerprints": [
         "4a7b019abe42641074181dbe1c4ca119599564a045f14fd323be9e2b41d92f65",
-        "77b9236f30b0d7cb59cc1794cd69901e11fb1423d1dc83609ca4784c1fed97c0"
+        "77b9236f30b0d7cb59cc1794cd69901e11fb1423d1dc83609ca4784c1fed97c0",
+        "dd6a41c5bb645c2e0419cee2b4f7e8f41560b064ca5a9484ea9770a37f09cba8"
       ]
     },
     "Profile.xlsx": {
@@ -62,6 +63,12 @@
       "previousFingerprints": [
         "26b322bc9dd61196878d48b031c1e27a6cfb1c6b60d16767c502a3d808b11333",
         "9000b353fe10267d861a635c398b73ed4b6600805a74669bac6d9d7107808de2"
+      ]
+    },
+    "ShopCatalog.xlsx": {
+      "fingerprint": "6b1a4198c13b478d71cd0f9ffce4e29325f71a6f1c7c8b6dcb605923043a1bab",
+      "previousFingerprints": [
+        "6b1a4198c13b478d71cd0f9ffce4e29325f71a6f1c7c8b6dcb605923043a1bab"
       ]
     }
   }

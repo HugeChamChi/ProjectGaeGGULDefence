@@ -12,6 +12,7 @@ const smokePath = argument('--smoke');
 const contentSmokePath = argument('--content-smoke');
 const eventMissionSmokePath = argument('--event-missions-smoke');
 const shopSmokePath = argument('--shop-smoke');
+const roundRewardSmokePath = argument('--round-rewards-smoke');
 const workspace = path.resolve(argument('--workspace') || app.getPath('userData'));
 app.setPath('userData', workspace);
 app.setPath('sessionData', path.join(workspace, 'browser-cache'));
@@ -115,6 +116,7 @@ async function start() {
   if(eventMissionSmokePath)await require('./event-missions-smoke.cjs')({window,app,resultPath:eventMissionSmokePath,workspace,store});
   if (shopSmokePath) await require('./shop-smoke.cjs')({window,app,store,workspace,resultPath:shopSmokePath,atomic});
   if (contentSmokePath) await require('./content-smoke.cjs')({window, app, store, workspace, resultPath:contentSmokePath, atomic});
+  if (roundRewardSmokePath) await require('./round-rewards-smoke.cjs')({window, app, workspace, resultPath:roundRewardSmokePath});
 }
 
 async function smoke() {

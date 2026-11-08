@@ -1,7 +1,15 @@
 'use strict';
 function table(config,kind){
  let rows;
- if(kind==='unitBaseStats')rows=config.Units.flatMap(u=>u.Stats.map(s=>({UnitKey:u.UnitKey,AssetKey:u.AssetKey,Name:u.Name,...s})));
+ if(kind==='roundRewards'){
+  const rows=config.tables.RoundRewards;
+  const headers=['RewardKey','Round','Currency','Amount'];
+  return [headers,...rows.map(r=>headers.map(k=>r[k]))];
+ }
+ else if(kind==='unitBaseStats'){
+  rows=config.Units.flatMap(u=>u.Stats.map(s=>({RecordType:'Stat',UnitKey:u.UnitKey,AssetKey:u.AssetKey,Name:u.Name,...s})));
+  rows.push(...(config.UpgradeCosts||[]).map(r=>({RecordType:'UpgradeCost',CharacterKey:r.Id,TargetLevel:r.TargetLevel,ItemKey:r.ItemId,Amount:r.Amount})));
+ }
  else if(kind==='missions'){
   rows=config.DataBindings.map(r=>({RecordType:'Binding',...r}));rows.push(...config.MissionEvents.map(r=>({RecordType:'Event',...r})));
   for(const {Rewards,...mission} of config.Missions){rows.push({RecordType:'Mission',...mission});Rewards.forEach((r,i)=>rows.push({RecordType:'Reward',MissionKey:mission.MissionKey,RewardIndex:i,ItemKey:r.itemId,Amount:r.amount}));}

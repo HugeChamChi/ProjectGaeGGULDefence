@@ -16,7 +16,7 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     await until('Boolean(window.__studioReady)');
     await run(`document.getElementById('settingsButton').click()`);
     assert.equal(await run(`document.querySelectorAll('#integrationStatus tbody tr').length`),6);
-    assert(await run(`document.getElementById('integrationStatus').textContent.includes('서버 저장·복원·보상 지급 미연결')`));
+    assert(await run(`document.getElementById('integrationStatus').textContent.includes('진행 저장·수령 처리 구현')`));
     checks.push('settings explains per-feature integration limits for team handoff');
     assert.equal(await run(`document.querySelector('#settingsDialog #themeToggle').getAttribute('role')`),'switch');
     assert.equal(await run(`document.documentElement.dataset.theme`),'dark');
@@ -42,8 +42,8 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     checks.push('bonus deployment prepares 30 bonus parents and 30 contracted effects and no PartIndex/description rows');
     await run(`document.getElementById('backendDeploymentButton').click();document.getElementById('backendPrepare').click()`);
     await until(`document.getElementById('backendStatus').textContent.startsWith('파일 준비 완료')`);
-    assert.equal(await run(`document.getElementById('backendChart').textContent`),'DEV_MissionEvents');
-    const missionPrepared=await run(`document.getElementById('backendPath').textContent`);
+    assert.equal(await run(`document.getElementById('backendChart').textContent`),'DEV_Events + DEV_Missions');
+    const missionPrepared=await run(`document.getElementById('backendPath').textContent.split(' / ').at(-1)`);
     assert.equal(JSON.parse(fs.readFileSync(path.join(path.dirname(missionPrepared),'deployment.json'),'utf8')).remoteApplied,false);
     await run(`document.getElementById('backendKind').value='unitBaseStats';document.getElementById('backendKind').dispatchEvent(new Event('change'));document.getElementById('backendPrepare').click()`);
     await until(`document.getElementById('backendStatus').textContent.startsWith('파일 준비 완료')`);
@@ -72,6 +72,9 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     checks.push('deployment history survives UI reload and restores exact release without claiming server verification');
     await run(`document.getElementById('enhancementWorkspaceButton').click()`);
     await until(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]').length===2`);
+    assert(await run(`!document.querySelector('iframe').contentWindow.STUDIO_NAV.some(n=>n.id==='account')`));
+    assert(await run(`!document.querySelector('#contentSubnav [data-section="account"]')`));
+    checks.push('duplicate account editor absent; game-backed account editor retained');
     const tabs=await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]')).map(b=>b.textContent)`);
     assert.deepEqual(tabs,['유닛','영구강화']);checks.push('Enhancement balance has Unit / Permanent tabs');
     const unitKeys=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.Unit.map(u=>u.UnitKey||u.UnitId).sort()`);
