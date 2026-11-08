@@ -7,7 +7,7 @@ import { chartTarget } from './deployment.mjs';
 import { writeChartXlsx, readChartXlsx } from './xlsx.mjs';
 
 export const researchColumns = ['SchemaVersion','ReleaseKey','TreeKey','TreeName','LegacySaveName','ShowLanes','ColumnSpacing','LaneNames','NodeId','Stat','IconAddress','Shape','MaxLevel','ValuePerLevel','Row','Column','Parents','RequireAnyParent','RequiredTotalLevel','ExclusiveGroup','RecommendOrder'];
-const stats = ['AttackPercent','AttackSpeedPercent','CritChance','CritDamage','SkillCooldownReduction','FoodProduction','StartFood','BossDamage','BurnDamage','TotemEffect'];
+const stats = ['AttackPercent','AttackSpeedPercent','CritChance','CritDamage','SkillCooldownReduction','FoodProduction','StartFood','BossDamage','SkillDamage','TotemEffect'];
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 
 export function validateResearch(rows) {

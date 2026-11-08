@@ -16,7 +16,8 @@
         if(!row||typeof row!=='object'||Array.isArray(row))throw Error(`${name} ${index+1}행 형식 오류`);
         const result={};
         for(const f of schema.fields){
-          const value=Object.hasOwn(row,f.key)?row[f.key]:empty(f.type);
+          let value=Object.hasOwn(row,f.key)?row[f.key]:empty(f.type);
+          if(f.type==='stat'&&value==='BurnDamage')value='SkillDamage';
           if(['rewards','costs'].includes(f.type)){
             if(!Array.isArray(value)||value.length>500||value.some(r=>!r||typeof r.itemId!=='string'||(r.amount!==null&&(typeof r.amount!=='number'||!Number.isFinite(r.amount)))))throw Error(`${name}: 아이템 목록 형식 오류`);
             result[f.key]=value.map(r=>({itemId:r.itemId,amount:r.amount}));

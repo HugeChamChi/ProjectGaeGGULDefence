@@ -61,8 +61,8 @@ public class UnitStatsModifier : MonoBehaviour
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out _);
 
     /// <summary>ComputeDamageFrom과 같고, 이번 추첨이 치명타였는지도 알려준다 (데미지 표시용).</summary>
-    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
-        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical);
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
+        => ComputeDamage(baseDamage, projAtkBonusMultiplier, true, out critical, damageMultiplier: damageMultiplier);
 
     /// <summary>Attack-coefficient path; run attack applies once and fixed damage bypasses it.</summary>
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
