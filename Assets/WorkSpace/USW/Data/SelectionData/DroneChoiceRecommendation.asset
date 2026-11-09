@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d820f56494e34efa813a9ecd25e1bbef, type: 3}
+  m_Name: DroneChoiceRecommendation
+  m_EditorClassIdentifier: Assembly-CSharp::ChoiceRecommendationSettings
+  StarterChooseIds: 8d230000a423000096230000b323000093230000ae2300008e2300008f230000a2230000b0230000a0230000

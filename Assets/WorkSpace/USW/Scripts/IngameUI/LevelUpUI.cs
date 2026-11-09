@@ -146,6 +146,13 @@ public class LevelUpUI : MonoBehaviour
             if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
         }
+        // 튜토리얼은 고정 카드라 추천 배지를 붙이지 않는다.
+        if (_tutorialSettings == null)
+        {
+            var recommended = _levelUpManager.GetRecommendations(choices);
+            for (int i = 0; i < _spawnedCards.Count && i < recommended.Length; i++)
+                _spawnedCards[i].SetRecommended(recommended[i]);
+        }
 
         bool fromGauge = !_isRerolling;
         _isRerolling = false;

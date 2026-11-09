@@ -81,6 +81,19 @@ public class LevelUpManager : MonoBehaviour
         }
     }
 
+    /// <summary>제시된 카드마다 추천 배지 여부를 같은 순서로 돌려준다. 분류나 추천 데이터가 없으면 모두 false다.</summary>
+    public bool[] GetRecommendations(IReadOnlyList<LevelUpData> offered)
+    {
+        if (offered == null) return Array.Empty<bool>();
+        var catalog = _selectedPool != null ? _selectedPool.ConceptCatalog : null;
+        if (catalog == null) return new bool[offered.Count];
+        var settings = _selectedPool.Recommendation;
+        var ids = new int[offered.Count];
+        for (int i = 0; i < offered.Count; i++) ids[i] = offered[i] != null ? offered[i].chooseId : 0;
+        return ChoiceRecommendationRule.Evaluate(ids, ChosenIds, catalog.TryGetTags,
+            settings != null ? settings.IsStarter : null);
+    }
+
     /// <summary>확정 프리뷰로 설명을 만들며 반복 조회는 재추첨하지 않는다.</summary>
     public string GetChoiceDescription(LevelUpData card)
         => card == null ? string.Empty : GetFormatter().Format(State.Prepare(card, UnityEngine.Random.Range));
