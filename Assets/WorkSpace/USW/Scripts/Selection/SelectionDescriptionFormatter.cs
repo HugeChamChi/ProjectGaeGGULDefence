@@ -25,7 +25,9 @@ public sealed class SelectionDescriptionFormatter
     public DescriptionSnapshot Capture(SelectionCardSnapshot card, string simple)
     {
         if (card == null) return new DescriptionSnapshot(null, simple);
-        var values = Values(card.CopyDefinition());
+        var definition = card.CopyDefinition();
+        ValidateTemplate(simple, definition);
+        var values = Values(definition);
         return new DescriptionSnapshot((card.DescriptionTemplate ?? string.Empty).Replace("[1~10%]", "{value}%"), simple, values);
     }
 
@@ -46,9 +48,26 @@ public sealed class SelectionDescriptionFormatter
 
     private static Dictionary<string, string> Values(SelectionCardDefinition definition)
     {
-        var values = new Dictionary<string, string>();
+        var result = new Dictionary<string, string>();
+        var ambiguous = new HashSet<string>();
+        void Merge(Dictionary<string, string> values, string scope)
+        {
+            foreach (var pair in values)
+            {
+                result.Add(scope + pair.Key, pair.Value);
+                if (ambiguous.Contains(pair.Key)) continue;
+                if (result.ContainsKey(pair.Key))
+                {
+                    result.Remove(pair.Key);
+                    ambiguous.Add(pair.Key);
+                }
+                else result.Add(pair.Key, pair.Value);
+            }
+        }
+        int effectIndex = 0;
         foreach (var effect in definition.Effects)
         {
+            var values = new Dictionary<string, string>();
             switch (effect)
             {
                 case HackingProductionRollDefinition d:
@@ -109,10 +128,18 @@ public sealed class SelectionDescriptionFormatter
                     values["value"] = Percent(d.Chance);
                     values["count"] = d.ManaCount.ToString(CultureInfo.InvariantCulture); break;
             }
+            Merge(values, "effect" + effectIndex.ToString(CultureInfo.InvariantCulture) + ".");
+            effectIndex++;
         }
+        int commandIndex = 0;
         foreach (var command in definition.Commands)
+        {
+            var values = new Dictionary<string, string>();
             if (command is RefundUpgradeCommandDefinition refund) values["refund"] = Percent(refund.Ratio);
-        return values;
+            Merge(values, "command" + commandIndex.ToString(CultureInfo.InvariantCulture) + ".");
+            commandIndex++;
+        }
+        return result;
     }
     private static string Percent(float ratio) => (ratio * 100f).ToString("0.#", CultureInfo.InvariantCulture);
     private static string Number(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);

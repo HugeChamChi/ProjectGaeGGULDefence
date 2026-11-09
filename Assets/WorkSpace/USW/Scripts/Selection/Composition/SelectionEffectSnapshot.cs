@@ -254,60 +254,61 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
             foreach (var group in card.ExclusiveGroups) if (!groups.Add(group)) throw new ArgumentException("Exclusive selection group conflict: " + group);
             foreach (var effect in card.CopyDefinition().Effects)
             {
+                if (RequiresSingleConfiguration(effect)) Once(effect);
                 switch (effect)
                 {
                     case StatModifierDefinition d: ApplyStat(d); break;
                     case UpgradeDiscountDefinition d:
                         if (_upgradeDiscounts.ContainsKey(card.CardId)) throw new ArgumentException("Multiple upgrade discounts on one card.");
                         _upgradeDiscounts.Add(card.CardId,d.Ratio); break;
-                    case BasicBombCountDefinition d: Once(effect); BasicSkillExtraBombs=d.ExtraBombs; break;
-                    case BombRearmDefinition d: Once(effect); BombRearmHits=d.HitsRequired; BombRearmExtraBombs=d.ExtraBombs; break;
-                    case BombStackFuseDefinition d: Once(effect); BombFuseStacks=d.MaximumStacks; BombFuseBonusPerStack=d.BonusPerStack; break;
-                    case GammanBombDefinition d: Once(effect); HasGammanBomb=true; GammanBombPrefab=d.Prefab; break;
-                    case BetanCycleDefinition d: Once(effect); BetanCycleMultiplier=d.TimeMultiplier; break;
-                    case CounterBombDefinition d: Once(effect); HasCounterBomb=true; break;
-                    case BombWarheadDefinition d: Once(effect); BombDamageMultiplier=d.DamageMultiplier; BombWarheadCycleMultiplier=d.CycleMultiplier; break;
-                    case BombArmorDefinition d: Once(effect); BombArmorReduction=d.ReductionRatio; BombArmorDuration=d.DurationSeconds; break;
-                    case BombExecutionDefinition d: Once(effect); BombExecutionThreshold=d.HpThreshold; BombExecutionBonus=d.DamageBonus; break;
-                    case BombSalvageDefinition d: Once(effect); BombSalvageHits=d.HitsRequired; BombSalvageFood=d.FoodAmount; break;
-                    case PeriodicBombDefinition d: Once(effect); PeriodicBombInterval=d.PeriodSeconds; PeriodicBombCount=d.BombCount; break;
+                    case BasicBombCountDefinition d: BasicSkillExtraBombs=d.ExtraBombs; break;
+                    case BombRearmDefinition d: BombRearmHits=d.HitsRequired; BombRearmExtraBombs=d.ExtraBombs; break;
+                    case BombStackFuseDefinition d: BombFuseStacks=d.MaximumStacks; BombFuseBonusPerStack=d.BonusPerStack; break;
+                    case GammanBombDefinition d: HasGammanBomb=true; GammanBombPrefab=d.Prefab; break;
+                    case BetanCycleDefinition d: BetanCycleMultiplier=d.TimeMultiplier; break;
+                    case CounterBombDefinition d: HasCounterBomb=true; break;
+                    case BombWarheadDefinition d: BombDamageMultiplier=d.DamageMultiplier; BombWarheadCycleMultiplier=d.CycleMultiplier; break;
+                    case BombArmorDefinition d: BombArmorReduction=d.ReductionRatio; BombArmorDuration=d.DurationSeconds; break;
+                    case BombExecutionDefinition d: BombExecutionThreshold=d.HpThreshold; BombExecutionBonus=d.DamageBonus; break;
+                    case BombSalvageDefinition d: BombSalvageHits=d.HitsRequired; BombSalvageFood=d.FoodAmount; break;
+                    case PeriodicBombDefinition d: PeriodicBombInterval=d.PeriodSeconds; PeriodicBombCount=d.BombCount; break;
                     case DroneAttackSpeedDefinition d: DroneAttackSpeedBonus+=d.BonusRatio; break;
-                    case FleetBombDefinition d: Once(effect); FleetBombInterval=d.PeriodSeconds; FleetBombCount=d.BombCount; break;
-                    case StackSkillFrequencyDefinition d: Once(effect); StackDamageBonusPerDrone=d.ReductionPerStack; MaximumStackDamageBonus=d.MaximumReduction; break;
+                    case FleetBombDefinition d: FleetBombInterval=d.PeriodSeconds; FleetBombCount=d.BombCount; break;
+                    case StackSkillFrequencyDefinition d: StackDamageBonusPerDrone=d.ReductionPerStack; MaximumStackDamageBonus=d.MaximumReduction; break;
                     case EmptyStackDamageDefinition d: HasEmptyStackDamage=true; break;
-                    case FoodPayoutDefinition d: Once(effect); HasBatchedFoodPayout=true; FoodPayoutInterval=d.PeriodSeconds; FoodProductionBonus+=d.BonusRatio; break;
-                    case HackingCompressionDefinition d: Once(effect); HackingCompressionRequiredAttacks=d.RequiredAttacks; HackingCompressionMultiplier=d.ProductionMultiplier; break;
+                    case FoodPayoutDefinition d: HasBatchedFoodPayout=true; FoodPayoutInterval=d.PeriodSeconds; FoodProductionBonus+=d.BonusRatio; break;
+                    case HackingCompressionDefinition d: HackingCompressionRequiredAttacks=d.RequiredAttacks; HackingCompressionMultiplier=d.ProductionMultiplier; break;
                     case HackingProductionFlatDefinition d: HackingProductionFlat=checked(HackingProductionFlat+d.StackCount); break;
                     case HackingProductionRollDefinition d: if (d.MinimumRatio != d.MaximumRatio) throw new ArgumentException("Production roll must be resolved by Prepare."); HackingProductionBonus+=d.MinimumRatio; break;
-                    case ManaRequirementDefinition d: Once(effect); HasManaRequirementReduction=true; ManaRequirementReduction=d.ReductionRatio; break;
-                    case HackingProductionProcDefinition d: Once(effect); HackingProductionProcChance=d.Chance; HackingProductionProcMultiplier=d.Multiplier; break;
-                    case GammanResidueDefinition d: Once(effect); HasGammanResidue=true; GammanResidueRatio=d.DamageRatio; GammanResidueDuration=d.DurationSeconds; GammanResidueTicks=d.TickCount; break;
+                    case ManaRequirementDefinition d: HasManaRequirementReduction=true; ManaRequirementReduction=d.ReductionRatio; break;
+                    case HackingProductionProcDefinition d: HackingProductionProcChance=d.Chance; HackingProductionProcMultiplier=d.Multiplier; break;
+                    case GammanResidueDefinition d: HasGammanResidue=true; GammanResidueRatio=d.DamageRatio; GammanResidueDuration=d.DurationSeconds; GammanResidueTicks=d.TickCount; break;
                     case ChiefCooldownDefinition d: ChiefCooldownReduction+=d.ReductionRatio; break;
-                    case ChiefChargeCapacityDefinition d: Once(effect); ChiefChargeCapacity=d.MaximumCharges; break;
-                    case ChiefHackingDetonationDefinition d: Once(effect); ChiefHackingDamagePerStack=d.DamageRatioPerStack; break;
-                    case ChiefVolleyDefinition d: Once(effect); ChiefVolleyDelay=d.ShotDelaySeconds; ChiefVolleyDamageRatio=d.DamageRatio; ChiefVolleyCount=d.ShotCount; break;
+                    case ChiefChargeCapacityDefinition d: ChiefChargeCapacity=d.MaximumCharges; break;
+                    case ChiefHackingDetonationDefinition d: ChiefHackingDamagePerStack=d.DamageRatioPerStack; break;
+                    case ChiefVolleyDefinition d: ChiefVolleyDelay=d.ShotDelaySeconds; ChiefVolleyDamageRatio=d.DamageRatio; ChiefVolleyCount=d.ShotCount; break;
                     case FoodProductionDefinition d: FoodProductionBonus+=d.BonusRatio; break;
-                    case WaveFoodDividendDefinition d: Once(effect); WaveFoodDividendRatio=d.Ratio; break;
+                    case WaveFoodDividendDefinition d: WaveFoodDividendRatio=d.Ratio; break;
                     case RallyDamageDefinition d: HasRallyDamage=true; RallyDamageBonus+=d.BonusRatio; break;
                     case ExplosionSkillRecoveryDefinition d: ExplosionSkillRecoverySeconds+=d.Seconds; break;
                     case MergeSupportDefinition d: MergeSupportChance+=d.Chance; break;
                     case CombatDroneCapacityDefinition d: ExtraCombatDroneCount=checked(ExtraCombatDroneCount+d.Count); break;
-                    case OverflowManaDefinition d: Once(effect); OverflowManaPerCast=d.ManaPerCast; break;
+                    case OverflowManaDefinition d: OverflowManaPerCast=d.ManaPerCast; break;
                     case HackingOverflowDamageDefinition d: HackingOverflowAttackCoefficient+=d.AttackCoefficient; break;
                     case HackingConsumptionDefinition d: HackingConsumptionMultiplier*=d.ConsumptionMultiplier; HackingStackDamageMultiplier*=d.StackDamageMultiplier; break;
                     case HackingCapacityDefinition d: HackingCapacityBonus=checked(HackingCapacityBonus+d.AdditionalCapacity); break;
                     case BetanAttackPenaltyDefinition d: BetanAttackReductionRatio=1f-(1f-BetanAttackReductionRatio)*(1f-d.ReductionRatio); break;
-                    case AcceleratedDriveDefinition d: Once(effect); ExtraTimeDrainRatio=d.ExtraDrainRatio; AcceleratedAttackSpeedBonus=d.AttackSpeedBonus; break;
-                    case SacrificeDefinition d: Once(effect); SacrificeCostSeconds=d.CostSeconds; SacrificeAttackPerPayment=d.AttackBonusPerPayment; break;
-                    case TimeVaultDefinition d: Once(effect); TimeVaultSeconds=d.GraceSeconds; break;
-                    case OverheatCompressionDefinition d: Once(effect); OverheatOverflowPerStack=d.OverflowPerStack; OverheatCostSeconds=d.CostSeconds; OverheatDamageWeight=d.DamageWeight; break;
-                    case OverloadMergeDefinition d: Once(effect); HasOverloadMerge=true; OverloadMergeCostSeconds=d.CostSeconds; OverloadMergeUpgradeChance=d.UpgradeChance; break;
-                    case RecoveryHackingDefinition d: Once(effect); RecoveryHackingStacks=d.StacksPerRecovery; RecoveryHackingData=d.HackingData; break;
-                    case GlitchBombDefinition d: Once(effect); GlitchBombPrefab=d.Prefab; break;
-                    case GlitchAttackDefinition d: Once(effect); GlitchAttackPerTrigger=d.BonusPerGlitch; GlitchAttackMaximumTriggers=d.MaximumTriggers; break;
-                    case BombHackingDefinition d: Once(effect); HasBombHacking=true; HackingStacksPerBomb=d.StacksPerBomb; break;
-                    case HackingCarryoverDefinition d: Once(effect); HackingCarryoverRatio=d.Ratio; break;
-                    case BonusManaDefinition d: Once(effect); BonusManaChance=d.Chance; BonusManaCount=d.ManaCount; break;
+                    case AcceleratedDriveDefinition d: ExtraTimeDrainRatio=d.ExtraDrainRatio; AcceleratedAttackSpeedBonus=d.AttackSpeedBonus; break;
+                    case SacrificeDefinition d: SacrificeCostSeconds=d.CostSeconds; SacrificeAttackPerPayment=d.AttackBonusPerPayment; break;
+                    case TimeVaultDefinition d: TimeVaultSeconds=d.GraceSeconds; break;
+                    case OverheatCompressionDefinition d: OverheatOverflowPerStack=d.OverflowPerStack; OverheatCostSeconds=d.CostSeconds; OverheatDamageWeight=d.DamageWeight; break;
+                    case OverloadMergeDefinition d: HasOverloadMerge=true; OverloadMergeCostSeconds=d.CostSeconds; OverloadMergeUpgradeChance=d.UpgradeChance; break;
+                    case RecoveryHackingDefinition d: RecoveryHackingStacks=d.StacksPerRecovery; RecoveryHackingData=d.HackingData; break;
+                    case GlitchBombDefinition d: GlitchBombPrefab=d.Prefab; break;
+                    case GlitchAttackDefinition d: GlitchAttackPerTrigger=d.BonusPerGlitch; GlitchAttackMaximumTriggers=d.MaximumTriggers; break;
+                    case BombHackingDefinition d: HasBombHacking=true; HackingStacksPerBomb=d.StacksPerBomb; break;
+                    case HackingCarryoverDefinition d: HackingCarryoverRatio=d.Ratio; break;
+                    case BonusManaDefinition d: BonusManaChance=d.Chance; BonusManaCount=d.ManaCount; break;
                     case EveryHitsAttackDefinition d: _hitPeriods.Add(d.HitCount); break;
                     case RandomExtraAttackDefinition d: RandomExtraAttackChance+=d.Chance; break;
                     case RandomProcAttackDefinition d: HasRandomProcAttack=true; RandomProcChance+=d.Chance; RandomProcDamagePct=d.DamageRatio; break;
@@ -411,6 +412,49 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
             default: throw new ArgumentException("Unknown stat projection.");
         }
     }
+    /// <summary>Rejects within-card duplicate non-additive features using the runtime projection policy.</summary>
+    public static void ValidateCardConfigurations(IEnumerable<SelectionEffectDefinition> effects)
+    {
+        var seen = new HashSet<Type>();
+        foreach (var effect in effects)
+            if (RequiresSingleConfiguration(effect) && !seen.Add(effect.GetType()))
+                throw new ArgumentException("Conflicting non-additive feature configuration: " + effect.GetType().Name);
+    }
+    private static bool RequiresSingleConfiguration(SelectionEffectDefinition effect) => effect is
+        BasicBombCountDefinition or
+        BombRearmDefinition or
+        BombStackFuseDefinition or
+        GammanBombDefinition or
+        BetanCycleDefinition or
+        CounterBombDefinition or
+        BombWarheadDefinition or
+        BombArmorDefinition or
+        BombExecutionDefinition or
+        BombSalvageDefinition or
+        PeriodicBombDefinition or
+        FleetBombDefinition or
+        StackSkillFrequencyDefinition or
+        FoodPayoutDefinition or
+        HackingCompressionDefinition or
+        ManaRequirementDefinition or
+        HackingProductionProcDefinition or
+        GammanResidueDefinition or
+        ChiefChargeCapacityDefinition or
+        ChiefHackingDetonationDefinition or
+        ChiefVolleyDefinition or
+        WaveFoodDividendDefinition or
+        OverflowManaDefinition or
+        AcceleratedDriveDefinition or
+        SacrificeDefinition or
+        TimeVaultDefinition or
+        OverheatCompressionDefinition or
+        OverloadMergeDefinition or
+        RecoveryHackingDefinition or
+        GlitchBombDefinition or
+        GlitchAttackDefinition or
+        BombHackingDefinition or
+        HackingCarryoverDefinition or
+        BonusManaDefinition;
     private void Once(SelectionEffectDefinition definition) { if (!_singleConfigurations.Add(definition.GetType())) throw new ArgumentException("Conflicting non-additive feature configuration: " + definition.GetType().Name); }
     private static void Finite(float value) { if(float.IsNaN(value)||float.IsInfinity(value)) throw new ArgumentException("Selection aggregation is not finite."); }
 }

@@ -19,6 +19,7 @@ public static class SelectionDefinitionReader
             _ => throw new ArgumentException($"Unsupported selection schema {card.EffectSchemaVersion}, card {card.chooseId}.")
         };
         SelectionDescriptionFormatter.ValidateTemplate(card.description, definition);
+        SelectionDescriptionFormatter.ValidateTemplate(card.simpleDescription, definition);
         return definition;
     }
 
@@ -44,6 +45,7 @@ public static class SelectionDefinitionReader
                 RequiresHighOwnedTier=target.RequiresHighOwnedTier, Tribes=(UnitTribe[])target.Tribes.Clone() });
         }
         foreach (var effect in definition.Effects) copy.Effects.Add(CopyEffect(effect));
+        SelectionEffectSnapshot.ValidateCardConfigurations(copy.Effects);
         foreach (var command in definition.Commands) copy.Commands.Add(CopyCommand(command));
         return copy;
     }
