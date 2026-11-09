@@ -17,6 +17,7 @@ public sealed class AppLoadingScreen : MonoBehaviour
     [SerializeField] private Button _retryButton;
     [SerializeField] private string _tutorialScene = "TutorialScene";
     [SerializeField] private string _lobbyScene = "LobbyScene";
+    [SerializeField] private string _loginMessage = "계정 확인 중…";
     [SerializeField] private string _startupMessage = "튜토리얼 준비 중…";
     [SerializeField] private string _returningMessage = "로비 준비 중…";
     [SerializeField] private string _failureMessage = "불러오지 못했어요. 다시 시도해 주세요.";
@@ -39,7 +40,7 @@ public sealed class AppLoadingScreen : MonoBehaviour
     private void Awake()
     {
         if (_retryButton != null) _retryButton.onClick.AddListener(BeginStartup);
-        if (SceneManager.GetActiveScene().name == BootSceneName) Show(StartupMessage);
+        if (SceneManager.GetActiveScene().name == BootSceneName) Show(_loginMessage);
         else Hide();
     }
 
@@ -47,8 +48,6 @@ public sealed class AppLoadingScreen : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == BootSceneName) BeginStartup();
     }
-
-    private string StartupMessage => _tutorialProgress != null && _tutorialProgress.IsCompleted ? _returningMessage : _startupMessage;
 
     private void BeginStartup() => LoadStartupAsync().Forget();
 
@@ -60,19 +59,22 @@ public sealed class AppLoadingScreen : MonoBehaviour
         try
         {
             ResetProgress();
-            Show(StartupMessage);
+            Show(_loginMessage);
             // Render the small boot cover before loading/activating the battle scene.
             await UniTask.NextFrame(cancellationToken: token);
+            // Restore the existing guest/linked account before consulting its tutorial record.
+            // A device-only legacy flag cannot establish completion for the authenticated owner.
+            await _initialization.InitializeAsync(token);
+            ReportProgress(_initializedProgress);
             if (_tutorialProgress.IsCompleted)
             {
-                // Restore the existing guest/linked session and Player before any lobby view binds.
-                await _initialization.InitializeAsync(token);
-                ReportProgress(_initializedProgress);
+                Show(_returningMessage);
                 await _scenes.TransitionToSceneAsync(_lobbyScene).AttachExternalCancellation(token);
                 Hide();
             }
             else
             {
+                Show(_startupMessage);
                 await _scenes.TransitionToSceneAsync(_tutorialScene).AttachExternalCancellation(token);
                 ReportProgress(_sceneLoadedProgress);
                 // The tutorial releases the cover after its initializer and unit preloads finish.

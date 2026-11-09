@@ -219,6 +219,8 @@ namespace GaeGGUL.Tutorial
                 }
                 if (_lobbyPreparation != null) await _lobbyPreparation.Task.AttachExternalCancellation(token);
                 await _appInitialization.InitializeAsync(token);
+                if (!await _progress.SaveCompletionAsync(token))
+                    throw new InvalidOperationException("튜토리얼 완료 기록을 저장하지 못했습니다. 다시 시도해 주세요.");
                 await _scenes.TransitionToSceneAsync("LobbyScene");
             }
             catch (OperationCanceledException) { }
@@ -674,6 +676,9 @@ namespace GaeGGUL.Tutorial
                         : _camera.DOFieldOfView(_cameraFov * _settings.CameraZoomRatio, _settings.CameraZoomSeconds))
                     .ToUniTask(cancellationToken: token);
             }
+            // DOTween's default Kill cancellation can complete its await successfully.
+            // Scene teardown must not resume this entrance and spawn a boss on a disposed grid.
+            token.ThrowIfCancellationRequested();
             _time.Release(this);
             _wave.StartWave();
             await Until(() => _boss.CurrentBoss != null, token);
