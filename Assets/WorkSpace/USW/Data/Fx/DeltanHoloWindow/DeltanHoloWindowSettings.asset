@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8471dd6105263b41a85ef4f18924bd9, type: 3}
+  m_Name: DeltanHoloWindowSettings
+  m_EditorClassIdentifier: Assembly-CSharp::DeltanHoloWindowSettings
+  FrameSprite: {fileID: 21300000, guid: ec3437c9b056d35428d784665b206b79, type: 3}
+  LineSprite: {fileID: 21300000, guid: 0488a1be3312cdf45ac5f30f0b98638f, type: 3}
+  ContentRatio: {x: 0.8333333, y: 0.7798165}
+  Windows:
+  - Offset: {x: -0.49603567, y: 0.6690714}
+    Width: 0.2768571
+    Rotation: -8
+    Delay: 0.3
+  - Offset: {x: 0.3460714, y: 0.76135707}
+    Width: 0.23994283
+    Rotation: 7
+    Delay: 0.5
+  - Offset: {x: -0.13842855, y: 1.1997142}
+    Width: 0.22148569
+    Rotation: -3
+    Delay: 0.7
+  PopDuration: 0.18
+  PopOvershoot: 2.2
+  CloseTime: 1.45
+  CloseDuration: 0.18
+  LinesPerWindow: 3
+  TitleBarRatio: 0.2
+  LineThicknessRatio: 0.075
+  LineSpacingRatio: 0.17
+  LineLeftPadRatio: 0.08
+  LineWidthRange: {x: 0.35, y: 0.82}
+  LineJitterSpeed: 3
+  LineColor: {r: 1, g: 1, b: 1, a: 0.9}
+  SortingLayer: FX
+  SortingOrder: 40
