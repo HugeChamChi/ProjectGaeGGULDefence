@@ -171,7 +171,7 @@ public sealed class LobbyProfilePopup : UI_Base
         _selectionName.text = current?.Name ?? "";
         _iconTab.image.color = _frames ? LobbyUtilityVisuals.Card : LobbyUtilityVisuals.CardFeatured;
         _frameTab.image.color = !_frames ? LobbyUtilityVisuals.Card : LobbyUtilityVisuals.CardFeatured;
-        _apply.interactable = !_applying && (_iconId != Player.Profile.Data.CurrentIconId || _frameId != Player.Profile.Data.CurrentFrameId || Player.Profile.IsDirty);
+        _apply.interactable = !_applying && (_iconId != Player.Profile.Data.CurrentIconId || _frameId != Player.Profile.Data.CurrentFrameId || Player.PlayerData.IsDirty);
     }
     private void Apply() => ApplyAsync().Forget();
     private async UniTaskVoid ApplyAsync()

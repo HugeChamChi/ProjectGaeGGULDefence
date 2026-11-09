@@ -11,6 +11,7 @@ public sealed class LobbyCurrencyNavigation : MonoBehaviour
     [SerializeField] private StaminaInsufficientPopup _staminaPopup;
     [SerializeField] private BottomPanelController _tabs;
     [SerializeField] private TMP_Text _shopStatus;
+    [SerializeField] private LobbyShopPreview _shopPreview;
     private const int ShopTab = 0;
 
     private void Awake()
@@ -25,7 +26,7 @@ public sealed class LobbyCurrencyNavigation : MonoBehaviour
     private void OpenShop(string currency)
     {
         _tabs?.SelectButton(ShopTab);
-        // The current shop page is a placeholder. No prices, products or rewards are invented here.
+        if (_shopPreview != null) { _shopPreview.ShowCurrency(); return; }
         if (_shopStatus != null) _shopStatus.text = currency + " 상품 준비 중";
     }
     private void OnDestroy()

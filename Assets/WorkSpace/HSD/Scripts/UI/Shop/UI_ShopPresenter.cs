@@ -17,10 +17,12 @@ public class UI_ShopPresenter
 
     public async UniTask BuyItem(ShopItemData data)
     {
-        bool success = await Player.Shop.Daily.BuyItem(data.ShopID);
+        var purchase = Player.Shop.Daily.BuyItem(data.ShopID);
+        _view.RefreshList();
+        bool success = await purchase;
+        _view.RefreshList();
         if (success)
         {
-            _view.RefreshList();
             UnityEngine.Debug.Log("Purchase Successful!");
         }
         else

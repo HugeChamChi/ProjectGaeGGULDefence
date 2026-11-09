@@ -41,7 +41,7 @@ public class UI_ShopItemSlot : UI_SlotBase<ShopItemData>
                 itemName = Table.Character.GetCharacterData(_data.ItemID).Name;
                 break;
             case ItemType.Currency:
-                itemName = _data.CurrencyType.ToString();
+                itemName = Table.Item.Get(_data.ItemID).Name;
                 break;
         }
 
