@@ -16,6 +16,8 @@ public class UnitCombatComponent : MonoBehaviour
 
     /// <summary>실제 발사와 연발 대기가 공유하는 보류 상태.</summary>
     public bool AttacksHeld => _paused || _deps?.FieldPause?.AttacksHeld == true || _deps?.GameManager?.IsFinished == true;
+    /// <summary>Whether this placed unit currently owns a running combat lifetime.</summary>
+    public bool LoopsRunning => _loopCts != null;
 
     /// <summary>보류된 연발의 남은 발을 재개 때 이어 쏜다.</summary>
     public UniTask WaitForAttacksAsync(CancellationToken token) =>
@@ -23,6 +25,7 @@ public class UnitCombatComponent : MonoBehaviour
 
     private float _attackTimer;
     private float _skillTimer;
+    private double _externalSkillTimer;
     private int _hitCount;
 
     /// <summary>실제 일반 공격 시작 시에만 발행된다. 그림자/스킬/보너스 발사는 발행하지 않는다.</summary>
@@ -45,9 +48,25 @@ public class UnitCombatComponent : MonoBehaviour
 
     public float SkillTimer
     {
-        get => _skillTimer;
-        set => _skillTimer = _unit != null && !_unit.CanUseSkill ? 0f : value;
+        get => _unit?.UsesExternalSkillClock == true ? (float)_externalSkillTimer : _skillTimer;
+        set
+        {
+            float charge = _unit != null && !_unit.CanUseSkill ? 0f : value;
+            if (_unit?.UsesExternalSkillClock == true) _externalSkillTimer = charge;
+            else _skillTimer = charge;
+        }
     }
+
+    /// <summary>Unrounded shared-clock charge; the float gauge must not determine event order.</summary>
+    public double ExactExternalSkillTimer => _externalSkillTimer;
+
+    /// <summary>Advance a timed external skill, preserving the existing one-charge storage cap.</summary>
+    public void AdvanceExternalSkillTimer(double seconds, double interval) =>
+        _externalSkillTimer = Math.Min(interval, _externalSkillTimer + seconds);
+
+    /// <summary>Consume one externally scheduled timed skill without converting the clock to float.</summary>
+    public void ConsumeExternalSkillTimer(double interval) =>
+        _externalSkillTimer = Math.Max(0, _externalSkillTimer - interval);
 
     /// <summary>CanAutoSkill이 꺼져있는 유닛(예: TestUnit)도 스킬을 즉시 발동시켜볼 수 있도록,
     /// 자동 루프의 타이머/쿨타임 체크를 거치지 않고 바로 ExecuteSkill을 호출한다.</summary>
@@ -69,7 +88,7 @@ public class UnitCombatComponent : MonoBehaviour
         if (_unit == null || AttacksHeld || (_unit.currentCell != null && _unit.currentCell.Model.IsSealed)) return;
 
         if (_unit.CanBasicAttack) _attackTimer += Time.deltaTime;
-        if (_unit.CanUseSkill && _unit.UsesTimedSkillCharge) _skillTimer += Time.deltaTime;
+        if (_unit.CanUseSkill && _unit.UsesTimedSkillCharge && !_unit.UsesExternalSkillClock) _skillTimer += Time.deltaTime;
         // 공격 애니메이션 대기 시간과 무관하게 생산을 진행한다. 스턴 시간은 누적하지 않는다.
         if (_loopCts != null && _unit.currentCell != null && !_unit.IsStunned)
             _resource?.TickFoodProduction(Time.deltaTime);
@@ -81,6 +100,7 @@ public class UnitCombatComponent : MonoBehaviour
         {
             _attackTimer = _unit.CanBasicAttack ? _stats.GetCurrentAttackInterval() : 0f;
             _skillTimer = 0f;
+            _externalSkillTimer = 0;
         }
 
         StopLoops();
@@ -164,12 +184,18 @@ public class UnitCombatComponent : MonoBehaviour
                 continue;
             }
 
+            if (_unit.UsesExternalSkillClock && !_unit.CanBasicAttack)
+            {
+                if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+                continue;
+            }
+
             float attackInterval = _stats.GetCurrentAttackInterval();
             float skillInterval = _stats.GetCurrentSkillInterval();
             
             bool canAttack = _unit.currentCell != null && !_unit.currentCell.Model.IsAttackDisabled && !_unit.currentCell.Model.TotemAttackDisabled && LiveBoss != null && !LiveBoss.IsDead;
 
-            if (_unit.CanUseSkill && _unit.CanAutoSkill && _unit.IsSkillChargeReady(_skillTimer, skillInterval) && canAttack)
+            if (!_unit.UsesExternalSkillClock && _unit.CanUseSkill && _unit.CanAutoSkill && _unit.IsSkillChargeReady(_skillTimer, skillInterval) && canAttack)
             {
                 _unit.SetState(UnitBase.UnitState.Skilling);
                 // Carry the overshoot so the skill rate does not depend on frame rate or attack waits.

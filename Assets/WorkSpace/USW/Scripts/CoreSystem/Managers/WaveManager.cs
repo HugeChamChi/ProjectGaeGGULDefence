@@ -179,11 +179,11 @@ public class WaveManager : MonoBehaviour
             _timerStarted = true;
         }
         _timerManager?.StopTimer();
-        float remainingDelay = gameConfig.bossSpawnDelaySeconds;
+        double remainingDelay = gameConfig.bossSpawnDelaySeconds;
         _timerManager?.SetVaultIntermission(true);
         while (remainingDelay > 0f)
         {
-            _uiManager?.UpdateTimerUI(remainingDelay, true);
+            _uiManager?.UpdateTimerUI((float)remainingDelay, true);
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
             remainingDelay -= Time.deltaTime;
         }
@@ -198,7 +198,7 @@ public class WaveManager : MonoBehaviour
         _log.BossSpawned(round, _run.BossStats);
 
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
-        _timerManager?.ResumeTimer();
+        _timerManager?.ResumeTimerAfterEncounterSpawn();
         var mainBoss = _bossManager.CurrentBoss;
         encounterBoss = mainBoss;
         foreach (var cell in _gridManager.GetOccupiedCells())
@@ -272,7 +272,14 @@ public class WaveManager : MonoBehaviour
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
         catch (OperationCanceledException) { return; }
-        if (await UniTask.Delay(RewardDelayMilliseconds, cancellationToken: token).SuppressCancellationThrow()) return;
+        // Match the authored delay without float accumulation adding a whole frame.
+        // Timed skills can charge in this gap, so the extra frame changes later hit order.
+        double rewardRemaining = RewardDelayMilliseconds / 1000d;
+        while (rewardRemaining > 0d)
+        {
+            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
+            rewardRemaining -= Time.deltaTime;
+        }
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
         while (_gameManager.CurrentState == GameManager.GameState.LevelUp || _fieldPause.AttacksHeld)
             if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;

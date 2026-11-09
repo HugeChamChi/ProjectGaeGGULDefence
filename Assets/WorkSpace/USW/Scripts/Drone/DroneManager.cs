@@ -10,6 +10,20 @@ using UnityEngine;
 /// </summary>
 public class DroneManager : MonoBehaviour
 {
+    private DroneCombatClock _combatClock;
+    /// <summary>Scene-owned clock shared by every combat drone and hacking caster.</summary>
+    public DroneCombatClock CombatClock
+    {
+        get
+        {
+            if (_combatClock == null)
+            {
+                _combatClock = gameObject.AddComponent<DroneCombatClock>();
+                _combatClock.Initialize(_gameManager);
+            }
+            return _combatClock;
+        }
+    }
     private DroneHackingRuntime _hacking;
     /// <summary>이 씬의 생산자/소비자가 공유하는 보스 해킹 자원.</summary>
     public DroneHackingRuntime Hacking

@@ -24,6 +24,7 @@ public class TimerController : MonoBehaviour
     private bool _applicationPaused, _skipResumeFrame;
     private bool _advancingFrame, _spendingTime;
     private int _expiryVersion;
+    private int _encounterResumeFrame = -1;
     /// <summary>런 1회 마지막 유예가 진행 중인지 여부.</summary>
     public bool TimeVaultActive { get; private set; }
     /// <summary>제물의 실제 지출을 +30초 지급과 별도로 표시한다.</summary>
@@ -69,7 +70,7 @@ public class TimerController : MonoBehaviour
         if (TimeVaultActive)
         {
             if (_game?.IsFinished == true) { CancelTimeVault(); return; }
-            if (!_vaultIntermission && _fieldPause?.AttacksHeld != true)
+            if (!_vaultIntermission && _encounterResumeFrame != Time.frameCount && _fieldPause?.AttacksHeld != true)
             {
                 _advancingFrame = true;
                 try { AdvanceTimeVault(Time.deltaTime); }
@@ -78,6 +79,9 @@ public class TimerController : MonoBehaviour
             return;
         }
         if (_fieldPause?.AttacksHeld == true) return;
+        // WaveManager re-registers the encounter's units in this frame. Like their
+        // combat clock, do not charge time that preceded this encounter's placement.
+        if (_encounterResumeFrame == Time.frameCount) return;
         _advancingFrame = true;
         try { _countdown.Advance(Time.deltaTime, 1d + (_overdrive?.ExtraTimeDrainRatio ?? 0f)); }
         finally { _advancingFrame = false; }
@@ -96,7 +100,12 @@ public class TimerController : MonoBehaviour
 
     public void StopTimer() { if (!TimeVaultActive) _expiryVersion++; _countdown.Stop(); }
     /// <summary>다음 보스 등장 전의 대기에서만 유예 시계를 정지한다.</summary>
-    public void SetVaultIntermission(bool paused) => _vaultIntermission = paused;
+    public void SetVaultIntermission(bool paused)
+    {
+        if (TimeVaultActive && _vaultIntermission && !paused)
+            _encounterResumeFrame = Time.frameCount;
+        _vaultIntermission = paused;
+    }
 
     private void OnApplicationPause(bool paused)
     {
@@ -222,6 +231,14 @@ public class TimerController : MonoBehaviour
     {
         if (_fieldPause?.AttacksHeld == true) return;
         _countdown.Resume();
+    }
+
+    /// <summary>Resume the normal countdown after encounter placement without charging the placement frame.</summary>
+    public void ResumeTimerAfterEncounterSpawn()
+    {
+        bool wasRunning = _countdown.IsRunning;
+        ResumeTimer();
+        if (!wasRunning && _countdown.IsRunning) _encounterResumeFrame = Time.frameCount;
     }
 
     /// <summary>남은 시간을 바로 늘린다. source·origin은 표시 연출 선택에만 쓰인다 (기본 = 보스 처치 합체 연출).</summary>

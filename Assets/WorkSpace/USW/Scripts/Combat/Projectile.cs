@@ -11,7 +11,7 @@ using System.Threading;
 /// 크기 배율은 BaseObject.ApplyScale()을 통해 항상 프리팹 원본 스케일(BaseScale) 기준으로 재계산되므로,
 /// 풀링으로 재사용되어도 Launch()를 반복 호출할 때마다 크기가 누적되어 계속 커지지 않는다.
 /// </summary>
-public class Projectile : BaseObject
+public class Projectile : BaseObject, IDroneCombatParticipant
 {
     [Inject] protected TotemBuffManager _totemBuffManager;
     [Inject] protected AudioManager _audioManager;
@@ -21,6 +21,38 @@ public class Projectile : BaseObject
 
     protected Action<Projectile>      _onComplete;
     protected CancellationTokenSource _moveCts;
+    private DroneCombatClock _combatClock;
+    private bool _clockFlight;
+    private double _flightElapsed, _flightDuration;
+    private Vector3 _flightFrom, _flightTo;
+
+    /// <summary>Opt a drone's straight projectile into its existing chronological combat clock.</summary>
+    public void BindCombatClock(DroneCombatClock clock) => _combatClock = clock;
+    /// <inheritdoc />
+    public double NextCombatEventIn => _clockFlight ? Math.Max(0, _flightDuration - _flightElapsed) : double.PositiveInfinity;
+    /// <summary>Hits precede ready skills and shots; registration order breaks equal-time hit ties.</summary>
+    public int CombatEventPriority => 0;
+    /// <inheritdoc />
+    public void AdvanceCombatTime(double seconds) { if (_clockFlight) _flightElapsed += seconds; }
+    /// <inheritdoc />
+    public bool ProcessCombatEvent()
+    {
+        if (!_clockFlight) return false;
+        _clockFlight = false;
+        _combatClock?.Unregister(this);
+        transform.position = _flightTo;
+        var callback = _onComplete;
+        _onComplete = null;
+        OnHit(_flightTo);
+        callback?.Invoke(this);
+        return true;
+    }
+    /// <inheritdoc />
+    public void RenderCombatState()
+    {
+        if (_clockFlight) transform.position = Vector3.Lerp(_flightFrom, _flightTo,
+            _flightDuration <= 0 ? 1f : (float)(_flightElapsed / _flightDuration));
+    }
 
     // _data가 전혀 설정되지 않은 경우를 위한 안전한 기본값 (기존 하드코딩 동작과 동일한 직선 이동 + 피격 사운드).
     private static readonly IMovement _fallbackMovement = new StraightMovement();
@@ -47,11 +79,27 @@ public class Projectile : BaseObject
 
         _data?.fireEffect?.Play(from, transform.parent, _audioManager);
 
+        if (_combatClock != null && (_data?.movement ?? _fallbackMovement) is StraightMovement straight)
+        {
+            _flightFrom = from;
+            _flightTo = to;
+            _flightElapsed = 0;
+            _flightDuration = Math.Max(0, straight.duration);
+            var direction = to - from;
+            if (direction.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.FromToRotation(BaseRotation * Vector3.up, direction.normalized) * BaseRotation;
+            _clockFlight = true;
+            _combatClock.Register(this);
+            return;
+        }
+
         MoveAsync(to, _moveCts.Token).Forget(e => { if (e is not System.OperationCanceledException) UnityEngine.Debug.LogException(e); });
     }
 
     protected void StopMove()
     {
+        _clockFlight = false;
+        _combatClock?.Unregister(this);
         if (_moveCts == null) return;
         _moveCts.Cancel();
         _moveCts.Dispose();
@@ -85,6 +133,7 @@ public class Projectile : BaseObject
     protected virtual void OnDisable()
     {
         StopMove();
+        _combatClock = null;
     }
 
     protected virtual void OnDestroy()

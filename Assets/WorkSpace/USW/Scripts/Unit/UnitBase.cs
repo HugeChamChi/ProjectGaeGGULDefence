@@ -61,6 +61,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public virtual bool CanAutoSkill => CanUseSkill;
     /// <summary>시간 충전 대신 고유 자원을 사용하는 유닛은 false를 반환한다.</summary>
     public virtual bool UsesTimedSkillCharge => true;
+    /// <summary>True when a shared combat clock owns automatic skill charge and dispatch.</summary>
+    public virtual bool UsesExternalSkillClock => false;
     /// <summary>자동 스킬의 충전 완료 판단. 사용 가능 상태 검사는 공통 루프가 담당한다.</summary>
     public virtual bool IsSkillChargeReady(float elapsed, float interval) => elapsed >= interval;
 

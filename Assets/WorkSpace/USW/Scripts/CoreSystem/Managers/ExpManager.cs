@@ -35,6 +35,9 @@ public class ExpManager : MonoBehaviour
     public const int MaxLevel = 20;
 
     public float CurrentExp   { get; private set; }
+    // Preserve sub-float remainders across differently batched visual arrivals.
+    private double _expRemainder;
+    private bool _endSettled;
     public int   CurrentLevel { get; private set; } = 1;
     public bool  IsMaxLevel   => CurrentLevel >= MaxLevel;
 
@@ -72,22 +75,51 @@ public class ExpManager : MonoBehaviour
 
     /// <summary>EXP 직접 추가. 초과분은 다음 레벨로 이월.</summary>
     public void AddExp(float amount)
+        => AddExp((double)amount);
+
+    /// <summary>Credits a visual batch without truncating its accumulated reward to float.</summary>
+    public void AddExp(double amount)
     {
         if (_gameManager?.IsFinished == true || IsMaxLevel) return;
 
-        CurrentExp += amount * (float)(_runPenalties?.ExperienceMultiplier ?? 1d);
+        Accumulate(amount * (float)(_runPenalties?.ExperienceMultiplier ?? 1d));
         if (!TryAdvanceLevel()) OnExpChanged?.Invoke(CurrentExp);
+    }
+
+    private void Accumulate(double amount)
+    {
+        double value = CurrentExp + _expRemainder + amount;
+        CurrentExp = (float)value;
+        _expRemainder = value - CurrentExp;
+    }
+
+    /// <summary>Settles already-earned pending EXP once after Win/Lose, without delivering choices.</summary>
+    public void SettlePendingExp(double amount)
+    {
+        if (_endSettled || _gameManager == null ||
+            (_gameManager.CurrentState != GameManager.GameState.Win && _gameManager.CurrentState != GameManager.GameState.Lose)) return;
+        _endSettled = true;
+        _pendingLevelUps = 0;
+        if (IsMaxLevel) return;
+        Accumulate(amount * (float)(_runPenalties?.ExperienceMultiplier ?? 1d));
+        while (!IsMaxLevel && CurrentExp + _expRemainder >= ExpToLevelUp)
+        {
+            Accumulate(-ExpToLevelUp);
+            CurrentLevel++;
+        }
+        if (IsMaxLevel) { CurrentExp = 0f; _expRemainder = 0; }
+        OnExpChanged?.Invoke(CurrentExp);
     }
 
     private bool TryAdvanceLevel()
     {
-        if (!DeferLevelUps && !IsMaxLevel && CurrentExp >= ExpToLevelUp)
+        if (!DeferLevelUps && !IsMaxLevel && CurrentExp + _expRemainder >= ExpToLevelUp)
         {
-            CurrentExp -= ExpToLevelUp;
+            Accumulate(-ExpToLevelUp);
             CurrentLevel++;
 
             if (IsMaxLevel)
-                CurrentExp = 0f;
+            { CurrentExp = 0f; _expRemainder = 0; }
 
             OnExpChanged?.Invoke(CurrentExp);
             TryFireLevelUp();
@@ -123,11 +155,11 @@ public class ExpManager : MonoBehaviour
         {
             // A completed selection is also a settlement point for overflow EXP.
             // Ignore the old selection's field hold: its owner releases only after this handoff.
-            if (!IsMaxLevel && CurrentExp >= ExpToLevelUp)
+            if (!IsMaxLevel && CurrentExp + _expRemainder >= ExpToLevelUp)
             {
-                CurrentExp -= ExpToLevelUp;
+                Accumulate(-ExpToLevelUp);
                 CurrentLevel++;
-                if (IsMaxLevel) CurrentExp = 0f;
+                if (IsMaxLevel) { CurrentExp = 0f; _expRemainder = 0; }
                 OnExpChanged?.Invoke(CurrentExp);
                 OnLevelUp?.Invoke();
             }

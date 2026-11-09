@@ -9,7 +9,7 @@ using UnityEngine;
 /// SO 설정의 H 궤도로 오너를 돌며, 궤도를 끄면 기존 고정 슬롯/호버를 사용한다.
 /// 족장 집결 시 DroneManager.ExecuteRallyAsync가 MoveToAsync/ReturnToHomeAsync를 직접 호출한다.
 /// </summary>
-public class DroneUnit : MonoBehaviour
+public class DroneUnit : MonoBehaviour, IDroneCombatParticipant
 {
     [Inject] private DroneManager _droneManager;
     [Inject] private BossManager _bossManager;
@@ -99,7 +99,8 @@ public class DroneUnit : MonoBehaviour
     private SpriteRenderer           _spriteRenderer;
     private Sprite                   _normalSprite;
     private DroneHoverAnimation      _hoverAnim;
-    private CancellationTokenSource  _attackCts;
+    private DroneCombatClock _combatClock;
+    private double _attackElapsed;
     private CancellationTokenSource  _flashCts;
     private Animator                 _animator;
     private SpineActorVisual        _spineVisual;
@@ -132,6 +133,14 @@ public class DroneUnit : MonoBehaviour
 
     /// <summary>선택 화면이 열린 동안 새 공격을 보류한다 (이미 날아가는 투사체는 그대로). 풀리면 기다리던 사격부터 한다.</summary>
     public void SetAttackHold(bool on) => _attackHeld = on;
+
+    /// <summary>Remove automatic firing until Initialize is called again; movement and ownership remain intact.</summary>
+    public void StopAutomaticAttacks()
+    {
+        _combatClock?.Unregister(this);
+        _combatClock = null;
+        _attackElapsed = 0;
+    }
 
     /// <summary>레벨업 등 일시정지 중 부유/애니메이션을 unscaled로 유지한다 (시각 전용).</summary>
     public void SetPauseIdle(bool on)
@@ -180,8 +189,8 @@ public class DroneUnit : MonoBehaviour
 
         _droneManager?.RegisterDrone(this);
 
-        _attackCts = new CancellationTokenSource();
-        AttackLoopAsync(_attackCts.Token).Forget();
+        _combatClock = _droneManager?.CombatClock;
+        _combatClock?.Register(this);
 
         StartOrbit();
     }
@@ -443,9 +452,7 @@ public class DroneUnit : MonoBehaviour
         SetPauseIdle(false);
         _spineVisual?.ResetAnimation();
         _attackLifetime++;
-        _attackCts?.Cancel();
-        _attackCts?.Dispose();
-        _attackCts = null;
+        StopAutomaticAttacks();
 
         _flashCts?.Cancel();
         _flashCts?.Dispose();
@@ -462,44 +469,42 @@ public class DroneUnit : MonoBehaviour
 
     // ── 공격 루프 ───────────────────────────────────────────────────
 
-    /// <summary>렉 걸린 한 프레임에서 밀린 발을 몰아 쏠 수 있는 최대 수. 프로젝타일이 한 번에 쏟아지지 않게 제한한다.</summary>
-    private const int MaxShotsPerFrame = 3;
-
-    // Frame-independent cadence: leftover time carries into the next shot, so 30/60 fps and frame drops
-    // give the same shots per second. Time saved while unable to fire is capped at one shot (no burst).
-    private async UniTaskVoid AttackLoopAsync(CancellationToken token)
+    private bool CanFireOnCombatClock
     {
-        float timer = 0f;
-        while (!token.IsCancellationRequested)
+        get
         {
-            if (await UniTask.Yield(PlayerLoopTiming.Update, token).SuppressCancellationThrow()) return;
-            if (_gameManager?.IsFinished == true) continue;
-
-            float interval = EffectiveAttackInterval;
-            try { RunStatMath.ToDelayMilliseconds(interval); }
-            catch (System.OverflowException error) { _run.Fail(error.Message); return; }
-
-            timer += Time.deltaTime;
-            if (timer < interval) continue;
-
+            if (!isActiveAndEnabled || _attackHeld || _gameManager?.IsFinished == true
+                || _owner == null || !_owner.isActiveAndEnabled || _owner.IsStunned || _owner.currentCell == null
+                || _owner.Combat?.AttacksHeld == true) return false;
             var boss = _bossManager?.CurrentBoss;
-            if (_attackHeld || boss == null || !boss.IsTargetable)
-            {
-                timer = interval;
-                continue;
-            }
-            // A slow frame longer than the interval fires the shots it owes (bounded), then keeps one interval at most.
-            for (int shot = 0; shot < MaxShotsPerFrame && timer >= interval; shot++)
-            {
-                timer -= interval;
-                bool critical = false;
-                int ownerDamage = _owner != null ? _owner.GetCombatDroneDamage(out critical) : 0;
-                float dmg = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
-                LaunchProjectile(Mathf.RoundToInt(dmg), critical);
-            }
-            timer = Mathf.Min(timer, interval);
+            var cell = _owner.currentCell.Model;
+            return boss != null && boss.IsTargetable && !cell.IsSealed && !cell.IsAttackDisabled && !cell.TotemAttackDisabled;
         }
     }
+    double IDroneCombatParticipant.NextCombatEventIn => CanFireOnCombatClock
+        ? System.Math.Max(0, EffectiveAttackInterval - _attackElapsed) : double.PositiveInfinity;
+    int IDroneCombatParticipant.CombatEventPriority => 2;
+    void IDroneCombatParticipant.AdvanceCombatTime(double seconds)
+    {
+        _attackElapsed += seconds;
+        // Blocked time stores at most one shot, never a backlog for resume.
+        if (!CanFireOnCombatClock) _attackElapsed = System.Math.Min(_attackElapsed, EffectiveAttackInterval);
+    }
+    bool IDroneCombatParticipant.ProcessCombatEvent()
+    {
+        if (!CanFireOnCombatClock) return false;
+        float interval = EffectiveAttackInterval;
+        try { RunStatMath.ToDelayMilliseconds(interval); }
+        catch (System.OverflowException error) { _run?.Fail(error.Message); return false; }
+        if (_attackElapsed + DroneCombatClock.BoundaryTolerance < interval) return false;
+        _attackElapsed = System.Math.Max(0, _attackElapsed - interval);
+        bool critical = false;
+        int ownerDamage = _owner != null ? _owner.GetCombatDroneDamage(out critical) : 0;
+        float damage = ownerDamage * (_droneManager?.DroneAtkMultiplier ?? 1f);
+        LaunchProjectile(Mathf.RoundToInt(damage), critical);
+        return true;
+    }
+    void IDroneCombatParticipant.RenderCombatState() { }
 
     private void LaunchProjectile(int damage, bool critical = false)
     {
@@ -574,6 +579,8 @@ public class DroneUnit : MonoBehaviour
                 p.transform.SetParent(null);
 
                 if (p is DroneLaserProjectile laser) laser.BindEmitter(recordedOrigin.HasValue ? null : _spineVisual);
+
+                p.BindCombatClock(_droneManager?.CombatClock);
 
                 p.Launch(origin, targetPos, proj =>
                 {

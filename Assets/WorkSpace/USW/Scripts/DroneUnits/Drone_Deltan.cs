@@ -5,9 +5,32 @@ public class Drone_Deltan : HackingDroneSpawner
 {
     private int _attackCount;
     private float _productionRemainder;
-    private float _postHackingRemaining;
+    private double _postHackingRemaining;
+    private bool _postHackingExpiryPending;
     public override float LevelAttackSpeedBonus => _postHackingRemaining > 0f ? LevelStat(UnitBonusStat.HackingPostSpeedPercent) : 0f;
-    private void Update() { if (currentCell != null && !IsStunned && Combat?.AttacksHeld != true) _postHackingRemaining = Mathf.Max(0f, _postHackingRemaining - Time.deltaTime); }
+    // Preserve the original buff policy: stun/attack hold freeze it, seal/attack disable do not.
+    private bool CanAdvancePostHacking => currentCell != null && !IsStunned && Combat?.AttacksHeld != true;
+    /// <inheritdoc />
+    protected override double NextTimedStateEventIn => _postHackingExpiryPending ? 0
+        : CanAdvancePostHacking && _postHackingRemaining > 0 ? _postHackingRemaining : double.PositiveInfinity;
+    /// <inheritdoc />
+    protected override void AdvanceTimedState(double seconds)
+    {
+        if (!CanAdvancePostHacking || _postHackingRemaining <= 0) return;
+        _postHackingRemaining = System.Math.Max(0, _postHackingRemaining - seconds);
+        if (_postHackingRemaining <= DroneCombatClock.BoundaryTolerance)
+        {
+            _postHackingRemaining = 0;
+            _postHackingExpiryPending = true;
+        }
+    }
+    /// <inheritdoc />
+    protected override bool ProcessTimedStateEvent()
+    {
+        if (!_postHackingExpiryPending) return false;
+        _postHackingExpiryPending = false;
+        return true;
+    }
     public int LevelProductionBonus => Mathf.RoundToInt(LevelStat(currentTier switch { Tier.Normal => UnitBonusStat.HackingProducedNormal, Tier.Rare => UnitBonusStat.HackingProducedRare, Tier.Epic => UnitBonusStat.HackingProducedEpic, _ => UnitBonusStat.HackingProducedLegend }));
     /// <summary>마나 카드까지 반영한 필요 공격 횟수.</summary>
     public int RequiredAttacks
@@ -47,7 +70,7 @@ public class Drone_Deltan : HackingDroneSpawner
         base.OnUnitPlaced();
         if (unitData?.Hacking != null && _droneManager != null) { _droneManager.Hacking.Configure(unitData.Hacking); _droneManager.Hacking.SetCapacityBonus(this, Mathf.RoundToInt(LevelStat(UnitBonusStat.HackingCapacityFlat))); }
     }
-    protected override void OnDisable() { _droneManager?.Hacking.SetCapacityBonus(this, 0); base.OnDisable(); }
+    protected override void OnDisable() { if (_droneManager != null) _droneManager.Hacking.SetCapacityBonus(this, 0); base.OnDisable(); }
     private void Charge(BasicAttackReplay attack)
     {
         if (isActiveAndEnabled && currentCell != null && unitData?.Hacking != null)
@@ -76,7 +99,7 @@ public class Drone_Deltan : HackingDroneSpawner
     protected override void OnUnitRemoved()
     {
         if (Combat != null) Combat.OnBasicAttackStarted -= Charge;
-        _droneManager?.Hacking.SetCapacityBonus(this, 0);
+        if (_droneManager != null) _droneManager.Hacking.SetCapacityBonus(this, 0);
         base.OnUnitRemoved();
     }
     /// <summary>SkillData 액션에서 호출한다. 수동 호출도 완충을 우회하지 않는다.</summary>
@@ -92,6 +115,7 @@ public class Drone_Deltan : HackingDroneSpawner
         if (effects != null && effects.HackingProductionProcChance > 0f && Random.value < effects.HackingProductionProcChance)
             produced = checked(produced * Mathf.Max(1, effects.HackingProductionProcMultiplier));
         _postHackingRemaining = LevelStat(UnitBonusStat.HackingPostDuration);
+        _postHackingExpiryPending = false;
         FlashOwnedDrones();
         StartHacking(runtime, target, produced, null, 0, false);
     }

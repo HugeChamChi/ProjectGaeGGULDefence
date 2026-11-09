@@ -32,7 +32,7 @@ public class ExpEffectController : MonoBehaviour
     private BossBase _subscribedBoss;
     private Canvas _canvas;
     private Camera _worldCamera;
-    private float _accumulatedExp;
+    private double _accumulatedExp;
     private float _lastEffectTime;
     private bool _started;
     private bool _pendingImmediateEffect;
@@ -80,15 +80,26 @@ public class ExpEffectController : MonoBehaviour
     {
         if (_bossManager != null) _bossManager.OnBossEntryed -= SubscribeBoss;
         UnsubscribeBoss();
-        float pending = _accumulatedExp;
-        _accumulatedExp = 0f;
+        double pending = TakePendingExp();
         foreach (Flight flight in _flights)
         {
-            pending += flight.Reward;
             Release(flight);
         }
         _flights.Clear();
         if (pending > 0f) _expManager?.AddExp(pending);
+    }
+
+    /// <summary>Transfers earned but unpaid EXP once; visuals cannot credit the drained rewards again.</summary>
+    public double TakePendingExp()
+    {
+        double pending = _accumulatedExp;
+        _accumulatedExp = 0;
+        foreach (var flight in _flights)
+        {
+            pending += flight.Reward;
+            flight.Reward = 0;
+        }
+        return pending;
     }
 
     private void SubscribeBoss(BossEntry _, BossEntry __)
@@ -128,7 +139,7 @@ public class ExpEffectController : MonoBehaviour
         }
         if (_accumulatedExp > 0f && Time.unscaledTime - _lastEffectTime >= _effectCooldown)
         {
-            float amount = _accumulatedExp;
+            double amount = _accumulatedExp;
             _accumulatedExp = 0f;
             _lastEffectTime = Time.unscaledTime;
             SpawnParticleAndApplyExp(amount);
@@ -146,7 +157,7 @@ public class ExpEffectController : MonoBehaviour
             MoveFollower(flight.Target, flight.Samples, flight.Distances, progress);
             if (progress >= 1f && flight.Reward > 0f)
             {
-                float reward = flight.Reward;
+                double reward = flight.Reward;
                 flight.Reward = 0f;
                 _expManager?.AddExp(reward);
                 if (!isActiveAndEnabled) return;
@@ -205,7 +216,7 @@ public class ExpEffectController : MonoBehaviour
             rect.yMin + position.y * rect.height, 0f));
     }
 
-    private void SpawnParticleAndApplyExp(float amount)
+    private void SpawnParticleAndApplyExp(double amount)
     {
         if (Time.timeScale <= 0f || particleImage == null || particleImage.gameObject == gameObject
             || !TryGetEndpoints(out Vector2 start, out Vector2 end)
@@ -241,8 +252,17 @@ public class ExpEffectController : MonoBehaviour
 
     private ParticleImage CreateParticle(Vector2 start, float duration, out RectTransform target)
     {
-        ParticleImage particle = RM.Instantiate(particleImage, NormalizedToWorld(start), _routeCanvas.rotation, _routeCanvas, true);
-        return PrepareParticle(particle, start, duration, out target);
+        // ParticleImage.Play emits the single authored burst synchronously and uses
+        // UnityEngine.Random even for fixed particle curves. Its visual creation must
+        // not change later critical/selection/mana rolls. EXP is awarded by the flight
+        // controller, outside this scope; rate emission is disabled in PrepareParticle.
+        var gameplayRandom = Random.state;
+        try
+        {
+            ParticleImage particle = RM.Instantiate(particleImage, NormalizedToWorld(start), _routeCanvas.rotation, _routeCanvas, true);
+            return PrepareParticle(particle, start, duration, out target);
+        }
+        finally { Random.state = gameplayRandom; }
     }
 
     private ParticleImage PrepareParticle(ParticleImage particle, Vector2 start, float duration, out RectTransform target)
@@ -323,7 +343,8 @@ public class ExpEffectController : MonoBehaviour
     {
         public ParticleImage Particle;
         public RectTransform Target;
-        public float Elapsed, Duration, TailDuration, Reward;
+        public float Elapsed, Duration, TailDuration;
+        public double Reward;
         public readonly Vector2[] Samples = new Vector2[SampleCount + 1];
         public readonly float[] Distances = new float[SampleCount + 1];
     }

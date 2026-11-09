@@ -174,6 +174,10 @@ public class GameManager : MonoBehaviour
 
     private void EndGame(bool isWin)
     {
+        // Terminal state is already committed. Drain earned rewards before result/owner cleanup;
+        // settlement updates EXP/level only and cannot reopen a choice or restart combat.
+        if (_resolver.TryResolve<ExpEffectController>(out var expEffects))
+            _expManager?.SettlePendingExp(expEffects.TakePendingExp());
         _timerManager?.CancelTimeVault();
         if (_resolver.TryResolve<DamageContributionLedger>(out var damageLedger)) damageLedger.FinalizeRun();
         _resultSnapshot = CaptureResult();
