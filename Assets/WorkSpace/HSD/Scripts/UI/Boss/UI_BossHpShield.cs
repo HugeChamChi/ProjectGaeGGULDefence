@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 보스 HP바 위에 남은 보호막을 네온 파랑 띠로 겹쳐 그린다 (FxLab_BossShieldBar, 사용자 확정 2026-10-22).
-/// 확정안: 길이 B(바 오른쪽 끝부터 최대HP 비율) + 2번 유리 실드(BossShieldBand_Glass 재질, 광택이 지나감).
+/// 확정안(2026-11-10 사용자): 길이 D3(바 전체를 덮고 남은 보호막 비율만큼 오른쪽부터 걷힘) + 얇은 유리에 느린 광택(BossShieldBand_ThinSheen 재질).
+/// 이전 확정안 B(바 오른쪽 끝부터 최대HP 비율)와 C(HP 끝에 붙임)는 선택 항목으로 남긴다.
 /// 띠는 HP 채움 그림과 같은 모양·높이이고, 경계 발광 이음선을 더한다. 오라·방패 아이콘은 실험실 비교용 선택 항목.
 /// 피격 감소는 HP와 같은 보간, 0이 되면 짧게 반짝이며 조각으로 깨지고, 부여 순간 짧게 차오른다.
 /// </summary>
@@ -16,6 +17,8 @@ public class UI_BossHpShield : MonoBehaviour
     {
         CurrentLine, // A안: HP 채움 끝부터 줄 단위 길이, 넘치면 현재 줄 위로 덮고 최대 한 줄
         WholeBar,    // B안: 바 오른쪽 끝부터 왼쪽으로 최대HP 비율 길이
+        AttachedToHp, // C안: HP 채움 끝에 붙여 최대HP 비율 길이, 바 끝을 넘으면 왼쪽으로 밀어 HP 끝을 덮는다
+        WholeBarOverlay, // D3안: 바 왼쪽 끝부터 오른쪽 끝까지 전체를 덮고, 남은 보호막 비율만큼 오른쪽부터 걷힌다
     }
 
     [Header("HP Bar (UI_BossHpBar와 같은 참조)")]
@@ -78,6 +81,7 @@ public class UI_BossHpShield : MonoBehaviour
     private decimal _maxHp = 1m;
     private decimal _hpPerLine = 1m;
     private float _shown;
+    private float _peak; // D3안: 이번 부여의 최대 보호막. 남은 비율 = _shown / _peak
     private float _flash;
     private float _alpha = 1f;
     private float _pulse = 1f;
@@ -118,6 +122,7 @@ public class UI_BossHpShield : MonoBehaviour
             KillValueTweens();
             _initialized = true;
             _shown = to;
+            _peak = to > 0f ? Mathf.Max(_peak, to) : 0f;
             _flash = 0f;
             _alpha = 1f;
             _scaleY = 1f;
@@ -139,6 +144,7 @@ public class UI_BossHpShield : MonoBehaviour
         _initialized = true;
         _target = 0m;
         _shown = 0f;
+        _peak = 0f;
         _flash = 0f;
         _alpha = 1f;
         _scaleY = 1f;
@@ -151,6 +157,7 @@ public class UI_BossHpShield : MonoBehaviour
         KillValueTweens();
         // 깨지는 중에 다시 부여되면 0부터 새로 차오른다.
         if (_alpha < 1f) _shown = 0f;
+        _peak = _shown <= 0f ? to : Mathf.Max(_peak, to);
         _alpha = 1f;
         _scaleY = 1f;
         _dissolve = 0f;
@@ -188,6 +195,7 @@ public class UI_BossHpShield : MonoBehaviour
         sequence.OnComplete(() =>
         {
             _shown = 0f;
+            _peak = 0f;
             _flash = 0f;
             _alpha = 1f;
             _scaleY = 1f;
@@ -269,11 +277,18 @@ public class UI_BossHpShield : MonoBehaviour
             start = fillRight;
             if (start + width > usableRight) start = usableRight - width;
         }
+        else if (_span == ShieldSpan.WholeBarOverlay)
+        {
+            width = Mathf.Clamp01(_shown / Mathf.Max(1e-6f, _peak)) * usableWidth;
+            start = usableLeft;
+        }
         else
         {
             width = Mathf.Clamp01(_shown / Mathf.Max(1e-6f, (float)_maxHp)) * usableWidth;
-            start = usableRight - width;
+            start = _span == ShieldSpan.AttachedToHp ? Mathf.Min(fillRight, usableRight - width) : usableRight - width;
         }
+        // D3안은 움직이는 경계가 오른쪽 끝이다. 나머지는 HP와 맞닿는 왼쪽 끝.
+        float edge = _span == ShieldSpan.WholeBarOverlay ? start + width : start;
 
         _mask.gameObject.SetActive(true);
         _mask.anchorMin = new Vector2(0f, _hpFillMask.anchorMin.y);
@@ -298,7 +313,7 @@ public class UI_BossHpShield : MonoBehaviour
         float barHeight = _bar.rect.height;
         seamRect.anchorMin = seamRect.anchorMax = new Vector2(0f, 0.5f);
         seamRect.pivot = new Vector2(0.5f, 0.5f);
-        seamRect.anchoredPosition = new Vector2(start, 0f);
+        seamRect.anchoredPosition = new Vector2(edge, 0f);
         seamRect.sizeDelta = new Vector2(_seamWidth, barHeight * _seamHeight);
         seamRect.localScale = new Vector3(1f, _scaleY, 1f);
         Color seam = Color.Lerp(_seamColor, Color.white, _flash);
@@ -311,7 +326,9 @@ public class UI_BossHpShield : MonoBehaviour
             float inv = artWidth > 0f ? 1f / artWidth : 0f;
             // 바 오른쪽 끝에 닿은 쪽은 보호막의 경계가 아니므로 테두리 빛을 넣지 않는다 (U를 멀리 보낸다).
             float endU = start + width >= usableRight - 0.5f ? 2f : (start + width - artLeft) * inv;
-            _bandInstance.SetVector(BandUId, new Vector4((start - artLeft) * inv, endU, 0f, 0f));
+            // 바 왼쪽 끝에 닿은 쪽(D3안)도 보호막 경계가 아니므로 테두리 빛을 넣지 않는다.
+            float startU = start <= usableLeft + 0.5f && _span == ShieldSpan.WholeBarOverlay ? -1f : (start - artLeft) * inv;
+            _bandInstance.SetVector(BandUId, new Vector4(startU, endU, 0f, 0f));
             _bandInstance.SetFloat(AspectId, barHeight > 0f ? artWidth / barHeight : 1f);
             _bandInstance.SetFloat(DissolveId, _dissolve);
         }
@@ -334,7 +351,7 @@ public class UI_BossHpShield : MonoBehaviour
             var iconRect = _icon.rectTransform;
             iconRect.anchorMin = iconRect.anchorMax = new Vector2(0f, 0.5f);
             iconRect.pivot = new Vector2(0.5f, 0.5f);
-            iconRect.anchoredPosition = new Vector2(start, 0f);
+            iconRect.anchoredPosition = new Vector2(edge, 0f);
             float pop = 1f + 0.25f * _flash + (_scaleY - 1f);
             iconRect.sizeDelta = new Vector2(_iconSize, _iconSize);
             iconRect.localScale = new Vector3(pop, pop, 1f);

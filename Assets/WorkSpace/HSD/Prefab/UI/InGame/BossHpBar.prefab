@@ -617,16 +617,16 @@ MonoBehaviour:
   _hpColor: {fileID: 694432296968566792}
   _hpBackground: {fileID: 2503550705461959490}
   _fillSpriteHorizontalPadding: {x: 10, y: 9}
-  _span: 1
+  _span: 3
   _seamSprite: {fileID: 21300000, guid: 0fac8405710446044942180ed3466a25, type: 3}
-  _bandColor: {r: 0.2, g: 0.62, b: 1, a: 0.85}
+  _bandColor: {r: 0.22, g: 0.58, b: 1, a: 0.72}
   _seamColor: {r: 0.72, g: 0.97, b: 1, a: 1}
   _flashColor: {r: 0.92, g: 1, b: 1, a: 0.95}
-  _seamWidth: 22
-  _seamHeight: 0.72
+  _seamWidth: 10
+  _seamHeight: 0.7
   _pulseMinAlpha: 0.55
   _pulsePeriod: 1.1
-  _bandMaterial: {fileID: 2100000, guid: 47ff4a5d924121140afe2a7c655ec166, type: 2}
+  _bandMaterial: {fileID: 2100000, guid: 2635e0d5040e4f84999cae8c4bd0d74b, type: 2}
   _haloSprite: {fileID: 0}
   _haloColor: {r: 0.2, g: 0.75, b: 1, a: 0.85}
   _haloPadding: {x: 26, y: 1.05}
@@ -638,6 +638,6 @@ MonoBehaviour:
   _grantDuration: 0.25
   _grantEase: 6
   _hitFlashDuration: 0.14
-  _hitFlashStrength: 0.45
+  _hitFlashStrength: 0.25
   _breakDuration: 0.28
   _breakScaleY: 1.35
