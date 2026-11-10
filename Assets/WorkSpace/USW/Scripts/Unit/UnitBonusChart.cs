@@ -26,11 +26,14 @@ public static class UnitBonusChart
         var rows=await BackendChartReader.ReadAsync(ChartName,token);
         var parsed=Parse(rows);var text=ParsePresentations(rows);token.ThrowIfCancellationRequested();definitions=parsed;presentations=text;
     }
+    /// <summary>
+    /// Returns the chart bonuses for a unit key. Units the chart does not list (e.g. tutorial-only
+    /// copies such as TutorialUnit_Betan) keep their authored SO bonuses instead of failing Init.
+    /// </summary>
     public static List<UnitLevelBonusDefinition> Resolve(string key,List<UnitLevelBonusDefinition> fallback)
     {
         if(definitions==null)return fallback;
-        if(!definitions.TryGetValue(key,out var value))throw new InvalidOperationException("Missing bonus unit: "+key);
-        return value;
+        return definitions.TryGetValue(key,out var value)?value:fallback;
     }
     public static void Clear(){definitions=null;presentations.Clear();}
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
