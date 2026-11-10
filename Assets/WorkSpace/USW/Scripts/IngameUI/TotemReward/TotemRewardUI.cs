@@ -26,6 +26,7 @@ using GaeGGUL.UI.Totem;
 public class TotemRewardUI : MonoBehaviour
 {
     [VContainer.Inject] private ExpManager _expManager;
+    [Inject] private GameManager _gameManager;
     private const int ChoiceCount = 3;
     [VContainer.Inject] private EndlessRunService _runPenalties;
     private const float TextBlockWidth = 0.55f;
@@ -84,12 +85,12 @@ public class TotemRewardUI : MonoBehaviour
     /// <summary>Raised for every reward opening, including queued and tutorial rewards.</summary>
     public event Action Opening;
     /// <summary>True when the overview has finished its entrance.</summary>
-    public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeSelf;
+    public bool IsReadyForSelection => _isOpen && !_busy && _overview != null && _overview.gameObject.activeInHierarchy;
     /// <summary>Overview target for a non-interactive tutorial highlight.</summary>
     public RectTransform ChoiceArea => _overview;
     public RectTransform RequiredChoiceArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].Icon.rectTransform;
     public RectTransform RequiredChoiceDescriptionArea => _bands[_choices.IndexOf(_tutorialSettings.RequiredTotem)].TextBlock;
-    public bool IsReadyForConfirmation => _isOpen && !_busy && _detail != null && _detail.gameObject.activeSelf;
+    public bool IsReadyForConfirmation => _isOpen && !_busy && _detail != null && _detail.gameObject.activeInHierarchy;
     public RectTransform ConfirmationArea => _confirmationArea;
     /// <summary>Current settled detail, used by the tutorial's real swipe lesson.</summary>
     public TotemData DetailChoice => IsReadyForConfirmation ? _choices[_detailIndex] : null;
@@ -171,6 +172,8 @@ public class TotemRewardUI : MonoBehaviour
     private int _detailIndex = -1;
     private CancellationTokenSource _selectionCts;
     private readonly object _tweenOwner = new object();
+    private RectTransform _retryPanel;
+    private bool _rewardGranted;
 
     private void Start()
     {
@@ -192,7 +195,7 @@ public class TotemRewardUI : MonoBehaviour
     /// <summary>보상 선택을 연다. 이미 열려 있으면 닫힌 뒤 이어서 연다. 선택이 끝나면 onChoiceMade를 부른다.</summary>
     public void Show(Action onChoiceMade)
     {
-        if (!isActiveAndEnabled) return;
+        if (!isActiveAndEnabled || _gameManager == null || _gameManager.IsFinished) return;
         if (_isOpen) { _pending.Enqueue(onChoiceMade); return; }
         ShowAsync(onChoiceMade).Forget();
     }
@@ -221,29 +224,75 @@ public class TotemRewardUI : MonoBehaviour
         _isOpen = true;
         _busy = true;
         _onChoiceMade = onChoiceMade;
+        _rewardGranted = false;
+        _choices.Clear();
+        _choices.AddRange(choices);
         Opening?.Invoke();
         PauseGame(token);
+
+        await LoadChoicesAsync(token);
+    }
+
+    private async UniTask LoadChoicesAsync(CancellationToken token)
+    {
+        _busy = true;
+        if (_retryPanel != null) _retryPanel.gameObject.SetActive(false);
 
         try
         {
             var loads = new List<UniTask>();
-            foreach (var data in choices) loads.Add(data.LoadAssetsAsync());
+            foreach (var data in _choices) loads.Add(data.LoadAssetsAsync());
             await UniTask.WhenAll(loads).AttachExternalCancellation(token);
             token.ThrowIfCancellationRequested();
 
             EnsureBuilt();
-            _choices.Clear();
-            _choices.AddRange(choices);
             PopulateOverview();
             await PlayEntranceAsync(token);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+            if (OwnsSelection(token) && !token.IsCancellationRequested) ShowRetry();
+        }
         catch (Exception error)
         {
-            if (OwnsSelection(token)) CancelPendingRewards();
-            Debug.LogException(error, this);
+            if (OwnsSelection(token)) ShowRetry();
+            Debug.LogWarning($"[TotemRewardUI] 보상 표시 실패, 같은 후보로 재시도 가능: {error.Message}", this);
         }
         finally { if (OwnsSelection(token)) _busy = false; }
+    }
+
+    private void ShowRetry()
+    {
+        if (_gameManager == null || _gameManager.IsFinished) { CancelPendingRewards(); return; }
+        DOTween.Kill(_tweenOwner, false);
+        if (_container != null) _container.gameObject.SetActive(false);
+        if (_retryPanel == null)
+        {
+            var backdrop = NewImage("RewardRetry", transform, Color.black);
+            _retryPanel = backdrop.rectTransform;
+            Stretch(_retryPanel);
+            var button = backdrop.gameObject.AddComponent<Button>();
+            button.onClick.AddListener(RetryReward);
+            var label = NewText("RetryLabel", _retryPanel, UiTypography.BodySize, Color.white, TextAlignmentOptions.Center);
+            Stretch(label.rectTransform);
+            label.text = "토템 보상을 불러오지 못했습니다.\n화면을 눌러 다시 시도하세요.";
+        }
+        if (_rootGroup != null) { _rootGroup.alpha = 1f; _rootGroup.blocksRaycasts = true; }
+        _retryPanel.SetAsLastSibling();
+        _retryPanel.gameObject.SetActive(true);
+    }
+
+    private void RetryReward()
+    {
+        if (_busy || !_isOpen || !isActiveAndEnabled) return;
+        if (_gameManager == null || _gameManager.IsFinished) { CancelPendingRewards(); return; }
+        if (_selectionCts == null)
+        {
+            _selectionCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            PauseGame(_selectionCts.Token);
+        }
+        if (_rewardGranted) CloseAsync(_selectionCts.Token).Forget();
+        else LoadChoicesAsync(_selectionCts.Token).Forget();
     }
 
     // ── 연출 ───────────────────────────────────────────────────
@@ -516,11 +565,13 @@ public class TotemRewardUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
+        if (!isActiveAndEnabled || _selectionCts == null || _gameManager == null || _gameManager.IsFinished || !IsReadyForConfirmation) return;
         if (!_isOpen || _busy || _detailIndex < 0 || _detailIndex >= _choices.Count) return;
         if (HasRequiredChoice && (!AllowTutorialConfirmation || _choices[_detailIndex] != _tutorialSettings.RequiredTotem)) return;
         _busy = true; // Inventory listeners can synchronously reenter selection or stop the run.
         var token = _selectionCts.Token;
         var data = _choices[_detailIndex];
+        _rewardGranted = true;
         _chosenTotems.Add(data.totemId);
         if (_inventory == null || !_inventory.TryAdd(data))
         {
@@ -595,6 +646,8 @@ public class TotemRewardUI : MonoBehaviour
         _detailIndex = -1;
         EndSelection();
         _choices.Clear();
+        _rewardGranted = false;
+        if (_retryPanel != null) _retryPanel.gameObject.SetActive(false);
         if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
         if (_container != null) _container.gameObject.SetActive(false);
         _timeScale?.Release(this);
@@ -617,7 +670,19 @@ public class TotemRewardUI : MonoBehaviour
         DOTween.Kill(_tweenOwner, false);
     }
 
-    private void OnDisable() => CancelPendingRewards();
+    private void OnDisable()
+    {
+        if (!_isOpen || _gameManager == null || _gameManager.IsFinished)
+        { CancelPendingRewards(); return; }
+        // A temporary UI disable keeps the reward and pause ownership until re-enabled.
+        EndSelection();
+        _busy = false;
+    }
+
+    private void OnEnable()
+    {
+        if (_isOpen) RetryReward();
+    }
 
     private void OnDestroy()
     {

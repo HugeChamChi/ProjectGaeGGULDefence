@@ -250,13 +250,14 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [Tooltip("회전 가능 여부.")]
     public bool isRotatable = true;
 
+    /// <summary>Loads authored references; missing addressed assets fail without allowing placement or reward completion.</summary>
     public async Cysharp.Threading.Tasks.UniTask LoadAssetsAsync()
     {
         if (!string.IsNullOrEmpty(iconAddress) && icon == null)
-            icon = await RM.LoadAsync<Sprite>(iconAddress);
+            icon = await LoadRequiredAsync<Sprite>(iconAddress);
             
         if (!string.IsNullOrEmpty(prefabAddress) && prefab == null)
-            prefab = await RM.LoadAsync<GameObject>(prefabAddress);
+            prefab = await LoadRequiredAsync<GameObject>(prefabAddress);
 
         if (rotationSprites == null || rotationSprites.Length != 4)
             rotationSprites = new Sprite[4];
@@ -266,9 +267,16 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
             for (int i = 0; i < rotationSpriteAddresses.Length; i++)
             {
                 if (!string.IsNullOrEmpty(rotationSpriteAddresses[i]) && i < rotationSprites.Length && rotationSprites[i] == null)
-                    rotationSprites[i] = await RM.LoadAsync<Sprite>(rotationSpriteAddresses[i]);
+                    rotationSprites[i] = await LoadRequiredAsync<Sprite>(rotationSpriteAddresses[i]);
             }
         }
+    }
+
+    private static async Cysharp.Threading.Tasks.UniTask<T> LoadRequiredAsync<T>(string address) where T : UnityEngine.Object
+    {
+        var asset = await RM.LoadAsync<T>(address);
+        if (asset == null) throw new System.InvalidOperationException($"Totem asset load failed: {address}");
+        return asset;
     }
 
     public void UnloadAssets()
