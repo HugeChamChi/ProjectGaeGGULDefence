@@ -16,6 +16,7 @@ public sealed class LevelUpFieldView : MonoBehaviour
     [SerializeField] private IngameHudMotion _hudMotion;
     private bool _open, _acceptInput, _transitioning;
     private LevelUpCardUI[] _cards = System.Array.Empty<LevelUpCardUI>();
+    private CanvasGroup _controlsGroup;
 
     /// <summary>True while choices are hidden by the explicit footer button.</summary>
     public bool ViewingField { get; private set; }
@@ -47,6 +48,7 @@ public sealed class LevelUpFieldView : MonoBehaviour
         ResetFieldView();
         _open = false;
         _acceptInput = false;
+        SetControlsHidden(false);
         if (_controls != null) _controls.SetActive(false);
         _hudMotion?.Release(this, animate);
     }
@@ -101,6 +103,19 @@ public sealed class LevelUpFieldView : MonoBehaviour
             _transitioning = false;
         }
         _button.interactable = CanToggle();
+        // The term/description sheet sits above the choices; hide the footer toggle so it cannot cover it.
+        SetControlsHidden(_choices != null && _choices.DescriptionBlocksInput);
+    }
+
+    private void SetControlsHidden(bool hidden)
+    {
+        if (_controls == null) return;
+        if (_controlsGroup == null && !_controls.TryGetComponent(out _controlsGroup))
+            _controlsGroup = _controls.AddComponent<CanvasGroup>();
+        float alpha = hidden ? 0f : 1f;
+        if (Mathf.Approximately(_controlsGroup.alpha, alpha)) return;
+        _controlsGroup.alpha = alpha;
+        _controlsGroup.blocksRaycasts = !hidden;
     }
 
     private void ResetFieldView()

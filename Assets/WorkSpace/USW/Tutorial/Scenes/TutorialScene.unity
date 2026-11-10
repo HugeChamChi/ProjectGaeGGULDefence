@@ -4505,18 +4505,8 @@ MonoBehaviour:
   btn_Close: {fileID: 569940358}
   btn_BackgroundClose: {fileID: 1038922086}
   targetAnim: {fileID: 338745200}
-  btn_TabUnit: {fileID: 344256563}
-  btn_TabTotem: {fileID: 930181009}
-  btn_TabLevelUp: {fileID: 2026350442}
-  btn_TabChief: {fileID: 1641859942}
-  listContentParent: {fileID: 94264818}
   slotPrefab: {fileID: 6299702935701553061, guid: 8dd1fbeda83ef0c4d80c1e1381a11000,
     type: 3}
-  addViewGroup: {fileID: 1956820263}
-  addListContentParent: {fileID: 843492097}
-  btn_ShowAddView: {fileID: 1799461487}
-  btn_CloseAddView: {fileID: 2133426320}
-  btn_ShowInfoView: {fileID: 514447782}
 --- !u!114 &338745200
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21855,12 +21845,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1641859940}
   m_CullTransparentMesh: 1
---- !u!224 &1649027957 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 747891969301302499, guid: 6e4abff8e05bf2349918b20fc8ccbbab,
-    type: 3}
-  m_PrefabInstance: {fileID: 1315466385}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1652163957
 GameObject:
   m_ObjectHideFlags: 0
@@ -23793,18 +23777,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1799461485}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1799461487 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3231242459247076546, guid: 1a483fb5d7386564786aeb60ec0bb3af,
-    type: 3}
-  m_PrefabInstance: {fileID: 1799461485}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1815637420
 GameObject:
   m_ObjectHideFlags: 0
@@ -26200,7 +26172,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -68}
-  m_SizeDelta: {x: 168, y: 268}
+  m_SizeDelta: {x: 168, y: 340}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &2003818436
 MonoBehaviour:
@@ -28142,18 +28114,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2133426318}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2133426320 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3231242459247076546, guid: 1a483fb5d7386564786aeb60ec0bb3af,
-    type: 3}
-  m_PrefabInstance: {fileID: 2133426318}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2139580104
 GameObject:
   m_ObjectHideFlags: 0
@@ -28304,6 +28264,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2141934156}
   m_CullTransparentMesh: 1
+--- !u!114 &9876543210123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008345684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bcf153ed53341e1879c9b9e5c36bbbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IngameHudMotion
+  _buttons: {fileID: 1715269599}
+  _sideTargets:
+  - {fileID: 1315466391}
+  - {fileID: 67880461}
+  _downDistance: 600
+  _rightDistance: 340
+  _hideSeconds: 0.3
+  _showSeconds: 0.4
 --- !u!222 &18343420462108489
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -30772,23 +30752,3 @@ SceneRoots:
   - {fileID: 1745485816}
   - {fileID: 1747743799}
   - {fileID: 1700999938}
---- !u!114 &9876543210123
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2008345684}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bcf153ed53341e1879c9b9e5c36bbbf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::IngameHudMotion
-  _buttons: {fileID: 1715269599}
-  _sideTargets:
-  - {fileID: 1315466391}
-  - {fileID: 67880461}
-  _downDistance: 600
-  _rightDistance: 340
-  _hideSeconds: 0.3
-  _showSeconds: 0.4

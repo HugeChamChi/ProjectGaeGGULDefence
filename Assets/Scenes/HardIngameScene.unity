@@ -8710,7 +8710,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -68}
-  m_SizeDelta: {x: 168, y: 268}
+  m_SizeDelta: {x: 168, y: 340}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &749393146
 MonoBehaviour:
@@ -14034,12 +14034,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   btn_Close: {fileID: 1578637727}
   txt_AccumulatedStats: {fileID: 1592704739}
---- !u!224 &1258720514 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 747891969301302499, guid: 6e4abff8e05bf2349918b20fc8ccbbab,
-    type: 3}
-  m_PrefabInstance: {fileID: 235807847}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1260888063
 GameObject:
   m_ObjectHideFlags: 0
@@ -23571,6 +23565,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2141934156}
   m_CullTransparentMesh: 1
+--- !u!114 &9876543210123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008345684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bcf153ed53341e1879c9b9e5c36bbbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IngameHudMotion
+  _buttons: {fileID: 1715269599}
+  _sideTargets:
+  - {fileID: 235807848}
+  - {fileID: 67880461}
+  _downDistance: 600
+  _rightDistance: 340
+  _hideSeconds: 0.3
+  _showSeconds: 0.4
 --- !u!222 &18343420462108489
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -25439,23 +25453,3 @@ SceneRoots:
   - {fileID: 654263406}
   - {fileID: 566297883}
   - {fileID: 1649027959}
---- !u!114 &9876543210123
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2008345684}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bcf153ed53341e1879c9b9e5c36bbbf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::IngameHudMotion
-  _buttons: {fileID: 1715269599}
-  _sideTargets:
-  - {fileID: 235807848}
-  - {fileID: 67880461}
-  _downDistance: 600
-  _rightDistance: 340
-  _hideSeconds: 0.3
-  _showSeconds: 0.4

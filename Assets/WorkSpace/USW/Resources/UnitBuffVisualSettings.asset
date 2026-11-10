@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc60b1b7c5c12cc4089eada71c932b72, type: 3}
   m_Name: UnitBuffVisualSettings
   m_EditorClassIdentifier: Assembly-CSharp::UnitBuffVisualSettings
-  Attack: {fileID: 11400000, guid: 38cd821945628124ba1b3420a7b06cc0, type: 2}
-  Speed: {fileID: 11400000, guid: af96ca4e6c04dff48af65644f0b0e5e5, type: 2}
-  Mixed: {fileID: 11400000, guid: 7a305d28854e2fd44b7e332569c5b6c2, type: 2}
+  Attack: {fileID: 11400000, guid: b8dfdb755a29d094db12cb7681fda9ed, type: 2}
+  Speed: {fileID: 11400000, guid: 40395c54c114a9046bc8c3b7113a67b7, type: 2}
+  Mixed: {fileID: 11400000, guid: c05081970d5db9845a6f9d789a42da53, type: 2}
   Disabled: {fileID: 11400000, guid: 1fca5b9a255ba054abc41a7d1025117d, type: 2}
   AdditiveMaterial: {fileID: 2100000, guid: 260f23e2645fb5d4ea147c72dd0d7479, type: 2}
   BatchShader: {fileID: 4800000, guid: 1220e004d2cba9344bcb3ee69a5cee5d, type: 3}

@@ -5,6 +5,8 @@ using UnityEngine;
 /// 모양새는 StatBuffFxStyle(SO 시안)로 정한다. 요소:
 ///   떠오르는 조각(세모·화살·번개·별·잎…, 섞기·겹치기·아래로) · 반짝이 · 속도선 ·
 ///   발밑 소용돌이 / 오라 / 남은 시간 눈금 · 유닛 뒤 빛기둥 · 머리 위 배지 · 시작 고리.
+/// 동시 조각 상한(MaxAlive): 대상이 많을 때 한 대상의 조각을 2~3개로 묶어 배치를 줄인다.
+/// 대상 크기 비례(ScaleWithTarget): Play 때 대상의 가장 큰 렌더러 크기로 배율을 정한다. 일반 유닛(기준 크기 이하)은 배율 1.
 /// 전장 바닥이 밝아서 몸통은 기본 스프라이트 머티리얼로 색을 그대로 칠하고, 번짐·반짝이만 USW/Fx/AdditiveWorld로 더한다
 /// (더하기만 쓰면 하얗게 날아감 — 실험실 1차 캡처 2026-10-11). 처음 시안의 빨강·노랑 마름모는 사용자 피드백으로 뺐다.
 /// 그림은 StatBuffShapes가 코드로 만든다. 실험실(StatBuffFxLab)에서 고르고, 게임에서는 버프가 걸릴 때 Play(유닛, 시안, 지속시간)를 부른다.
@@ -77,6 +79,11 @@ public sealed class StatBuffFx : MonoBehaviour
     private Color? _tint;
     private Transform _anchor;
     private float _scale = 1f;
+    private float _baseScale = 1f;
+    private float _targetScale = 1f;
+    private Vector3 _feetOffset;  // 대상 위치 → 발밑 기준점 (기준 크기 이하 대상은 0 — 지금과 같은 자리)
+    private int _measureTries;
+    private const int MaxMeasureTries = 10;
     private float _clock;
     private float _startAt = -1f;
     private float _endAt;
@@ -105,9 +112,11 @@ public sealed class StatBuffFx : MonoBehaviour
         if (style == null) return;
         if (!_built) _style = style;
         Build();
+        bool retarget = anchor != _anchor;
         _anchor = anchor;
-        _scale = Mathf.Max(0.05f, scale);
+        _baseScale = Mathf.Max(0.05f, scale);
         bool fresh = !IsPlaying || _clock >= _endAt || style != _style;
+        if (fresh || retarget) _measureTries = 0;
         if (fresh)
         {
             if (style != _style) HideAll();
@@ -118,7 +127,8 @@ public sealed class StatBuffFx : MonoBehaviour
             _nextRiserAt = _clock;
             _nextSparkleAt = _clock + 0.05f;
             _nextLineAt = _clock;
-            if (playIntro) for (int i = 0; i < style.BurstCount; i++) SpawnRiser();
+            MeasureTarget();
+            if (playIntro) for (int i = 0; i < style.BurstCount && CanSpawnRiser(); i++) SpawnRiser();
         }
         else if (duration > 0f)
         {
@@ -129,7 +139,48 @@ public sealed class StatBuffFx : MonoBehaviour
         _burstAt = playIntro && style.BurstRing ? _clock : -1f;
         _badgeAt = playIntro && style.Badge != StatBuffShape.None ? _clock : -1f;
         _nextBadgeAt = style.BadgeRepeat > 0f ? _clock + style.BadgeRepeat : float.PositiveInfinity;
+        MeasureTarget();
         Follow();
+    }
+
+    /// <summary>대상 그림(활성 렌더러 중 가장 큰 것)의 크기로 배율을 정한다. 스파인 첫 프레임처럼 아직 비어 있으면 몇 프레임 다시 잰다.</summary>
+    private void MeasureTarget()
+    {
+        _scale = _baseScale * _targetScale;
+        if (_measureTries >= MaxMeasureTries || _anchor == null || _style == null) return;
+        if (!_style.ScaleWithTarget)
+        {
+            _targetScale = 1f; _feetOffset = Vector3.zero; _measureTries = MaxMeasureTries;
+            _scale = _baseScale;
+            return;
+        }
+        _measureTries++;
+        Bounds best = default;
+        float bestArea = 0f;
+        foreach (var r in _anchor.GetComponentsInChildren<Renderer>())
+        {
+            if (!r.enabled || !(r is SpriteRenderer || r is MeshRenderer) || r.transform.IsChildOf(transform)) continue;
+            var b = r.bounds;
+            float area = b.size.x * b.size.y;
+            if (area > bestArea) { bestArea = area; best = b; }
+        }
+        if (bestArea <= 0.0001f) { _targetScale = 1f; _feetOffset = Vector3.zero; _scale = _baseScale; return; }
+        _measureTries = MaxMeasureTries;
+        _targetScale = Mathf.Clamp(Mathf.Max(best.size.x, best.size.y) / _style.TargetReferenceSize, 1f, _style.MaxTargetScale);
+        // 큰 대상(보스)은 피벗이 발밑이 아닐 수 있어 그림 아래 가운데를 발밑으로 쓴다
+        var anchorPos = _anchor.position;
+        _feetOffset = _targetScale > 1f ? new Vector3(best.center.x - anchorPos.x, best.min.y - anchorPos.y, 0f) : Vector3.zero;
+        _scale = _baseScale * _targetScale;
+    }
+
+    // 동시 조각 상한 안인지 (겹치기는 2개로 센다)
+    private bool CanSpawnRiser()
+    {
+        int max = _style.MaxAlive;
+        if (max <= 0) return true;
+        int alive = 0;
+        foreach (var r in _risers) if (r.Active) alive++;
+        return alive + (_style.Stacked ? 2 : 1) <= Mathf.Max(max, _style.Stacked ? 2 : 1);
     }
 
     /// <summary>조각·오라·빛기둥·눈금의 기본색(Primary)을 덮는다. null이면 시안 색으로 돌아간다.</summary>
@@ -204,6 +255,7 @@ public sealed class StatBuffFx : MonoBehaviour
     {
         _clock += _useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
         if (!IsPlaying || !_built || _style == null) return;
+        if (_measureTries < MaxMeasureTries) MeasureTarget();
         Follow();
 
         bool alive = _clock < _endAt;
@@ -227,7 +279,7 @@ public sealed class StatBuffFx : MonoBehaviour
 
     private void Follow()
     {
-        if (_anchor != null) transform.position = _anchor.position;
+        if (_anchor != null) transform.position = _anchor.position + _feetOffset;
     }
 
     // ── 생성 ─────────────────────────────────────────────
@@ -235,7 +287,7 @@ public sealed class StatBuffFx : MonoBehaviour
     private void Spawn()
     {
         var s = _style;
-        if (_clock >= _nextRiserAt)
+        if (_clock >= _nextRiserAt && CanSpawnRiser()) // 상한에 걸리면 자리가 날 때 바로 띄운다
         {
             _nextRiserAt = _clock + s.Interval * Range(0.7f, 1.3f);
             SpawnRiser();
@@ -538,6 +590,7 @@ public sealed class StatBuffFx : MonoBehaviour
         {
             var s = _style;
             int risers = Mathf.Clamp(Mathf.CeilToInt(s.Life * 1.15f / Mathf.Max(.02f, s.Interval * .7f)) * (s.Stacked ? 2 : 1) + s.BurstCount, 4, MaxRisers);
+            if (s.MaxAlive > 0) risers = Mathf.Min(risers, Mathf.Max(s.MaxAlive, s.Stacked ? 2 : 1));
             _risers = new Riser[risers];
             _sparkles = new Riser[s.SparkleSize > 0f && s.SparkleInterval > 0f ? Mathf.Min(MaxSparkles, Mathf.CeilToInt(SparkleLife / (s.SparkleInterval * .6f)) + 1) : 0];
             float lineLife = s.SpeedLineSpeed > 0f ? Mathf.Max(.15f, (s.Area.y + s.SpeedLineLength) / s.SpeedLineSpeed) : .4f;

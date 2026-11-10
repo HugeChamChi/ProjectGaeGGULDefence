@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c8dd09147feed94f85f9011dfa863e7, type: 3}
+  m_Name: StatBuffStyle_N1_ThreeMixed
+  m_EditorClassIdentifier: Assembly-CSharp::StatBuffFxStyle
+  DisplayName: "N1 3\uAC1C \xB7 \uACF5\u2191\uC18D\u2193"
+  Usage: "\uBE68\uAC15 \uC624\uB974\uACE0 \uD30C\uB791 \uB0B4\uB824\uAC10, \uCD5C\uB300
+    3\uAC1C"
+  Primary: {r: 1, g: 0.28, b: 0.3, a: 1}
+  Secondary: {r: 0.35, g: 0.6, b: 1, a: 1}
+  BadgeColor: {r: 1, g: 0.28, b: 0.3, a: 1}
+  AutoOutlineColor: 1
+  OutlineColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.9}
+  AnimateRiserColor: 0
+  RiserColorOverLife:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  Shape: 1
+  Outline: 0
+  Downward: 0
+  Pattern: 0
+  Interval: 0.35
+  MaxAlive: 3
+  Life: 1
+  Rise: 0.9
+  Size: {x: 0.45, y: 0.6}
+  Area: {x: 0.65, y: 1.1}
+  Stacked: 0
+  StackGap: 0.62
+  SpinRange: {x: 0, y: 0}
+  RandomTilt: 0
+  Sway: 0
+  SwayFrequency: 6
+  EndScale: 0.7
+  SecondaryShare: 0.4
+  SecondaryShape: 0
+  SecondaryDownward: 1
+  SparkleInterval: 0
+  SparkleSize: 0
+  SparkleColor: {r: 1, g: 1, b: 1, a: 1}
+  SpeedLines: 0
+  SpeedLineInterval: 0.07
+  SpeedLineLength: 0.45
+  SpeedLineSpeed: 3.2
+  Swoosh: 0
+  SwooshArcs: 2
+  SwooshSpeed: 320
+  SwooshRadius: 0.55
+  GroundAura: 0
+  AuraRadius: 0.6
+  TimerPips: 0
+  PipCount: 10
+  ScaleWithTarget: 1
+  TargetReferenceSize: 1.8
+  MaxTargetScale: 4
+  Pillar: 0
+  PillarHeight: 1.9
+  PillarWidth: 0.95
+  Badge: 0
+  BadgeY: 1.55
+  BadgeSize: 0.5
+  BadgeHold: 0.8
+  BadgeRepeat: 0
+  BurstRing: 1
+  BurstCount: 2
+  Intro: 0.35
+  Outro: 0.35

@@ -36,6 +36,8 @@ public sealed class StatBuffFxStyle : ScriptableObject
     public bool Downward;
     public StatBuffSpawnPattern Pattern = StatBuffSpawnPattern.Scatter;
     [Min(0.02f)] public float Interval = 0.12f;
+    [Tooltip("한 대상에 동시에 떠 있는 조각 수 상한 (0 = 제한 없음, 겹치기는 2개로 셈) — 대상이 많을 때 배치 절약")]
+    [Min(0)] public int MaxAlive;
     [Min(0.1f)] public float Life = 0.85f;
     [Min(0f)] public float Rise = 0.75f;
     [Tooltip("최소 / 최대 크기")]
@@ -83,6 +85,13 @@ public sealed class StatBuffFxStyle : ScriptableObject
     [Tooltip("남은 시간 눈금 — 지속시간이 있을 때 시간 따라 하나씩 꺼진다")]
     public bool TimerPips;
     [Range(4, 16)] public int PipCount = 10;
+
+    [Header("대상 크기 비례")]
+    [Tooltip("대상 그림 크기에 맞춰 키운다. 기준 크기 이하(일반 유닛)는 배율 1")]
+    public bool ScaleWithTarget;
+    [Tooltip("이 크기(월드, 가로·세로 중 큰 쪽)까지는 배율 1")]
+    [Min(0.1f)] public float TargetReferenceSize = 1.8f;
+    [Min(1f)] public float MaxTargetScale = 4f;
 
     [Header("빛기둥 (유닛 뒤)")]
     public bool Pillar;
