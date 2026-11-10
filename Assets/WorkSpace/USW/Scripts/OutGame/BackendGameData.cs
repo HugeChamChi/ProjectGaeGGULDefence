@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using BackEnd;
 using LitJson;
@@ -241,6 +241,28 @@ public class BackendGameData
     // -------------------------
     // 파싱 헬퍼
     // -------------------------
+    public virtual async UniTask<bool> CommitCharacterUpgradeAsync(PlayerData next, string expectedSaveId, AccountJsonStore.Row row, string json)
+    {
+        string owner = _owner; int session = _session;
+        if (string.IsNullOrEmpty(_inDate) || owner != Backend.UserInDate || string.IsNullOrEmpty(row.InDate) || expectedSaveId != _serverSaveId) return false;
+        var playerWhere = new Where(); playerWhere.Equal("PlayerSaveId", expectedSaveId);
+        var characterWhere = new Where(); characterWhere.Equal("Data", row.Json);
+        var playerParam = new Param(); playerParam.Add("Gold", next.Gold); playerParam.Add("Diamond", next.Diamond); playerParam.Add("RewardInventory", JsonMapper.ToJson(next.RewardInventory)); playerParam.Add("PlayerSaveId", next.SaveId);
+        var characterParam = new Param(); characterParam.Add("Data", json);
+        var writes = new System.Collections.Generic.List<TransactionValue>
+        {
+            TransactionValue.SetUpdate("PlayerData", playerWhere, playerParam),
+            TransactionValue.SetUpdate("PlayerCharacterData", characterWhere, characterParam)
+        };
+        var done = new UniTaskCompletionSource<bool>();
+        Backend.GameData.TransactionWriteV2(writes, result => done.TrySetResult(result.IsSuccess()));
+        bool saved = await done.Task;
+        if (session != _session || owner != Backend.UserInDate) return false;
+        if (saved) { _serverSaveId = next.SaveId; _hasSaveId = true; _submittedSaveIds.Clear(); }
+        else HasWriteConflict = true;
+        return saved;
+    }
+
     private PlayerData ParsePlayerData(JsonData data)
     {
         // Missing legacy columns may use defaults; malformed existing amounts must never become zero saves.
@@ -262,8 +284,11 @@ public class BackendGameData
             UpgradeProgress = ParseUpgradeProgress(data.GetString("UpgradeProgressJson", "{\"SchemaVersion\":1,\"Trees\":[],\"LocalImportId\":\"\"}")),
             PlayerUid = Backend.UID,
             SaveId = data.GetString("PlayerSaveId", string.Empty),
+            WeeklyShopPurchasePeriod = data.GetString("WeeklyShopPurchasePeriod", string.Empty),
+            WeeklyShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("WeeklyShopPurchases", "[]")),
             ShopPurchaseDay = data.GetString("ShopPurchaseDay", string.Empty),
             ShopPurchases = JsonMapper.ToObject<System.Collections.Generic.List<int>>(data.GetString("ShopPurchases", "[]")),
+            RoundRewardClaims = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("RoundRewardClaims", "[]")) ?? new(),
             CompletedTutorials = JsonMapper.ToObject<System.Collections.Generic.List<string>>(data.GetString("CompletedTutorials", "[]")),
             SelectedChiefId = data.GetInt("SelectedChiefId", -1),
             SelectedIconId = data.GetInt("SelectedIconId", -1),
@@ -276,6 +301,7 @@ public class BackendGameData
             PendingEntryId = data.GetString("PendingEntryId", string.Empty),
             PendingEntryCost = data.GetInt("PendingEntryCost", 0),
             CouponHistory = ParseCouponHistory(data.GetString("CouponHistory", "[]")),
+            DiamondPurchases = ParseDiamondPurchases(data.GetString("DiamondPurchases", "[]")),
             PlayerName = data.GetString(COLUMN_PLAYER_NAME, "유저"),
             Gold       = data.GetInt(COLUMN_GOLD, 0),
             Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
@@ -305,8 +331,11 @@ public class BackendGameData
         // LitJson serializes ResearchSaveData.CurrentVersion (a const), then cannot deserialize it.
         param.Add("UpgradeProgressJson", JsonUtility.ToJson(data.UpgradeProgress));
         param.Add("PlayerSaveId", data.SaveId ?? string.Empty);
+        param.Add("WeeklyShopPurchasePeriod", data.WeeklyShopPurchasePeriod ?? string.Empty);
+        param.Add("WeeklyShopPurchases", JsonMapper.ToJson(data.WeeklyShopPurchases));
         param.Add("ShopPurchaseDay", data.ShopPurchaseDay ?? string.Empty);
         param.Add("ShopPurchases", JsonMapper.ToJson(data.ShopPurchases));
+        param.Add("RoundRewardClaims", JsonMapper.ToJson(data.RoundRewardClaims));
         param.Add("CompletedTutorials", JsonMapper.ToJson(data.CompletedTutorials));
         param.Add("SelectedChiefId", data.SelectedChiefId);
         param.Add("SelectedIconId", data.SelectedIconId);
@@ -319,6 +348,7 @@ public class BackendGameData
         param.Add("PendingEntryId", data.PendingEntryId ?? string.Empty);
         param.Add("PendingEntryCost", data.PendingEntryCost);
         param.Add("CouponHistory", JsonMapper.ToJson(data.CouponHistory ?? new System.Collections.Generic.List<CouponReceipt>()));
+        param.Add("DiamondPurchases", JsonMapper.ToJson(data.DiamondPurchases ?? new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>()));
         param.Add(COLUMN_PLAYER_NAME, data.PlayerName);
         param.Add(COLUMN_GOLD, data.Gold);
         param.Add(COLUMN_DIAMOND, data.Diamond);
@@ -379,6 +409,19 @@ public class BackendGameData
         foreach (var receipt in history)
             if (receipt == null || string.IsNullOrEmpty(receipt.Id) || receipt.Gold < 0 || receipt.Diamond < 0 || receipt.Stamina < 0)
                 throw new FormatException("Invalid coupon history entry; existing deduplication history must be repaired.");
+        return history;
+    }
+
+    private static System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt> ParseDiamondPurchases(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null") return new();
+        var history = JsonMapper.ToObject<System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>>(json);
+        if (history == null) throw new FormatException("Invalid diamond purchase history.");
+        var ids = new System.Collections.Generic.HashSet<string>();
+        foreach (var receipt in history)
+            if (receipt == null || string.IsNullOrWhiteSpace(receipt.Id) || string.IsNullOrWhiteSpace(receipt.ProductId)
+                || receipt.Diamond <= 0 || !ids.Add(receipt.Id))
+                throw new FormatException("Invalid diamond purchase history; existing grants must be preserved.");
         return history;
     }
 

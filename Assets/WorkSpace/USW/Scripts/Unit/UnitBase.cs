@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -196,11 +196,18 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         if (_spriteRenderer != null) _visual = new UnitVisualController(_spriteRenderer);
     }
 
+    public float AccountUpgradeMultiplier { get; private set; } = 1f;
+
     public void Init(UnitDependencies deps)
     {
         unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
-        LevelBonuses = new UnitLevelBonusController(unitData.LevelBonuses, deps.UnitLevels?.GetLevel(UnitBalanceRuntime.GetUnitKey(unitData.name)) ?? 1);
+        var characterId = unitData != null ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
+        int level = Player.Characters.IsReady ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
+        AccountUpgradeMultiplier = 1f + (level - 1) * GaeGGUL.DeckUpgrade.DeckUpgradeProgress.MultiplierPerLevel;
+        LevelBonuses = new UnitLevelBonusController(
+            UnitBonusChart.Resolve(UnitBalanceRuntime.GetUnitKey(unitData.name), unitData.LevelBonuses),
+            deps.UnitLevels?.GetLevel(characterId) ?? 1);
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
@@ -327,7 +334,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
@@ -354,6 +361,9 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public int GetCombatDroneDamage(out bool critical) => _stats.GetCombatDroneDamage(out critical);
     public int GetCombatDroneDisplayDamage(bool includeUpgrade = true) => _stats?.GetCombatDroneDisplayDamage(includeUpgrade) ?? 0;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
+    /// <summary>Only effects authored on this unit's skill receive permanent skill damage.</summary>
+    public float GetSkillDamageMultiplier(IEffect effect) => unitData?.skillData?.hitEffects?.Contains(effect) == true
+        ? 1f + (_deps?.Research?.Get(ResearchStat.SkillDamage) ?? 0f) : 1f;
     /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
     {
@@ -364,10 +374,10 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public int ComputeAttackDamageFrom(float baseDamage) => ComputeAttackDamageFrom(baseDamage, 1f, out _);
     public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier) => _stats?.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier) ?? 0;
     /// <summary>ComputeDamageFrom과 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>
-    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical)
+    public int ComputeDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
     {
         critical = false;
-        return _stats != null ? _stats.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier, out critical) : 0;
+        return _stats != null ? _stats.ComputeDamageFrom(baseDamage, projAtkBonusMultiplier, out critical, damageMultiplier) : 0;
     }
 
     /// <summary>테스트 등의 명시적 스킬 발동에서 UnitCombatComponent.ExecuteSkill()(skillData 우선, 없으면 legacy 폴백) 전체 파이프라인을 그대로 태운다.</summary>

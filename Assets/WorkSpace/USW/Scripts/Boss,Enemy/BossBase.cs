@@ -290,8 +290,7 @@ public abstract class BossBase : MonoBehaviour
 
     private long ScaleBurnDamage(long units)
     {
-        decimal scaled = units * (1m + (decimal)(_research?.Get(ResearchStat.BurnDamage) ?? 0f))
-            * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f)) * PatternDamageMultiplier;
+        decimal scaled = units * (1m + (decimal)(_research?.Get(ResearchStat.BossDamage) ?? 0f)) * PatternDamageMultiplier;
         return scaled >= long.MaxValue ? long.MaxValue : (long)decimal.Round(scaled, 0, MidpointRounding.AwayFromZero);
     }
 

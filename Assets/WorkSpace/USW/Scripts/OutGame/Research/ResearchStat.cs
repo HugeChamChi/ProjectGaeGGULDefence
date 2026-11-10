@@ -12,6 +12,6 @@ public enum ResearchStat
     FoodProduction = 5,
     StartFood = 6,
     BossDamage = 7,
-    BurnDamage = 8,
+    SkillDamage = 8,
     TotemEffect = 9,
 }

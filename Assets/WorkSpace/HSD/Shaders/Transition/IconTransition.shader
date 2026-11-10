@@ -81,42 +81,19 @@ Shader "Custom/IconTransition"
                 float finalMaxScale = _IconMaxScale * aspectScale;
                 // -------------------------------------------
                 
+                // Use the same left-to-right growing pattern in both phases.
+                // It paints black during cover and paints transparency during reveal.
+                float p = _Progress < 0.5 ? _Progress * 2.0 : (_Progress - 0.5) * 2.0;
+                float threshold = saturate(p * 1.8 - i.uv.x * 0.8);
+                float currentScale = threshold * finalMaxScale;
+                float2 scaledUV = (localUV - 0.5) / max(currentScale, 0.0001) + 0.5;
                 float mask = 0;
-                float threshold = 0;
+                if (threshold > 0 && all(scaledUV >= 0 && scaledUV <= 1))
+                    mask = tex2D(_TransitionTex, scaledUV).a;
 
-                if (_Progress < 0.5)
-                {
-                    // Phase 1: 채워지는 단계
-                    float p = _Progress * 2.0; 
-                    threshold = saturate(p * 1.8 - i.uv.x * 0.8);
-                    
-                    // 아이콘 스케일 계산 (Max Scale까지 확장)
-                    float currentScale = threshold * finalMaxScale;
-                    
-                    // 중앙 기준 UV 스케일링 (값이 커질수록 이미지가 커짐 = 샘플링 범위는 좁아짐)
-                    float2 scaledUV = (localUV - 0.5) / max(currentScale, 0.0001) + 0.5;
-                    
-                    // 텍스처 경계 밖은 알파 0으로 처리 (Clamp와 유사)
-                    if (all(scaledUV >= 0 && scaledUV <= 1))
-                    {
-                        mask = tex2D(_TransitionTex, scaledUV).a;
-                    }
-                }
-                else
-                {
-                    // Phase 2: 사라지는 단계
-                    float p = (_Progress - 0.5) * 2.0;
-                    threshold = saturate(p * 1.8 - i.uv.x * 0.8);
-                    
-                    float currentScale = threshold * finalMaxScale;
-                    float2 scaledUV = (localUV - 0.5) / max(currentScale, 0.0001) + 0.5;
-                    
-                    if (all(scaledUV >= 0 && scaledUV <= 1))
-                    {
-                        mask = tex2D(_TransitionTex, scaledUV).a;
-                    }
-                    mask = 1.0 - mask;
-                }
+                // Join the animated icons continuously to the fully opaque loading hold.
+                mask = lerp(mask, 1.0, smoothstep(0.8, 1.0, threshold));
+                if (_Progress > 0.5) mask = 1.0 - mask;
 
                 fixed4 col = _Color;
                 col.a *= mask;

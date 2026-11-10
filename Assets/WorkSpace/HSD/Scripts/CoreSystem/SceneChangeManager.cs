@@ -23,6 +23,9 @@ public class SceneChangeManager
     /// </summary>
     public async UniTask TransitionToSceneAsync(string sceneName, Func<UniTask> beforeLoad = null, Func<UniTask> afterLoad = null)
     {
+#if SHOP_TEST_BUILD
+        if (sceneName == "LobbyScene") sceneName = "ShopTestLobby";
+#endif
         IsTransitioning = true;
         try
         {

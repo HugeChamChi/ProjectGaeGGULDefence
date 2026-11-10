@@ -28,8 +28,10 @@ namespace GaeGGUL.DeckUpgrade
             var data = new DeckUpgradeItemViewData
             {
                 Index = index, Name = index < 0 ? _chief.DisplayName : _units[index].unitName,
-                Level = _service.GetLevel(id), Gold = _service.Gold, Cost = _service.GetCost(id),
-                ChiefBonus = _service.ChiefBonus
+                Level = _service.GetLevel(id), Gold = _service.GetBalance(id), Currency = _service.GetCurrency(id), Cost = _service.GetCost(id),
+                IsOwned = _service.IsOwned(id), IsBusy = _service.IsBusy || (_service.UsesAccountData && !Player.PlayerData.IsReady),
+                UpgradeStatus = _service.UsesAccountData && Player.PlayerData.HasSaveConflict ? "재접속 필요" : _service.IsBusy ? "저장 중…" : "",
+                ChiefBonus = _service.GetChiefBonus(GetId(-1))
             };
             if (data.IsChief) PopulateChief(data);
             else PopulateUnit(data, UnitBalanceRuntime.Resolve(_units[index]), id);
@@ -38,6 +40,7 @@ namespace GaeGGUL.DeckUpgrade
 
         /// <summary>Attempts the selected character's preview upgrade.</summary>
         public bool TryUpgrade(int index) => _service.TryUpgrade(GetId(index));
+        public Cysharp.Threading.Tasks.UniTask<bool> TryUpgradeAsync(int index) => _service.TryUpgradeAsync(GetId(index));
 
         /// <inheritdoc />
         public void Dispose() => _service.OnChanged -= HandleChanged;
@@ -47,7 +50,8 @@ namespace GaeGGUL.DeckUpgrade
         private string GetId(int index)
         {
             if (index < -1 || index >= _units.Length) throw new ArgumentOutOfRangeException(nameof(index));
-            return index < 0 ? DeckUpgradeProgress.ChiefId : _units[index].name;
+            if (!_service.UsesAccountData) return index < 0 ? DeckUpgradeProgress.ChiefId : _units[index].name;
+            return index < 0 ? PlayerCharacterManager.ChiefId(_chief.ChieftainId) : PlayerCharacterManager.UnitId(_units[index].characterId.Get(Tier.Normal));
         }
 
         private void PopulateChief(DeckUpgradeItemViewData data)

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using VContainer;
 
 /// <summary>
@@ -107,11 +107,11 @@ public class Drone_Zeltan : UnitBase
     public float AuthoredFoodPerDrone => unitData != null ? unitData.fleetFoodPerDrone.Get(currentTier) : 0f;
 
     /// <summary>이 젤탕이 더하는 최종 드론 1기당 초당 식량. 강화와 생산 선택지 배율을 즉시 반영한다.</summary>
-    public float FoodPerDronePerSecond => (AuthoredFoodPerDrone + (_upgradeManager?.ZeltanFoodPerDroneBonus ?? 0f))
+    public float FoodPerDronePerSecond => (AuthoredFoodPerDrone * AccountUpgradeMultiplier + (_upgradeManager?.ZeltanFoodPerDroneBonus ?? 0f))
         * (1f + (DroneEffects?.FoodProductionBonus ?? 0f));
 
     /// <summary>강화분을 제외한 드론 1기당 초당 식량. 선택지 보정은 유지한다.</summary>
-    public float FoodPerDronePerSecondBeforeUpgrade => AuthoredFoodPerDrone
+    public float FoodPerDronePerSecondBeforeUpgrade => AuthoredFoodPerDrone * AccountUpgradeMultiplier
         * (1f + (DroneEffects?.FoodProductionBonus ?? 0f));
 
     /// <summary>저작된 등급별 자체 초당 생산에 선택지 배율을 적용한다. 인게임 강화는 기당 계수만 올린다.</summary>

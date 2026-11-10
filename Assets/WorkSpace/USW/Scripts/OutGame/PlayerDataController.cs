@@ -8,6 +8,7 @@ using UnityEngine;
 public class PlayerDataController : IDisposable, Global.IClearable
 {
     private PlayerData _data;
+    private bool _characterPurchase;
     private BackendGameData _backendData;
     private CancellationTokenSource _sessionCts;
     private UniTaskCompletionSource<bool> _save;
@@ -53,7 +54,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     /// <summary>User-facing synchronization status.</summary>
     public string SaveStatus { get; private set; } = "";
     /// <summary>Whether authenticated balances can be changed.</summary>
-    public bool IsReady => _data != null && _account == _accountProvider() && !string.IsNullOrEmpty(_account) && !HasSaveConflict;
+    public bool IsReady => !_characterPurchase && _data != null && _account == _accountProvider() && !string.IsNullOrEmpty(_account) && !HasSaveConflict;
     /// <summary>Profile refresh callback.</summary>
     public Action<PlayerData> OnPlayerProfilePopupUpdated;
     /// <summary>Balance/profile refresh callback.</summary>
@@ -78,6 +79,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
         InitData(() => completion.TrySetResult());
         await completion.Task;
         if (!IsReady) return;
+        bool ownershipChanged = false;
+        foreach (var entry in _data.RewardInventory.Owned)
+            if (entry.Type == RewardType.Unit && entry.Count > 1) { entry.Count = 1; ownershipChanged = true; }
+        if (ownershipChanged) SaveAndRefresh();
         await SyncClockAsync();
         RecoverStamina();
         if (IsDirty) await TrySaveAsync();
@@ -85,7 +90,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     /// <summary>Invalidates callbacks while retaining the owner's pending journal on disk.</summary>
     public void Clear()
     {
-        _generation++;
+        _generation++; _characterPurchase = false;
         _sessionCts?.Cancel(); _sessionCts?.Dispose(); _sessionCts = null;
         _save?.TrySetResult(false); _save = null;
         _data = null; _account = null; IsDirty = false; HasSaveConflict = false;
@@ -229,6 +234,21 @@ public class PlayerDataController : IDisposable, Global.IClearable
         _data.Gold += receipt.Gold; _data.Diamond += receipt.Diamond; _data.Stamina += receipt.Stamina;
         _data.CouponHistory.Add(receipt); SaveAndRefresh(); return true;
     }
+    /// <summary>Applies a verified store purchase and its deduplication ID to one durable balance snapshot.</summary>
+    public bool TryApplyDiamondPurchase(GaeGGUL.IAP.DiamondPurchaseReceipt receipt)
+    {
+        if (!IsReady || receipt == null || string.IsNullOrWhiteSpace(receipt.Id)
+            || string.IsNullOrWhiteSpace(receipt.ProductId) || receipt.Diamond <= 0) return false;
+        _data.DiamondPurchases ??= new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>();
+        var previous = _data.DiamondPurchases.Find(value => value.Id == receipt.Id);
+        if (previous != null) return previous.ProductId == receipt.ProductId && previous.Diamond == receipt.Diamond;
+        if (!CanAdd(_data.Diamond, receipt.Diamond)) return false;
+        _data.Diamond += receipt.Diamond;
+        _data.DiamondPurchases.Add(new GaeGGUL.IAP.DiamondPurchaseReceipt
+            { Id = receipt.Id, ProductId = receipt.ProductId, Diamond = receipt.Diamond });
+        SaveAndRefresh(); return true;
+    }
+
     /// <summary>Claims today's attendance reward and records the day in the same durable snapshot.</summary>
     /// <returns>The claimed day (1-7), or 0 when nothing was granted.</returns>
     public void VisitEventMissions(DateTimeOffset now) { if(IsReady && GGD.Events.EventMissions.Visit(_data,now))SaveAndRefresh(); }
@@ -363,14 +383,16 @@ public class PlayerDataController : IDisposable, Global.IClearable
         SaveAndRefresh();
     }
 
-    public bool IsShopPurchased(string day, int id) => IsReady && _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id);
+    public bool IsShopPurchased(string day, int id, bool weekly = false) => IsReady && (weekly
+        ? _data.WeeklyShopPurchasePeriod == day && _data.WeeklyShopPurchases.Contains(id)
+        : _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id));
 
-    /// <summary>Price, reward and daily receipt commit in one durable/account snapshot.</summary>
-    public bool TryPurchaseShopItem(ShopItemData item, string day)
+    /// <summary>Price, reward and period receipt commit in one durable/account snapshot.</summary>
+    public bool TryPurchaseShopItem(ShopItemData item, string day, bool weekly = false, bool repeatable = false)
     {
         if (!IsReady || item == null || item.ItemID < 0 || string.IsNullOrEmpty(day)) return false;
         if (item.Type == ItemType.Character && item.ItemID == 0) return false;
-        if (IsShopPurchased(day, item.ShopID)) return true;
+        if (!repeatable && IsShopPurchased(day, item.ShopID, weekly)) return true;
         var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
         if (!DeductPurchase(next, item.CurrencyType, item.Price) || item.Amount <= 0) return false;
         try
@@ -381,8 +403,19 @@ public class PlayerDataController : IDisposable, Global.IClearable
             else return false; // Unsupported legacy item rewards must never charge the player.
         }
         catch (OverflowException) { return false; }
-        if (next.ShopPurchaseDay != day) { next.ShopPurchaseDay = day; next.ShopPurchases.Clear(); }
-        next.ShopPurchases.Add(item.ShopID);
+        if (!repeatable)
+        {
+            if (weekly)
+            {
+                if (next.WeeklyShopPurchasePeriod != day) { next.WeeklyShopPurchasePeriod = day; next.WeeklyShopPurchases.Clear(); }
+                next.WeeklyShopPurchases.Add(item.ShopID);
+            }
+            else
+            {
+                if (next.ShopPurchaseDay != day) { next.ShopPurchaseDay = day; next.ShopPurchases.Clear(); }
+                next.ShopPurchases.Add(item.ShopID);
+            }
+        }
         _data = next; SaveAndRefresh(); return true;
     }
 
@@ -417,7 +450,61 @@ public class PlayerDataController : IDisposable, Global.IClearable
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
         var owned = next.RewardInventory.Owned.Find(x => x.Type == RewardType.Unit && x.TargetId == id);
         if (owned == null) { owned = new RewardOwnedEntry { Type = RewardType.Unit, TargetId = id }; next.RewardInventory.Owned.Add(owned); }
-        owned.Count = checked(owned.Count + amount);
+        owned.Count = amount > 0 ? 1 : owned.Count;
+    }
+
+    public async UniTask<bool> TryCommitCharacterUpgradeAsync(int cost, AccountJsonStore.Row characterRow, string characterJson, string currency = "Gold")
+    {
+        if (IsReady && string.IsNullOrEmpty(_confirmedSaveId)) MarkDirty();
+        if (cost <= 0 || !IsReady || _backendData == null || !await TrySaveAsync() || !IsReady || GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(_data, currency) < cost) return false;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Spend(next, currency, cost); next.SaveId = Guid.NewGuid().ToString("N");
+        return await CommitCharacterChangeAsync(next, characterRow, characterJson);
+    }
+
+    public async UniTask<bool> TryCommitTestCharacterOwnershipAsync(AccountJsonStore.Row characterRow, string characterJson, int[] unitIds, bool owned)
+    {
+        if (IsReady && string.IsNullOrEmpty(_confirmedSaveId)) MarkDirty();
+        if (!IsReady || _backendData == null || !await TrySaveAsync() || !IsReady) return false;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        if (owned)
+        {
+            foreach (int id in unitIds) AddPurchasedUnit(next, id, 1);
+        }
+        else
+        {
+            foreach (var entry in next.RewardInventory.Owned)
+                if (entry.Type == RewardType.Unit) entry.Count = 0;
+        }
+        next.SaveId = Guid.NewGuid().ToString("N");
+        return await CommitCharacterChangeAsync(next, characterRow, characterJson);
+    }
+
+    private async UniTask<bool> CommitCharacterChangeAsync(PlayerData next, AccountJsonStore.Row characterRow, string characterJson)
+    {
+        int generation = _generation;
+        _characterPurchase = true;
+        try
+        {
+            bool saved = await _backendData.CommitCharacterUpgradeAsync(next, _confirmedSaveId, characterRow, characterJson);
+            if (!Matches(generation)) return false;
+            if (!saved)
+            {
+                HasSaveConflict = true; SetStatus("강화 저장 결과를 확인해야 합니다. 재접속해 주세요."); return false;
+            }
+            _data = next; _confirmedSaveId = next.SaveId; _revision++;
+            _attemptedSaveIds.Clear(); IsDirty = false; DeleteJournal(); SetStatus("");
+            return true;
+        }
+        catch (Exception)
+        {
+            if (generation == _generation) { HasSaveConflict = true; SetStatus("강화 저장 결과를 확인해야 합니다. 재접속해 주세요."); }
+            return false;
+        }
+        finally
+        {
+            if (generation == _generation) { _characterPurchase = false; RefreshUI(_data); }
+        }
     }
 
     public void CompleteTutorial(string id)
@@ -441,10 +528,17 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     public void AddOwnedCharacter(int id, int count)
     {
-        if (!IsReady || id <= 0 || count == 0) return;
+        if (!IsReady || id <= 0 || count <= 0) return;
         int existing = _data.RewardInventory.Count(RewardType.Unit, id);
         if ((long)existing + count < 0 || (long)existing + count > int.MaxValue) return;
         AddPurchasedUnit(_data, id, count); SaveAndRefresh();
+    }
+    public async UniTask<bool> ClaimRoundRewardAsync(RoundReachRewards.Definition reward)
+    {
+        if (!IsReady || !Player.RoundRecords.OwnsAccount || Player.RoundRecords.Account != _account) return false;
+        if (!RoundReachRewards.Apply(_data, reward, Player.RoundRecords.GetBest("NORMAL"))) return false;
+        SaveAndRefresh();
+        return await TrySaveAsync();
     }
     public async UniTask<bool> GrantRewardAsync(RewardCatalog catalog, string grantId, RewardAmount[] rewards)
     {

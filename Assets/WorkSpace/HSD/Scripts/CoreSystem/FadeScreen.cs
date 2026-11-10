@@ -73,13 +73,13 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
             if (fadeImage != null) fadeImage.raycastTarget = true;
             // 0부터 시작해서 0.5까지
             _fadeMaterial.SetFloat(materialPropertyName, 0f);
-            await _fadeMaterial.DOFloat(0.5f, materialPropertyName, duration).SetUpdate(true)
+            await _fadeMaterial.DOFloat(0.5f, materialPropertyName, duration).SetEase(Ease.InOutSine).SetUpdate(true)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
         else if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true;
-            await canvasGroup.DOFade(1f, duration).SetUpdate(true)
+            await canvasGroup.DOFade(1f, duration).SetEase(Ease.InOutSine).SetUpdate(true)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
     }
@@ -91,19 +91,41 @@ public class FadeScreen : MonoBehaviour, IFadeScreen
         if (useMaterialTransition && _fadeMaterial != null)
         {
             if (fadeImage != null) fadeImage.raycastTarget = true; // 페이드 아웃 중 터치 방지
-            // 0.5부터 시작해서 1까지
-            _fadeMaterial.SetFloat(materialPropertyName, 0.5f);
-            await _fadeMaterial.DOFloat(1f, materialPropertyName, duration).SetUpdate(true)
-                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+            // Keep the current cover: an already-clear title must not jump back to opaque.
+            await AnimateRevealAsync(duration);
             if (fadeImage != null) fadeImage.raycastTarget = false;
         }
         else if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true; // 페이드 아웃 중 터치 방지
-            await canvasGroup.DOFade(0f, duration).SetUpdate(true)
-                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+            await AnimateRevealAsync(duration);
             canvasGroup.blocksRaycasts = false;
         }
         loadingView?.Hide();
+    }
+
+    private async UniTask AnimateRevealAsync(float duration)
+    {
+        bool materialTransition = useMaterialTransition && _fadeMaterial != null;
+        float start = materialTransition ? _fadeMaterial.GetFloat(materialPropertyName) : canvasGroup.alpha;
+        float end = materialTransition ? 1f : 0f;
+        float elapsed = 0f;
+        double previousFrame = Time.realtimeSinceStartupAsDouble;
+        var token = this.GetCancellationTokenOnDestroy();
+        while (elapsed < duration && !Mathf.Approximately(start, end))
+        {
+            await UniTask.NextFrame(PlayerLoopTiming.LastPostLateUpdate, token);
+            double now = Time.realtimeSinceStartupAsDouble;
+            // Scene activation can consume the entire tween duration in one frame.
+            // Advance only a visible frame's worth, independent of the load-frame delta.
+            elapsed += Mathf.Min((float)(now - previousFrame), 1f / 30f);
+            previousFrame = now;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float value = Mathf.Lerp(start, end, (1f - Mathf.Cos(t * Mathf.PI)) * .5f);
+            if (materialTransition) _fadeMaterial.SetFloat(materialPropertyName, value);
+            else canvasGroup.alpha = value;
+        }
+        if (materialTransition) _fadeMaterial.SetFloat(materialPropertyName, end);
+        else canvasGroup.alpha = end;
     }
 }

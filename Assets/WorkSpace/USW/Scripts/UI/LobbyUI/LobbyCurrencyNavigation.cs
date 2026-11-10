@@ -21,13 +21,14 @@ public sealed class LobbyCurrencyNavigation : MonoBehaviour
         _diamondButton?.onClick.AddListener(OpenDiamond);
     }
     private void OpenStamina() => _staminaPopup?.ShowStatus();
-    private void OpenGold() => OpenShop("Gold");
-    private void OpenDiamond() => OpenShop("Dia");
-    private void OpenShop(string currency)
+    private void OpenGold() => OpenShop(GaeGGUL.Shop.UI.ShopSection.Gold);
+    private void OpenDiamond() => OpenShop(GaeGGUL.Shop.UI.ShopSection.Diamond);
+    private void OpenShop(GaeGGUL.Shop.UI.ShopSection section)
     {
         _tabs?.SelectButton(ShopTab);
         if (_shopPreview != null) { _shopPreview.ShowCurrency(); return; }
-        if (_shopStatus != null) _shopStatus.text = currency + " 상품 준비 중";
+        var page = _tabs?.panelButtons[ShopTab]._panel.GetComponentInChildren<GaeGGUL.Shop.UI.ShopPageView>(true);
+        if (page != null) page.ScrollToSection(section);
     }
     private void OnDestroy()
     {

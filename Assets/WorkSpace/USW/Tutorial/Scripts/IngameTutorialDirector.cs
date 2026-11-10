@@ -93,6 +93,10 @@ namespace GaeGGUL.Tutorial
         /// <summary>True only after all authored interactions have succeeded.</summary>
         public bool IsComplete { get; private set; }
 
+        private readonly UniTaskCompletionSource _entryPreparation = new();
+        /// <summary>Completes after tutorial units are ready, before the transition reveals the scene.</summary>
+        public UniTask EntryPreparation => _entryPreparation.Task;
+
         private void Start()
         {
             _ui.ConfigureResultNavigation(ReturnToLobby, false, true);
@@ -125,13 +129,16 @@ namespace GaeGGUL.Tutorial
                 _input.AllowPointerClicks = false;
                 _input.CanBeginInteraction = _ => false;
                 // Let gameplay Start methods wire their injected services before starting the battle.
-                await Until(() => _initializer.IsReady, token);
+                // IsReady waits for the transition reveal; prepare units before that reveal.
+                await _initializer.Preparation.AttachExternalCancellation(token);
                 DownloadContentInBackgroundAsync(this.GetCancellationTokenOnDestroy()).Forget();
                 PrepareLobbyInBackgroundAsync(this.GetCancellationTokenOnDestroy()).Forget();
                 foreach (var data in _settings.SpawnUnits.Append(_settings.MergeUnit).Distinct())
                     await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 _game.StartGame(false);
-                _loadingScreen?.Hide();
+                _entryPreparation.TrySetResult();
+                if (!_scenes.IsTransitioning) _loadingScreen?.Hide();
+                await Until(() => _initializer.IsReady, token);
                 var lessons = _plan.Lessons;
                 _lessonCount = lessons.Count;
                 foreach (var asset in lessons)
@@ -167,8 +174,8 @@ namespace GaeGGUL.Tutorial
                 IsComplete = true;
                 Debug.Log("[IngameTutorial] Complete", this);
             }
-            catch (OperationCanceledException) { }
-            catch (Exception e) { Debug.LogException(e, this); }
+            catch (OperationCanceledException) { _entryPreparation.TrySetCanceled(); }
+            catch (Exception e) { _entryPreparation.TrySetException(e); Debug.LogException(e, this); }
             finally
             {
                 Restore();

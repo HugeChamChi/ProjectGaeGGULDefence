@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
     private string _recordAccount;
     private string _recordMode;
     private string _eventRunKey;
+    private bool _savingStart;
     /// <summary>Committed terminal state; late combat, reward and production callbacks must not mutate a run.</summary>
     public bool IsFinished => CurrentState == GameState.Win || CurrentState == GameState.Lose || CurrentState == GameState.Faulted;
     /// <summary>마지막 유예 동안 딜표와 설정 외 플레이어 조작을 차단하는 공통 상태.</summary>
@@ -99,7 +100,9 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>Starts gameplay; tutorial scenes can reveal the first wave after the first summon.</summary>
-    public void StartGame(bool startWave)
+    public void StartGame(bool startWave) => StartGameAsync(startWave).Forget();
+
+    private async UniTaskVoid StartGameAsync(bool startWave)
     {
         if (CurrentState != GameState.Idle) return;
         if (_research?.IsReady != true) return;
@@ -124,6 +127,24 @@ public class GameManager : MonoBehaviour
         _recordAccount = IsProductionBattle && Player.RoundRecords.OwnsAccount ? Player.RoundRecords.Account : null;
         _recordMode = IsProductionBattle ? "NORMAL" : null;
         _accountExperience.Begin(IsProductionBattle);
+
+        if (IsProductionBattle)
+        {
+            _savingStart = true;
+            string runId = Player.PlayerData.Data.AccountExperienceRunId;
+            Player.BeginBattle();
+            try { await Player.UpdateDirtyDataAsync(); }
+            catch (Exception saveError) { Debug.LogException(saveError); }
+            if (this == null) return;
+            _savingStart = false;
+            if (!Player.PlayerData.IsReady || Player.PlayerData.IsDirty
+                || Player.PlayerData.Data.AccountExperienceRunId != runId)
+            {
+                FailPreparation("출격 시작 상태를 저장하지 못했습니다. 연결 확인 후 다시 시도해 주세요.");
+                return;
+            }
+            if (CurrentState != GameState.Playing) return;
+        }
 
         _uiManager.HideStartButton();
 
@@ -193,9 +214,12 @@ public class GameManager : MonoBehaviour
         var accountReceipt = _accountExperience.Finish(isWin);
         _resultSnapshot.AccountExperience = accountReceipt?.Experience ?? 0;
         _resultSnapshot.HasAccountExperience = accountReceipt != null;
-        if (accountReceipt != null) _accountExperience.SaveAsync().Forget();
-        if (IsProductionBattle && Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round))
-            Player.RoundRecords.SaveAsync().Forget();
+        if (IsProductionBattle)
+        {
+            Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round);
+            // Stage every result before one dirty flush; account progression and missions share one row.
+            Player.EndBattle();
+        }
         _uiManager?.BlockGameplayInput();
         _waveManager.StopRun();
         UnsubscribeGameplay();
@@ -252,7 +276,7 @@ public class GameManager : MonoBehaviour
     private void OnDisable() => CancelEndPresentation();
     private void Update()
     {
-        if (CurrentState == GameState.Playing || CurrentState == GameState.LevelUp) _survivalSeconds += Time.deltaTime;
+        if (!_savingStart && (CurrentState == GameState.Playing || CurrentState == GameState.LevelUp)) _survivalSeconds += Time.deltaTime;
     }
 
     /// <summary>Stops a failed startup without leaving the scene in the waiting-to-start state.</summary>
@@ -264,6 +288,7 @@ public class GameManager : MonoBehaviour
         FailureReason = error;
         CurrentState = GameState.Faulted;
         _accountExperience?.Cancel();
+        if (IsProductionBattle) Player.EndBattle();
         _waveManager?.StopRun();
         UnsubscribeGameplay();
         _timerManager?.StopTimer();
@@ -282,6 +307,7 @@ public class GameManager : MonoBehaviour
     private void OnDestroy()
     {
         _accountExperience?.Cancel();
+        if (IsProductionBattle) Player.EndBattle();
         if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
         if (_waveManager != null) _waveManager.OnBossDefeated -= HandleBossKilled;
         if (_waveManager != null) _waveManager.OnRunStopped -= _accountExperience.Cancel;
@@ -304,12 +330,7 @@ public class GameManager : MonoBehaviour
         if (pauseStatus) _timeScale?.Pause(_applicationPauseOwner);
         else ResumeCombatAfterPauseAsync(version).Forget();
         if (IsEditorPreview) return;
-        if (pauseStatus)
-        {
-            // 앱이 백그라운드로 전환될 때 디바운싱 타이머를 무시하고 무조건 즉시 저장 시도
-            UnityEngine.Debug.Log("[GameManager] 앱 백그라운드 전환 감지. 데이터 강제 업데이트 진행...");
-            Player.UpdateDirtyDataAsync().Forget();
-        }
+        Player.SetApplicationPaused(pauseStatus);
     }
 
     private async UniTask ResumeCombatAfterPauseAsync(int version)
@@ -322,8 +343,7 @@ public class GameManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         if (IsEditorPreview) return;
-        // 앱이 강제로 종료될 때 최후의 저장 시도
-        UnityEngine.Debug.Log("[GameManager] 앱 강제 종료 감지. 데이터 강제 업데이트 진행...");
+        // Best effort only; force-kill cannot guarantee delivery.
         Player.UpdateDirtyDataAsync().Forget();
     }
 }

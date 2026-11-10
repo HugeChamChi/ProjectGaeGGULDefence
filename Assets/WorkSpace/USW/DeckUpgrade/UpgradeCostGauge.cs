@@ -12,6 +12,21 @@ namespace GaeGGUL.DeckUpgrade
         public Image Fill { get; private set; }
         private RectTransform fillRect, arrowReflection;
         private float clock, height;
+        public void SetCurrency(string currency)
+        {
+            var icon = transform.Find("UpgradeCurrencyIcon");
+            if (icon == null)
+            {
+                var image = NewImage("UpgradeCurrencyIcon", transform, Color.white, null);
+                image.type = Image.Type.Simple; image.preserveAspect = true;
+                image.rectTransform.anchorMin = image.rectTransform.anchorMax = new Vector2(0, .5f);
+                image.rectTransform.sizeDelta = Vector2.one * height;
+                image.rectTransform.anchoredPosition = new Vector2(-height * .4f, 0);
+                icon = image.transform;
+            }
+            icon.GetComponent<Image>().sprite = DeckUpgradeCurrency.Icon;
+            icon.gameObject.SetActive(currency == DeckUpgradeCurrency.Token);
+        }
 
         public static UpgradeCostGauge Create(RectTransform parent, Sprite rounded, Sprite arrowSprite)
         {
@@ -39,12 +54,31 @@ namespace GaeGGUL.DeckUpgrade
             return gauge;
         }
 
-        public void SetAmount(int available, int required, bool canUpgrade)
+        public static void SetLocked(RectTransform parent, bool locked)
         {
-            Ratio = Mathf.Clamp01(available / (float)required);
-            Ready = canUpgrade && available >= required;
+            var existing = parent.Find("OwnershipLock");
+            if (existing == null)
+            {
+                var shade = NewImage("OwnershipLock", parent, new Color32(35, 35, 42, 245), null);
+                Stretch(shade.rectTransform);
+                var shackle = NewImage("Shackle", shade.transform, Color.white, null).rectTransform;
+                shackle.sizeDelta = new Vector2(18, 20); shackle.anchoredPosition = new Vector2(0, 5);
+                var hole = NewImage("Hole", shackle, new Color32(35, 35, 42, 255), null).rectTransform;
+                hole.sizeDelta = new Vector2(10, 14);
+                var body = NewImage("Body", shade.transform, Color.white, null).rectTransform;
+                body.sizeDelta = new Vector2(26, 17); body.anchoredPosition = new Vector2(0, -5);
+                existing = shade.transform;
+            }
+            existing.SetAsLastSibling(); existing.gameObject.SetActive(locked);
+        }
+
+        public void SetAmount(int available, int required, bool canUpgrade, bool owned = true)
+        {
+            Ratio = owned ? Mathf.Clamp01(available / (float)required) : 0;
+            Ready = owned && canUpgrade && available >= required;
             fillRect.anchorMax = new Vector2(Ratio, 1);
             Arrow.gameObject.SetActive(Ready);
+            SetLocked((RectTransform)transform, !owned);
         }
 
         private void Update()

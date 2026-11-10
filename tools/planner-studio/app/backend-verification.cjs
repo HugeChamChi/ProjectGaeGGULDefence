@@ -24,7 +24,7 @@ async function unityCommand(project, args) {
 }
 
 async function verifyPrepared(record, project, workspace) {
-  if (!record || !/^DEV_(Events|Missions|MissionEvents|UnitBaseStats|UnitLevelBonuses)$/.test(record.targetChartName)) {
+  if (!record || !/^DEV_(Events|Missions|MissionEvents|UnitBaseStats|UnitLevelBonuses|RoundRewards)$/.test(record.targetChartName)) {
     throw Error('지원하지 않는 DEV 대상입니다.');
   }
   if (!project || !fs.existsSync(path.join(project, 'ProjectSettings/ProjectVersion.txt'))) {

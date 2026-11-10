@@ -12,14 +12,14 @@ public class FixedDamage : IReplayableEffect
 
     public void Apply(UnitBase caster, BossBase target, Vector3 hitPosition)
     {
-        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical);
+        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical, caster.GetSkillDamageMultiplier(this));
         target.TakeDamage(damage, hitPosition, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData);
     }
 
     /// <inheritdoc />
     public Action<BossBase, Vector3> Capture(UnitBase caster)
     {
-        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical);
+        int damage = caster.ComputeDamageFrom(power.Get(caster.currentTier), 1f, out bool critical, caster.GetSkillDamageMultiplier(this));
         return new RecordedDamage(damage, critical ? BossDamageKind.Critical : BossDamageKind.Normal, caster.unitData).Apply;
     }
 }

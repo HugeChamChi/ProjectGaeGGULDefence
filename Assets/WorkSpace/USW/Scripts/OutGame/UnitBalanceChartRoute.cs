@@ -3,7 +3,7 @@ using System;
 /// <summary>Unit balance chart names for the future loader. Does not fetch or apply data.</summary>
 public static class UnitBalanceChartRoute
 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
     public const string Environment = "DEV";
 #else
     public const string Environment = "LIVE";

@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2d209e7093f38a40929f429e32a26c3
+    m_Address: ShopTestLobby
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec78d61bbf916a3458d7b8ad8e39c50f
     m_Address: HardIngameScene
     m_ReadOnly: 0

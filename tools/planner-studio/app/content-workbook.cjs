@@ -5,7 +5,7 @@ const {open,hash}=require('./workbook.cjs');
 let context;
 function engine(){
   if(!context){context=vm.createContext({TextEncoder,TextDecoder,Uint8Array,Uint32Array,DataView,ArrayBuffer});
-    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
+    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','shop-catalog','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
 const bundles={items:['Item','ItemFunction','SelectionList','SelectionOption'],bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['MissionEvents','Missions'],missions:['MissionEvents','Missions']};
@@ -37,6 +37,7 @@ function inspect(bytes){
     // Normalize old column names before validating, including ambiguous old/new duplicates.
     for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
+    if(name==='ShopCatalog'&&![...headers.values()].includes('Weight'))fields=fields.filter(f=>f.key!=='Weight');
     if(name==='Missions'&&![...headers.values()].includes('MissionType'))fields=fields.filter(f=>f.key!=='MissionType');
     if(name==='MissionEvents'&&![...headers.values()].includes('ClaimEndAt'))fields=fields.filter(f=>f.key!=='ClaimEndAt');
     if(name==='ItemFunction'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.key!=='FunctionDrafts');
@@ -69,6 +70,7 @@ function inspect(bytes){
 }
 function read(bytes,project){
   const e=engine(),parsed=inspect(bytes),p=e.Studio.shape(project);
+  for(const r of parsed.tables.ShopCatalog||[])if(!Object.hasOwn(r,'Weight'))r.Weight=['Daily','Weekly'].includes(r.Section)&&r.FixedFree===0?1:0;
   for(const mission of parsed.tables.Missions||[])if(!Object.hasOwn(mission,'MissionType'))mission.MissionType=mission.EventKey?'Event':'Normal';
   if(parsed.names.some(n=>e.MissionEvents.names.includes(n))){
     for(const name of ['MissionEvents','Missions'])if(!parsed.tables[name])throw Error('??? Excel?? Events? Missions ??? ?? ?????.');
@@ -137,6 +139,7 @@ function toRuntime(project,names){
   if(names.some(n=>e.UnitKeys.sheetFor[n]||e.UnitKeys.headers[n])){
     for(const [name,rows]of Object.entries(e.UnitKeys.tables(p)))result[{Units:'units',BaseStats:'baseStats',UpgradeStats:'upgradeStats',LevelBonuses:'levelBonuses'}[name]]=rows.slice(1).map(row=>Object.fromEntries(rows[0].map((key,i)=>[key,key==='Costs'?e.RewardCore.parseItems(row[i]).map(r=>({itemKey:r.itemId,amount:r.amount})):key==='EffectParams'?JSON.parse(row[i]):row[i]])));
   }
+  if(names.includes('ShopCatalog'))result.shopProducts=p.tables.ShopCatalog.map(r=>Object.fromEntries(e.STUDIO_SCHEMAS.ShopCatalog.fields.filter(f=>f.export!==false).map(f=>[f.key,r[f.key]])));
   if(names.some(n=>e.MissionEvents.names.includes(n)))Object.assign(result,e.MissionEvents.runtime(p));
   return result;
 }

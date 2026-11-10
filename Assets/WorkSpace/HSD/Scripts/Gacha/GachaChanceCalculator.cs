@@ -32,7 +32,7 @@ public class GachaChanceCalculator
         _totalProbability = 0;
 
         _gachaTableID = Chart.GetProbabilityIdByName(_gachaTableName);
-        JsonData rows = Chart.GetProbabilityDataByName(_gachaTableName);
+        JsonData rows = await Chart.GetProbabilityDataByNameAsync(_gachaTableName);
 
         if (rows == null)
         {

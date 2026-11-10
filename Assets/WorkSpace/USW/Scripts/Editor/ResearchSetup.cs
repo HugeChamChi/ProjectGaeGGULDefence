@@ -39,7 +39,7 @@ public static class ResearchSetup
         (ResearchStat.FoodProduction, "식량 생산", true, "picto:Support"),
         (ResearchStat.StartFood, "시작 식량", false, "mui:Icon/Common/Store Bag"),
         (ResearchStat.BossDamage, "보스 피해", true, "picto:Boss"),
-        (ResearchStat.BurnDamage, "화상 피해", true, "picto:Fire"),
+        (ResearchStat.SkillDamage, "스킬 피해 증가", true, "picto:Fire"),
         (ResearchStat.TotemEffect, "토템 효과", true, "picto:Temple"),
     };
 
@@ -134,7 +134,7 @@ public static class ResearchSetup
         ResearchStat[] cycle =
         {
             ResearchStat.AttackPercent, ResearchStat.CritChance, ResearchStat.AttackSpeedPercent, ResearchStat.CritDamage,
-            ResearchStat.FoodProduction, ResearchStat.AttackPercent, ResearchStat.SkillCooldownReduction, ResearchStat.BurnDamage,
+            ResearchStat.FoodProduction, ResearchStat.AttackPercent, ResearchStat.SkillCooldownReduction, ResearchStat.SkillDamage,
             ResearchStat.BossDamage, ResearchStat.StartFood, ResearchStat.TotemEffect,
         };
         int[] maxLevels = { 3, 5, 7 };
@@ -170,7 +170,7 @@ public static class ResearchSetup
         ResearchStat.AttackSpeedPercent => 0.003f,
         ResearchStat.CritChance => 0.001f,
         ResearchStat.CritDamage => 0.003f,
-        ResearchStat.BurnDamage => 0.004f,
+        ResearchStat.SkillDamage => 0.004f,
         ResearchStat.BossDamage => special ? 0.015f : 0.003f,
         ResearchStat.StartFood => special ? 5f : 3f,
         ResearchStat.TotemEffect => special ? 0.01f : 0.002f,

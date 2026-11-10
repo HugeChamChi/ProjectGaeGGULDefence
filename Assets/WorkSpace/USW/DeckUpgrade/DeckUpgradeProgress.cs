@@ -25,7 +25,7 @@ namespace GaeGGUL.DeckUpgrade
         }
 
         public int Level(string id) => units.Find(x => x.id == id)?.level ?? 1;
-        public int Cost(string id) => 150 * Level(id);
+        public int Cost(string id) => Level(id);
         public float Multiplier(string id) => 1f + (Level(id) - 1) * MultiplierPerLevel;
         public float ChiefBonus => (Level(ChiefId) - 1) * ChiefBonusPerLevel;
         public float UnitMultiplier(string id) => Multiplier(id) * (1 + ChiefBonus);

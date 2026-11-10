@@ -14,5 +14,5 @@ public sealed class BackendEndlessBalanceGateway : IEndlessBalanceGateway
 
     /// <inheritdoc />
     public UniTask<JsonData> LoadAsync(CancellationToken token)
-        => BackendChartReader.ReadAsync(EndlessBalanceService.ChartName, token);
+        => BackendChartReader.ReadAsync(EndlessBalanceService.ChartName, token, refresh: true);
 }

@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -224,14 +224,16 @@ namespace GaeGGUL.DeckUpgrade
             var divider = (RectTransform)grid.Find("UnownedHeader"); lastOwnedOnly = !divider.gameObject.activeSelf;
             float scale = variant == 2 ? 1.16f : variant == 3 ? 1.12f : 1.2f;
             float rowStep = variant == 2 ? 510 : variant == 3 ? 455 : 490;
-            int ownedCount = GetComponent<DeckSelectorConcept>().screen.units.Length + 1;
+            var selector = GetComponent<DeckSelectorConcept>();
+            int ownedCount = selector.OwnedCount;
+            int ownedSlot = 0, unownedSlot = 0;
             float dividerY = 40 + Mathf.CeilToInt(ownedCount / 3f) * rowStep;
             divider.anchoredPosition = new Vector2(25, -dividerY);
             int count = 0;
             foreach (Transform child in grid)
             {
                 if (child == divider) continue;
-                bool owned = count < ownedCount; int index = owned ? count : count - ownedCount;
+                bool owned = selector.IsOwnedCard(child); int index = owned ? ownedSlot++ : unownedSlot++;
                 var card = (RectTransform)child;
                 card.localScale = Vector3.one * scale;
                 card.anchoredPosition = new Vector2((1032 - (232 * scale + 660)) * .5f + index % 3 * 330, -(owned ? 40 : dividerY + 104) - index / 3 * rowStep);

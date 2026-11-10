@@ -39,6 +39,11 @@ public class UI_PartySelectPresenter
     private void OnPartySelected(PartyDataSO partyData)
     {
         _selectedParty = partyData;
+        if (Player.LobbyProgress.IsReady && Player.LobbyProgress.Data.LastParty != partyData.name)
+        {
+            Player.LobbyProgress.Data.LastParty = partyData.name;
+            Player.LobbyProgress.Changed();
+        }
         Debug.Log($"Party Selected: {_selectedParty.partyName}");
     }
 
@@ -48,6 +53,8 @@ public class UI_PartySelectPresenter
     {
         if (_isProcessing) return;
         _selectedParty = GlobalData.SelectedParty;
+        if (_selectedParty == null && lobbyData != null && Player.LobbyProgress.IsReady)
+            _selectedParty = lobbyData.partyList.Find(x => x != null && x.name == Player.LobbyProgress.Data.LastParty);
         if (_selectedParty == null && lobbyData != null && lobbyData.partyList.Count > 0)
             _selectedParty = lobbyData.partyList[0];
         OnStartGameClicked();

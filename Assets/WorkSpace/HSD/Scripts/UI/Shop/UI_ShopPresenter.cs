@@ -12,15 +12,15 @@ public class UI_ShopPresenter
 
     public void Initialize()
     {
-        _view.SetupShopList(Player.Shop.Daily.DailyItems);
+        _view.SetupShopList(_view.Shop.DailyItems);
     }
 
     public async UniTask BuyItem(ShopItemData data)
     {
-        var purchase = Player.Shop.Daily.BuyItem(data.ShopID);
+        var purchase = _view.Shop.BuyItem(data.ShopID);
         _view.RefreshList();
         bool success = await purchase;
-        _view.RefreshList();
+        _view.SetupShopList(_view.Shop.DailyItems);
         if (success)
         {
             UnityEngine.Debug.Log("Purchase Successful!");

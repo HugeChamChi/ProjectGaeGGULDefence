@@ -12,7 +12,7 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable, System
     private System.Threading.CancellationToken _cancellation;
     private readonly TitleView _view;
 
-    private bool _isProcessing = false;
+    private bool _isProcessing = true;
 
     [Inject]
     public TitlePresenter(GlobalUIManager uiManager, SceneChangeManager sceneChangeManager, AppInitialization initialization, TitleView view = null)
@@ -42,10 +42,12 @@ public class TitlePresenter : IInitializable, ITickable, IAsyncStartable, System
     public async Awaitable StartAsync(System.Threading.CancellationToken cancellation)
     {
         _cancellation = cancellation;
-        if (_uiManager != null)
+        try
         {
-            await _uiManager.FadeOutAsync();
+            if (_uiManager != null)
+                await _uiManager.FadeOutAsync();
         }
+        finally { _isProcessing = false; }
     }
 
     public void Tick()

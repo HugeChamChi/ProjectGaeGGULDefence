@@ -16,7 +16,8 @@
         if(!row||typeof row!=='object'||Array.isArray(row))throw Error(`${name} ${index+1}행 형식 오류`);
         const result={};
         for(const f of schema.fields){
-          const value=Object.hasOwn(row,f.key)?row[f.key]:empty(f.type);
+          let value=Object.hasOwn(row,f.key)?row[f.key]:empty(f.type);
+          if(f.type==='stat'&&value==='BurnDamage')value='SkillDamage';
           if(['rewards','costs'].includes(f.type)){
             if(!Array.isArray(value)||value.length>500||value.some(r=>!r||typeof r.itemId!=='string'||(r.amount!==null&&(typeof r.amount!=='number'||!Number.isFinite(r.amount)))))throw Error(`${name}: 아이템 목록 형식 오류`);
             result[f.key]=value.map(r=>({itemId:r.itemId,amount:r.amount}));
@@ -146,7 +147,7 @@
     if(levels.length&&levels.some((r,i)=>r.Level!==i+1||r.RequiredExperience<(i===levels.length-1?0:1)||(i===levels.length-1&&r.RequiredExperience!==0)))add('AccountLevel',0,'Level','레벨은 1부터 연속이어야 하며 최대 레벨 EXP는 0, 나머지는 양수여야 합니다.');
     const economy=Object.fromEntries(p.tables.Economy.map(r=>[r.ConfigKey,r.Value]));
     const level=levels.find(r=>r.Level===economy.InitialLevel);
-    if(!level||economy.InitialExperience<0||economy.InitialExperience>=(level.RequiredExperience||1))add('Economy',0,'Value','계정 시작 레벨/경험치가 경험치 곡선과 맞지 않습니다.');
+    if(levels.length&&(!level||economy.InitialExperience<0||economy.InitialExperience>=(level.RequiredExperience||1)))add('Economy',0,'Value','계정 시작 레벨/경험치가 경험치 곡선과 맞지 않습니다.');
     return issues;
   }
   const serialize=RewardCore.serialize;

@@ -9,6 +9,7 @@ namespace GaeGGUL.DeckUpgrade
     {
         private RectTransform root, bubble;
         private CanvasGroup group;
+        private TMP_Text titleText, bodyText;
         public bool IsOpen => gameObject.activeSelf;
         public string Body { get; private set; }
         public static DeckUpgradeEffectTooltip Create(RectTransform canvas, TMP_Text source, ResearchViewSettings style)
@@ -25,17 +26,38 @@ namespace GaeGGUL.DeckUpgrade
             ImageBox("Border", view.bubble, 0, 0, 700, 220, borderColor, style.RoundedFill, style.RoundedCornerScale);
             ImageBox("Face", view.bubble, 4, 4, 692, 212, faceColor, style.RoundedFill, style.RoundedCornerScale);
             var title = Label("EffectTitle", view.bubble, source, 22, 16, 656, 50, 32);
+            view.titleText = title;
             title.text = "공격속도 증가"; title.color = new Color32(255, 226, 146, 255);
             var body = Label("EffectBody", view.bubble, source, 22, 84, 656, 120, 29);
-            var bonuses = new UnitLevelBonusController(UnitBonusChart.Resolve("AlphanChief", new System.Collections.Generic.List<UnitLevelBonusDefinition>()), 12);
-            view.Body = $"{bonuses.GetStat(UnitBonusStat.ChiefSpeedDuration):0.##}초간 전체 유닛 공격속도 {bonuses.GetStat(UnitBonusStat.ChiefSpeedPercent)*100f:0.##}% 증가.\n중첩 없이 지속시간만 갱신.";
-            body.text = DeckUpgradeBonusView.HighlightNumbers(view.Body);
+            view.bodyText = body;
+            view.SetEffect("ChiefAttackSpeed", 12);
             view.group = view.bubble.gameObject.AddComponent<CanvasGroup>();
             view.Hide(); return view;
         }
-        public void Show(TermLinkTapTarget source, string id)
+        private void SetEffect(string effect, int level)
+        {
+            string key = effect == "HackingProduction" ? "UnitData_Deltan" : effect == "HackingConsumption" ? "UnitData_Gamman" : "AlphanChief";
+            var bonuses = new UnitLevelBonusController(UnitBonusChart.Resolve(key, new System.Collections.Generic.List<UnitLevelBonusDefinition>()), level);
+            if (effect == "HackingProduction" || effect == "HackingConsumption")
+            {
+                bool production = effect == "HackingProduction";
+                titleText.text = production ? "해킹 추가 생산량" : "해킹 추가 소모 한도";
+                var stats = production
+                    ? new[] { UnitBonusStat.HackingProducedNormal, UnitBonusStat.HackingProducedRare, UnitBonusStat.HackingProducedEpic, UnitBonusStat.HackingProducedLegend }
+                    : new[] { UnitBonusStat.HackingConsumedNormal, UnitBonusStat.HackingConsumedRare, UnitBonusStat.HackingConsumedEpic, UnitBonusStat.HackingConsumedLegend };
+                Body = $"노말 +{bonuses.GetStat(stats[0]):0.##} / 레어 +{bonuses.GetStat(stats[1]):0.##}\n에픽 +{bonuses.GetStat(stats[2]):0.##} / 전설 +{bonuses.GetStat(stats[3]):0.##}";
+            }
+            else
+            {
+                titleText.text = "공격속도 증가";
+                Body = $"{bonuses.GetStat(UnitBonusStat.ChiefSpeedDuration):0.##}초간 전체 유닛 공격속도 {bonuses.GetStat(UnitBonusStat.ChiefSpeedPercent)*100f:0.##}% 증가.";
+            }
+            bodyText.text = DeckUpgradeBonusView.HighlightNumbers(Body);
+        }
+        public void Show(TermLinkTapTarget source, string id, string effect = "ChiefAttackSpeed", int level = 12)
         {
             if (!source.TryGetLinkWorldBounds(id, out var min, out var max)) return;
+            SetEffect(effect, level);
             gameObject.SetActive(true); transform.SetAsLastSibling(); Canvas.ForceUpdateCanvases();
             Vector3 top = root.InverseTransformPoint(max);
             Vector3 center = root.InverseTransformPoint((min + max) * .5f);

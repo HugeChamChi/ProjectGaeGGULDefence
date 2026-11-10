@@ -51,7 +51,7 @@ public sealed class PlayerPrefsResearchSaveStore : IResearchSaveStore
     /// <summary>기존 저장 하나가 여러 트리/계정으로 복제되지 않게 하는 완료 키.</summary>
     public static string MigrationKey(string legacyKey) => "OutgameUpgrade.Migrated." + Uri.EscapeDataString(legacyKey);
 
-    private static ResearchSaveData Parse(string json, string treeKey, bool legacy)
+    internal static ResearchSaveData Parse(string json, string treeKey, bool legacy)
     {
         // 누락 필드의 기본값을 정상 저장으로 오인하지 않도록 JSON 구조부터 검사한다.
         var root = JObject.Parse(json, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });

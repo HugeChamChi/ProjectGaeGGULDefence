@@ -68,7 +68,9 @@ public sealed class RoundRecordManager : Global.IClearable
     }
 
     /// <summary>Loads remote maxima then retries pending saves; bounded and safe across scene/account changes.</summary>
-    public async UniTask RefreshAsync()
+    public UniTask RefreshAsync() => SynchronizeAsync(true);
+
+    private async UniTask SynchronizeAsync(bool refresh)
     {
         if (!OwnsAccount || _busy) return;
         int generation = _generation;
@@ -80,12 +82,20 @@ public sealed class RoundRecordManager : Global.IClearable
         {
             Status = IsDirty ? "기록 저장 중" : "기록 불러오는 중";
             OnChanged?.Invoke();
-            var remote = await _store.LoadAsync(account, timeout.Token);
-            if (!IsCurrent(generation)) return;
+            Dictionary<string, int> remote = null;
+            if (refresh)
+            {
+                remote = await _store.LoadAsync(account, timeout.Token);
+                if (!IsCurrent(generation)) return;
+            }
             foreach (string mode in Modes)
             {
-                int confirmed = remote.TryGetValue(mode, out int value) ? value : 0;
-                ApplyConfirmed(mode, confirmed);
+                int confirmed;
+                if (remote != null)
+                {
+                    confirmed = remote.TryGetValue(mode, out int value) ? value : 0;
+                    ApplyConfirmed(mode, confirmed);
+                }
                 if (_pending.TryGetValue(mode, out int target))
                 {
                     confirmed = await _store.MergeAsync(account, mode, target, timeout.Token);
@@ -108,7 +118,7 @@ public sealed class RoundRecordManager : Global.IClearable
     }
 
     /// <inheritdoc />
-    public UniTask SaveAsync() => RefreshAsync();
+    public UniTask SaveAsync() => IsDirty ? SynchronizeAsync(false) : UniTask.CompletedTask;
 
     /// <summary>Cancels old callbacks and clears presentation, preserving only the owner's durable pending journal.</summary>
     public void Clear()

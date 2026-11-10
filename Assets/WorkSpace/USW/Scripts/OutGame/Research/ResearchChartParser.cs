@@ -116,6 +116,8 @@ public static class ResearchChartParser
     private static T EnumValue<T>(JsonData row, string key) where T : struct
     {
         string text = Text(row, key, true);
+        // Preserve the replaced node when an older uploaded chart is still active.
+        if (typeof(T) == typeof(ResearchStat) && text == "BurnDamage") text = "SkillDamage";
         if (!Enum.TryParse<T>(text, out var value) || !Enum.IsDefined(typeof(T), value) || value.ToString() != text)
             throw new FormatException("Unsupported " + key + ": " + text);
         return value;

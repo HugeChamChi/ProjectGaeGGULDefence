@@ -1,122 +1,77 @@
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using BackEnd;
 using Cysharp.Threading.Tasks;
-using LitJson;
-using UnityEngine;
 
+/// <summary>Compatibility facade for gacha ownership, backed by common character records.</summary>
 public class PlayerCharacterManager : Global.IClearable
 {
-    private const string TABLE_NAME = "PlayerOwnedCharacterData";
-    private const string DATA_KEY = "OwnedCharacterCounts";
-    private Dictionary<int, int> _ownedCharacterCounts = new Dictionary<int, int>();
-    public bool IsDirty { get => false; set { } }
-    private int _generation;
-    private string _owner;
-
-
+    public bool IsDirty { get => Player.Characters.IsDirty || Player.PlayerData.IsDirty; set => Player.Characters.IsDirty = value; }
+    public static string UnitId(int id) => "unit:" + id.ToString(CultureInfo.InvariantCulture);
+    public static string ChiefId(int id) => "chief:" + id.ToString(CultureInfo.InvariantCulture);
+    public int GetCount(int id)
+    {
+        int count = Player.Characters.Data?.Characters.Find(x => x.Id == UnitId(id))?.Count ?? 0;
+        int rewards = Player.PlayerData.IsReady ? Player.PlayerData.Data.RewardInventory.Count(RewardType.Unit, id) : 0;
+        return count > 0 || rewards > 0 ? 1 : 0;
+    }
+    public int GetChiefCount(int id) => (Player.Characters.Data?.Characters.Find(x => x.Id == ChiefId(id))?.Count ?? 0) > 0 ? 1 : 0;
+    public void AddChief(int id, int count = 1) => AddRecord(ChiefId(id), count);
+    public void AddCharacter(int id, int count = 1) { if (Player.Characters.IsReady) Player.PlayerData.AddOwnedCharacter(id, count); }
+    private void AddRecord(string id, int count)
+    {
+        if (!Player.Characters.IsReady || count <= 0) return;
+        var entries = Player.Characters.Data.Characters;
+        var entry = entries.Find(x => x.Id == id);
+        if (entry != null && entry.Count == 1) return;
+        if (entry == null) { entry = new AccountCharacterData.Entry { Id = id }; entries.Add(entry); }
+        entry.Count = 1; Player.Characters.Changed();
+    }
+    public void AddCharacters(int[] ids) { foreach (int id in ids) AddCharacter(id); }
+    public void AddCharacter(ICharacterData character) => AddCharacter(character.Id);
+    public void AddCharacters(ICharacterData[] characters) { foreach (var character in characters) AddCharacter(character); }
+    public async UniTask SaveAsync()
+    {
+        await Player.Characters.SaveAsync();
+        await Player.PlayerData.SaveAsync();
+    }
     public async UniTask InitalizeAsync()
     {
-        var tcs = new UniTaskCompletionSource();
-        Load(() => tcs.TrySetResult());
-        await tcs.Task;
-        if (string.IsNullOrEmpty(_owner) || _owner != Backend.UserInDate)
-            throw new InvalidOperationException("Character inventory could not be loaded.");
-    }
-
-    public void Clear()
-    {
-        _generation++; _owner = null;
-        _ownedCharacterCounts.Clear();
-    }
-
-    public int GetCount(int characterId)
-    {
-        int existing = _ownedCharacterCounts.TryGetValue(characterId, out int count) ? count : 0;
-        int rewards = Player.PlayerData.IsReady ? Player.PlayerData.Data.RewardInventory.Count(RewardType.Unit, characterId) : 0;
-        return (int)Math.Min(int.MaxValue, (long)existing + rewards);
-    }
-    public void AddCharacter(int characterId, int count = 1)
-    {
-        // Legacy counts remain read-only. New grants share PlayerData's durable inventory snapshot.
-        if (_owner != Backend.UserInDate) return;
-        Player.PlayerData.AddOwnedCharacter(characterId, count);
-    }
-    public void AddCharacters(int[] ids)
-    {
-        foreach (var id in ids)
-        {
-            AddCharacter(id, 1);
-        }
-    }
-    public void AddCharacter(ICharacterData character)
-    {
-        AddCharacter(character.Id, 1);
-    }
-    public void AddCharacters(ICharacterData[] characters)
-    {
-        foreach (var character in characters)
-        {
-            AddCharacter(character.Id, 1);
-        }
-    }
-
-    public UniTask SaveAsync() => Player.PlayerData.SaveAsync();
-
-    public void Load(Action onCompleted = null)
-    {
-        Clear();
-        int generation = _generation;
+        if (!Player.Characters.IsReady) throw new InvalidOperationException("Character data is not ready.");
+        bool normalized = false;
+        foreach (var entry in Player.Characters.Data.Characters)
+            if (entry.Count > 1) { entry.Count = 1; normalized = true; }
+        if (normalized) { Player.Characters.Changed(); await Player.Characters.SaveAsync(); }
+        if (Player.Characters.Data.LegacyOwnershipImported) return;
         string owner = Backend.UserInDate;
-        Backend.GameData.GetMyData(TABLE_NAME, new Where(), callback =>
+        var done = new UniTaskCompletionSource<BackendReturnObject>();
+        Backend.GameData.GetMyData("PlayerOwnedCharacterData", new Where(), result => done.TrySetResult(result));
+        var response = await done.Task;
+        AccountJsonStore.RequireOwner(owner, default);
+        if (!response.IsSuccess()) throw new InvalidOperationException("Legacy ownership read failed: " + response.GetStatusCode());
+        var rows = response.FlattenRows();
+        // Ownership is a set: union duplicate rows without summing quantities.
+        for (int row = 0; row < rows.Count; row++)
         {
-            try
+            if (!rows[row].ContainsKey("OwnedCharacterCounts") || rows[row]["OwnedCharacterCounts"] == null)
+                throw new InvalidOperationException("Legacy inventory is missing ownership.");
+            var counts = rows[row]["OwnedCharacterCounts"];
+            foreach (string key in counts.Keys)
             {
-                if (generation != _generation || owner != Backend.UserInDate) return;
-                if (callback.IsSuccess())
-                {
-                    JsonData rows = callback.FlattenRows();
-                    if (rows.Count > 1) throw new InvalidOperationException("Character duplicate rows require repair.");
-
-                    if (rows.Count > 0)
-                    {
-                        // 데이터가 존재하는 경우 복구
-
-                        if (rows[0].ContainsKey(DATA_KEY) && rows[0][DATA_KEY] != null)
-                        {
-                            _ownedCharacterCounts.Clear();
-                            JsonData data = rows[0][DATA_KEY];
-                            foreach (string key in data.Keys)
-                            {
-                                if (int.TryParse(key, out int id))
-                                {
-                                    _ownedCharacterCounts.Add(id, (int)data[key]);
-                                }
-                            }
-                        }
-                        Debug.Log($"캐릭터 보유 데이터 로드 성공: Count={_ownedCharacterCounts.Count}");
-                    }
-                    else
-                    {
-                        // 데이터가 없는 경우 (신규 유저)
-                        Debug.Log("저장된 캐릭터 보유 데이터가 없습니다. 신규 유저로 처리합니다.");
-                    }
-                    _owner = owner;
-                }
-                else
-                {
-                    // 네트워크 오류, 서버 점검 등 실패 처리
-                    Debug.LogError($"캐릭터 보유 데이터 로드 실패: {callback.GetStatusCode()} - {callback.GetErrorMessage()}");
-                }
+                int id = int.Parse(key, CultureInfo.InvariantCulture), count = int.Parse(counts[key].ToString(), CultureInfo.InvariantCulture);
+                if (count < 0) throw new InvalidOperationException("Invalid legacy ownership.");
+                if (count == 0) continue;
+                var entry = Player.Characters.Data.Characters.Find(x => x.Id == UnitId(id));
+                if (entry == null) Player.Characters.Data.Characters.Add(new AccountCharacterData.Entry { Id = UnitId(id), Count = 1 });
+                else entry.Count = 1;
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"캐릭터 보유 데이터 파싱 중 예외 발생: {e.Message}");
-            }
-            finally
-            {
-                onCompleted?.Invoke();
-            }
-        });
+        }
+        foreach (var entry in Player.Characters.Data.Characters) entry.Count = entry.Count > 0 ? 1 : 0;
+        Player.Characters.Data.LegacyOwnershipImported = true;
+        Player.Characters.Changed(); await SaveAsync();
+        if (Player.Characters.IsDirty) throw new InvalidOperationException("Character migration save is pending.");
     }
+    public void Load(Action onCompleted = null) => LoadCore(onCompleted).Forget();
+    private async UniTaskVoid LoadCore(Action done) { try { await InitalizeAsync(); } finally { done?.Invoke(); } }
+    public void Clear() { }
 }
