@@ -474,13 +474,17 @@ public static class IngameTutorialChecks
                 var hits = new System.Collections.Generic.List<RaycastResult>();
                 EventSystem.current.RaycastAll(pointer, hits);
                 var target = hits.Count > 0 ? ExecuteEvents.GetEventHandler<IBeginDragHandler>(hits[0].gameObject) : null;
+                // With the combat buttons live, a swipe over them goes through the button gesture to the same pager.
                 var inputArea = target != null ? target.GetComponent<HudDamageSwipeArea>() : null;
-                Check(inputArea != null && inputArea.Pager == tutorialChart.HudPager,"Actual tutorial raycast reaches HUD swipe " + (open ? "open" : "return"));
-                inputArea.OnInitializePotentialDrag(pointer);
+                var gesture = target != null ? target.GetComponent<HudDamageButtonGesture>() : null;
+                Check(inputArea != null && inputArea.Pager == tutorialChart.HudPager || gesture != null && gesture.Pager == tutorialChart.HudPager,
+                    "Actual tutorial raycast reaches HUD swipe " + (open ? "open" : "return"));
+                if (inputArea != null) inputArea.OnInitializePotentialDrag(pointer); else gesture.OnInitializePotentialDrag(pointer);
                 pointer.position = area.center + Vector2.right * (open ? -8f : 8f);
-                inputArea.OnBeginDrag(pointer);
+                if (inputArea != null) inputArea.OnBeginDrag(pointer); else gesture.OnBeginDrag(pointer);
                 pointer.position = area.center + Vector2.right * area.width * (open ? -.3f : .3f);
-                inputArea.OnDrag(pointer); inputArea.OnEndDrag(pointer);
+                if (inputArea != null) { inputArea.OnDrag(pointer); inputArea.OnEndDrag(pointer); }
+                else { gesture.OnDrag(pointer); gesture.OnEndDrag(pointer); }
             }
             await Stage(IngameTutorialStage.OptionsMenu);
             await Instruction(settings.MenuDamageInstruction);
@@ -514,7 +518,17 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==settings.CombatPracticeInstruction,cancellationToken:token);
             Check(!tutorialMenu.IsExpanded && !tutorialChart.IsOpen && !tutorialInventory.IsOpen,"Menu lesson closes every window before the final battle");
             Check(!input.AllowPointerClicks && Time.timeScale==0,"Final combat explanation blocks gameplay input");
-            await Acknowledge();
+            {
+                // 11-10 user request: the sortie button works under the final explanation and dismisses it.
+                int beforePractice=spawn.SuccessfulSpawnCount;
+                var practiceWallet=Get<CurrencyManager>(director,"_currency");
+                if(practiceWallet.Currency<spawn.CurrentCost) practiceWallet.AddCurrency(spawn.CurrentCost);
+                await FocusReady(overlay);
+                ClickButton(summon);
+                await UniTask.WaitUntil(()=>spawn.SuccessfulSpawnCount==beforePractice+1,cancellationToken:token).TimeoutWithoutException(System.TimeSpan.FromSeconds(5),DelayType.Realtime);
+                await UniTask.WaitUntil(()=>!dialogue.gameObject.activeInHierarchy,cancellationToken:token).TimeoutWithoutException(System.TimeSpan.FromSeconds(5),DelayType.Realtime);
+                Check(spawn.SuccessfulSpawnCount==beforePractice+1 && !dialogue.gameObject.activeInHierarchy,"Final explanation: sortie summons and dismisses the explanation");
+            }
             await UniTask.WaitUntil(()=>boss.CurrentBoss!=null && Get<WaveManager>(director,"_wave").CurrentWave==2,cancellationToken:token);
             Check(boss.CurrentBoss.MaxHp==4500,"Wave 3 practice boss uses authored 4500 HP");
             var optionsMenu=Object.FindFirstObjectByType<IngameHudMenu>();

@@ -962,7 +962,22 @@ namespace GaeGGUL.Tutorial
         {
             LockWorldInput(); Block();
             _dialogue.ShowText(_settings.CombatPracticeInstruction, _lessonIndex, _lessonCount, true);
-            await AwarenessAsync(Ui(_timerTarget), token);
+            // The final battle is free play: the sortie button already works under this explanation and
+            // a summon also dismisses it (user request 2026-11-10). Other taps dismiss as before.
+            _summonLimit = int.MaxValue;
+            int spawnedBefore = _spawner.SuccessfulSpawnCount;
+            _time.Pause(this);
+            _overlay.Show(_settings, true, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_timerTarget), ButtonArea(_summonButton));
+            while (true)
+            {
+                int taps = _overlay.TapCount;
+                await Until(() => _overlay.TapCount > taps || _spawner.SuccessfulSpawnCount > spawnedBefore, token);
+                if (_spawner.SuccessfulSpawnCount > spawnedBefore || !_dialogue.IsTyping) break;
+                _dialogue.CompleteTyping();
+            }
+            _dialogue.Hide();
+            Block();
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
             bool defeated = false;
             void OnDefeated()
             {

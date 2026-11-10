@@ -95,9 +95,20 @@ public sealed class IngameHudDamagePager : MonoBehaviour
     {
         _slide?.Kill(); _pointerId = int.MinValue;
         bool changed = IsChartVisible != visible;
+        // Remember the button state at the moment the chart opens, not at bind time: the tutorial binds
+        // while the HUD is still hidden, and restoring that stale state left the sortie button dead.
+        if (changed && visible)
+        {
+            _previousInteractable = _buttonGroup.interactable;
+            _previousBlocksRaycasts = _buttonGroup.blocksRaycasts;
+        }
         IsChartVisible = visible;
-        _buttonGroup.interactable = !visible && _previousInteractable;
-        _buttonGroup.blocksRaycasts = !visible && _previousBlocksRaycasts;
+        if (visible) _buttonGroup.interactable = _buttonGroup.blocksRaycasts = false;
+        else if (changed)
+        {
+            _buttonGroup.interactable = _previousInteractable;
+            _buttonGroup.blocksRaycasts = _previousBlocksRaycasts;
+        }
         float target = visible ? 1f : 0f;
         if (!animate) { _pop?.Kill(); _popScale = 1f; SetProgress(target); return; }
         _slide = DOTween.To(() => _progress, SetProgress, target, _settings.HudSlideSeconds)
