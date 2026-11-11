@@ -78,6 +78,10 @@ public static class Player
         using (bonusTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
             await UnitBonusChart.InitializeAsync(bonusTimeout.Token);
         RequireCurrentInitialization(owner, generation);
+        using (var runBalanceTimeout = new CancellationTokenSource())
+        using (runBalanceTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await GGD.BackendCharts.RunBalanceChartLoader.InitializeAsync(runBalanceTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
         await UniTask.WhenAll(
             Profile.InitalizeAsync(),
             Mail.InitalizeAsync(),
@@ -127,6 +131,7 @@ public static class Player
         RoundRecords.Clear();
         GGD.Events.EventChartLoader.Clear();
         UnitBonusChart.Clear();
+        GGD.BackendCharts.RunBalanceChartLoader.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();

@@ -109,9 +109,9 @@ public sealed class LevelUpDrawer
         // SO 미연결 검사용 기본값 역시 실제 풀 SO의 기본 비율과 같다.
         float weight = tier switch
         {
-            Tier.Rare => settings != null ? settings.RareWeight : LevelUpPoolData.DefaultRareWeight,
-            Tier.Epic => settings != null ? settings.EpicWeight : LevelUpPoolData.DefaultEpicWeight,
-            Tier.Legend => settings != null ? settings.LegendWeight : LevelUpPoolData.DefaultLegendWeight,
+            Tier.Rare => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CardsRareWeight, settings != null ? settings.RareWeight : LevelUpPoolData.DefaultRareWeight),
+            Tier.Epic => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CardsEpicWeight, settings != null ? settings.EpicWeight : LevelUpPoolData.DefaultEpicWeight),
+            Tier.Legend => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CardsLegendWeight, settings != null ? settings.LegendWeight : LevelUpPoolData.DefaultLegendWeight),
             _ => 0f
         };
         return float.IsNaN(weight) || float.IsInfinity(weight) ? 0f : Mathf.Max(0f, weight);

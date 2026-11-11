@@ -22,7 +22,16 @@ public sealed class UpgradeSettings : ScriptableObject
     public float[] ZeltanCosts = { 100f, 400f, 800f, 1400f, 2300f };
 
     /// <summary>젤탕의 최대 강화 단계. 다른 대상은 단계 상한이 없다.</summary>
-    public int ZeltanMaxLevel => ZeltanCosts?.Length ?? 0;
+    // The fields above are the bundled values (Editor, tutorial). Gameplay and UI read the properties below,
+    // which return the DEV_/LIVE_RunBalance chart values once the chart is installed (TODO G12).
+    public float CurrentInitialCost => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.UpgradeInitialCost, InitialCost);
+    public float CurrentCostMultiplier => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.UpgradeCostMultiplier, CostMultiplier);
+    public float CurrentAttackPercentPerLevel => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.UpgradeAttackPercentPerLevel, AttackPercentPerLevel);
+    public float CurrentAttackSpeedPercentPerLevel => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.UpgradeAttackSpeedPercentPerLevel, AttackSpeedPercentPerLevel);
+    public float CurrentZeltanFoodPerDronePerLevel => GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.UpgradeZeltanFoodPerDronePerLevel, ZeltanFoodPerDronePerLevel);
+    public float[] CurrentZeltanCosts => GGD.BackendCharts.RunBalance.List(GGD.BackendCharts.RunBalance.UpgradeZeltanCosts, ZeltanCosts);
+
+    public int ZeltanMaxLevel => CurrentZeltanCosts?.Length ?? 0;
 
     /// <summary>현재 단계에서 더 강화할 수 없는지 확인한다. 젤탕만 상한을 가진다.</summary>
     public bool IsMaxLevel(string key, int currentLevel) => key == ZeltanTarget && currentLevel >= ZeltanMaxLevel;
@@ -56,17 +65,18 @@ public sealed class UpgradeSettings : ScriptableObject
         if (food)
         {
             if (IsMaxLevel(key, currentLevel)) return false;
-            cost = ZeltanCosts[currentLevel];
+            cost = CurrentZeltanCosts[currentLevel];
             if (!IsFinite(cost) || cost < 0f) return false;
         }
         else
         {
-            if (!IsFinite(InitialCost) || InitialCost <= 0f || !IsFinite(CostMultiplier) || CostMultiplier < 1f) return false;
-            cost = (float)(InitialCost * Math.Pow(CostMultiplier, currentLevel));
+            float initialCost = CurrentInitialCost, costMultiplier = CurrentCostMultiplier;
+            if (!IsFinite(initialCost) || initialCost <= 0f || !IsFinite(costMultiplier) || costMultiplier < 1f) return false;
+            cost = (float)(initialCost * Math.Pow(costMultiplier, currentLevel));
             if (!IsFinite(cost)) return false;
         }
-        step = new Step { Cost = cost, AttackPercent = food ? 0f : AttackPercentPerLevel,
-            AttackSpeedPercent = food ? 0f : AttackSpeedPercentPerLevel };
+        step = new Step { Cost = cost, AttackPercent = food ? 0f : CurrentAttackPercentPerLevel,
+            AttackSpeedPercent = food ? 0f : CurrentAttackSpeedPercentPerLevel };
         return IsFinite(step.AttackPercent) && step.AttackPercent >= 0f
             && IsFinite(step.AttackSpeedPercent) && step.AttackSpeedPercent >= 0f;
     }

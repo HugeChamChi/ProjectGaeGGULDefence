@@ -150,7 +150,7 @@ public class GameManager : MonoBehaviour
 
         _timerManager.OnTimeUp += HandleTimeUp;
 
-        _currencyManager.AddCurrency(config.startingFood + _research.Get(ResearchStat.StartFood));
+        _currencyManager.AddCurrency(GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.EconomyStartingFood, config.startingFood) + _research.Get(ResearchStat.StartFood));
         _expManager.OnLevelUp += HandleLevelUp;
 
         if (startWave) _waveManager.StartWave();

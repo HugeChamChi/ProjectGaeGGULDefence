@@ -103,7 +103,7 @@ public class UpgradeManager : MonoBehaviour
 
     /// <summary>현재 젤탕 강화로 더하는 전투 드론 1기당 초당 식량. 선택지 보정 전 값이다.</summary>
     public float ZeltanFoodPerDroneBonus => _settings != null
-        ? GetUpgradeLevel(UpgradeSettings.ZeltanTarget) * _settings.ZeltanFoodPerDronePerLevel : 0f;
+        ? GetUpgradeLevel(UpgradeSettings.ZeltanTarget) * _settings.CurrentZeltanFoodPerDronePerLevel : 0f;
 
     /// <summary>대상이 최대 단계에 도달해 더 강화할 수 없는지 확인한다.</summary>
     public bool IsMaxLevel(string upgradeTarget) => _settings != null
@@ -112,8 +112,8 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>동일 설정에서 강화 안내 문구를 만든다.</summary>
     public string GetUpgradeDescription(string target) => _settings == null ? string.Empty
         : target == UpgradeSettings.ZeltanTarget
-            ? $"드론 1기당\n+{_settings.ZeltanFoodPerDronePerLevel:0.##}/초\n최대 {_settings.ZeltanMaxLevel}단계"
-            : $"공격력 +{_settings.AttackPercentPerLevel:0.##}%\n공속 +{_settings.AttackSpeedPercentPerLevel:0.##}%";
+            ? $"드론 1기당\n+{_settings.CurrentZeltanFoodPerDronePerLevel:0.##}/초\n최대 {_settings.ZeltanMaxLevel}단계"
+            : $"공격력 +{_settings.CurrentAttackPercentPerLevel:0.##}%\n공속 +{_settings.CurrentAttackSpeedPercentPerLevel:0.##}%";
 
     /// <summary>현재 강화 레벨 기준 공격력 배율(1.0 = 강화 없음)을 반환합니다. 호출자가 자신의 기준 공격력에 곱해서 사용합니다.</summary>
     public float GetAtkUpgradeMultiplier(int characterId)
@@ -122,7 +122,7 @@ public class UpgradeManager : MonoBehaviour
 
         string jobType = GetJobType(characterId);
         return !_settings.ContainsTarget(jobType) || jobType == UpgradeSettings.ZeltanTarget ? 1f
-            : 1f + GetUpgradeLevel(jobType) * _settings.AttackPercentPerLevel / 100f;
+            : 1f + GetUpgradeLevel(jobType) * _settings.CurrentAttackPercentPerLevel / 100f;
     }
 
     /// <summary>현재 강화 레벨 기준 공격 속도 배율(1.0 = 강화 없음, 클수록 빠름)을 반환합니다. 호출자가 자신의 기준 공격 간격을 이 값으로 나눠서 사용합니다.</summary>
@@ -132,7 +132,7 @@ public class UpgradeManager : MonoBehaviour
 
         string jobType = GetJobType(characterId);
         return !_settings.ContainsTarget(jobType) || jobType == UpgradeSettings.ZeltanTarget ? 1f
-            : 1f + GetUpgradeLevel(jobType) * _settings.AttackSpeedPercentPerLevel / 100f;
+            : 1f + GetUpgradeLevel(jobType) * _settings.CurrentAttackSpeedPercentPerLevel / 100f;
     }
 
     /// <summary>다음 강화 비용을 반환한다. 설정 오류나 표현 불가능한 비용이면 -1.</summary>

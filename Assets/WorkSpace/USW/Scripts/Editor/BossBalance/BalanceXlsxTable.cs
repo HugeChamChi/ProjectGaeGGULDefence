@@ -34,7 +34,10 @@ public sealed class BalanceXlsxTable
     public IReadOnlyList<Row> Rows => _rows;
 
     /// <summary>필수 헤더가 있는 표 하나를 읽는다. 계산용 열은 입력으로 읽지 않으면 유지된다.</summary>
-    public static BalanceXlsxTable Read(byte[] bytes, string sheetName, params string[] required)
+    public static BalanceXlsxTable Read(byte[] bytes, string sheetName, params string[] required) => Read(bytes, sheetName, 2, required);
+
+    /// <summary>헤더 행 번호를 지정해 읽는다. 뒤끝 차트 업로드용 파일은 헤더가 1행이다.</summary>
+    public static BalanceXlsxTable Read(byte[] bytes, string sheetName, int headerRow, params string[] required)
     {
         using var input = new MemoryStream(bytes, false);
         using var zip = new ZipArchive(input, ZipArchiveMode.Read);
@@ -46,7 +49,7 @@ public sealed class BalanceXlsxTable
         string part = new Uri(new Uri("https://xlsx.local/xl/workbook.xml"), (string)rel.Attribute("Target")).AbsolutePath.TrimStart('/');
         var strings = zip.GetEntry("xl/sharedStrings.xml") == null ? Array.Empty<string>() : Load(zip, "xl/sharedStrings.xml").Root.Elements(Ns + "si").Select(Text).ToArray();
         var rows = Load(zip, part).Descendants(Ns + "sheetData").Elements(Ns + "row").ToArray();
-        var header = rows.SingleOrDefault(x => (string)x.Attribute("r") == "2") ?? throw new FormatException($"{sheetName}: 2행 헤더가 없습니다.");
+        var header = rows.SingleOrDefault(x => (string)x.Attribute("r") == headerRow.ToString()) ?? throw new FormatException($"{sheetName}: {headerRow}행 헤더가 없습니다.");
         var columns = new Dictionary<string, string>(StringComparer.Ordinal);
         var names = new HashSet<string>(StringComparer.Ordinal);
         foreach (var cell in header.Elements(Ns + "c"))
@@ -61,7 +64,7 @@ public sealed class BalanceXlsxTable
         foreach (var source in rows)
         {
             int number = (int)source.Attribute("r");
-            if (number <= 2) continue;
+            if (number <= headerRow) continue;
             var row = new Row { Number = number, Sheet = sheetName, Strings = strings };
             foreach (var cell in source.Elements(Ns + "c"))
                 if (columns.TryGetValue(Column(cell), out string label)) row.Cells.Add(label, cell);

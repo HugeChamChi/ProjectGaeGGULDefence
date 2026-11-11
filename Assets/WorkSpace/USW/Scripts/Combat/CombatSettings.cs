@@ -21,10 +21,10 @@ public sealed class CombatSettings
     /// <summary>저작 설정을 복사한다. 설정 없는 독립 검사에서는 기존 기본값 0을 사용한다.</summary>
     public CombatSettings(GameConfig config)
     {
-        BaseCritChance = config != null ? config.baseCritChance : 0f;
-        DamageVariance = config != null ? Mathf.Clamp(config.damageVariance, 0f, MaximumVariance) : 0f;
-        CritDamageVariance = config != null ? Mathf.Clamp(config.critDamageVariance, 0f, MaximumVariance) : 0f;
-        BaseCritDamageMultiplier = config != null ? Mathf.Max(1f, config.baseCritDamageMultiplier) : DefaultBaseCritDamageMultiplier;
-        MaxAttackSpeedMultiplier = config != null ? Mathf.Max(1f, config.maxAttackSpeedMultiplier) : DefaultMaxAttackSpeedMultiplier;
+        BaseCritChance = config != null ? GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CombatBaseCritChance, config.baseCritChance) : 0f;
+        DamageVariance = config != null ? Mathf.Clamp(GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CombatDamageVariance, config.damageVariance), 0f, MaximumVariance) : 0f;
+        CritDamageVariance = config != null ? Mathf.Clamp(GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CombatCritDamageVariance, config.critDamageVariance), 0f, MaximumVariance) : 0f;
+        BaseCritDamageMultiplier = config != null ? Mathf.Max(1f, GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CombatBaseCritDamageMultiplier, config.baseCritDamageMultiplier)) : DefaultBaseCritDamageMultiplier;
+        MaxAttackSpeedMultiplier = config != null ? Mathf.Max(1f, GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.CombatMaxAttackSpeedMultiplier, config.maxAttackSpeedMultiplier)) : DefaultMaxAttackSpeedMultiplier;
     }
 }

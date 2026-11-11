@@ -105,7 +105,7 @@ public class UnitSpawner : MonoBehaviour
 
         // 본게임 소환 비용은 GameConfig가 원본이다. 튜토리얼은 대본용 설정이 우선한다.
         var config = _resolver.TryResolve<GameManager>(out var gameManager) ? gameManager.Config : null;
-        if (config != null) { _initialCost = Mathf.Max(0f, config.summonInitialCost); _costIncrease = Mathf.Max(0f, config.summonCostIncrease); }
+        if (config != null) { _initialCost = Mathf.Max(0f, GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.SummonInitialCost, config.summonInitialCost)); _costIncrease = Mathf.Max(0f, GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.SummonCostIncrease, config.summonCostIncrease)); }
         CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : _initialCost;
     }
 

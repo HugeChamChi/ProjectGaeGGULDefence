@@ -39,13 +39,15 @@ public class ExpManager : MonoBehaviour
     private double _expRemainder;
     private bool _endSettled;
     public int   CurrentLevel { get; private set; } = 1;
-    public bool  IsMaxLevel   => CurrentLevel >= MaxLevel;
+    public bool  IsMaxLevel   => CurrentLevel >= Mathf.RoundToInt(GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.ExpMaxLevel, MaxLevel));
 
     /// <summary>현재 레벨에서 다음 레벨까지 필요한 EXP. ExpLevelData(SO)가 정본이며, 미할당 시에만 FallbackExpTable을 쓴다.</summary>
     public float ExpToLevelUp
     {
         get
         {
+            var chart = GGD.BackendCharts.RunBalance.List(GGD.BackendCharts.RunBalance.ExpRequired, null);
+            if (chart != null) return chart[Mathf.Clamp(CurrentLevel - 1, 0, chart.Length - 1)];
             if (expLevelData != null) return expLevelData.GetExpRequired(CurrentLevel);
             return FallbackExpTable[Mathf.Min(CurrentLevel - 1, FallbackExpTable.Length - 1)];
         }
