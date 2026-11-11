@@ -104,9 +104,10 @@ public sealed class UnitBalanceSnapshot : IDisposable
         if (resolved.Contains(source)) return source;
         if (!definitions.TryGetValue(source.name, out var definition))
         {
-            // The totem joker (WildcardUnit) only occupies a cell and merges; it has no attack, skill or food
-            // stats to balance, so it is deliberately not a chart row (user decision 2026-11-11).
-            if (source.prefab != null && source.prefab.GetComponent<WildcardUnit>() != null) return source;
+            // A unit with no balance stats at all (the totem joker: it only occupies a cell and merges) is
+            // deliberately not a chart row (user decision 2026-11-11). Its prefab loads by address later, so
+            // the data itself is the only thing available to recognize it here.
+            if (HasNoBalanceStats(source)) return source;
             throw new InvalidOperationException("Missing remote unit mapping: " + source.name);
         }
         if (!copies.TryGetValue(source, out var copy))
@@ -129,6 +130,14 @@ public sealed class UnitBalanceSnapshot : IDisposable
         copy.icon = source.icon; copy.prefab = source.prefab;
         copy.LevelBonuses = UnitBonusChart.Resolve(definition.UnitKey, source.LevelBonuses);
         return copy;
+    }
+
+    private static bool HasNoBalanceStats(UnitData source)
+    {
+        foreach (Tier tier in new[] { Tier.Normal, Tier.Rare, Tier.Epic, Tier.Legend })
+            if (source.atk.Get(tier) != 0f || source.attackSpeed.Get(tier) != 0f || source.skillCooldown.Get(tier) != 0f
+                || source.foodProduction.Get(tier) != 0f || source.maxDroneCount.Get(tier) != 0) return false;
+        return true;
     }
 
     public void Dispose()
