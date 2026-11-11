@@ -25,3 +25,15 @@ MonoBehaviour:
     IdColumn: itemID
     ItemId: Stamina
     Currency: 2
+  - ChartName: COMMON_RewardItems
+    IdColumn: itemID
+    ItemId: Gold
+    Currency: 0
+  - ChartName: COMMON_RewardItems
+    IdColumn: itemID
+    ItemId: Diamond
+    Currency: 1
+  - ChartName: COMMON_RewardItems
+    IdColumn: itemID
+    ItemId: Stamina
+    Currency: 2
