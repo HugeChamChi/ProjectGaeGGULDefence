@@ -102,7 +102,13 @@ public sealed class UnitBalanceSnapshot : IDisposable
     {
         if (source == null) return null;
         if (resolved.Contains(source)) return source;
-        if (!definitions.TryGetValue(source.name, out var definition)) throw new InvalidOperationException("Missing remote unit mapping: " + source.name);
+        if (!definitions.TryGetValue(source.name, out var definition))
+        {
+            // The totem joker (WildcardUnit) only occupies a cell and merges; it has no attack, skill or food
+            // stats to balance, so it is deliberately not a chart row (user decision 2026-11-11).
+            if (source.prefab != null && source.prefab.GetComponent<WildcardUnit>() != null) return source;
+            throw new InvalidOperationException("Missing remote unit mapping: " + source.name);
+        }
         if (!copies.TryGetValue(source, out var copy))
         {
             copy = UnityEngine.Object.Instantiate(source);

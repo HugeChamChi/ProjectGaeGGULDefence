@@ -77,7 +77,7 @@ public static class UnitInfoDisplayChecks
             var zelta = Component<Drone_Zeltan>(); zelta.unitData = Asset<UnitData>();
             zelta.Init(new UnitDependencies()); presenter.SetUnitData(zelta);
             Check(atkText.text == "0기", "Zeltan replaces attack with live fleet count");
-            var frog = Component<FrogArcher>(); frog.unitData = Asset<UnitData>(); frog.unitData.atk.normal = 50;
+            var frog = Component<PlainCheckUnit>(); frog.unitData = Asset<UnitData>(); frog.unitData.atk.normal = 50;
             frog.unitData.attackSpeed.normal = 2; frog.Init(new UnitDependencies()); presenter.SetUnitData(frog);
             Check(atkText.text == "50", "Switching unit resets cached drone display");
             UnityEngine.Object.DestroyImmediate(frog.gameObject); Check(!presenter.Refresh(), "Destroyed unit invalidates view");

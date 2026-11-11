@@ -37,12 +37,6 @@ MonoBehaviour:
     Count: 2
     DemoDamagePerSecond: 350
     Color: {r: 0.37, g: 0.76, b: 0.57, a: 1}
-  - Unit: {fileID: 11400000, guid: 9be061eeef3ac984b803199acd97d628, type: 2}
-    DisplayNameOverride: "\uAC1C\uAD6C\uB9AC \uAD81\uC218"
-    Portrait: {fileID: 21300000, guid: 6df9fc772e96ab04c9b4936bbd3d83b0, type: 3}
-    Count: 4
-    DemoDamagePerSecond: 720
-    Color: {r: 0.64, g: 0.55, b: 0.91, a: 1}
   - Unit: {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
     DisplayNameOverride: 
     Portrait: {fileID: 21300000, guid: 9db28dea548971348984f593f77b080f, type: 3}
@@ -69,5 +63,7 @@ MonoBehaviour:
   HudPageMinAlpha: 0.25
   HudSettlePopScale: 1.035
   HudSettlePopSeconds: 0.25
-  HudOpenHint: "‹ 좌우로 밀어서 딜 그래프 보기 ›"
-  HudCloseHint: "‹ 좌우로 밀어서 버튼으로 돌아가기 ›"
+  HudOpenHint: "\u2039 \uC88C\uC6B0\uB85C \uBC00\uC5B4\uC11C \uB51C \uADF8\uB798\uD504
+    \uBCF4\uAE30 \u203A"
+  HudCloseHint: "\u2039 \uC88C\uC6B0\uB85C \uBC00\uC5B4\uC11C \uBC84\uD2BC\uC73C\uB85C
+    \uB3CC\uC544\uAC00\uAE30 \u203A"

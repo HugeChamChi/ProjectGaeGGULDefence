@@ -27,12 +27,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - DynamicShopData
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 054cf655cfdd39241a886de8c64d6d3f
-    m_Address: Data/UD_Frog_Mage
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 068ce850b5a24ff4bbabeab9a730815c
     m_Address: "Data/SD_\uAC80\uD48D"
     m_ReadOnly: 0
@@ -155,12 +149,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51263ba706524e4aabb60f3fa7a91e9a
     m_Address: "Data/SD_\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 55f2fe0b1aefd77448fc7e110327b990
-    m_Address: Data/UD_Frog_Rogue
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
@@ -288,12 +276,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - ChiefData
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9be061eeef3ac984b803199acd97d628
-    m_Address: Data/UD_Frog_Archer
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9e427abc3d2e3f24da695a858cb6c99a
     m_Address: Data/Dron_Party
     m_ReadOnly: 0
@@ -342,12 +324,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - PlayerFrame
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b786c1ffcd532e04fb06cbefc2a3b909
-    m_Address: Data/Test_Party
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba6e8ec0c9dafa642b97a80492270904
     m_Address: ChiefData/ChiefData
     m_ReadOnly: 0
@@ -372,20 +348,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c1adfb35d73d9714db864be394eeabf4
-    m_Address: Data/UD_Frog_Priest
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c39813e7c222d814cbf2503f99fa2999
     m_Address: Data/WaveData_Round08
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c5c2b6131e43e584aba669f17e1df816
-    m_Address: Data/Chief_UnitData_Frog_Warrior_Legend
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data

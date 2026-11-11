@@ -49,7 +49,7 @@ public static class ResearchSkillDamageChecks
             var values = (float[])typeof(ResearchRunBonuses).GetField("_values", Private).GetValue(research);
             values[(int)ResearchStat.SkillDamage] = .5f;
             var deps = new UnitDependencies { Research = research };
-            var unit = root.AddComponent<FrogWarrior>();
+            var unit = root.AddComponent<PlainCheckUnit>();
             var stats = root.AddComponent<UnitStatsModifier>();
             data.atk = new PerTierFloat { normal = 100 };
             data.skillData = skill; data.basicAttackData = basic; unit.unitData = data;

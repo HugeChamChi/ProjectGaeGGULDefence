@@ -88,9 +88,9 @@ public static class TotemBehaviorChecks
         var upper = Asset<UnitData>();
         upper.atk.rare = 80;
         upper.skillData = Asset<SkillData>();
-        var first = Unit<FrogArcher>(original);
-        var second = Unit<FrogArcher>(original);
-        var different = Unit<FrogArcher>(Asset<UnitData>());
+        var first = Unit<PlainCheckUnit>(original);
+        var second = Unit<PlainCheckUnit>(original);
+        var different = Unit<PlainCheckUnit>(Asset<UnitData>());
         var joker = Unit<WildcardUnit>(Asset<UnitData>());
         var source = Component<TotemTemporaryTierBoost>();
         var otherSource = Component<TotemTemporaryTierBoost>();
@@ -160,7 +160,7 @@ public static class TotemBehaviorChecks
     {
         var data = Asset<TotemData>();
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
-        var unit = Unit<FrogArcher>(Asset<UnitData>());
+        var unit = Unit<PlainCheckUnit>(Asset<UnitData>());
         var cell = grid.GetCell(3, 2);
         cell.TryPlaceUnit(unit);
         Set(unit, "<currentCell>k__BackingField", cell);
@@ -188,7 +188,7 @@ public static class TotemBehaviorChecks
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
         var unitData = Asset<UnitData>();
         unitData.atk.normal = 100;
-        var unit = Unit<FrogArcher>(unitData);
+        var unit = Unit<PlainCheckUnit>(unitData);
         unit.Init(new UnitDependencies());
         var cell = grid.GetCell(3, 2);
         cell.TryPlaceUnit(unit);
@@ -252,7 +252,7 @@ public static class TotemBehaviorChecks
     {
         var data = Asset<TotemData>();
         data.effectRanges.Add(new TotemRelativeOffsetRange { offsets = new List<Vector2Int> { Vector2Int.right } });
-        var unit = Unit<FrogArcher>(Asset<UnitData>());
+        var unit = Unit<PlainCheckUnit>(Asset<UnitData>());
         var cell = grid.GetCell(3, 2);
         cell.TryPlaceUnit(unit);
         Set(unit, "<currentCell>k__BackingField", cell);

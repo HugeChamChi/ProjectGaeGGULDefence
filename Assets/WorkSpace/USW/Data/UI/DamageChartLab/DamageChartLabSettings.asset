@@ -37,12 +37,6 @@ MonoBehaviour:
     Count: 2
     DemoDamagePerSecond: 350
     Color: {r: 0.37, g: 0.76, b: 0.57, a: 1}
-  - Unit: {fileID: 11400000, guid: 9be061eeef3ac984b803199acd97d628, type: 2}
-    DisplayNameOverride: "\uAC1C\uAD6C\uB9AC \uAD81\uC218"
-    Portrait: {fileID: 21300000, guid: 6df9fc772e96ab04c9b4936bbd3d83b0, type: 3}
-    Count: 4
-    DemoDamagePerSecond: 720
-    Color: {r: 0.64, g: 0.55, b: 0.91, a: 1}
   - Unit: {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
     DisplayNameOverride: 
     Portrait: {fileID: 21300000, guid: 9db28dea548971348984f593f77b080f, type: 3}
@@ -54,3 +48,22 @@ MonoBehaviour:
   RefreshInterval: 0.16
   WarmupSeconds: 12
   BurstDamage: 42000
+  RuntimePanelMin: {x: 0.03, y: 0.18}
+  RuntimePanelMax: {x: 0.97, y: 0.78}
+  VisibleRows: 6
+  RuntimeTextScale: 1.08
+  HudHeight: 400
+  HudVisibleRows: 3
+  HudTextScale: 1.35
+  HudSwipeFraction: 0.12
+  HudButtonSwipeStartFraction: 0.03
+  HudButtonSwipeDirectionRatio: 1.5
+  HudSlideSeconds: 0.22
+  HudPageMinScale: 0.9
+  HudPageMinAlpha: 0.25
+  HudSettlePopScale: 1.035
+  HudSettlePopSeconds: 0.25
+  HudOpenHint: "\u2039 \uC88C\uC6B0\uB85C \uBC00\uC5B4\uC11C \uB51C \uADF8\uB798\uD504
+    \uBCF4\uAE30 \u203A"
+  HudCloseHint: "\u2039 \uC88C\uC6B0\uB85C \uBC00\uC5B4\uC11C \uBC84\uD2BC\uC73C\uB85C
+    \uB3CC\uC544\uAC00\uAE30 \u203A"

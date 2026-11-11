@@ -85,7 +85,7 @@ public static class TotemExpansionChecks
         var cellNear = grid.GetCell(4, 3);
         Check(Mathf.Approximately(cellNear.Model.GetTotemCellBonus(StatKind.Speed), -0.2f), "Negative speed applies");
         Check(Mathf.Approximately(cellNear.Model.GetTotemCellBonus(StatKind.AttackPercent), 0.5f), "Tradeoff attack applies");
-        var unit = Component<FrogArcher>();
+        var unit = Component<PlainCheckUnit>();
         unit.unitData = Asset<UnitData>();
         unit.unitData.attackSpeed.normal = 1;
         unit.Init(new UnitDependencies());
@@ -120,7 +120,7 @@ public static class TotemExpansionChecks
             return shot;
         }));
         int Launches() { int count = 0; foreach (var shot in shots) count += shot.LaunchCount; return count; }
-        var unit = Component<FrogArcher>();
+        var unit = Component<PlainCheckUnit>();
         unit.unitData = Asset<UnitData>();
         unit.unitData.atk.normal = 100;
         unit.unitData.attackSpeed.normal = 1;

@@ -40,7 +40,7 @@ public static class DroneProductionChecks
             var grid = Component<GridManager>(); var cell = Component<GridCell>();
             Set(cell, "<Model>k__BackingField", new GridCellModel());
             Set(grid, "_grid", new[,] { { cell } }); Set(spawn, "_gridManager", grid);
-            spawn.Reward = Component<FrogArcher>(); cell.TryPlaceUnit(spawn.Reward);
+            spawn.Reward = Component<PlainCheckUnit>(); cell.TryPlaceUnit(spawn.Reward);
             spawn.ProcessPendingSupport(); Check(spawn.PendingSupportCount == 2 && spawn.Placed == 0, "Full grid retains queue");
             manager.RemoveEffect(support);
             cell.RemoveUnit(); spawn.Fail = true; spawn.ProcessPendingSupport();
