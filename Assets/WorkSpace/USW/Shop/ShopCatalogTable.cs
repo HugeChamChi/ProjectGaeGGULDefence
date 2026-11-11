@@ -23,7 +23,9 @@ namespace GaeGGUL.Shop
     /// <summary>One applied backend chart owns stock. Store prices and receipts remain with Unity IAP.</summary>
     public sealed class ShopCatalogTable
     {
-        public const string ChartName = "ShopCatalog";
+        public const string ChartName = ChartEnvironment.Prefix + "ShopCatalog";
+        public const string DailyChartName = ChartEnvironment.Prefix + "ShopDailyList";
+        public const string WeeklyChartName = ChartEnvironment.Prefix + "ShopWeeklyList";
         private List<ShopCatalogProduct> _products = new List<ShopCatalogProduct>();
         public bool IsReady { get; private set; }
         public IEnumerable<ShopCatalogProduct> Products(ShopCategory section) => _products.Where(p => p.Section == section);
@@ -37,7 +39,7 @@ namespace GaeGGUL.Shop
             try
             {
                 var combined = new JsonData(); combined.SetJsonType(JsonType.Array);
-                var names = new[] { "ShopDailyList", "ShopWeeklyList", ChartName };
+                var names = new[] { DailyChartName, WeeklyChartName, ChartName };
                 var charts = await BackendChartReader.ReadManyAsync(names, timeout.Token);
                 foreach (string name in names)
                 {
@@ -45,7 +47,7 @@ namespace GaeGGUL.Shop
                     for (int i = 0; i < rows.Count; i++)
                     {
                         string section = rows[i]["Section"].ToString();
-                        if (name == "ShopDailyList" ? section != "Daily" : name == "ShopWeeklyList" ? section != "Weekly" : section != "Gold" && section != "InApp")
+                        if (name == DailyChartName ? section != "Daily" : name == WeeklyChartName ? section != "Weekly" : section != "Gold" && section != "InApp")
                             throw new FormatException("Wrong shop section in chart: " + name);
                         combined.Add(rows[i]);
                     }

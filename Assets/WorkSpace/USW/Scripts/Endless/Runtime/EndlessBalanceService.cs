@@ -7,7 +7,7 @@ using UnityEngine;
 public sealed class EndlessBalanceService
 {
     /// <summary>Exact backend chart name expected by this client.</summary>
-    public const string ChartName = "EndlessBalance";
+    public const string ChartName = GGD.BackendCharts.ChartEnvironment.Prefix + "EndlessBalance";
     private const int TimeoutSeconds = 5;
     /// <summary>Last successful refresh; null means NORMAL entry is blocked.</summary>
     public EndlessBalanceSnapshot Current { get; private set; }

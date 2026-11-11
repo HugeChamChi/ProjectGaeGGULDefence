@@ -43,11 +43,11 @@ public static class ShopLiveChecks
             var expected = JsonMapper.ToObject(File.ReadAllText("Assets/WorkSpace/USW/Shop/Data/ShopCatalogEditorFixture.json"));
             var combined = new JsonData(); combined.SetJsonType(JsonType.Array);
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            foreach (string name in new[] { "ShopDailyList", "ShopWeeklyList", "ShopCatalog" })
+            foreach (string name in new[] { "DEV_ShopDailyList", "DEV_ShopWeeklyList", "DEV_ShopCatalog" })
             {
                 var rows = await GGD.BackendCharts.BackendChartReader.ReadAsync(name, timeout.Token);
                 Check(rows != null && rows.IsArray, name + " applied CDN file");
-                var scope = name == "ShopDailyList" ? new[] { "Daily" } : name == "ShopWeeklyList" ? new[] { "Weekly" } : new[] { "Gold", "InApp" };
+                var scope = name == "DEV_ShopDailyList" ? new[] { "Daily" } : name == "DEV_ShopWeeklyList" ? new[] { "Weekly" } : new[] { "Gold", "InApp" };
                 var local = new Dictionary<int, JsonData>();
                 for (int i = 0; i < expected.Count; i++) if (scope.Contains(expected[i]["Section"].ToString())) local.Add(expected[i].GetInt("ShopID"), expected[i]);
                 Check(rows.Count == local.Count, name + " row count " + rows.Count);

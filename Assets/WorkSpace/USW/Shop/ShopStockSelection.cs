@@ -10,7 +10,7 @@ namespace GaeGGUL.Shop
     public static class ShopStockSelection
     {
         public const int RandomSlots = 5;
-        public static string ProbabilityName(ShopCategory section) => section == ShopCategory.Daily ? "ShopDailyProbability" : "ShopWeeklyProbability";
+        public static string ProbabilityName(ShopCategory section) => GGD.BackendCharts.ChartEnvironment.Prefix + (section == ShopCategory.Daily ? "ShopDailyProbability" : "ShopWeeklyProbability");
 
         public static List<ShopCatalogProduct> SelectLocal(IEnumerable<ShopCatalogProduct> products, Func<double> next)
         {
