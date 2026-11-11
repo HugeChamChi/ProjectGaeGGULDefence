@@ -30,8 +30,8 @@ public sealed class ResearchSaveService : IDisposable
     public ResearchSaveSession GetSession(string accountKey, ResearchTreeData tree, string legacyPrefix)
     {
         if (tree == null) throw new ArgumentNullException(nameof(tree));
-        var address = new ResearchSaveAddress(accountKey, tree.TreeKey,
-            string.IsNullOrEmpty(tree.LegacySaveName) ? null : legacyPrefix + tree.LegacySaveName);
+        // legacyPrefix is no longer read: the unversioned PlayerPrefs import was removed on 2026-11-11 (TODO G15).
+        var address = new ResearchSaveAddress(accountKey, tree.TreeKey);
         if (!_sessions.TryGetValue(address.StorageKey, out var session))
             _sessions.Add(address.StorageKey, session = new ResearchSaveSession(_store, address, tree));
         else if (session.Progress != null && session.Progress.Tree != tree)

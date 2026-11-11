@@ -61,13 +61,6 @@ public sealed class ResearchSaveSession : IDisposable
     {
         if (_disposed) return;
         _revision++;
-        if (_store is AccountResearchSaveStore accountStore)
-        {
-            try { accountStore.Checkpoint(Address, Progress.Capture()); _savedRevision = _revision; SaveError = null; }
-            catch (Exception error) { SaveError = error; }
-            OnSaveStateChanged?.Invoke();
-            return;
-        }
         FlushAsync(_lifetime.Token).Forget();
     }
 
@@ -77,7 +70,7 @@ public sealed class ResearchSaveSession : IDisposable
         if (_disposed) throw new ObjectDisposedException(nameof(ResearchSaveSession));
         cancellationToken.ThrowIfCancellationRequested();
         var operation = _save;
-        if (operation == null && Progress != null && (IsDirty || (_store is AccountResearchSaveStore && Player.PlayerData.IsDirty)))
+        if (operation == null && Progress != null && IsDirty)
         {
             operation = _save = new UniTaskCompletionSource();
             SaveCore(operation).Forget();
