@@ -14,7 +14,6 @@ public class LobbyLifetimeScope : LifetimeScope
     {
         builder.RegisterInstance(new SceneComponentCollection(gameObject.scene));
         builder.RegisterEntryPoint<GaeGGUL.Tutorial.TutorialSceneBinding>();
-        SceneComponentRegistration.RegisterOptional<Test_TutorialSystem>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<GaeGGUL.Tutorial.TutorialActor>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<StaminaInsufficientPopup>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<BackendManager>(builder, gameObject.scene);

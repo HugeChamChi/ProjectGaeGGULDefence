@@ -9,7 +9,6 @@ public static class Table
     public static CharacterTable Character      { get; private set; } = new();
     public static ItemTable Item                { get; private set; } = new();
     public static ShopTables Shop               { get; private set; } = new();
-    public static GachaTable Gacha              { get; private set; } = new();
     public static ProjectileTable Projectile    { get; private set; } = new();
 
     public static async UniTask InitializeAsync()
@@ -26,11 +25,6 @@ public static class Table
             Projectile.InitializeAsync()
         );
 
-        // GachaManager는 CharacterManager의 데이터에 의존할 수 있으므로 (Data Resolver)
-        // 안전하게 Character 초기화 완료 후 실행하거나, 혹은 병렬로 실행합니다.
-        // 현재 GachaSystem의 InitializeAsync는 확률/비용만 로드하므로 병렬 실행이 가능합니다.
-        await Gacha.InitializeAsync();
-        
         Debug.Log("<color=green><b>Table</b></color> initialized successfully.");
     }
 }

@@ -111,12 +111,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Data
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 39eb63f0712b5744eb0fe1cc8dc98ad9
-    m_Address: Data/TutorialSequence
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Data
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3aaf6da918e03ad47ac25aef4eb1d09e
     m_Address: Data/WaveData_Round07
     m_ReadOnly: 0

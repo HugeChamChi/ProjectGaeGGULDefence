@@ -419,23 +419,6 @@ public class PlayerDataController : IDisposable, Global.IClearable
         _data = next; SaveAndRefresh(); return true;
     }
 
-    public bool TryPurchaseCharacters(int price, ICharacterData[] characters)
-    {
-        if (!IsReady || characters == null || characters.Length == 0) return false;
-        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
-        if (!DeductPurchase(next, CurrencyType.Diamond, price)) return false;
-        try
-        {
-            foreach (var character in characters)
-            {
-                if (character == null || character.Id <= 0) return false;
-                AddPurchasedUnit(next, character.Id, 1);
-            }
-        }
-        catch (OverflowException) { return false; }
-        _data = next; SaveAndRefresh(); return true;
-    }
-
     private static bool DeductPurchase(PlayerData next, CurrencyType currency, int price)
     {
         if (price < 0) return false;
