@@ -519,7 +519,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public async UniTask<bool> ClaimRoundRewardAsync(RoundReachRewards.Definition reward)
     {
         if (!IsReady || !Player.RoundRecords.OwnsAccount || Player.RoundRecords.Account != _account) return false;
-        if (!RoundReachRewards.Apply(_data, reward, Player.RoundRecords.GetBest("NORMAL"))) return false;
+        if (!RoundReachRewards.Apply(_data, reward, Player.RoundRecords.GetConfirmedBest("NORMAL"))) return false;
         SaveAndRefresh();
         return await TrySaveAsync();
     }

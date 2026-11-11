@@ -322,7 +322,7 @@ public sealed class LobbyBattleView : MonoBehaviour
         button.onClick.AddListener(() => ClaimRewardAsync(reward, status).Forget());
         _refreshRewards.Add(() => {
             bool claimed = _playerData?.Data?.RoundRewardClaims?.Contains(reward.RewardKey) == true;
-            bool ready = _rewardsReady && _playerData?.IsReady == true && (Player.RoundRecords.GetBest(RecordMode) ?? 0) >= round;
+            bool ready = _rewardsReady && _playerData?.IsReady == true && (Player.RoundRecords.GetConfirmedBest(RecordMode) ?? 0) >= round;
             button.interactable = !claimed && ready && !_claimingReward;
             status.text = claimed ? (_playerData.IsDirty ? "저장 대기" : "수령 완료") : ready ? "수령하기" : round + "R 도달 시";
         });
