@@ -5,9 +5,10 @@ using System.Collections.Generic;
 public static class SelectionEffectProjector
 {
     /// <summary>외부 입력을 수정하지 않고 새 불변 결과를 계산한다.</summary>
-    public static SelectionEffectSnapshot Project(IEnumerable<SelectionCardSnapshot> cards, float baseCritChance = 0f)
+    public static SelectionEffectSnapshot Project(IEnumerable<SelectionCardSnapshot> cards, float baseCritChance = 0f,
+        float baseCritDamageMultiplier = CombatSettings.DefaultBaseCritDamageMultiplier)
     {
         if (cards == null) throw new ArgumentNullException(nameof(cards));
-        return new SelectionEffectSnapshot(cards, baseCritChance);
+        return new SelectionEffectSnapshot(cards, baseCritChance, baseCritDamageMultiplier);
     }
 }

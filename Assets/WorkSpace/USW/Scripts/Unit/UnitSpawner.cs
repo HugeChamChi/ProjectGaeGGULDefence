@@ -28,10 +28,12 @@ public class UnitSpawner : MonoBehaviour
     [SerializeField] private Vector3 spawnScale = new Vector3(0.5f, 0.5f, 0.5f);
 
     public float CurrentCost { get; private set; }
-    /// <summary>튜토리얼 설정이 없을 때 첫 소환 비용(식량).</summary>
-    private const float DefaultInitialCost = 20f;
-    /// <summary>튜토리얼 설정이 없을 때 소환 성공마다 오르는 비용(식량).</summary>
-    private const float DefaultCostIncrease = 20f;
+    /// <summary>GameConfig를 찾지 못한 독립 검사에서 쓰는 첫 소환 비용(식량). GameConfig 기본값과 같다.</summary>
+    private const float FallbackInitialCost = 20f;
+    /// <summary>GameConfig를 찾지 못한 독립 검사에서 쓰는 소환 비용 증가분(식량). GameConfig 기본값과 같다.</summary>
+    private const float FallbackCostIncrease = 20f;
+    private float _initialCost = FallbackInitialCost;
+    private float _costIncrease = FallbackCostIncrease;
     [SerializeField] private GaeGGUL.Tutorial.IngameTutorialSettings _tutorialSettings;
     /// <summary>Successful paid summons, excluding bonus and merge spawns.</summary>
     public int SuccessfulSpawnCount { get; private set; }
@@ -101,7 +103,10 @@ public class UnitSpawner : MonoBehaviour
         _bossManager = _resolver.Resolve<BossManager>();
         _totemBuffManager = _resolver.Resolve<TotemBuffManager>();
 
-        CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : DefaultInitialCost;
+        // 본게임 소환 비용은 GameConfig가 원본이다. 튜토리얼은 대본용 설정이 우선한다.
+        var config = _resolver.TryResolve<GameManager>(out var gameManager) ? gameManager.Config : null;
+        if (config != null) { _initialCost = Mathf.Max(0f, config.summonInitialCost); _costIncrease = Mathf.Max(0f, config.summonCostIncrease); }
+        CurrentCost = _tutorialSettings != null ? _tutorialSettings.InitialCost : _initialCost;
     }
 
     /// <summary>Optional scene-owned permission checked before spending currency or creating a unit.</summary>
@@ -178,7 +183,7 @@ public class UnitSpawner : MonoBehaviour
         LastSpawnedUnit = unit;
         SuccessfulSpawnCount++;
 
-        float increment = _tutorialSettings != null ? _tutorialSettings.CostIncrease : DefaultCostIncrease;
+        float increment = _tutorialSettings != null ? _tutorialSettings.CostIncrease : _costIncrease;
         CurrentCost += increment;
         OnCostChanged?.Invoke(CurrentCost);
     }

@@ -109,7 +109,8 @@ public class UnitStatsModifier : MonoBehaviour
         float critChance = Mathf.Clamp01((lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f) + LevelStat(UnitBonusStat.CriticalChancePoints));
         if (rollCritical && UnityEngine.Random.value < critChance)
         {
-            float critMultiplier = lu != null ? lu.CritDamageMultiplier : 1.5f;
+            float critMultiplier = lu != null ? lu.CritDamageMultiplier
+                : _deps?.CombatSettings?.BaseCritDamageMultiplier ?? CombatSettings.DefaultBaseCritDamageMultiplier;
             float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage)
                 + (_unit.LevelBonuses?.GetStat(UnitBonusStat.CriticalDamagePoints) ?? 0f);
             damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * DamageCalculator.Spread(_deps?.CombatSettings?.CritDamageVariance ?? 0f);

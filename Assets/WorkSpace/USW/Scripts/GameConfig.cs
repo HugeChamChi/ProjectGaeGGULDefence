@@ -63,6 +63,10 @@ public class GameConfig : ScriptableObject
     [Header("Economy")]
     public float startingFood = 20f;   // food given at game start
     public float placeCost    = 10f;   // cost to place one unit
+    [Tooltip("본게임 첫 소환 비용(식량). 튜토리얼은 IngameTutorialSettings 값을 쓴다.")]
+    [Min(0f)] public float summonInitialCost = 20f;
+    [Tooltip("소환에 성공할 때마다 오르는 비용(식량). 튜토리얼은 IngameTutorialSettings 값을 쓴다.")]
+    [Min(0f)] public float summonCostIncrease = 20f;
 
     [Header("Combat")]
     [Tooltip("모든 유닛·드론 공통 기본 치명타 확률 (0~1). 레벨업·토템 보너스는 이 위에 더한다.\n" +
@@ -77,6 +81,8 @@ public class GameConfig : ScriptableObject
     [Tooltip("현재 등급 기본 공속 대비 최종 공격 빈도의 최대 배율. 유닛과 전투 드론에 같이 적용하고, 보스 패턴 감속은 상한 뒤에 곱한다.\n" +
              "사용자 결정 2026-11-05: 8배 (델탕 전설 1.8회 × 8 = 초당 14.4회, 30fps 한계 15회 아래)")]
     [Min(1f)] public float maxAttackSpeedMultiplier = 8f;
+    [Tooltip("선택지, 토템, 연구 보너스를 더하기 전의 기본 치명타 피해 배율 (1.5 = 150%).")]
+    [Min(1f)] public float baseCritDamageMultiplier = 1.5f;
 
     [Header("Visuals")]
     public UnitTierPalette tierPalette; // 등급별 비주얼 설정

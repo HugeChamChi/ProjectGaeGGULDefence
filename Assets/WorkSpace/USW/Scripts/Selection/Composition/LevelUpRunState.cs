@@ -9,6 +9,7 @@ public sealed class LevelUpRunState
     /// <summary>자동 지출이 성공한 뒤 한 번만 공격력을 적립한다.</summary>
     public void RecordSacrifice() { if (_started) SacrificeAttackBonus += Current.SacrificeAttackPerPayment; }
     private float _baseCritChance;
+    private float _baseCritDamageMultiplier = CombatSettings.DefaultBaseCritDamageMultiplier;
     private double _glitchAttackBonus;
     /// <summary>오류 누적 횟수. 새 런에서만 초기화한다.</summary>
     public int GlitchAttackTriggers { get; private set; }
@@ -46,14 +47,17 @@ public sealed class LevelUpRunState
         Active = _active.AsReadOnly();
         History = _history.AsReadOnly();
         Results = _results.AsReadOnly();
-        Current = SelectionEffectProjector.Project(_active, _baseCritChance);
+        Current = SelectionEffectProjector.Project(_active, _baseCritChance, _baseCritDamageMultiplier);
     }
     /// <summary>첫 런 시작 전에 씬의 전투 설정을 연결한다. 진행 중인 런의 기본값은 변경하지 않는다.</summary>
-    public void ConfigureBaseCritChance(float baseCritChance)
+    public void ConfigureBaseCritChance(float baseCritChance) => ConfigureBaseCombat(baseCritChance, _baseCritDamageMultiplier);
+    /// <summary>첫 런 시작 전에 기본 치명 확률과 기본 치명 피해 배율을 함께 연결한다.</summary>
+    public void ConfigureBaseCombat(float baseCritChance, float baseCritDamageMultiplier)
     {
         if (_started) throw new InvalidOperationException("Cannot change combat settings after BeginRun.");
-        var initial = SelectionEffectProjector.Project(_active, baseCritChance);
+        var initial = SelectionEffectProjector.Project(_active, baseCritChance, baseCritDamageMultiplier);
         _baseCritChance = baseCritChance;
+        _baseCritDamageMultiplier = baseCritDamageMultiplier;
         Current = initial;
     }
     /// <summary>새 런에서만 기록을 비운다. 같은 런의 중복 Init은 보장/프리뷰를 지우지 않는다.</summary>
@@ -63,7 +67,7 @@ public sealed class LevelUpRunState
         RunId = runId; _started = true;
         GlitchAttackTriggers = 0; _glitchAttackBonus = 0; SacrificeAttackBonus = 0;
         _prepared.Clear(); _active.Clear(); _history.Clear(); _results.Clear(); _everAcquired.Clear(); _pendingLegendSources.Clear();
-        Current = SelectionEffectProjector.Project(_active, _baseCritChance);
+        Current = SelectionEffectProjector.Project(_active, _baseCritChance, _baseCritDamageMultiplier);
         return true;
     }
     /// <summary>처음 본 카드의 정의/랜덤 값만 확정한다. 난수 API는 [min,maxExclusive) 계약이다.</summary>
@@ -84,7 +88,7 @@ public sealed class LevelUpRunState
         RequireRun();
         if (_everAcquired.Contains(cardId) || !_prepared.TryGetValue(cardId, out var card)) return false;
         var candidate = new List<SelectionCardSnapshot>(_active) { card };
-        var projected = SelectionEffectProjector.Project(candidate, _baseCritChance);
+        var projected = SelectionEffectProjector.Project(candidate, _baseCritChance, _baseCritDamageMultiplier);
         _results.Add(new SelectionResultRecord(card, resultDescription));
         _active.Add(card); _history.Add(card); _everAcquired.Add(cardId); Current = projected;
         if (card.HasCommand<GuaranteeLegendCommandDefinition>()) _pendingLegendSources.Add(cardId);
@@ -97,7 +101,7 @@ public sealed class LevelUpRunState
         int index = _active.FindIndex(card => card.CardId == cardId);
         if (index < 0) return false;
         var candidate = new List<SelectionCardSnapshot>(_active); candidate.RemoveAt(index);
-        var projected = SelectionEffectProjector.Project(candidate, _baseCritChance);
+        var projected = SelectionEffectProjector.Project(candidate, _baseCritChance, _baseCritDamageMultiplier);
         _active.RemoveAt(index); _pendingLegendSources.Remove(cardId); Current = projected;
         return true;
     }

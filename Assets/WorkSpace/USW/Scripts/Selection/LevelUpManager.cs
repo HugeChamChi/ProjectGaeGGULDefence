@@ -50,7 +50,7 @@ public class LevelUpManager : MonoBehaviour
     {
         if (_runtimeInitialized) return;
         _runState ??= new LevelUpRunState();
-        _runState.ConfigureBaseCritChance(CombatConfiguration.BaseCritChance);
+        _runState.ConfigureBaseCombat(CombatConfiguration.BaseCritChance, CombatConfiguration.BaseCritDamageMultiplier);
         _runState.BeginRun(GetInstanceID());
         _reader ??= new SelectionEffectReader(_runState);
         _drawer ??= new LevelUpDrawer(new UnitySelectionRandom());

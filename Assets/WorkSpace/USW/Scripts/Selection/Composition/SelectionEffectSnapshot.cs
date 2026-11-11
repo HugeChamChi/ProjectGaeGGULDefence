@@ -60,7 +60,7 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     /// <summary>CritChance의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float CritChance { get; private set; } = 0f;
     /// <summary>CritDamageMultiplier의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
-    public float CritDamageMultiplier { get; private set; } = 1.5f;
+    public float CritDamageMultiplier { get; private set; } = CombatSettings.DefaultBaseCritDamageMultiplier;
     /// <summary>FoodSpeedBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
     public float FoodSpeedBonus { get; private set; } = 0f;
     /// <summary>ProjectileSizeBonus의 현재 선택지 기여. 비율은 1=100%, 시간은 초 단위.</summary>
@@ -242,9 +242,10 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public IReadOnlyList<int> BonusAttackEveryNHits { get; }
     /// <summary>출처별 강화 할인. 환급 이력은 포함하지 않는다.</summary>
     public IReadOnlyDictionary<int,float> UpgradeDiscounts { get; }
-    internal SelectionEffectSnapshot(IEnumerable<SelectionCardSnapshot> cards, float baseCritChance)
+    internal SelectionEffectSnapshot(IEnumerable<SelectionCardSnapshot> cards, float baseCritChance, float baseCritDamageMultiplier = CombatSettings.DefaultBaseCritDamageMultiplier)
     {
         Finite(baseCritChance); CritChance=Mathf.Clamp01(baseCritChance);
+        Finite(baseCritDamageMultiplier); CritDamageMultiplier=Mathf.Max(1f, baseCritDamageMultiplier);
         BonusAttackEveryNHits=_hitPeriods.AsReadOnly();
         UpgradeDiscounts=new ReadOnlyDictionary<int,float>(_upgradeDiscounts);
         var ids=new HashSet<int>(); var groups=new HashSet<string>(StringComparer.Ordinal);
