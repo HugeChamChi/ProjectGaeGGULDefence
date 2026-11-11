@@ -121,10 +121,10 @@ public class PlayerDataController : IDisposable, Global.IClearable
             if (!Matches(generation)) return;
             if (value == null) { SetStatus("재화 조회 실패, 다시 시도해 주세요."); return; }
             _data = value; _confirmedSaveId = value.SaveId ?? "";
-            if (PlayerPrefs.HasKey(JournalKey))
+            if (SignedPrefs.HasKey(JournalKey))
             {
                 PlayerDataJournal pending = null;
-                try { pending = JsonUtility.FromJson<PlayerDataJournal>(PlayerPrefs.GetString(JournalKey)); }
+                try { pending = JsonUtility.FromJson<PlayerDataJournal>(SignedPrefs.GetString(JournalKey)); }
                 catch (ArgumentException) { HasSaveConflict = true; }
                 if (pending?.Data == null || string.IsNullOrEmpty(pending.Data.SaveId)) HasSaveConflict = true;
                 else if (pending.Data.SaveId == _confirmedSaveId) DeleteJournal();
@@ -620,7 +620,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
     }
     private bool Matches(int generation) => generation == _generation && _account == _accountProvider();
     private string JournalKey => _journalPrefix + _account;
-    private void PersistJournal() { PlayerPrefs.SetString(JournalKey, JsonUtility.ToJson(new PlayerDataJournal { BaseSaveId = _confirmedSaveId, AttemptedSaveIds = _attemptedSaveIds, Data = _data })); PlayerPrefs.Save(); }
-    private void DeleteJournal() { PlayerPrefs.DeleteKey(JournalKey); PlayerPrefs.Save(); }
+    private void PersistJournal() { SignedPrefs.SetString(JournalKey, JsonUtility.ToJson(new PlayerDataJournal { BaseSaveId = _confirmedSaveId, AttemptedSaveIds = _attemptedSaveIds, Data = _data })); PlayerPrefs.Save(); }
+    private void DeleteJournal() { SignedPrefs.DeleteKey(JournalKey); PlayerPrefs.Save(); }
     private void SetStatus(string status) { SaveStatus = status; OnSaveStatusChanged?.Invoke(); }
 }

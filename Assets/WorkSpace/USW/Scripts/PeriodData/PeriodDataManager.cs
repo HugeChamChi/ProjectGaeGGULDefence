@@ -87,12 +87,12 @@ namespace GGD.Periods
         }
         private void RestorePending()
         {
-            if (PlayerPrefs.HasKey(Key))
+            if (SignedPrefs.HasKey(Key))
             {
                 // Never overwrite an unreadable/conflicting journal with freshly loaded defaults.
                 try
                 {
-                    var pending = JsonUtility.FromJson<Journal>(PlayerPrefs.GetString(Key));
+                    var pending = JsonUtility.FromJson<Journal>(SignedPrefs.GetString(Key));
                     if (pending == null || string.IsNullOrWhiteSpace(pending.Payload) || string.IsNullOrEmpty(pending.Period) || pending.Base == null) throw new FormatException("Invalid period journal.");
                     string remote = Signature(_savedPeriod, _savedPayload);
                     if (Signature(pending.Period, pending.Payload) == remote) DeleteJournal();
@@ -198,9 +198,9 @@ namespace GGD.Periods
             if (_conflict) throw new InvalidOperationException(_table + " conflict; journal retained.");
             var json = JsonUtility.ToJson(new Journal { Base = Signature(_savedPeriod, _savedPayload), Period = _period, Payload = PeriodSerialization.Write(_data), Attempts = _attempts });
             if (json == _persisted) return;
-            PlayerPrefs.SetString(Key, json); PlayerPrefs.Save(); _persisted = json;
+            SignedPrefs.SetString(Key, json); PlayerPrefs.Save(); _persisted = json;
         }
-        private void DeleteJournal() { PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _persisted = null; }
+        private void DeleteJournal() { SignedPrefs.DeleteKey(Key); PlayerPrefs.Save(); _persisted = null; }
         private string CurrentKey() => PeriodSerialization.Key(ServerClock.UtcNow, _weekly);
         private void EnsurePeriod()
         {

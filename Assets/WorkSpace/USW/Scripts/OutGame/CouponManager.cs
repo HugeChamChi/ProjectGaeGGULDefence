@@ -32,7 +32,7 @@ public sealed class CouponManager
         string key = JournalPrefix + owner;
         try
         {
-            if (PlayerPrefs.HasKey(key)) return await RecoverAsync(owner, key);
+            if (SignedPrefs.HasKey(key)) return await RecoverAsync(owner, key);
             if (Player.PlayerData.Data.CouponHistory?.Exists(item => item.CodeFingerprint == Fingerprint(code)) == true)
                 return (false, "이 계정에서 이미 사용한 쿠폰입니다.");
             if (!await Player.PlayerData.TrySaveAsync()) return (false, "기존 재화 저장을 완료한 뒤 다시 시도해 주세요.");
@@ -47,7 +47,7 @@ public sealed class CouponManager
                 // Persist even if the waiting UI timed out or the user switched accounts.
                 if (response.IsSuccess()) { journal.Response = response.GetReturnValuetoJSON().ToJson(); Persist(key, journal); }
                 else if (response.StatusCode >= 400 && response.StatusCode < 500 && response.StatusCode != 408 && response.StatusCode != 429)
-                { PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); }
+                { SignedPrefs.DeleteKey(key); PlayerPrefs.Save(); }
                 completion.TrySetResult(response);
             });
             var response = await completion.Task.AttachExternalCancellation(timeout.Token);
@@ -65,7 +65,7 @@ public sealed class CouponManager
         if (_busy || !Player.PlayerData.IsReady) return (false, "계정 데이터를 불러오는 중입니다.");
         string owner = Backend.UserInDate;
         string key = JournalPrefix + owner;
-        if (!PlayerPrefs.HasKey(key)) return (true, "");
+        if (!SignedPrefs.HasKey(key)) return (true, "");
         _busy = true;
         try { return await RecoverAsync(owner, key); }
         catch (Exception) { return (false, "보관된 쿠폰 결과 확인이 필요합니다. 고객지원에 문의해 주세요."); }
@@ -73,14 +73,14 @@ public sealed class CouponManager
     }
     private static async UniTask<(bool Success, string Message)> RecoverAsync(string owner, string key)
     {
-        var journal = JsonUtility.FromJson<CouponRedemptionJournal>(PlayerPrefs.GetString(key));
+        var journal = JsonUtility.FromJson<CouponRedemptionJournal>(SignedPrefs.GetString(key));
         if (journal == null || string.IsNullOrEmpty(journal.Response)) return (false, "쿠폰 사용 결과 확인이 필요합니다. 회원코드와 쿠폰을 고객지원에 전달해 주세요.");
         if (!CouponRewardParser.TryParse(journal.Response, out var receipt, out string error)) return (false, error + " 응답은 보관되었습니다.");
         receipt.CodeFingerprint = journal.Fingerprint;
         if (Backend.UserInDate != owner || !Player.PlayerData.TryApplyCoupon(receipt)) return (false, "보상 지급을 보류했습니다. 계정/보유량을 확인해 주세요.");
         if (!await Player.PlayerData.TrySaveAsync()) return (false, "쿠폰은 사용되었습니다. 보상 저장 대기 중이며 다시 누르면 저장만 재시도합니다.");
         if (Backend.UserInDate != owner) return (false, "원래 계정에서 지급 상태를 확인해 주세요.");
-        PlayerPrefs.DeleteKey(key); PlayerPrefs.Save();
+        SignedPrefs.DeleteKey(key); PlayerPrefs.Save();
         return (true, $"쿠폰 지급 완료, Gold +{receipt.Gold}, Dia +{receipt.Diamond}, 스태미나 +{receipt.Stamina}");
     }
     /// <summary>Backend 404 combines expiry/invalid/used cases; do not invent a more precise reason.</summary>
@@ -100,5 +100,5 @@ public sealed class CouponManager
     }
     private static bool ContainsControl(string code) { foreach (char c in code) if (char.IsControl(c)) return true; return false; }
     private static string Fingerprint(string code) { using var hash = SHA256.Create(); return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(code))).Replace("-", ""); }
-    private static void Persist(string key, CouponRedemptionJournal journal) { PlayerPrefs.SetString(key, JsonUtility.ToJson(journal)); PlayerPrefs.Save(); }
+    private static void Persist(string key, CouponRedemptionJournal journal) { SignedPrefs.SetString(key, JsonUtility.ToJson(journal)); PlayerPrefs.Save(); }
 }

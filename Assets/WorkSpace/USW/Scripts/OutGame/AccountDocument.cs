@@ -40,12 +40,12 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
         var data = string.IsNullOrEmpty(row.InDate) ? new T() : AccountJsonStore.Parse<T>(row.Json);
         _validate(data);
         _confirmed = data.SaveId ?? "";
-        if (PlayerPrefs.HasKey(Key))
+        if (SignedPrefs.HasKey(Key))
         {
-            var pending = JsonConvert.DeserializeObject<Journal>(PlayerPrefs.GetString(Key));
+            var pending = JsonConvert.DeserializeObject<Journal>(SignedPrefs.GetString(Key));
             if (pending?.Data == null) throw new InvalidOperationException("Invalid pending account data.");
             _validate(pending.Data);
-            if (data.SaveId == pending.Data.SaveId) { PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
+            if (data.SaveId == pending.Data.SaveId) { SignedPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
             else if (_confirmed == pending.BaseSaveId || _confirmed == pending.AttemptSaveId) { data = pending.Data; IsDirty = true; }
             else throw new InvalidOperationException("Account save conflicts with pending local changes: " + _table);
         }
@@ -59,7 +59,7 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
         _requestSave();
     }
     private void Persist()
-    { PlayerPrefs.SetString(Key, JsonConvert.SerializeObject(new Journal { BaseSaveId = _confirmed, AttemptSaveId = _attemptSaveId, Data = Data })); PlayerPrefs.Save(); }
+    { SignedPrefs.SetString(Key, JsonConvert.SerializeObject(new Journal { BaseSaveId = _confirmed, AttemptSaveId = _attemptSaveId, Data = Data })); PlayerPrefs.Save(); }
     public async UniTask SaveAsync()
     {
         if (_save != null) { await _save.Task; return; }
@@ -92,7 +92,7 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
                 }
                 if (generation != _generation) return;
                 _confirmed = saveId; _attemptSaveId = "";
-                if (Data.SaveId == saveId) { IsDirty = false; PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
+                if (Data.SaveId == saveId) { IsDirty = false; SignedPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
                 else Persist();
             }
         }
@@ -115,7 +115,7 @@ public sealed class AccountDocument<T> : Global.IClearable where T : AccountDocu
     {
         if (!IsLocked || _owner != _ownerProvider()) throw new InvalidOperationException("Account document changed.");
         _validate(value); Data = value; _confirmed = value.SaveId; _attemptSaveId = "";
-        IsDirty = false; PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save();
+        IsDirty = false; SignedPrefs.DeleteKey(Key); PlayerPrefs.Save();
     }
     public void Clear() { _generation++; IsLocked = false; Data = null; _owner = null; _confirmed = ""; _attemptSaveId = ""; IsDirty = false; _save = null; }
 }

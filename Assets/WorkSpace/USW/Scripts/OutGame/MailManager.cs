@@ -27,7 +27,7 @@ public class MailManager : Global.IClearable
         get
         {
             if (string.IsNullOrEmpty(_owner) || _owner != _gateway.Owner) return false;
-            try { return !string.IsNullOrEmpty(JsonUtility.FromJson<MailClaimJournal>(PlayerPrefs.GetString(PendingPrefix + _owner, "{}"))?.Response); }
+            try { return !string.IsNullOrEmpty(JsonUtility.FromJson<MailClaimJournal>(SignedPrefs.GetString(PendingPrefix + _owner, "{}"))?.Response); }
             catch (Exception) { return false; }
         }
     }
@@ -45,8 +45,8 @@ public class MailManager : Global.IClearable
         {
             if (string.IsNullOrEmpty(_owner) || _owner != _gateway.Owner) return "";
             string key = PendingPrefix + _owner;
-            if (!PlayerPrefs.HasKey(key)) return "";
-            try { return JsonUtility.FromJson<MailClaimJournal>(PlayerPrefs.GetString(key))?.Id ?? ""; }
+            if (!SignedPrefs.HasKey(key)) return "";
+            try { return JsonUtility.FromJson<MailClaimJournal>(SignedPrefs.GetString(key))?.Id ?? ""; }
             catch (Exception) { return ""; }
         }
     }
@@ -172,7 +172,7 @@ public class MailManager : Global.IClearable
             if (response.IsSuccess()) { journal.Response = response.GetReturnValuetoJSON().ToJson(); Persist(key, journal); }
             // A rejection proves this request did not grant. Ambiguous network/server errors retain evidence.
             else if (response.StatusCode >= 400 && response.StatusCode < 500 && response.StatusCode != 408 && response.StatusCode != 429)
-            { PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); }
+            { SignedPrefs.DeleteKey(key); PlayerPrefs.Save(); }
             completion.TrySetResult(response);
         });
         var result = await WaitAsync(completion, _lifetime.Token);
@@ -217,9 +217,9 @@ public class MailManager : Global.IClearable
     {
         string key = PendingPrefix + owner;
         if (!Current(owner, generation)) return false;
-        if (!PlayerPrefs.HasKey(key)) { IsDirty = false; return true; }
+        if (!SignedPrefs.HasKey(key)) { IsDirty = false; return true; }
         IsDirty = true;
-        var journal = JsonUtility.FromJson<MailClaimJournal>(PlayerPrefs.GetString(key));
+        var journal = JsonUtility.FromJson<MailClaimJournal>(SignedPrefs.GetString(key));
         if (journal == null || string.IsNullOrEmpty(journal.Response)) { Publish("수령 결과 확인 필요, 고객지원에 문의해 주세요. 자동으로 다시 지급하지 않습니다."); return false; }
         var json = JsonMapper.ToObject(journal.Response);
         if (!json.ContainsKey("postItems") || !MailParser.TryRewards(json["postItems"], journal.Id, _config, out var receipt, out _))
@@ -228,7 +228,7 @@ public class MailManager : Global.IClearable
         // Existing balance+receipt snapshot is shared with coupons; mail IDs are explicitly namespaced.
         if (!_gateway.Balances.TryApplyCoupon(receipt)) { Publish("보상 적용 대기, 계정과 보유 한도 확인 필요"); return false; }
         if (!await _gateway.Balances.TrySaveAsync() || !Current(owner, generation)) { if (Current(owner, generation)) Publish("보상 저장을 기다리고 있어요. 연결되면 자동으로 이어집니다."); return false; }
-        PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); IsDirty = false;
+        SignedPrefs.DeleteKey(key); PlayerPrefs.Save(); IsDirty = false;
         _posts.RemoveAll(post => post.Key == journal.Id); Publish("보상 수령 완료"); return true;
     }
     private static async UniTask<MailResponse> WaitAsync(UniTaskCompletionSource<MailResponse> completion, CancellationToken token)
@@ -237,7 +237,7 @@ public class MailManager : Global.IClearable
         using var timer = timeout.CancelAfterSlim(TimeSpan.FromSeconds(15), DelayType.Realtime);
         return await completion.Task.AttachExternalCancellation(timeout.Token);
     }
-    private static void Persist(string key, MailClaimJournal journal) { PlayerPrefs.SetString(key, JsonUtility.ToJson(journal)); PlayerPrefs.Save(); }
+    private static void Persist(string key, MailClaimJournal journal) { SignedPrefs.SetString(key, JsonUtility.ToJson(journal)); PlayerPrefs.Save(); }
     /// <summary>Returns a snapshot so UI sorting cannot change claim identity.</summary>
     public List<Post> GetCurrentPostList()
     {
