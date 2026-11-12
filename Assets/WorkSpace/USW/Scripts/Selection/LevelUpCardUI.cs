@@ -202,7 +202,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         if (nameText != null)
             nameText.text = data.chooseName;
 
-        ApplyTierSprites(data?.tier ?? Tier.Rare);
+        ApplyTierSprites(data != null ? data.CurrentTier : Tier.Rare);
     }
 
     // ── 선택/해제 ──────────────────────────────────────────────

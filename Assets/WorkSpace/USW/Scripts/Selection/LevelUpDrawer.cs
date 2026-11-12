@@ -20,9 +20,9 @@ public sealed class LevelUpDrawer
 
         foreach (var data in pool)
         {
-            if (data != null && data.spawnRate > 0f && !float.IsInfinity(data.spawnRate)
-                && (data.tier == Tier.Rare || data.tier == Tier.Epic || data.tier == Tier.Legend)
-                && (!forceLegend || data.tier == Tier.Legend)
+            if (data != null && data.IsOffered
+                && (data.CurrentTier == Tier.Rare || data.CurrentTier == Tier.Epic || data.CurrentTier == Tier.Legend)
+                && (!forceLegend || data.CurrentTier == Tier.Legend)
                 && !hasAcquired(data.chooseId) && IsApplicable(data, presentTribes))
                 filtered.Add(data);
         }
@@ -35,13 +35,13 @@ public sealed class LevelUpDrawer
 
         foreach (var d in filtered)
         {
-            if (!tierGroups.ContainsKey(d.tier))
+            if (!tierGroups.ContainsKey(d.CurrentTier))
             {
-                tierGroups[d.tier] = new List<LevelUpData>();
-                tierWeights[d.tier] = 0f;
+                tierGroups[d.CurrentTier] = new List<LevelUpData>();
+                tierWeights[d.CurrentTier] = 0f;
             }
-            tierGroups[d.tier].Add(d);
-            tierWeights[d.tier] = forceLegend ? 1f : GetTierWeight(d.tier, settings);
+            tierGroups[d.CurrentTier].Add(d);
+            tierWeights[d.CurrentTier] = forceLegend ? 1f : GetTierWeight(d.CurrentTier, settings);
         }
 
         if (tierGroups.Count == 0) return new List<LevelUpData>();
@@ -99,8 +99,8 @@ public sealed class LevelUpDrawer
     private static bool HasLegendCandidate(IReadOnlyList<LevelUpData> pool, Func<int,bool> acquired, HashSet<UnitTribe> tribes, int sourceId)
     {
         foreach (var card in pool)
-            if (card != null && card.chooseId != sourceId && card.tier == Tier.Legend && card.spawnRate > 0f
-                && !float.IsInfinity(card.spawnRate) && !acquired(card.chooseId) && IsApplicable(card, tribes) && !HasLegendCommand(card)) return true;
+            if (card != null && card.chooseId != sourceId && card.CurrentTier == Tier.Legend && card.IsOffered
+                && !acquired(card.chooseId) && IsApplicable(card, tribes) && !HasLegendCommand(card)) return true;
         return false;
     }
 

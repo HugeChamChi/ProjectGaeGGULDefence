@@ -182,7 +182,7 @@ public class LevelUpRevealSequence : MonoBehaviour
         foreach (var card in cards)
         {
             var data = card != null ? card.GetData() : null;
-            if (data != null && data.tier > top) top = data.tier;
+            if (data != null && data.CurrentTier > top) top = data.CurrentTier;
         }
         return _tierReveal.Play(top);
     }

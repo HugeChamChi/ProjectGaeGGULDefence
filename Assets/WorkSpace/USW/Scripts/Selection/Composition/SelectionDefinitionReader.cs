@@ -15,12 +15,19 @@ public static class SelectionDefinitionReader
             // Historical editor fixtures are transient. Authored cards must be explicitly migrated.
             0 when !UnityEditor.EditorUtility.IsPersistent(card) => CopyLegacyForMigration(card),
 #endif
-            1 => CopyAndValidate(card.Composition),
+            1 => CopyWithChart(card),
             _ => throw new ArgumentException($"Unsupported selection schema {card.EffectSchemaVersion}, card {card.chooseId}.")
         };
         SelectionDescriptionFormatter.ValidateTemplate(card.description, definition);
         SelectionDescriptionFormatter.ValidateTemplate(card.simpleDescription, definition);
         return definition;
+    }
+
+    // SelectionCards 차트에 이 카드의 키가 있으면 사본의 숫자를 차트 값으로 바꾸고 다시 검증한다. 효과와 설명문이 이 사본을 같이 읽는다.
+    private static SelectionCardDefinition CopyWithChart(LevelUpData card)
+    {
+        var copy = CopyAndValidate(card.Composition);
+        return GGD.BackendCharts.SelectionCards.Apply(card.chooseId, copy) ? CopyAndValidate(copy) : copy;
     }
 
     /// <summary>모든 참조형 설정을 복사하여 원본과 공유하지 않는다.</summary>

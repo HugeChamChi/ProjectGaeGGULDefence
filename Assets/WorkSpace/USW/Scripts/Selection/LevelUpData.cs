@@ -47,6 +47,11 @@ public class LevelUpData : ScriptableObject
     [Header("Drone Selection (선택 사항)")]
     [HideInInspector] public DroneSelectionEffect droneEffect;
 
+    /// <summary>현재 등급. SelectionCards 차트에 이 카드의 키가 있으면 차트 값, 없으면 에셋 값.</summary>
+    public Tier CurrentTier => GGD.BackendCharts.SelectionCards.Tier(chooseId, tier);
+    /// <summary>선택지 후보로 나올 수 있는지. 에셋의 spawnRate가 0보다 크고 차트에서 끄지 않은 카드(Enabled 0은 제외).</summary>
+    public bool IsOffered => spawnRate > 0f && !float.IsInfinity(spawnRate) && GGD.BackendCharts.SelectionCards.IsEnabled(chooseId);
+
     [Header("Display")]
     public Sprite   icon;
     public Sprite[] animationFrames;
