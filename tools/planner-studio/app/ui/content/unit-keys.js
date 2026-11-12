@@ -1,7 +1,9 @@
 'use strict';
 globalThis.UnitKeysFeature = ({studio: Studio}) => {
   const S=STUDIO_SCHEMAS,field=(key,label,type='text',extra={})=>({key,label,type,...extra});
-  S.UnitBaseStat={label:'기본 스탯',keys:['BaseStatKey','Tier'],fields:[field('BaseStatKey','기본 스탯 키','id',{required:true}),field('Tier','등급','enum',{values:['normal','rare','epic','legend']}),...['Attack','AttackInterval','SkillCooldown','FoodProduction'].map(k=>field(k,{Attack:'공격력',AttackInterval:'공격 속도(회/초)',SkillCooldown:'스킬 쿨타임(초)',FoodProduction:'초당 식량'}[k],'float',{min:0})),field('MaxDroneCount','최대 드론 수','int',{min:0,max:2147483647})],note:'실제 UnitData의 등급별 원본 스탯입니다. 강화 시안 배율과 구분합니다.'};
+  S.UnitBaseStat={label:'기본 스탯',keys:['BaseStatKey','Tier'],fields:[field('BaseStatKey','기본 스탯 키','id',{required:true}),field('Tier','등급','enum',{values:['normal','rare','epic','legend']}),...['Attack','AttackInterval','SkillCooldown','FoodProduction'].map(k=>field(k,{Attack:'공격력',AttackInterval:'공격 속도(회/초)',SkillCooldown:'스킬 쿨타임(초)',FoodProduction:'초당 식량'}[k],'float',{min:0})),field('MaxDroneCount','최대 드론 수','int',{min:0,max:2147483647}),field('SelfDestructCoefficient','자폭 계수','float',{min:0}),field('CombatDroneAttackCoefficient','전투 드론 공격 계수(네 등급 같은 값)','float',{min:0}),field('FleetFoodPerDrone','드론당 초당 식량','float',{min:0})],note:'실제 UnitData의 등급별 원본 스탯입니다. 강화 시안 배율과 구분합니다.'};
+  // Saved projects made before 2026-11-12 lack the three added columns: take them from the seed row of the same unit and tier, never a blind default.
+  const fillAddedUnitColumns=p=>{for(const r of p.tables.UnitBaseStat||[]){const seed=UNIT_BASE_STATS.find(x=>x.BaseStatKey===r.BaseStatKey&&x.Tier===r.Tier);for(const [k,d] of [['SelfDestructCoefficient',0],['CombatDroneAttackCoefficient',1],['FleetFoodPerDrone',0]])if(r[k]===undefined||r[k]===null||r[k]==='')r[k]=seed?seed[k]:d;}};
   STUDIO_SEED.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);
   // Only new project defaults use authored descriptions; saved planning drafts keep their edits.
   for(const bonus of UNIT_AUTHORED_BONUSES){
@@ -12,7 +14,7 @@ globalThis.UnitKeysFeature = ({studio: Studio}) => {
   PlannerScope.active.add('UnitBaseStat');STUDIO_NAV.find(n=>n.id==='units').tables.push('UnitBaseStat');
   for(const [key,label]of [['UnitKey','유닛 키'],['BaseStatKey','기본 스탯 키'],['UpgradeKey','강화 성장 키'],['LevelBonusKey','레벨 보너스 키']])S.Unit.fields.push(field(key,label));
   function decorate(p){
-    if(!p.tables.UnitBaseStat)p.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);
+    if(!p.tables.UnitBaseStat)p.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);fillAddedUnitColumns(p);
     for(const u of p.tables.Unit){
       if(u.UnitKey===undefined)u.UnitKey=u.UnitId;
       if(u.BaseStatKey===undefined)u.BaseStatKey=u.Kind==='Unit'?'base_'+u.UnitId:'';
@@ -21,7 +23,7 @@ globalThis.UnitKeysFeature = ({studio: Studio}) => {
     }return p;
   }
   decorate(STUDIO_SEED);
-  function prepare(p){const copy=Studio.clone(p);if(!copy.tables.UnitBaseStat)copy.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);for(const u of copy.tables.Unit){const original=STUDIO_SEED.tables.Unit.find(x=>x.UnitId===u.UnitId);for(const k of ['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'])if(!Object.hasOwn(u,k))u[k]=original?.[k]??(k==='UnitKey'?u.UnitId:'');}return copy;}
+  function prepare(p){const copy=Studio.clone(p);if(!copy.tables.UnitBaseStat)copy.tables.UnitBaseStat=Studio.clone(UNIT_BASE_STATS);fillAddedUnitColumns(copy);for(const u of copy.tables.Unit){const original=STUDIO_SEED.tables.Unit.find(x=>x.UnitId===u.UnitId);for(const k of ['UnitKey','BaseStatKey','UpgradeKey','LevelBonusKey'])if(!Object.hasOwn(u,k))u[k]=original?.[k]??(k==='UnitKey'?u.UnitId:'');}return copy;}
   const headers={
     Units:['UnitKey','Name','Kind','BackendKeys','IconKey','MaxLevel','BaseStatKey','UpgradeKey','LevelBonusKey'],
     BaseStats:S.UnitBaseStat.fields.map(f=>f.key==='AttackInterval'?'AttackFrequency':f.key),

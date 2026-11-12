@@ -16,10 +16,17 @@ function unitRuntime(project) {
       Stats: shaped.tables.UnitBaseStat.filter(r => r.BaseStatKey === u.BaseStatKey).map(r => ({
         Tier: r.Tier, Attack: r.Attack, AttackFrequency: r.AttackInterval,
         SkillCooldown: r.SkillCooldown, FoodProduction: r.FoodProduction, MaxDroneCount: r.MaxDroneCount,
+        // Chart columns added 2026-11-12; the game rejects a unit stat chart without them.
+        SelfDestructCoefficient: r.SelfDestructCoefficient, CombatDroneAttackCoefficient: r.CombatDroneAttackCoefficient, FleetFoodPerDrone: r.FleetFoodPerDrone,
       })),
     };
   });
   if (!units.length || new Set(units.map(u => u.AssetKey)).size !== units.length) throw Error('유닛 매핑이 없거나 중복됩니다.');
+  for (const u of units) {
+    for (const k of ['SelfDestructCoefficient','CombatDroneAttackCoefficient','FleetFoodPerDrone'])
+      if (u.Stats.some(x => typeof x[k] !== 'number' || !Number.isFinite(x[k]) || x[k] < 0)) throw Error(u.UnitKey + ': ' + k + ' 값이 없거나 잘못됐습니다.');
+    if (new Set(u.Stats.map(x => x.CombatDroneAttackCoefficient)).size !== 1) throw Error(u.UnitKey + ': 전투 드론 공격 계수는 네 등급이 같은 값이어야 합니다.');
+  }
   const UpgradeCosts = shaped.tables.Unit.flatMap(u => {
     const mapping = JSON.parse(u.BackendIds), key = u.Kind === 'Chief' ? 'chief:' + mapping : 'unit:' + mapping.normal;
     return shaped.tables.UnitUpgrade.filter(r => r.UnitId === u.UnitId).map(r => {
