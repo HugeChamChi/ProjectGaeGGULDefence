@@ -38,7 +38,7 @@ namespace GGD.BackendCharts
                 string key=Text(row,"UnitKey");
                 if(!units.TryGetValue(key,out var unit)) {unit=Strings(row,"UnitKey","AssetKey","Name");unit["Stats"]=new List<object>();units.Add(key,unit);}
                 if((string)unit["AssetKey"]!=Text(row,"AssetKey") || (string)unit["Name"]!=Text(row,"Name"))throw new FormatException("Mixed unit metadata");
-                var stat=Strings(row,"Tier");foreach(var k in new[]{"Attack","AttackFrequency","SkillCooldown","FoodProduction"})stat[k]=Number(row,k);
+                var stat=Strings(row,"Tier");foreach(var k in new[]{"Attack","AttackFrequency","SkillCooldown","FoodProduction","SelfDestructCoefficient","CombatDroneAttackCoefficient","FleetFoodPerDrone"})stat[k]=Number(row,k);
                 var count=Number(row,"MaxDroneCount");if(count!=Math.Truncate(count)||count<0||count>int.MaxValue)throw new FormatException("MaxDroneCount");stat["MaxDroneCount"]=(int)count;
                 ((List<object>)unit["Stats"]).Add(stat);
             }

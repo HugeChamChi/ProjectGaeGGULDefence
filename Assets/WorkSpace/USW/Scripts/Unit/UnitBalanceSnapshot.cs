@@ -13,6 +13,8 @@ public sealed class UnitBalanceSnapshot : IDisposable
     {
         public string Tier;
         public float Attack, AttackFrequency, SkillCooldown, FoodProduction;
+        /// <summary>Betan bomb coefficient, combat drone attack coefficient (same on all four tiers of a unit) and Zeltan food per drone (chart columns added 2026-11-12, TODO G12).</summary>
+        public float SelfDestructCoefficient, CombatDroneAttackCoefficient, FleetFoodPerDrone;
         public int MaxDroneCount;
     }
     [Serializable] public sealed class UpgradePrice { public string Id, ItemId; public int TargetLevel, Amount; }
@@ -36,7 +38,9 @@ public sealed class UnitBalanceSnapshot : IDisposable
             foreach (JsonData stat in Array(unit, "Stats"))
                 stats.Add(new Stats { Tier = Text(stat, "Tier"), Attack = Number(stat, "Attack"),
                     AttackFrequency = Number(stat, "AttackFrequency"), SkillCooldown = Number(stat, "SkillCooldown"),
-                    FoodProduction = Number(stat, "FoodProduction"), MaxDroneCount = Integer(stat, "MaxDroneCount") });
+                    FoodProduction = Number(stat, "FoodProduction"), MaxDroneCount = Integer(stat, "MaxDroneCount"),
+                    SelfDestructCoefficient = Number(stat, "SelfDestructCoefficient"), CombatDroneAttackCoefficient = Number(stat, "CombatDroneAttackCoefficient"),
+                    FleetFoodPerDrone = Number(stat, "FleetFoodPerDrone") });
             units.Add(new Definition { UnitKey = Text(unit, "UnitKey"), AssetKey = Text(unit, "AssetKey"),
                 Name = Text(unit, "Name"), Stats = stats.ToArray() });
         }
@@ -86,8 +90,11 @@ public sealed class UnitBalanceSnapshot : IDisposable
             foreach (var stat in unit.Stats)
             {
                 if (stat == null || !tiers.Add(ParseTier(stat.Tier)) || stat.MaxDroneCount < 0) throw new ArgumentException("Invalid unit tier");
-                foreach (float value in new[] {stat.Attack, stat.AttackFrequency, stat.SkillCooldown, stat.FoodProduction})
+                foreach (float value in new[] {stat.Attack, stat.AttackFrequency, stat.SkillCooldown, stat.FoodProduction,
+                    stat.SelfDestructCoefficient, stat.CombatDroneAttackCoefficient, stat.FleetFoodPerDrone})
                     if (float.IsNaN(value) || float.IsInfinity(value) || value < 0) throw new ArgumentException("Invalid unit stat");
+                // UnitData holds one combat drone coefficient per unit, so the four tier rows must agree.
+                if (stat.CombatDroneAttackCoefficient != unit.Stats[0].CombatDroneAttackCoefficient) throw new ArgumentException("CombatDroneAttackCoefficient differs between tiers: " + unit.UnitKey);
             }
             definitions.Add(unit.AssetKey, unit);
         }
@@ -117,12 +124,16 @@ public sealed class UnitBalanceSnapshot : IDisposable
             copy.unitName = definition.Name;
             copy.atk = new PerTierFloat(); copy.attackSpeed = new PerTierFloat();
             copy.skillCooldown = new PerTierFloat(); copy.foodProduction = new PerTierFloat(); copy.maxDroneCount = new PerTierInt();
+            // The chart is the only source of the bomb coefficient: clear the legacy single-value fallback.
+            copy.SelfDestructCoefficients = new PerTierFloat(); copy.SelfDestructAttackCoefficient = 0f; copy.fleetFoodPerDrone = new PerTierFloat();
+            copy.CombatDroneAttackCoefficient = definition.Stats[0].CombatDroneAttackCoefficient;
             foreach (var stat in definition.Stats)
             {
                 var tier = ParseTier(stat.Tier);
                 copy.atk.Set(tier, stat.Attack); copy.attackSpeed.Set(tier, stat.AttackFrequency);
                 copy.skillCooldown.Set(tier, stat.SkillCooldown); copy.foodProduction.Set(tier, stat.FoodProduction);
                 copy.maxDroneCount.Set(tier, stat.MaxDroneCount);
+                copy.SelfDestructCoefficients.Set(tier, stat.SelfDestructCoefficient); copy.fleetFoodPerDrone.Set(tier, stat.FleetFoodPerDrone);
             }
             copies.Add(source, copy); resolved.Add(copy);
         }
