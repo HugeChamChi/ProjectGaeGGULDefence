@@ -73,7 +73,7 @@ namespace GaeGGUL.DeckUpgrade
             bool producer = unit.foodProduction.Get(Tier.Normal) > 0;
             float basis = producer ? unit.foodProduction.Get(Tier.Normal) : unit.atk.Get(Tier.Normal);
             float multiplier = _service.GetMultiplier(id) * (1 + data.ChiefBonus);
-            float nextMultiplier = (_service.GetMultiplier(id) + DeckUpgradeProgress.MultiplierPerLevel) * (1 + data.ChiefBonus);
+            float nextMultiplier = (_service.GetMultiplier(id) + DeckUpgradeProgress.CurrentMultiplierPerLevel) * (1 + data.ChiefBonus);
             string next = data.IsMaxLevel ? "MAX" : (basis * nextMultiplier).ToString("0.#");
             data.CurrentStat = (producer ? "식량 생산   " : "공격력   ") + $"{basis * multiplier:0.#}";
             data.StatComparison = data.CurrentStat + $"  ›  <color=#91E6A6>{next}</color>";

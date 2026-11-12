@@ -37,7 +37,7 @@ namespace GaeGGUL.DeckUpgrade
             var next = JsonConvert.DeserializeObject<AccountCharacterData>(JsonConvert.SerializeObject(document.Data));
             var entry = next.Characters.Find(x => x.Id == id);
             if (entry == null) { entry = new AccountCharacterData.Entry { Id = id, Count = 1 }; next.Characters.Add(entry); }
-            if (entry.Level >= DeckUpgradeProgress.MaxLevel) return false;
+            if (entry.Level >= DeckUpgradeProgress.CurrentMaxLevel) return false;
             var price = UnitBalanceRuntime.UpgradeCost(id, entry.Level + 1);
             int cost = price.Amount;
             if (DeckUpgradeCurrency.Balance(Player.PlayerData.Data, price.ItemId) < cost) return false;

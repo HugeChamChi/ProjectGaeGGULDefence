@@ -471,17 +471,17 @@ public class UIManager : MonoBehaviour
             if (paid)
             {
                 var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
-                if (config == null || config.stageEntryCost <= 0)
+                if (config == null || config.CurrentStageEntryCost <= 0)
                     throw new System.InvalidOperationException("출격 비용 설정을 확인해 주세요.");
                 var balance = VContainer.IObjectResolverExtensions.Resolve<EndlessBalanceService>(_resolver);
                 var mode = VContainer.IObjectResolverExtensions.Resolve<WaveManager>(_resolver).EndlessMode;
                 await balance.PrepareEntryAsync(token, mode);
                 token.ThrowIfCancellationRequested();
                 var player = Player.PlayerData;
-                if (!await player.ReserveEntryAsync(config.stageEntryCost))
+                if (!await player.ReserveEntryAsync(config.CurrentStageEntryCost))
                 {
                     ShowNavigationFailure(player.IsReady && string.IsNullOrEmpty(player.Data.PendingEntryId)
-                        ? $"스태미나가 부족합니다. 현재: {player.Data.Stamina} / 필요: {config.stageEntryCost}"
+                        ? $"스태미나가 부족합니다. 현재: {player.Data.Stamina} / 필요: {config.CurrentStageEntryCost}"
                         : "저장 확인 후 다시 시작할 수 있습니다. 잠시 후 다시 시도해 주세요.");
                     return;
                 }

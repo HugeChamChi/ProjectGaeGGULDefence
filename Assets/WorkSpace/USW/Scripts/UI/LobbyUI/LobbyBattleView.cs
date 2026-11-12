@@ -186,8 +186,8 @@ public sealed class LobbyBattleView : MonoBehaviour
         RefreshRewards();
         if (_staminaCostText == null) return;
         if (_staminaConfig == null) { _staminaCostText.text = "—"; return; }
-        _staminaCostText.text = _staminaConfig.stageEntryCost.ToString();
-        _staminaCostText.color = data != null && data.Stamina < _staminaConfig.stageEntryCost
+        _staminaCostText.text = _staminaConfig.CurrentStageEntryCost.ToString();
+        _staminaCostText.color = data != null && data.Stamina < _staminaConfig.CurrentStageEntryCost
             ? new Color(1f, 0.38f, 0.38f) : Color.white;
         if (_partySubtitle != null)
             _partySubtitle.text = GlobalData.SelectedParty != null ? GlobalData.SelectedParty.partyName : "족장과 덱 선택";

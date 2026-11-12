@@ -50,6 +50,11 @@ public static class Player
     {
         try
         {
+        // 0. 아웃게임 밸런스 차트: 신규 계정 생성과 스태미나 계산이 읽으므로 플레이어 데이터보다 먼저 받는다. 실패하면 로그인에서 멈춘다.
+        using (var outgameTimeout = new CancellationTokenSource())
+        using (outgameTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
+            await GGD.BackendCharts.OutgameBalance.Chart.LoadAsync(outgameTimeout.Token);
+        RequireCurrentInitialization(owner, generation);
         // 1. 핵심 데이터(플레이어 정보) 먼저 초기화
         await PlayerData.InitalizeAsync();
         RequireCurrentInitialization(owner, generation);
@@ -134,6 +139,7 @@ public static class Player
         GGD.BackendCharts.RunBalance.Chart.Clear();
         GGD.BackendCharts.SkillBalance.Chart.Clear();
         GGD.BackendCharts.DebuffChart.Clear();
+        GGD.BackendCharts.OutgameBalance.Chart.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();

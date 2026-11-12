@@ -19,4 +19,12 @@ public class StaminaConfig : ScriptableObject
     [Header("스테이지 진입")]
     [Tooltip("파티 선택 후 게임 시작(스테이지 진입) 시 소모되는 스태미나")]
     public int stageEntryCost = 5;
+
+    // The fields above are the bundled values (Editor, tutorial, before login). Gameplay and UI read the properties below,
+    // which return the DEV_/LIVE_OutgameBalance chart values once the chart is installed (TODO G12).
+    public int CurrentRecoveryIntervalSeconds => GGD.BackendCharts.OutgameBalance.Integer(GGD.BackendCharts.OutgameBalance.StaminaRecoveryIntervalSeconds, recoveryIntervalSeconds);
+    public int CurrentDefaultMaxStamina => GGD.BackendCharts.OutgameBalance.Integer(GGD.BackendCharts.OutgameBalance.StaminaDefaultMax, defaultMaxStamina);
+    public int CurrentRefillAmount => GGD.BackendCharts.OutgameBalance.Integer(GGD.BackendCharts.OutgameBalance.StaminaRefillAmount, refillAmount);
+    public int CurrentDiamondCostForRefill => GGD.BackendCharts.OutgameBalance.Integer(GGD.BackendCharts.OutgameBalance.StaminaRefillDiamondCost, diamondCostForRefill);
+    public int CurrentStageEntryCost => GGD.BackendCharts.OutgameBalance.Integer(GGD.BackendCharts.OutgameBalance.StaminaStageEntryCost, stageEntryCost);
 }

@@ -53,8 +53,8 @@ public class BackendGameData
         }
     }
 
-    private static int RecoveryIntervalSeconds => StaminaConfig != null ? StaminaConfig.recoveryIntervalSeconds : 600;
-    private static int DefaultMaxStamina => StaminaConfig != null ? StaminaConfig.defaultMaxStamina : 30;
+    private static int RecoveryIntervalSeconds => StaminaConfig != null ? StaminaConfig.CurrentRecoveryIntervalSeconds : 600;
+    private static int DefaultMaxStamina => StaminaConfig != null ? StaminaConfig.CurrentDefaultMaxStamina : 30;
 
     // -------------------------
     // 데이터 불러오기
@@ -110,14 +110,14 @@ public class BackendGameData
         var newData = new PlayerData
         {
             PlayerName = Backend.UserNickName ?? "유저",
-            Gold = Mathf.Max(0, economy.InitialGold),
-            Diamond = Mathf.Max(0, economy.InitialDiamond),
+            Gold = Mathf.Max(0, economy.CurrentInitialGold),
+            Diamond = Mathf.Max(0, economy.CurrentInitialDiamond),
             Stamina = DefaultMaxStamina,
             MaxStamina = DefaultMaxStamina,
             LastStaminaRecoveryTime = ServerClock.UtcNowSeconds,
             PlayerLevel = progression.InitialLevel,
             PlayerExp = progression.InitialExperience,
-            MaxExp = progression.RequiredExperience[progression.InitialLevel - 1]
+            MaxExp = progression.CurrentRequiredExperience[progression.InitialLevel - 1]
         };
 
         Param param = PlayerDataToParam(newData);
@@ -306,7 +306,7 @@ public class BackendGameData
             Gold       = data.GetInt(COLUMN_GOLD, 0),
             Diamond    = data.GetInt(COLUMN_DIAMOND, 0),
             Stamina    = data.GetInt(COLUMN_STAMINA, DefaultMaxStamina),
-            MaxStamina = data.GetInt(COLUMN_MAX_STAMINA, DefaultMaxStamina),
+            MaxStamina = DefaultMaxStamina, // chart or bundled value; the saved column is ignored (user answer 2026-11-11)
             LastStaminaRecoveryTime = data.GetLong(COLUMN_LAST_STAMINA_RECOVERY_TIME, ServerClock.UtcNowSeconds),
             PlayerLevel = data.GetInt(COLUMN_PLAYER_LEVEL, 1),
             PlayerExp   = data.GetInt(COLUMN_PLAYER_EXP, 0),

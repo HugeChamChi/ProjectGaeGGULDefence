@@ -17,7 +17,7 @@ public class LocalNotificationGateway
     /// <summary>Current account identity; never embedded in notifications.</summary>
     public virtual string Owner => BackEnd.Backend.IsLogin ? BackEnd.Backend.UserInDate : null;
     /// <summary>Same authored recovery interval used by BackendGameData; missing data disables stamina reminders.</summary>
-    public virtual int RecoveryIntervalSeconds => RM.Load<StaminaConfig>("Data/StaminaConfig")?.recoveryIntervalSeconds ?? 0;
+    public virtual int RecoveryIntervalSeconds => RM.Load<StaminaConfig>("Data/StaminaConfig")?.CurrentRecoveryIntervalSeconds ?? 0;
     /// <summary>Real OS permission; does not request another permission dialog.</summary>
     public virtual bool PermissionGranted => DeviceSettingsService.NotificationPermissionGranted;
     /// <summary>Registers the app's reminder channel without requesting permission.</summary>

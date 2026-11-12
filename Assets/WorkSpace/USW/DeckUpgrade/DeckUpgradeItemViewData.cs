@@ -15,7 +15,7 @@ namespace GaeGGUL.DeckUpgrade
         /// <summary>Numeric cost of the next level.</summary>
         public int Cost { get; internal set; }
         /// <summary>Whether the preview level limit has been reached.</summary>
-        public bool IsMaxLevel => Level >= DeckUpgradeProgress.MaxLevel;
+        public bool IsMaxLevel => Level >= DeckUpgradeProgress.CurrentMaxLevel;
         /// <summary>Whether the next upgrade is currently affordable.</summary>
         public bool IsOwned { get; internal set; } = true;
         public bool IsBusy { get; internal set; }

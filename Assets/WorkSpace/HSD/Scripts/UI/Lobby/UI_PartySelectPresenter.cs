@@ -79,7 +79,7 @@ public class UI_PartySelectPresenter
             if (!test && _tutorial != null && !_tutorial.IsCompleted)
             { await _sceneChangeManager.TransitionToSceneAsync("TutorialScene"); return; }
             var config = RM.Load<StaminaConfig>("Data/StaminaConfig");
-            if (config == null || config.stageEntryCost <= 0) { _staminaPopup?.ShowMessage("출격 비용 설정을 확인해 주세요."); return; }
+            if (config == null || config.CurrentStageEntryCost <= 0) { _staminaPopup?.ShowMessage("출격 비용 설정을 확인해 주세요."); return; }
             try
             {
                 if (_balance == null) throw new System.InvalidOperationException("전투 설정 서비스를 준비하지 못했습니다.");
@@ -95,10 +95,10 @@ public class UI_PartySelectPresenter
                 return;
             }
             var player = Player.PlayerData;
-            if (!await player.ReserveEntryAsync(config.stageEntryCost))
+            if (!await player.ReserveEntryAsync(config.CurrentStageEntryCost))
             {
                 if (player.IsReady && string.IsNullOrEmpty(player.Data.PendingEntryId))
-                    _staminaPopup?.Show(player.Data.Stamina, config.stageEntryCost);
+                    _staminaPopup?.Show(player.Data.Stamina, config.CurrentStageEntryCost);
                 else _staminaPopup?.ShowMessage(player.SaveStatus + "\n저장 확인 후 출격할 수 있습니다.");
                 return;
             }

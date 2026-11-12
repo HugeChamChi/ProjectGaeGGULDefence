@@ -165,7 +165,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
         if (_accountProgression == null || _data == null) return;
         // Preserve saved EXP through curve changes, without issuing new EXP or level-up rewards.
         _accountProgression.Apply(_data.PlayerLevel, _data.PlayerExp, 0, out int level, out int experience);
-        int requirement = _accountProgression.RequiredExperience[level - 1];
+        int requirement = _accountProgression.CurrentRequiredExperience[level - 1];
         if (_data.PlayerLevel == level && _data.PlayerExp == experience && _data.MaxExp == requirement) return;
         _data.PlayerLevel = level; _data.PlayerExp = experience; _data.MaxExp = requirement;
         SaveAndRefresh();
@@ -219,8 +219,8 @@ public class PlayerDataController : IDisposable, Global.IClearable
     public bool TryRefillStamina(StaminaConfig config)
     {
         RecoverStamina();
-        if (config == null || !CanSpend(_data?.Diamond ?? 0, config.diamondCostForRefill) || !CanAdd(_data?.Stamina ?? 0, config.refillAmount)) return false;
-        _data.Diamond -= config.diamondCostForRefill; _data.Stamina += config.refillAmount; SaveAndRefresh(); return true;
+        if (config == null || !CanSpend(_data?.Diamond ?? 0, config.CurrentDiamondCostForRefill) || !CanAdd(_data?.Stamina ?? 0, config.CurrentRefillAmount)) return false;
+        _data.Diamond -= config.CurrentDiamondCostForRefill; _data.Stamina += config.CurrentRefillAmount; SaveAndRefresh(); return true;
     }
     /// <summary>Atomically applies one server coupon receipt and its amounts to the local durable snapshot.</summary>
     public bool TryApplyCoupon(CouponReceipt receipt)
@@ -344,7 +344,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
         receipt = new AccountExperienceReceipt
         { RunId = ticket.RunId, Sequence = ticket.Sequence, Experience = actual, LevelBefore = _data.PlayerLevel, LevelAfter = level };
         _data.PlayerLevel = level; _data.PlayerExp = remaining;
-        _data.MaxExp = config.RequiredExperience[level - 1];
+        _data.MaxExp = config.CurrentRequiredExperience[level - 1];
         _data.AccountExperienceReceipt = receipt;
         _data.AccountExperienceRunId = string.Empty;
         SaveAndRefresh();

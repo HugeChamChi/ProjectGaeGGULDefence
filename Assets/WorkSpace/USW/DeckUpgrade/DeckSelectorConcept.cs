@@ -143,7 +143,7 @@ namespace GaeGGUL.DeckUpgrade
             page.Find("DeckCollection/DeckSummaryStrip/CollectionCount").GetComponent<TMP_Text>().text = $"<b>보유 {OwnedCount} / {unitCards.Count}</b>";
             chiefCardLevel.text = chief.IsOwned ? "Lv." + chief.Level : "미보유";
             detailName.text = selected.Name;
-            detailLevel.text = selected.IsOwned ? "Lv." + selected.Level + "/" + DeckUpgradeProgress.MaxLevel : "미보유";
+            detailLevel.text = selected.IsOwned ? "Lv." + selected.Level + "/" + DeckUpgradeProgress.CurrentMaxLevel : "미보유";
             requiredCost.text = !selected.IsOwned ? "미보유" : !string.IsNullOrEmpty(selected.UpgradeStatus) ? selected.UpgradeStatus : selected.IsMaxLevel ? "MAX" : selected.Cost.ToString("N0");
             detailChiefFrame.gameObject.SetActive(selected.IsChief);
             detailUnitFrame.gameObject.SetActive(!selected.IsChief);

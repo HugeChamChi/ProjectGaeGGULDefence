@@ -46,6 +46,8 @@ namespace GGD.BackendCharts
 
         [Serializable] private sealed class Settings { public bool UseRemote; }
         private readonly string _content, _settingsResource;
+        private readonly bool _bundledBeforeLoad;
+        private readonly Func<Dictionary<string, float[]>, string> _extraCheck;
         private Dictionary<string, float[]> _values;
         private bool? _remoteRequired;
         private bool _warnedBundled;
@@ -58,8 +60,11 @@ namespace GGD.BackendCharts
 
         /// <param name="content">Chart name without the environment prefix, also the Excel sheet name.</param>
         /// <param name="settingsResource">Resources JSON with <c>{"UseRemote":true}</c>; when false or absent the chart is not used.</param>
-        public BalanceChart(string content, string settingsResource, IReadOnlyDictionary<string, BalanceRule> rules)
-        { _content = content; _settingsResource = settingsResource; Rules = rules; }
+        /// <param name="bundledBeforeLoad">True for values that screens read before any login (title, notifications): no exception then, the bundled value is returned until the chart is installed.</param>
+        /// <param name="extraCheck">Optional check across keys after every key passed its own rule; returns a problem text or null.</param>
+        public BalanceChart(string content, string settingsResource, IReadOnlyDictionary<string, BalanceRule> rules,
+            bool bundledBeforeLoad = false, Func<Dictionary<string, float[]>, string> extraCheck = null)
+        { _content = content; _settingsResource = settingsResource; Rules = rules; _bundledBeforeLoad = bundledBeforeLoad; _extraCheck = extraCheck; }
 
         public bool RequiresRemote
         {
@@ -99,7 +104,7 @@ namespace GGD.BackendCharts
             // Only a running tutorial keeps bundled values; in edit mode the open scene says nothing about gameplay.
             if (Application.isPlaying && SceneManager.GetActiveScene().name == TutorialSceneName) return null;
             if (_values != null) return _values[key];
-            if (RequiresRemote)
+            if (RequiresRemote && !_bundledBeforeLoad)
             {
                 if (!Application.isEditor) throw new InvalidOperationException(_content + " chart must load before gameplay reads " + key);
                 if (!_warnedBundled)
@@ -151,6 +156,8 @@ namespace GGD.BackendCharts
             }
             foreach (var key in Rules.Keys)
                 if (!parsed.ContainsKey(key)) throw new FormatException(_content + ": missing key " + key);
+            string problem = _extraCheck?.Invoke(parsed);
+            if (problem != null) throw new FormatException(_content + ": " + problem);
             return parsed;
         }
 

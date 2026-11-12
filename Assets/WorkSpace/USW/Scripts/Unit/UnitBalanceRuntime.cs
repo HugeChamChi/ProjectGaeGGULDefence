@@ -12,7 +12,7 @@ public static class UnitBalanceRuntime
     private static bool warnedBundled;
     public static bool IsLoaded => snapshot != null;
     public static UnitBalanceSnapshot.UpgradePrice UpgradeCost(string id, int target) => snapshot != null
-        ? snapshot.UpgradeCost(id, Mathf.Min(target, GaeGGUL.DeckUpgrade.DeckUpgradeProgress.MaxLevel))
+        ? snapshot.UpgradeCost(id, Mathf.Min(target, GaeGGUL.DeckUpgrade.DeckUpgradeProgress.CurrentMaxLevel))
         : new UnitBalanceSnapshot.UpgradePrice { Id = id, TargetLevel = target, ItemId = "UpgradeTokenA", Amount = target - 1 };
     public static string GetUnitKey(string assetKey) => snapshot?.GetUnitKey(assetKey) ?? assetKey;
 

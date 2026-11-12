@@ -32,7 +32,7 @@ public class StaminaInsufficientPopup : MonoBehaviour
             _refillButton.onClick.AddListener(OnRefillClicked);
 
         if (_refillButtonText != null && _staminaConfig != null)
-            _refillButtonText.text = $"다이아 {_staminaConfig.diamondCostForRefill}개로 스태미나 +{_staminaConfig.refillAmount}";
+            _refillButtonText.text = $"다이아 {_staminaConfig.CurrentDiamondCostForRefill}개로 스태미나 +{_staminaConfig.CurrentRefillAmount}";
 
         _popupPanel.SetActive(false);
     }

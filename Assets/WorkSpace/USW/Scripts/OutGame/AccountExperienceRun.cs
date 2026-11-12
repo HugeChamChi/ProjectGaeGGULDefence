@@ -35,7 +35,7 @@ public sealed class AccountExperienceRun
         _config.Validate();
         _ticket = _player.BeginAccountExperienceRun();
         _closed = _ticket == null;
-        _winExperience = _config.WinBossExperience; _loseExperience = _config.LoseBossExperience;
+        _winExperience = _config.CurrentWinBossExperience; _loseExperience = _config.CurrentLoseBossExperience;
         _grantWin = _config.GrantOnWin; _grantLose = _config.GrantOnLose;
     }
 
