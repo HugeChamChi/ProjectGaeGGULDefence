@@ -107,7 +107,14 @@ production/session-state/active.md
 /Tools
 /production
 /ProfilerCaptures
-/Data
+# Data는 무시하되, 뒤끝 차트의 엑셀 원본은 공유한다 (사용자 결정 2026-11-12, docs/technical/balance-charts.md)
+/Data/*
+!/Data/Balance/
+/Data/Balance/*
+!/Data/Balance/RunBalance.xlsx
+!/Data/Balance/SkillBalance.xlsx
+!/Data/Balance/EndlessBalance.xlsx
+!/Data/Balance/Debuffs.xlsx
 /Assets/outputs
 /Assets/Resources
 /Assets/_Recovery
