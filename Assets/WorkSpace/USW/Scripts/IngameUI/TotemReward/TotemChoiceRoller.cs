@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 보스 처치 보상 토템 선택지 뽑기 (TotemRewardUI).
 /// 등급 하나를 후보 수에 비례해 고른 뒤 그 등급에서 먼저 뽑고, 모자라면 나머지 후보에서 채운다.
-/// 이미 고른 토템(exclude)은 다시 나오지 않는다.
+/// 이미 고른 토템(exclude)과 TotemBalance 차트에서 끈 토템(Enabled 0)은 나오지 않는다.
 /// </summary>
 public static class TotemChoiceRoller
 {
@@ -17,7 +17,7 @@ public static class TotemChoiceRoller
         var filtered = new List<TotemData>();
         foreach (var data in pool)
         {
-            if (data != null && (exclude == null || !exclude.Contains(data.totemId)))
+            if (data != null && (exclude == null || !exclude.Contains(data.totemId)) && GGD.BackendCharts.TotemBalance.IsEnabled(data.totemId))
                 filtered.Add(data);
         }
 

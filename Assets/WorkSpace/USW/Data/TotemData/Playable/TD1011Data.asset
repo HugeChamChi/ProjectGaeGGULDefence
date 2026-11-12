@@ -20,7 +20,6 @@ MonoBehaviour:
     FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
-  UseSheetData: 0
   BonusProjectile:
     Chance: 0.33
     AttackCoefficient: 0.5
@@ -57,9 +56,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
   - {fileID: 21300000, guid: e74c51402090cd64cba773f5a5d93d67, type: 3}
   description: "\uC704 3\uCE78\uC740 \uACF5\uACA9\uD560 \uC218 \uC5C6\uACE0, \uC544\uB798
-    1\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 40% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+    1\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 {SpeedBonus%} \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
   DetailedDescription: "\uC704 3\uCE78\uC740 \uACF5\uACA9\uD560 \uC218 \uC5C6\uACE0,
-    \uC544\uB798 1\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 40% \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
+    \uC544\uB798 1\uCE78\uC758 \uACF5\uACA9 \uC18D\uB3C4\uAC00 {SpeedBonus%} \uC0C1\uC2B9\uD569\uB2C8\uB2E4."
   functions:
   - rid: 5888964705059602534
   effectRanges:

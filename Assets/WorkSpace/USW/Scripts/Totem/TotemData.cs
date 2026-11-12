@@ -14,7 +14,7 @@ public enum TotemType
 }
 
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
-public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
+public partial class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
     /// <summary>GenericBuffTotem groups replace shared functions/ranges when populated.</summary>
     [Header("효과별 설명 · 색상 · 기능 · 범위 (GenericBuffTotem)")]
@@ -25,7 +25,9 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     /// <summary>Whether this data uses independent effect groups.</summary>
     public bool HasEffectGroups => EffectGroups != null && EffectGroups.Exists(group => group != null);
     /// <summary>저작된 간단히/자세히 문구. 기본 호출은 기존 정보창의 자세한 설명을 유지한다.</summary>
-    public string GetDisplayDescription(bool detailed = true)
+    public string GetDisplayDescription(bool detailed = true) => FillNumbers(BuildDisplayDescription(detailed));
+
+    private string BuildDisplayDescription(bool detailed)
     {
         if (detailed && !string.IsNullOrWhiteSpace(DetailedDescription))
         {
@@ -45,8 +47,9 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 
     private string BuildGrowthStageDescription()
     {
-        if (GrowthStages == null) return string.Empty;
-        var stages = GrowthStages.FindAll(stage => stage != null);
+        var current = CurrentGrowthStages;
+        if (current == null) return string.Empty;
+        var stages = current.FindAll(stage => stage != null);
         stages.Sort((left, right) => left.RequiredSeconds.CompareTo(right.RequiredSeconds));
         var lines = new List<string>();
         TotemGrowthStage previous = null;
@@ -59,8 +62,9 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
             Vector2Int size = GrowthRangeSize(stage);
             if (previous != null && size != GrowthRangeSize(previous))
                 effects.Add($"범위 {size.x}×{size.y}로 확장");
-            if (i == stages.Count - 1 && GrowthHarvestSeconds > 0 && GrowthHarvestFood > 0)
-                effects.Add($"{FormatDuration(GrowthHarvestSeconds)}마다 식량 {GrowthHarvestFood:0.#} 생성");
+            float harvestSeconds = CurrentGrowthHarvestSeconds, harvestFood = CurrentGrowthHarvestFood;
+            if (i == stages.Count - 1 && harvestSeconds > 0 && harvestFood > 0)
+                effects.Add($"{FormatDuration(harvestSeconds)}마다 식량 {harvestFood:0.#} 생성");
             if (effects.Count > 0)
                 lines.Add($"{(stage.RequiredSeconds == 0 ? "배치" : FormatDuration(stage.RequiredSeconds))}<pos=3.5em>{string.Join(", ", effects)}");
             previous = stage;
@@ -138,10 +142,10 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [SerializeField] private double _debuffFireInterval;
     [SerializeField] private double _debuffImpactDamage;
     [SerializeField] private ProjectileData _debuffProjectile;
-    /// <summary>발사 간격(초), 부여자 설정.</summary>
-    public double DebuffFireInterval => _debuffFireInterval;
-    /// <summary>화염구 즉발 기본 피해, 부여자 설정.</summary>
-    public decimal DebuffImpactDamage => (decimal)_debuffImpactDamage;
+    /// <summary>발사 간격(초). 차트 값이 있으면 차트 값.</summary>
+    public double DebuffFireInterval => Number(GGD.BackendCharts.TotemBalance.FireIntervalSeconds);
+    /// <summary>화염구 즉발 기본 피해. 차트 값이 있으면 차트 값.</summary>
+    public decimal DebuffImpactDamage => (decimal)Number(GGD.BackendCharts.TotemBalance.ImpactDamage);
     /// <summary>발사체 시각/이동 구성.</summary>
     public ProjectileData DebuffProjectile => _debuffProjectile;
     /// <inheritdoc />
@@ -179,11 +183,11 @@ public class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
     [SerializeReference, SelectableReference]
     public List<ITotemRange> attackDisabledRanges = new List<ITotemRange>();
 
-    /// <summary>functions 중 kind가 일치하는 첫 SimpleBuffFunction의 amount. 없으면 0.</summary>
+    /// <summary>functions 중 kind가 일치하는 첫 SimpleBuffFunction의 현재 수치(차트 값이 있으면 차트 값). 없으면 0.</summary>
     public float GetSimpleAmount(StatKind kind)
     {
         foreach (var fn in functions)
-            if (fn is SimpleBuffFunction simple && simple.kind == kind) return simple.amount;
+            if (fn is SimpleBuffFunction simple && simple.kind == kind) return SimpleAmount(kind, simple.amount);
         return 0f;
     }
 

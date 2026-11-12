@@ -45,6 +45,31 @@ namespace GGD.BackendCharts
         private const char ListSeparator = '|';
 
         [Serializable] private sealed class Settings { public bool UseRemote; }
+        private static int _tutorialFrame = -1;
+        private static bool _tutorialRunning;
+
+        /// <summary>
+        /// True while the tutorial scene is the active scene in Play mode. Asked once per frame, because totem and unit
+        /// components read chart values every Update and <c>Scene.name</c> allocates a string on each call.
+        /// </summary>
+        public static bool TutorialRunning
+        {
+            get
+            {
+                if (!Application.isPlaying) return false;
+                int frame = Time.frameCount;
+                if (frame != _tutorialFrame)
+                {
+                    _tutorialFrame = frame;
+                    _tutorialRunning = SceneManager.GetActiveScene().name == TutorialSceneName;
+                }
+                return _tutorialRunning;
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetTutorialCheck() => _tutorialFrame = -1;
+
         private readonly string _content, _settingsResource;
         private readonly bool _bundledBeforeLoad;
         private readonly Func<Dictionary<string, float[]>, string> _extraCheck;
@@ -102,7 +127,7 @@ namespace GGD.BackendCharts
             if (!Rules.TryGetValue(key, out var rule)) throw new ArgumentException("Unknown " + _content + " key: " + key, nameof(key));
             if (rule.Shape != shape) throw new ArgumentException(_content + " key " + key + " is " + rule.Shape + ", not " + shape, nameof(key));
             // Only a running tutorial keeps bundled values; in edit mode the open scene says nothing about gameplay.
-            if (Application.isPlaying && SceneManager.GetActiveScene().name == TutorialSceneName) return null;
+            if (TutorialRunning) return null;
             if (_values != null) return _values[key];
             if (RequiresRemote && !_bundledBeforeLoad)
             {

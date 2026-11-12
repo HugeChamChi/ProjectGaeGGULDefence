@@ -84,10 +84,11 @@ public sealed class TotemBonusProjectile : RangedBuffTotemBase
         var settings = Data?.BonusProjectile;
         var boss = _bosses != null ? _bosses.CurrentBoss : null;
         if (!IsActive || unit == null || unit.currentCell == null || settings == null ||
-            _projectiles == null || boss == null || boss.IsDead || settings.AttackCoefficient <= 0f ||
-            Random.value >= Mathf.Clamp01(settings.Chance)) return;
+            _projectiles == null || boss == null || boss.IsDead) return;
+        float coefficient = Data.BonusProjectileAttackCoefficient;
+        if (coefficient <= 0f || Random.value >= Mathf.Clamp01(Data.BonusProjectileChance)) return;
 
-        int damage = unit.ComputeAttackDamageFrom(unit.GetUpgradedAtk() * settings.AttackCoefficient);
+        int damage = unit.ComputeAttackDamageFrom(unit.GetUpgradedAtk() * coefficient);
         Vector3 position = boss.transform.position;
         var source = DamageSourceData;
         _projectiles.Launch(unit.transform.position, position, settings.Projectile, () =>

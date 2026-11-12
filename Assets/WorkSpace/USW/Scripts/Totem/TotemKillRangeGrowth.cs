@@ -24,26 +24,26 @@ public sealed class TotemKillRangeGrowth : RangedBuffTotemBase
         get
         {
             int best=-1;float threshold=-1;
-            if(Data?.GrowthStages==null)return best;
-            for(int i=0;i<Data.GrowthStages.Count;i++)
-            {var stage=Data.GrowthStages[i];if(stage!=null && stage.RequiredSeconds<=_seconds && stage.RequiredSeconds>threshold){best=i;threshold=stage.RequiredSeconds;}}
+            if(Data?.CurrentGrowthStages==null)return best;
+            for(int i=0;i<Data.CurrentGrowthStages.Count;i++)
+            {var stage=Data.CurrentGrowthStages[i];if(stage!=null && stage.RequiredSeconds<=_seconds && stage.RequiredSeconds>threshold){best=i;threshold=stage.RequiredSeconds;}}
             return best;
         }
     }
     /// <summary>현재 단계 정의.</summary>
-    public TotemGrowthStage CurrentStage => StageIndex>=0?Data.GrowthStages[StageIndex]:null;
+    public TotemGrowthStage CurrentStage => StageIndex>=0?Data.CurrentGrowthStages[StageIndex]:null;
     /// <summary>최대 성장까지 필요한 진행 시간.</summary>
     public double BloomSeconds
-    {get {double max=0;if(Data?.GrowthStages!=null)foreach(var stage in Data.GrowthStages)if(stage!=null)max=Math.Max(max,stage.RequiredSeconds);return max;}}
+    {get {double max=0;if(Data?.CurrentGrowthStages!=null)foreach(var stage in Data.CurrentGrowthStages)if(stage!=null)max=Math.Max(max,stage.RequiredSeconds);return max;}}
     /// <summary>다음 성장 단계 또는 만개 후 수확 진행 비율.</summary>
     public float GaugeProgress
     {
         get
         {
             if(Data==null)return 0;
-            if(_seconds>=BloomSeconds)return Mathf.Clamp01((float)(_harvest/Math.Max(MinimumGaugeDurationSeconds,Data.GrowthHarvestSeconds)));
+            if(_seconds>=BloomSeconds)return Mathf.Clamp01((float)(_harvest/Math.Max(MinimumGaugeDurationSeconds,Data.CurrentGrowthHarvestSeconds)));
             double start=CurrentStage?.RequiredSeconds??0,next=BloomSeconds;
-            foreach(var stage in Data.GrowthStages)if(stage!=null&&stage.RequiredSeconds>_seconds)next=Math.Min(next,stage.RequiredSeconds);
+            foreach(var stage in Data.CurrentGrowthStages)if(stage!=null&&stage.RequiredSeconds>_seconds)next=Math.Min(next,stage.RequiredSeconds);
             return Mathf.Clamp01((float)((_seconds-start)/Math.Max(MinimumGaugeDurationSeconds,next-start)));
         }
     }
@@ -56,9 +56,9 @@ public sealed class TotemKillRangeGrowth : RangedBuffTotemBase
         {
             if (CurrentStage == null) return string.Empty;
             if (_seconds >= BloomSeconds)
-                return $"다음 식량까지 {Math.Ceiling(Math.Max(0, Data.GrowthHarvestSeconds - _harvest)):0}초";
+                return $"다음 식량까지 {Math.Ceiling(Math.Max(0, Data.CurrentGrowthHarvestSeconds - _harvest)):0}초";
             double next = BloomSeconds;
-            foreach (var stage in Data.GrowthStages)
+            foreach (var stage in Data.CurrentGrowthStages)
                 if (stage != null && stage.RequiredSeconds > _seconds)
                     next = Math.Min(next, stage.RequiredSeconds);
             return $"다음 강화까지 {Math.Ceiling(Math.Max(0, next - _seconds)):0}초";
@@ -79,11 +79,11 @@ public sealed class TotemKillRangeGrowth : RangedBuffTotemBase
             _totemBuffManager?.RebuildCellBuffFlags();
             if(_gridManager!=null && _gridManager.IsPreviewingTotem(this))_gridManager.ShowTotemRangePreview(this);
         }
-        if(_seconds>=bloom && Data.GrowthHarvestSeconds>0)
+        if(_seconds>=bloom && Data.CurrentGrowthHarvestSeconds>0)
         {
             _harvest+=excess;
-            int ticks=(int)Math.Floor(_harvest/Data.GrowthHarvestSeconds);
-            if(ticks>0){_harvest-=ticks*Data.GrowthHarvestSeconds;_currency?.AddCurrency(ticks*Data.GrowthHarvestFood);}
+            int ticks=(int)Math.Floor(_harvest/Data.CurrentGrowthHarvestSeconds);
+            if(ticks>0){_harvest-=ticks*Data.CurrentGrowthHarvestSeconds;_currency?.AddCurrency(ticks*Data.CurrentGrowthHarvestFood);}
         }
         OnGaugeChanged?.Invoke(GaugeProgress);
     }

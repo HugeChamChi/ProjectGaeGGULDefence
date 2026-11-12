@@ -61,7 +61,7 @@ public class TotemSelectionCardUI : MonoBehaviour
         }
 
         if (nameText        != null) nameText.text        = data?.totemName   ?? string.Empty;
-        if (descriptionText != null) descriptionText.text = data?.description ?? string.Empty;
+        if (descriptionText != null) descriptionText.text = data != null ? data.FillNumbers(data.description) ?? string.Empty : string.Empty;
         if (tierText        != null) tierText.text        = TierToLabel(data?.tier ?? Tier.Normal);
 
         ApplyTierSprites(data?.tier ?? Tier.Normal);

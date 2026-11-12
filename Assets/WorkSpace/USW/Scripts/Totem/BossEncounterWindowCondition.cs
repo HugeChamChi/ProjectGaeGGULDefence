@@ -18,5 +18,8 @@ public class BossEncounterWindowCondition : ITotemBuffContextCondition
 
     /// <inheritdoc />
     public bool IsMet(TotemBase totem, GridCell cell, TotemBuffManager buffManager)
-        => buffManager != null && buffManager.IsWithinBossEncounter(seconds);
+        => buffManager != null && buffManager.IsWithinBossEncounter(SecondsFor(totem));
+
+    /// <summary>이 토템에 적용되는 유지 시간. 차트에 키가 있으면 차트 값, 없으면 에셋 값.</summary>
+    public float SecondsFor(TotemBase totem) => totem != null && totem.Data != null ? totem.Data.EncounterWindowSeconds(seconds) : seconds;
 }

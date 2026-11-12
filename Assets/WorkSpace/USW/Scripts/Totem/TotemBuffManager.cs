@@ -73,21 +73,23 @@ public class TotemBuffManager : MonoBehaviour
         {
             var data = totem != null && totem.IsActive ? totem.Data : null;
             if (data == null) continue;
-            CollectEncounterThreshold(data.functions, ref next);
+            CollectEncounterThreshold(totem, data.functions, ref next);
             if (data.EffectGroups == null) continue;
             foreach (var group in data.EffectGroups)
-                if (group != null) CollectEncounterThreshold(group.Functions, ref next);
+                if (group != null) CollectEncounterThreshold(totem, group.Functions, ref next);
         }
         return next;
     }
 
-    private void CollectEncounterThreshold(List<ITotemFunction> functions, ref float next)
+    private void CollectEncounterThreshold(TotemBase totem, List<ITotemFunction> functions, ref float next)
     {
         if (functions == null) return;
         foreach (var function in functions)
-            if (function is ConditionalBuffFunction { condition: BossEncounterWindowCondition window }
-                && window.seconds > _bossEncounterSeconds && window.seconds < next)
-                next = window.seconds;
+            if (function is ConditionalBuffFunction { condition: BossEncounterWindowCondition window })
+            {
+                float seconds = window.SecondsFor(totem);
+                if (seconds > _bossEncounterSeconds && seconds < next) next = seconds;
+            }
     }
 
     private void OnDestroy()

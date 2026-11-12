@@ -118,8 +118,8 @@ public sealed class TotemShadowAttack : RangedBuffTotemBase
     private void OnAttack(BasicAttackReplay attack)
     {
         var settings = Data?.ShadowAttack;
-        if (!IsActive || settings == null || float.IsNaN(settings.DelaySeconds) ||
-            float.IsInfinity(settings.DelaySeconds) || settings.DelaySeconds < 0) return;
+        float delay = settings != null ? Data.ShadowDelaySeconds : 0f;
+        if (!IsActive || settings == null || float.IsNaN(delay) || float.IsInfinity(delay) || delay < 0) return;
         ShadowAttackVisual available = null;
         var castEffect = attack.VisualSource == attack.Source.transform ? attack.Source.unitData?.basicAttackData?.castEffect : null;
         int placementVersion = _placementVersion;
@@ -128,7 +128,7 @@ public sealed class TotemShadowAttack : RangedBuffTotemBase
             if (!IsActive || placementVersion != _placementVersion) return;
             _pending.Add(new PendingShot
             {
-                Remaining = settings.DelaySeconds, Attack = attack,
+                Remaining = delay, Attack = attack,
                 Fire = () =>
                 {
                     if (first && available != null)

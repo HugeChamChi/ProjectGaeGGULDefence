@@ -20,7 +20,7 @@ public class TotemFoodGenerator : TotemBase
     protected override void ApplyBuff()
     {
         var gen = totemData.GetFoodGenerator();
-        if (gen == null || gen.amount <= 0f)
+        if (gen == null || totemData.FoodAmount <= 0f)
         {
             Debug.LogWarning($"TotemFoodGenerator({name}): FoodGeneratorFunction이 없거나 amount = 0. TotemData를 확인하세요.");
             return;
@@ -40,12 +40,13 @@ public class TotemFoodGenerator : TotemBase
         if (!_generating) return;
         var gen = totemData?.GetFoodGenerator();
         if (gen == null) return;
-        double interval = Mathf.Max(MinimumInterval, gen.interval);
+        double interval = Mathf.Max(MinimumInterval, totemData.FoodIntervalSeconds);
+        float amount = totemData.FoodAmount;
         _elapsed += Time.deltaTime;
         while (_generating && _elapsed >= interval)
         {
             _elapsed -= interval;
-            if (gen.amount > 0f) _currencyManager?.AddCurrency(gen.amount);
+            if (amount > 0f) _currencyManager?.AddCurrency(amount);
         }
     }
 

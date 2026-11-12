@@ -12,6 +12,8 @@ public class SimpleBuffFunction : ITotemFunction
 
     public void Apply(TotemBase totem, GridCell cell, TotemBuffManager buffManager)
     {
+        // 차트에 이 토템의 키가 있으면 차트 값, 없으면 에셋 값.
+        float amount = totem != null && totem.Data != null ? totem.Data.SimpleAmount(kind, this.amount) : this.amount;
         if (cell == null || amount == 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return;
 
         float efficiency = 1f + (buffManager != null ? buffManager.TotemEfficiencyBonus : 0f);

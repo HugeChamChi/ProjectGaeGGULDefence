@@ -20,7 +20,6 @@ MonoBehaviour:
     FadeSeconds: 0.08
     Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
     VisualOffset: {x: 0.15, y: 0.1, z: 0}
-  UseSheetData: 0
   BonusProjectile:
     Chance: 0.33
     AttackCoefficient: 0.5
@@ -56,8 +55,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
   - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
   - {fileID: 21300000, guid: f68106d4e90c2084fa449ebf8134e8b3, type: 3}
-  description: "10\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 30\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
-  DetailedDescription: "10\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 30\uC744 \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
+  description: "{FoodIntervalSeconds}\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 {Food}\uC744
+    \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
+  DetailedDescription: "{FoodIntervalSeconds}\uCD08\uB9C8\uB2E4 \uC2DD\uB7C9 {Food}\uC744
+    \uC0DD\uC0B0\uD569\uB2C8\uB2E4."
   functions:
   - rid: 1992779463445184621
   effectRanges: []

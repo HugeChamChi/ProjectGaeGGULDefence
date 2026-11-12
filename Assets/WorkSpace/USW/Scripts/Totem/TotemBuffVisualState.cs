@@ -100,7 +100,7 @@ public sealed class TotemBuffVisualState
         var window = (_function as ConditionalBuffFunction)?.condition as BossEncounterWindowCondition;
         int epoch = window != null ? _bossEpoch : _source is TotemKillRangeGrowth growth ? growth.StageIndex : 0;
         var key = new Key(_source.GetInstanceID(), _function == null ? 0 : RuntimeHelpers.GetHashCode(_function), epoch, disabled ? -1 : (int)kind);
-        list.Add(new Contribution(key, kind, amount, disabled, replaces, window?.seconds ?? -1f));
+        list.Add(new Contribution(key, kind, amount, disabled, replaces, window?.SecondsFor(_source) ?? -1f));
     }
 
     /// <summary>구독을 해제하고 성공한 재계산만 원자적으로 게시한다.</summary>
