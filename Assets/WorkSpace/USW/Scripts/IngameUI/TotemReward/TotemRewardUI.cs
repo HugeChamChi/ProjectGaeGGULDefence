@@ -575,8 +575,9 @@ public class TotemRewardUI : MonoBehaviour
         _chosenTotems.Add(data.totemId);
         if (_inventory == null || !_inventory.TryAdd(data))
         {
-            Debug.Log($"[TotemRewardUI] 토템 인벤토리 가득 참 — 식량 {_fallbackFood} 지급");
-            _currencyManager?.AddCurrency(_fallbackFood);
+            float food = GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.TotemFullInventoryFood, _fallbackFood);
+            Debug.Log($"[TotemRewardUI] 토템 인벤토리 가득 참 — 식량 {food} 지급");
+            _currencyManager?.AddCurrency(food);
         }
         if (OwnsSelection(token)) CloseAsync(token).Forget();
     }

@@ -19,6 +19,9 @@ public static class RunBalanceWorkbook
     public const string SheetName = "RunBalance";
     // Three GameConfig assets exist; IngameScene references this one (the other two are test configs).
     private const string GameConfigPath = "Assets/WorkSpace/HSD/Resources/Data/GameConfig.asset";
+    private const string TotemSettingsPath = "Assets/WorkSpace/USW/Resources/TotemInteractionSettings.asset";
+    // The full-inventory food lives on the reward screen prefab that the game scenes instantiate.
+    private const string TotemRewardPrefabPath = "Assets/WorkSpace/USW/Prefab/UI/TotemRewardCanvas.prefab";
 
     /// <summary>Checks the workbook with the same rules the game applies to the chart and lists differences from bundled values.</summary>
     [MenuItem("Tools/Balance/RunBalance.xlsx 검사 (업로드 전)")]
@@ -94,6 +97,12 @@ public static class RunBalanceWorkbook
         for (int i = 0; i < curve.Length; i++) required.GetArrayElementAtIndex(i).floatValue = curve[i];
         serializedExp.ApplyModifiedProperties();
         foreach (var asset in new UnityEngine.Object[] { config, upgrade, exp, pool }) { EditorUtility.SetDirty(asset); AssetDatabase.SaveAssetIfDirty(asset); }
+        var totemSettings = TotemSettings();
+        totemSettings.FindProperty("_capacity").intValue = Mathf.RoundToInt(One(RunBalance.TotemCapacity));
+        totemSettings.ApplyModifiedProperties(); AssetDatabase.SaveAssetIfDirty(totemSettings.targetObject);
+        var totemReward = TotemReward();
+        totemReward.FindProperty("_fallbackFood").floatValue = One(RunBalance.TotemFullInventoryFood);
+        totemReward.ApplyModifiedProperties(); PrefabUtility.SavePrefabAsset(((Component)totemReward.targetObject).transform.root.gameObject);
 
         string note = Mathf.RoundToInt(One(RunBalance.ExpMaxLevel)) != ExpManager.MaxLevel
             ? "\n주의: Exp.MaxLevel은 코드 상수(ExpManager.MaxLevel = " + ExpManager.MaxLevel + ")라 반영되지 않았다. 차트 값은 실행 중에 적용된다." : "";
@@ -141,7 +150,18 @@ public static class RunBalanceWorkbook
             map[RunBalance.CardsEpicWeight] = N(pool.EpicWeight);
             map[RunBalance.CardsLegendWeight] = N(pool.LegendWeight);
         }
+        map[RunBalance.TotemCapacity] = N(TotemSettings().FindProperty("_capacity").intValue);
+        map[RunBalance.TotemFullInventoryFood] = N(TotemReward().FindProperty("_fallbackFood").floatValue);
         return map;
+    }
+
+    private static SerializedObject TotemSettings()
+        => new SerializedObject(AssetDatabase.LoadAssetAtPath<TotemInteractionSettings>(TotemSettingsPath) ?? throw new InvalidOperationException("Missing " + TotemSettingsPath));
+
+    private static SerializedObject TotemReward()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TotemRewardPrefabPath) ?? throw new InvalidOperationException("Missing " + TotemRewardPrefabPath);
+        return new SerializedObject(prefab.GetComponentInChildren<TotemRewardUI>(true) ?? throw new InvalidOperationException("TotemRewardUI not found in " + TotemRewardPrefabPath));
     }
 
     private static T Single<T>() where T : ScriptableObject

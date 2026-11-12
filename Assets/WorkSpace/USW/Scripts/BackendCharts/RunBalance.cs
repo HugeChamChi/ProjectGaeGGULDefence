@@ -29,6 +29,8 @@ namespace GGD.BackendCharts
         public const string CardsRareWeight = "Cards.RareWeight";
         public const string CardsEpicWeight = "Cards.EpicWeight";
         public const string CardsLegendWeight = "Cards.LegendWeight";
+        public const string TotemCapacity = "Totem.Capacity";
+        public const string TotemFullInventoryFood = "Totem.FullInventoryFood";
 
         public static readonly BalanceChart Chart = new BalanceChart("RunBalance", "RunBalanceChartSettings", new Dictionary<string, BalanceRule>
         {
@@ -51,6 +53,9 @@ namespace GGD.BackendCharts
             { CardsRareWeight, new BalanceRule(0f, 1000000f) },
             { CardsEpicWeight, new BalanceRule(0f, 1000000f) },
             { CardsLegendWeight, new BalanceRule(0f, 1000000f) },
+            // The totem inventory screen has five slots, so the chart cannot exceed five.
+            { TotemCapacity, new BalanceRule(1f, 5f, wholeNumber: true) },
+            { TotemFullInventoryFood, new BalanceRule(0f, 1000000f) },
         });
 
         public static string ChartName => Chart.ChartName;
