@@ -57,7 +57,7 @@ public sealed class AlphanActiveSkill : IChiefActiveSkill, IInitializable, ITick
     /// <inheritdoc />
     public bool IsAvailable => !_disposed && _data != null && _drones != null;
     /// <summary>알팡 선택지의 쿨타임 감소만 적용한다. 유닛/셀 스탯을 사용하지 않는다.</summary>
-    public float CooldownSeconds => _data == null ? 0 : Mathf.Max(0.05f, _data.CooldownSeconds
+    public float CooldownSeconds => _data == null ? 0 : Mathf.Max(0.05f, _data.CurrentCooldownSeconds
         * (1f-(_effects?.ChiefCooldownReduction ?? 0f)) * Mathf.Max(0f, 1f-Bonus(UnitBonusStat.ChiefCooldownPercent)));
     private bool IsPlaying => (_game == null || _game.CurrentState == GameManager.GameState.Playing) && Time.timeScale > 0;
     /// <inheritdoc />

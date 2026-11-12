@@ -147,7 +147,7 @@ public class Drone_Betan : DroneSpawnerBase
                     else
                     {
                         int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical,
-                            origin == SelfDestructOrigin.BasicSkill ? damageMultiplier : 1f);
+                            origin == SelfDestructOrigin.BasicSkill ? damageMultiplier * SkillDamageMultiplier : 1f);
                         bomb.Initialize(damage, critical, target, unitData, volleyIndex, this, _bombOwnerLifetime);
                     }
                 }

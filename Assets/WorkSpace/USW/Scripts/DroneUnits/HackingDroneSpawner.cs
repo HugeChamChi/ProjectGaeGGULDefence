@@ -22,7 +22,7 @@ public abstract class HackingDroneSpawner : DroneSpawnerBase, IDroneCombatPartic
     public bool IsHacking => _cast != null;
     /// <summary>The shared ledger's actual authored and selected capacity.</summary>
     public int SharedStackCapacity => _droneManager != null ? _droneManager.Hacking.Ledger.Capacity
-        : (unitData?.Hacking?.Capacity ?? 0) + (DroneEffects?.HackingCapacityBonus ?? 0);
+        : (unitData?.Hacking?.CurrentCapacity ?? 0) + (DroneEffects?.HackingCapacityBonus ?? 0);
     /// <inheritdoc />
     public override bool CanUseSkill => unitData?.Hacking != null && unitData.skillData != null;
     /// <inheritdoc />

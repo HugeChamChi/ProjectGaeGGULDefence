@@ -13,4 +13,9 @@ public sealed class AlphanSkillData : ScriptableObject
     public string SoundAddress = "05.Leader_Skill_Effect";
     [Tooltip("집결 사격 수렴 빔 연출 프리팹 (Prefab/Effect/ChiefConvergeBeam). 비어 있으면 연출 없이 피해만 준다")]
     public ChiefConvergeBeamFx BeamFx;
+
+    // The fields above are the bundled values (Editor, tutorial). Gameplay and UI read the properties below,
+    // which return the DEV_/LIVE_SkillBalance chart values once the chart is installed (TODO G12).
+    public float CurrentCooldownSeconds => GGD.BackendCharts.SkillBalance.Number(GGD.BackendCharts.SkillBalance.AlphanCooldownSeconds, CooldownSeconds);
+    public float CurrentRallyAttackCoefficient => GGD.BackendCharts.SkillBalance.Number(GGD.BackendCharts.SkillBalance.AlphanRallyAttackCoefficient, RallyAttackCoefficient);
 }

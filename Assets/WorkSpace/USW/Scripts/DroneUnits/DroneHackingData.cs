@@ -96,4 +96,13 @@ public sealed class DroneHackingData : ScriptableObject
         }
         return false;
     }
+
+    // The fields above are the bundled values (Editor, tutorial). Gameplay and UI read the members below,
+    // which return the DEV_/LIVE_SkillBalance chart values once the chart is installed (TODO G12).
+    public int CurrentCapacity => Mathf.RoundToInt(GGD.BackendCharts.SkillBalance.Number(GGD.BackendCharts.SkillBalance.HackingCapacity, Capacity));
+    public int GetAttacksToCharge(Tier tier) => Mathf.RoundToInt(GGD.BackendCharts.SkillBalance.Tiered(GGD.BackendCharts.SkillBalance.HackingAttacksToCharge, tier, AttacksToCharge.Get(tier)));
+    public int GetStacksProduced(Tier tier) => Mathf.RoundToInt(GGD.BackendCharts.SkillBalance.Tiered(GGD.BackendCharts.SkillBalance.HackingStacksProduced, tier, StacksProduced.Get(tier)));
+    public int GetMaxStacksConsumed(Tier tier) => Mathf.RoundToInt(GGD.BackendCharts.SkillBalance.Tiered(GGD.BackendCharts.SkillBalance.HackingMaxStacksConsumed, tier, MaxStacksConsumed.Get(tier)));
+    public float GetBaseCoefficient(Tier tier) => GGD.BackendCharts.SkillBalance.Tiered(GGD.BackendCharts.SkillBalance.HackingBaseCoefficient, tier, BaseCoefficient.Get(tier));
+    public float GetCoefficientPerStack(Tier tier) => GGD.BackendCharts.SkillBalance.Tiered(GGD.BackendCharts.SkillBalance.HackingCoefficientPerStack, tier, CoefficientPerStack.Get(tier));
 }

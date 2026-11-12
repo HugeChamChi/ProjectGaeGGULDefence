@@ -10,7 +10,7 @@ public static class TermFacts
         if (source is UnitData unit)
             template = template.Replace("{coefficient}", BombCoefficients(unit));
         if (source is DroneHackingData hacking)
-            template = template.Replace("{capacity}", hacking.Capacity.ToString(CultureInfo.InvariantCulture));
+            template = template.Replace("{capacity}", hacking.CurrentCapacity.ToString(CultureInfo.InvariantCulture));
         return template;
     }
 
@@ -20,13 +20,13 @@ public static class TermFacts
         switch (kind)
         {
             case TermFactKind.ChiefSkill when source is AlphanSkillData chief:
-                return $"기본 집결 피해 = 참가 드론 공격력 합 ×{Number(chief.RallyAttackCoefficient)}, 기본 쿨타임 {Number(chief.CooldownSeconds)}초";
+                return $"기본 집결 피해 = 참가 드론 공격력 합 ×{Number(chief.CurrentRallyAttackCoefficient)}, 기본 쿨타임 {Number(chief.CurrentCooldownSeconds)}초";
             case TermFactKind.SelfDestruct when source is UnitData betan:
                 return $"기본 폭발 피해 = 베탕 공격력 ×{BombCoefficients(betan)} (일반/레어/에픽/전설)";
             case TermFactKind.HackStack when source is DroneHackingData hacking:
-                return $"보스 1마리당 최대 {hacking.Capacity}개";
+                return $"보스 1마리당 최대 {hacking.CurrentCapacity}개";
             case TermFactKind.TimeRecovery when source is DisigmanData disigman:
-                return $"디시그망 스킬 1회당 {PerTier(disigman.SecondsRecovered)}초 회복";
+                return $"디시그망 스킬 1회당 {PerTier(disigman.CurrentSecondsRecovered)}초 회복";
             default:
                 return string.Empty;
         }

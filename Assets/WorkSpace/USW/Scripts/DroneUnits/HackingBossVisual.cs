@@ -85,7 +85,7 @@ public sealed class HackingBossVisual : MonoBehaviour
         Vector3 center = centerBone != null ? centerBone.GetWorldPosition(_skeleton.transform) : bounds.center;
         center.z = _boss.transform.position.z - .65f;
         _block = new MaterialPropertyBlock();
-        _marks = new Mark[Mathf.Max(1, Mathf.Max(_capacity, _data.Capacity) / Mathf.Max(1, _data.StacksPerMark))];
+        _marks = new Mark[Mathf.Max(1, Mathf.Max(_capacity, _data.CurrentCapacity) / Mathf.Max(1, _data.StacksPerMark))];
         int order = Mathf.Max(54, renderer.sortingOrder + 2);
         for (int i = 0; i < _marks.Length; i++)
         {

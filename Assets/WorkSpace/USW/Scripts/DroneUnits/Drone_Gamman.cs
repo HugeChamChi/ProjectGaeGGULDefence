@@ -22,7 +22,7 @@ public class Drone_Gamman : HackingDroneSpawner
     protected override void OnDisable() { CancelDelivery(); _deliveryLifetime++; base.OnDisable(); }
     /// <summary>레벨과 선택지 배율을 반영한 실제 1회 최대 소비량.</summary>
     public int MaximumStacksConsumed => Mathf.Max(1, Mathf.FloorToInt(
-        ((unitData?.Hacking != null ? unitData.Hacking.MaxStacksConsumed.Get(currentTier) : 0) + LevelConsumptionBonus)
+        ((unitData?.Hacking != null ? unitData.Hacking.GetMaxStacksConsumed(currentTier) : 0) + LevelConsumptionBonus)
         * (DroneEffects?.HackingConsumptionMultiplier ?? 1f)));
 
     public int LevelConsumptionBonus => Mathf.RoundToInt(LevelStat(currentTier switch { Tier.Normal => UnitBonusStat.HackingConsumedNormal, Tier.Rare => UnitBonusStat.HackingConsumedRare, Tier.Epic => UnitBonusStat.HackingConsumedEpic, _ => UnitBonusStat.HackingConsumedLegend }));
@@ -46,14 +46,15 @@ public class Drone_Gamman : HackingDroneSpawner
         var data = unitData.Hacking;
         var reservation = runtime.Reserve(target, MaximumStacksConsumed);
         if (reservation == null) return;
-        float coefficient = data.BaseCoefficient.Get(currentTier)
-            + reservation.DamageAmount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
-        int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical);
+        float coefficient = data.GetBaseCoefficient(currentTier)
+            + reservation.DamageAmount * data.GetCoefficientPerStack(currentTier) * StackDamageMultiplier;
+        float skillDamage = SkillDamageMultiplier;
+        int damage = ComputeAttackDamageFrom(GetUpgradedAtk() * coefficient, 1f, out bool critical, skillDamage);
         // Historical definition compatibility only; the authored 9109 now supplies Deltan compression.
         var effects = DroneEffects;
-        float stackCoefficient = reservation.DamageAmount * data.CoefficientPerStack.Get(currentTier) * StackDamageMultiplier;
+        float stackCoefficient = reservation.DamageAmount * data.GetCoefficientPerStack(currentTier) * StackDamageMultiplier;
         _pendingResidue = effects?.HasGammanResidue == true && reservation.Amount > 0 && coefficient > 0f
-            ? damage * (stackCoefficient / coefficient) * effects.GammanResidueRatio : 0f;
+            ? damage / skillDamage * (stackCoefficient / coefficient) * effects.GammanResidueRatio : 0f; // 잔류 피해는 스킬 피해 보너스 제외
         FlashOwnedDrones();
         if (effects?.HasGammanBomb == true && effects.GammanBombPrefab != null)
         {

@@ -18,7 +18,7 @@ public sealed class DroneHackingRuntime : MonoBehaviour
     private BossBase _target;
     private DroneHackingData _data;
     private readonly System.Collections.Generic.Dictionary<UnitBase,int> _capacityBonuses = new();
-    private int Capacity { get { int bonus=0; foreach (var pair in _capacityBonuses) if (pair.Key != null) bonus=Mathf.Max(bonus,pair.Value); return (_data != null ? _data.Capacity : 1)+bonus+(_effects?.HackingCapacityBonus ?? 0); } }
+    private int Capacity { get { int bonus=0; foreach (var pair in _capacityBonuses) if (pair.Key != null) bonus=Mathf.Max(bonus,pair.Value); return (_data != null ? _data.CurrentCapacity : 1)+bonus+(_effects?.HackingCapacityBonus ?? 0); } }
     public void SetCapacityBonus(UnitBase owner, int bonus)
     {
         if (bonus > 0) _capacityBonuses[owner]=bonus; else _capacityBonuses.Remove(owner);

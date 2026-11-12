@@ -116,9 +116,9 @@ namespace GaeGGUL.UI.Unit
             else if (data.Disigman != null)
             {
                 int attacks = _unit is Disigman live ? live.RequiredAttacks
-                    : Mathf.Max(1, data.Disigman.AttacksToCharge.Get(tier));
+                    : Mathf.Max(1, data.Disigman.GetAttacksToCharge(tier));
                 float seconds = _unit is Disigman current ? current.SecondsRecovered
-                    : Mathf.Max(0f, data.Disigman.SecondsRecovered.Get(tier));
+                    : Mathf.Max(0f, data.Disigman.GetSecondsRecovered(tier));
                 var damage = data.skillData?.hitEffects?.Find(effect => effect is AtkCoefficientDamage) as AtkCoefficientDamage;
                 float coefficient = damage?.coefficient?.Get(tier) ?? 0f;
                 _view.UpdateSkillInfo(data.SkillDisplayName,
@@ -130,15 +130,15 @@ namespace GaeGGUL.UI.Unit
             {
                 bool producer = _unit is Drone_Deltan || data.prefabAddress == "DroneUnit_Deltan";
                 var hacking = data.Hacking;
-                int attacks = _unit is Drone_Deltan delta ? delta.RequiredAttacks : hacking.AttacksToCharge.Get(tier);
-                int production = _unit is Drone_Deltan liveDelta ? liveDelta.NextProduction : hacking.StacksProduced.Get(tier);
-                float perStack = hacking.CoefficientPerStack.Get(tier) * (_unit is Drone_Gamman gamma ? gamma.StackDamageMultiplier : 1f);
+                int attacks = _unit is Drone_Deltan delta ? delta.RequiredAttacks : hacking.GetAttacksToCharge(tier);
+                int production = _unit is Drone_Deltan liveDelta ? liveDelta.NextProduction : hacking.GetStacksProduced(tier);
+                float perStack = hacking.GetCoefficientPerStack(tier) * (_unit is Drone_Gamman gamma ? gamma.StackDamageMultiplier : 1f);
                 string description = !_detailed
                     ? (producer ? $"드론이 {attacks}회 공격하면 해킹 스택 {production}개를 만듭니다."
-                        : $"해킹 스택을 최대 {(_unit is Drone_Gamman consumer ? consumer.MaximumStacksConsumed : hacking.MaxStacksConsumed.Get(tier))}개 소모해 강력한 공격을 합니다.")
+                        : $"해킹 스택을 최대 {(_unit is Drone_Gamman consumer ? consumer.MaximumStacksConsumed : hacking.GetMaxStacksConsumed(tier))}개 소모해 강력한 공격을 합니다.")
                     : producer
                     ? $"소유 드론 일반공격 {attacks}회마다 해킹 스킬을 사용합니다. 다음 생산 {production}스택. 보스 공유 상한 {(_unit is HackingDroneSpawner spawner ? spawner.SharedStackCapacity : hacking.Capacity)}."
-                    : $"기본 피해 계수 {hacking.BaseCoefficient.Get(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {(_unit is Drone_Gamman consumerDetail ? consumerDetail.MaximumStacksConsumed : hacking.MaxStacksConsumed.Get(tier))}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
+                    : $"기본 피해 계수 {hacking.GetBaseCoefficient(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {(_unit is Drone_Gamman consumerDetail ? consumerDetail.MaximumStacksConsumed : hacking.GetMaxStacksConsumed(tier))}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
                 _view.UpdateSkillInfo(producer ? "해킹" : "해킹 기폭", description,
                     producer ? $"공격 {attacks}회 충전" : $"{cooldown:F1}초");
             }

@@ -51,6 +51,10 @@ MonoBehaviour:
       data:
         value: 1
     - rid: 5888964643206987871
-      type: {class: ConstantFloat, ns: , asm: GGD.Core}
+      type: {class: SkillBalanceFloat, ns: , asm: Assembly-CSharp}
       data:
-        value: 1
+        key: Disigman.BasicCoefficient
+        normal: 1
+        rare: 1
+        epic: 1
+        legend: 1

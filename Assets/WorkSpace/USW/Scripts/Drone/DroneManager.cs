@@ -45,6 +45,7 @@ public class DroneManager : MonoBehaviour
     [VContainer.Inject] private GridManager _gridManager;
     [VContainer.Inject] private IDroneEffectReader _effects;
     [VContainer.Inject] private IChiefSelectionReader _chiefEffects;
+    [VContainer.Inject] private ResearchRunBonuses _research;
     [VContainer.Inject] private GameManager _gameManager;
     [VContainer.Inject] private FieldPauseVisuals _fieldPause;
     [VContainer.Inject] private BossPatternController _patterns;
@@ -270,7 +271,8 @@ public class DroneManager : MonoBehaviour
         decimal attack = 0m;
         foreach (var drone in drones)
             if (drone != null) attack += Mathf.Max(0, drone.NonCriticalAttackDamage);
-        decimal damage = attack * (decimal)attackCoefficient;
+        // 집결은 족장의 스킬 피해다: 강화 트리의 스킬 피해를 곱한다 (사용자 결정 2026-11-12).
+        decimal damage = attack * (decimal)attackCoefficient * (decimal)(1f + (_research?.Get(ResearchStat.SkillDamage) ?? 0f));
         return _chiefEffects?.HasRallyDamage == true ? damage * (decimal)_chiefEffects.RallyDamageBonus : damage;
     }
 
@@ -421,7 +423,7 @@ public class DroneManager : MonoBehaviour
             if (chiefData != null)
             {
                 chiefTarget = _bossManager?.CurrentBoss;
-                chiefDamage = GetChiefRallyDamage(snapshot, chiefData.RallyAttackCoefficient);
+                chiefDamage = GetChiefRallyDamage(snapshot, chiefData.CurrentRallyAttackCoefficient);
                 hackingDamageRatio = _chiefEffects?.ChiefHackingDamagePerStack ?? 0f;
                 if (chiefData.Hacking != null)
                 {

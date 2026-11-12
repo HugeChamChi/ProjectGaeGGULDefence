@@ -362,8 +362,13 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public int GetCombatDroneDisplayDamage(bool includeUpgrade = true) => _stats?.GetCombatDroneDisplayDamage(includeUpgrade) ?? 0;
     public int ComputeDamageFrom(float baseDamage) => _stats?.ComputeDamageFrom(baseDamage) ?? 0;
     /// <summary>Only effects authored on this unit's skill receive permanent skill damage.</summary>
+    /// <summary>
+    /// 이 유닛의 스킬 피해에 곱하는 배율 (강화 트리의 스킬 피해). 사용자 결정 2026-11-12: 유닛의 스킬 피해에만 적용하고
+    /// 화상, 아머, 받는 피해 증가 같은 디버프와 잔류 피해에는 적용하지 않는다. 스킬 피해를 주는 곳이 직접 곱한다.
+    /// </summary>
+    public float SkillDamageMultiplier => 1f + (_deps?.Research?.Get(ResearchStat.SkillDamage) ?? 0f);
     public float GetSkillDamageMultiplier(IEffect effect) => unitData?.skillData?.hitEffects?.Contains(effect) == true
-        ? 1f + (_deps?.Research?.Get(ResearchStat.SkillDamage) ?? 0f) : 1f;
+        ? SkillDamageMultiplier : 1f;
     /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>
     public int ComputeAttackDamageFrom(float baseDamage, float projAtkBonusMultiplier, out bool critical, float damageMultiplier = 1f)
     {

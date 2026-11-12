@@ -37,7 +37,7 @@ public class Drone_Deltan : HackingDroneSpawner
     {
         get
         {
-            int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.AttacksToCharge.Get(currentTier) : 1);
+            int baseline = Mathf.Max(1, unitData?.Hacking != null ? unitData.Hacking.GetAttacksToCharge(currentTier) : 1);
             var effects = DroneEffects;
             if (effects?.HackingCompressionRequiredAttacks > 0) baseline = effects.HackingCompressionRequiredAttacks;
             int selected = effects?.HasManaRequirementReduction != true ? baseline : baseline - Mathf.Max(1, Mathf.RoundToInt(baseline * effects.ManaRequirementReduction));
@@ -48,7 +48,7 @@ public class Drone_Deltan : HackingDroneSpawner
     public int ChargedAttacks => Mathf.Min(_attackCount, RequiredAttacks);
     /// <summary>선택지와 이월 소수량을 포함한 다음 시전의 생산량. 조회는 상태를 바꾸지 않는다.</summary>
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
-    private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.StacksProduced.Get(currentTier) : 0)
+    private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.GetStacksProduced(currentTier) : 0)
         + LevelProductionBonus + (DroneEffects?.HackingProductionFlat ?? 0))
         * (DroneEffects?.HackingCompressionMultiplier ?? 1)
         * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;

@@ -80,7 +80,7 @@ public static class Player
         RequireCurrentInitialization(owner, generation);
         using (var runBalanceTimeout = new CancellationTokenSource())
         using (runBalanceTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
-            await GGD.BackendCharts.RunBalanceChartLoader.InitializeAsync(runBalanceTimeout.Token);
+            await UniTask.WhenAll(GGD.BackendCharts.RunBalance.Chart.LoadAsync(runBalanceTimeout.Token), GGD.BackendCharts.SkillBalance.Chart.LoadAsync(runBalanceTimeout.Token));
         RequireCurrentInitialization(owner, generation);
         await UniTask.WhenAll(
             Profile.InitalizeAsync(),
@@ -131,7 +131,8 @@ public static class Player
         RoundRecords.Clear();
         GGD.Events.EventChartLoader.Clear();
         UnitBonusChart.Clear();
-        GGD.BackendCharts.RunBalanceChartLoader.Clear();
+        GGD.BackendCharts.RunBalance.Chart.Clear();
+        GGD.BackendCharts.SkillBalance.Chart.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();
