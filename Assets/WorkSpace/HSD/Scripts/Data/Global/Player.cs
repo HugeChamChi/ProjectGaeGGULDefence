@@ -80,7 +80,7 @@ public static class Player
         RequireCurrentInitialization(owner, generation);
         using (var runBalanceTimeout = new CancellationTokenSource())
         using (runBalanceTimeout.CancelAfterSlim(TimeSpan.FromSeconds(30), DelayType.Realtime))
-            await UniTask.WhenAll(GGD.BackendCharts.RunBalance.Chart.LoadAsync(runBalanceTimeout.Token), GGD.BackendCharts.SkillBalance.Chart.LoadAsync(runBalanceTimeout.Token));
+            await UniTask.WhenAll(GGD.BackendCharts.RunBalance.Chart.LoadAsync(runBalanceTimeout.Token), GGD.BackendCharts.SkillBalance.Chart.LoadAsync(runBalanceTimeout.Token), GGD.BackendCharts.DebuffChart.LoadAsync(runBalanceTimeout.Token));
         RequireCurrentInitialization(owner, generation);
         await UniTask.WhenAll(
             Profile.InitalizeAsync(),
@@ -133,6 +133,7 @@ public static class Player
         UnitBonusChart.Clear();
         GGD.BackendCharts.RunBalance.Chart.Clear();
         GGD.BackendCharts.SkillBalance.Chart.Clear();
+        GGD.BackendCharts.DebuffChart.Clear();
         PlayerData.Clear();
         Profile.Clear();
         Mail.Clear();

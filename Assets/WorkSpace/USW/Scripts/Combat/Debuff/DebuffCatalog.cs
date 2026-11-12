@@ -7,8 +7,9 @@ public sealed class DebuffCatalog
     private Dictionary<int, DebuffDefinition> _definitions = new Dictionary<int, DebuffDefinition>();
     /// <summary>로컬 SO를 초기 정의로 로딩한다.</summary>
     public DebuffCatalog(DebuffSettings settings) { Replace(settings.CreateDefinitions()); }
-    /// <summary>정의가 있으면 반환한다.</summary>
-    public bool TryGet(int id, out DebuffDefinition definition) => _definitions.TryGetValue(id, out definition);
+    /// <summary>정의가 있으면 반환한다. 뒤끝 Debuffs 차트가 설치돼 있으면 차트 정의가 우선하고, 튜토리얼과 에디터 직접 실행은 SO 정의를 쓴다.</summary>
+    public bool TryGet(int id, out DebuffDefinition definition)
+        => GGD.BackendCharts.DebuffChart.TryGet(id, out definition) || _definitions.TryGetValue(id, out definition);
     /// <summary>유효 정의 집합 생성. 초기 버전은 종류/중첩 그룹별 하나의 정의만 허용한다.</summary>
     public static Dictionary<int, DebuffDefinition> Validate(IEnumerable<DebuffDefinition> definitions)
     {
