@@ -137,6 +137,8 @@ public class BossPatternController : MonoBehaviour
         };
         entry.SpineAnimator = boss.GetComponent<BossSpineAnimator>();
         entry.Runtime?.ConfigurePatternContext(_gridManager);
+        // BossPatterns 차트 값이 에셋과 다르면 차트 숫자를 담은 사본을 등록한다. 에셋은 바꾸지 않는다.
+        patterns = GGD.BackendCharts.BossPatterns.Runtime(patterns);
         if (patterns != null)
             foreach (var pattern in patterns)
                 if (pattern != null && !entry.Patterns.Exists(p => p.Data == pattern))

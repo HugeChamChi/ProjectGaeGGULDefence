@@ -1,0 +1,165 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using GGD.BackendCharts;
+using LitJson;
+using UnityEditor;
+using UnityEngine;
+
+/// <summary>
+/// Editor-only bridge between the authoring workbook <c>Data/Balance/BossPatterns.xlsx</c> and the bundled boss pattern assets
+/// (user decision 2026-11-11: Excel is the source; bundled values and the BACKND chart are both made from it).
+/// The same workbook is uploaded to DEV_BossPatterns, then LIVE_BossPatterns. Never opened by a player build.
+///
+/// Adding a boss (user request 2026-11-13): put its pattern assets under one of <see cref="Folders"/>, run
+/// "BossPatterns 키 목록 다시 만들기", then "BossPatterns.xlsx 검사": the check lists the rows the workbook is missing
+/// with their bundled values, ready to paste into the workbook and the DEV_ and LIVE_ charts.
+/// </summary>
+public static class BossPatternsWorkbook
+{
+    public const string SourcePath = "Data/Balance/BossPatterns.xlsx";
+    public const string SheetName = "BossPatterns";
+    public const string KeysPath = "Assets/WorkSpace/USW/Scripts/BackendCharts/BossPatternsKeys.cs";
+    /// <summary>Folders whose pattern assets are in the chart. Tutorial and lab assets live elsewhere and keep bundled values.</summary>
+    public static readonly string[] Folders = { "Assets/WorkSpace/USW/Data/BossData", "Assets/WorkSpace/USW/Data/BossPatterns" };
+
+    [MenuItem("Tools/Balance/BossPatterns.xlsx 검사 (업로드 전)")]
+    public static void CheckMenu() => Debug.Log(Check(SourcePath));
+
+    [MenuItem("Tools/Balance/BossPatterns.xlsx 값을 앱 내장 값에 반영")]
+    public static void ImportMenu() => Debug.Log(Import(SourcePath));
+
+    [MenuItem("Tools/Balance/BossPatterns 키 목록 다시 만들기 (보스나 패턴을 추가한 뒤)")]
+    public static void GenerateKeysMenu() => Debug.Log(GenerateKeys());
+
+    /// <summary>Pattern assets under <see cref="Folders"/> whose kind has chart values, by asset name (sorted).</summary>
+    public static SortedDictionary<string, ScriptableObject> Assets()
+    {
+        var result = new SortedDictionary<string, ScriptableObject>(StringComparer.Ordinal);
+        foreach (string guid in AssetDatabase.FindAssets("t:ScriptableObject", Folders))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            if (asset == null || BossPatterns.Names(asset).Count == 0) continue;
+            if (asset.name.Contains(".")) throw new InvalidOperationException("패턴 에셋 이름에 점을 쓸 수 없다: " + path);
+            if (result.TryGetValue(asset.name, out var other))
+                throw new InvalidOperationException("같은 이름의 패턴 에셋이 둘이다: " + path + ", " + AssetDatabase.GetAssetPath(other));
+            result.Add(asset.name, asset);
+        }
+        return result;
+    }
+
+    /// <summary>Every chart key the assets ask for with its bundled value text, in asset order.</summary>
+    public static List<KeyValuePair<string, string>> AssetRows()
+    {
+        var rows = new List<KeyValuePair<string, string>>();
+        foreach (var asset in Assets().Values)
+            foreach (string name in BossPatterns.Names(asset))
+            {
+                var field = BossPatterns.Field(asset.GetType(), name);
+                if (field == null) throw new InvalidOperationException(asset.name + ": 차트 값 " + name + "에 해당하는 필드가 없다.");
+                object value = field.GetValue(asset);
+                rows.Add(new KeyValuePair<string, string>(asset.name + "." + name, value is float[] list ? string.Join("|", list.Select(N)) : N(Convert.ToSingle(value))));
+            }
+        return rows;
+    }
+
+    /// <summary>Bundled value of every chart key. Throws when the key list and the assets disagree.</summary>
+    public static Dictionary<string, string> Bundled()
+    {
+        var result = AssetRows().ToDictionary(row => row.Key, row => row.Value);
+        foreach (string key in BossPatterns.Rules.Keys)
+            if (!result.ContainsKey(key)) throw new InvalidOperationException("차트 키 " + key + ": 패턴 에셋에 해당 값이 없다. 키 목록을 다시 만든다.");
+        foreach (string key in result.Keys)
+            if (!BossPatterns.Rules.ContainsKey(key)) throw new InvalidOperationException("패턴 에셋의 값 " + key + ": 차트 키 목록에 없다. 키 목록을 다시 만든다.");
+        return result;
+    }
+
+    /// <summary>Rewrites BossPatternsKeys.cs from the pattern assets. Run after adding or removing a boss, a pattern or a mechanic.</summary>
+    public static string GenerateKeys()
+    {
+        var rows = AssetRows();
+        foreach (var row in rows)
+        {
+            string name = row.Key.Substring(row.Key.LastIndexOf('.') + 1);
+            if (!BossPatterns.ValueRules.ContainsKey(name)) throw new InvalidOperationException("값 이름 " + name + "의 범위 규칙이 BossPatterns.ValueRules에 없다.");
+        }
+        var text = new StringBuilder();
+        text.Append("// Generated by the menu Tools/Balance/BossPatterns 키 목록 다시 만들기 (BossPatternsWorkbook.GenerateKeys). Do not edit by hand.\n");
+        text.Append("namespace GGD.BackendCharts\n{\n");
+        text.Append("    /// <summary>Key list of the BossPatterns chart. A separate class so the list exists before BossPatterns builds its rules.</summary>\n");
+        text.Append("    public static class BossPatternsKeys\n    {\n        public static readonly string[] Keys =\n        {\n");
+        foreach (var row in rows) text.Append("            \"").Append(row.Key).Append("\",\n");
+        text.Append("        };\n    }\n}\n");
+        File.WriteAllText(KeysPath, text.ToString(), new UTF8Encoding(false));
+        AssetDatabase.ImportAsset(KeysPath);
+        return "BossPatternsKeys.cs: 에셋 " + Assets().Count + "개, 키 " + rows.Count + "개";
+    }
+
+    private static List<KeyValuePair<string, string>> Rows(string path)
+    {
+        var table = BalanceXlsxTable.Read(File.ReadAllBytes(path), SheetName, 1, "Key", "Value");
+        return table.Rows.Select(row => new KeyValuePair<string, string>((row.Get("Key") ?? "").Trim(), row.Get("Value") ?? "")).ToList();
+    }
+
+    /// <summary>Reads and validates the workbook with the rules the game applies to the chart.</summary>
+    public static Dictionary<string, float[]> Read(string path)
+    {
+        var rows = new JsonData(); rows.SetJsonType(JsonType.Array);
+        foreach (var row in Rows(path))
+        {
+            var item = new JsonData();
+            item["Key"] = row.Key;
+            item["Value"] = row.Value;
+            rows.Add(item);
+        }
+        return BossPatterns.Parse(rows);
+    }
+
+    public static string Check(string path)
+    {
+        var bundled = Bundled();
+        // Rows a new boss still needs, with the bundled values to paste. Reported before the format check, which would stop at the first one.
+        var present = new HashSet<string>(Rows(path).Select(row => row.Key));
+        var missing = bundled.Where(pair => !present.Contains(pair.Key)).ToList();
+        if (missing.Count > 0)
+            return "BossPatterns.xlsx에 없는 줄 " + missing.Count + "개 (엑셀과 DEV_, LIVE_ 차트에 추가):\n"
+                   + string.Join("\n", missing.Select(pair => pair.Key + "\t" + pair.Value));
+        var workbook = Read(path);
+        var lines = new List<string> { "BossPatterns.xlsx 형식 통과: 키 " + workbook.Count + "개" };
+        foreach (var pair in workbook)
+        {
+            string excel = string.Join("|", pair.Value.Select(N));
+            if (bundled[pair.Key] != excel) lines.Add("다름 " + pair.Key + ": 엑셀 " + excel + " / 앱 내장 " + bundled[pair.Key]);
+        }
+        if (lines.Count == 1) lines.Add("앱 내장 값과 전부 같음");
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>Writes workbook numbers into the bundled pattern assets after the whole workbook passed validation.</summary>
+    public static string Import(string path)
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Exit Play mode before importing boss patterns.");
+        Bundled();
+        var workbook = Read(path);
+        foreach (var asset in Assets().Values)
+        {
+            Undo.RecordObject(asset, "Import BossPatterns.xlsx");
+            foreach (string name in BossPatterns.Names(asset))
+            {
+                var field = BossPatterns.Field(asset.GetType(), name);
+                float[] values = workbook[asset.name + "." + name];
+                if (field.FieldType == typeof(float[])) field.SetValue(asset, values.Clone());
+                else field.SetValue(asset, field.FieldType == typeof(int) ? (object)Mathf.RoundToInt(values[0]) : values[0]);
+            }
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+        }
+        return "BossPatterns.xlsx 값을 앱 내장 값에 반영함: 키 " + workbook.Count + "개";
+    }
+
+    public static string N(float value) => ((double)(decimal)value).ToString("0.######", CultureInfo.InvariantCulture);
+}
