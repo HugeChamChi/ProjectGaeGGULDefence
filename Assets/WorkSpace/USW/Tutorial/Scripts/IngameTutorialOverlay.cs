@@ -244,7 +244,13 @@ namespace GaeGGUL.Tutorial
                 from.x += _holes[0].width * 0.3f * direction;
                 to.x -= _holes[0].width * 0.3f * direction;
             }
-            if (_gesture == Gesture.HoldDrag) to += Vector2.right * _holes[0].width;
+            if (_gesture == Gesture.HoldDrag)
+            {
+                // 두 번째 강조가 있으면 그쪽으로 끈다(회전 수업: 유닛 방향). 없으면 기존처럼 오른쪽.
+                Vector2 direction = _holes.Count > 1 && (_holes[1].center - from).sqrMagnitude > 1f
+                    ? (_holes[1].center - from).normalized : Vector2.right;
+                to += direction * _holes[0].width;
+            }
             Vector2 tip = Vector2.Lerp(from, to, Mathf.SmoothStep(0, 1, t));
             bool pressed = _gesture == Gesture.Tap
                 ? elapsed < _settings.GestureSeconds * _settings.HandTapPressedFraction

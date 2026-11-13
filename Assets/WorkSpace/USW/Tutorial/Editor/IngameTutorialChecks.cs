@@ -340,6 +340,14 @@ public static class IngameTutorialChecks
             Check(!Get<bool>(motion,"_charged"),"Chief retracts only after skill motion completes");
             Check(!patterns.IsCounterablePattern(boss.CurrentBoss),"Actual chief button cancels the earthquake before impact");
             Check(grid.AllCells().All(c=>!c.Model.IsBossTelegraphPreviewed),"Successful counter clears the field warning");
+            // L28: 막은 뒤 집결의 큰 피해 용도와 재사용 대기 안내 두 장.
+            var chiefInstruction=Get<TMPro.TMP_Text>(dialogue,"_instruction");
+            await UniTask.WaitUntil(()=>chiefInstruction.text==settings.ChiefRallyDamageInstruction,cancellationToken:token);
+            await FocusReady(overlay);await Acknowledge();
+            string cooldownPrefix=settings.ChiefCooldownInstruction.Substring(0,settings.ChiefCooldownInstruction.IndexOf("{0}"));
+            await UniTask.WaitUntil(()=>chiefInstruction.text.StartsWith(cooldownPrefix) && chiefInstruction.text!=settings.ChiefCooldownInstruction,cancellationToken:token);
+            Check(chiefInstruction.text.Contains("120초"),"Chief cooldown lesson shows the actual cooldown: "+chiefInstruction.text.Replace("\n"," "));
+            await FocusReady(overlay);await Acknowledge();
             if (firstBossBalanceOnly)
             {
                 await UniTask.WaitUntil(() => measuredBoss == null || measuredBoss.IsDead ||
@@ -446,7 +454,9 @@ public static class IngameTutorialChecks
             var effectBefore=totem.Data.GetEffectCells(totem,grid).ToArray();
             Check(totem.Data.GetSimpleAmount(StatKind.Speed)==0.1f && effectBefore.Length>0 && effectBefore.All(c=>c.HasSpeedBuff),"Placed tutorial totem applies attack speed to its actual cells");
             Check(totem.Data.isRotatable && totem.CurrentCell==moveDestination,"Rotation follows successful totem movement");
-            Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==1,"Rotation highlights only the installed totem");
+            var rotationTarget=Get<GridCell>(director,"_rotationTargetCell");
+            Check(rotationTarget!=null && rotationTarget.OccupyingUnit!=null && !effectBefore.Contains(rotationTarget),"Move lesson picks a cell where the current range misses the target unit");
+            Check(Get<System.Collections.Generic.List<Func<Rect>>>(overlay,"_targets").Count==2,"Rotation highlights the installed totem and the target unit");
             var rotationDrag=totem.GetComponent<DragHandler>();
             var originalPosition=totem.transform.position;
             rotationDrag.BeginPress();rotationDrag.OnBeginDrag();rotationDrag.OnDrag((Vector2)originalPosition+Vector2.right);
@@ -457,8 +467,12 @@ public static class IngameTutorialChecks
             var start=(Vector2)Camera.main.WorldToScreenPoint(totem.GetComponent<Collider2D>().bounds.center);
             Call(input,"ProcessPointerDown",start);
             await UniTask.Delay(800,DelayType.Realtime,cancellationToken:token);
-            var end=(Vector2)Camera.main.WorldToScreenPoint(totem.transform.position)+Vector2.right*150;
+            var totemScreen=(Vector2)Camera.main.WorldToScreenPoint(totem.transform.position);
+            var targetScreen=(Vector2)Camera.main.WorldToScreenPoint(rotationTarget.transform.position);
+            var end=totemScreen+(targetScreen-totemScreen).normalized*150;
             Call(input,"ProcessPointerMove",end);Call(input,"ProcessPointerUp",end);
+            await UniTask.WaitUntil(()=>Get<TMPro.TMP_Text>(dialogue,"_instruction").text==settings.TotemRotateSuccessInstruction,cancellationToken:token);
+            Check(totem.Data.GetEffectCells(totem,grid).Contains(rotationTarget) && rotationTarget.HasSpeedBuff,"Rotating toward the unit puts it in the attack speed range");
             // 하단 HUD 실제 왕복 스와이프 → 메뉴 → 선택지 보관함 → 설정 위치
             var tutorialMenu=Object.FindFirstObjectByType<IngameHudMenu>();
             var tutorialChart=Object.FindFirstObjectByType<IngameDamageChart>();
@@ -557,7 +571,7 @@ public static class IngameTutorialChecks
             }
             finally { time.Release(optionsFixture); }
             await UniTask.WaitUntil(()=>director.IsComplete,cancellationToken:token);
-            Check(totem.RotationStep==1,"Hold then drag right rotates the totem");
+            Check(totem.RotationStep!=0 && totem.Data.GetEffectCells(totem,grid).Contains(rotationTarget),"Hold then drag toward the unit rotates the totem to face it (step "+totem.RotationStep+")");
             var effectAfter=totem.Data.GetEffectCells(totem,grid).ToArray();
             Check(!effectAfter.SequenceEqual(effectBefore) && effectAfter.All(c=>c.HasSpeedBuff) && effectBefore.Except(effectAfter).All(c=>!c.HasSpeedBuff),"Rotation moves the attack-speed buff and removes it from the old cells");
             var result=Object.FindFirstObjectByType<ResultScreenView>();

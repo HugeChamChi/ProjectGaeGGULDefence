@@ -187,6 +187,20 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         finally { _previewRotationStep = null; }
     }
 
+    /// <summary>
+    /// 이 토템이 cell에 rotationStep 방향으로 있다고 가정한 효과 칸. 실제 칸, 회전, 버프, 표시는 바꾸지 않는다(튜토리얼 칸 고르기용).
+    /// </summary>
+    public List<GridCell> GetAffectedCellsAt(GridCell cell, int rotationStep)
+    {
+        if (cell == null) return new List<GridCell>();
+        var oldCell = CurrentCell;
+        var oldPreview = _previewRotationStep;
+        CurrentCell = cell;
+        _previewRotationStep = ((rotationStep % 4) + 4) % 4;
+        try { return GetAffectedCells(); }
+        finally { CurrentCell = oldCell; _previewRotationStep = oldPreview; }
+    }
+
     /// <summary>Restores the committed range after cancelling a gesture.</summary>
     public void RestoreRotationPreview() => _gridManager?.ShowTotemRangePreview(this);
 

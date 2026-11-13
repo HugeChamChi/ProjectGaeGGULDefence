@@ -87,6 +87,8 @@ namespace GaeGGUL.Tutorial
         private Exception _contentDownloadError;
         private UniTaskCompletionSource _lobbyPreparation;
         private TotemRotateBadgeView _rotationComparison;
+        // 회전 수업에서 효과 범위가 닿아야 하는 유닛 칸. 이동 수업이 고른다.
+        private GridCell _rotationTargetCell;
 
         /// <summary>Current authored lesson, visible to diagnostics and playtest tools.</summary>
         public IngameTutorialStage CurrentStage { get; private set; }
@@ -529,6 +531,16 @@ namespace GaeGGUL.Tutorial
                         Block();
                         _dialogue.ShowText("좋아요! 액티브 스킬로 보스의 지진을 막았어요!", _lessonIndex, _lessonCount, false);
                         await Delay(1.5f, token);
+                        // L28: 막기 말고도 큰 피해를 넣는 용도와 재사용 대기를 알려 준다. 모든 패턴을 끊는다고 말하지 않는다.
+                        Func<Rect> bossArea = _guidedBoss != null && _guidedBoss.GetComponentInChildren<Renderer>() != null
+                            ? () => ScreenBounds(_guidedBoss.GetComponentInChildren<Renderer>().bounds)
+                            : Ui((RectTransform)_chiefButton.transform);
+                        _dialogue.ShowText(_settings.ChiefRallyDamageInstruction, _lessonIndex, _lessonCount, true);
+                        await AwarenessAsync(bossArea, token);
+                        _dialogue.ShowText(string.Format(_settings.ChiefCooldownInstruction, Mathf.RoundToInt(_chiefSkill.CooldownSeconds)),
+                            _lessonIndex, _lessonCount, true);
+                        await AwarenessAsync(Ui((RectTransform)_chiefButton.transform), token);
+                        _time.Release(this);
                     }
                     finally
                     {
@@ -772,12 +784,13 @@ namespace GaeGGUL.Tutorial
         {
             var source = _placedTotem.CurrentCell;
             // Leave a tile between the source and destination so the two spotlights stay distinct.
-            var destination = _grid.GetEmptyCells()
+            var candidates = _grid.GetEmptyCells()
                 .Where(c => c != source && (c.GridPosition - source.GridPosition).sqrMagnitude >= 4)
                 .OrderBy(c => Mathf.Abs(c.GridPosition.y - source.GridPosition.y))
                 .ThenBy(c => (c.GridPosition - source.GridPosition).sqrMagnitude)
                 .ThenBy(c => c.GridPosition.x)
-                .First();
+                .ToList();
+            var destination = PickRotationLessonCell(candidates) ?? candidates.First();
             _dropCell = destination;
             var drag = _placedTotem.GetComponent<DragHandler>();
             _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
@@ -793,13 +806,54 @@ namespace GaeGGUL.Tutorial
         {
             int rotation = _placedTotem.RotationStep;
             var drag = _placedTotem.GetComponent<DragHandler>();
+            var target = _rotationTargetCell;
             _input.CanBeginInteraction = d => ReferenceEquals(d, drag);
             _input.AllowPointerClicks = false;
             _input.CanEndInteraction = (d, p) => drag.IsRotating;
             drag.RotationOnly = true;
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.HoldDrag, World(_placedTotem.CurrentCell));
-            try { await Until(() => _placedTotem.RotationStep != rotation, token); }
+            // 유닛 칸을 두 번째 강조로 두면 손 안내가 그 방향으로 끈다. 효과가 그 유닛에 닿아야 통과한다.
+            if (target != null)
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.HoldDrag, World(_placedTotem.CurrentCell), World(target));
+            else
+                _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.HoldDrag, World(_placedTotem.CurrentCell));
+            try
+            {
+                await Until(() => target != null && target.OccupyingUnit != null
+                    ? _placedTotem.GetAffectedCells().Contains(target) && !drag.IsRotating
+                    : _placedTotem.RotationStep != rotation, token);
+            }
             finally { if (drag != null) drag.RotationOnly = false; }
+            if (target != null && target.OccupyingUnit != null)
+            {
+                LockWorldInput(); Block();
+                _dialogue.ShowText(_settings.TotemRotateSuccessInstruction, _lessonIndex, _lessonCount, false);
+                await Delay(1.5f, token);
+            }
+            _rotationTargetCell = null;
+        }
+
+        /// <summary>
+        /// 회전 수업용 이동 칸: 지금 방향의 효과 범위에는 유닛이 없고, 다른 방향으로 돌리면 유닛(합성 유닛 우선)에 닿는 빈칸.
+        /// 그런 칸이 없으면 null(기존 칸 선택과 아무 방향 회전으로 돌아간다).
+        /// </summary>
+        private GridCell PickRotationLessonCell(System.Collections.Generic.List<GridCell> candidates)
+        {
+            _rotationTargetCell = null;
+            int step = _placedTotem.RotationStep;
+            var unitCells = _grid.GetOccupiedCells().Where(c => c.OccupyingUnit != null)
+                .OrderBy(c => _mergedUnit != null && c.OccupyingUnit == _mergedUnit ? 0 : 1).ToList();
+            foreach (var unitCell in unitCells)
+                foreach (var cell in candidates)
+                {
+                    if (_placedTotem.GetAffectedCellsAt(cell, step).Any(c => c.OccupyingUnit != null)) continue;
+                    for (int s = 0; s < 4; s++)
+                    {
+                        if (s == step || !_placedTotem.GetAffectedCellsAt(cell, s).Contains(unitCell)) continue;
+                        _rotationTargetCell = unitCell;
+                        return cell;
+                    }
+                }
+            return null;
         }
 
         private async UniTask PreviewChoiceAsync(CancellationToken token)

@@ -31,6 +31,12 @@ namespace GaeGGUL.Tutorial
         /// <summary>Gap between the real rotation badge and its tutorial comparison, in canvas pixels.</summary>
         [Min(0f)] public float TotemBadgeComparisonGap = 16f;
         [TextArea] public string TotemReturnInstruction = "확인했으면 가속 토템으로 돌아와 주세요.\n좌우로 밀어 가속 토템을 찾아보세요.";
+        /// <summary>족장 수업: 지진을 막은 뒤 집결의 큰 피해 용도 (TODO L28, 사용자 B안 2026-11-13).</summary>
+        [TextArea] public string ChiefRallyDamageInstruction = "액티브 스킬은 막기만 하는 게 아니에요.\n드론이 모여 쏘는 집결 사격은 보스에게 큰 피해를 줘요.";
+        /// <summary>족장 수업: 재사용 대기. {0}은 실제 쿨타임(초)으로 채운다.</summary>
+        [TextArea] public string ChiefCooldownInstruction = "다시 쓰려면 {0}초를 기다려야 해요.\n위험한 패턴을 막을지, 공격에 쓸지 골라 보세요.";
+        /// <summary>회전 수업: 효과 범위가 유닛에 닿았을 때.</summary>
+        [TextArea] public string TotemRotateSuccessInstruction = "좋아요! 유닛의 공격 속도가 빨라졌어요!";
         [TextArea] public string CombatPracticeInstruction = "토템 이동과 회전을 모두 배웠어요!\n이제 WAVE 3 보스까지 물리쳐 보세요.";
         [Header("≡ menu lesson (before the WAVE 3 battle)")]
         [TextArea] public string MenuOpenInstruction = "전투 중에 볼 수 있는 정보는 이 메뉴에 모여 있어요.\n메뉴 버튼을 눌러 보세요.";

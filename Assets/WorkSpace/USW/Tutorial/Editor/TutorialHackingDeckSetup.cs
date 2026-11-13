@@ -95,7 +95,7 @@ public static class TutorialHackingDeckSetup
             [IngameTutorialStage.LevelUp] = "게이지가 가득 차면 <color=#D66A27>「선택지 보상」</color>을 얻어요.\n유닛을 강화할 보상을 선택해 보세요.",
             [IngameTutorialStage.TotemChoice] = "보스 처치! <color=#D66A27>「가속 토템」</color>을 선택해 보세요.\n효과 범위 안 유닛의 「공격 속도」가 증가해요.",
             [IngameTutorialStage.PlaceTotem] = "「가속 토템」을 강조된 빈칸으로\n<color=#D66A27>끌어서 설치</color>해 보세요.",
-            [IngameTutorialStage.RotateTotem] = "토템을 <color=#D66A27>길게 누른 뒤 옆으로</color> 끌어 보세요.\n회전하여 「공격 속도」 증가 범위의 방향을 바꿀 수 있어요."
+            [IngameTutorialStage.RotateTotem] = "토템을 <color=#D66A27>길게 누른 뒤 유닛 쪽으로</color> 끌어 보세요.\n「공격 속도」 증가 범위가 유닛에 닿게 돌려 봐요."
         };
         foreach (var pair in texts)
         {

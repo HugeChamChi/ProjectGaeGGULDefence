@@ -286,7 +286,7 @@ public static class IngameTutorialSetup
             (IngameTutorialStage.TotemChoice, "보스 처치! 잘했어요!\n전투를 도와줄 <color=#D66A27>토템</color>을 골라 봐요."),
             (IngameTutorialStage.OpenInventory, "새 토템이 도착했어요!\n<color=#D66A27>토템 보관함</color>을 열어 봐요."),
             (IngameTutorialStage.PlaceTotem, "토템을 강조된 빈칸으로\n<color=#D66A27>끌어서 설치</color>해 보세요."),
-            (IngameTutorialStage.RotateTotem, "토템을 <color=#D66A27>길게 누른 뒤 옆으로</color> 끌어 보세요.\n회전하여 효과 범위의 방향을 바꿀 수 있어요.")
+            (IngameTutorialStage.RotateTotem, "토템을 <color=#D66A27>길게 누른 뒤 유닛 쪽으로</color> 끌어 보세요.\n효과 범위가 유닛에 닿게 돌려 봐요.")
         };
         plan.Lessons.Clear();
         foreach (var (stage, instruction) in recipes)
