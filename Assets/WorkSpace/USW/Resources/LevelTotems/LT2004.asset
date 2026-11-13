@@ -42,13 +42,13 @@ MonoBehaviour:
   totemType: 0
   tier: 0
   totemName: "\uC591\uC606 +3"
-  iconAddress: SPR_TD1004
+  iconAddress: SPR_TD1003
   prefabAddress: 
   rotationSpriteAddresses:
-  - SPR_TD1004
-  - SPR_TD1004
-  - SPR_TD1004
-  - SPR_TD1004
+  - SPR_TD1003
+  - SPR_TD1003
+  - SPR_TD1003
+  - SPR_TD1003
   icon: {fileID: 0}
   prefab: {fileID: 0}
   rotationSprites:

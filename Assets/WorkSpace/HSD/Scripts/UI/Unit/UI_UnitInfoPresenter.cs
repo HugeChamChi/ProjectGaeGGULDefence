@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 
 namespace GaeGGUL.UI.Unit
@@ -13,6 +14,7 @@ namespace GaeGGUL.UI.Unit
         private float _attack, _interval, _cooldown;
         private bool _detailed = true;
         private string _firstStat, _secondStat;
+        private int _levelProgressLevel = -1;
 
         /// <summary>기존 정보 패널을 표시 대상으로 사용한다.</summary>
         public UI_UnitInfoPresenter(UI_UnitInfoPanel view) => _view = view;
@@ -61,6 +63,7 @@ namespace GaeGGUL.UI.Unit
             _unit = null; _displayedData = null;
             _hasStats = _wasPlaced = _trackingUnit = false;
             _firstStat = _secondStat = null;
+            _levelProgressLevel = -1;
         }
 
         private string GetAuthoredDescription(UnitData data, Tier tier)
@@ -73,16 +76,26 @@ namespace GaeGGUL.UI.Unit
 
         private void UpdateSkillInfo(string name, string description, string cooldown, DebuffBinding binding = default)
         {
-            string progression = null;
-            if (_unit != null && _unit.UsesTotemLevels)
-            {
-                var next = _unit.LevelBonuses?.NextUnlock;
-                progression = next != null
-                    ? $"<color=#69C875>다음 해금 · Lv.{next.Level}</color>\n{next.Description}"
-                    : "<color=#69C875>최대 레벨 · 모든 효과 해금</color>";
-            }
             _view.UpdateSkillInfo(name, description, cooldown, binding);
-            _view.UpdateLevelProgress(progression);
+            int level = _unit != null && _unit.UsesTotemLevels ? _unit.CurrentLevel : 0;
+            if (_levelProgressLevel == level) return;
+            _levelProgressLevel = level;
+            if (level == 0)
+            {
+                _view.UpdateLevelProgress(null);
+                return;
+            }
+            var progression = new StringBuilder("<line-height=30>");
+            bool first = true;
+            foreach (var milestone in _unit.LevelBonuses.Milestones)
+            {
+                if (!first) progression.Append('\n');
+                first = false;
+                string color = level >= milestone.Level ? "#F2F2F2" : "#85858D";
+                progression.Append($"<color={color}><b>{milestone.Level}</b><pos=44>{milestone.Description}</color>");
+            }
+            progression.Append("</line-height>");
+            _view.UpdateLevelProgress(progression.ToString());
         }
 
         private static string FormatSplit(float baseline, float total, string suffix = "")

@@ -220,7 +220,7 @@ namespace GaeGGUL.UI.Unit
             }
         }
 
-        /// <summary>Fits the next unlock in its own attached footer without overflowing the authored skill box.</summary>
+        /// <summary>Shows compact milestone rows in an attached footer below the skill box.</summary>
         public void UpdateLevelProgress(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -236,7 +236,7 @@ namespace GaeGGUL.UI.Unit
                 _levelProgressPanel.anchorMin = Vector2.zero;
                 _levelProgressPanel.anchorMax = new Vector2(1f, 0f);
                 _levelProgressPanel.pivot = new Vector2(.5f, 1f);
-                _levelProgressPanel.anchoredPosition = new Vector2(0f, -8f);
+                _levelProgressPanel.anchoredPosition = new Vector2(0f, -4f);
                 var background = go.GetComponent<Image>();
                 var source = GetComponent<Image>();
                 if (source != null)
@@ -247,23 +247,28 @@ namespace GaeGGUL.UI.Unit
                     background.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
                 }
                 else background.color = new Color(.12f, .12f, .12f, 1f);
-                var label = new GameObject("NextUnlock", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var label = new GameObject("Milestones", typeof(RectTransform), typeof(TextMeshProUGUI));
                 label.transform.SetParent(go.transform, false);
                 _levelProgressText = label.GetComponent<TextMeshProUGUI>();
                 if (txt_SkillDescription != null) _levelProgressText.font = txt_SkillDescription.font;
-                _levelProgressText.fontSize = UiTypography.BodySize;
+                _levelProgressText.fontSize = UiTypography.BodySize * .75f;
+                _levelProgressText.fontSizeMax = UiTypography.BodySize * .75f;
+                _levelProgressText.fontSizeMin = 18f;
+                _levelProgressText.enableAutoSizing = true;
+                _levelProgressText.textWrappingMode = TextWrappingModes.NoWrap;
+                _levelProgressText.richText = true;
                 _levelProgressText.color = Color.white;
-                _levelProgressText.alignment = TextAlignmentOptions.MidlineLeft;
+                _levelProgressText.alignment = TextAlignmentOptions.TopLeft;
                 _levelProgressText.raycastTarget = false;
                 var rect = _levelProgressText.rectTransform;
                 rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-                rect.offsetMin = new Vector2(24f, 16f); rect.offsetMax = new Vector2(-24f, -16f);
+                rect.offsetMin = new Vector2(20f, 10f); rect.offsetMax = new Vector2(-20f, -10f);
             }
             _levelProgressPanel.gameObject.SetActive(true);
             _levelProgressText.text = text;
-            float width = Mathf.Max(1f, ((RectTransform)transform).rect.width - 48f);
-            float height = _levelProgressText.GetPreferredValues(text, width, float.PositiveInfinity).y + 32f;
-            _levelProgressPanel.sizeDelta = new Vector2(0f, Mathf.Max(100f, height));
+            float width = Mathf.Max(1f, ((RectTransform)transform).rect.width - 40f);
+            float height = _levelProgressText.GetPreferredValues(text, width, float.PositiveInfinity).y + 20f;
+            _levelProgressPanel.sizeDelta = new Vector2(0f, height);
         }
 
         /// <summary>젤탕의 기존 두 칸을 드론 현황과 식량으로 바꾸고 다른 유닛에서 원래 아이콘을 복원한다.</summary>

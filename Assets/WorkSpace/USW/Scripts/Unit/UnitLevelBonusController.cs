@@ -10,6 +10,7 @@ public sealed class UnitLevelBonusController
     private readonly Dictionary<string, long> completed = new();
     public int Level { get; private set; }
     private readonly IEnumerable<UnitLevelBonusDefinition> definitions;
+    public IEnumerable<UnitLevelBonusDefinition> Milestones => definitions;
 
     public UnitLevelBonusDefinition NextUnlock
     {
