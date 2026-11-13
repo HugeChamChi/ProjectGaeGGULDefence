@@ -115,6 +115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TotemRewardUI
   _settings: {fileID: 11400000, guid: 044d3b53fd637674a9e151ee1310fb3b, type: 2}
+  _tutorialSettings: {fileID: 0}
   _totemPool:
   - {fileID: 11400000, guid: 7e5d173d5f1534244a4b9a51d1e10b1e, type: 2}
   - {fileID: 11400000, guid: 716262fab7b56a2419695191945c6008, type: 2}

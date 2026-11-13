@@ -25,10 +25,13 @@ MonoBehaviour:
   _totemRewardPositions: 03000000060000000a000000
   startingFood: 400
   placeCost: 10
+  summonInitialCost: 20
+  summonCostIncrease: 20
   baseCritChance: 0.1
   damageVariance: 0.1
   critDamageVariance: 0.1
   maxAttackSpeedMultiplier: 8
+  baseCritDamageMultiplier: 1.5
   tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
   _defeatDuration: 0.8
   _defeatTimeScale: 0.2
