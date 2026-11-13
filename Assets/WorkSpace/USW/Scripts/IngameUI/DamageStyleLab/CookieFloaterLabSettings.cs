@@ -88,6 +88,14 @@ public class CookieFloaterLabSettings : ScriptableObject
     public DamageStyleLabSettings.Gradient2 CriticalColor = new DamageStyleLabSettings.Gradient2(new Color(0.95f, 0.26f, 0.1f), new Color(1f, 0.62f, 0.24f));
     public DamageStyleLabSettings.Gradient2 BurnColor = new DamageStyleLabSettings.Gradient2(new Color(1f, 0.36f, 0.3f), new Color(0.84f, 0.06f, 0.1f));
 
+    [Header("족장 집결 피해 숫자 (TODO L40, 사용자 결정 2026-11-13 D안 4조각)")]
+    public DamageStyleLabSettings.Gradient2 RallyColor = new DamageStyleLabSettings.Gradient2(new Color(0.62f, 0.95f, 1f), new Color(0.31f, 0.78f, 0.94f));
+    [Tooltip("집결 숫자 크기 배율 (일반 1)")][Min(0.1f)] public float RallyScale = 1.05f;
+    [Tooltip("집결 숫자가 떠올라 사라지기까지 (실제 초). 일반 숫자보다 길게")][Min(0.1f)] public float RallyLifetime = 1.4f;
+    [Tooltip("집결 숫자 등장 때 커졌다 돌아오는 정도")][Min(0f)] public float RallyPopOvershoot = 0.7f;
+    [Tooltip("집결 합계를 나눠 띄우는 조각 수 (고정). 합은 그대로")][Range(1, 8)] public int RallyPieces = 4;
+    [Tooltip("조각 사이 간격 (실제 초)")][Min(0f)] public float RallyPieceInterval = 0.11f;
+
     [Header("범위 표시선")]
     public Color ScatterGuideColor = new Color(1f, 1f, 1f, 0.35f);
     public Color CenterGuideColor = new Color(0.4f, 0.9f, 1f, 0.6f);

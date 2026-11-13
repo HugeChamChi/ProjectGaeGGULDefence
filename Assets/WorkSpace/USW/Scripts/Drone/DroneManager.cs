@@ -493,14 +493,14 @@ public class DroneManager : MonoBehaviour
                                 if (!chiefCommitted) units = boss.CalculateFinalDamageUnits(baseDamage);
                             }
                             decimal previousHp = boss.CurrentHp;
-                            boss.ApplyRecordedDamage(units, source: source);
+                            boss.ApplyRecordedDamage(units, kind: BossDamageKind.Rally, source: source);
                             NotifyRallyImpact(boss, previousHp);
                         }
                     }
                     else if (doubleShot.Count == 0)
                     {
                         decimal previousHp = boss.CurrentHp;
-                        boss.TakeDamage(baseDamage, source: source);
+                        boss.TakeDamage(baseDamage, kind: BossDamageKind.Rally, source: source);
                         NotifyRallyImpact(boss, previousHp);
                     }
                     else
@@ -508,7 +508,7 @@ public class DroneManager : MonoBehaviour
                         long finalUnits = boss.CalculateFinalDamageUnits(baseDamage);
                         long shotUnits = (long)System.Math.Round(finalUnits * (decimal)doubleShot.DamageRatio, System.MidpointRounding.AwayFromZero);
                         decimal previousHp = boss.CurrentHp;
-                        boss.ApplyRecordedDamage(shotUnits, source: source);
+                        boss.ApplyRecordedDamage(shotUnits, kind: BossDamageKind.Rally, source: source);
                         NotifyRallyImpact(boss, previousHp);
                         for (int shot = 1; shot < doubleShot.Count; shot++)
                         {
@@ -517,7 +517,7 @@ public class DroneManager : MonoBehaviour
                             if (boss == null || boss.IsDead) break;
                             if (beam != null) beam.Pulse();
                             previousHp = boss.CurrentHp;
-                            boss.ApplyRecordedDamage(shotUnits, source: source);
+                            boss.ApplyRecordedDamage(shotUnits, kind: BossDamageKind.Rally, source: source);
                             NotifyRallyImpact(boss, previousHp);
                         }
                     }

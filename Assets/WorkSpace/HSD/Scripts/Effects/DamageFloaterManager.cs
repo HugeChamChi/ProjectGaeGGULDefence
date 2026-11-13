@@ -73,6 +73,16 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
     [SerializeField] private Color _burnColor = new Color(1f, 0.2f, 0.15f, 1f);
     [SerializeField] private float _criticalScale = 1.25f;
     [SerializeField] private float _burnScale = 0.85f;
+    [Header("족장 집결 숫자 (TODO L40, 사용자 결정 2026-11-13 D안 4조각)")]
+    [SerializeField] private Color _rallyColor = new Color(0.435f, 0.89f, 1f, 1f);
+    [SerializeField] private float _rallyScale = 1.05f;
+    [Tooltip("집결 숫자가 떠올라 사라지기까지 (실제 초). 일반 숫자보다 길게.")]
+    [SerializeField, Min(0.1f)] private float _rallyDuration = 1.4f;
+    [SerializeField, Min(0f)] private float _rallyPopOvershoot = 0.7f;
+    [Tooltip("집결 합계를 나눠 띄우는 조각 수(고정). 합은 그대로.")]
+    [SerializeField, Range(1, 8)] private int _rallyPieces = 4;
+    [Tooltip("조각 사이 간격 (실제 초).")]
+    [SerializeField, Min(0f)] private float _rallyPieceInterval = 0.11f;
 
     private DamageReceiptFeed _receipt;
     
@@ -193,6 +203,12 @@ public class DamageFloaterManager : MonoBehaviour, ILoadableAsset
             BurnColor = _burnColor,
             CriticalScale = _criticalScale,
             BurnScale = _burnScale,
+            RallyColor = _rallyColor,
+            RallyScale = _rallyScale,
+            RallyDuration = _rallyDuration,
+            RallyPopOvershoot = _rallyPopOvershoot,
+            RallyPieces = _rallyPieces,
+            RallyPieceInterval = _rallyPieceInterval,
         }, rect);
         if (_subscribedBoss != null) _receipt.SetAnchor(_subscribedBoss.transform);
         return _receipt;

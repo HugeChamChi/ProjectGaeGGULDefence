@@ -35,12 +35,22 @@ public sealed class DamageReceiptFeed : MonoBehaviour
         public Color BurnColor;
         public float CriticalScale;
         public float BurnScale;
+        /// <summary>족장 집결 숫자 색 (TODO L40).</summary>
+        public Color RallyColor;
+        public float RallyScale;
+        /// <summary>집결 숫자가 떠올라 사라지기까지 (실제 초).</summary>
+        public float RallyDuration;
+        public float RallyPopOvershoot;
+        /// <summary>집결 합계를 나눠 띄우는 고정 조각 수. 합은 그대로.</summary>
+        public int RallyPieces;
+        /// <summary>조각 사이 간격 (실제 초).</summary>
+        public float RallyPieceInterval;
     }
 
     private const float PopSeconds = 0.12f;
     private const float PopOvershoot = 0.3f;
     private const float FadeStart = 0.45f; // 수명 비율 — 이후부터 흐려진다
-    private static readonly BossDamageKind[] Kinds = { BossDamageKind.Normal, BossDamageKind.Critical, BossDamageKind.Burn };
+    private static readonly BossDamageKind[] Kinds = { BossDamageKind.Normal, BossDamageKind.Critical, BossDamageKind.Burn, BossDamageKind.Rally };
 
     private sealed class Popup
     {
@@ -51,6 +61,8 @@ public sealed class DamageReceiptFeed : MonoBehaviour
         public float BornAt;
         public float BaseScale;
         public Vector2 Start;
+        public float Duration;
+        public float Overshoot;
     }
 
     private Popup[] _popups;
@@ -60,7 +72,10 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     private Transform _anchorTarget;
     private Renderer _anchorRenderer;       // 스프라이트 보스는 SpriteRenderer, Spine 보스는 MeshRenderer
     private float _lineHeight;             // 컨테이너 로컬 단위의 글자 높이
-    private readonly decimal[] _pending = new decimal[3];
+    private readonly decimal[] _pending = new decimal[4];
+    private readonly System.Collections.Generic.List<(float At, decimal Amount, int Row)> _rallyQueue = new();
+    private readonly System.Collections.Generic.List<decimal> _rallyPieces = new();
+    private readonly System.Random _presentationRandom = new System.Random();
     private float _nextFlushAt;
 
     /// <summary>템플릿(TMP를 가진 데미지 텍스트 프리팹)을 복제해 숫자 오브젝트를 미리 만든다.</summary>
@@ -118,6 +133,7 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     public void Clear()
     {
         for (int i = 0; i < _pending.Length; i++) _pending[i] = 0;
+        _rallyQueue.Clear();
         if (_popups != null) foreach (var p in _popups) Deactivate(p);
     }
 
@@ -126,7 +142,7 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     {
         if (_popups == null || amount <= 0) return;
         int k = Mathf.Clamp((int)kind, 0, _pending.Length - 1);
-        bool idle = _pending[0] == 0 && _pending[1] == 0 && _pending[2] == 0;
+        bool idle = IsIdle;
         if (idle && Time.unscaledTime >= _nextFlushAt)
             _nextFlushAt = Time.unscaledTime + _settings.FlushInterval; // 조용하다가 첫 피해가 오면 주기를 새로 시작
         _pending[k] += amount;
@@ -137,22 +153,48 @@ public sealed class DamageReceiptFeed : MonoBehaviour
         if (_popups == null) return;
         float now = Time.unscaledTime;
         if (now >= _nextFlushAt) Flush(now);
+        SpawnQueuedRally(now);
         Animate(now);
     }
 
     private void Flush(float now)
     {
         _nextFlushAt = now + _settings.FlushInterval;
-        if (_pending[0] == 0 && _pending[1] == 0 && _pending[2] == 0) return;
+        if (IsIdle) return;
         Vector2 basePos = ComputeBase();
         int row = 0;
         foreach (var kind in Kinds)
         {
             int k = (int)kind;
             if (_pending[k] <= 0) continue;
-            Spawn(kind, _pending[k], basePos + new Vector2(0f, -row * _lineHeight * _settings.LineHeightFactor), now);
+            if (kind == BossDamageKind.Rally)
+            {
+                // 집결 합계를 고정 개수 조각으로 나눠 간격을 두고 띄운다 (표시 전용, 합 = 합계).
+                RallyDamageSplit.Split(_pending[k], _settings.RallyPieces, _presentationRandom, _rallyPieces);
+                for (int i = 0; i < _rallyPieces.Count; i++)
+                    _rallyQueue.Add((now + i * Mathf.Max(0f, _settings.RallyPieceInterval), _rallyPieces[i], row + i));
+            }
+            else Spawn(kind, _pending[k], basePos + new Vector2(0f, -row * _lineHeight * _settings.LineHeightFactor), now);
             _pending[k] = 0;
             row++;
+        }
+    }
+
+    private bool IsIdle
+    {
+        get { for (int i = 0; i < _pending.Length; i++) if (_pending[i] != 0) return false; return true; }
+    }
+
+    private void SpawnQueuedRally(float now)
+    {
+        if (_rallyQueue.Count == 0) return;
+        Vector2 basePos = ComputeBase();
+        for (int i = 0; i < _rallyQueue.Count; i++)
+        {
+            if (_rallyQueue[i].At > now) continue;
+            var piece = _rallyQueue[i];
+            _rallyQueue.RemoveAt(i--);
+            Spawn(BossDamageKind.Rally, piece.Amount, basePos + new Vector2(0f, -piece.Row * _lineHeight * _settings.LineHeightFactor * 0.9f), now);
         }
     }
 
@@ -170,8 +212,11 @@ public sealed class DamageReceiptFeed : MonoBehaviour
         target.Kind = kind;
         target.BornAt = now;
         target.Start = start;
+        bool rally = kind == BossDamageKind.Rally;
         target.BaseScale = TextScale * (kind == BossDamageKind.Critical ? _settings.CriticalScale
-            : kind == BossDamageKind.Burn ? _settings.BurnScale : 1f);
+            : kind == BossDamageKind.Burn ? _settings.BurnScale : rally ? _settings.RallyScale : 1f);
+        target.Duration = rally ? _settings.RallyDuration : _settings.Duration;
+        target.Overshoot = rally ? _settings.RallyPopOvershoot : PopOvershoot;
         if (target.Text != null)
         {
             target.Text.fontStyle = kind == BossDamageKind.Critical ? FontStyles.Bold : FontStyles.Normal;
@@ -186,11 +231,11 @@ public sealed class DamageReceiptFeed : MonoBehaviour
 
     private void Animate(float now)
     {
-        float duration = Mathf.Max(_settings.Duration, 0.05f);
         float rise = _lineHeight * _settings.RiseLines;
         foreach (var p in _popups)
         {
             if (!p.Active) continue;
+            float duration = Mathf.Max(p.Duration, 0.05f);
             float age = now - p.BornAt;
             float t = age / duration;
             if (t >= 1f) { Deactivate(p); continue; }
@@ -201,8 +246,8 @@ public sealed class DamageReceiptFeed : MonoBehaviour
 
             // 등장 팝: 0 → 1.3 → 1
             float pop = age < PopSeconds
-                ? Mathf.Lerp(0f, 1f + PopOvershoot, age / PopSeconds)
-                : 1f + PopOvershoot * Mathf.Max(0f, 1f - (age - PopSeconds) / PopSeconds);
+                ? Mathf.Lerp(0f, 1f + p.Overshoot, age / PopSeconds)
+                : 1f + p.Overshoot * Mathf.Max(0f, 1f - (age - PopSeconds) / PopSeconds);
             float scale = p.BaseScale * pop;
             p.Rect.localScale = new Vector3(scale, scale, 1f);
 
@@ -226,6 +271,7 @@ public sealed class DamageReceiptFeed : MonoBehaviour
     private Color ColorOf(BossDamageKind kind) =>
         kind == BossDamageKind.Critical ? _settings.CriticalColor
         : kind == BossDamageKind.Burn ? _settings.BurnColor
+        : kind == BossDamageKind.Rally ? _settings.RallyColor
         : _settings.NormalColor;
 
     // 보스 스프라이트 오른쪽 끝 옆(화면 픽셀 기준). 화면 공간·월드 공간 캔버스 모두 화면 좌표를 거쳐 컨테이너 로컬로 바꾼다.

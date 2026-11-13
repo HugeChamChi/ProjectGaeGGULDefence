@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,14 +26,16 @@ public sealed class CookieFloaterVariantView
         public Vector2 Direction;
         public float MaxHalfWidth;
         public Vector2 HalfSize;
+        public float Lifetime;
+        public float PopOvershoot;
     }
 
-    private static readonly BossDamageKind[] Kinds = { BossDamageKind.Normal, BossDamageKind.Critical, BossDamageKind.Burn };
+    private static readonly BossDamageKind[] Kinds = { BossDamageKind.Normal, BossDamageKind.Critical, BossDamageKind.Burn, BossDamageKind.Rally };
 
     private readonly CookieFloaterLabSettings _s;
     private readonly RectTransform _root;
     private readonly Popup[] _popups;
-    private readonly decimal[] _pending = new decimal[3];
+    private readonly decimal[] _pending = new decimal[4];
     private readonly Image[] _scatterGuide;
     private readonly Image[] _centerGuide;
     private SpriteRenderer _anchor;
@@ -41,6 +44,8 @@ public sealed class CookieFloaterVariantView
     private int _seed;
     private float _nextFlushAt;
     private bool _flushArmed;
+    private readonly List<(float At, decimal Amount, Vector3? Hit)> _rallyQueue = new();
+    private readonly List<decimal> _rallyPieces = new();
 
     /// <summary>현재 후보 번호 (Settings.Variants 기준).</summary>
     public int VariantIndex { get; private set; }
@@ -116,6 +121,20 @@ public sealed class CookieFloaterVariantView
     {
         var v = Variant;
         if (amount <= 0 || v == null) return;
+        if (kind == BossDamageKind.Rally)
+        {
+            // 집결 합계 하나를 고정 개수 조각으로 나눠 간격을 두고 띄운다 (표시 전용, 합 = 합계).
+            RallyDamageSplit.Split(amount, _s.RallyPieces, _rng, _rallyPieces);
+            for (int i = 0; i < _rallyPieces.Count; i++)
+                _rallyQueue.Add((now + i * Mathf.Max(0f, _s.RallyPieceInterval), _rallyPieces[i], worldHit));
+            HitCount++;
+            return;
+        }
+        SpawnHit(v, kind, amount, now, worldHit);
+    }
+
+    private void SpawnHit(CookieFloaterLabSettings.Variant v, BossDamageKind kind, decimal amount, float now, Vector3? worldHit)
+    {
         Rect screen = ScatterArea(v);
         Vector2 center = screen.center;
         if (worldHit.HasValue && Camera.main != null)
@@ -126,7 +145,7 @@ public sealed class CookieFloaterVariantView
         Rect area = Rect.MinMaxRect(Mathf.Max(safe.xMin + pad, center.x - radius.x), center.y - radius.y,
             Mathf.Min(safe.xMax - pad, center.x + radius.x), center.y + radius.y);
         Spawn(v, area, kind, amount, now, true);
-        HitCount++;
+        if (kind != BossDamageKind.Rally) HitCount++;
     }
 
     /// <summary>떠 있는 숫자·쌓인 피해·기록을 지우고 무작위 순서를 처음으로 되돌린다.</summary>
@@ -134,6 +153,7 @@ public sealed class CookieFloaterVariantView
     {
         for (int i = 0; i < _pending.Length; i++) _pending[i] = 0;
         _flushArmed = false;
+        _rallyQueue.Clear();
         foreach (var p in _popups) { p.Active = false; p.Rect.gameObject.SetActive(false); }
         _rng = new System.Random(_seed);
         PeakActive = 0;
@@ -152,6 +172,13 @@ public sealed class CookieFloaterVariantView
         Rect area = ScatterArea(v);
         UpdateGuides(v, area);
         if (_flushArmed && now >= _nextFlushAt) Flush(v, area, now);
+        for (int i = 0; i < _rallyQueue.Count; i++)
+        {
+            if (_rallyQueue[i].At > now) continue;
+            var piece = _rallyQueue[i];
+            _rallyQueue.RemoveAt(i--);
+            SpawnHit(v, BossDamageKind.Rally, piece.Amount, now, piece.Hit);
+        }
         Animate(v, area, now);
     }
 
@@ -176,7 +203,7 @@ public sealed class CookieFloaterVariantView
         for (int i = 0; i < limit; i++)
         {
             var p = _popups[i];
-            if (p.Active && now - p.BornAt >= v.Lifetime) { p.Active = false; ActiveCount = Mathf.Max(0, ActiveCount - 1); }
+            if (p.Active && now - p.BornAt >= p.Lifetime) { p.Active = false; ActiveCount = Mathf.Max(0, ActiveCount - 1); }
             if (!p.Active) { target = p; break; }
             if (target == null || p.BornAt < target.BornAt) target = p;
         }
@@ -189,12 +216,15 @@ public sealed class CookieFloaterVariantView
         Rect zone = CenterZone(v, area);
         Vector2 start = center ? RandomIn(zone) : v.UseCenterZone ? RandomOutside(area, zone) : RandomIn(area);
 
-        float kindScale = kind == BossDamageKind.Critical ? v.CriticalScale : kind == BossDamageKind.Burn ? v.BurnScale : 1f;
+        bool rally = kind == BossDamageKind.Rally;
+        float kindScale = kind == BossDamageKind.Critical ? v.CriticalScale : kind == BossDamageKind.Burn ? v.BurnScale : rally ? _s.RallyScale : 1f;
         float zoneScale = !v.UseCenterZone ? 1f : center ? v.CenterScale : v.OuterScale;
 
         target.Text.fontSize = v.FontSize;
         target.Text.text = DamageStyleLabUtil.Short(amount);
         target.BaseScale = kindScale * zoneScale;
+        target.Lifetime = rally ? _s.RallyLifetime : v.Lifetime;
+        target.PopOvershoot = rally ? _s.RallyPopOvershoot : v.PopOvershoot;
         target.Direction = Direction(v, start.x - area.center.x);
         if (_s.FullScreenWidth || perHit)
         {
@@ -203,9 +233,9 @@ public sealed class CookieFloaterVariantView
             target.Text.ForceMeshUpdate();
             var bounds = target.Text.textBounds;
             float halfWidth = Mathf.Max(Mathf.Abs(bounds.min.x), Mathf.Abs(bounds.max.x))
-                * target.BaseScale * (1f + Mathf.Max(0f, v.PopOvershoot));
+                * target.BaseScale * (1f + Mathf.Max(0f, target.PopOvershoot));
             target.MaxHalfWidth = halfWidth;
-            target.HalfSize = bounds.extents * target.BaseScale * (1f + Mathf.Max(0f, v.PopOvershoot));
+            target.HalfSize = bounds.extents * target.BaseScale * (1f + Mathf.Max(0f, target.PopOvershoot));
             start = KeepInside(start, target.Direction, v.Rise, halfWidth, area);
         }
 
@@ -217,7 +247,7 @@ public sealed class CookieFloaterVariantView
         target.Start = start;
         target.BaseAlpha = center ? v.CenterAlpha : v.Alpha;
         target.Text.colorGradient = (kind == BossDamageKind.Critical ? _s.CriticalColor
-            : kind == BossDamageKind.Burn ? _s.BurnColor : _s.NormalColor).ToVertexGradient();
+            : kind == BossDamageKind.Burn ? _s.BurnColor : rally ? _s.RallyColor : _s.NormalColor).ToVertexGradient();
         target.Rect.anchoredPosition = start;
         target.Rect.localScale = Vector3.zero;
         target.Group.alpha = target.BaseAlpha;
@@ -241,7 +271,7 @@ public sealed class CookieFloaterVariantView
             float gap = float.PositiveInfinity;
             foreach (var other in _popups)
             {
-                if (!other.Active || other == target || now - other.BornAt >= v.Lifetime) continue;
+                if (!other.Active || other == target || now - other.BornAt >= other.Lifetime) continue;
                 Vector2 delta = point - other.Rect.anchoredPosition;
                 gap = Mathf.Min(gap, Mathf.Max(Mathf.Abs(delta.x) - target.HalfSize.x - other.HalfSize.x,
                     Mathf.Abs(delta.y) - target.HalfSize.y - other.HalfSize.y));
@@ -264,20 +294,19 @@ public sealed class CookieFloaterVariantView
 
     private void Animate(CookieFloaterLabSettings.Variant v, Rect area, float now)
     {
-        float life = Mathf.Max(0.05f, v.Lifetime);
         int active = 0;
         foreach (var p in _popups)
         {
             if (!p.Active) continue;
             float age = now - p.BornAt;
-            float t = age / life;
+            float t = age / Mathf.Max(0.05f, p.Lifetime);
             if (t >= 1f) { p.Active = false; p.Rect.gameObject.SetActive(false); continue; }
             active++;
             float eased = 1f - Mathf.Pow(1f - t, Mathf.Max(1f, v.RiseEasePower));
             Vector2 position = p.Start + p.Direction * (v.Rise * eased);
             if (_s.FullScreenWidth) position = KeepInside(position, Vector2.zero, 0f, p.MaxHalfWidth, area);
             p.Rect.anchoredPosition = position;
-            float s = p.BaseScale * DamageStyleLabUtil.Pop(age, v.PopSeconds, v.PopOvershoot);
+            float s = p.BaseScale * DamageStyleLabUtil.Pop(age, v.PopSeconds, p.PopOvershoot);
             p.Rect.localScale = new Vector3(s, s, 1f);
             float fade = t < v.FadeStart ? 1f : 1f - (t - v.FadeStart) / Mathf.Max(0.0001f, 1f - v.FadeStart);
             p.Group.alpha = p.BaseAlpha * fade;
