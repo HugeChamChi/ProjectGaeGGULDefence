@@ -265,13 +265,14 @@ public class WaveManager : MonoBehaviour
             _fieldPause.HoldAttacks(this);
             try
             {
+                // 2026-11-14 user decision: a kill resets the countdown to the start time (60 s) instead of adding
+                // the role bonus, and the timer absorption and clear notice presentation are no longer played.
                 float before = _timerManager != null ? _timerManager.RemainingTime : 0f;
-                if (gameConfig != null && _clearPresentation != null && _clearPresentation.isActiveAndEnabled)
-                    await _clearPresentation.PlayBossClearAsync(bonusSeconds, bossPosition, gameConfig, token);
-                else if (gameConfig != null) _timerManager?.AddBossKillTime(bonusSeconds);
+                float resetSeconds = _balanceSnapshot?.StartSeconds ?? gameConfig.countdownSeconds;
+                _timerManager?.ResetBossKillTime(resetSeconds);
                 if (EndlessRunLog.Enabled && _run.IsEndless && OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay))
                     Debug.Log($"[EndlessBalance] run={_log.RunLabel} service_run={runId} round={round} role={role} " +
-                        $"bonus={bonusSeconds} timer_before={before:R} timer_after={_timerManager?.RemainingTime:R}");
+                        $"reset={resetSeconds} timer_before={before:R} timer_after={_timerManager?.RemainingTime:R}");
             }
             finally { _fieldPause.Exit(this, _run.IsActive && !_gameManager.IsFinished); }
             if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;

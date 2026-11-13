@@ -47,6 +47,13 @@ public sealed class CombatCountdown
         if (double.IsInfinity(Remaining + seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
         Remaining += seconds;
     }
+    /// <summary>남은 시간을 정한 값으로 맞춘다 (보스 처치 초기화). 누적 전투 시간은 그대로 둔다.</summary>
+    public void SetRemaining(double seconds)
+    {
+        Validate(seconds);
+        if (seconds <= 0) throw new ArgumentOutOfRangeException(nameof(seconds));
+        Remaining = seconds;
+    }
     /// <summary>전투 경과를 진행하지 않고 실제 잔고만 지불한다. 확정 콜백 뒤 시간초과를 한 번 알린다.</summary>
     public double Spend(double seconds, Action<double> onSpent = null)
     {

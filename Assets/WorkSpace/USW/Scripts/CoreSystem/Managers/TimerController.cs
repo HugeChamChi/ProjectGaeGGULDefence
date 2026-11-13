@@ -249,6 +249,19 @@ public class TimerController : MonoBehaviour
     public void AddBossKillTime(float seconds)
         => AddTimeCore(seconds, TimeAddSource.Default, null, null, null, true);
 
+    /// <summary>
+    /// 무한모드 보스 처치: 남은 시간을 더하지 않고 <paramref name="seconds"/>로 맞춘 뒤 제물을 정산한다 (2026-11-14 사용자 결정, 60초 초기화).
+    /// 남은 시간이 더 많아도 줄인다. 시간 추가 이벤트를 내지 않으므로 보스 처치 합체 연출과 정산음은 나오지 않는다.
+    /// </summary>
+    public void ResetBossKillTime(float seconds)
+    {
+        if (TimeVaultActive || _game?.IsFinished == true || seconds <= 0f) return;
+        _countdown.SetRemaining(seconds);
+        OnTimerTick?.Invoke(RemainingTime);
+        Debug.Log($"[TimerController] 보스 처치 초기화 → 남은 시간: {RemainingTime:F1}초");
+        PayBossKillSacrifice();
+    }
+
     /// <summary>디시그망 실제 회복을 원인 유닛과 원래 보스에 귀속한다. 0초 회복은 글리치가 아니다.</summary>
     public void AddTimeFromDisigman(float seconds, Disigman actor, BossBase target)
     {
@@ -270,7 +283,12 @@ public class TimerController : MonoBehaviour
         OnTimeAdded?.Invoke(seconds);
         OnTimeAddedFrom?.Invoke(seconds, source, origin);
         // Commit +30 first, then pay -10 as a distinct source/display event.
-        if (bossKill && (_overdrive?.SacrificeCostSeconds ?? 0f) > 0f)
+        if (bossKill) PayBossKillSacrifice();
+    }
+
+    private void PayBossKillSacrifice()
+    {
+        if ((_overdrive?.SacrificeCostSeconds ?? 0f) > 0f)
         {
             float cost = _overdrive.SacrificeCostSeconds;
             SpendCountdown(cost, paid =>

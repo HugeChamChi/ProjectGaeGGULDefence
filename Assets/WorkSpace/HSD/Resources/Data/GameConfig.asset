@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridColumns: 6
   gridRows: 4
-  countdownSeconds: 150
+  countdownSeconds: 60
   _bossKillBonusSeconds: 30
   _breatherBossKillBonusSeconds: 15
   _hardBossKillBonusSeconds: 30
