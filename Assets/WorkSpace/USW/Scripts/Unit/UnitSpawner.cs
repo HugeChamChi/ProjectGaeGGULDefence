@@ -374,6 +374,28 @@ public class UnitSpawner : MonoBehaviour
         OnAnyUnitSold?.Invoke();
     }
 
+    /// <summary>
+    /// Boss penalty: replaces the unit with the same unit one tier lower in its cell, or removes a Normal unit.
+    /// No sale reward, sale damage or sale event. Returns the replacement, or null when the unit was removed.
+    /// </summary>
+    public UnitBase DemoteUnit(UnitBase unit)
+    {
+        if (unit == null) return null;
+        var cell = FindCellByUnit(unit);
+        if (cell == null) return null;
+        unit.RestoreOriginalTier();
+        var data = unit.unitData;
+        Tier tier = unit.currentTier;
+        cell.RemoveUnit();
+        unit.OnRemoved();
+        Destroy(unit.gameObject);
+        if (tier <= Tier.Normal || data == null) return null;
+        var lower = _unitFactory.CreateUnitFromData(data, (Tier)((int)tier - 1));
+        if (lower == null) return null;
+        PlaceUnitWithEffect(lower, cell, cell.transform.position);
+        return lower;
+    }
+
     private GridCell FindCellByUnit(UnitBase unit)
     {
         foreach (var cell in _gridManager.AllCells())

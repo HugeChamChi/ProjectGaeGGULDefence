@@ -15,6 +15,7 @@ public class BossPatternController : MonoBehaviour
     [Inject] private GridManager _gridManager;
     [Inject] private GameManager _gameManager;
     [Inject] private FieldPauseVisuals _fieldPause;
+    [Inject] private UnitSpawner _unitSpawner;
     private BattleCameraShake _shake;
 
     private sealed class PatternState
@@ -136,6 +137,7 @@ public class BossPatternController : MonoBehaviour
             Runtime = boss as IBossPatternRuntime
         };
         entry.SpineAnimator = boss.GetComponent<BossSpineAnimator>();
+        (boss as IBossUnitSpawnerUser)?.ConfigureUnitSpawner(_unitSpawner);
         entry.Runtime?.ConfigurePatternContext(_gridManager);
         // BossPatterns 차트 값이 에셋과 다르면 차트 숫자를 담은 사본을 등록한다. 에셋은 바꾸지 않는다.
         patterns = GGD.BackendCharts.BossPatterns.Runtime(patterns);

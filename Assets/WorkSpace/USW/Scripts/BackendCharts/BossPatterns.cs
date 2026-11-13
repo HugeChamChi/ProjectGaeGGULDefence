@@ -57,6 +57,16 @@ namespace GGD.BackendCharts
             { "MemorySafeCount", new BalanceRule(1f, 24f, wholeNumber: true) },
             { "LockTime", new BalanceRule(0.1f, 60f) },
             { "BeamWidthCells", new BalanceRule(0.1f, 6f) },
+            // DeertreeBossSettings
+            { "RootCooldown", new BalanceRule(1f, 600f) },           // seconds between root casts
+            { "CurseThreshold", new BalanceRule(0.01f, 0.99f) },    // HP fraction of the one binding curse
+            { "CurseDuration", new BalanceRule(0.1f, 60f) },        // seconds to tap a curse binding away before the unit loses a tier
+            { "CurseTaps", new BalanceRule(1f, 20f, wholeNumber: true) },
+            { "CurseTargets", new BalanceRule(1f, 24f, wholeNumber: true) },
+            { "FruitThreshold", new BalanceRule(0.01f, 0.99f) },    // HP fraction of the one fruit cast
+            { "FruitDuration", new BalanceRule(0.1f, 60f) },        // seconds the apples can be tapped
+            { "AppleTaps", new BalanceRule(1f, 20f, wholeNumber: true) },
+            { "HealPerApple", new BalanceRule(0f, 1f) },            // max HP fraction healed per apple left
         };
 
         /// <summary>Effect values of each pattern kind. Interval and HpThreshold are added from the trigger, not listed here.</summary>
@@ -87,6 +97,10 @@ namespace GGD.BackendCharts
             { PatternLabMechanic.OccupyRelay, new[] { "Windup", "StunDuration" } },
             { PatternLabMechanic.RedLight, new[] { "Windup", "StunDuration", "ActiveDuration" } },
         };
+
+        /// <summary>Fight numbers of a Deertree settings asset. Windups and Spine pose timings stay in the asset.</summary>
+        private static readonly string[] DeertreeValues =
+            { "RootCooldown", "CurseThreshold", "CurseDuration", "CurseTaps", "CurseTargets", "FruitThreshold", "FruitDuration", "AppleTaps", "HealPerApple" };
 
         private static readonly Dictionary<string, BalanceRule> RuleTable = BuildRules();
         private static readonly Dictionary<UnityEngine.Object, Copy> Copies = new Dictionary<UnityEngine.Object, Copy>();
@@ -145,6 +159,8 @@ namespace GGD.BackendCharts
                     return MechanicValues.TryGetValue(mechanic.Mechanic, out var values) ? values : Array.Empty<string>();
                 case PlacementBossPhaseData _:
                     return new[] { Thresholds };
+                case DeertreeBossSettings _:
+                    return DeertreeValues;
                 default:
                     return Array.Empty<string>();
             }
@@ -170,6 +186,9 @@ namespace GGD.BackendCharts
             for (int i = 0; i < patterns.Length; i++) result[i] = patterns[i] == null ? null : (BossPatternData)Current(patterns[i]);
             return result;
         }
+
+        /// <summary>Same as <see cref="Runtime"/> for a boss-owned settings asset that is not a pattern list entry.</summary>
+        public static T RuntimeCopy<T>(T asset) where T : UnityEngine.Object => asset == null ? null : (T)Current(asset);
 
         private static UnityEngine.Object Current(UnityEngine.Object source)
         {

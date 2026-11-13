@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14c8e5b96891bd94788c9c187f9f76eb, type: 3}
+  m_Name: DeertreePatterns
+  m_EditorClassIdentifier: Assembly-CSharp::DeertreeBossSettings
+  Boss: {fileID: 11400000, guid: 58c66ab5ac53150499f94dbff0cbdfa9, type: 2}
+  Root: {fileID: 11400000, guid: 1270b843eb9fdc443ac486f8452452a5, type: 2}
+  Branch: {fileID: 11400000, guid: d5c0d2836b0a1ce41bf8b5d035f6607c, type: 2}
+  Curse: {fileID: 11400000, guid: 5549675389e8cb843b3b6bf46d0cb324, type: 2}
+  RootCooldown: 5
+  FruitThreshold: 0.1
+  CurseThreshold: 0.5
+  FruitDuration: 5
+  CurseDuration: 5
+  HealPerApple: 0.1
+  AppleTaps: 3
+  CurseTaps: 5
+  CurseTargets: 3
+  RootWindup: 1.2
+  FruitWindup: 1.2
+  CurseWindup: 1.2
+  BranchReturnDuration: 0.6
+  BranchGrowDuration: 2.5
+  BranchHoldAt: 2.5
+  BranchReturnAt: 4
+  RootHoldAt: 1.2
+  VineHoldAt: 1.2
+  FruitBossHoldAt: 1.5
+  FruitBossLoopEnd: 1.9
+  FruitBossLoopPeriod: 1.8
+  FruitBossReturnBlend: 0.16
+  FruitBossReturnAt: 3.2
+  CurseBossHoldAt: 1.2
+  CurseBossLoopEnd: 1.6
+  CurseBossLoopPeriod: 1.8
+  CurseBossReturnBlend: 0.16
+  CurseBossReturnAt: 2.6
+  CurseRecoveryDuration: 0.4
+  AppleShader: {fileID: 4800000, guid: c3173d81570b17740b97e7669d455a52, type: 3}
+  AppleHighlight: {r: 1, g: 0.96, b: 0.86, a: 1}
+  AppleGlow: 0.18
+  BindingGlow: 0.22
+  AppleScale: 1.35
+  BossCenter: {x: 0, y: 0}
+  BossWidth: 9
+  BranchCenter: {x: 0, y: -2.2}
+  BranchWidth: 9
+  RootWidthPerCell: 0.8
+  VineWidthPerCell: 0.82
+  AppleTouchPixels: 80
+  SellFont: {fileID: 11400000, guid: 3e2c3a3748586f742bb390eb2d0986dc, type: 2}
+  SellLabel: "\uD310\uB9E4 0"
+  SellBackground: {r: 0.1, g: 0.16, b: 0.15, a: 0.92}

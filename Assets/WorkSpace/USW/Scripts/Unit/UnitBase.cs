@@ -145,6 +145,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// <summary>배치는 유지하고 봉인 칸의 작동만 중단한다.</summary>
     public bool IsCellSealed => currentCell != null && currentCell.Model.IsSealed;
     public bool IsStunned => _stun != null && _stun.IsStunned;
+    /// <summary>A boss binding on this unit consumes taps, so a tap does not open unit information.</summary>
+    public bool TapCaptured { get; set; }
     /// <summary>향후 유닛별 스턴 면역 확장점.</summary>
     public virtual bool StunImmune => false;
     /// <summary>현재 유닛에게 스턴을 적용한다. 토템은 UnitBase가 아니므로 대상이 아니다.</summary>

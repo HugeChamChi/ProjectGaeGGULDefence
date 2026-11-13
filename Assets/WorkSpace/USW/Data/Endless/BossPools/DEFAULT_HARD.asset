@@ -21,3 +21,6 @@ MonoBehaviour:
   - _bossKey: LizardBossData
     _boss: {fileID: 11400000, guid: 26f320298edc16b43ab3207e4d1b6d6f, type: 2}
     _enabled: 1
+  - _bossKey: DeertreeBossData
+    _boss: {fileID: 11400000, guid: 42495cae685363b4585a5ea7c8753c23, type: 2}
+    _enabled: 1

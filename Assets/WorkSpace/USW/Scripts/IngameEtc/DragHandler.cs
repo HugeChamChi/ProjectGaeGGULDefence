@@ -202,6 +202,7 @@ public class DragHandler : MonoBehaviour, IDraggable
 
     public void OnPointerClick()
     {
+        if (_unit != null && _unit.TapCaptured) return;
         if (_unit != null)
         {
             OnUnitClickedEvent?.Invoke(_unit);

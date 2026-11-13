@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EndlessModeData
   _key: HARD_INGAME
   _enabled: 1
-  _cycleLength: 2
+  _cycleLength: 3
   _penaltyInterval: 10
   _penaltyFirstApplyRound: 11
   _penaltyDrawCount: 2
@@ -27,6 +27,10 @@ MonoBehaviour:
     _role: 2
     _bossKey: LizardBossData
     _boss: {fileID: 11400000, guid: 26f320298edc16b43ab3207e4d1b6d6f, type: 2}
+  - _position: 3
+    _role: 2
+    _bossKey: DeertreeBossData
+    _boss: {fileID: 11400000, guid: 42495cae685363b4585a5ea7c8753c23, type: 2}
   _growth:
     _isConfigured: 1
     _firstGrowthRound: 11

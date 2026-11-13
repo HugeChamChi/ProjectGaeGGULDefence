@@ -37,6 +37,8 @@ MonoBehaviour:
     Data: {fileID: 11400000, guid: 6b69a7a275cd3204cb5799037ec07fc3, type: 2}
   - Key: LizardBossData
     Data: {fileID: 11400000, guid: 26f320298edc16b43ab3207e4d1b6d6f, type: 2}
+  - Key: DeertreeBossData
+    Data: {fileID: 11400000, guid: 42495cae685363b4585a5ea7c8753c23, type: 2}
   _prefabs:
   - Key: CrocodilePrototype
     Prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2,
@@ -70,4 +72,7 @@ MonoBehaviour:
       type: 3}
   - Key: Lizard
     Prefab: {fileID: 3647438387697009494, guid: ae729b82b2cc28d41b975fef23985247,
+      type: 3}
+  - Key: Deertree
+    Prefab: {fileID: 8021417378635392540, guid: ded8c68b09690ef4a853998a08b594d0,
       type: 3}
