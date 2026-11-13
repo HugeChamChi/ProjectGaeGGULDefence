@@ -29,7 +29,7 @@ public class TimerController : MonoBehaviour
     public bool TimeVaultActive { get; private set; }
     /// <summary>제물의 실제 지출을 +30초 지급과 별도로 표시한다.</summary>
     public event Action<float> OnSacrificePaid;
-    /// <summary>시간 금고 시작/종료 시 UI와 공속 효과을 동기화한다.</summary>
+    /// <summary>비상 전력 시작/종료 시 UI와 공속 효과을 동기화한다.</summary>
     public event Action<bool> OnTimeVaultChanged;
     public void Init()
     {

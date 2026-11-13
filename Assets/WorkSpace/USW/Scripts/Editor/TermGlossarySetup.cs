@@ -69,7 +69,7 @@ public static class TermGlossarySetup
             Kind = "규칙", KindColor = new Color(0.85f, 0.55f, 0.2f),
             Body = "남은 시간을 다루는 효과입니다. 디시그망은 스킬을 쓸 때마다 남은 시간을 바로 회복하고, " +
                    "오버드라이브 효과는 시간을 써서 공격력·공속·합성·해킹 효율 같은 이득을 얻습니다. " +
-                   "시간이 저절로 줄어드는 것은 소비가 아니며, 남은 시간이 0초가 되면 바로 패배합니다(시간 금고 효과 제외).",
+                   "시간이 저절로 줄어드는 것은 소비가 아니며, 남은 시간이 0초가 되면 바로 패배합니다(비상 전력 효과 제외).",
             FactKind = TermFactKind.TimeRecovery, FactSource = Load<ScriptableObject>(DroneData + "Disigman.asset"),
         },
     };

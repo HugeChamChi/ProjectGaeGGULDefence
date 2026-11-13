@@ -24,7 +24,7 @@ MonoBehaviour:
       RequiresHighOwnedTier: 0
     Commands: []
   chooseId: 9138
-  chooseName: "\uBC1C\uC0AC\uB300 \uC99D\uC124"
+  chooseName: Ctrl C + V
   tier: 1
   spawnRate: 1
   description: "\uBCA0\uD0D5\uC774 \uAE30\uBCF8 \uC2A4\uD0AC\uB85C \uC790\uD3ED \uB4DC\uB860\uC744

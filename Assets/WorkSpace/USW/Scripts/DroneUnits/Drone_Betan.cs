@@ -25,7 +25,7 @@ public class Drone_Betan : DroneSpawnerBase
     private BossBase _pendingSkillBoss;
     private float _pendingSkillDamageMultiplier = 1f;
     private int _fleetVolleyIndex = -1;
-    /// <summary>9143 일제 기동이 차단 성공 때 배치된 베탕 한 마리당 발사하는 자폭 드론 수.</summary>
+    /// <summary>9143 이건 서비스이 차단 성공 때 배치된 베탕 한 마리당 발사하는 자폭 드론 수.</summary>
     private const int CounterBombsPerBetan = 1;
 
     public enum SelfDestructOrigin { BasicSkill, PeriodicSelection, FleetSelection }

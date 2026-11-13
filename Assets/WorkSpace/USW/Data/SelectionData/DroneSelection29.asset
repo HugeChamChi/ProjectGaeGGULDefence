@@ -24,7 +24,7 @@ MonoBehaviour:
       RequiresHighOwnedTier: 0
     Commands: []
   chooseId: 9129
-  chooseName: "\uD655\uC7A5 \uC18C\uCF13"
+  chooseName: "\uC18C\uCF13 \uD655\uC7A5"
   tier: 1
   spawnRate: 1
   description: "\uAC10\uB9DD\uC758 1\uD68C \uCD5C\uB300 \uD574\uD0B9 \uC2A4\uD0DD

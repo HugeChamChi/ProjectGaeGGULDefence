@@ -11,7 +11,7 @@ public interface IOverdriveEffectReader
     float SacrificeAttackPerPayment { get; }
     /// <summary>이번 런의 이미 지불한 제물 공격력 증가율.</summary>
     float SacrificeAttackBonus { get; }
-    /// <summary>시간 금고의 마지막 유예 초. 0이면 미획득.</summary>
+    /// <summary>비상 전력의 마지막 유예 초. 0이면 미획득.</summary>
     float TimeVaultSeconds { get; }
     /// <summary>과열 한 개당 필요한 초과 스택 수. 0이면 미획득.</summary>
     int OverheatOverflowPerStack { get; }

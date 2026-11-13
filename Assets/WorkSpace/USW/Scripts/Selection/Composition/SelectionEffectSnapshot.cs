@@ -212,7 +212,7 @@ public sealed class SelectionEffectSnapshot : ISelectionCombatReader, IDroneEffe
     public float SacrificeCostSeconds { get; private set; }
     /// <summary>제물 지출당 공격력 가산.</summary>
     public float SacrificeAttackPerPayment { get; private set; }
-    /// <summary>시간 금고 유예 초.</summary>
+    /// <summary>비상 전력 유예 초.</summary>
     public float TimeVaultSeconds { get; private set; }
     /// <summary>과열당 초과 스택 수.</summary>
     public int OverheatOverflowPerStack { get; private set; }

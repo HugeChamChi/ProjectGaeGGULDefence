@@ -2,8 +2,8 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 시간 금고(9136) 유예 연출 설정 — 에셋 참조, 색, 타이밍, 화면 문구. TimeVaultFx가 읽는다.
-/// 기준: design/gdd/overdrive-deck.md C06 시간 금고 (0초 → 15초 유예). 유예가 끝나면 연출만 걷고 기존 전투 종료 흐름으로 넘긴다.
+/// 비상 전력(9136) 유예 연출 설정 — 에셋 참조, 색, 타이밍, 화면 문구. TimeVaultFx가 읽는다.
+/// 기준: design/gdd/overdrive-deck.md C06 비상 전력 (0초 → 15초 유예). 유예가 끝나면 연출만 걷고 기존 전투 종료 흐름으로 넘긴다.
 /// 연출은 HTML 시안 C "시스템 오버라이드" (2026-11-05 사용자 확정). 문구는 현지화 시스템 연결 전까지 여기 둔다.
 /// </summary>
 [CreateAssetMenu(menuName = "USW/Fx/Time Vault Fx Settings", fileName = "TimeVaultFxSettings")]

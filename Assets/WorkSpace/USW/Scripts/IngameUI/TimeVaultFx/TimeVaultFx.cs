@@ -3,7 +3,7 @@ using UnityEngine;
 using VContainer;
 
 /// <summary>
-/// 시간 금고(9136) 유예 연출 "시스템 오버라이드" — 남은 시간 0초에서 15초 유예가 열리는 동안 패배를 해킹으로 우회한 화면을 덮는다
+/// 비상 전력(9136) 유예 연출 "시스템 오버라이드" — 남은 시간 0초에서 15초 유예가 열리는 동안 패배를 해킹으로 우회한 화면을 덮는다
 /// (HTML 시안 C, 2026-11-05 사용자 확정. 기준 design/gdd/overdrive-deck.md C06).
 /// TimerController.OnTimeVaultChanged(true)에서 시작, 남은 시간은 TimerController.RemainingTime을 그대로 읽고(보스 사이 정지 포함),
 /// OnTimeVaultChanged(false)에서 ExitSeconds 동안 걷어낸다. 그 뒤는 기존 전투 종료 흐름(GameManager.EndGame → DefeatPresentation → 결과)이 이어간다.

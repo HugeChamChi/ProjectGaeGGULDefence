@@ -26,7 +26,7 @@ MonoBehaviour:
   chooseId: 9142
   chooseName: "\uACFC\uD68C\uC804 \uBAA8\uD130"
   tier: 1
-  spawnRate: 1
+  spawnRate: 0
   description: "\uBCA0\uD0D5\uC758 \uAE30\uBCF8 \uC2A4\uD0AC \uC900\uBE44 \uC2DC\uAC04\uC774
     {value}\uBC30\uAC00 \uB429\uB2C8\uB2E4. \uB3C5\uB9BD \uC8FC\uAE30 \uC790\uD3ED
     \uBC1C\uC0AC\uB294 \uBCC0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."

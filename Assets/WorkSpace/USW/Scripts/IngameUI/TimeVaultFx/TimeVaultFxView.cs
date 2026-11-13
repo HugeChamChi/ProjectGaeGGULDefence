@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 시간 금고 유예 연출(시스템 오버라이드)의 UI 요소를 만들고 들고 있는다. TimeVaultFx가 처음 쓸 때 한 번 만든다.
+/// 비상 전력 유예 연출(시스템 오버라이드)의 UI 요소를 만들고 들고 있는다. TimeVaultFx가 처음 쓸 때 한 번 만든다.
 /// 좌표는 1080x1920 기준 캔버스 단위. 남은 시간 숫자는 인게임 타이머가 보여 주므로 만들지 않는다.
 /// 배지·차단 띠의 위치와 크기는 TimeVaultFx가 실제 HUD에 맞춘다.
 /// </summary>

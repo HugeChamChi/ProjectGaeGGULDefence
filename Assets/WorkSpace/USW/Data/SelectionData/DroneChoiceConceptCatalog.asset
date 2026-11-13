@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DroneChoiceConceptCatalog
   _poolId: 9100
   _schemaVersion: 1
-  _dataVersion: 20261104_BOMB_TEN_01
-  _sourceWorkbookSha256: 21b5d7c19432ef81e0f70031f0d84ba037fc28a7dd53ea375063bfc7fdefcf74
+  _dataVersion: 20261113_CARD_NAMING_01
+  _sourceWorkbookSha256: ebb983573d52bd8890284fd8679deffab0d0b98e6caf4a4750cdb634330f45fe
   _contentHash: 02d9b176a1e2f93a90eb985131f0d21aa329455b18ecd27284dfc1fe16d050d4
   _entries:
   - ChooseId: 9101

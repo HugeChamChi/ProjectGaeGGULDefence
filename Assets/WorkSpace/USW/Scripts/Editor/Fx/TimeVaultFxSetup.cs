@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// 시간 금고(9136) 유예 연출(TimeVaultFx, 시스템 오버라이드)을 IngameScene에 단다 (2026-11-05).
+/// 비상 전력(9136) 유예 연출(TimeVaultFx, 시스템 오버라이드)을 IngameScene에 단다 (2026-11-05).
 /// 전용 Screen Space Overlay 캔버스 + TimeVaultFx를 만들고 실제 HUD(타이머 패널·글자, 하단 버튼 묶음, SafeArea 루트)를 연결한다.
 /// 하단 버튼 묶음의 CanvasGroup은 CombatHudPager가 넘김 알파로 쓰므로 버튼마다 CanvasGroup을 달아 잠금 대상으로 넣는다.
 /// 다시 실행하면 이전에 단 캔버스를 지우고 새로 단다. InGameLifetimeScope의 선택 등록(RegisterOptional&lt;TimeVaultFx&gt;)이 주입한다.

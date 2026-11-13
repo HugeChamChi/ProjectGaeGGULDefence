@@ -1,6 +1,6 @@
 using System;
 
-/// <summary>C06 시간 금고의 런 1회 유예.</summary>
+/// <summary>C06 비상 전력의 런 1회 유예.</summary>
 [Serializable]
 public sealed class TimeVaultDefinition : SelectionEffectDefinition
 {

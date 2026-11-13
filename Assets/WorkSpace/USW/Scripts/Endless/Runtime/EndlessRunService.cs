@@ -47,7 +47,7 @@ public sealed class EndlessRunService : IRunStatModifiers, IDisposable
     public System.Collections.Generic.IReadOnlyList<RunPenaltyData> PenaltyChoices => _penalties.Offered;
     /// <summary>유효한 선택이 오기 전 다음 라운드 진행을 막는다.</summary>
     public bool AwaitingPenaltyChoice => _penalties.AwaitingChoice;
-    /// <summary>시간 금고의 유예 중 선택 화면을 생략하고 다음 라운드를 진행한다.</summary>
+    /// <summary>비상 전력의 유예 중 선택 화면을 생략하고 다음 라운드를 진행한다.</summary>
     public void SkipPendingPenalty() => _penalties.DiscardPending();
     /// <summary>현재 런/라운드의 제시된 후보만 한 번 선택한다.</summary>
     public bool TryChoosePenalty(long runId, int round, string key)
