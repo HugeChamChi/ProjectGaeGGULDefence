@@ -56,6 +56,7 @@ namespace GaeGGUL.Tutorial
             _dialogue?.AvoidAreas(this, _targets);
             raycastTarget = true;
             gameObject.SetActive(true);
+            EnsureSpotlightMaterial();
             RefreshHoles();
             UpdateHand();
             SetVerticesDirty();
@@ -264,15 +265,19 @@ namespace GaeGGUL.Tutorial
             rect.localScale = Vector3.one * (pressed && hold > 0f ? 0.88f : 1f);
         }
 
-        // Creates the per-overlay spotlight material and uploads the current holes in local coordinates.
+        // Assigning Graphic.material marks the graphic dirty, so it must happen before the canvas rebuild,
+        // never from OnPopulateMesh (Unity logs "already inside a graphic rebuild loop").
+        private void EnsureSpotlightMaterial()
+        {
+            if (_spotlight != null || _settings == null || _settings.SpotlightMaterial == null) return;
+            _spotlight = new Material(_settings.SpotlightMaterial) { name = "TutorialSpotlight (Instance)" };
+            material = _spotlight;
+        }
+
+        // Uploads the current holes in local coordinates to the spotlight material created by Show.
         private bool UseSpotlight()
         {
-            if (_settings.SpotlightMaterial == null) return false;
-            if (_spotlight == null)
-            {
-                _spotlight = new Material(_settings.SpotlightMaterial) { name = "TutorialSpotlight (Instance)" };
-                material = _spotlight;
-            }
+            if (_spotlight == null) return false;
             float scale = rectTransform.rect.width / HandReferenceWidth;
             int count = Mathf.Min(_holes.Count, MaxSpotlightHoles);
             for (int i = 0; i < count; i++)

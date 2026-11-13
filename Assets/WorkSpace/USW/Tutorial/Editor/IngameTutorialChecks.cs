@@ -217,6 +217,11 @@ public static class IngameTutorialChecks
             Check(game.CurrentState==GameManager.GameState.LevelUp,"Dismissal does not auto-select a card");
             var cards=level.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
             Check(cards.Select(c=>c.GetData()).SequenceEqual(settings.LevelUpChoices),"Choice cards use the fixed authored order");
+            var fieldControls=Get<GameObject>(Get<LevelUpFieldView>(level,"_fieldView"),"_controls");
+            var fieldGroup=fieldControls.GetComponent<CanvasGroup>();
+            Check(level.HideFieldViewFooter && (!fieldControls.activeInHierarchy || (fieldGroup!=null && fieldGroup.alpha==0f && !fieldGroup.blocksRaycasts)),
+                "Field view button stays hidden during the tutorial level-up lesson");
+            await Snapshot("04-levelup-no-field-view");
             await UniTask.WaitUntil(()=>cards.All(c=>!c.AllowSelection),cancellationToken:token);
             await FocusReady(overlay);
             dialogue.CompleteTyping();
@@ -313,6 +318,7 @@ public static class IngameTutorialChecks
             Check(!level.DescriptionBlocksInput,"Tapping a term selects the required card without reopening its explanation");
             await Stage(IngameTutorialStage.ChiefSkill);
             Check(Get<GameObject>(director,"_optionsButton").activeSelf,"Options appear after reaching the level-up choices");
+            Check(!level.HideFieldViewFooter,"Field view hiding is released after the level-up lesson");
             // Stage changes before the level-up close animation restores parent CanvasGroups.
             await UniTask.WaitUntil(()=>upgrade.IsInteractable(),cancellationToken:token);
             Check(upgrade.IsInteractable(),"Finishing choices restores the upgrade button");
