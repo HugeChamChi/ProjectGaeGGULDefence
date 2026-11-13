@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using GGD.BackendCharts;
+using LitJson;
+using UnityEditor;
+using UnityEngine;
+
+/// <summary>
+/// Editor-only bridge between the authoring workbook <c>Data/Balance/PenaltyBalance.xlsx</c> and the bundled run penalty assets
+/// (user decision 2026-11-11: Excel is the source; bundled values and the BACKND chart are both made from it).
+/// The same workbook is uploaded to DEV_PenaltyBalance, then LIVE_PenaltyBalance. Never opened by a player build.
+///
+/// Adding a penalty: author it (configured, with unit and amount) and add it to a pool under <see cref="PoolFolder"/>, run
+/// "PenaltyBalance 키 목록 다시 만들기", then "PenaltyBalance.xlsx 검사": it lists the rows the workbook is missing.
+/// </summary>
+public static class PenaltyBalanceWorkbook
+{
+    public const string SourcePath = "Data/Balance/PenaltyBalance.xlsx";
+    public const string SheetName = "PenaltyBalance";
+    public const string KeysPath = "Assets/WorkSpace/USW/Scripts/BackendCharts/PenaltyBalanceKeys.cs";
+    public const string PoolFolder = "Assets/WorkSpace/USW/Data/Endless/Pools";
+
+    [MenuItem("Tools/Balance/PenaltyBalance.xlsx 검사 (업로드 전)")]
+    public static void CheckMenu() => Debug.Log(Check(SourcePath));
+
+    [MenuItem("Tools/Balance/PenaltyBalance.xlsx 값을 앱 내장 값에 반영")]
+    public static void ImportMenu() => Debug.Log(Import(SourcePath));
+
+    [MenuItem("Tools/Balance/PenaltyBalance 키 목록 다시 만들기 (패널티를 추가한 뒤)")]
+    public static void GenerateKeysMenu() => Debug.Log(GenerateKeys());
+
+    /// <summary>Penalty pools under <see cref="PoolFolder"/>.</summary>
+    public static List<RunPenaltyPoolData> Pools()
+        => AssetDatabase.FindAssets("t:RunPenaltyPoolData", new[] { PoolFolder })
+            .Select(guid => AssetDatabase.LoadAssetAtPath<RunPenaltyPoolData>(AssetDatabase.GUIDToAssetPath(guid))).Where(pool => pool != null).ToList();
+
+    /// <summary>Pool entries of configured penalties by penalty key (sorted). A penalty listed in two pools must carry the same on/off and weight.</summary>
+    public static SortedDictionary<string, RunPenaltyPoolEntry> Entries()
+    {
+        var result = new SortedDictionary<string, RunPenaltyPoolEntry>(StringComparer.Ordinal);
+        foreach (var pool in Pools())
+            foreach (var entry in pool.Entries)
+            {
+                if (entry == null || entry.Penalty == null || !entry.Penalty.IsConfigured) continue;
+                string key = entry.Penalty.Key;
+                if (string.IsNullOrWhiteSpace(key) || key.Contains(".")) throw new InvalidOperationException("패널티 키가 비었거나 점이 있다: " + entry.Penalty.name);
+                if (result.TryGetValue(key, out var other))
+                {
+                    if (other.BundledEnabled != entry.BundledEnabled || other.BundledWeight != entry.BundledWeight)
+                        throw new InvalidOperationException("패널티 " + key + ": 풀마다 사용 여부나 가중치가 다르다. 차트는 패널티당 값 하나만 가진다.");
+                    continue;
+                }
+                result.Add(key, entry);
+            }
+        return result;
+    }
+
+    private static bool HasDelta(RunPenaltyData penalty) => penalty.Unit == RunPenaltyUnit.Percent;
+
+    /// <summary>Every chart key the assets ask for with its bundled value text, in penalty order.</summary>
+    public static List<KeyValuePair<string, string>> AssetRows()
+    {
+        var rows = new List<KeyValuePair<string, string>>();
+        foreach (var pair in Entries())
+        {
+            rows.Add(new KeyValuePair<string, string>(pair.Key + "." + PenaltyBalance.Enabled, pair.Value.BundledEnabled ? "1" : "0"));
+            rows.Add(new KeyValuePair<string, string>(pair.Key + "." + PenaltyBalance.Weight, N(pair.Value.BundledWeight)));
+            if (HasDelta(pair.Value.Penalty)) rows.Add(new KeyValuePair<string, string>(pair.Key + "." + PenaltyBalance.Delta, N(pair.Value.Penalty.BundledDelta)));
+        }
+        return rows;
+    }
+
+    /// <summary>Bundled value of every chart key. Throws when the key list and the assets disagree.</summary>
+    public static Dictionary<string, string> Bundled()
+    {
+        var result = AssetRows().ToDictionary(row => row.Key, row => row.Value);
+        foreach (string key in PenaltyBalance.Rules.Keys)
+            if (!result.ContainsKey(key)) throw new InvalidOperationException("차트 키 " + key + ": 패널티 에셋에 해당 값이 없다. 키 목록을 다시 만든다.");
+        foreach (string key in result.Keys)
+            if (!PenaltyBalance.Rules.ContainsKey(key)) throw new InvalidOperationException("패널티 에셋의 값 " + key + ": 차트 키 목록에 없다. 키 목록을 다시 만든다.");
+        return result;
+    }
+
+    /// <summary>Rewrites PenaltyBalanceKeys.cs from the pool assets. Run after adding, removing or configuring a penalty.</summary>
+    public static string GenerateKeys()
+    {
+        var entries = Entries();
+        var text = new StringBuilder();
+        text.Append("// Generated by the menu Tools/Balance/PenaltyBalance 키 목록 다시 만들기 (PenaltyBalanceWorkbook.GenerateKeys). Do not edit by hand.\n");
+        text.Append("namespace GGD.BackendCharts\n{\n");
+        text.Append("    /// <summary>Penalties of the PenaltyBalance chart. A separate class so the lists exist before PenaltyBalance builds its rules.</summary>\n");
+        text.Append("    public static class PenaltyBalanceKeys\n    {\n");
+        void List(string name, IEnumerable<string> keys)
+            => text.Append("        public static readonly string[] ").Append(name).Append(" = { ").Append(string.Join(", ", keys.Select(key => "\"" + key + "\""))).Append(" };\n");
+        List("Penalties", entries.Keys);
+        List("PercentPenalties", entries.Where(pair => HasDelta(pair.Value.Penalty)).Select(pair => pair.Key));
+        List("RepeatablePenalties", entries.Where(pair => !pair.Value.Penalty.OncePerRun).Select(pair => pair.Key));
+        text.Append("    }\n}\n");
+        File.WriteAllText(KeysPath, text.ToString(), new UTF8Encoding(false));
+        AssetDatabase.ImportAsset(KeysPath);
+        return "PenaltyBalanceKeys.cs: 패널티 " + entries.Count + "개, 키 " + AssetRows().Count + "개";
+    }
+
+    private static List<KeyValuePair<string, string>> Rows(string path)
+    {
+        var table = BalanceXlsxTable.Read(File.ReadAllBytes(path), SheetName, 1, "Key", "Value");
+        return table.Rows.Select(row => new KeyValuePair<string, string>((row.Get("Key") ?? "").Trim(), row.Get("Value") ?? "")).ToList();
+    }
+
+    /// <summary>Reads and validates the workbook with the rules the game applies to the chart.</summary>
+    public static Dictionary<string, float[]> Read(string path)
+    {
+        var rows = new JsonData(); rows.SetJsonType(JsonType.Array);
+        foreach (var row in Rows(path))
+        {
+            var item = new JsonData();
+            item["Key"] = row.Key;
+            item["Value"] = row.Value;
+            rows.Add(item);
+        }
+        return PenaltyBalance.Parse(rows);
+    }
+
+    public static string Check(string path)
+    {
+        var bundled = Bundled();
+        var present = new HashSet<string>(Rows(path).Select(row => row.Key));
+        var missing = bundled.Where(pair => !present.Contains(pair.Key)).ToList();
+        if (missing.Count > 0)
+            return "PenaltyBalance.xlsx에 없는 줄 " + missing.Count + "개 (엑셀과 DEV_, LIVE_ 차트에 추가):\n"
+                   + string.Join("\n", missing.Select(pair => pair.Key + "\t" + pair.Value));
+        var workbook = Read(path);
+        var lines = new List<string> { "PenaltyBalance.xlsx 형식 통과: 키 " + workbook.Count + "개" };
+        foreach (var pair in workbook)
+        {
+            string excel = N(pair.Value[0]);
+            if (bundled[pair.Key] != excel) lines.Add("다름 " + pair.Key + ": 엑셀 " + excel + " / 앱 내장 " + bundled[pair.Key]);
+        }
+        if (lines.Count == 1) lines.Add("앱 내장 값과 전부 같음");
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>Writes workbook numbers into the bundled penalty and pool assets after the whole workbook passed validation.</summary>
+    public static string Import(string path)
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Exit Play mode before importing penalty balance.");
+        Bundled();
+        var workbook = Read(path);
+        foreach (var pool in Pools())
+        {
+            var serialized = new SerializedObject(pool);
+            var entries = serialized.FindProperty("_entries");
+            for (int i = 0; i < entries.arraySize; i++)
+            {
+                var entry = entries.GetArrayElementAtIndex(i);
+                var penalty = entry.FindPropertyRelative("_penalty").objectReferenceValue as RunPenaltyData;
+                if (penalty == null || !PenaltyBalance.Has(penalty.Key)) continue;
+                entry.FindPropertyRelative("_enabled").boolValue = workbook[penalty.Key + "." + PenaltyBalance.Enabled][0] != 0f;
+                entry.FindPropertyRelative("_weight").doubleValue = (double)(decimal)workbook[penalty.Key + "." + PenaltyBalance.Weight][0];
+                entry.FindPropertyRelative("_weightConfirmed").boolValue = true;
+                if (!workbook.TryGetValue(penalty.Key + "." + PenaltyBalance.Delta, out var delta)) continue;
+                var data = new SerializedObject(penalty);
+                data.FindProperty("_delta").doubleValue = (double)(decimal)delta[0];
+                data.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.SaveAssetIfDirty(penalty);
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssetIfDirty(pool);
+        }
+        return "PenaltyBalance.xlsx 값을 앱 내장 값에 반영함: 키 " + workbook.Count + "개";
+    }
+
+    public static string N(double value) => ((double)(decimal)(float)value).ToString("0.######", CultureInfo.InvariantCulture);
+}

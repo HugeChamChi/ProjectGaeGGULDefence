@@ -19,8 +19,10 @@ public sealed class RunPenaltyData : ScriptableObject
     public RunPenaltyTarget Target => _target;
     /// <summary>증감값의 단위.</summary>
     public RunPenaltyUnit Unit => _unit;
-    /// <summary>부호를 포함한 1회 증감값. Percent -10은 현재 값의 0.9배.</summary>
-    public double Delta => _delta;
+    /// <summary>부호를 포함한 1회 증감값. Percent -10은 현재 값의 0.9배. PenaltyBalance 차트에 키가 있으면 차트 값.</summary>
+    public double Delta => GGD.BackendCharts.PenaltyBalance.DeltaOf(_key, _delta);
+    /// <summary>에셋에 저작된 증감값(차트와 무관). 엑셀 검사와 반영 전용.</summary>
+    public double BundledDelta => _delta;
     /// <summary>효과 수치와 단위가 확정되었는지 여부.</summary>
     public bool IsConfigured => _isConfigured;
     /// <summary>규칙형은 선택하여 적용한 뒤 다시 등장하지 않는다.</summary>
