@@ -14,26 +14,28 @@ exports.register = ({ handler, workspace, store, atomic }) => {
   }
   require('./backend-deployment.cjs').register({handler,workspace,atomic,exportFile,getCurrentProject:current});
   handler('content-workbook-export',p=>{
-    const names=excel.bundles[p.bundle]||[p.table];
-    const result=exportFile(p.table==='ShopCatalog'?'ShopCatalog_Editing.xlsx':p.bundle==='items'?'ItemCatalog_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='bonuses'?'UnitLevelBonuses_작성용_'+new Date().toISOString().slice(0,10)+'.xlsx':p.bundle==='missions'?'MissionEvents.xlsx':p.bundle==='enhancement'?'EnhancementBalance.xlsx':p.bundle==='rewards'?'AttendanceEvent.xlsx':p.table+'.xlsx',excel.write(p.project,names));
-    if(p.bundle==='items')result.tableFiles=names.map(name=>{const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,excel.write(p.project,[name]));return file;});
-    require('./item-icons.cjs').exportIcons(p.project,path.dirname(result.file));
-    const parsed=excel.toRuntime(p.project,names);
-    result.dataFile=result.file.replace(/\.xlsx$/,'.data.json');atomic(result.dataFile,JSON.stringify(parsed,null,2));
-    if(p.table==='ShopCatalog'){
-      result.previewFile=result.file.replace(/\.xlsx$/,'.editor-preview.json');atomic(result.previewFile,JSON.stringify(parsed.shopProducts,null,2));
-      result.probabilityFiles=Object.entries(excel.engine().ShopCatalogTools.probabilityTables(excel.engine().Studio.shape(p.project))).map(([name,rows])=>{
-        const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;
-      });
-      result.chartFiles=Object.entries(excel.engine().ShopCatalogTools.listTables(excel.engine().Studio.shape(p.project))).map(([name,rows])=>{
-        const file=path.join(path.dirname(result.file),name+'.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;
-      });
+    const e=excel.engine(), project=e.Studio.shape(p.project);
+    const errors=e.Studio.validate(project).filter(i=>i.severity==='error');
+    if(errors.length)throw Error(errors[0].message);
+    let tables;
+    const readable=require('./readable-chart.cjs').table;
+    if(p.bundle==='missions'||p.bundle==='rewards')tables=require('./event-tables.cjs').tables(project);
+    else if(p.bundle==='bonuses')tables={UnitLevelBonuses:readable(project,'unitBonuses')};
+    else if(['Unit','UnitUpgrade','UnitBaseStat','UnitMilestone'].includes(p.table))tables={UnitBaseStats:readable(require('./unit-runtime.cjs').unitRuntime(project),'unitBaseStats')};
+    else if(p.table==='ShopCatalog')tables={...e.ShopCatalogTools.listTables(project),...e.ShopCatalogTools.probabilityTables(project)};
+    else {
+      const all=e.Studio.tables(project);
+      const names=p.bundle==='items'?excel.bundles.items:['ResearchTree','ResearchNode'].includes(p.table)?['ResearchTree','ResearchNode','ResearchLevel']:[p.table];
+      tables=Object.fromEntries(names.map(name=>[name,all[name]]));
     }
-    result.schemaFile=result.file.replace(/\.xlsx$/,'.schema.json');atomic(result.schemaFile,JSON.stringify(excel.contract(names),null,2));
-    if(p.bundle==='missions'){
-      const pair=require('./event-tables.cjs').tables(excel.engine().Studio.shape(p.project));
-      result.chartFiles=Object.entries(pair).map(([name,rows])=>{const file=path.join(path.dirname(result.file),name+'.backend.xlsx');atomic(file,Buffer.from(excel.engine().RewardCore.xlsx(name,rows)));return file;});
+    let result;
+    for(const [name,rows] of Object.entries(tables)){
+      if(!rows)throw Error('지원하지 않는 백엔드 표: '+name);
+      const bytes=Buffer.from(e.RewardCore.xlsx(name,rows));
+      if(!result){result=exportFile(name+'.backend.xlsx',bytes);result.chartFiles=[result.file];}
+      else {const file=path.join(path.dirname(result.file),name+'.backend.xlsx');atomic(file,bytes);result.chartFiles.push(file);}
     }
+    require('./item-icons.cjs').exportIcons(project,path.dirname(result.file));
     return result;
   });
   handler('content-workbook-import',p=>{

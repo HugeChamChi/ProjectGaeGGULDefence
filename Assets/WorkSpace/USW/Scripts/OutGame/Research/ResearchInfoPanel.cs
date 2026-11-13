@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
@@ -9,16 +9,20 @@ using UnityEngine.UI;
 public sealed class ResearchInfoPanel
 {
     private const float IconSize = 216f;
-    private const float ButtonHeight = 86f;
+    private const float ButtonHeight = 104f;
     private const float ButtonBottom = 8f;
     private const float ButtonMargin = 34f;
-    private const float ButtonGap = 76f;
+    private const float ContentLeft = 330f;
+    private const float ContentRight = 54f;
+    private const float ContentPadding = 28f;
+    // Card artwork: the contrasting content area spans y203..324 in the 443px source.
+    private const float ContentCenterY = 263.5f;
+    private const float ContentLineHeight = 90f;
     private const float TitleFont = 56f;
-    private const float StatFont = 44f;
+    private const float StatFont = 48f;
     private const float ButtonFont = 46f;
     private const float DotSize = 12f;
     private const float DotGap = 5f;
-    private const float MaxButtonWidth = 420f;
     private readonly ResearchViewSettings _s;
     private readonly RectTransform _iconSlot;
     private readonly Image _icon;
@@ -66,8 +70,8 @@ public sealed class ResearchInfoPanel
         _dotRow = ResearchUi.Place(ResearchUi.NewRect(_iconSlot, "LevelDots"), new Vector2(0.5f, 0f),
             new Vector2(0.5f, 0.5f), new Vector2(0f, 33f), new Vector2(IconSize - 40f, DotSize));
         _title = Text(panel, "Title", TitleFont, TextAlignmentOptions.Left, 356f, 54f, 94f, 181f);
-        _statName = Text(panel, "StatName", 36f, TextAlignmentOptions.Left, 374f, 68f, 202f, 246f);
-        _currentValue = Text(panel, "CurrentValue", StatFont, TextAlignmentOptions.Right, 374f, 406f, 254f, 312f);
+        _statName = Text(panel, "StatName", StatFont, TextAlignmentOptions.MidlineLeft, ContentLeft + ContentPadding, ContentRight + ContentPadding, ContentCenterY - ContentLineHeight * 0.5f, ContentCenterY + ContentLineHeight * 0.5f);
+        _currentValue = Text(panel, "CurrentValue", StatFont, TextAlignmentOptions.MidlineRight, ContentLeft, ContentRight, ContentCenterY - ContentLineHeight * 0.5f, ContentCenterY + ContentLineHeight * 0.5f);
         _currentValue.color = new Color32(218, 228, 235, 255);
         _valueArrow = ResearchUi.NewRect(panel, "ValueArrowSlot");
         _valueArrow.anchorMin = new Vector2(0f, 1f);
@@ -77,7 +81,7 @@ public sealed class ResearchInfoPanel
         var valueArrow = _valueArrow.gameObject.AddComponent<ResearchValueArrow>();
         valueArrow.color = new Color32(235, 216, 132, 255);
         valueArrow.raycastTarget = false;
-        _value = Text(panel, "Value", StatFont, TextAlignmentOptions.Right, 752f, 68f, 254f, 312f);
+        _value = Text(panel, "Value", StatFont, TextAlignmentOptions.MidlineRight, ContentLeft, ContentRight, ContentCenterY - ContentLineHeight * 0.5f, ContentCenterY + ContentLineHeight * 0.5f);
         _value.color = settings.InfoValueColor;
         var row = ResearchUi.NewRect(panel, "ActionRow");
         row.anchorMin = Vector2.zero; row.anchorMax = new Vector2(1f, 0f); row.pivot = new Vector2(0.5f, 0f);
@@ -86,9 +90,11 @@ public sealed class ResearchInfoPanel
         _recommend = BuildButton(row, "RecommendButton", 0, settings.MaxLabelSprite, settings.RecommendButtonLabel, out _recommendText);
         _main = BuildButton(row, "MainButton0", 1, settings.UpgradeButtonSprite, settings.UpgradeLabel, out _mainText);
         var arrow = ResearchUi.NewRect(_recommend.transform, "UpgradeArrow");
-        ResearchUi.Place(arrow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-134f, 0f), new Vector2(52f, 56f));
+        ResearchUi.Place(arrow, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-14f, 4f), new Vector2(48f, 54f));
         arrow.gameObject.AddComponent<ResearchRecommendationArrow>().raycastTarget = false;
-        ResearchUi.Stretch(_recommendText.rectTransform, 72f, 0f, 12f, 0f);
+        arrow.DOAnchorPosY(10f, 0.8f).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetUpdate(true).SetLink(arrow.gameObject);
+        ResearchUi.Stretch(_recommendText.rectTransform, 14f, 0f, 14f, 0f);
+        _recommendText.fontSize = _recommendText.fontSizeMax = 40f;
         _recommend.onClick.AddListener(() =>
         {
             _pressedButton = (RectTransform)_recommend.transform;
@@ -135,6 +141,7 @@ public sealed class ResearchInfoPanel
         _value.text = _s.FormatDisplayValue(_progress.Tree, _node, shownLevel);
         _currentValue.gameObject.SetActive(!maxed);
         _valueArrow.gameObject.SetActive(!maxed);
+        LayoutValues(maxed);
         _mainText.text = state == ResearchNodeState.Maxed ? _s.MaxLabel
             : state == ResearchNodeState.Blocked ? _s.ChangeChoiceLabel
             : state == ResearchNodeState.Available ? _s.UpgradeLabel : _s.LockedLabel;
@@ -144,22 +151,10 @@ public sealed class ResearchInfoPanel
 
     private void SetActionLayout(bool maxed)
     {
-        _recommend.gameObject.SetActive(!maxed);
-        var rect = (RectTransform)_main.transform;
-        if (maxed)
-        {
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.offsetMin = new Vector2(-MaxButtonWidth * 0.5f, 0f);
-            rect.offsetMax = new Vector2(MaxButtonWidth * 0.5f, 0f);
-        }
-        else
-        {
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(ButtonGap * 0.5f, 0f);
-            rect.offsetMax = Vector2.zero;
-        }
+        _recommend.gameObject.SetActive(true);
+        _main.GetComponent<Image>().enabled = !maxed;
+        _mainText.fontSize = maxed ? 88f : ButtonFont;
+        _mainText.fontSizeMax = maxed ? 88f : ButtonFont;
     }
 
     /// <summary>실제 누른 버튼과 선택 아이콘에 강화 완료 탄력을 적용한다.</summary>
@@ -176,6 +171,28 @@ public sealed class ResearchInfoPanel
             if (_pressedButton != null) Bounce(_pressedButton);
         }
         _pressedButton = null;
+    }
+
+    private void LayoutValues(bool maxed)
+    {
+        float nextWidth = _value.GetPreferredValues(_value.text).x + 4f;
+        float currentWidth = _currentValue.GetPreferredValues(_currentValue.text).x + 4f;
+        PlaceValue((RectTransform)_value.transform.parent, ContentRight + ContentPadding, nextWidth);
+        PlaceValue((RectTransform)_currentValue.transform.parent, ContentRight + ContentPadding + nextWidth + 58f, currentWidth);
+        _valueArrow.anchorMin = _valueArrow.anchorMax = Vector2.one;
+        _valueArrow.pivot = Vector2.one;
+        _valueArrow.anchoredPosition = new Vector2(-ContentRight - ContentPadding - nextWidth - 12f, -ContentCenterY + 17f);
+        _valueArrow.sizeDelta = new Vector2(34f, 34f);
+        var nameRect = (RectTransform)_statName.transform.parent;
+        nameRect.offsetMax = new Vector2(-(ContentRight + ContentPadding + nextWidth + (maxed ? 0f : currentWidth + 58f) + 20f), -ContentCenterY + ContentLineHeight * 0.5f);
+    }
+
+    private static void PlaceValue(RectTransform rect, float right, float width)
+    {
+        rect.anchorMin = rect.anchorMax = Vector2.one;
+        rect.pivot = Vector2.one;
+        rect.anchoredPosition = new Vector2(-right, -ContentCenterY + ContentLineHeight * 0.5f);
+        rect.sizeDelta = new Vector2(width, ContentLineHeight);
     }
 
     private void Complete(RectTransform rect)
@@ -224,9 +241,10 @@ public sealed class ResearchInfoPanel
         var button = ResearchUi.NewButton(row, name, sprite, Color.white, label, ButtonFont, _s.FontBold, out var image, out text, _s.FontMaterial);
         image.type = Image.Type.Sliced;
         var rect = (RectTransform)button.transform;
-        rect.anchorMin = new Vector2(index * 0.5f, 0f); rect.anchorMax = new Vector2((index + 1) * 0.5f, 1f);
-        rect.offsetMin = new Vector2(index == 0 ? 0f : ButtonGap * 0.5f, 0f);
-        rect.offsetMax = new Vector2(index == 0 ? -ButtonGap * 0.5f : 0f, 0f);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = new Vector2(index == 0 ? 0f : 1f, 1f);
+        rect.offsetMin = new Vector2(index == 0 ? 12f : ContentLeft - ButtonMargin, 0f);
+        rect.offsetMax = new Vector2(index == 0 ? 264f : ButtonMargin - ContentRight, 0f);
         text.enableAutoSizing = true; text.fontSizeMin = UiTypography.AutoSizeMinimum; text.fontSizeMax = ButtonFont;
         button.transition = Selectable.Transition.None;
         return button;

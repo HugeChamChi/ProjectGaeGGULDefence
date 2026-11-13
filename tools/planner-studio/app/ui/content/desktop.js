@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  let saveQueue = Promise.resolve();
+  let saveQueue = Promise.resolve(), revision = 0;
   const api = window.parent.studio;
   async function call(name, payload) {
     const result = await api[name](payload);
@@ -9,7 +9,7 @@
   }
   window.desktopContent = {
     async importWorkbook(file,project){return call('contentWorkbookImport',{bytes:Array.from(new Uint8Array(await file.arrayBuffer())),project});},
-    async exportWorkbook(project,workspace,table){await saveQueue;return call('contentWorkbookExport',{project,bundle:table==='RoundRewards'?null:ItemCatalog.names.includes(table)?'items':['BonusDefinition','BonusEffect'].includes(table)?'bonuses':MissionEvents.names.includes(table)?'missions':workspace==='enhancement'?'enhancement':workspace==='rewards'?'rewards':null,table});},
+    async exportWorkbook(project,workspace,table){await saveQueue.catch(() => {});return call('contentWorkbookExport',{project,bundle:table==='RoundRewards'?null:ItemCatalog.names.includes(table)?'items':['BonusDefinition','BonusEffect'].includes(table)?'bonuses':MissionEvents.names.includes(table)?'missions':workspace==='enhancement'?'enhancement':workspace==='rewards'?'rewards':null,table});},
     async restore(key) {
       try {
         const project = await call('contentLoad');
@@ -19,15 +19,18 @@
       }
     },
     autosave(project) {
+      const current = ++revision;
       const snapshot = JSON.parse(JSON.stringify(project));
       saveQueue = saveQueue.catch(() => {}).then(() => call('contentSave', { project: snapshot }));
-      saveQueue.catch(error => {
-        document.getElementById('save-state').textContent = '파일 자동 저장 실패 · JSON 보관 필요';
+      saveQueue.then(() => {
+        if(current === revision) document.getElementById('save-state').textContent = '이 PC에 자동 저장됨';
+      }).catch(error => {
+        if(current === revision) document.getElementById('save-state').textContent = '파일 자동 저장 실패 · JSON 보관 필요';
         console.error(error);
       });
     },
     async exportFile(name, data, type) {
-      await saveQueue;
+      await saveQueue.catch(() => {});
       const bytes = Array.from(new Uint8Array(await new Blob([data], { type }).arrayBuffer()));
       const result = await call('contentExport', { name, bytes });
       const status = document.getElementById('save-state');

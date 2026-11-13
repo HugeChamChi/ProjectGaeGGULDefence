@@ -530,6 +530,17 @@ public class PlayerDataController : IDisposable, Global.IClearable
         if (next != null) { _data = next; SaveAndRefresh(); }
         return await TrySaveAsync();
     }
+    /// <summary>Only battle settlement calls this path. The caller supplies its stable run receipt ID.</summary>
+    public async UniTask<bool> GrantBattleRewardAsync(RewardCatalog catalog, string runId, RewardAmount[] rewards,
+        ResearchRunBonuses bonuses)
+    {
+        if (!IsReady || bonuses == null || !bonuses.CanGrantBattleRewards(_account) || string.IsNullOrWhiteSpace(runId)) return false;
+        var next = RewardInventory.Apply(_data, catalog, "battle:" + runId, rewards,
+            Mathf.RoundToInt(bonuses.Get(ResearchStat.BattleGoldGain) * 10000f),
+            Mathf.RoundToInt(bonuses.Get(ResearchStat.BattleUpgradeTokenGain) * 10000f));
+        if (next != null) { _data = next; SaveAndRefresh(); }
+        return await TrySaveAsync();
+    }
     /// <inheritdoc />
     public async UniTask SaveAsync() { await TrySaveAsync(); }
     /// <summary>Serializes writes; only a confirmed matching revision clears dirty state.</summary>

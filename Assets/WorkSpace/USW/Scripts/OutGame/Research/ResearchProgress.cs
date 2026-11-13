@@ -68,13 +68,13 @@ public sealed class ResearchProgress
             any |= maxed;
             all &= maxed;
         }
-        return node.RequireAnyParent ? any : all;
+        return !node.RequireAllParentsMax && node.RequireAnyParent ? any : all;
     }
 
     /// <summary>동시에 찍을 수 있는 두 갈래의 합류는 양쪽 1레벨씩 필요하다. 택1 합류는 기존 조건을 쓴다.</summary>
     public bool RequiresBothParentsStarted(ResearchNodeData node)
     {
-        if (node.Parents.Count != 2) return false;
+        if (node.RequireAllParentsMax || node.Parents.Count != 2) return false;
         var left = _tree.Find(node.Parents[0]);
         var right = _tree.Find(node.Parents[1]);
         if (left == null || right == null) return false;

@@ -8,12 +8,34 @@ public sealed class UnitLevelBonusController
     private readonly Dictionary<UnitBonusStat, float> stats = new();
     private readonly List<EveryNthCycleBonus> cycles = new();
     private readonly Dictionary<string, long> completed = new();
-    public int Level { get; }
+    public int Level { get; private set; }
+    private readonly IEnumerable<UnitLevelBonusDefinition> definitions;
+
+    public UnitLevelBonusDefinition NextUnlock
+    {
+        get
+        {
+            UnitLevelBonusDefinition next = null;
+            if (definitions != null)
+                foreach (var definition in definitions)
+                    if (definition != null && definition.Level > Level &&
+                        (next == null || definition.Level < next.Level)) next = definition;
+            return next;
+        }
+    }
 
     public UnitLevelBonusController(IEnumerable<UnitLevelBonusDefinition> definitions, int level)
     {
-        if (level < 1) throw new ArgumentOutOfRangeException(nameof(level));
+        this.definitions = definitions;
+        SetLevel(level);
+    }
+
+    public void SetLevel(int level)
+    {
+        if (level < 1 || level > 15) throw new ArgumentOutOfRangeException(nameof(level));
         Level = level;
+        stats.Clear();
+        cycles.Clear();
         if (definitions == null) return;
         int foodMultiplierLevel = -1;
         foreach (var definition in definitions)

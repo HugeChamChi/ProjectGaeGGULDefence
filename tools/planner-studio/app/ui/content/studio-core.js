@@ -167,8 +167,8 @@
     const level=n=>n?Math.max(0,Math.min(n.MaxLevel,levels[n.NodeId]||0)):0,total=nodes.reduce((s,n)=>s+level(n),0);
     return Object.fromEntries(nodes.map(n=>{
       const parents=n.Parents.map(id=>map.get(id));
-      const both=parents.length===2&&parents.every(Boolean)&&(!parents[0].ExclusiveGroup||parents[0].ExclusiveGroup!==parents[1].ExclusiveGroup);
-      const ready=!parents.length||(both?parents.every(p=>level(p)>=1):n.RequireAnyParent?parents.some(p=>p&&level(p)>=p.MaxLevel):parents.every(p=>p&&level(p)>=p.MaxLevel));
+      const both=!n.RequireAllParentsMax&&parents.length===2&&parents.every(Boolean)&&(!parents[0].ExclusiveGroup||parents[0].ExclusiveGroup!==parents[1].ExclusiveGroup);
+      const ready=!parents.length||(both?parents.every(p=>level(p)>=1):!n.RequireAllParentsMax&&n.RequireAnyParent?parents.some(p=>p&&level(p)>=p.MaxLevel):parents.every(p=>p&&level(p)>=p.MaxLevel));
       const blocked=n.ExclusiveGroup&&level(n)===0&&nodes.some(o=>o!==n&&o.ExclusiveGroup===n.ExclusiveGroup&&level(o)>0);
       return [n.NodeId,level(n)>=n.MaxLevel?'maxed':blocked?'blocked':ready&&total>=n.RequiredTotalLevel?'available':'locked'];
     }));

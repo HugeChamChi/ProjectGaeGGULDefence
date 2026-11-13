@@ -71,7 +71,8 @@ public class Drone_Zeltan : UnitBase
     /// <summary>자체·군단 생산량을 공통 정산 컴포넌트에 전달한다. 이 유닛은 지급 상태를 소유하지 않는다.</summary>
     public void TickBatchedFoodPayout(float deltaTime)
     {
-        _foodResource?.TickBatchedFoodProduction(deltaTime, CurrentFoodProductionPerSecond + FleetFoodPerSecond);
+        float own = CurrentFoodProductionPerSecond;
+        _foodResource?.TickBatchedFoodProduction(deltaTime, own + FleetFoodPerSecond, own);
     }
 
     protected override void OnUnitPlaced()

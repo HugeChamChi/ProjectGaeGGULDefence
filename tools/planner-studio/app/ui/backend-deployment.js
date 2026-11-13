@@ -33,7 +33,7 @@
       prepared = await call('contentBackendPrepare', { kind: $('backendKind').value, project });
       $('backendChart').textContent = prepared.targetEventChartName ? prepared.targetEventChartName+' + '+prepared.targetChartName : prepared.targetChartName;
       $('backendPath').textContent = prepared.eventFile ? prepared.eventFile+' / '+prepared.file : prepared.file;
-      $('backendAuthoringPath').textContent = prepared.authoringFile;
+      $('backendAuthoringPath').textContent = prepared.sourceFile;
       $('backendRelease').textContent = prepared.releaseKey;
       $('backendPrepared').hidden = false;
       status.textContent = '파일 준비 완료 · 서버 업로드·적용은 아직 확인하지 않았습니다.';
@@ -66,9 +66,9 @@
   function showPrepared(record) {
     prepared = record;
     $('backendKind').value = record.kind;
-    $('backendChart').textContent = record.targetChartName;
-    $('backendPath').textContent = record.file;
-    $('backendAuthoringPath').textContent = record.authoringFile;
+    $('backendChart').textContent = record.targetEventChartName ? record.targetEventChartName+' + '+record.targetChartName : record.targetChartName;
+    $('backendPath').textContent = record.eventFile ? record.eventFile+' / '+record.file : record.file;
+    $('backendAuthoringPath').textContent = record.sourceFile;
     $('backendRelease').textContent = record.releaseKey;
     $('backendPrepared').hidden = false;
     verification.textContent = '';

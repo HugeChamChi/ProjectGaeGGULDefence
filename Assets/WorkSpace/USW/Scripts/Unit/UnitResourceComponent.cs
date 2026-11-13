@@ -12,6 +12,7 @@ public class UnitResourceComponent : MonoBehaviour
     // Batch credit survives temporary removal/replacement on the same unit instance.
     // Selling/merging destroys this component and discards unpaid credit, as before.
     private float _batchTimer;
+    private float _batchOwnTimer;
     private float _pendingFood;
 
     public void Init(UnitBase unit, UnitDependencies deps)
@@ -20,6 +21,7 @@ public class UnitResourceComponent : MonoBehaviour
         _deps = deps;
         _foodTimer = 0f;
         _batchTimer = 0f;
+        _batchOwnTimer = 0f;
         _pendingFood = 0f;
     }
 
@@ -29,7 +31,7 @@ public class UnitResourceComponent : MonoBehaviour
     /// while removal/seal pauses the clock. Ending batch mode flushes earned credit
     /// on the next eligible tick; ending the run never pays further credit.
     /// </summary>
-    public void TickBatchedFoodProduction(float deltaTime, float foodPerSecond)
+    public void TickBatchedFoodProduction(float deltaTime, float foodPerSecond, float ownFoodPerSecond = 0f)
     {
         if (_deps?.CurrencyManager == null || _deps.GameManager?.IsFinished == true || _unit == null) return;
         if (!_unit.UsesExternalFoodPayout)
@@ -44,6 +46,17 @@ public class UnitResourceComponent : MonoBehaviour
         {
             float step = Mathf.Min(deltaTime, period - _batchTimer);
             _pendingFood += foodPerSecond * step;
+            // Keep continuous own/fleet accrual. Only own production advances the
+            // fifth-tick counter; the extra amount is earned at that tick's level.
+            if (ownFoodPerSecond > 0f)
+            {
+                float frequency = 1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent);
+                _batchOwnTimer += step * frequency;
+                int ownTicks = Mathf.FloorToInt(_batchOwnTimer);
+                _batchOwnTimer -= ownTicks;
+                for (int i = 0; i < ownTicks; i++)
+                    _pendingFood += ownFoodPerSecond / frequency * (_unit.NextFoodPayoutMultiplier() - 1f);
+            }
             _batchTimer += step;
             deltaTime -= step;
             if (_batchTimer >= period)

@@ -14,4 +14,6 @@ public enum ResearchStat
     BossDamage = 7,
     SkillDamage = 8,
     TotemEffect = 9,
+    BattleGoldGain = 10,
+    BattleUpgradeTokenGain = 11,
 }

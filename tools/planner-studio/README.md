@@ -1,3 +1,11 @@
+## 2026-11-12 백엔드 출력 기준
+
+현재 Excel 내보내기는 표별 단일 시트 `.backend.xlsx`를 생성합니다. 작성용 다중 시트 Excel, `.data.json`, `.schema.json`, CSV/전체 ZIP 중복 출력은 제거했습니다. 프로젝트 JSON 백업·불러오기는 유지하며, 배포 준비에는 복원용 `source-project.json`과 이력이 포함됩니다. 기존 작성용 Excel은 이전 자료 가져오기용으로 읽을 수 있습니다.
+
+유닛 강화 비용은 UnitBaseStats의 UpgradeCost 행으로 출력하며 게임 구매에 연결됩니다. Gold·Diamond·UpgradeTokenA 중 한 재화와 양의 정수 수량을 사용합니다. 게임에서 소비하지 않는 미리보기 강화 배율·전체 보너스 편집은 제거했습니다. 과거 JSON의 값은 보존하지만 게임 출력 대상은 아닙니다. 실제 레벨 보너스는 보너스 편집 → UnitLevelBonuses 차트로 관리합니다. 게임의 성장 공식을 새로 변경한 작업은 아닙니다.
+
+아래의 작성용 Excel 구조·왕복 설명은 기존 파일을 가져오는 호환 규약입니다. 현재 출력 기준은 이 절을 따릅니다.
+
 ﻿# GGD 기획 작업실
 
 2026-11-05 코드 기준. 편집·파일 생성, 서버 파일 일치, 실제 플레이 검증은 서로 다른 상태다. 기능별 현재 범위는 [적용 점검](APPLICATION-AUDIT.md), 사용 순서는 [팀 안내](TEAM-GUIDE.md), 남은 일은 [NEXT-STEPS.md](NEXT-STEPS.md)를 따른다.

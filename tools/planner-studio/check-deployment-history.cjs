@@ -24,3 +24,10 @@ assert.equal(restarted['content-backend-history']().find(r=>r.releaseKey===unit.
 fs.appendFileSync(mission.file,'changed');
 assert.throws(()=>restarted['content-backend-restore']({releaseKey:mission.releaseKey}));
 console.log('PASS: separate releases, persisted source, restart restore, unknown release and tampered source/upload rejected');
+
+for (const broken of ['{broken', '{}', '[null]']) {
+  fs.writeFileSync(path.join(workspace, 'deployment-history.json'), broken);
+  assert.deepEqual(session()['content-backend-history'](), []);
+  assert.ok(fs.readdirSync(workspace).some(name => name.startsWith('deployment-history.json.corrupt-') && fs.readFileSync(path.join(workspace,name),'utf8') === broken));
+}
+console.log('PASS: corrupt history preserved and startup recovered');

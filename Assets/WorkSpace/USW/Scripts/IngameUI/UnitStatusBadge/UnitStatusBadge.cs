@@ -30,6 +30,7 @@ public sealed class UnitStatusBadge : MaskableGraphic
     private bool _bound;
     private DragHandler _dragHandler;
     private Tier _tier;
+    private int _level;
     private bool _passive;
     private bool _full;
     private float _progress;
@@ -111,8 +112,10 @@ public sealed class UnitStatusBadge : MaskableGraphic
         }
         _lastCharge = charge;
         _hasCharge = true;
-        bool stateChanged = _tier != Unit.currentTier || _passive != passive || _full != full;
+        int level = Unit.UsesTotemLevels ? Unit.CurrentLevel : 0;
+        bool stateChanged = _tier != Unit.currentTier || _level != level || _passive != passive || _full != full;
         _tier = Unit.currentTier;
+        _level = level;
         _passive = passive;
         _full = full;
         AnimateProgress(charge, passive);
@@ -226,6 +229,7 @@ public sealed class UnitStatusBadge : MaskableGraphic
         float symbol = style.Symbol == UnitStatusBadgeSettings.TierSymbol.Star ? SymbolStar
             : style.Symbol == UnitStatusBadgeSettings.TierSymbol.StarOutline ? SymbolStarOutline
             : Mathf.Clamp((int)tier + 1, 1, 4);
+        if (_bound && Unit != null && Unit.UsesTotemLevels) symbol = 20f + Mathf.Clamp(_level, 1, 15);
         charge.w = style.RimWidth;
         // Per-badge phase so glints and effects do not pulse in step across the field.
         float seed = Mathf.Repeat(GetInstanceID() * 0.6180339f, 1f) * 0.99f;

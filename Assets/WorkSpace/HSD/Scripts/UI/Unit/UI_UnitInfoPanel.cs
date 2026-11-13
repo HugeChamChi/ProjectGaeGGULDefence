@@ -36,6 +36,8 @@ namespace GaeGGUL.UI.Unit
         private UI_UnitInfoPresenter _presenter;
         private Toggle _descriptionToggle;
         private DebuffInfoLink _effectLink;
+        private RectTransform _levelProgressPanel;
+        private TextMeshProUGUI _levelProgressText;
 
         /// <summary>Supplies the shared explanation presenter explicitly from scene wiring.</summary>
         [VContainer.Inject]
@@ -216,6 +218,52 @@ namespace GaeGGUL.UI.Unit
             {
                 txt_SkillCooldown.text = cooldownText;
             }
+        }
+
+        /// <summary>Fits the next unlock in its own attached footer without overflowing the authored skill box.</summary>
+        public void UpdateLevelProgress(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                if (_levelProgressPanel != null) _levelProgressPanel.gameObject.SetActive(false);
+                return;
+            }
+            if (_levelProgressPanel == null)
+            {
+                var go = new GameObject("LevelProgress", typeof(RectTransform), typeof(Image));
+                go.transform.SetParent(transform, false);
+                _levelProgressPanel = (RectTransform)go.transform;
+                _levelProgressPanel.anchorMin = Vector2.zero;
+                _levelProgressPanel.anchorMax = new Vector2(1f, 0f);
+                _levelProgressPanel.pivot = new Vector2(.5f, 1f);
+                _levelProgressPanel.anchoredPosition = new Vector2(0f, -8f);
+                var background = go.GetComponent<Image>();
+                var source = GetComponent<Image>();
+                if (source != null)
+                {
+                    background.sprite = source.sprite;
+                    background.type = source.type;
+                    background.color = source.color;
+                    background.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+                }
+                else background.color = new Color(.12f, .12f, .12f, 1f);
+                var label = new GameObject("NextUnlock", typeof(RectTransform), typeof(TextMeshProUGUI));
+                label.transform.SetParent(go.transform, false);
+                _levelProgressText = label.GetComponent<TextMeshProUGUI>();
+                if (txt_SkillDescription != null) _levelProgressText.font = txt_SkillDescription.font;
+                _levelProgressText.fontSize = UiTypography.BodySize;
+                _levelProgressText.color = Color.white;
+                _levelProgressText.alignment = TextAlignmentOptions.MidlineLeft;
+                _levelProgressText.raycastTarget = false;
+                var rect = _levelProgressText.rectTransform;
+                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+                rect.offsetMin = new Vector2(24f, 16f); rect.offsetMax = new Vector2(-24f, -16f);
+            }
+            _levelProgressPanel.gameObject.SetActive(true);
+            _levelProgressText.text = text;
+            float width = Mathf.Max(1f, ((RectTransform)transform).rect.width - 48f);
+            float height = _levelProgressText.GetPreferredValues(text, width, float.PositiveInfinity).y + 32f;
+            _levelProgressPanel.sizeDelta = new Vector2(0f, Mathf.Max(100f, height));
         }
 
         /// <summary>젤탕의 기존 두 칸을 드론 현황과 식량으로 바꾸고 다른 유닛에서 원래 아이콘을 복원한다.</summary>

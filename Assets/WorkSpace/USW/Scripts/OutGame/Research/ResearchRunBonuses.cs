@@ -13,6 +13,10 @@ public sealed class ResearchRunBonuses
     private readonly SceneComponentCollection _scene;
     /// <summary>강화 로드가 끝나기 전에는 전투 시작을 허용하지 않는다.</summary>
     public bool IsReady { get; private set; }
+    private string _rewardAccount;
+    private long _rewardGeneration;
+    public bool CanGrantBattleRewards(string account) => IsReady && _rewardAccount != null
+        && _rewardAccount == account && _account.AccountKey == account && _account.Generation == _rewardGeneration;
 
 #if UNITY_EDITOR
     /// <summary>Direct Editor previews use zero permanent bonuses and never load a player save session.</summary>
@@ -41,6 +45,7 @@ public sealed class ResearchRunBonuses
         {
             if (_tree == null) throw new InvalidOperationException("영구 강화 트리 미연결");
             string accountKey = _account.AccountKey;
+            long accountGeneration = _account.Generation;
             var tree = await _saves.ResolveTreeAsync(_tree, cancellationToken);
             if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
             var session = _saves.GetSession(accountKey, tree, "OutgameUpgrade.");
@@ -50,6 +55,9 @@ public sealed class ResearchRunBonuses
             if (accountKey != _account.AccountKey) throw new InvalidOperationException("Research account changed during load");
             foreach (ResearchStat stat in Enum.GetValues(typeof(ResearchStat)))
                 _values[(int)stat] = session.Progress.GetTotal(stat);
+            if (accountGeneration != _account.Generation) throw new InvalidOperationException("Research account session changed during load");
+            _rewardAccount = accountKey;
+            _rewardGeneration = accountGeneration;
         }
         cancellationToken.ThrowIfCancellationRequested();
         IsReady = true;
