@@ -31,6 +31,13 @@ namespace GGD.BackendCharts
         public const string CardsLegendWeight = "Cards.LegendWeight";
         public const string TotemCapacity = "Totem.Capacity";
         public const string TotemFullInventoryFood = "Totem.FullInventoryFood";
+        public const string ConversionHardFastSeconds = "Conversion.HardFastSeconds";
+        public const string ConversionHardFastStones = "Conversion.HardFastStones";
+        public const string ConversionHardSeconds = "Conversion.HardSeconds";
+        public const string ConversionHardStones = "Conversion.HardStones";
+        public const string ConversionBreatherFastSeconds = "Conversion.BreatherFastSeconds";
+        public const string ConversionBreatherFastStones = "Conversion.BreatherFastStones";
+        public const string ConversionCostPerTier = "Conversion.CostPerTier";
 
         public static readonly BalanceChart Chart = new BalanceChart("RunBalance", "RunBalanceChartSettings", new Dictionary<string, BalanceRule>
         {
@@ -56,6 +63,13 @@ namespace GGD.BackendCharts
             // The totem inventory screen has five slots, so the chart cannot exceed five.
             { TotemCapacity, new BalanceRule(1f, 5f, wholeNumber: true) },
             { TotemFullInventoryFood, new BalanceRule(0f, 1000000f) },
+            { ConversionHardFastSeconds, new BalanceRule(0f, 3600f) },
+            { ConversionHardFastStones, new BalanceRule(0f, 100f, wholeNumber: true) },
+            { ConversionHardSeconds, new BalanceRule(0f, 3600f) },
+            { ConversionHardStones, new BalanceRule(0f, 100f, wholeNumber: true) },
+            { ConversionBreatherFastSeconds, new BalanceRule(0f, 3600f) },
+            { ConversionBreatherFastStones, new BalanceRule(0f, 100f, wholeNumber: true) },
+            { ConversionCostPerTier, new BalanceRule(0f, 100f, wholeNumber: true) },
         });
 
         public static string ChartName => Chart.ChartName;

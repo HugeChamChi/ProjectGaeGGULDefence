@@ -28,6 +28,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private HealthBarSettingsSO healthBarSettings;
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text currencyText;
+    /// <summary>HUD food counter; the conversion stone counter is laid out next to it.</summary>
+    public TMP_Text CurrencyText => currencyText;
     [SerializeField] private TMP_Text spawnCostText;
     [SerializeField] private TMP_Text bossHpText;
     [SerializeField] private Slider   currentLineSlider;

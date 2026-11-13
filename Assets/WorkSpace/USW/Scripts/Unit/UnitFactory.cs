@@ -151,6 +151,25 @@ public class UnitFactory : MonoBehaviour
         return InstantiateFromData(pool[Random.Range(0, pool.Length)], tier);
     }
 
+    /// <summary>
+    /// 같은 등급에서 <paramref name="exclude"/>와 다른 종류 유닛을 랜덤 생성한다 (변환용).
+    /// 후보가 없으면 null을 돌려준다.
+    /// </summary>
+    public UnitBase CreateRandomUnitOfTierExcluding(Tier tier, UnitData exclude)
+    {
+        if (unitDataList == null || unitDataList.Length == 0) return null;
+        var pool = System.Array.FindAll(unitDataList, d => IsRandomEligible(d) && !IsSameKind(d, exclude));
+        return pool.Length == 0 ? null : InstantiateFromData(pool[Random.Range(0, pool.Length)], tier);
+    }
+
+    /// <summary>변환 후보가 하나라도 있는지 (원래 종류 제외).</summary>
+    public bool HasOtherKind(UnitData exclude)
+        => unitDataList != null && System.Array.Exists(unitDataList, d => IsRandomEligible(d) && !IsSameKind(d, exclude));
+
+    // 실행 중 유닛 데이터는 차트 사본일 수 있어 SO 참조 대신 유닛 이름으로 종류를 비교한다.
+    private static bool IsSameKind(UnitData candidate, UnitData unit)
+        => unit != null && (candidate == unit || candidate.unitName == unit.unitName);
+
     /// <summary>부족 + 티어로 랜덤 유닛 생성 (GainUnit 레벨업 효과용)</summary>
     public UnitBase CreateRandomUnitByTribeAndTier(UnitTribe tribe, Tier tier)
     {

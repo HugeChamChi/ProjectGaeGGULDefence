@@ -42,6 +42,19 @@ public class GameConfig : ScriptableObject
         error = $"Round {round}: no endless boss reward slot at position {position}.";
         return false;
     }
+    [Header("Conversion Stones (bundled; RunBalance chart overrides)")]
+    [Tooltip("어려운 보스를 이 전투 시간(초) 안에 잡으면 신속한 처치")]
+    [Min(0f)] public float conversionHardFastSeconds = 20f;
+    [Min(0f)] public float conversionHardFastStones = 2f;
+    [Tooltip("어려운 보스를 이 전투 시간(초) 안에 잡으면 보스 처치 보상")]
+    [Min(0f)] public float conversionHardSeconds = 40f;
+    [Min(0f)] public float conversionHardStones = 1f;
+    [Tooltip("쉬운 보스를 이 전투 시간(초) 안에 잡으면 신속한 처치")]
+    [Min(0f)] public float conversionBreatherFastSeconds = 20f;
+    [Min(0f)] public float conversionBreatherFastStones = 1f;
+    [Tooltip("변환 비용 = 등급 번호(노말1, 레어2, 에픽3, 레전드4) × 이 값")]
+    [Min(0f)] public float conversionCostPerTier = 1f;
+
     [Tooltip("타이머 보너스 카운트업 완료 후 처치 공지까지의 실제 시간")]
     [SerializeField, Min(0f)] private float _bossClearNoticeDelaySeconds = 0.4f;
     /// <summary>Unscaled delay between the completed timer addition and the clear notice.</summary>

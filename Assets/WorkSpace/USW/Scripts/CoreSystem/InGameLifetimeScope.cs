@@ -99,6 +99,10 @@ public class InGameLifetimeScope : LifetimeScope
         builder.RegisterInstance(damageChartSettings);
         builder.Register<DamageContributionLedger>(Lifetime.Scoped);
         if (!isDamageChartLab) builder.RegisterEntryPoint<DamageContributionBinding>();
+        // Conversion stones: earned by fast boss kills, spent to convert a placed unit (user design 2026-11-14).
+        builder.Register<ConversionStoneWallet>(Lifetime.Scoped);
+        builder.Register<ConversionService>(Lifetime.Scoped);
+        builder.RegisterEntryPoint<ConversionBinding>();
         SceneComponentRegistration.RegisterOptional<IngameDamageChart>(builder, gameObject.scene);
         SceneComponentRegistration.RegisterOptional<SelectionInventoryUI>(builder, gameObject.scene);
         DamageChartLab.RegisterServices(builder, gameObject.scene); // 독립 딜표 비교 씬에서만 등록

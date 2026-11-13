@@ -81,6 +81,13 @@ public static class RunBalanceWorkbook
         config.startingFood = One(RunBalance.EconomyStartingFood);
         config.summonInitialCost = One(RunBalance.SummonInitialCost);
         config.summonCostIncrease = One(RunBalance.SummonCostIncrease);
+        config.conversionHardFastSeconds = One(RunBalance.ConversionHardFastSeconds);
+        config.conversionHardFastStones = One(RunBalance.ConversionHardFastStones);
+        config.conversionHardSeconds = One(RunBalance.ConversionHardSeconds);
+        config.conversionHardStones = One(RunBalance.ConversionHardStones);
+        config.conversionBreatherFastSeconds = One(RunBalance.ConversionBreatherFastSeconds);
+        config.conversionBreatherFastStones = One(RunBalance.ConversionBreatherFastStones);
+        config.conversionCostPerTier = One(RunBalance.ConversionCostPerTier);
         upgrade.InitialCost = One(RunBalance.UpgradeInitialCost);
         upgrade.CostMultiplier = One(RunBalance.UpgradeCostMultiplier);
         upgrade.AttackPercentPerLevel = One(RunBalance.UpgradeAttackPercentPerLevel);
@@ -127,6 +134,13 @@ public static class RunBalanceWorkbook
             map[RunBalance.EconomyStartingFood] = N(config.startingFood);
             map[RunBalance.SummonInitialCost] = N(config.summonInitialCost);
             map[RunBalance.SummonCostIncrease] = N(config.summonCostIncrease);
+            map[RunBalance.ConversionHardFastSeconds] = N(config.conversionHardFastSeconds);
+            map[RunBalance.ConversionHardFastStones] = N(config.conversionHardFastStones);
+            map[RunBalance.ConversionHardSeconds] = N(config.conversionHardSeconds);
+            map[RunBalance.ConversionHardStones] = N(config.conversionHardStones);
+            map[RunBalance.ConversionBreatherFastSeconds] = N(config.conversionBreatherFastSeconds);
+            map[RunBalance.ConversionBreatherFastStones] = N(config.conversionBreatherFastStones);
+            map[RunBalance.ConversionCostPerTier] = N(config.conversionCostPerTier);
         }
         if (upgrade != null)
         {

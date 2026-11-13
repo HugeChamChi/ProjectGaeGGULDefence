@@ -436,6 +436,7 @@ namespace GaeGGUL.Tutorial
                     Block();
                     if (_optionsButton != null) _optionsButton.SetActive(true);
                     _levelUpUI.RequireUnitPreview = true;
+                    _levelUpUI.HideFieldViewFooter = true;
                     _exp.DeferLevelUps = false;
                     _exp.AddExp(0);
                     await Until(() => _levelUpUI.IsReadyForSelection, token);
@@ -460,6 +461,7 @@ namespace GaeGGUL.Tutorial
                     }
                     _exp.DeferLevelUps = true;
                     _levelUpUI.RequireUnitPreview = false;
+                    _levelUpUI.HideFieldViewFooter = false;
                     GrantTutorialChoices();
                     break;
                 case IngameTutorialStage.OpenUpgrade:

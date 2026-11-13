@@ -75,7 +75,9 @@ public sealed class LevelUpFieldView : MonoBehaviour
         RefreshLabel();
     }
 
-    private bool CanToggle() => _open && _acceptInput && !_transitioning && _choices != null &&
+    private bool FooterHidden => _choices != null && (_choices.DescriptionBlocksInput || _choices.HideFieldViewFooter);
+
+    private bool CanToggle() => _open && _acceptInput && !_transitioning && _choices != null && !_choices.HideFieldViewFooter &&
         _choices.IsReadyForSelection && !_choices.DescriptionBlocksInput &&
         (ViewingField || !_choices.FieldPreviewBlocksInput) && !HasCardPress();
 
@@ -103,8 +105,9 @@ public sealed class LevelUpFieldView : MonoBehaviour
             _transitioning = false;
         }
         _button.interactable = CanToggle();
-        // The term/description sheet sits above the choices; hide the footer toggle so it cannot cover it.
-        SetControlsHidden(_choices != null && _choices.DescriptionBlocksInput);
+        // The term/description sheet sits above the choices, and the tutorial explanation owns the lesson's choice
+        // screen; hide the footer toggle so it cannot cover either.
+        SetControlsHidden(FooterHidden);
     }
 
     private void SetControlsHidden(bool hidden)

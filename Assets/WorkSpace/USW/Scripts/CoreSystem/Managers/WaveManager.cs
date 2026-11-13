@@ -51,11 +51,17 @@ public class WaveManager : MonoBehaviour
     private EncounterPhase _phase;
     private int _bossIndex;
     private bool _waveStarted;
+    private double _bossFightStartedAt;
 
     /// <summary>One-based round notification shared by finite and endless HUD.</summary>
     public event Action<int> OnWaveChanged;
     /// <summary>Emitted once after a live encounter's defeat is accepted, before final-result snapshotting.</summary>
     public event Action OnBossDefeated;
+    /// <summary>
+    /// Emitted after the boss clear presentation with the defeated boss role and its combat seconds
+    /// (combat clock from spawn to defeat; choice pauses excluded). Skipped while the time vault ends the run.
+    /// </summary>
+    public event Action<EndlessBossRole, double> OnBossKillTimed;
     /// <summary>Reward request. The captured completion is safe against duplicate/stale invocations.</summary>
     public event Action<Action> OnTotemSelectionRequested;
     /// <summary>Invalidates scene UI selections whenever this run stops, including faults.</summary>
@@ -199,6 +205,7 @@ public class WaveManager : MonoBehaviour
 
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _timerManager?.ResumeTimerAfterEncounterSpawn();
+        _bossFightStartedAt = _timerManager != null ? _timerManager.ElapsedCombatTime : 0d;
         var mainBoss = _bossManager.CurrentBoss;
         encounterBoss = mainBoss;
         foreach (var cell in _gridManager.GetOccupiedCells())
@@ -215,6 +222,7 @@ public class WaveManager : MonoBehaviour
     {
         if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.Fighting)) return;
         _phase = EncounterPhase.RewardDelay;
+        double fightSeconds = _timerManager != null ? Math.Max(0d, _timerManager.ElapsedCombatTime - _bossFightStartedAt) : 0d;
         _timerManager?.StopTimer();
         var gameConfig = config != null ? config : _gameManager.Config;
 
@@ -236,10 +244,10 @@ public class WaveManager : MonoBehaviour
         if (_run.IsEndless) _log.BossDefeated(round, CurrentLevel, _run.AttackMultiplier, _run.AttackFrequencyMultiplier);
         // Reserve at combat completion, activate after the reward when entering the next round.
         if (bossIndex == _pendingBosses.Count - 1 && !TryCompleteRound(runId, round)) return;
-        WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, role, bonusSeconds, _waveCts.Token).Forget();
+        WaitAndShowRewardAsync(runId, round, bossIndex, bossPosition, gameConfig, role, bonusSeconds, fightSeconds, _waveCts.Token).Forget();
     }
 
-    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, EndlessBossRole role, float bonusSeconds, CancellationToken token)
+    private async UniTaskVoid WaitAndShowRewardAsync(long runId, int round, int bossIndex, Vector3? bossPosition, GameConfig gameConfig, EndlessBossRole role, float bonusSeconds, double fightSeconds, CancellationToken token)
     {
         if (_timerManager?.TimeVaultActive == true)
         {
@@ -267,6 +275,7 @@ public class WaveManager : MonoBehaviour
             }
             finally { _fieldPause.Exit(this, _run.IsActive && !_gameManager.IsFinished); }
             if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
+            OnBossKillTimed?.Invoke(role, fightSeconds);
             _expManager?.FlushPendingLevelUp();
             while (_gameManager.CurrentState == GameManager.GameState.LevelUp || _fieldPause.AttacksHeld)
                 await UniTask.Yield(PlayerLoopTiming.Update, token);

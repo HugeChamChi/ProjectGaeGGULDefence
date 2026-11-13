@@ -83,6 +83,8 @@ public class LevelUpUI : MonoBehaviour
     public RectTransform ChoiceArea => cardContainer as RectTransform;
     /// <summary>Tutorials need one applicable unit card to teach hold-to-preview.</summary>
     public bool RequireUnitPreview { get; set; }
+    /// <summary>Hides the "필드 보기" footer while a tutorial explanation owns the choice screen.</summary>
+    public bool HideFieldViewFooter { get; set; }
 
     private void Awake()
     {
