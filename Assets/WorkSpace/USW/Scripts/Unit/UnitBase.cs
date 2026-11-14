@@ -40,7 +40,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public float LevelGrowthMultiplier => 1f + (CurrentLevel - 1) * (this is Drone_Deltan || this is Drone_Zeltan ? .01f : .02f);
     public float LevelAttackGrowth => UsesTotemLevels && !(this is Drone_Deltan) && !(this is Drone_Zeltan) ? LevelGrowthMultiplier : 1f;
     public float LevelSpeedGrowth => this is Drone_Deltan ? LevelGrowthMultiplier : 1f;
-    public float LevelFoodGrowth => this is Drone_Zeltan ? LevelGrowthMultiplier : 1f;
+    public float LevelFoodGrowth => this is Drone_Zeltan ? 1f + (CurrentLevel - 1) * .01f : 1f;
+    public float LevelFoodSpeedBonus => LevelStat(UnitBonusStat.FoodSpeedPercent) + (this is Drone_Zeltan ? (CurrentLevel - 1) * .01f : 0f);
     public event Action OnLevelChanged;
     /// <summary>Levels per growth step for tier-indexed tables (Betan arms and combat drones): Lv1 0, Lv3 1, Lv6 2, Lv9+ 3.</summary>
     public const int LevelsPerGrowthStep = 3;
@@ -415,7 +416,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     /// 이 유닛의 스킬 피해에 곱하는 배율 (강화 트리의 스킬 피해). 사용자 결정 2026-11-12: 유닛의 스킬 피해에만 적용하고
     /// 화상, 아머, 받는 피해 증가 같은 디버프와 잔류 피해에는 적용하지 않는다. 스킬 피해를 주는 곳이 직접 곱한다.
     /// </summary>
-    public float SkillDamageMultiplier => 1f + (_deps?.Research?.Get(ResearchStat.SkillDamage) ?? 0f);
+    public float SkillDamageMultiplier => (1f + (_deps?.Research?.Get(ResearchStat.SkillDamage) ?? 0f))
+        * (1f + LevelStat(UnitBonusStat.SkillDamagePercent));
     public float GetSkillDamageMultiplier(IEffect effect) => unitData?.skillData?.hitEffects?.Contains(effect) == true
         ? SkillDamageMultiplier : 1f;
     /// <summary>Attack-coefficient damage with the run attack modifier applied exactly once.</summary>

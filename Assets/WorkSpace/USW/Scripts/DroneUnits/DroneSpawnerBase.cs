@@ -100,6 +100,8 @@ public abstract class DroneSpawnerBase : UnitBase
     protected override void OnUnitPlaced()
     {
         _dronesPlaced = true;
+        OnLevelChanged -= RefreshCombatDrones;
+        OnLevelChanged += RefreshCombatDrones;
         UnsubscribeSelections();
         _subscribedSelections = SelectionChanges;
         if (_subscribedSelections != null) _subscribedSelections.OnEffectsChanged += RefreshCombatDrones;
@@ -174,6 +176,7 @@ public abstract class DroneSpawnerBase : UnitBase
     protected override void OnUnitRemoved()
     {
         _dronesPlaced = false;
+        OnLevelChanged -= RefreshCombatDrones;
         UnsubscribeSelections();
         foreach (var drone in _ownedDrones)
         {

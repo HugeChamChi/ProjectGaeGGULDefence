@@ -27,7 +27,7 @@ public sealed class Disigman : UnitBase
 
     /// <summary>Current tier's authored attack requirement, clamped to at least one.</summary>
     public int RequiredAttacks => Mathf.Max(1, unitData?.Disigman != null
-        ? unitData.Disigman.GetAttacksToCharge(currentTier) : 1);
+        ? unitData.Disigman.GetAttacksToCharge(currentTier) - Mathf.RoundToInt(LevelStat(UnitBonusStat.ChargeAttackReductionFlat)) : 1);
     /// <summary>Current charge; movement preserves it and a new instance starts empty.</summary>
     public int ChargedAttacks => Mathf.Min(_chargedAttacks, RequiredAttacks);
     /// <summary>Seconds restored immediately on the next accepted cast.</summary>

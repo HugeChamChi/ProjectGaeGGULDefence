@@ -32,10 +32,11 @@ public class UnitStatsModifier : MonoBehaviour
     /// <summary>현재 런타임 보정을 유지하고 인게임 강화만 제외한 표시용 공격력.</summary>
     public int GetNonCriticalAttackDamageBeforeUpgrade() => ComputeDamage(LevelBaseAtk, 1f, false, out _, true);
 
-    public int GetCombatDroneDamage(out bool critical) => ComputeDamage(UpgradedAtk * _unit.unitData.CombatDroneAttackCoefficient, 1f, true, out critical, true);
+    public int GetCombatDroneDamage(out bool critical) => ComputeDamage(UpgradedAtk * (_unit.unitData.CombatDroneAttackCoefficient + LevelDroneDamageCoefficient), 1f, true, out critical, true);
     public int GetCombatDroneDisplayDamage(bool includeUpgrade) => ComputeDamage(
         (includeUpgrade ? UpgradedAtk : LevelBaseAtk)
-        * _unit.unitData.CombatDroneAttackCoefficient, 1f, false, out _, true);
+        * (_unit.unitData.CombatDroneAttackCoefficient + LevelDroneDamageCoefficient), 1f, false, out _, true);
+    private float LevelDroneDamageCoefficient => _unit is Drone_Deltan deltan ? deltan.LevelBasicDamageCoefficient : 0f;
 
     /// <summary>보정(강화 등) 적용 후, 크리티컬/토템/부족 등 데미지 파이프라인 통과 전의 기준 공격력.</summary>
     public float GetUpgradedAtk() => UpgradedAtk;

@@ -549,6 +549,15 @@ public class DroneUnit : MonoBehaviour, IDroneCombatParticipant
             else shadowArrivedEarly = true;
         });
         owner.InvokeOnAttack();
+        if (owner is Drone_Deltan deltan)
+        {
+            int extra = deltan.CompleteLevelBasicAttack();
+            for (int i = 0; i < extra; i++) ShootProjectile(bossArea.GetRandomWorldPosition(), () =>
+            {
+                if (boss != null && !boss.IsDead)
+                    boss.ApplyProjectileImpact(() => boss.TakeDamage(damage, boss.transform.position, kind, source));
+            });
+        }
     }
 
     private async UniTaskVoid ShootAfterHoldAsync(Vector3 target, System.Action callback, Vector3? origin, int lifetime)

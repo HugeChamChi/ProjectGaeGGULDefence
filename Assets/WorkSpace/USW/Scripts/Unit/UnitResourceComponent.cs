@@ -50,7 +50,7 @@ public class UnitResourceComponent : MonoBehaviour
             // fifth-tick counter; the extra amount is earned at that tick's level.
             if (ownFoodPerSecond > 0f)
             {
-                float frequency = 1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent);
+                float frequency = 1f + _unit.LevelFoodSpeedBonus;
                 _batchOwnTimer += step * frequency;
                 int ownTicks = Mathf.FloorToInt(_batchOwnTimer);
                 _batchOwnTimer -= ownTicks;
@@ -88,11 +88,17 @@ public class UnitResourceComponent : MonoBehaviour
         if (_unit != null && _unit.UsesExternalFoodPayout) return;
         if (_deps?.CurrencyManager == null || _unit == null || _unit.IsStunned || _unit.IsCellSealed || _unit.unitData == null || deltaTime <= 0f) return;
 
+        if (_unit is Drone_Zeltan zeltan) zeltan.TickLevelFoodProduction(deltaTime, TickFoodProductionStep);
+        else TickFoodProductionStep(deltaTime);
+    }
+
+    private void TickFoodProductionStep(float deltaTime)
+    {
         float cellFoodSpeedBonus = _unit.GetStatBonus(StatKind.FoodSpeed);
         float speedMultiplier = 1f / Mathf.Max(0.1f, 1f + cellFoodSpeedBonus);
         if (!_unit.IsFoodProductionBuffable) speedMultiplier = 1f;
 
-        _foodTimer += deltaTime / speedMultiplier * (1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent));
+        _foodTimer += deltaTime / speedMultiplier * (1f + _unit.LevelFoodSpeedBonus);
 
         float payoutInterval = Mathf.Max(1f, _unit.FoodPayoutInterval);
         if (_foodTimer < payoutInterval) return;
@@ -142,7 +148,7 @@ public class UnitResourceComponent : MonoBehaviour
             float intervalMultiplier = 1f / Mathf.Max(0.1f, 1f + cellIntervalBonus);
             if (!_unit.IsFoodProductionBuffable) intervalMultiplier = 1f;
 
-            return amountPerTick / intervalMultiplier * (1f + _unit.LevelStat(UnitBonusStat.FoodSpeedPercent));
+            return amountPerTick / intervalMultiplier * (1f + _unit.LevelFoodSpeedBonus);
         }
     }
 }
