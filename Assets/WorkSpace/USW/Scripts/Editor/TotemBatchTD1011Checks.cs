@@ -12,13 +12,13 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class TotemBatchTD1011Checks
 {
-    private const string Folder = "Assets/WorkSpace/USW/Data/TotemData/Playable";
+    private const string Folder = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable";
     private static Scene _scene;
     private static readonly List<UnityEngine.Object> _assets = new();
     private static readonly List<TotemBase> _totems = new();
     private static int _passed;
 
-    [MenuItem("Tools/USW/Totems/Run TD1011-1014 Checks")]
+    // Legacy (VC8-LT 2026-11-14): TD totems are no longer rewards or placeable; menu disconnected, kept for reference only.
     public static void Run()
     {
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play Mode first.");

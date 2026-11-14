@@ -4,7 +4,8 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>실제 TD1001~1010 Addressables와 배치/화염구/생산 연결을 새 Play Mode에서 확인한다.</summary>
+/// <summary>실제 TD1001~1010 Addressables와 배치/화염구/생산 연결을 새 Play Mode에서 확인한다.
+/// Legacy (VC8-LT 2026-11-14): TotemSpawner가 레벨 토템만 배치하므로 지금은 통과하지 않는다. 참고용으로만 남기며 호출하지 않는다.</summary>
 public static class TotemContentChecks
 {
     /// <summary>약 43초간 실제 전투를 진행하고 Temp에 결과를 쓴다. 테스트 후 Play Mode를 종료한다.</summary>
@@ -32,7 +33,7 @@ public static class TotemContentChecks
             for (int id = 1001; id <= 1010; id++)
             {
                 var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>(
-                    "Assets/WorkSpace/USW/Data/TotemData/Playable/TD" + id + "Data.asset"));
+                    "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD" + id + "Data.asset"));
                 await data.LoadAssetsAsync().AttachExternalCancellation(token);
                 Check(data.prefab != null && data.icon != null, "TD" + id + " loads prefab/icon");
                 GridCell target = null;

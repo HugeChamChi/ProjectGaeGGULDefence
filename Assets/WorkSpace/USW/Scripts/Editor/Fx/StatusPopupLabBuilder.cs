@@ -37,8 +37,8 @@ public static class StatusPopupLabBuilder
     public const string IngameLabPath = "Assets/WorkSpace/USW/Scene/FxLab_StatusPopupIngame.unity";
     private const string IngameSourcePath = "Assets/Scenes/IngameScene.unity";
     private const string DemoFontPath = "Assets/Imports/Font/NotoSansKR-Bold SDF.asset";
-    private const string MixedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset";
-    private const string AttackSpeedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset";
+    private const string MixedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1009Data.asset";
+    private const string AttackSpeedTotemPath = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1008Data.asset";
     private const string DemoChoicePath = "Assets/WorkSpace/USW/Data/SelectionData/DroneSelection2.asset";
     private const int DemoCanvasOrder = 500;
 

@@ -237,7 +237,8 @@ public static class FieldPauseVisualsCheck
             patterns.enabled = false;
             patterns.RegisterBoss(boss, boss.Patterns);
             await CheckDroneAsync(resolver, pause, game, level, grid, boss, token);
-            await CheckEmitterAsync(resolver, pause, game, level, grid, boss, token);
+            // Legacy (VC8-LT 2026-11-14): TD1003 debuff emitter cannot be placed (TotemSpawner accepts level totems only); call disconnected, method kept.
+            // await CheckEmitterAsync(resolver, pause, game, level, grid, boss, token);
             StopAutomaticAttacks(grid);
             // D3: lethal in-flight hit, deferred EXP level, then one scaled reward delay.
             exp.DeferLevelUps = false;
@@ -368,7 +369,7 @@ public static class FieldPauseVisualsCheck
     {
         StopAutomaticAttacks(grid);
         await Real(.5f, token);
-        var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1003Data.asset");
+        var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1003Data.asset");
         var cell = grid.GetEmptyCells().First();
         bool placed = await resolver.Resolve<TotemSpawner>().PlaceTotemAtCellAsync(data, cell, token);
         Check(placed, "authored TD1003 placed through real spawner");

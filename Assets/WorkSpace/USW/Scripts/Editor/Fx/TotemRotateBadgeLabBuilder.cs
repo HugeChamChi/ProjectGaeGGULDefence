@@ -16,7 +16,7 @@ public static class TotemRotateBadgeLabBuilder
     private const string ScenePath = "Assets/WorkSpace/USW/Scene/FxLab_TotemRotateBadge.unity";
     private const string RewardPrefabPath = "Assets/WorkSpace/USW/Prefab/UI/TotemRewardCanvas.prefab";
     private const string PanelPrefabPath = "Assets/WorkSpace/HSD/Prefab/UI/InGame/Totem_Info_Panel.prefab";
-    private const string TotemRoot = "Assets/WorkSpace/USW/Data/TotemData/Playable";
+    private const string TotemRoot = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable";
     private const string RotateIconPath = "Assets/Imports/GGD_ArtWork/KHJ_Artwork/In-game/Rotation_icon.png";
     private const string BgPath = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Battlefield_BG/Battlefield_BG_Extended.jpg";
     private const string FontGuid = "8863727b6c787ba4a910762f78e8fd55"; // KCC-Ganpan SDF (게임 UI 폰트)

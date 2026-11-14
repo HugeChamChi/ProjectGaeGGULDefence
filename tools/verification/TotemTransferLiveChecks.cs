@@ -47,9 +47,9 @@ public static class TotemTransferLiveChecks
             time.Pause(owner);
             Check(inventory.Items.Count == 0, "Fresh real inventory empty");
             Check(grid.GetEmptyCells().Count >= 4, "Real board has test cells");
-            var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset");
-            var other = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset");
-            var growthData = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset");
+            var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1001Data.asset");
+            var other = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1009Data.asset");
+            var growthData = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1002Data.asset");
             string authored = EditorJsonUtility.ToJson(data) + EditorJsonUtility.ToJson(other) + EditorJsonUtility.ToJson(growthData);
             int active = buffs.GetActiveTotemCount(); float food = currency.Currency;
             var a = grid.GetEmptyCells()[0]; var b = grid.GetEmptyCells()[1];

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -30,19 +31,17 @@ public static class TotemInventoryChecks
             var ui = (TotemInventoryUI)resolver.Resolve(typeof(TotemInventoryUI));
             var rotation = (TotemRotationUI)resolver.Resolve(typeof(TotemRotationUI));
             check(inventory.Items.Count == 0, "Fresh run inventory empty");
-            var data = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1009Data.asset"));
+            var data = UnityEngine.Object.Instantiate(LevelTotemCatalog.All.First(t => t.IsLevelTotem && GGD.BackendCharts.TotemBalance.IsEnabled(t.totemId)));
             // Rotation gestures are checked below; enable rotation only on this runtime clone.
             data.isRotatable = true;
             await data.LoadAssetsAsync().AttachExternalCancellation(token);
             selection = UnityEngine.Object.FindFirstObjectByType<TotemRewardUI>(FindObjectsInactive.Include);
-            var poolField = typeof(TotemRewardUI).GetField("_totemPool", Private);
-            originalPool = (TotemData[])poolField.GetValue(selection);
-            poolField.SetValue(selection, new[] { data });
+            // TotemChoiceRoller always rolls from LevelTotemCatalog (enabled level totems), so the reward pool is not injected.
             int callbacks = 0;
             int emptyBefore = grid.GetEmptyCells().Count;
             selection.Show(() => callbacks++);
             await UniTask.WaitUntil(() => selection.IsReadyForSelection, cancellationToken: token);
-            check(selection.ChoiceArea.Find("Band_0").gameObject.activeSelf && !selection.ChoiceArea.Find("Band_1").gameObject.activeSelf, "Single reward band loaded");
+            check(selection.ChoiceArea.Find("Band_0").gameObject.activeSelf, "Level totem reward band loaded");
             await ConfirmFirstReward(selection, token);
             check(inventory.Items.Count == 1 && grid.GetEmptyCells().Count == emptyBefore, "Reward enters inventory instead of grid");
             check(callbacks == 1, "Reward callback exactly once");
@@ -74,7 +73,9 @@ public static class TotemInventoryChecks
             }
             check(await inventory.TryPlaceAsync(2, cell, token), "Explicit cell placement succeeds");
             check(inventory.Items.Count == 4 && cell.OccupyingTotem != null, "Successful placement consumes exactly one item");
-            check(!await inventory.TryPlaceAsync(0, cell, token) && inventory.Items.Count == 4, "Occupied drop preserves storage");
+            // Dropping on an occupied cell exchanges: the placed totem returns to the same storage slot.
+            var beforeExchange = cell.OccupyingTotem;
+            check(await inventory.TryPlaceAsync(1, cell, token) && inventory.Items.Count == 4 && cell.OccupyingTotem != null && cell.OccupyingTotem != beforeExchange, "Occupied drop exchanges with storage");
             Canvas.ForceUpdateCanvases();
             check(!slots[4].gameObject.activeSelf && slots[0].transform.position.x > slots[3].transform.position.x, "Remaining icons pack to right");
             var totem = cell.OccupyingTotem;
@@ -89,12 +90,15 @@ public static class TotemInventoryChecks
             check(!grid.IsPreviewingTotem(totem), "Center release hides range");
             rotation.Begin(totem);
             rotation.End(world(center + Vector2.right * 100));
-            check(totem.RotationStep == 1, "Right release commits clockwise rotation");
+            int rightStep = TotemRotationUI.StepToward(1, TotemRotationUI.BaseFacing(totem.DamageSourceData));
+            check(totem.RotationStep == rightStep, "Right release aims the totem to the right");
             check(!grid.IsPreviewingTotem(totem), "Committed rotation release hides range");
             check(TotemRotationUI.ResolveDirection(Vector2.up * 100, 24) == 0 && TotemRotationUI.ResolveDirection(Vector2.down * 100, 24) == 2 && TotemRotationUI.ResolveDirection(Vector2.left * 100, 24) == 3, "All four cardinal directions quantized");
             var frontTotem = Resources.Load<TotemData>("LevelTotems/LT2001");
             check(frontTotem != null && TotemRotationUI.BaseFacing(frontTotem) == 2 && TotemRotationUI.StepToward(0, 2) == 2 && TotemRotationUI.StepToward(1, 2) == 3 && TotemRotationUI.StepToward(-1, 2) == -1 && TotemRotationUI.StepToward(3, 0) == 3, "Dragging aims a down-facing level totem toward the drag direction");
-            check(totem.RotateOffset(Vector2Int.right) == Vector2Int.down, "Effect offsets follow committed direction");
+            var expectedOffset = Vector2Int.right;
+            for (int i = 0; i < rightStep; i++) expectedOffset = new Vector2Int(expectedOffset.y, -expectedOffset.x); // one clockwise quarter turn per step
+            check(totem.RotateOffset(Vector2Int.right) == expectedOffset, "Effect offsets follow committed direction");
             var drag = totem.GetComponent<DragHandler>();
             var oldPosition = totem.transform.position;
             drag.BeginPress();

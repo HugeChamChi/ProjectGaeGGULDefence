@@ -19,7 +19,7 @@ public static class TotemRotateUILabBuilder
     private const string RangeMaterialPath = "Assets/WorkSpace/USW/Materials/TotemEffectRange.mat";
     private const string HoldRingMaterialPath = "Assets/WorkSpace/USW/Materials/TotemHoldRing.mat";
     private const string FontPath = "Assets/Imports/Font/NotoSansKR-Medium SDF.asset";
-    private const string TotemRoot = "Assets/WorkSpace/USW/Data/TotemData/Playable/";
+    private const string TotemRoot = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/";
     private const string UnitRoot = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Drone_Deck/Character_Designs/";
     private static readonly string[] Totems = { "TD1006Data", "TD1001Data", "TD1005Data" }; // 회전 가능 토템 전부
     private static readonly string[] Units = { "Betang_1.png", "Gammang.png", "Zetang_1.png", "Deltang.png", "Alphang_1.png", "Drone_Yellow_Gammang_1.png" };

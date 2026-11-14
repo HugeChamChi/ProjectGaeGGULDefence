@@ -90,6 +90,7 @@ public static class ResearchUpgradeChecks
     private static void CheckBackground(ResearchTreeData tree, ResearchViewSettings settings)
     {
         var root = new GameObject("ResearchBackgroundCheck", typeof(RectTransform));
+        ResearchViewSettings original = null;
         try
         {
             var viewport = (RectTransform)root.transform;
@@ -103,8 +104,27 @@ public static class ResearchUpgradeChecks
             var bg = layer.gameObject.AddComponent<ResearchBackground>();
             bg.Initialize(viewport, content, settings, progress);
             var surface = layer.Find("MaxReveal/Art").GetComponent<Image>();
-            Assert(settings.BackgroundDesign == ResearchBackgroundDesign.Original && surface.sprite == settings.PanelBackground,
-                "Original settings must restore the original background artwork.");
+            // User decision 2026-11-14: the shipped cyan band (since 10-17) is the intended background, not the original artwork.
+            Assert(settings.BackgroundDesign == ResearchBackgroundDesign.CyanBand
+                && settings.BackgroundPattern == ResearchBackgroundPattern.SilhouetteDiagonal && surface.sprite == null,
+                "Authored settings use the cyan band with frog silhouettes instead of the original artwork.");
+            bg.RefreshVisuals();
+            float spacing = Mathf.Max(80f, settings.BackgroundIconRowSpacing);
+            Assert(bg.RevealHeight == 0f && Mathf.Approximately(surface.rectTransform.rect.height, viewport.rect.height + spacing * 2f),
+                "Silhouette background fills only the visible area and stays dark without a MAX node.");
+            UnityEngine.Object.DestroyImmediate(layer.gameObject);
+            // The original-art path stays selectable in settings; keep checking it on a temporary copy.
+            original = UnityEngine.Object.Instantiate(settings);
+            original.BackgroundDesign = ResearchBackgroundDesign.Original;
+            original.BackgroundPattern = ResearchBackgroundPattern.Still;
+            original.PanelBackground = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Imports/GGD_ArtWork/KHJ_Artwork/Out-game/SPR_UI3600_PanelBg.png");
+            Assert(original.PanelBackground != null, "Original background artwork asset must exist.");
+            settings = original;
+            layer = ResearchUi.Stretch(ResearchUi.NewRect(viewport, "Background"));
+            bg = layer.gameObject.AddComponent<ResearchBackground>();
+            bg.Initialize(viewport, content, settings, progress);
+            surface = layer.Find("MaxReveal/Art").GetComponent<Image>();
+            Assert(surface.sprite == settings.PanelBackground, "Original settings must restore the original background artwork.");
             bg.RefreshVisuals();
             Assert(bg.RevealHeight == 0f, "No MAX means no visible artwork.");
             Assert(surface.type == Image.Type.Tiled && surface.rectTransform.rect.height == content.rect.height,
@@ -133,7 +153,7 @@ public static class ResearchUpgradeChecks
             bg.Preview = false; progress.ResetAll(); bg.RefreshVisuals();
             Assert(bg.RevealHeight == 0f, "Leaving preview after reset must be dark.");
         }
-        finally { UnityEngine.Object.DestroyImmediate(root); }
+        finally { UnityEngine.Object.DestroyImmediate(root); if (original != null) UnityEngine.Object.DestroyImmediate(original); }
     }
 
     private static void Assert(bool condition, string message)

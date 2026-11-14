@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public static class TotemBatchTD1011Builder
 {
-    private const string Folder = "Assets/WorkSpace/USW/Data/TotemData/Playable";
+    private const string Folder = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable";
     private const string TemplateId = "TD1009";
     private const string RewardCanvasPath = "Assets/WorkSpace/USW/Prefab/UI/TotemRewardCanvas.prefab";
 
@@ -24,7 +24,7 @@ public static class TotemBatchTD1011Builder
         public System.Action<TotemData> Configure;
     }
 
-    [MenuItem("Tools/USW/Totems/Create TD1011-1014")]
+    // Legacy (VC8-LT 2026-11-14): TD totems are no longer rewards or placeable; menu disconnected, kept for reference only.
     public static void Build()
     {
         var specs = new[]

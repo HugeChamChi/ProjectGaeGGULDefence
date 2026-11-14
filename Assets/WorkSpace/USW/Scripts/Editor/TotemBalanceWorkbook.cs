@@ -17,7 +17,8 @@ public static class TotemBalanceWorkbook
 {
     public const string SourcePath = "Data/Balance/TotemBalance.xlsx";
     public const string SheetName = "TotemBalance";
-    private const string AssetFolder = "Assets/WorkSpace/USW/Data/TotemData/Playable";
+    // The TD totems moved to Legacy on 2026-11-14 (level totems replaced them); the chart still requires their 36 keys.
+    private const string AssetFolder = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable";
 
     [MenuItem("Tools/Balance/TotemBalance.xlsx 검사 (업로드 전)")]
     public static void CheckMenu() => Debug.Log(Check(SourcePath));

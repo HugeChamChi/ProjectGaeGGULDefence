@@ -42,7 +42,7 @@ public static class TotemBottomDrawerValidation
             }
             var ui = UnityEngine.Object.FindFirstObjectByType<TotemInventoryUI>(FindObjectsInactive.Include);
             var inventory = (TotemInventory)scope.Container.Resolve(typeof(TotemInventory));
-            var data = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1004Data.asset");
+            var data = LevelTotemCatalog.All.First(t => t.IsLevelTotem && GGD.BackendCharts.TotemBalance.IsEnabled(t.totemId));
             await data.LoadAssetsAsync().AttachExternalCancellation(token);
             while (inventory.Items.Count < inventory.Capacity) inventory.TryAdd(data);
 

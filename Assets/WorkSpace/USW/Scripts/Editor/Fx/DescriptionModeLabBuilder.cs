@@ -115,7 +115,7 @@ public static class DescriptionModeLabBuilder
     private static DescriptionModeLabEntry Selection(int number, string brief, string detailed)
         => new DescriptionModeLabEntry { Selection = AssetDatabase.LoadAssetAtPath<LevelUpData>($"Assets/WorkSpace/USW/Data/SelectionData/DroneSelection{number}.asset"), BriefTemplate = brief, DetailedTemplate = detailed };
     private static DescriptionModeLabEntry Totem(int number, string brief, string detailed)
-        => new DescriptionModeLabEntry { Totem = AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Playable/TD{number}Data.asset"), BriefTemplate = brief, DetailedTemplate = detailed };
+        => new DescriptionModeLabEntry { Totem = AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD{number}Data.asset"), BriefTemplate = brief, DetailedTemplate = detailed };
     private static T Find<T>(Scene scene) where T : Component
     {
         foreach (var root in scene.GetRootGameObjects())

@@ -16,7 +16,7 @@ public static class SortieLabBuilder
 {
     private const string ScenePath = "Assets/WorkSpace/USW/Scene/FxLab_Sortie.unity";
     private const string UnitPrefabRoot = "Assets/WorkSpace/USW/Prefab/Unit/DronUnit";
-    private const string TotemPrefabRoot = "Assets/WorkSpace/USW/Data/TotemData/Playable";
+    private const string TotemPrefabRoot = "Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable";
     private const string CellPrefabPath = "Assets/WorkSpace/USW/Prefab/etc/GridCell_Prefab.prefab";
     private const string BgPath = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Battlefield_BG/Battlefield_BG_Extended.jpg";
     private const string BossPath = "Assets/Imports/GGD_ArtWork/JSY_Artwork/BOSS/SPR_Boss1_001.png";

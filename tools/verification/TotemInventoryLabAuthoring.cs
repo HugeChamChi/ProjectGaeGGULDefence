@@ -26,7 +26,7 @@ public static class TotemInventoryLabAuthoring
         {
             settings = ScriptableObject.CreateInstance<TotemInventoryLabSettings>();
             settings.Samples = new[] { 1001, 1005, 1006, 1008, 1009 }.Select(id =>
-                AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Playable/TD{id}Data.asset")).ToArray();
+                AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD{id}Data.asset")).ToArray();
             if (settings.Samples.Any(data => data == null || data.DisplaySprite == null))
                 throw new Exception("An authored sample is missing data or a display sprite.");
             AssetDatabase.CreateAsset(settings, SettingsPath);

@@ -57,4 +57,4 @@ TD1004 본체는 `TD1004.prefab/SpineVisual`의 SkeletonAnimation을 사용합�
 5. IngameScene의 TotemRewardUI → Totem Pool에 새 SO를 추가합니다. 별도로 구형 TotemSelectUI를 쓰는 화면이 있으면 해당 풀도 확인합니다.
 6. SO를 선택한 뒤 Assets → Totems → Validate Selected SO를 실행합니다.
 
-게임에서 선택됐던 ID는 해당 런의 후보에서 제외됩니다. ID를 중복시키지 마세요. 검증 자동 실행은 새 Play Mode에서 `TotemContentChecks.Run()`을 사용하며 결과는 `Temp/totem-content-checks.txt`에 기록됩니다.
+게임에서 선택됐던 ID는 해당 런의 후보에서 제외됩니다. ID를 중복시키지 마세요. (Legacy, 2026-11-14) 옛 검증 `TotemContentChecks.Run()`은 TD 토템을 배치할 수 없게 되어 호출을 끊고 참고용으로만 남겼습니다.
