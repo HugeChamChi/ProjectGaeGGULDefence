@@ -13,8 +13,6 @@ const contentSmokePath = argument('--content-smoke');
 const eventMissionSmokePath = argument('--event-missions-smoke');
 const shopSmokePath = argument('--shop-smoke');
 const roundRewardSmokePath = argument('--round-rewards-smoke');
-const economySmokePath = argument('--economy-smoke');
-const chartUploadSmokePath = argument('--chart-upload-smoke');
 const workspace = path.resolve(argument('--workspace') || app.getPath('userData'));
 app.setPath('userData', workspace);
 app.setPath('sessionData', path.join(workspace, 'browser-cache'));
@@ -25,7 +23,7 @@ if (!gotLock) app.quit();
 else {
   app.on('second-instance', () => { if (window) { window.restore(); window.focus(); } });
   app.whenReady().then(start).catch(error => {
-    if (smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath || economySmokePath || chartUploadSmokePath) atomic(smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath || economySmokePath || chartUploadSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
+    if (smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath) atomic(smokePath || contentSmokePath || eventMissionSmokePath || shopSmokePath, JSON.stringify({ ok: false, error: error.stack }, null, 2));
     else dialog.showErrorBox('기획 작업실을 열 수 없습니다', error.message);
     app.exit(1);
   });
@@ -46,7 +44,7 @@ async function start() {
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
   session.defaultSession.setPermissionCheckHandler(() => false);
   window = new BrowserWindow({ width: 1540, height: 990, minWidth: 1180, minHeight: 760,
-    backgroundColor: '#f7f8fb', title: 'GGD 기획 작업실', show: !chartUploadSmokePath && !economySmokePath && !shopSmokePath && !smokePath && !contentSmokePath && argument('--qa') !== '1', autoHideMenuBar: true,
+    backgroundColor: '#f7f8fb', title: 'GGD 기획 작업실', show: !shopSmokePath && !smokePath && !contentSmokePath && argument('--qa') !== '1', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, backgroundThrottling: !smokePath && !contentSmokePath && argument('--qa') !== '1' } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -61,9 +59,8 @@ async function start() {
   });
   require('./content-service.cjs').register({ handler, workspace, store, atomic });
   require('./backend-console.cjs').register({handler,parent:window});
-  const uploadTest=chartUploadSmokePath?require('./chart-upload-smoke.cjs').fixture({workspace}):null;
-  chartUploader=require('./chart-upload.cjs').createService({workspace,atomic,...(uploadTest?{run:uploadTest.run,resolveProject:()=>uploadTest.project}:{})});
-  require('./chart-upload.cjs').register({handler,workspace,atomic,dialog:uploadTest?.dialog||dialog,parent:window,service:chartUploader});
+  chartUploader=require('./chart-upload.cjs').createService({workspace,atomic});
+  require('./chart-upload.cjs').register({handler,workspace,atomic,dialog,parent:window,service:chartUploader});
   handler('state', () => store.getState());
   handler('save-guide', p => store.saveGuide(p.uid, p.guide));
   handler('settings', () => store.getSettings());
@@ -123,8 +120,6 @@ async function start() {
   if (shopSmokePath) await require('./shop-smoke.cjs')({window,app,store,workspace,resultPath:shopSmokePath,atomic});
   if (contentSmokePath) await require('./content-smoke.cjs')({window, app, store, workspace, resultPath:contentSmokePath, atomic});
   if (roundRewardSmokePath) await require('./round-rewards-smoke.cjs')({window, app, workspace, resultPath:roundRewardSmokePath});
-  if (economySmokePath) await require('./outgame-economy-smoke.cjs')({window,app,store,workspace,resultPath:economySmokePath,atomic});
-  if (chartUploadSmokePath) await require('./chart-upload-smoke.cjs').smoke({window,app,store,workspace,resultPath:chartUploadSmokePath,atomic,test:uploadTest});
 }
 
 async function smoke() {
