@@ -121,9 +121,13 @@ public sealed class ResearchBackground : MonoBehaviour
     {
         float width = _viewport.rect.width, height = _viewport.rect.height;
         int maxRow = _progress.HighestMaxedRow;
-        bool completed = _progress.Tree.Nodes.Count > 0;
+        // 맨 위 줄 강화를 모두 마치면 배경 전체를 표시한다.
+        int topRow = -1;
         foreach (var node in _progress.Tree.Nodes)
-            if (node != null && _progress.GetLevel(node) < node.MaxLevel) { completed = false; break; }
+            if (node != null) topRow = Mathf.Max(topRow, node.Row);
+        bool completed = topRow >= 0;
+        foreach (var node in _progress.Tree.Nodes)
+            if (node != null && node.Row == topRow && _progress.GetLevel(node) < node.MaxLevel) { completed = false; break; }
         float fill = 0f;
         if (maxRow >= 0)
         {

@@ -31,7 +31,7 @@ public static class ThreeWaveTutorialAuthoring
         Add(plan, IngameTutorialStage.TimeLimit, "보스가 나타났어요! 제한 시간 안에 보스를 물리쳐야 해요.");
         Add(plan, IngameTutorialStage.FirstSummon, "식량을 써서 유닛을 소환할 수 있어요.");
         Add(plan, IngameTutorialStage.ObserveCombat, "유닛이 자동으로 공격해요.");
-        Add(plan, IngameTutorialStage.Merge, "같은 종류, 같은 레벨의 베탕을 합성하면 더 높은 레벨의 유닛이 돼요.");
+        Add(plan, IngameTutorialStage.Merge, "같은 종류, 같은 등급의 베탕을 합성하면 더 높은 등급의 유닛이 돼요.");
         Add(plan, IngameTutorialStage.OpenUpgrade, "아직 힘이 부족해요. 강화가 필요하겠어요.");
         Add(plan, IngameTutorialStage.UpgradeSlots, "베탕을 강화해서 더 강하게 만들어 보세요.");
         Add(plan, IngameTutorialStage.SecondWave, "보스를 물리치고 다음 보스가 등장하면 제한 시간이 다시 채워져요.");

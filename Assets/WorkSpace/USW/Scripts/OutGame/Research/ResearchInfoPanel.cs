@@ -123,7 +123,8 @@ public sealed class ResearchInfoPanel
     public void Refresh()
     {
         var recommended = _progress?.GetRecommended();
-        _recommend.interactable = recommended != null && _progress.CanUpgrade(recommended);
+        // 골드가 부족해도 누를 수 있게 두고, 누르면 부족 안내를 띄운다.
+        _recommend.interactable = recommended != null;
         _recommendText.text = _s.RecommendButtonLabel;
         bool maxed = _node != null && _progress != null && _progress.GetState(_node) == ResearchNodeState.Maxed;
         SetActionLayout(maxed);
@@ -152,7 +153,7 @@ public sealed class ResearchInfoPanel
         _mainText.text = state == ResearchNodeState.Maxed ? _s.MaxLabel
             : state == ResearchNodeState.Blocked ? _s.ChangeChoiceLabel
             : state == ResearchNodeState.Available ? _s.UpgradeLabel : _s.LockedLabel;
-        _main.interactable = state == ResearchNodeState.Blocked || _progress.CanUpgrade(_node);
+        _main.interactable = state == ResearchNodeState.Blocked || state == ResearchNodeState.Available;
         RefreshDots(level);
     }
 

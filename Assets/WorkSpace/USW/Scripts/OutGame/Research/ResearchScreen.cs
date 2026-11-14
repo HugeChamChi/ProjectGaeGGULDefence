@@ -332,7 +332,13 @@ public sealed class ResearchScreen : MonoBehaviour
     /// <summary>노드를 한 단계 올린다 ([강화] 버튼).</summary>
     public void Upgrade(ResearchNodeData node)
     {
-        if (Progress == null || !Progress.CanUpgrade(node)) return;
+        if (Progress == null || node == null) return;
+        if (Player.PlayerData.IsReady && Progress.GetState(node) == ResearchNodeState.Available && !Progress.CanAfford(node))
+        {
+            ShowToast(_settings.NotEnoughGoldMessage);
+            return;
+        }
+        if (!Progress.CanUpgrade(node)) return;
         if (!Progress.TryUpgrade(node))
         {
             RefreshAll();
@@ -433,9 +439,15 @@ public sealed class ResearchScreen : MonoBehaviour
     {
         var s = _settings;
         int level = Progress.GetLevel(node);
-        _toastText.text = string.Format(s.ToastFormat, s.GetDisplayName(Progress.Tree, node), level,
-            s.FormatDisplayValue(Progress.Tree, node, level));
+        ShowToast(string.Format(s.ToastFormat, s.GetDisplayName(Progress.Tree, node), level,
+            s.FormatDisplayValue(Progress.Tree, node, level)));
+    }
 
+    /// <summary>상단 알림으로 안내 문구를 잠시 보여준다.</summary>
+    public void ShowToast(string message)
+    {
+        var s = _settings;
+        _toastText.text = message;
         _toast.DOKill();
         _toastGroup.DOKill();
         _toast.gameObject.SetActive(true);
