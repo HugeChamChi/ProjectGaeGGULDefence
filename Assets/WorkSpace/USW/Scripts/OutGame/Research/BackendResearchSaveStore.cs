@@ -21,7 +21,7 @@ public sealed class AccountResearchData : AccountDocumentData
     }
 }
 
-/// <summary>All account research trees share a dedicated private server row.</summary>
+/// <summary>Legacy row is read once. Levels and currency then share PlayerData's journal and batched writes.</summary>
 public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
 {
     private readonly PlayerPrefsResearchSaveStore _local = new();
@@ -33,7 +33,7 @@ public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
     private async UniTask EnsureLoaded(ResearchSaveAddress address, CancellationToken token)
     {
         AccountJsonStore.RequireOwner(address.AccountKey, token);
-        if (_document.IsReady) return;
+        if (Player.PlayerData.IsReady && Player.PlayerData.Data.UpgradeProgress.AccountSnapshotMigrated) return;
         var operation = _load;
         if (operation == null)
         {
@@ -45,7 +45,13 @@ public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
     }
     private async UniTask LoadCore(UniTaskCompletionSource completion, int generation)
     {
-        try { await _document.InitializeAsync(); completion.TrySetResult(); }
+        try
+        {
+            await _document.InitializeAsync();
+            if (generation != _generation) throw new OperationCanceledException();
+            Player.PlayerData.MigrateResearchProgress(_document.Data.Trees);
+            completion.TrySetResult();
+        }
         catch (Exception error) { completion.TrySetException(error); }
         finally { if (generation == _generation) _load = null; }
     }
@@ -53,17 +59,7 @@ public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
     {
         if (address.AccountKey == ResearchSaveAddress.LocalAccount) return await _local.LoadAsync(address, token);
         await EnsureLoaded(address, token);
-        var tree = _document.Data.Trees.Find(x => x.TreeKey == address.TreeKey);
-        if (tree == null && Player.PlayerData.IsReady)
-        {
-            var legacy = Player.PlayerData.Data.UpgradeProgress.Trees.Find(x => x.TreeKey == address.TreeKey);
-            if (legacy != null)
-            {
-                legacy.GetLevels(address.TreeKey);
-                await SaveAsync(address, legacy, token);
-                tree = legacy;
-            }
-        }
+        var tree = Player.PlayerData.Data.UpgradeProgress.Trees.Find(x => x.TreeKey == address.TreeKey);
         return tree == null ? new ResearchSaveData { TreeKey = address.TreeKey }
             : JsonConvert.DeserializeObject<ResearchSaveData>(JsonConvert.SerializeObject(tree));
     }
@@ -72,13 +68,7 @@ public sealed class BackendResearchSaveStore : IResearchSaveStore, IDisposable
         if (address.AccountKey == ResearchSaveAddress.LocalAccount) { await _local.SaveAsync(address, data, token); return; }
         data.GetLevels(address.TreeKey);
         await EnsureLoaded(address, token);
-        var trees = _document.Data.Trees;
-        int index = trees.FindIndex(x => x.TreeKey == address.TreeKey);
-        var copy = JsonConvert.DeserializeObject<ResearchSaveData>(JsonConvert.SerializeObject(data));
-        if (index < 0) trees.Add(copy); else trees[index] = copy;
-        _document.Changed(); await _document.SaveAsync();
-        AccountJsonStore.RequireOwner(address.AccountKey, token);
-        if (_document.IsDirty) throw new IOException("Research save is pending. Retry before switching accounts.");
+        Player.PlayerData.SetUpgradeProgress(data);
     }
     public void Dispose() { Player.OnAccountCleared -= Clear; Clear(); }
 }

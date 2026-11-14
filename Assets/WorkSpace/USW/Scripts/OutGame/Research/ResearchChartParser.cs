@@ -45,6 +45,8 @@ public static class ResearchChartParser
                     Id = Text(row, "NodeId", true), Stat = EnumValue<ResearchStat>(row, "Stat"),
                     IconAddress = Text(row, "IconAddress", true), Shape = EnumValue<ResearchNodeShape>(row, "Shape"),
                     MaxLevel = Int(row, "MaxLevel", 1, 1000), ValuePerLevel = Number(row, "ValuePerLevel"),
+                    CostItemId = Text(row, "CostItemId"), BaseCost = Int(row, "BaseCost", 0, int.MaxValue),
+                    CostStep = Int(row, "CostStep", 0, int.MaxValue),
                     Row = Int(row, "Row", 0, 200), Column = Int(row, "Column", -1, 2),
                     Parents = Strings(row, "Parents"), RequireAnyParent = Bool(row, "RequireAnyParent"),
                     RequireAllParentsMax = row.ContainsKey("RequireAllParentsMax") && !string.IsNullOrWhiteSpace(Text(row, "RequireAllParentsMax")) && Bool(row, "RequireAllParentsMax"),
@@ -53,6 +55,10 @@ public static class ResearchChartParser
                 };
                 if (tree.Find(node.Id) != null) throw new FormatException("Duplicate node: " + key + "/" + node.Id);
                 if (float.IsInfinity(node.ValuePerLevel * node.MaxLevel)) throw new FormatException("Value overflow");
+                bool previewCost = key != "BASIC" && string.IsNullOrEmpty(node.CostItemId) && node.BaseCost == 0 && node.CostStep == 0;
+                if (!previewCost && (node.CostItemId != "Gold" || node.BaseCost < 1
+                    || (long)node.BaseCost + (long)node.CostStep * (node.MaxLevel - 1) > int.MaxValue))
+                    throw new FormatException("Invalid research cost: " + key + "/" + node.Id);
                 tree.Nodes.Add(node);
             }
             foreach (var tree in trees.Values)

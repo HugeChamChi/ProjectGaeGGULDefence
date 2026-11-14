@@ -10,14 +10,17 @@ public sealed class ResearchProgress
 {
     private readonly ResearchTreeData _tree;
     private readonly Dictionary<string, int> _levels;
+    private readonly PlayerDataController _wallet;
+    internal bool IsApplyingUpgrade { get; private set; }
 
     /// <summary>어떤 노드의 레벨이 바뀌었을 때 (여러 노드가 한꺼번에 바뀌면 null).</summary>
     public event Action<ResearchNodeData> OnChanged;
 
     /// <summary>이미 로드한 진행을 복사한다. 저장/네트워크 수명은 ResearchSaveSession이 담당한다.</summary>
-    public ResearchProgress(ResearchTreeData tree, IReadOnlyDictionary<string, int> levels)
+    public ResearchProgress(ResearchTreeData tree, IReadOnlyDictionary<string, int> levels, PlayerDataController wallet = null)
     {
         _tree = tree;
+        _wallet = wallet;
         _levels = new Dictionary<string, int>();
         if (levels != null) foreach (var pair in levels) _levels.Add(pair.Key, pair.Value);
     }
@@ -103,18 +106,40 @@ public sealed class ResearchProgress
     }
 
     /// <summary>지금 한 단계 올릴 수 있는지.</summary>
-    public bool CanUpgrade(ResearchNodeData node) => node != null && _tree.Find(node.Id) == node && GetState(node) == ResearchNodeState.Available;
+    public bool CanUpgrade(ResearchNodeData node) => node != null && _tree.Find(node.Id) == node
+        && GetState(node) == ResearchNodeState.Available && CanAfford(node);
 
-    /// <summary>영구 강화는 재화를 소모하지 않는다. 해금·선행·최대 레벨 조건은 유지한다.</summary>
-    public int GetUpgradeCost(ResearchNodeData node) => 0;
+    /// <summary>다음 한 단계의 비용. 표시와 실제 차감이 같은 차트 값을 사용한다.</summary>
+    public int GetUpgradeCost(ResearchNodeData node) => node == null || GetLevel(node) >= node.MaxLevel ? 0
+        : checked(node.BaseCost + node.CostStep * GetLevel(node));
+
+    public bool CanAfford(ResearchNodeData node) => _wallet == null || (_wallet.IsReady
+        && node.CostItemId == "Gold" && GetUpgradeCost(node) > 0 && _wallet.Data.Gold >= GetUpgradeCost(node));
 
     /// <summary>한 단계 올리고 저장한다. 못 올리면 false.</summary>
     public bool TryUpgrade(ResearchNodeData node)
     {
         if (!CanUpgrade(node)) return false;
-        _levels[node.Id] = GetLevel(node) + 1;
+        int nextLevel = GetLevel(node) + 1;
+        IsApplyingUpgrade = true;
+        try { if (_wallet != null && !_wallet.TryPurchaseResearch(_tree, node, Capture())) return false; }
+        finally { IsApplyingUpgrade = false; }
+        _levels[node.Id] = nextLevel;
         OnChanged?.Invoke(node);
         return true;
+    }
+
+    internal void RefreshFromAccount()
+    {
+        if (_wallet == null || !_wallet.IsReady || IsApplyingUpgrade) return;
+        var saved = _wallet.Data.UpgradeProgress.Trees.Find(x => x.TreeKey == _tree.TreeKey);
+        var levels = saved?.GetLevels(_tree.TreeKey) ?? new Dictionary<string, int>();
+        bool same = levels.Count == _levels.Count;
+        foreach (var pair in levels) same &= _levels.TryGetValue(pair.Key, out int value) && value == pair.Value;
+        if (same) return;
+        _levels.Clear();
+        foreach (var pair in levels) _levels.Add(pair.Key, pair.Value);
+        OnChanged?.Invoke(null);
     }
 
     /// <summary>
@@ -126,7 +151,7 @@ public sealed class ResearchProgress
         ResearchNodeData best = null;
         foreach (var node in _tree.Nodes)
         {
-            if (node == null || !CanUpgrade(node)) continue;
+            if (node == null || GetState(node) != ResearchNodeState.Available) continue;
             if (best == null || Rank(node) < Rank(best)) best = node;
         }
         return best;

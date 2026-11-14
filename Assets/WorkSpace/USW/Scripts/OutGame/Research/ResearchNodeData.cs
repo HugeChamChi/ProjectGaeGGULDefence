@@ -19,6 +19,10 @@ public class ResearchNodeData
     [Min(1)] public int MaxLevel = 3;
     [Tooltip("레벨당 오르는 값. 3레벨이면 이 값 × 3")]
     public float ValuePerLevel = 1f;
+    [Header("강화 비용")]
+    public string CostItemId = "Gold";
+    [Min(1)] public int BaseCost;
+    [Min(0)] public int CostStep;
     public int Row;
     [Range(-1, 2)] public int Column;
 

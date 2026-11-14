@@ -6,7 +6,7 @@ import { projectRoot, localFile, readJson } from './balance.mjs';
 import { chartTarget } from './deployment.mjs';
 import { writeChartXlsx, readChartXlsx } from './xlsx.mjs';
 
-export const researchColumns = ['SchemaVersion','ReleaseKey','TreeKey','TreeName','LegacySaveName','ShowLanes','ColumnSpacing','LaneNames','NodeId','Stat','IconAddress','Shape','MaxLevel','ValuePerLevel','Row','Column','Parents','RequireAnyParent','RequiredTotalLevel','ExclusiveGroup','RecommendOrder'];
+export const researchColumns = ['SchemaVersion','ReleaseKey','TreeKey','TreeName','LegacySaveName','ShowLanes','ColumnSpacing','LaneNames','NodeId','Stat','IconAddress','Shape','MaxLevel','ValuePerLevel','Row','Column','Parents','RequireAnyParent','RequiredTotalLevel','ExclusiveGroup','RecommendOrder','CostItemId','BaseCost','CostStep'];
 const stats = ['AttackPercent','AttackSpeedPercent','CritChance','CritDamage','SkillCooldownReduction','FoodProduction','StartFood','BossDamage','SkillDamage','TotemEffect'];
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 
@@ -23,6 +23,10 @@ export function validateResearch(rows) {
     for (const key of ['ColumnSpacing','ValuePerLevel'])
       if (String(row[key]).trim()==='' || !Number.isFinite(Number(row[key])) || Number(row[key])<0 || Number(row[key])>3.4028234663852886e38) throw Error('숫자 범위 오류: '+key);
     if (Number(row.ValuePerLevel)*Number(row.MaxLevel)>3.4028234663852886e38) throw Error('수치 합계 범위 초과');
+    for (const key of ['BaseCost','CostStep'])
+      if (!/^\d+$/.test(String(row[key])) || !Number.isSafeInteger(Number(row[key])) || Number(row[key]) > 2147483647) throw Error('비용 정수 범위 오류: '+key);
+    const preview = row.TreeKey !== 'BASIC' && row.CostItemId === '' && Number(row.BaseCost) === 0 && Number(row.CostStep) === 0;
+    if (!preview && (row.CostItemId !== 'Gold' || Number(row.BaseCost) < 1 || Number(row.BaseCost) + Number(row.CostStep) * (Number(row.MaxLevel)-1) > 2147483647)) throw Error('유효하지 않은 강화 비용');
     for (const key of ['ShowLanes','RequireAnyParent']) if (!['true','false','True','False','1','0'].includes(String(row[key]))) throw Error('boolean 오류: '+key);
     if (!stats.includes(row.Stat) || !['Square','Circle','Special'].includes(row.Shape)) throw Error('미지원 스탯 또는 모양');
     const arrays = {};
@@ -64,10 +68,9 @@ export function researchFromProject(project, releaseKey) {
   }
   const rows=project.tables.ResearchNode.map(n=>{
     const t=trees.get(n.TreeKey); if (!t) throw Error('트리 누락: '+n.TreeKey);
-    if (n.CostItemId || n.BaseCost!==0 || n.CostStep!==0) throw Error('현재 강화는 무료입니다. 비용 기능 구현 전에는 유료 설정을 배포할 수 없습니다.');
     return {SchemaVersion:1,ReleaseKey:releaseKey,TreeKey:t.TreeKey,TreeName:t.Name,LegacySaveName:t.LegacySaveName,
       ShowLanes:String(t.ShowLanes),ColumnSpacing:t.ColumnSpacing,LaneNames:JSON.stringify(t.LaneNames),
-      ...Object.fromEntries(['NodeId','Stat','IconAddress','Shape','MaxLevel','ValuePerLevel','Row','Column','RequiredTotalLevel','ExclusiveGroup','RecommendOrder'].map(k=>[k,n[k]])),
+      ...Object.fromEntries(['NodeId','Stat','IconAddress','Shape','MaxLevel','ValuePerLevel','Row','Column','RequiredTotalLevel','ExclusiveGroup','RecommendOrder','CostItemId','BaseCost','CostStep'].map(k=>[k,n[k]])),
       Parents:JSON.stringify(n.Parents),RequireAnyParent:String(n.RequireAnyParent)};
   });
   if (new Set(rows.map(r=>r.TreeKey)).size!==trees.size) throw Error('노드 없는 트리');

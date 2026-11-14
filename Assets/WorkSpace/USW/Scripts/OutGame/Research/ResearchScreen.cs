@@ -15,7 +15,7 @@ using VContainer;
 /// 처음 해 보는 사람을 위해 화면을 열면 추천 노드로 이동하고 그 노드를 선택해 둔다.
 /// 하단은 KHJ 아트의 고정 [추천 강화] / [강화] 두 버튼을 사용한다.
 /// 추천 강화는 추천 노드를, 강화는 현재 선택한 노드를 올린다.
-/// 진행 상황은 트리마다 IResearchSaveStore(지금은 PlayerPrefs)에 따로 저장한다. 영구 강화는 재화를 소모하지 않는다.
+/// 계정 강화는 재화와 함께 PlayerData의 로컬 저널에 기록하고 기존 배치 저장으로 전송한다.
 /// </summary>
 public sealed class ResearchScreen : MonoBehaviour
 {
@@ -108,6 +108,7 @@ public sealed class ResearchScreen : MonoBehaviour
         _retry.onClick.AddListener(Retry);
         _account.OnAccountChanged += Reload;
         Player.PlayerData.OnSaveStatusChanged += UpdateSaveStatus;
+        Player.PlayerData.OnUpdateUI += BalanceChanged;
         if (!_embeddedInLobby)
         {
             _back = ResearchUi.NewButton(transform, "BackToLobby", _settings.RoundedFill, _settings.Soft, "로비로",
@@ -176,8 +177,20 @@ public sealed class ResearchScreen : MonoBehaviour
     private void Retry()
     {
         if (_progresses == null) { Reload(); return; }
-        foreach (var session in _sessions) session.FlushAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        RetrySaveAsync().Forget();
         UpdateSaveStatus();
+    }
+
+    private async UniTaskVoid RetrySaveAsync()
+    {
+        foreach (var session in _sessions) await session.FlushAsync(this.GetCancellationTokenOnDestroy());
+        if (_account.AccountKey != ResearchSaveAddress.LocalAccount) await Player.PlayerData.TrySaveAsync();
+        UpdateSaveStatus();
+    }
+
+    private void BalanceChanged(PlayerData data)
+    {
+        if (Progress != null) RefreshAll();
     }
 
     private void UpdateSaveStatus()
@@ -186,7 +199,7 @@ public sealed class ResearchScreen : MonoBehaviour
         bool failed = false;
         if (_sessions != null) foreach (var session in _sessions) failed |= session.SaveError != null;
         _status.text = failed ? "저장에 실패했습니다. 다시 시도해 주세요." : Player.PlayerData.SaveStatus;
-        _retry.gameObject.SetActive(failed);
+        _retry.gameObject.SetActive(failed || (Player.PlayerData.IsDirty && !string.IsNullOrEmpty(Player.PlayerData.SaveStatus)));
     }
 
     private void ReleaseViews()
@@ -207,6 +220,7 @@ public sealed class ResearchScreen : MonoBehaviour
     {
         if (_account != null) _account.OnAccountChanged -= Reload;
         Player.PlayerData.OnSaveStatusChanged -= UpdateSaveStatus;
+        Player.PlayerData.OnUpdateUI -= BalanceChanged;
         _loading?.Cancel();
         ReleaseViews();
     }
@@ -227,6 +241,8 @@ public sealed class ResearchScreen : MonoBehaviour
                 await session.FlushAsync(this.GetCancellationTokenOnDestroy());
                 if (session.IsDirty || session.SaveError != null) { UpdateSaveStatus(); return; }
             }
+            if (_account.AccountKey != ResearchSaveAddress.LocalAccount && !await Player.PlayerData.TrySaveAsync())
+            { UpdateSaveStatus(); return; }
             await _scenes.TransitionToSceneAsync("LobbyScene");
         }
         catch (OperationCanceledException) { }
@@ -259,7 +275,7 @@ public sealed class ResearchScreen : MonoBehaviour
         wallet.color = new Color32(0x00, 0x50, 0x60, 0xFF);
         ResearchUi.Place(wallet.rectTransform, Vector2.one, Vector2.one,
             new Vector2(-Margin, -Margin), new Vector2(260f, 72f));
-        _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", "무료", 34f, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
+        _goldBalance = ResearchUi.NewText(wallet.transform, "Amount", string.Empty, 34f, s.FontBold, TextAlignmentOptions.Center, s.FontMaterial);
         ResearchUi.Stretch(_goldBalance.rectTransform);
         topBar.gameObject.SetActive(!_embeddedInLobby);
 
@@ -362,7 +378,7 @@ public sealed class ResearchScreen : MonoBehaviour
 
     private void RefreshAll()
     {
-        _goldBalance.text = "무료";
+        _goldBalance.text = Player.PlayerData.IsReady ? $"골드 {Player.PlayerData.Data.Gold:N0}" : "미리보기";
         View.Refresh();
         _info.Refresh();
     }

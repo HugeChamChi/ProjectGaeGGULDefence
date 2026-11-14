@@ -7,6 +7,8 @@ public sealed class UpgradeProgressData
     public int SchemaVersion = 1;
     public List<ResearchSaveData> Trees = new();
     public string LocalImportId = "";
+    // Once copied, PlayerResearchData is retained only as a legacy source for older clients.
+    public bool AccountSnapshotMigrated;
     public void Validate()
     {
         if (SchemaVersion != 1 || Trees == null) throw new FormatException("Unsupported upgrade save.");

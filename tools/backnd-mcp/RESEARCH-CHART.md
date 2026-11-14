@@ -1,5 +1,9 @@
 # 강화 트리 차트 작업과 사용법
 
+2026-11-14 갱신: BASIC 비용을 게임에 연결했다. 필수 비용 열은 CostItemId/기본 Gold, BaseCost/양의 정수, CostStep/0 이상의 정수이며 다음 비용은 BaseCost + CostStep × 현재 레벨이다. 최대 단계 비용은 int 범위여야 한다. 비활성 CHOICE/LANES의 공란·0 비용은 유지한다. 원본 PermanentUpgrade.xlsx에서 비용을 추출해 내장 JSON·트리 SO와 DEV/LIVE에 반영했다. 콘솔은 Excel 표시 문자열을 읽으므로 업로드 정수 서식은 쉼표 없는 `0`을 사용한다.
+
+재화와 강화 레벨은 PlayerData의 동일 로컬 복구 저널/서버 스냅샷에 저장한다. 기존 PlayerResearchData는 최초1회 이관하고 이후 클릭마다 서버를 호출하지 않는다. 기존30초/60초 배치 저장과 출격·백그라운드 저장을 사용한다. 구버전 앱의 별도 강화 저장과 혼용하지 않는다. `outputs/research-cost-20261114/RESULT.md` 참조. 아래 10월의 상태표·기록은 당시 상태다.
+
 2026-10-25. 기존 강화 트리를 차트 형식으로 연결했다. 서버 생성/업로드는 아직 하지 않았고 기본 데이터는 게임에 포함된 ResearchBalance.json이다.
 
 ## 작업 목록
@@ -38,7 +42,7 @@ MCP export_research_chart 인자:
 {"sourceFile":"outputs/research-charts/research-initial-20261025/outgame-project.json","releaseKey":"research-review-002","environment":"DEV"}
 ```
 
-새 출력 폴더를 만들고 기존 ReleaseKey 폴더를 덮어쓰지 않는다. 엑셀은 수식 없는 단일 ResearchBalance 시트, 첫 행 영문 열 이름이다. NodeId는 문자열이다. 비율은 0.02=2%, StartFood는 식량 수량이다. Parents와 LaneNames는 JSON 문자열 배열이다. 트리 설정은 노드 행마다 반복되며 같은 TreeKey의 설정이 다르면 거부한다. 단일 차트 파일을 사용해 여러 표의 버전 혼합을 피한다. 유료 비용 설정은 구현 전까지 내보내기에서 거부한다.
+새 출력 폴더를 만들고 기존 ReleaseKey 폴더를 덮어쓰지 않는다. 엑셀은 수식 없는 단일 ResearchBalance 시트, 첫 행 영문 열 이름이다. NodeId는 문자열이다. 비율은 0.02=2%, StartFood는 식량 수량이다. Parents와 LaneNames는 JSON 문자열 배열이다. 트리 설정은 노드 행마다 반복되며 같은 TreeKey의 설정이 다르면 거부한다. 단일 차트 파일을 사용해 여러 표의 버전 혼합을 피한다. 비용은 Unity와 같은 범위로 검증한 뒤 세 비용 열에 포함한다.
 
 TreeKey/NodeId/LegacySaveName은 저장 식별자다. 기존 키 변경은 별도 이관이 필요하다. MaxLevel을 낮춰도 저장 원값은 삭제하지 않으며 조회는 새 최대 레벨로 제한된다. 삭제한 노드의 저장 값도 기존 정책대로 보존한다.
 

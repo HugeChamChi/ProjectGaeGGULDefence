@@ -33,7 +33,8 @@ public sealed class ResearchSaveService : IDisposable
         // legacyPrefix is no longer read: the unversioned PlayerPrefs import was removed on 2026-11-11 (TODO G15).
         var address = new ResearchSaveAddress(accountKey, tree.TreeKey);
         if (!_sessions.TryGetValue(address.StorageKey, out var session))
-            _sessions.Add(address.StorageKey, session = new ResearchSaveSession(_store, address, tree));
+            _sessions.Add(address.StorageKey, session = new ResearchSaveSession(_store, address, tree,
+                _store is BackendResearchSaveStore && accountKey != ResearchSaveAddress.LocalAccount ? Player.PlayerData : null));
         else if (session.Progress != null && session.Progress.Tree != tree)
             throw new InvalidOperationException("서로 다른 트리에 같은 TreeKey가 지정되었습니다: " + tree.TreeKey);
         return session;

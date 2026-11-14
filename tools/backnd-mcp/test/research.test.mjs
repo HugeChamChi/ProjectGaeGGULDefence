@@ -16,8 +16,14 @@ test('current research data, malformed graphs and unsupported costs',()=>{
   const w=createRequire(import.meta.url)('../../planner-studio/app/content-workbook.cjs');
   const project=JSON.parse(JSON.stringify(w.engine().Studio.create()));
   assert.equal(researchFromProject(project,'test').length,61);
-  project.tables.ResearchNode[0].BaseCost=10;
-  assert.throws(()=>researchFromProject(project,'test'),/무료/);
+  const paid=researchFromProject(project,'test').find(n=>n.TreeKey==='BASIC');
+  assert.equal(paid.CostItemId,'Gold'); assert.ok(paid.BaseCost>0);
+  for(const change of [n=>n.BaseCost=0,n=>n.BaseCost=-1,n=>n.CostStep=-1,n=>n.CostStep=2147483647,n=>n.CostItemId='Diamond']) {
+    const altered=structuredClone(project); change(altered.tables.ResearchNode.find(n=>n.TreeKey==='BASIC'));
+    assert.throws(()=>researchFromProject(altered,'test'),/비용/);
+  }
+  const missing=structuredClone(rows); delete missing[0].BaseCost;
+  assert.throws(()=>validateResearch(missing),/열 누락/);
 });
 
 test('research XLSX round trip uses DEV and immutable release directory',async t=>{

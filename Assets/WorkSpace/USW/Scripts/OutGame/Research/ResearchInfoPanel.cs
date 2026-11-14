@@ -37,6 +37,8 @@ public sealed class ResearchInfoPanel
     private readonly Button _main;
     private readonly TextMeshProUGUI _recommendText;
     private readonly TextMeshProUGUI _mainText;
+    private readonly TextMeshProUGUI _recommendCost;
+    private readonly TextMeshProUGUI _mainCost;
     private ResearchProgress _progress;
     private ResearchNodeData _node;
     private RectTransform _pressedButton;
@@ -89,6 +91,8 @@ public sealed class ResearchInfoPanel
         row.offsetMax = new Vector2(-ButtonMargin, ButtonBottom + ButtonHeight);
         _recommend = BuildButton(row, "RecommendButton", 0, settings.MaxLabelSprite, settings.RecommendButtonLabel, out _recommendText);
         _main = BuildButton(row, "MainButton0", 1, settings.UpgradeButtonSprite, settings.UpgradeLabel, out _mainText);
+        _recommendCost = BuildCost(_recommend);
+        _mainCost = BuildCost(_main);
         var arrow = ResearchUi.NewRect(_recommend.transform, "UpgradeArrow");
         ResearchUi.Place(arrow, new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-14f, 4f), new Vector2(48f, 54f));
         arrow.gameObject.AddComponent<ResearchRecommendationArrow>().raycastTarget = false;
@@ -123,6 +127,9 @@ public sealed class ResearchInfoPanel
         _recommendText.text = _s.RecommendButtonLabel;
         bool maxed = _node != null && _progress != null && _progress.GetState(_node) == ResearchNodeState.Maxed;
         SetActionLayout(maxed);
+        RefreshCost(_recommend, _recommendText, _recommendCost, recommended);
+        RefreshCost(_main, _mainText, _mainCost, _node != null && _progress != null
+            && _progress.GetState(_node) != ResearchNodeState.Blocked && !maxed ? _node : null);
         if (_node == null || _progress == null)
         {
             _title.text = _statName.text = _value.text = _currentValue.text = string.Empty;
@@ -155,6 +162,39 @@ public sealed class ResearchInfoPanel
         _main.GetComponent<Image>().enabled = !maxed;
         _mainText.fontSize = maxed ? 88f : ButtonFont;
         _mainText.fontSizeMax = maxed ? 88f : ButtonFont;
+    }
+
+    private TextMeshProUGUI BuildCost(Button button)
+    {
+        var row = ResearchUi.NewRect(button.transform, "Cost");
+        ResearchUi.Place(row, new Vector2(.5f, 0f), new Vector2(.5f, 0f), new Vector2(0f, 8f), new Vector2(160f, 40f));
+        var icon = ResearchUi.NewImage(row, "CurrencyIcon", _s.GoldIcon, new Vector2(34f, 34f), Vector2.zero);
+        icon.preserveAspect = true;
+        var text = ResearchUi.NewText(row, "Amount", string.Empty, 32f, _s.FontBold, TextAlignmentOptions.Center, _s.FontMaterial);
+        return text;
+    }
+
+    private void RefreshCost(Button button, TextMeshProUGUI label, TextMeshProUGUI cost, ResearchNodeData node)
+    {
+        var row = (RectTransform)cost.transform.parent;
+        bool visible = node != null && _progress != null && node.CostItemId == "Gold" && node.BaseCost > 0;
+        row.gameObject.SetActive(visible);
+        ResearchUi.Stretch(label.rectTransform, 14f, visible ? 44f : 0f, 14f, visible ? 2f : 0f);
+        if (!visible) return;
+        cost.text = _progress.GetUpgradeCost(node).ToString("N0");
+        cost.color = _progress.CanAfford(node) ? Color.white : new Color32(255, 120, 120, 255);
+        cost.fontSize = 32f;
+        float width = cost.GetPreferredValues(cost.text).x + 4f;
+        float available = ((RectTransform)button.transform).rect.width - 28f;
+        if (width + 42f > available)
+        {
+            cost.fontSize = Mathf.Max(24f, 32f * (available - 42f) / width);
+            width = cost.GetPreferredValues(cost.text).x + 4f;
+        }
+        row.sizeDelta = new Vector2(width + 42f, 40f);
+        var icon = (RectTransform)row.Find("CurrencyIcon");
+        icon.anchoredPosition = new Vector2(-width * .5f - 4f, 0f);
+        ResearchUi.Place(cost.rectTransform, new Vector2(.5f, .5f), new Vector2(.5f, .5f), new Vector2(21f, 0f), new Vector2(width, 40f));
     }
 
     /// <summary>실제 누른 버튼과 선택 아이콘에 강화 완료 탄력을 적용한다.</summary>

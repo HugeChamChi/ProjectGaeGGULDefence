@@ -367,6 +367,42 @@ public class PlayerDataController : IDisposable, Global.IClearable
     /// <summary>Marks an existing direct data mutation at a legacy boundary as a durable change.</summary>
     public void MarkDirty() { if (IsReady) SaveAndRefresh(); }
 
+    /// <summary>One-time copy of the legacy document into the currency snapshot and its durable journal.</summary>
+    public void MigrateResearchProgress(System.Collections.Generic.List<ResearchSaveData> trees)
+    {
+        if (!IsReady) throw new InvalidOperationException("Upgrade account is unavailable.");
+        if (_data.UpgradeProgress.AccountSnapshotMigrated) return;
+        var next = JsonUtility.FromJson<UpgradeProgressData>(JsonUtility.ToJson(_data.UpgradeProgress));
+        foreach (var tree in trees)
+        {
+            tree.GetLevels(tree.TreeKey);
+            next.Trees.RemoveAll(x => x.TreeKey == tree.TreeKey);
+            next.Trees.Add(JsonUtility.FromJson<ResearchSaveData>(JsonUtility.ToJson(tree)));
+        }
+        next.AccountSnapshotMigrated = true;
+        next.Validate();
+        _data.UpgradeProgress = next;
+        SaveAndRefresh();
+    }
+
+    /// <summary>Gold and the next level enter one local journal immediately; existing debounce sends the snapshot.</summary>
+    public bool TryPurchaseResearch(ResearchTreeData tree, ResearchNodeData node, ResearchSaveData before)
+    {
+        if (!IsReady || !_data.UpgradeProgress.AccountSnapshotMigrated || tree == null || node == null || before == null
+            || node.CostItemId != "Gold" || tree.Find(node.Id) != node) return false;
+        var levels = before.GetLevels(tree.TreeKey);
+        var saved = _data.UpgradeProgress.Trees.Find(x => x.TreeKey == tree.TreeKey);
+        var current = saved?.GetLevels(tree.TreeKey) ?? new System.Collections.Generic.Dictionary<string, int>();
+        if (levels.Count != current.Count) return false;
+        foreach (var pair in levels) if (!current.TryGetValue(pair.Key, out int value) || value != pair.Value) return false;
+        var progress = new ResearchProgress(tree, levels);
+        int cost = progress.GetUpgradeCost(node);
+        if (cost <= 0 || _data.Gold < cost || !progress.TryUpgrade(node)) return false;
+        _data.Gold -= cost;
+        SetUpgradeProgress(progress.Capture());
+        return true;
+    }
+
     public void SetUpgradeProgress(ResearchSaveData tree, string importId = null)
     {
         if (!IsReady) throw new InvalidOperationException("Upgrade account is unavailable.");

@@ -8,6 +8,7 @@ public sealed class ResearchSaveSession : IDisposable
 {
     private readonly IResearchSaveStore _store;
     private readonly ResearchTreeData _tree;
+    private readonly PlayerDataController _wallet;
     private readonly CancellationTokenSource _lifetime = new();
     private UniTaskCompletionSource _load;
     private UniTaskCompletionSource _save;
@@ -24,8 +25,8 @@ public sealed class ResearchSaveSession : IDisposable
     /// <summary>저장 상태가 바뀌면 알린다. 구독자는 자신의 계정 세대를 확인해야 한다.</summary>
     public event Action OnSaveStateChanged;
     /// <summary>주입된 저장소와 고정 소유자로 세션을 구성한다.</summary>
-    public ResearchSaveSession(IResearchSaveStore store, ResearchSaveAddress address, ResearchTreeData tree)
-    { _store = store; Address = address; _tree = tree; }
+    public ResearchSaveSession(IResearchSaveStore store, ResearchSaveAddress address, ResearchTreeData tree, PlayerDataController wallet = null)
+    { _store = store; Address = address; _tree = tree; _wallet = wallet; }
 
     /// <summary>동시 로드는 하나로 합친다. 화면 취소는 앱 소유 로드를 중단하지 않는다.</summary>
     public async UniTask LoadAsync(CancellationToken cancellationToken)
@@ -49,8 +50,9 @@ public sealed class ResearchSaveSession : IDisposable
         {
             var data = await _store.LoadAsync(Address, token);
             token.ThrowIfCancellationRequested();
-            Progress = new ResearchProgress(_tree, data.GetLevels(Address.TreeKey));
+            Progress = new ResearchProgress(_tree, data.GetLevels(Address.TreeKey), _wallet);
             Progress.OnChanged += Changed;
+            if (_wallet != null) _wallet.OnUpdateUI += AccountUpdated;
             completion.TrySetResult();
         }
         catch (Exception error) { completion.TrySetException(error); }
@@ -63,6 +65,8 @@ public sealed class ResearchSaveSession : IDisposable
         _revision++;
         FlushAsync(_lifetime.Token).Forget();
     }
+
+    private void AccountUpdated(PlayerData data) => Progress?.RefreshFromAccount();
 
     /// <summary>진행 중 저장은 기다리고 후속 변경은 최신 스냅샷 하나로 합친다. 실패 시 dirty를 유지한다.</summary>
     public async UniTask FlushAsync(CancellationToken cancellationToken)
@@ -114,6 +118,7 @@ public sealed class ResearchSaveSession : IDisposable
         if (_disposed) return;
         _disposed = true;
         if (Progress != null) Progress.OnChanged -= Changed;
+        if (_wallet != null) _wallet.OnUpdateUI -= AccountUpdated;
         OnSaveStateChanged = null;
         _lifetime.Cancel();
         _lifetime.Dispose();
