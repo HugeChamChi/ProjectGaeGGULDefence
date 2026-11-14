@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
-  m_Name: 22_FinalBattle
+  m_Name: 16_RotateTotem
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
     delayBeforeExecute: 0
     useDim: 0
-    Stage: 22
-    Instruction: "\uC0AC\uC2B4\uC744 \uBB3C\uB9AC\uCCD0 \uC8FC\uC138\uC694."
+    Stage: 13
+    Instruction: "\uD1A0\uD15C\uC744 \uAE38\uAC8C \uB204\uB978 \uB4A4 \uBCA0\uD0D5
+      \uCABD\uC73C\uB85C \uB04C\uC5B4 \uD68C\uC804\uD574 \uC8FC\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

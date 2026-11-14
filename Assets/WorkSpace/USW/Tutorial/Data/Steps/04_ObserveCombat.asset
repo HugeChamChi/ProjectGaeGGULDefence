@@ -10,15 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
-  m_Name: 01_FirstSummon
+  m_Name: 04_ObserveCombat
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
     delayBeforeExecute: 0
     useDim: 0
-    Stage: 1
-    Instruction: "\uC2DD\uB7C9\uC73C\uB85C \uCD9C\uACA9\uD574\uC694. \uCD9C\uACA9
-      \uBC84\uD2BC\uC744 \uB124 \uBC88 \uB20C\uB7EC \uC8FC\uC138\uC694."
+    Stage: 15
+    Instruction: "\uC720\uB2DB\uC774 \uC790\uB3D9\uC73C\uB85C \uACF5\uACA9\uD574\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

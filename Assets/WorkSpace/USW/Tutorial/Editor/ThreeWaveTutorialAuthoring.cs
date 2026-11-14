@@ -81,9 +81,8 @@ public static class ThreeWaveTutorialAuthoring
     }
     private static void Add(IngameTutorialPlan plan, IngameTutorialStage stage, string instruction)
     {
-        string name = $"Steps/{(int)stage:00}_{stage}.asset";
-        var lesson = Load<IngameTutorialLesson>(name);
-        if (lesson == null) { lesson = ScriptableObject.CreateInstance<IngameTutorialLesson>(); AssetDatabase.CreateAsset(lesson, Root + name); }
+        var lesson = TutorialStepAssets.Find(stage);
+        if (lesson == null) { lesson = ScriptableObject.CreateInstance<IngameTutorialLesson>(); AssetDatabase.CreateAsset(lesson, TutorialStepAssets.NewPath(stage)); }
         lesson.Kind = IngameTutorialLesson.LessonKind.GameplayRecipe;
         lesson.Gameplay = new IngameTutorialStep { Stage = stage, Instruction = instruction };
         plan.Lessons.Add(lesson); EditorUtility.SetDirty(lesson);

@@ -80,7 +80,7 @@ public static class IngameTutorialSetup
             {
                 var lesson = ScriptableObject.CreateInstance<IngameTutorialLesson>();
                 lesson.Gameplay = step;
-                AssetDatabase.CreateAsset(lesson, $"{DataPath}/Steps/{(int)step.Stage:00}_{step.Stage}.asset");
+                AssetDatabase.CreateAsset(lesson, TutorialStepAssets.FindPath(step.Stage) ?? TutorialStepAssets.NewPath(step.Stage));
                 plan.Lessons.Add(lesson);
             }
             AssetDatabase.CreateAsset(plan, DataPath + "/FirstBattleSequence.asset");
@@ -291,7 +291,7 @@ public static class IngameTutorialSetup
         plan.Lessons.Clear();
         foreach (var (stage, instruction) in recipes)
         {
-            string path = $"{DataPath}/Steps/{(int)stage:00}_{stage}.asset";
+            string path = TutorialStepAssets.FindPath(stage) ?? TutorialStepAssets.NewPath(stage);
             var lesson = AssetDatabase.LoadAssetAtPath<IngameTutorialLesson>(path);
             if (lesson == null)
             {

@@ -99,7 +99,7 @@ public static class TutorialHackingDeckSetup
         };
         foreach (var pair in texts)
         {
-            var lesson = AssetDatabase.LoadAssetAtPath<IngameTutorialLesson>($"{DataPath}/Steps/{(int)pair.Key:00}_{pair.Key}.asset");
+            var lesson = TutorialStepAssets.Find(pair.Key);
             if (lesson == null) continue;
             lesson.Gameplay.Instruction = pair.Value;
             EditorUtility.SetDirty(lesson);

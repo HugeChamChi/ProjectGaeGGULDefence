@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
-  m_Name: 20_Conversion
+  m_Name: 14_PlaceTotem
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
     delayBeforeExecute: 0
     useDim: 0
-    Stage: 20
-    Instruction: "\uBCC0\uD658\uC11D\uC73C\uB85C \uC720\uB2DB\uC758 \uC885\uB958\uB97C
-      \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."
+    Stage: 11
+    Instruction: "\uD1A0\uD15C\uC744 \uD45C\uC2DC\uB41C \uBE48\uCE78\uC5D0 \uB193\uC544
+      \uC8FC\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

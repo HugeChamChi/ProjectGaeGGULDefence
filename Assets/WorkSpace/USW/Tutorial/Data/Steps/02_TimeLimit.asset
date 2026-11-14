@@ -10,16 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
-  m_Name: 17_OptionsMenu
+  m_Name: 02_TimeLimit
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
     delayBeforeExecute: 0
     useDim: 0
-    Stage: 17
-    Instruction: "\uC804\uD22C \uC911\uC5D0 \uBCFC \uC218 \uC788\uB294 \uC815\uBCF4\uB294
-      \uC774 \uBA54\uB274\uC5D0 \uBAA8\uC5EC \uC788\uC5B4\uC694.\n\uBA54\uB274 \uBC84\uD2BC\uC744
-      \uB20C\uB7EC \uBCF4\uC138\uC694."
+    Stage: 14
+    Instruction: "\uB0A8\uC740 \uC2DC\uAC04 \uC548\uC5D0 \uC801\uC744 \uBB3C\uB9AC\uCCD0\uC694.
+      \uCC98\uCE58\uD558\uBA74 60\uCD08\uB85C \uB3CC\uC544\uC640\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

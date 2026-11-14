@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4d630b9ced8b34b877691636c64e0f, type: 3}
-  m_Name: 05_LevelUp
+  m_Name: 12_TotemChoice
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
     delayBeforeExecute: 0
     useDim: 0
-    Stage: 5
-    Instruction: "\uC138 \uC120\uD0DD\uC9C0 \uC911 \uD558\uB098\uB97C \uACE8\uB77C
-      \uC774\uBC88 \uC804\uD22C\uB97C \uAC15\uD654\uD560 \uC218 \uC788\uC5B4\uC694."
+    Stage: 9
+    Instruction: "\uC804\uBC29 +2 \uD1A0\uD15C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.
+      \uC55E \uCE78 \uC720\uB2DB\uC758 \uB808\uBCA8\uC744 2 \uC62C\uB824\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 
