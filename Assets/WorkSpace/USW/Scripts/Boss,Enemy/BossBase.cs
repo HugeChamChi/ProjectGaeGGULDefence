@@ -253,6 +253,7 @@ public abstract class BossBase : MonoBehaviour
         {
             _animator.Play("Idle");
         }
+        BossHitReaction.Attach(this);
     }
 
     // ── 데미지 처리 ─────────────────────────────────────────────────

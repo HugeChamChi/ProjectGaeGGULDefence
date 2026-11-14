@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2cfd9d843b35264f85be43579c1f847, type: 3}
+  m_Name: BossHitReactionProfile
+  m_EditorClassIdentifier: Assembly-CSharp::BossHitReactionProfile
+  FillShader: {fileID: 4800000, guid: 45495790b394f894a967dbf44489b57b, type: 3}
+  FlashColor: {r: 1, g: 1, b: 1, a: 1}
+  NormalFlash: 0.16
+  CriticalFlash: 0.9
+  FlashOpacity: 0.55
+  FlashFastDecay: 4
+  FlashSlowDecay: 9
+  FlashDecayThreshold: 0.3
+  NormalSquash: 0.012
+  CriticalSquash: 0.045
+  SquashWidthRatio: 0.6
+  SquashLinearDecay: 0.25
+  SquashRemainPerSecond: 0.0001
+  CriticalShakeScreenFraction: 0.0045
+  CriticalShakeSeconds: 0.12
+  ReactToBurn: 0

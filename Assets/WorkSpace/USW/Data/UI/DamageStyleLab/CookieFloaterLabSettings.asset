@@ -14,22 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CookieFloaterLabSettings
   PoolCapacity: 64
   HitMaxPopups: 32
-  HitScatterRadius: {x: 320, y: 120}
+  HitScatterRadius: {x: 22, y: 22}
   HitSpacing: 8
   Variants:
   - Name: "A \uAE30\uC874 \uD769\uBFCC\uB9AC\uAE30"
     Motion: 0
     DiagonalAngle: 35
-    Lifetime: 0.6
-    Rise: 36
-    RiseEasePower: 2
-    FadeStart: 0.5
-    PopSeconds: 0.08
+    Lifetime: 0.8
+    Rise: 112
+    RiseEasePower: 3
+    FadeStart: 0.45
+    PopSeconds: 0.12
     PopOvershoot: 0.3
-    FontSize: 41
-    CriticalScale: 1.5
+    FontSize: 48
+    CriticalScale: 1.25
     BurnScale: 1.5
-    Alpha: 0.85
+    Alpha: 1
     FlushInterval: 0.15
     MaxPopups: 14
     Scatter: {x: 1, y: 0.8}
@@ -137,11 +137,11 @@ MonoBehaviour:
   Font: {fileID: 11400000, guid: aaa65b78c16511f488c948aa019d2c6e, type: 2}
   FontMaterial: {fileID: 2100000, guid: 1ed1176a96616b045870b85d2ccad108, type: 2}
   NormalColor:
-    Top: {r: 1, g: 0.84, b: 0.62, a: 1}
-    Bottom: {r: 1, g: 0.62, b: 0.38, a: 1}
+    Top: {r: 0.95686275, g: 0.6784314, b: 0.4862745, a: 1}
+    Bottom: {r: 0.95686275, g: 0.6784314, b: 0.4862745, a: 1}
   CriticalColor:
-    Top: {r: 0.9490196, g: 0.25882354, b: 0.101960786, a: 1}
-    Bottom: {r: 1, g: 0.61960787, b: 0.23921569, a: 1}
+    Top: {r: 1, g: 0.29411766, b: 0.22745098, a: 1}
+    Bottom: {r: 1, g: 0.29411766, b: 0.22745098, a: 1}
   BurnColor:
     Top: {r: 1, g: 0.36, b: 0.3, a: 1}
     Bottom: {r: 0.84, g: 0.06, b: 0.1, a: 1}

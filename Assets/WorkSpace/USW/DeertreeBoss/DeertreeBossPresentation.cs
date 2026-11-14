@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// Deertree visuals and field taps in the real battle scene: boss pose, apple branch, roots, bindings and the root sale badge.
 /// Poses are sampled on the combat clock by <see cref="BossDeertree"/>, the same way the approved lab samples them.
 /// </summary>
-public sealed class DeertreeBossPresentation : MonoBehaviour
+public sealed class DeertreeBossPresentation : MonoBehaviour, IBossHitVisual
 {
     private const string BossLayer = "Default", EffectLayer = "FX"; // FX draws above every unit row
     private const int BossOrder = -10, RootOrder = 40, VineOrder = 41, BranchOrder = 60, SellOrder = 70;
@@ -24,6 +24,8 @@ public sealed class DeertreeBossPresentation : MonoBehaviour
     private Transform _effects;
     private SkeletonAnimation _boss, _branch;
     private SkeletonRenderer _bossRenderer, _branchRenderer;
+    /// <inheritdoc />
+    public SkeletonRenderer HitSkeleton => _bossRenderer;
     private TrackEntry _bossTrack;
     private DeertreeEncounter.Pattern _bossPattern;
     private float _bossAge, _clock;
