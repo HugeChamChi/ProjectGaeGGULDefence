@@ -121,14 +121,17 @@ public sealed class ResearchBackground : MonoBehaviour
     {
         float width = _viewport.rect.width, height = _viewport.rect.height;
         int maxRow = _progress.HighestMaxedRow;
+        bool completed = _progress.Tree.Nodes.Count > 0;
+        foreach (var node in _progress.Tree.Nodes)
+            if (node != null && _progress.GetLevel(node) < node.MaxLevel) { completed = false; break; }
         float fill = 0f;
         if (maxRow >= 0)
         {
             float top = _content.rect.yMin + _settings.ContentPadding + _displayRow * _settings.RowSpacing;
             fill = _viewport.InverseTransformPoint(_content.TransformPoint(new Vector3(0f, top))).y - _viewport.rect.yMin;
         }
-        _reveal.sizeDelta = new Vector2(0f, Preview ? height : maxRow < 0 ? 0f : Mathf.Clamp(fill, 0f, height));
-        _frontierVisible = maxRow >= 0 && fill > 0f && fill < height;
+        _reveal.sizeDelta = new Vector2(0f, Preview || completed ? height : maxRow < 0 ? 0f : Mathf.Clamp(fill, 0f, height));
+        _frontierVisible = !completed && maxRow >= 0 && fill > 0f && fill < height;
         _completionRect.sizeDelta = new Vector2(width, 1);
         _completionRect.anchoredPosition = new Vector2(0, _reveal.sizeDelta.y);
         bool silhouette = Pattern == ResearchBackgroundPattern.SilhouetteDiagonal;
@@ -144,7 +147,7 @@ public sealed class ResearchBackground : MonoBehaviour
         {
             _bottomFade.SetAsLastSibling();
             _bottomFade.sizeDelta = new Vector2(0f, Mathf.Min(_settings.BackgroundBottomFadeHeight, RevealHeight));
-            _frontier.gameObject.SetActive(RevealHeight > 0f);
+            _frontier.gameObject.SetActive(RevealHeight > 0f && !completed);
         }
 
         int rows = Mathf.CeilToInt((contentHeight + _settings.BackgroundIconSize * 2f) / spacing) + 1;
