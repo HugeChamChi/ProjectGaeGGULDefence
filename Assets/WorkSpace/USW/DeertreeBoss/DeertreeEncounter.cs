@@ -79,7 +79,7 @@ public sealed class DeertreeEncounter
         if (Hp <= 0) return;
         if (IsInvulnerable) return;
         Hp = Mathf.Clamp01(fraction);
-        if (Hp <= _settings.FruitThreshold && !_fruitUsed) _fruitPending = true;
+        if (!_settings.CurseOnlyPractice && Hp <= _settings.FruitThreshold && !_fruitUsed) _fruitPending = true;
         if (Hp <= _settings.CurseThreshold && !_curseUsed) _cursePending = true;
         if (Hp <= 0) ClearEffects();
         else if (Casting == Pattern.Root)
@@ -127,6 +127,12 @@ public sealed class DeertreeEncounter
             if (cell.CurseTapsLeft <= 0) continue;
             cell.CurseRemaining = Mathf.Max(0, cell.CurseRemaining - delta);
             if (cell.CurseRemaining > 0) continue;
+            if (_settings.CurseOnlyPractice)
+            {
+                cell.CurseTapsLeft = _settings.CurseTaps;
+                cell.CurseRemaining = _settings.CurseDuration;
+                continue;
+            }
             cell.CurseTapsLeft = 0; cell.Tier = Mathf.Max(0, cell.Tier - 1);
             if (cell.Tier == 0) cell.RootBindTapsLeft = 0;
         }
@@ -167,7 +173,7 @@ public sealed class DeertreeEncounter
         bool fruitReady = !_fruitUsed && _fruitPending, curseReady = !_curseUsed && _cursePending;
         if (fruitReady && (FruitFirst || !curseReady)) { _fruitUsed = true; Begin(Pattern.Fruit); }
         else if (curseReady) { _curseUsed = true; Begin(Pattern.Curse); }
-        else if (_rootClock >= _settings.RootCooldown) { _rootClock = 0; Begin(Pattern.Root); }
+        else if (!_settings.CurseOnlyPractice && _rootClock >= _settings.RootCooldown) { _rootClock = 0; Begin(Pattern.Root); }
     }
 
     private void Begin(Pattern pattern)

@@ -45,7 +45,12 @@ namespace GaeGGUL.Tutorial
                 case IngameTutorialStage.OpenUpgrade: return new[] { IngameTutorialStage.Merge };
                 case IngameTutorialStage.UpgradeSlots: return new[] { IngameTutorialStage.OpenUpgrade };
                 case IngameTutorialStage.ChiefSkill: return new[] { IngameTutorialStage.LevelUp, IngameTutorialStage.UpgradeSlots };
-                case IngameTutorialStage.TotemChoice: return new[] { IngameTutorialStage.ChiefSkill };
+                case IngameTutorialStage.SecondWave: return new[] { IngameTutorialStage.UpgradeSlots };
+                case IngameTutorialStage.EarthquakeTelegraph: return new[] { IngameTutorialStage.SecondWave };
+                case IngameTutorialStage.TotemChoice: return new[] { IngameTutorialStage.LevelUp, IngameTutorialStage.EarthquakeTelegraph };
+                case IngameTutorialStage.Conversion: return new[] { IngameTutorialStage.RotateTotem };
+                case IngameTutorialStage.DeerCurse: return new[] { IngameTutorialStage.Conversion };
+                case IngameTutorialStage.FinalBattle: return new[] { IngameTutorialStage.DeerCurse };
                 case IngameTutorialStage.OpenInventory: return new[] { IngameTutorialStage.TotemChoice };
                 case IngameTutorialStage.PlaceTotem: return new[] { IngameTutorialStage.OpenInventory };
                 case IngameTutorialStage.MoveTotem: return new[] { IngameTutorialStage.PlaceTotem };

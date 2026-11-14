@@ -22,20 +22,18 @@ MonoBehaviour:
   - {x: 2, y: 1}
   - {x: 1, y: 2}
   - {x: 2, y: 2}
-  MergeUnit: {fileID: 11400000, guid: e9004d6b657e20b4dad7e9fa6f872c6d, type: 2}
-  UpgradeTarget: Deltan
+  MergeUnit: {fileID: 11400000, guid: af38c4fcb04c9804dbcb566956add72a, type: 2}
+  UpgradeTarget: Betan
   LevelUpChoices:
   - {fileID: 11400000, guid: bc4c748e27ffc85448fa237342157adb, type: 2}
   - {fileID: 11400000, guid: e21d7bf323b86e74cb36c6b3edceb059, type: 2}
   - {fileID: 11400000, guid: 429f8664f6ab1f14eb6a3ed4787c8805, type: 2}
-  GrantedChoices:
-  - {fileID: 11400000, guid: d7b716518b1c92b44a95a21f1ef4cc5f, type: 2}
-  - {fileID: 11400000, guid: a6e5732dcc0c22845adb4c2442a5c8c5, type: 2}
+  GrantedChoices: []
   TotemChoices:
-  - {fileID: 11400000, guid: 44f0490da603f2f49bea690fe7c7a979, type: 2}
-  - {fileID: 11400000, guid: 7e5d173d5f1534244a4b9a51d1e10b1e, type: 2}
-  - {fileID: 11400000, guid: 1dd83b38de995f341a84302ae5ebc23f, type: 2}
-  RequiredTotem: {fileID: 11400000, guid: 44f0490da603f2f49bea690fe7c7a979, type: 2}
+  - {fileID: 11400000, guid: a791346fd7f02e340a8008b5f66c1117, type: 2}
+  - {fileID: 11400000, guid: ddf84ba49c5a6b74f8945663b4db4a01, type: 2}
+  - {fileID: 11400000, guid: 3ccf14e36da670a4c845add64976c05f, type: 2}
+  RequiredTotem: {fileID: 11400000, guid: a791346fd7f02e340a8008b5f66c1117, type: 2}
   NonRotatableExample: {fileID: 11400000, guid: 716262fab7b56a2419695191945c6008,
     type: 2}
   CounterPattern: {fileID: 11400000, guid: a3d687d182678da4aa20c0cc82480787, type: 2}
@@ -50,15 +48,31 @@ MonoBehaviour:
   TotemReturnInstruction: "\uD655\uC778\uD588\uC73C\uBA74 \uAC00\uC18D \uD1A0\uD15C\uC73C\uB85C
     \uB3CC\uC544\uC640 \uC8FC\uC138\uC694.\n\uC88C\uC6B0\uB85C \uBC00\uC5B4 \uAC00\uC18D
     \uD1A0\uD15C\uC744 \uCC3E\uC544\uBCF4\uC138\uC694."
-  CombatPracticeInstruction: "\uD1A0\uD15C \uC774\uB3D9\uACFC \uD68C\uC804\uC744
-    \uBAA8\uB450 \uBC30\uC6E0\uC5B4\uC694!\n\uC774\uC81C WAVE 3 \uBCF4\uC2A4\uAE4C\uC9C0
-    \uBB3C\uB9AC\uCCD0 \uBCF4\uC138\uC694."
+  ChiefRallyDamageInstruction: "\uC561\uD2F0\uBE0C \uC2A4\uD0AC\uC740 \uB9C9\uAE30\uB9CC
+    \uD558\uB294 \uAC8C \uC544\uB2C8\uC5D0\uC694.\n\uB4DC\uB860\uC774 \uBAA8\uC5EC
+    \uC3D8\uB294 \uC9D1\uACB0 \uC0AC\uACA9\uC740 \uBCF4\uC2A4\uC5D0\uAC8C \uD070
+    \uD53C\uD574\uB97C \uC918\uC694."
+  ChiefCooldownInstruction: "\uB2E4\uC2DC \uC4F0\uB824\uBA74 {0}\uCD08\uB97C \uAE30\uB2E4\uB824\uC57C
+    \uD574\uC694.\n\uC704\uD5D8\uD55C \uD328\uD134\uC744 \uB9C9\uC744\uC9C0, \uACF5\uACA9\uC5D0
+    \uC4F8\uC9C0 \uACE8\uB77C \uBCF4\uC138\uC694."
+  TotemRotateSuccessInstruction: "\uAE30\uBCF8 \uB808\uBCA8 2\uC5D0 \uD1A0\uD15C
+    +2\uAC00 \uB354\uD574\uC838 4\uB808\uBCA8\uC774 \uB410\uC5B4\uC694. 3\uB808\uBCA8
+    \uD6A8\uACFC\uB3C4 \uCF1C\uC838\uC694!"
+  CombatPracticeInstruction: "\uC800\uC8FC \uD574\uC81C\uAE4C\uC9C0 \uBC30\uC6E0\uC5B4\uC694.
+    \uC774\uC81C \uC0AC\uC2B4\uC744 \uBB3C\uB9AC\uCCD0 \uBCF4\uC138\uC694!"
   MenuOpenInstruction: "\uC804\uD22C \uC911\uC5D0 \uBCFC \uC218 \uC788\uB294 \uC815\uBCF4\uB294
     \uC774 \uBA54\uB274\uC5D0 \uBAA8\uC5EC \uC788\uC5B4\uC694.\n\uBA54\uB274 \uBC84\uD2BC\uC744
     \uB20C\uB7EC \uBCF4\uC138\uC694."
-  MenuDamageInstruction: "하단 버튼 영역을 왼쪽으로 밀어 보세요.\n실시간 딜 그래프로 바뀌어요."
-  MenuDamageExplanation: "캐릭터 그림과 막대로 누가 얼마나 피해를 줬는지 볼 수 있어요.\n전투 중에도 실시간으로 갱신돼요."
-  MenuDamageReturnInstruction: "이번에는 오른쪽으로 밀어\n출격, 강화, 액티브 스킬, 토템 버튼으로 돌아가 보세요."
+  MenuDamageInstruction: "\uD558\uB2E8 \uBC84\uD2BC \uC601\uC5ED\uC744 \uC67C\uCABD\uC73C\uB85C
+    \uBC00\uC5B4 \uBCF4\uC138\uC694.\n\uC2E4\uC2DC\uAC04 \uB51C \uADF8\uB798\uD504\uB85C
+    \uBC14\uB00C\uC5B4\uC694."
+  MenuDamageExplanation: "\uCE90\uB9AD\uD130 \uADF8\uB9BC\uACFC \uB9C9\uB300\uB85C
+    \uB204\uAC00 \uC5BC\uB9C8\uB098 \uD53C\uD574\uB97C \uC92C\uB294\uC9C0 \uBCFC
+    \uC218 \uC788\uC5B4\uC694.\n\uC804\uD22C \uC911\uC5D0\uB3C4 \uC2E4\uC2DC\uAC04\uC73C\uB85C
+    \uAC31\uC2E0\uB3FC\uC694."
+  MenuDamageReturnInstruction: "\uC774\uBC88\uC5D0\uB294 \uC624\uB978\uCABD\uC73C\uB85C
+    \uBC00\uC5B4\n\uCD9C\uACA9, \uAC15\uD654, \uC561\uD2F0\uBE0C \uC2A4\uD0AC, \uD1A0\uD15C
+    \uBC84\uD2BC\uC73C\uB85C \uB3CC\uC544\uAC00 \uBCF4\uC138\uC694."
   MenuReopenInstruction: "\uBA54\uB274\uB97C \uB2E4\uC2DC \uC5F4\uC5B4 \uBCF4\uC138\uC694."
   MenuSelectionInstruction: "\uC774\uBC88\uC5D4 \uC120\uD0DD\uC9C0\uB97C \uB20C\uB7EC
     \uBCF4\uC138\uC694."
@@ -66,7 +80,8 @@ MonoBehaviour:
     \uC5EC\uAE30\uC5D0 \uBAA8\uC5EC\uC694.\n\uBAA8\uC11C\uB9AC\uC758 \uC5BC\uAD74\uC774
     \uD6A8\uACFC\uB97C \uBC1B\uB294 \uC720\uB2DB\uC774\uC5D0\uC694."
   MenuSettingsExplanation: "\uC18C\uB9AC\uC640 \uC9C4\uB3D9\uC740 \uC5EC\uAE30 \uC124\uC815\uC5D0\uC11C
-    \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694.\n\uD29C\uD1A0\uB9AC\uC5BC \uC911\uC5D0\uB294 \uC7A0\uC2DC \uC774\uC6A9\uD560 \uC218 \uC5C6\uC5B4\uC694."
+    \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694.\n\uD29C\uD1A0\uB9AC\uC5BC \uC911\uC5D0\uB294
+    \uC7A0\uC2DC \uC774\uC6A9\uD560 \uC218 \uC5C6\uC5B4\uC694."
   InitialCost: 20
   CostIncrease: 20
   TrainingFoodPerSecond: 20
@@ -77,7 +92,8 @@ MonoBehaviour:
   HandIdleTip: {x: 0.23, y: 0.86}
   HandPressedTip: {x: 0.18, y: 0.76}
   HandTapPressedFraction: 0.5
-  ChoicePreviewInstruction: "<b><color=#FF9D32>선택지를 꾹 누르고 있어 보세요.</color></b>\n영향을 받는 유닛이 강조돼요.\n필드에 해당 유닛이 없으면 강조 표시가 나타나지 않아요.\n확인한 뒤 손을 떼어 주세요."
+  ChoicePreviewInstruction: "\uD544\uB4DC \uBCF4\uAE30 \uBC84\uD2BC\uC73C\uB85C \uBC30\uCE58\uC640
+    \uB808\uBCA8\uC744 \uD655\uC778\uD560 \uC218 \uC788\uC5B4\uC694."
   ChoiceTermInstruction: "\uAC15\uC870\uB41C \u300C\uC6A9\uC5B4\u300D\uB97C \uB20C\uB7EC
     \uC124\uBA85\uC744 \uD655\uC778\uD574 \uBCF4\uC138\uC694.\n\uD655\uC778\uC774
     \uB05D\uB098\uBA74 \uC124\uBA85 \uCC3D\uC744 \uB2EB\uC544 \uC8FC\uC138\uC694."
@@ -89,6 +105,8 @@ MonoBehaviour:
   HoldCueOffset: {x: -84, y: 64}
   HoldCueColor: {r: 1, g: 0.8, b: 0.25, a: 1}
   ObserveCombatSeconds: 5
+  DeerPreparationHpFloor: 0.55
+  PracticeConversionStones: 1
   ExperienceFillSeconds: 2
   RevealSeconds: 0.35
   FocusSeconds: 0.65

@@ -225,41 +225,23 @@ public static class IngameTutorialChecks
             await UniTask.WaitUntil(()=>cards.All(c=>!c.AllowSelection),cancellationToken:token);
             await FocusReady(overlay);
             dialogue.CompleteTyping();
-            await UniTask.WaitUntil(()=>
-            {
-                float elapsed=Mathf.Max(0,Time.unscaledTime-Get<float>(overlay,"_started")-settings.FocusSeconds)%settings.GestureSeconds;
-                return elapsed>0.35f && elapsed<settings.HoldGestureSeconds;
-            },cancellationToken:token);
-            await Frames();
-            var cueMesh=overlay.canvasRenderer.GetMesh();
-            {
-                var cueVertices=cueMesh.vertices.Skip(Mathf.Max(0,cueMesh.vertexCount-192)).ToArray();
-                var cuePoints=cueVertices.Select(v=>RectTransformUtility.WorldToScreenPoint(null,overlay.rectTransform.TransformPoint(v))).ToArray();
-                var cueRect=Rect.MinMaxRect(cuePoints.Min(p=>p.x),cuePoints.Min(p=>p.y),cuePoints.Max(p=>p.x),cuePoints.Max(p=>p.y));
-                var handRect=overlay.ScreenRect(Get<Image>(overlay,"_handImage").rectTransform);
-                Check(cueVertices.Length==192 && !cueRect.Overlaps(handRect) && cueRect.xMin>=0 && cueRect.yMin>=0 && cueRect.xMax<=Screen.width && cueRect.yMax<=Screen.height,"Complete hold progress ring stays on screen and clear of the hand pointer");
-                Check(Vector2.Distance(cueRect.center,handRect.center)<Screen.width*0.25f,"Hold progress stays close to the pointer rather than in a screen corner");
-            }
-            Check(settings.ChoicePreviewInstruction.Contains("#FF9D32"),"Hold instruction uses authored orange emphasis");
-            await Snapshot("04a-hold-preview-guide");
-            var previewTargets=new System.Collections.Generic.List<UnitBase>();
-            var card=cards.FirstOrDefault(c=>LevelUpFeedbackTargets.Resolve(c.GetData(),grid,previewTargets)==LevelUpFeedbackDestination.Units)
-                ?? cards.First(c=>c.GetData().specialEffect!=LevelUpSpecialEffect.RerollChoices);
+            var card=cards.First(c=>c.GetData()==settings.LevelUpChoices[0]);
+            var cardBounds=overlay.ScreenRect((RectTransform)card.transform);
+            pointer.position=new Vector2(cardBounds.center.x,cardBounds.yMax-cardBounds.height*0.15f);
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);await Frames();
-            Check(game.CurrentState==GameManager.GameState.LevelUp && !card.AllowSelection,"Quick tap cannot skip required card hold preview");
+            Check(game.CurrentState==GameManager.GameState.LevelUp && !card.AllowSelection,"Quick tap cannot skip required term inspection");
             card.OnPointerDown(pointer);
             await UniTask.Delay(650,DelayType.Realtime,cancellationToken:token);
-            Check(Get<bool>(card,"_peeking") && !overlay.gameObject.activeSelf,"Hold reveals field without tutorial mask hiding units");
+            Check(!Get<bool>(card,"_peeking") && overlay.gameObject.activeSelf && !level.FieldPreviewBlocksInput,"Card hold no longer opens field preview or hides the tutorial guide");
             var highlighter=level.GetComponent<LevelUpPeekHighlighter>();
-            Check(Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Count>0,"Held choice highlights its affected field units");
-            Check(Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Contains(merged),"Holding the fixed first card highlights the merged unit");
+            Check(highlighter==null || Get<System.Collections.Generic.List<UnitBase>>(highlighter,"_targets").Count==0,"Held choice does not start target hopping");
             upgrade.OnPointerClick(pointer);
             Check(!upgrade.IsInteractable() && !Get<HSD.UI.Upgrade.UI_UpgradePanel>(director,"_upgradePanel").IsOpen,
-                "Choice field preview blocks upgrades even while the tutorial overlay is hidden");
-            await Snapshot("04-held-card-unit-highlight");
+                "Term inspection keeps upgrades blocked");
+            await Snapshot("04-card-hold-disabled");
             card.OnPointerUp(pointer);card.OnPointerClick(pointer);
             await UniTask.WaitUntil(()=>!card.TutorialPreviewOnly && !level.FieldPreviewBlocksInput,cancellationToken:token);
-            Check(game.CurrentState==GameManager.GameState.LevelUp,"Releasing preview does not select card");
+            Check(game.CurrentState==GameManager.GameState.LevelUp,"Releasing a long card press does not select card");
             Check(cards.All(c=>!c.AllowSelection),"Reward selection stays blocked until the term tutorial finishes");
             card.OnPointerDown(pointer);card.OnPointerUp(pointer);card.OnPointerClick(pointer);await Frames();
             Check(game.CurrentState==GameManager.GameState.LevelUp,"A card tap cannot skip the term tutorial");

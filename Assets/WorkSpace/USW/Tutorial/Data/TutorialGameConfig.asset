@@ -14,8 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridColumns: 6
   gridRows: 4
-  countdownSeconds: 600
+  countdownSeconds: 60
   _bossKillBonusSeconds: 30
+  _breatherBossKillBonusSeconds: 10
+  _hardBossKillBonusSeconds: 30
+  conversionHardFastSeconds: 20
+  conversionHardFastStones: 2
+  conversionHardSeconds: 40
+  conversionHardStones: 1
+  conversionBreatherFastSeconds: 20
+  conversionBreatherFastStones: 1
+  conversionCostPerTier: 1
   _bossClearNoticeDelaySeconds: 0.4
   bossSpawnDelaySeconds: 0
   cellSize: 1.5
@@ -23,10 +32,13 @@ MonoBehaviour:
   _totemRewardPositions: 02000000
   startingFood: 20
   placeCost: 10
+  summonInitialCost: 20
+  summonCostIncrease: 20
   baseCritChance: 0
   damageVariance: 0
   critDamageVariance: 0
   maxAttackSpeedMultiplier: 8
+  baseCritDamageMultiplier: 1.5
   tierPalette: {fileID: 11400000, guid: c3ac173e5b02b0e48abe0e41ca3ddfdd, type: 2}
   _defeatDuration: 0.8
   _defeatTimeScale: 0.2

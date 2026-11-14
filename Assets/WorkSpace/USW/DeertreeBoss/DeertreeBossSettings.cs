@@ -20,6 +20,8 @@ public sealed class DeertreeBossSettings : ScriptableObject
     [Min(1)] public int AppleTaps = 3;
     [Min(1)] public int CurseTaps = 5;
     [Min(1)] public int CurseTargets = 3;
+    [Header("Tutorial practice only (disabled on production settings)")]
+    public bool CurseOnlyPractice;
     [Tooltip("Offline preview timing estimate, measured from skill start to effect appearance.")]
     [Min(0)] public float RootWindup = 1.2f;
     [Min(0)] public float FruitWindup = 1.2f;

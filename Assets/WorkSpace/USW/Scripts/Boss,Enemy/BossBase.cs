@@ -227,6 +227,8 @@ public abstract class BossBase : MonoBehaviour
     public bool Invincible { get; set; } = false;
     /// <summary>Guided battles can accept damage while preserving the boss for a required lesson.</summary>
     public bool PreventDeath { get; set; }
+    /// <summary>Optional lesson gate; zero leaves normal combat unchanged.</summary>
+    public float LessonHpFloor { get; set; }
 
     /// <summary>데미지 1당 지급할 경험치 배율. BossManager.SpawnSingleBoss가 BossEntry 기준으로 설정한다.</summary>
     public float ExpMultiplier { get; set; } = 0.01f;
@@ -305,6 +307,11 @@ public abstract class BossBase : MonoBehaviour
             OnShieldChanged?.Invoke(Shield, MaxHp);
         }
         if (PreventDeath) units = Math.Min(units, Math.Max(0, _health.CurrentUnits - CombatHealth.Scale));
+        if (LessonHpFloor > 0)
+        {
+            long floor = (long)(MaxHp * (decimal)Mathf.Clamp01(LessonHpFloor) * CombatHealth.Scale);
+            units = Math.Min(units, Math.Max(0, _health.CurrentUnits - floor));
+        }
         long actual = units > 0 ? _health.ApplyDamage(units) : 0;
         bool died = IsDead;
         if (died) { Debuffs?.Clear(); _shieldUnits = 0; _deathStarted = true; }

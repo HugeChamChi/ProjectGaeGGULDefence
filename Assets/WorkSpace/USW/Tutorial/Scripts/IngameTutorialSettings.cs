@@ -80,6 +80,8 @@ namespace GaeGGUL.Tutorial
         /// <summary>Visible hold cue color.</summary>
         public Color HoldCueColor = new Color(1f, 0.8f, 0.25f, 1f);
         [Min(0)] public float ObserveCombatSeconds = 5f;
+        [Range(.51f, 1f)] public float DeerPreparationHpFloor = .55f;
+        [Min(1)] public int PracticeConversionStones = 1;
         [Min(0.1f)] public float ExperienceFillSeconds = 2f;
         [Min(0.1f)] public float RevealSeconds = 0.35f;
         [Min(0.1f)] public float FocusSeconds = 0.65f;

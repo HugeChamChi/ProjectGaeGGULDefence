@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
-    delayBeforeExecute: 1.5
+    delayBeforeExecute: 0
     useDim: 0
     Stage: 6
-    Instruction: "\uC774\uBC88\uC5D4 <color=#D66A27>\uAC15\uD654</color> \uCC28\uB840!\n\uAC15\uD654
-      \uBC84\uD2BC\uC744 \uB20C\uB7EC \uBCFC\uAE4C\uC694?"
+    Instruction: "\uC774\uBC88\uC5D0\uB294 \uC2DD\uB7C9\uC73C\uB85C \uBCA0\uD0D5
+      \uC885\uB958\uB97C \uAC15\uD654\uD574 \uBCFC\uAC8C\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

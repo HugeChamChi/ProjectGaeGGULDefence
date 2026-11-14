@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GaeGGUL.Tutorial.IngameTutorialLesson
   Kind: 0
   Gameplay:
-    delayBeforeExecute: 0.5
+    delayBeforeExecute: 0
     useDim: 0
     Stage: 1
-    Instruction: "출격 버튼을 4번 눌러 유닛을 소환해 주세요!"
+    Instruction: "\uC2DD\uB7C9\uC73C\uB85C \uCD9C\uACA9\uD574\uC694. \uCD9C\uACA9
+      \uBC84\uD2BC\uC744 \uB124 \uBC88 \uB20C\uB7EC \uC8FC\uC138\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 

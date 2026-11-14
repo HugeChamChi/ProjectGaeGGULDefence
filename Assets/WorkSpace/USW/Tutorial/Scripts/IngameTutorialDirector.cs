@@ -12,7 +12,7 @@ using VContainer;
 namespace GaeGGUL.Tutorial
 {
     /// <summary>Scene-owned orchestration of the first battle using actual gameplay and UI systems.</summary>
-    public sealed class IngameTutorialDirector : MonoBehaviour
+    public sealed partial class IngameTutorialDirector : MonoBehaviour
     {
         [SerializeField] private IngameTutorialPlan _plan;
         [SerializeField] private TutorialTargetBinding[] _targets;
@@ -120,6 +120,7 @@ namespace GaeGGUL.Tutorial
                 ValidateConfiguration();
                 _camera = Camera.main;
                 _running = true;
+                _tutorialFlow.OnBossReady += PrepareLessonBoss;
                 _previousSummonPermission = _spawner.CanPlayerSummon;
                 _spawner.CanPlayerSummon = () => _spawner.SuccessfulSpawnCount < _summonLimit &&
                     (_previousSummonPermission == null || _previousSummonPermission());
@@ -259,8 +260,6 @@ namespace GaeGGUL.Tutorial
                 !_settings.TotemChoices.Contains(_settings.RequiredTotem) || _settings.CounterPattern == null ||
                 _settings.CounterPattern.patternType != BossPatternType.Earthquake || _settings.CounterPattern.ImpactTimeSec <= 0)
                 throw new InvalidOperationException("Tutorial requires a fixed merge unit, three choices and three totems including a required rotatable reward.");
-            if (_settings.NonRotatableExample == null || _settings.NonRotatableExample.isRotatable)
-                throw new InvalidOperationException("Tutorial requires an authored non-rotatable badge example.");
             if (_plan != null)
             {
                 if (_targets != null && _targets.Where(t => t != null).GroupBy(t => t.Key).Any(g => string.IsNullOrWhiteSpace(g.Key) || g.Count() > 1))
@@ -402,22 +401,15 @@ namespace GaeGGUL.Tutorial
                     break;
                 case IngameTutorialStage.ObserveCombat:
                     Block();
-                    await Delay(_settings.ObserveCombatSeconds, token);
+                    await CombatGapAsync(token);
                     break;
                 case IngameTutorialStage.ExperienceGauge:
                     ShowRecipeDialogue();
                     await AwarenessAsync(Ui(_experienceTarget), token);
                     _time.Release(this);
-                    _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui(_experienceTarget));
-                    float startExp = _exp.CurrentExp;
-                    float requiredExp = _exp.ExpToLevelUp;
-                    const int fillSteps = 20;
-                    for (int i = 1; i <= fillSteps; i++)
-                    {
-                        await Delay(_settings.ExperienceFillSeconds / fillSteps, token);
-                        _exp.AddExp(Mathf.Max(0, Mathf.Lerp(startExp, requiredExp, i / (float)fillSteps) - _exp.CurrentExp));
-                    }
-                    await Delay(0.4f, token);
+                    _dialogue.Hide();
+                    _overlay.Hide();
+                    await Until(() => _exp.CurrentExp >= _exp.ExpToLevelUp, token);
                     break;
                 case IngameTutorialStage.ThreeSummons:
                     Block();
@@ -431,18 +423,20 @@ namespace GaeGGUL.Tutorial
                 case IngameTutorialStage.Merge:
                     ShowRecipeDialogue();
                     await MergeAsync(token);
+                    await CombatGapAsync(token);
                     break;
                 case IngameTutorialStage.LevelUp:
                     Block();
                     if (_optionsButton != null) _optionsButton.SetActive(true);
-                    _levelUpUI.RequireUnitPreview = true;
-                    _levelUpUI.HideFieldViewFooter = true;
+                    _levelUpUI.RequireUnitPreview = false;
+                    _levelUpUI.HideFieldViewFooter = false;
                     _exp.DeferLevelUps = false;
                     _exp.AddExp(0);
                     await Until(() => _levelUpUI.IsReadyForSelection, token);
                     ShowRecipeDialogue();
                     await AwarenessAsync(Ui(_levelUpUI.ChoiceArea), token);
                     await PreviewChoiceAsync(token);
+                    await FieldViewLessonAsync(token);
                     var choices = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
                     var requiredChoice = choices.First(c => c.GetData() == _settings.LevelUpChoices[0]);
                     foreach (var choice in choices)
@@ -462,7 +456,8 @@ namespace GaeGGUL.Tutorial
                     _exp.DeferLevelUps = true;
                     _levelUpUI.RequireUnitPreview = false;
                     _levelUpUI.HideFieldViewFooter = false;
-                    GrantTutorialChoices();
+                    await CombatGapAsync(token);
+                    _guidedBoss.PreventDeath = false;
                     break;
                 case IngameTutorialStage.OpenUpgrade:
                     Block();
@@ -583,7 +578,23 @@ namespace GaeGGUL.Tutorial
                     _time.Pause(this); ShowRecipeDialogue();
                     await RotateTotemAsync(token);
                     // ≡ 메뉴 수업이 뒤에 있으면 마지막 전투는 그 수업이 끝난 뒤 연다.
-                    if (!HasLesson(IngameTutorialStage.OptionsMenu)) await PracticeBattleAsync(token);
+                    if (!HasLesson(IngameTutorialStage.Conversion) && !HasLesson(IngameTutorialStage.OptionsMenu)) await PracticeBattleAsync(token);
+                    break;
+                case IngameTutorialStage.SecondWave:
+                    await SecondWaveAsync(token);
+                    break;
+                case IngameTutorialStage.EarthquakeTelegraph:
+                    await TelegraphAsync(token);
+                    break;
+                case IngameTutorialStage.Conversion:
+                    await ConversionLessonAsync(token);
+                    break;
+                case IngameTutorialStage.DeerCurse:
+                    await CurseLessonAsync(token);
+                    break;
+                case IngameTutorialStage.FinalBattle:
+                    _guidedBoss.PreventDeath = false;
+                    await PracticeBattleAsync(token);
                     break;
                 case IngameTutorialStage.OptionsMenu:
                     await OptionsMenuAsync(token);
@@ -861,25 +872,11 @@ namespace GaeGGUL.Tutorial
         private async UniTask PreviewChoiceAsync(CancellationToken token)
         {
             var cards = _levelUpUI.ChoiceArea.GetComponentsInChildren<LevelUpCardUI>();
-            var targets = new System.Collections.Generic.List<UnitBase>();
             var card = cards.First(c => c.GetData() == _settings.LevelUpChoices[0]);
-            if (LevelUpFeedbackTargets.Resolve(card.GetData(), _grid, targets) != LevelUpFeedbackDestination.Units || !targets.Contains(_mergedUnit))
-                throw new InvalidOperationException("Tutorial preview must highlight the fixed merged unit.");
-            bool previewed = false;
-            bool released = false;
-            void Peek(LevelUpCardUI source, bool peeking)
-            {
-                if (peeking) { previewed = true; _overlay.Hide(); }
-                else if (previewed) released = true;
-            }
-            foreach (var choice in cards) { choice.AllowSelection = false; choice.SetTutorialPreviewOnly(true); }
-            card.OnPeekChanged += Peek;
-            _dialogue.ShowText(_settings.ChoicePreviewInstruction, _lessonIndex, _lessonCount, false);
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Hold, Ui((RectTransform)card.transform));
+            // 카드 홀드 프리뷰는 폐지됐다. 기존 수업이 발생하지 않는 홀드 이벤트를 기다리지 않게 한다.
+            foreach (var choice in cards) { choice.AllowSelection = false; choice.SetTutorialPreviewOnly(false); }
             try
             {
-                await Until(() => released && !_levelUpUI.FieldPreviewBlocksInput, token);
-                foreach (var choice in cards) choice.SetTutorialPreviewOnly(false);
                 Canvas.ForceUpdateCanvases();
                 card.DescriptionText.ForceMeshUpdate();
                 if (card.DescriptionText.textInfo.linkCount == 0)
@@ -898,7 +895,6 @@ namespace GaeGGUL.Tutorial
             }
             finally
             {
-                if (card != null) card.OnPeekChanged -= Peek;
                 foreach (var choice in cards) if (choice != null) { choice.AllowSelection = true; choice.SetTutorialPreviewOnly(false); }
             }
         }
@@ -968,32 +964,6 @@ namespace GaeGGUL.Tutorial
             _dialogue.ShowText(_currentRecipe.Instruction, _lessonIndex, _lessonCount, false);
             _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, RequiredTotemBounds);
             await Until(() => _rewardUI.IsReadyForConfirmation, token);
-            Block();
-            _rewardUI.SetTutorialBrowsing(true);
-            _dialogue.ShowText(_settings.TotemSwipeInstruction, _lessonIndex, _lessonCount, false);
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Swipe, TotemSwipeBounds);
-            await Until(() => _rewardUI.DetailChoice != null && _rewardUI.DetailChoice != _settings.RequiredTotem, token);
-            Block();
-            _rewardUI.SetTutorialBrowsing(false);
-            _dialogue.ShowText(_settings.TotemReturnInstruction, _lessonIndex, _lessonCount, false);
-            _rewardUI.SetTutorialBrowsing(true);
-            _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.SwipeRight, TotemSwipeBounds);
-            await Until(() => _rewardUI.DetailChoice == _settings.RequiredTotem, token);
-            _rewardUI.SetTutorialBrowsing(false);
-            _dialogue.ShowText(_settings.TotemRotationBadgeInstruction, _lessonIndex, _lessonCount, true);
-            await AwarenessAsync(Ui(_rewardUI.DetailRotationBadge), token);
-            var badge = _rewardUI.DetailRotationBadge.GetComponent<TotemRotateBadgeView>();
-            _rotationComparison = badge.CreateComparison(_settings.NonRotatableExample, _settings.TotemBadgeComparisonGap);
-            try
-            {
-                _dialogue.ShowText(_settings.TotemNoRotationInstruction, _lessonIndex, _lessonCount, true);
-                await AwarenessAsync(Ui((RectTransform)_rotationComparison.transform), token);
-            }
-            finally
-            {
-                if (_rotationComparison != null) Destroy(_rotationComparison.gameObject);
-                _rotationComparison = null;
-            }
             Block();
             if (!_rewardUI.ConfirmTutorialChoice()) throw new InvalidOperationException("Required tutorial totem is not ready to confirm.");
             await Until(() => !_rewardUI.IsOpen && _inventory.Items.Count > 0, token);
@@ -1149,6 +1119,7 @@ namespace GaeGGUL.Tutorial
             _income = false;
             if (!_running) return;
             _running = false;
+            RestoreThreeWaveLessons();
             if (_spawner != null) _spawner.CanPlayerSummon = _previousSummonPermission;
             if (_overlay != null) _overlay.Hide();
             _time?.Release(this);

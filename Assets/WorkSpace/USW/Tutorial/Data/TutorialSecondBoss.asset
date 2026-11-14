@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a665f6b16a8c1046a8f6dec368ce7f1, type: 3}
   m_Name: TutorialSecondBoss
   m_EditorClassIdentifier: Assembly-CSharp::BossData
-  _displayName: DummyBoss2
-  _prefab: {fileID: 5097534829583230306, guid: 67b930a4bb684fd488d42f204f2e0932, type: 3}
-  _icon: {fileID: 21300000, guid: c04f17808312b4548badf98a7a7679e6, type: 3}
-  _maxHp: 4500
+  _displayName: "\uC545\uC5B4 (\uC784\uC2DC \uC678\uD615)"
+  _prefab: {fileID: 8359961223642800298, guid: ccc6adb766302c14793fba5bc7be4ef2, type: 3}
+  _icon: {fileID: 21300000, guid: 499066ea7e505104d98ac28ef617b8ad, type: 3}
+  _maxHp: 7000
   _defense: 0
-  _hpLineCount: 420
-  _expReward: 400
+  _hpLineCount: 3
+  _expReward: 100

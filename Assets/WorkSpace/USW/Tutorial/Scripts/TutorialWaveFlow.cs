@@ -50,6 +50,8 @@ public sealed class TutorialWaveFlow : IDisposable
     public event Action<int> OnWaveChanged;
     /// <summary>Accepted boss defeat before the result snapshot.</summary>
     public event Action OnBossDefeated;
+    /// <summary>Configures lesson gates before any placed unit starts fighting the new boss.</summary>
+    public event Action<BossBase, int> OnBossReady;
     /// <summary>Reward request with a stale/duplicate-safe completion.</summary>
     public event Action<Action> OnTotemSelectionRequested;
     /// <summary>Zero-based tutorial wave for existing HUD and lesson bindings.</summary>
@@ -176,6 +178,7 @@ public sealed class TutorialWaveFlow : IDisposable
         _timerManager?.ResumeTimer();
         var mainBoss = _bossManager.CurrentBoss;
         encounterBoss = mainBoss;
+        OnBossReady?.Invoke(mainBoss, CurrentWave);
         foreach (var cell in _gridManager.GetOccupiedCells())
         {
             if (!_run.Matches(runId, round)) return;
@@ -218,9 +221,7 @@ public sealed class TutorialWaveFlow : IDisposable
             _fieldPause.HoldAttacks(this);
             try
             {
-                if (gameConfig != null && _clearPresentation != null && _clearPresentation.isActiveAndEnabled)
-                    await _clearPresentation.PlayBossClearAsync(bonusSeconds, bossPosition, gameConfig, token);
-                else if (gameConfig != null) _timerManager?.AddBossKillTime(bonusSeconds);
+                _timerManager?.ResetBossKillTime(gameConfig.countdownSeconds);
             }
             finally { _fieldPause.Exit(this, _run.IsActive && !_gameManager.IsFinished); }
             if (!OwnsEncounter(runId, round, bossIndex, EncounterPhase.RewardDelay)) return;
