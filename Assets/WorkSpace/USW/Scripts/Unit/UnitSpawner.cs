@@ -375,7 +375,8 @@ public class UnitSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Boss penalty: replaces the unit with the same unit one tier lower in its cell, or removes a Normal unit.
+    /// Boss penalty: lowers permanent in-run level by one, or removes a level-one unit.
+    /// Non-level units retain their tier-based penalty. Totem bonuses never protect the base level.
     /// No sale reward, sale damage or sale event. Returns the replacement, or null when the unit was removed.
     /// </summary>
     public UnitBase DemoteUnit(UnitBase unit)
@@ -385,13 +386,16 @@ public class UnitSpawner : MonoBehaviour
         if (cell == null) return null;
         unit.RestoreOriginalTier();
         var data = unit.unitData;
+        bool levelUnit = unit.UsesTotemLevels;
+        int lowerLevel = unit.BaseLevel - 1;
         Tier tier = unit.currentTier;
         cell.RemoveUnit();
         unit.OnRemoved();
         Destroy(unit.gameObject);
-        if (tier <= Tier.Normal || data == null) return null;
-        var lower = _unitFactory.CreateUnitFromData(data, (Tier)((int)tier - 1));
+        if (data == null || (levelUnit ? lowerLevel < 1 : tier <= Tier.Normal)) return null;
+        var lower = _unitFactory.CreateUnitFromData(data, levelUnit ? Tier.Normal : (Tier)((int)tier - 1));
         if (lower == null) return null;
+        if (levelUnit) lower.SetBaseLevel(lowerLevel);
         PlaceUnitWithEffect(lower, cell, cell.transform.position);
         return lower;
     }

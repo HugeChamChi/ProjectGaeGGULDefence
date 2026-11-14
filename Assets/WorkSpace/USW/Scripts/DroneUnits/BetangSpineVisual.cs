@@ -81,7 +81,7 @@ public sealed class BetangSpineVisual : MonoBehaviour, IPauseIdleVisual
         _skillSequence = false;
     }
 
-    private int CurrentTierIndex => _unit == null ? 0 : _unit.currentTier switch
+    private int CurrentTierIndex => _unit == null ? 0 : _unit.GrowthTier switch
     {
         Tier.Rare => 1,
         Tier.Epic => 2,

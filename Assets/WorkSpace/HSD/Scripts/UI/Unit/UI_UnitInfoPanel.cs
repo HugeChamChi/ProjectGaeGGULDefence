@@ -266,7 +266,7 @@ namespace GaeGGUL.UI.Unit
             }
             _levelProgressPanel.gameObject.SetActive(true);
             _levelProgressText.text = text;
-            float width = Mathf.Max(1f, ((RectTransform)transform).rect.width - 40f);
+            float width = Mathf.Max(1f, (transform is RectTransform panelRect ? panelRect.rect.width : 0f) - 40f);
             float height = _levelProgressText.GetPreferredValues(text, width, float.PositiveInfinity).y + 20f;
             _levelProgressPanel.sizeDelta = new Vector2(0f, height);
         }

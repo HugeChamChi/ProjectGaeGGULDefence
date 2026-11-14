@@ -219,7 +219,7 @@ public class UnitFactory : MonoBehaviour
         }
 
         unit.unitData = runtimeData;
-        unit.currentTier = tier;
+        unit.currentTier = unit.UsesTotemLevels ? Tier.Normal : tier;
         unit.animator?.Initialize(unit);
 
         unit.Init(_deps);

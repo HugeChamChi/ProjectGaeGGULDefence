@@ -144,26 +144,18 @@ try {
     cells[3,2].RemoveUnit();cells[3,2].TryPlaceUnit(beta);Set(beta,"<currentCell>k__BackingField",cells[3,2]);
     beta.PlaceForCheck();
     Check(beta.OwnedDroneCount==1,"Betan starts with one real spawned drone");
-    var tier=Place<TotemTemporaryTierBoost>(RangeData());
-    Check(beta.currentTier==Tier.Rare && beta.OwnedDroneCount==2,"Temporary tier immediately spawns second Betan drone");
-    tier.PaintAffectedCells();Check(beta.OwnedDroneCount==2,"Repaint does not spawn duplicate drones");
-    tier.OnRemoved();Check(beta.currentTier==Tier.Normal && beta.OwnedDroneCount==1,"Removal restores Betan tier and retracts excess drone");
-    tier.OnPlaced(cells[2,2]);Check(beta.OwnedDroneCount==2,"Reentry restores second drone");
-    beta.OnRemoved();Check(beta.OwnedDroneCount==0,"Removing boosted owner never respawns drones during tier restoration");
-    tier.OnRemoved();
-    var selections=Comp<LevelUpManager>();var production=Data<LevelUpData>();production.chooseId=99120;
-    DroneSelectionPresets.Configure(production,DroneSelectionKind.ExtraCombatDrone);selections.ApplyEffect(production);
-    var enhanced=Comp<CombatDroneCheckProbe>();enhanced.unitData=Data<UnitData>();enhanced.unitData.maxDroneCount.rare=2;enhanced.unitData.maxDroneCount.epic=3;enhanced.unitData.maxDroneCount.legend=4;
-    enhanced.currentTier=Tier.Rare;enhanced.Init(new UnitDependencies {SelectionCombat = selections.Effects, DroneEffects = selections.Effects, SelectionChanges = selections.Effects, CombatSettings = selections.CombatConfiguration});
-    cells[3,2].RemoveUnit();cells[3,2].TryPlaceUnit(enhanced);Set(enhanced,"<currentCell>k__BackingField",cells[3,2]);enhanced.PlaceForCheck();
-    tier.OnPlaced(cells[2,2]);Check(enhanced.currentTier==Tier.Epic && enhanced.OriginalTier==Tier.Rare && enhanced.OwnedDroneCount==3,"Temporary Epic does not unlock production card bonus");
-    cells[3,2].RemoveUnit();cells[4,2].TryPlaceUnit(enhanced);Set(enhanced,"<currentCell>k__BackingField",cells[4,2]);tier.PaintAffectedCells();
-    Check(enhanced.currentTier==Tier.Rare && enhanced.OwnedDroneCount==2,"Moving outside tier range immediately retracts extra drone");
-    enhanced.RemoveForCheck();enhanced.currentTier=Tier.Epic;enhanced.PlaceForCheck();
-    Check(enhanced.OwnedDroneCount==4,"Owned Epic retains production card extra drone");
-    enhanced.TryApplyTemporaryTier(tier);Check(enhanced.OwnedDroneCount==5,"Owned Epic promoted to Legend has four plus production drone");
-    enhanced.RemoveTemporaryTier(tier);Check(enhanced.OwnedDroneCount==4,"Restoring Epic preserves production card drone");
-    enhanced.OnRemoved();
+    // 2026-11-14: Betan has no tiers. Combat drones and Spine arms follow its current level (base + totem):
+    // Lv1 1, Lv3 2, Lv6 3, Lv9+ 4. Legacy temporary-tier totems and card 9120 (owned Epic bonus) are out of the pool.
+    // Same 1/2/3/4 table as UnitData_Betan; the shared check data only authors the lower entries.
+    beta.unitData.maxDroneCount.normal=1;beta.unitData.maxDroneCount.rare=2;beta.unitData.maxDroneCount.epic=3;beta.unitData.maxDroneCount.legend=4;
+    Check(beta.UsesTotemLevels && beta.GrowthTier==Tier.Normal && beta.OwnedDroneCount==1,"Betan Lv1 keeps one drone");
+    beta.SetBaseLevel(3);Check(beta.GrowthTier==Tier.Rare && beta.OwnedDroneCount==2,"Betan Lv3 immediately spawns a second drone");
+    beta.SetTotemLevelBonus(3);Check(beta.CurrentLevel==6 && beta.OwnedDroneCount==3,"Totem levels count toward Betan drones (Lv6 three; level="+beta.CurrentLevel+", drones="+beta.OwnedDroneCount+")");
+    beta.SetTotemLevelBonus(0);Check(beta.OwnedDroneCount==2,"Removing totem levels retracts the extra drone");
+    beta.SetBaseLevel(9);Check(beta.OwnedDroneCount==4,"Betan Lv9 reaches four drones");
+    beta.SetBaseLevel(12);Check(beta.GrowthTier==Tier.Legend && beta.OwnedDroneCount==4,"Betan Lv12 stays at the four-arm maximum");
+    beta.SetBaseLevel(1);Check(beta.OwnedDroneCount==1,"Lowering Betan level retracts drones");
+    beta.OnRemoved();Check(beta.OwnedDroneCount==0,"Removing Betan releases its drones");
 } finally {
     foreach(var t in totems)if(t!=null && t.IsActive)t.OnRemoved();
     UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);

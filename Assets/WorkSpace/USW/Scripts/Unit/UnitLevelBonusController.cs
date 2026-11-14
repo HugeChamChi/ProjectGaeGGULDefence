@@ -33,7 +33,7 @@ public sealed class UnitLevelBonusController
 
     public void SetLevel(int level)
     {
-        if (level < 1 || level > 15) throw new ArgumentOutOfRangeException(nameof(level));
+        if (level < 1) throw new ArgumentOutOfRangeException(nameof(level));
         Level = level;
         stats.Clear();
         cycles.Clear();

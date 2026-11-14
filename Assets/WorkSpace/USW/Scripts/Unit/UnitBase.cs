@@ -23,19 +23,47 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public UnitData unitData;
     public UnitLevelBonusController LevelBonuses { get; private set; }
     public int CurrentLevel => LevelBonuses?.Level ?? 1;
+    /// <summary>Maximum in-run level, including temporary totem bonuses.</summary>
+    public const int MaxUnitLevel = int.MaxValue;
+    private int _baseLevel = 1;
+    private int _totemLevelBonus;
+    /// <summary>Permanent in-run level earned by merging; excludes totems.</summary>
+    public int BaseLevel => _baseLevel;
+    /// <summary>Sets the permanent in-run level without consuming temporary totem levels.</summary>
+    public void SetBaseLevel(int level)
+    {
+        if (level < 1 || level > MaxUnitLevel) throw new ArgumentOutOfRangeException(nameof(level));
+        _baseLevel = level;
+        RefreshUnitLevel();
+    }
     public bool UsesTotemLevels => this is Disigman || this is Drone_Betan || this is Drone_Deltan || this is Drone_Gamman || this is Drone_Zeltan;
-    public float LevelGrowthMultiplier => 1f + (CurrentLevel - 1) * (this is Drone_Deltan ? .01f : .02f);
+    public float LevelGrowthMultiplier => 1f + (CurrentLevel - 1) * (this is Drone_Deltan || this is Drone_Zeltan ? .01f : .02f);
     public float LevelAttackGrowth => UsesTotemLevels && !(this is Drone_Deltan) && !(this is Drone_Zeltan) ? LevelGrowthMultiplier : 1f;
     public float LevelSpeedGrowth => this is Drone_Deltan ? LevelGrowthMultiplier : 1f;
     public float LevelFoodGrowth => this is Drone_Zeltan ? LevelGrowthMultiplier : 1f;
     public event Action OnLevelChanged;
+    /// <summary>Levels per growth step for tier-indexed tables (Betan arms and combat drones): Lv1 0, Lv3 1, Lv6 2, Lv9+ 3.</summary>
+    public const int LevelsPerGrowthStep = 3;
+    /// <summary>
+    /// Tier used by tier-indexed growth tables (combat drone count, Betan Spine arms). Level units grow by current level
+    /// including temporary totem levels (user decision 2026-11-14); other units keep their combat tier.
+    /// </summary>
+    public Tier GrowthTier => UsesTotemLevels ? (Tier)Mathf.Clamp(CurrentLevel / LevelsPerGrowthStep, (int)Tier.Normal, (int)Tier.Legend) : currentTier;
     public void SetTotemLevelBonus(int amount)
     {
+        _totemLevelBonus = Mathf.Max(0, amount);
+        RefreshUnitLevel();
+    }
+
+    private void RefreshUnitLevel()
+    {
         if (!UsesTotemLevels || LevelBonuses == null) return;
-        int level = Mathf.Clamp(1 + amount, 1, 15);
+        int level = (int)Math.Min((long)_baseLevel + _totemLevelBonus, MaxUnitLevel);
         if (CurrentLevel == level) return;
+        var growth = GrowthTier;
         LevelBonuses.SetLevel(level);
         OnLevelChanged?.Invoke();
+        if (GrowthTier != growth) OnCombatTierChanged();
     }
     public float LevelStat(UnitBonusStat stat) => LevelBonuses?.GetStat(stat) ?? 0f;
     public virtual float LevelAttackSpeedBonus => 0f;
@@ -219,6 +247,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
+        _baseLevel = 1;
+        _totemLevelBonus = 0;
         if (UsesTotemLevels) currentTier = Tier.Normal;
         var characterId = unitData != null ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
         int level = Player.Characters.IsReady ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;

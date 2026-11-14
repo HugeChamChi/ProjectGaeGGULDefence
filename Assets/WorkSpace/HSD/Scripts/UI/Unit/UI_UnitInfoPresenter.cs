@@ -119,7 +119,9 @@ namespace GaeGGUL.UI.Unit
             if (_unit != null && _unit.UsesTotemLevels)
             {
                 int level = _unit.CurrentLevel;
-                _view.UpdateBasicInfo($"{data.unitName} Lv.{level} / 15", data.icon, Tier.Normal);
+                int temporary = level - _unit.BaseLevel;
+                string levelText = temporary > 0 ? $"기본 {_unit.BaseLevel} + 토템 {temporary}" : $"기본 {_unit.BaseLevel}";
+                _view.UpdateBasicInfo($"{data.unitName} Lv.{level} / 15 ({levelText})", data.icon, Tier.Normal);
             }
             else if (identityChanged) _view.UpdateBasicInfo(data.unitName, data.icon, tier);
             bool betan = _unit is Drone_Betan || data.prefabAddress == "DroneUnit_Betan";

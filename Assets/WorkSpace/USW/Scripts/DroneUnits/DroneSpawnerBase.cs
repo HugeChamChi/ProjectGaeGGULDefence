@@ -43,7 +43,7 @@ public abstract class DroneSpawnerBase : UnitBase
     private bool _dronesPlaced;
 
     /// <summary>실제 소유 등급이 에픽/전설인 소환자의 전투 드론 상한. 임시 등급 상승은 해금하지 않는다.</summary>
-    public int CombatDroneCapacity => unitData == null ? 0 : unitData.maxDroneCount.Get(currentTier)
+    public int CombatDroneCapacity => unitData == null ? 0 : unitData.maxDroneCount.Get(GrowthTier)
         + (int)(LevelBonuses?.GetStat(UnitBonusStat.DroneCountFlat) ?? 0f)
         + ((OriginalTier == Tier.Epic || OriginalTier == Tier.Legend)
             ? Mathf.Max(0, DroneEffects?.ExtraCombatDroneCount ?? 0) : 0);

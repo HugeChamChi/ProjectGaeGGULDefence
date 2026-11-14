@@ -2,7 +2,7 @@ using GGD.BackendCharts;
 using UnityEngine;
 
 /// <summary>
-/// Converts a placed unit into a random different kind of the same tier for conversion stones.
+/// Converts a placed unit into a random different kind, preserving its permanent in-run level.
 /// Removal and placement use the same paths as selling and merging (OnRemoved, RemoveUnit, PlaceUnitWithEffect).
 /// </summary>
 public sealed class ConversionService
@@ -12,6 +12,8 @@ public sealed class ConversionService
     private readonly UnitSpawner _spawner;
     private readonly MergeManager _merge;
     private readonly GameManager _game;
+    /// <summary>Only the director's designated practice unit can convert during a tutorial.</summary>
+    public UnitBase TutorialTarget { get; set; }
 
     public ConversionService(ConversionStoneWallet wallet, UnitFactory factory, UnitSpawner spawner, MergeManager merge, GameManager game)
     { _wallet = wallet; _factory = factory; _spawner = spawner; _merge = merge; _game = game; }
@@ -19,10 +21,11 @@ public sealed class ConversionService
     /// <summary>Whether the unit can show the conversion button at all (placed combat unit outside the tutorial).</summary>
     public bool Offers(UnitBase unit) =>
         unit != null && !unit.IsWildcardMergeUnit && unit.currentCell != null && unit.currentCell.OccupyingUnit == unit &&
-        !BalanceChart.TutorialRunning && Cost(unit) > 0;
+        (!BalanceChart.TutorialRunning || unit == TutorialTarget) && Cost(unit) > 0;
 
-    /// <summary>Stones this unit costs (tier number times the per-tier value).</summary>
-    public int Cost(UnitBase unit) => unit == null ? -1 : ConversionRules.Cost(_game != null ? _game.Config : null, unit.OriginalTier);
+    /// <summary>Level units pay their base level in stones; temporary totem levels are excluded.</summary>
+    public int Cost(UnitBase unit) => unit == null ? -1 : unit.UsesTotemLevels ? unit.BaseLevel
+        : ConversionRules.Cost(_game != null ? _game.Config : null, unit.OriginalTier);
 
     /// <summary>Checks every condition; <paramref name="reason"/> is a short player-facing message when false.</summary>
     public bool CanConvert(UnitBase unit, out string reason)
@@ -45,6 +48,8 @@ public sealed class ConversionService
         var cell = unit.currentCell;
         var created = _factory.CreateRandomUnitOfTierExcluding(unit.OriginalTier, unit.OriginalData);
         if (created == null) { reason = "바꿀 수 있는 유닛이 없습니다."; return false; }
+        if (unit.UsesTotemLevels && created.UsesTotemLevels)
+            created.SetBaseLevel(unit.BaseLevel);
         if (!_wallet.TrySpend(Cost(unit)))
         {
             Object.Destroy(created.gameObject);

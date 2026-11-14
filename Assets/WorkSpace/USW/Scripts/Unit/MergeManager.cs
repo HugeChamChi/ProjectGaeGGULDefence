@@ -6,8 +6,8 @@ using UnityEngine;
 /// <summary>
 /// 합성 시스템.
 ///
-/// 조건: 동일 unitType + 동일 UnitTier 유닛이 필드에 2마리 이상
-/// 결과: 2마리 제거 → 다음 tier 랜덤 유닛 1마리 스폰 (첫 번째 빈 칸)
+/// 레벨 유닛은 같은 종류와 기본 레벨끼리 합성해 같은 종류의 기본 레벨 +1 유닛을 만든다(비레벨 유닛은 기존 다음 등급 무작위).
+/// 토템 임시 레벨은 재료 조건과 결과 기본 레벨에서 제외한다.
 ///
 /// 도메인 이벤트 (InGameInstaller가 UI에 연결)
 ///   OnUnitSelected(unit, canMerge) — 유닛 선택됨
@@ -62,8 +62,7 @@ public class MergeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 드래그 합성. 합성 가능한 두 유닛(동일 유닛·동일 등급, 또는 노말 + 와일드카드)을
-    /// 드래그로 겹치면 다음 등급 랜덤 유닛 1기를 드롭한 셀에 배치한다.
+    /// 합성 가능한 두 유닛을 겹치면 합성 결과 유닛을 드롭한 셀에 배치한다.
     /// </summary>
     public bool TryMergeByDrag(UnitBase dragged, UnitBase target)
     {
@@ -88,7 +87,10 @@ public class MergeManager : MonoBehaviour
     private bool MergeTargets(List<(UnitBase unit, GridCell cell)> targets, GridCell spawnCell, Tier nextTier)
     {
         if (_unitFactoryManager == null || _spawnerManager == null) return false;
-        bool overload = _glitchEffects?.HasOverloadMerge == true && nextTier < Tier.Legend;
+        bool levelMerge = targets[0].unit.UsesTotemLevels;
+        int nextLevel = levelMerge ? targets[0].unit.BaseLevel + 1 : 1;
+        bool overload = _glitchEffects?.HasOverloadMerge == true &&
+            (levelMerge ? nextLevel < UnitBase.MaxUnitLevel : nextTier < Tier.Legend);
         float cost = overload ? _glitchEffects.OverloadMergeCostSeconds : 0f;
         if (overload)
         {
@@ -99,12 +101,27 @@ public class MergeManager : MonoBehaviour
                 return false;
             }
             if (UnityEngine.Random.value < _glitchEffects.OverloadMergeUpgradeChance)
-                nextTier = (Tier)((int)nextTier + 1);
+            {
+                if (levelMerge) nextLevel++;
+                else nextTier = (Tier)((int)nextTier + 1);
+            }
         }
-        var newUnit = _tutorialSettings != null
+        if (levelMerge) nextTier = Tier.Normal;
+        var newUnit = levelMerge
+            ? _unitFactoryManager.CreateUnitFromData(targets[0].unit.OriginalData, Tier.Normal)
+            : _tutorialSettings != null
             ? _unitFactoryManager.CreateUnitFromData(_tutorialSettings.MergeUnit, nextTier)
             : _unitFactoryManager.CreateRandomUnitOfTier(nextTier);
         if (newUnit == null) return false;
+        if (levelMerge)
+        {
+            if (!newUnit.UsesTotemLevels)
+            {
+                UnityEngine.Object.Destroy(newUnit.gameObject);
+                return false;
+            }
+            newUnit.SetBaseLevel(nextLevel);
+        }
         // Existing factory preparation failure remains free. Materials are still intact here.
         if (overload && !_timer.SpendTimeFromMerge(cost, newUnit, _bossManager?.CurrentBoss))
         {
@@ -172,7 +189,7 @@ public class MergeManager : MonoBehaviour
     {
         if (_gameManager?.IsTimeVaultActive == true) return false;
         if (unit?.unitData == null) return false;
-        if (unit.OriginalTier == Tier.Legend) return false;
+        if (unit.UsesTotemLevels ? unit.BaseLevel >= UnitBase.MaxUnitLevel : unit.OriginalTier == Tier.Legend) return false;
         return GetMergeTargets(unit).Count >= 2;
     }
 

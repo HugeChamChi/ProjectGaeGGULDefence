@@ -36,7 +36,6 @@ public sealed class ConversionBinding : IInitializable, IDisposable
     /// <summary>Subscribes before the first boss and builds the UI once.</summary>
     public void Initialize()
     {
-        if (BalanceChart.TutorialRunning) return;
         _active = true;
         _resolver.TryResolve(out _toast);
         _waves.OnBossKillTimed += OnBossKill;
@@ -64,6 +63,7 @@ public sealed class ConversionBinding : IInitializable, IDisposable
 
     private void OnBossKill(EndlessBossRole role, double combatSeconds)
     {
+        if (BalanceChart.TutorialRunning) return;
         if (role != EndlessBossRole.Hard && role != EndlessBossRole.Breather) return;
         var reward = ConversionRules.ForKill(_game.Config, role, combatSeconds);
         _wallet.Add(reward.Stones);
