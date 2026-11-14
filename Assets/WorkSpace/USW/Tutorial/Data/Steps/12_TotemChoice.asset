@@ -17,8 +17,7 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 9
-    Instruction: "\uC804\uBC29 +2 \uD1A0\uD15C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.
-      \uC55E \uCE78 \uC720\uB2DB\uC758 \uB808\uBCA8\uC744 2 \uC62C\uB824\uC694."
+    Instruction: "\uD1A0\uD15C\uC740 \uC720\uB2DB\uC758 \uB808\uBCA8\uC744 \uC62C\uB824 \uC918\uC694. \uC804\uBC29 +2 \uD1A0\uD15C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694!"
   Instruction: 
   StartWhen: 0
   TargetKey: 

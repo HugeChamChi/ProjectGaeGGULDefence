@@ -55,7 +55,7 @@ namespace GaeGGUL.Tutorial
             await CombatGapAsync(token);
             _guidedBoss.PreventDeath = false;
             await Until(() => _wave.CurrentWave == 1 && _guidedBoss != null && !_guidedBoss.IsDead, token);
-            _dialogue.ShowText("처치하면 남은 시간이 60초로 돌아와요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText("보스를 물리치고 다음 보스가 등장하면 제한 시간이 다시 채워져요.", _lessonIndex, _lessonCount, false);
             await Delay(_settings.FocusSeconds, token);
         }
 
@@ -63,7 +63,7 @@ namespace GaeGGUL.Tutorial
         {
             _patterns.RegisterBoss(_guidedBoss, new[] { _settings.CounterPattern });
             await Until(() => _patterns.IsCounterablePattern(_guidedBoss), token);
-            _dialogue.ShowText("빛나는 칸은 공격 예고예요. 악어의 지진은 모든 칸에 닿아요.", _lessonIndex, _lessonCount, true);
+            _dialogue.ShowText("보스가 공격을 준비해요! 빛나는 칸이 공격이 예고된 칸이에요.", _lessonIndex, _lessonCount, true);
             await AwarenessAsync(() => _grid.AllCells().Select(c => World(c)()).Aggregate((a,b) =>
                 Rect.MinMaxRect(Mathf.Min(a.xMin,b.xMin), Mathf.Min(a.yMin,b.yMin), Mathf.Max(a.xMax,b.xMax), Mathf.Max(a.yMax,b.yMax))), token);
             await ReleasePointersAsync(token);
@@ -94,7 +94,7 @@ namespace GaeGGUL.Tutorial
         private async UniTask ConversionLessonAsync(CancellationToken token)
         {
             _stones.Add(_settings.PracticeConversionStones);
-            _dialogue.ShowText("변환석을 얻었어요. 다음 전투에서 사용해 볼게요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText("변환석을 얻었어요.", _lessonIndex, _lessonCount, false);
             _time.Release(this);
             _fieldPause.Exit(this);
             await Until(() => _wave.CurrentWave == 2 && _deer != null, token);
@@ -109,7 +109,7 @@ namespace GaeGGUL.Tutorial
             _input.CanBeginInteraction = d => ReferenceEquals(d, targetDrag);
             _input.CanEndInteraction = (d, p) => false;
             _input.AllowPointerClicks = true;
-            _dialogue.ShowText("감망을 눌러 보세요. 변환석 1개로 같은 기본 레벨의 다른 유닛으로 바꿔요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText("감망을 눌러 변환석으로 다른 유닛으로 바꿔 보세요.", _lessonIndex, _lessonCount, false);
             _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, World(cell));
             var button = FindFirstObjectByType<ConversionButtonView>(FindObjectsInactive.Include);
             if (button == null) throw new InvalidOperationException("Conversion button is missing.");
@@ -142,18 +142,18 @@ namespace GaeGGUL.Tutorial
                 var target = cell.transform.position; target.z = _cameraPosition.z;
                 await MoveLessonCameraAsync(target, _settings.CameraZoomRatio, token);
             }
-            _dialogue.ShowText("저주에 묶인 유닛이에요. 이 유닛을 다섯 번 눌러 풀어 주세요.", _lessonIndex, _lessonCount, true);
+            _dialogue.ShowText("보스의 패턴 때문에 유닛이 저주에 묶였어요!", _lessonIndex, _lessonCount, true);
             await AwarenessAsync(World(cell), token);
             if (_camera != null) await MoveLessonCameraAsync(_cameraPosition, 1f, token);
             _hasCameraPose = false;
             await ReleasePointersAsync(token);
-            _dialogue.ShowText("묶인 유닛을 다섯 번 눌러 주세요. 시간이 끝나도 다시 연습할 수 있어요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText("유닛을 5번 터치해서 저주를 풀어 주세요!", _lessonIndex, _lessonCount, false);
             _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, World(cell));
             _time.Release(this);
             // Direct boss input handles bindings. Keep selection/dragging disabled.
             await Until(() => _deer.Encounter.Cells[index].CurseTapsLeft == 0, token);
             Block();
-            _dialogue.ShowText("저주를 풀었어요! 이제 사슴을 물리쳐 보세요.", _lessonIndex, _lessonCount, false);
+            _dialogue.ShowText("저주를 풀었어요!", _lessonIndex, _lessonCount, false);
             await Delay(_settings.FocusSeconds, token);
             await CombatGapAsync(token);
         }

@@ -278,7 +278,7 @@ public static class IngameTutorialThreeWaveChecks
             await Acknowledge();
             int index = Array.FindIndex(deer.Encounter.Cells, c => c.CurseTapsLeft > 0);
             Check(index >= 0 && deer.Encounter.Cells.Count(c => c.CurseTapsLeft > 0) == 1, "Practice curse binds exactly one unit");
-            await WaitText("묶인 유닛을");
+            await WaitText("유닛을 5번");
             await FocusReady(); await Frames();
             await Snapshot("05-curse");
             var presentation = deer.GetComponentInChildren<DeertreeBossPresentation>(true);

@@ -480,7 +480,7 @@ namespace GaeGGUL.Tutorial
                     _overlay.Show(_settings, true, true, true, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)item.transform));
                     await Until(() => item.CurrentLevel > level, token);
                     Block();
-                    _dialogue.ShowText("좋아요! 유닛이 더 강해졌어요!", _lessonIndex, _lessonCount, false);
+                    _dialogue.ShowText("좋아요! 더 강해졌어요!", _lessonIndex, _lessonCount, false);
                     _overlay.Show(_settings, false, true, false, IngameTutorialOverlay.Gesture.Tap, Ui((RectTransform)item.transform));
                     await AcknowledgeAsync(token);
                     await _upgradePanel.CloseAsync().AttachExternalCancellation(token);
@@ -840,6 +840,8 @@ namespace GaeGGUL.Tutorial
             {
                 LockWorldInput(); Block();
                 _dialogue.ShowText(_settings.TotemRotateSuccessInstruction, _lessonIndex, _lessonCount, false);
+                await Delay(1.5f, token);
+                _dialogue.ShowText(_settings.TotemRotateLevelEffectInstruction, _lessonIndex, _lessonCount, false);
                 await Delay(1.5f, token);
             }
             _rotationTargetCell = null;

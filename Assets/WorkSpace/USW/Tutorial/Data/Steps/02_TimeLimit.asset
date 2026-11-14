@@ -17,8 +17,7 @@ MonoBehaviour:
     delayBeforeExecute: 0
     useDim: 0
     Stage: 14
-    Instruction: "\uB0A8\uC740 \uC2DC\uAC04 \uC548\uC5D0 \uC801\uC744 \uBB3C\uB9AC\uCCD0\uC694.
-      \uCC98\uCE58\uD558\uBA74 60\uCD08\uB85C \uB3CC\uC544\uC640\uC694."
+    Instruction: "\uBCF4\uC2A4\uAC00 \uB098\uD0C0\uB0AC\uC5B4\uC694! \uC81C\uD55C \uC2DC\uAC04 \uC548\uC5D0 \uBCF4\uC2A4\uB97C \uBB3C\uB9AC\uCCD0\uC57C \uD574\uC694."
   Instruction: 
   StartWhen: 0
   TargetKey: 
