@@ -1,5 +1,23 @@
 # GGD 뒤끝 관리 MCP
 
+2026-11-14: **차트 업로드·적용 자동화 추가** (`chart-upload.mjs`, MCP `upload_chart`·`console_chart_status`). 뒤끝은 공개 업로드 API가 없어 콘솔 웹(console.thebackend.io)을 Playwright로 연다. 엑셀 해석은 콘솔 페이지 자신의 코드가 하고(파일 입력에 파일을 넣음), 서버 처리 완료 대기 → 저장된 행이 콘솔이 보낸 행과 같은지 대조 → 적용 → 선택 파일 변경 확인 순서다. 대조가 틀리면 적용하지 않는다. 콘솔 내부 API(`consoleapi.thebackend.io/{project}/project/chart/...`)는 비공개라 콘솔 개편 시 깨질 수 있다.
+
+```powershell
+node Tools/backnd-mcp/chart-upload.mjs login     # 처음 또는 세션 만료 시. 창에서 직접 로그인(+OTP)
+node Tools/backnd-mcp/chart-upload.mjs status    # 로그인 확인 + 차트 목록(폴더 포함)
+node Tools/backnd-mcp/chart-upload.mjs upload --env DEV --chart SkillBalance --file Data/Balance/SkillBalance.xlsx
+node Tools/backnd-mcp/chart-upload.mjs upload --env LIVE --chart SkillBalance --file Data/Balance/SkillBalance.xlsx --confirm-live
+```
+
+- `--chart`는 접두어 없는 이름. `DEV_`/`LIVE_`는 `--env`로 붙는다. 차트는 콘솔에 미리 있어야 한다(없으면 CHART_NOT_FOUND).
+- LIVE는 `--confirm-live` 없으면 거부. 출시 앱에 다음 로그인부터 반영된다.
+- 결과는 stdout 마지막 줄 JSON(`ok`, `code`, `fileId`, `previousFileId`, `rowCount`). 종료 코드 0 성공, 1 실패, 2 로그인 필요(LOGIN_REQUIRED). 되돌리기는 콘솔에서 `previousFileId` 파일을 다시 적용한다.
+- 로그인 세션은 `%LOCALAPPDATA%/GGD/backnd-console-profile`(저장소 밖)에만 있다. 비밀번호·토큰은 저장·출력하지 않는다. 한 번에 한 프로세스만 이 프로필을 쓸 수 있다.
+- 콘솔 검사(시트 1개, `id` 열 금지, 열 이름 영문/숫자)에 걸리면 UPLOAD_REJECTED로 콘솔 메시지를 돌려준다. 차트당 파일은 최대 600개.
+- `chart-record.mjs`: 콘솔 동작을 다시 분석해야 할 때 쓰는 기록 창. 입력칸 값과 로그인 화면은 기록하지 않는다. 결과는 `outputs/backnd-chart-upload/`.
+- 연습용 차트 `DEV_UploadTest`(게임이 읽지 않음)가 콘솔에 있다.
+- 이 업로드는 게임 규칙 검사(유니티 메뉴 `Tools/Balance/<차트>.xlsx 검사`)를 대신하지 않는다. [밸런스 차트 규칙](../../docs/technical/balance-charts.md) 4절 순서를 따른다.
+
 2026-10-26: 기획툴에 미션 설정·유닛 기본 스탯의 DEV 적용 화면과 공식 콘솔 창, 서버 파일 대조를 추가했다. 유닛 기본 스탯은 DEV/LIVE_UnitBaseStats 단일 스냅샷을 게임이 읽는다. 기존 3개 분할 차트의 강화 비용·성장·계정 레벨 연결은 별도다. 자동 업로드 API는 구현하지 않았으며 콘솔에서 업로드·적용한다. `verify-config-chart.mjs <backend.xlsx> <DEV_MissionEvents 또는 DEV_UnitBaseStats>`로 준비 파일과 서버의 현재 적용 파일을 비교할 수도 있다. Unity/Pipeline과 기존 뒤끝 로그인이 필요하고, 파일 일치는 실제 플레이 검증과 구분한다.
 
 2026-10-25: 프로젝트 로컬 MCP 구현 및 Codex 등록 완료. 현재 범위는 **유닛 공통 밸런스 검증·배포 파일 준비·비교와 읽기 전용 SDK 연결**이다. 콘솔 테이블 생성, 차트 업로드/적용, 이벤트 exporter, 유저 저장, 게임 런타임의 SO 덮어쓰기는 포함하지 않는다. 유닛 강화의 실제 게임 적용 TODO는 유지한다.

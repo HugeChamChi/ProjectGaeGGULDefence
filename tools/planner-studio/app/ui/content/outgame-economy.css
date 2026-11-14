@@ -1,0 +1,1 @@
+.economy-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin:24px 0}.economy-columns h3{margin-bottom:14px}.economy-columns section{min-width:0}.economy-columns input{width:100%}

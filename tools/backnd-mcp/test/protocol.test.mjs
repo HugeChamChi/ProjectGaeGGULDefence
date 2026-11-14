@@ -13,8 +13,8 @@ test('real stdio client lists tools and validates/exports/verifies/compares with
   await client.connect(transport);
   t.after(() => client.close());
   const list = await client.listTools();
-  assert.equal(list.tools.length,12);
-  assert.ok(!list.tools.some(tool => /upload|delete|create_table/.test(tool.name)));
+  assert.equal(list.tools.length,14);
+  assert.ok(!list.tools.some(tool => /delete|create_table/.test(tool.name)));
   const fixtures = path.join(projectRoot,'outputs/backnd-mcp');
   fs.mkdirSync(fixtures,{recursive:true});
   const id = 'test-' + Date.now();

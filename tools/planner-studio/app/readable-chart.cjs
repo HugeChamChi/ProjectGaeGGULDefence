@@ -5,7 +5,7 @@ function table(config,kind){
   rows=[];
   for(const t of config.tables.ResearchTree){
    for(const n of config.tables.ResearchNode.filter(n=>n.TreeKey===t.TreeKey)){
-    const {Parents,IconKey,CostItemId,BaseCost,CostStep,...node}=n;
+    const {Parents,IconKey,...node}=n;
     rows.push({RecordType:'Node',TreeName:t.Name,LegacySaveName:t.LegacySaveName||(t.TreeKey==='BASIC'?'UpgradeTree_Basic':''),ShowLanes:t.ShowLanes,ColumnSpacing:t.ColumnSpacing,...node});
     Parents.forEach((id,index)=>rows.push({RecordType:'Parent',TreeKey:t.TreeKey,NodeId:n.NodeId,ParentIndex:index,ParentNodeId:id}));
    }

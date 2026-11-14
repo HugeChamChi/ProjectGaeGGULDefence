@@ -2,7 +2,7 @@
   'use strict';
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let unitId='',editing=false,draft=null,owner=null;
-  globalThis.UnitOverview={render({project:p,changed,render,toast}){
+  globalThis.UnitOverview={isEditing:()=>editing,render({project:p,changed,render,toast}){
     if(owner!==p){owner=p;editing=false;draft=null;}
     const list=[...p.tables.Unit].sort((a,b)=>Number(p.tables.UnitUpgrade.some(r=>r.UnitId===b.UnitId))-Number(p.tables.UnitUpgrade.some(r=>r.UnitId===a.UnitId)));
     if(!list.some(u=>u.UnitId===unitId)){unitId=list[0]?.UnitId||'';editing=false;}

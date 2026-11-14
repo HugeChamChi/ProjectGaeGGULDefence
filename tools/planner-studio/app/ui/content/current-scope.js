@@ -50,7 +50,6 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   }
   for(const r of STUDIO_SEED.tables.Attendance)r.Rewards=Studio.clone(STUDIO_SEED.tables.RewardGroup.find(g=>g.RewardGroupId===r.RewardGroupId)?.Rewards||[]);
   const hidden = {
-    ResearchNode:['CostItemId','BaseCost','CostStep'],
     Tutorial:['RewardGroupId'],
     BattleReward:['WinRewardGroupId','LoseRewardGroupId']
   };
@@ -115,13 +114,13 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   globalThis.PlannerScope={active,chiefPaths,overview(p){
     const groups=[
-      ['강화 밸런스',['units','research']],['출석',['missions']],
+      ['강화 밸런스',['units','research',...(typeof OutgameEconomy!=='undefined'?['outgameEconomy']:[])]],['출석',['missions']],
       ['기본 설정',['roundRewards','shops','party','economy','profile','tutorial']]
     ];
     return `<div class="scope-heading"><h2>현재 기능 작업실</h2><p>왼쪽에서 기능을 고르고, 위쪽 세부 항목에서 편집하세요.</p></div>${groups.map(([label,ids])=>`<section class="panel scope-group"><div class="panel-head"><h2>${label}</h2></div><div class="workspace-grid">${ids.map(id=>{const n=STUDIO_NAV.find(n=>n.id===id);return `<button data-nav="${id}"><strong>${n.icon} ${n.label}</strong><small>${n.tables.map(t=>`${esc(S[t].label)} ${p.tables[t].length}`).join(' · ')}</small></button>`;}).join('')}</div></section>`).join('')}<div class="scope-note">계정 경험치와 전투 EXP는 밸런스 편집 → 계정 성장에서 관리합니다. 기본 설정의 이전 계정 표는 JSON에 보존되며 편집·Excel 출력에서 제외됩니다. 게임 적용은 기능별 절차를 따릅니다.</div>`;
   },workspace:'settings',renderTabs(section){
     const workspace=this.workspace;
-    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화']]:workspace==='rewards'?[['missions','이벤트 · 미션'],['roundRewards','라운드 도달 보상']]:[];
+    const options=workspace==='enhancement'?[['units','유닛'],['research','영구강화'],['outgameEconomy','체력 연동 경제']]:workspace==='rewards'?[['missions','이벤트 · 미션'],['roundRewards','라운드 도달 보상']]:[];
     document.getElementById('workspace-tabs').innerHTML=options.map(([id,label])=>`<button class="${section===id?'active':''}" data-workspace-section="${id}">${label}</button>`).join('');
     if(options.length)document.getElementById('page-title').textContent=workspace==='enhancement'?'강화 밸런스':'보상·출석';
     if(workspace==='rewards')document.getElementById('page-title').textContent=section==='roundRewards'?'라운드 도달 보상':'이벤트';

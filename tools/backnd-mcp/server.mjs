@@ -1,4 +1,7 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -13,9 +16,9 @@ const server = new McpServer({ name: 'ggd-backnd', version: '0.1.0' });
 const file = z.string().min(1).describe('Unity 프로젝트 기준 상대 파일 경로.');
 const table = z.enum(Object.keys(tableKeys));
 const environment = z.enum(['DEV', 'LIVE']).default('DEV');
-function register(name, description, inputSchema, handler, readOnly = true, openWorld = false) {
+function register(name, description, inputSchema, handler, readOnly = true, openWorld = false, destructive = false) {
   server.registerTool(name, { description, inputSchema, annotations: {
-    readOnlyHint: readOnly, destructiveHint: false, idempotentHint: readOnly, openWorldHint: openWorld,
+    readOnlyHint: readOnly, destructiveHint: destructive, idempotentHint: readOnly, openWorldHint: openWorld,
   } }, async args => {
     try {
       const result = await handler(args);
@@ -31,7 +34,7 @@ register('backnd_status', '로컬 MCP 기능 및 Unity Pipeline 연결 상태. �
   try { editor = { available: true, details: await unity(['command', 'editor_status', '--project-path', projectRoot]) }; }
   catch (error) { editor = { available: false, reason: error.message }; }
   return { projectRoot, editor, defaultTarget: chartTarget(), capabilities: { unitBalanceValidation: true, unitChartExport: true, localComparison: true,
-    sdkChartRead: 'Unity Pipeline 연결 + 뒤끝 로그인 필요', remoteChartWrite: false, createTable: false, gameplayIntegration: false } };
+    sdkChartRead: 'Unity Pipeline 연결 + 뒤끝 로그인 필요', remoteChartWrite: 'upload_chart (뒤끝 콘솔 로그인 필요)', createTable: false, gameplayIntegration: false } };
 });
 
 register('validate_unit_balance', '기획 작업실 outgame-project.json의 유닛/강화/보너스 키·수치·참조를 검사합니다. 입력을 수정하지 않습니다.', { projectFile: file }, ({ projectFile }) => {
@@ -88,5 +91,25 @@ register('validate_research_balance', '강화 트리 프로젝트 JSON 또는 Re
 register('export_research_chart', '강화 트리를 단일 ResearchBalance.xlsx와 런타임 JSON으로 내보냅니다. DEV 기본, LIVE는 명시합니다. 서버 업로드는 하지 않습니다.', {
   sourceFile: file, releaseKey: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/), environment,
 }, ({ sourceFile, releaseKey, environment }) => exportResearch(sourceFile, releaseKey, environment), false);
+
+// 콘솔 업로드는 chart-upload.mjs를 별도 프로세스로 실행한다(브라우저 출력이 MCP stdio와 섞이지 않게).
+const execUpload = promisify(execFile);
+async function chartUpload(args) {
+  let stdout;
+  try { ({ stdout } = await execUpload(process.execPath, [path.join(projectRoot, 'Tools/backnd-mcp/chart-upload.mjs'), ...args], { cwd: projectRoot, windowsHide: true, timeout: 400_000 })); }
+  catch (error) { if (!error.stdout) throw error; stdout = error.stdout; }
+  const result = JSON.parse(stdout.trim().split('\n').pop());
+  if (!result.ok) throw Error(`${result.code}: ${result.message}`);
+  return result;
+}
+
+register('console_chart_status', '뒤끝 콘솔 로그인 상태와 GaeGGULDefence 차트 목록(폴더 포함). 로그인이 풀렸으면 사용자가 `node Tools/backnd-mcp/chart-upload.mjs login`을 실행해야 합니다.', {},
+  () => chartUpload(['status']), true, true);
+
+register('upload_chart', '엑셀/CSV 파일을 뒤끝 콘솔의 DEV_ 또는 LIVE_ 차트에 업로드하고, 서버 저장 내용을 대조한 뒤 적용합니다. LIVE는 출시 앱에 바로 반영되므로 confirmLive=true가 필요합니다. 차트는 콘솔에 미리 있어야 합니다.', {
+  environment: z.enum(['DEV', 'LIVE']), chart: z.string().regex(/^[A-Za-z0-9]+$/).describe('접두어 없는 내용 이름. 예: SkillBalance'),
+  file, confirmLive: z.boolean().default(false),
+}, ({ environment, chart, file, confirmLive }) =>
+  chartUpload(['upload', '--env', environment, '--chart', chart, '--file', localFile(file), ...(confirmLive ? ['--confirm-live'] : [])]), false, true, true);
 
 await server.connect(new StdioServerTransport());

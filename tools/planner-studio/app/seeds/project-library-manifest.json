@@ -2,7 +2,7 @@
   "version": 4,
   "files": {
     "UnitBalance.xlsx": {
-      "fingerprint": "b2c02ff66dd4ec961a4c77736d4bfc07575e11b1622aa84e1a21708a7677d3ba",
+      "fingerprint": "5fed631d0a10da0f0234434ae1f9104d5def5f5fda965765789bb796a676aa98",
       "previousFingerprints": [
         "4cc1e65b3369b3d91ec3f5fa1317c59856ab1deeca1c9ea03ec021edf911c873",
         "a6c9cdafdaf3e544d731688054e6d24324bca74a53d442bc785a223cf11b3489",
@@ -17,15 +17,19 @@
         "022127b78373d663b7775e0893751d553c5c2aa8e6a9efc9a8b820dc4cfa53d2",
         "639580ec35394043ddecf3488b328b3976ac7796f2a77dab1be2bfd7dcbcb95d",
         "9d2d1da65c0a0c96f20b1f3b50555092dccbdeb6ce31714ae15070a474401678",
-        "2d095311e2827946ee54825c9e0a6ca558fd909092c31c4b2d4d8053d50f4218"
+        "2d095311e2827946ee54825c9e0a6ca558fd909092c31c4b2d4d8053d50f4218",
+        "b2c02ff66dd4ec961a4c77736d4bfc07575e11b1622aa84e1a21708a7677d3ba",
+        "5fed631d0a10da0f0234434ae1f9104d5def5f5fda965765789bb796a676aa98"
       ]
     },
     "PermanentUpgrade.xlsx": {
-      "fingerprint": "ac0a30a8e599cc891d5c32818ba68778fd92d0ec81a0c6a7bca6cd79d53475fb",
+      "fingerprint": "1502d5594e9b81537029852fd5ab5d4dd5a5fbaadc8997b3bd495b87c7516e6f",
       "previousFingerprints": [
         "d17cda566f7042b8566971c3325f1fe48f249b890e22dfa1784d71bdad8f6ee1",
         "69a93efff200ea95049e3b5028dd71e8950d9cf741d5dd488747a1e6b70dcb8e",
-        "5a6e6f9eac76b7796777367b7335b91505faa1dbdfa346d01fd065b955db5c32"
+        "5a6e6f9eac76b7796777367b7335b91505faa1dbdfa346d01fd065b955db5c32",
+        "ac0a30a8e599cc891d5c32818ba68778fd92d0ec81a0c6a7bca6cd79d53475fb",
+        "1502d5594e9b81537029852fd5ab5d4dd5a5fbaadc8997b3bd495b87c7516e6f"
       ]
     },
     "MissionEvents.xlsx": {

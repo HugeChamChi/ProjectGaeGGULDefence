@@ -5,7 +5,7 @@ const {open,hash}=require('./workbook.cjs');
 let context;
 function engine(){
   if(!context){context=vm.createContext({TextEncoder,TextDecoder,Uint8Array,Uint32Array,DataView,ArrayBuffer});
-    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','shop-catalog','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
+    for(const name of ['seed','schemas','core','studio-core','current-scope','unit-base-seed','unit-keys','drone-only','attendance-events','event-catalog','mission-events','bonus-legacy-defaults','bonus-defaults','bonus-contracts','bonus-model','bonus-editor','item-catalog','shop-catalog','outgame-economy','studio-compose'])vm.runInContext(fs.readFileSync(path.join(__dirname,'ui/content',name+'.js'),'utf8'),context);
   }return context;
 }
 const bundles={items:['Item','ItemFunction','SelectionList','SelectionOption'],bonuses:['BonusDefinition','BonusEffect'],enhancement:['Unit','UnitUpgrade','UnitMilestone','BonusDefinition','BonusEffect','ResearchTree','ResearchNode'],rewards:['MissionEvents','Missions'],missions:['MissionEvents','Missions']};
@@ -47,7 +47,7 @@ function inspect(bytes){
     // Accept the previous workbook layout while exporting only direct attendance rewards.
     if(name==='Attendance'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.export!==false);
     if(name==='UnitMilestone')fields=fields.filter(f=>!['EffectStatus','EffectId','EffectParams'].includes(f.key)||[...headers.values()].includes(f.key));
-    if(name==='ResearchNode')fields=fields.filter(f=>!['IconAddress','RequireAllParentsMax'].includes(f.key)||[...headers.values()].includes(f.key));
+    if(name==='ResearchNode')fields=fields.filter(f=>!['IconAddress','RequireAllParentsMax','CostItemId','BaseCost','CostStep'].includes(f.key)||[...headers.values()].includes(f.key));
     if(fields.some(f=>![...headers.values()].includes(f.key))||new Set(headers.values()).size!==headers.size)throw Error(`${name}: 열 이름이 양식과 다릅니다.`);
     const rowNumbers=[...new Set([...sheet.cells.keys()].map(a=>Number(a.match(/\d+$/)[0])).filter(n=>n>1))].sort((a,b)=>a-b);
     tables[name]=rowNumbers.map(n=>{

@@ -10,7 +10,7 @@ assert(!JSON.stringify(config).includes('Assets/'));
 assert.equal(config.Units[0].Stats[0].AttackFrequency,project.tables.UnitBaseStat[0].AttackInterval);
 assert.equal(config.UpgradeCosts.length,114);
 assert(config.UpgradeCosts.every(r=>r.ItemId==='UpgradeTokenA'));
-assert(config.UpgradeCosts.every(r=>r.Amount===r.TargetLevel-1));
+assert(config.UpgradeCosts.every(r=>r.Amount===(r.Id.startsWith('chief:')?r.TargetLevel-1:engine.OutgameEconomy.unitCost(project.tables.OutgameEconomy[0],r.TargetLevel))));
 const priced=engine.Studio.clone(project);
 priced.tables.UnitUpgrade[0].Costs=[{itemId:'Diamond',amount:7}];
 assert.equal(unitRuntime(priced).UpgradeCosts[0].ItemId,'Diamond');

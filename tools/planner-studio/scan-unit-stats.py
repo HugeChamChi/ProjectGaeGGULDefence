@@ -21,6 +21,19 @@ for unit in seed['tables']['Unit']:
             match=re.search(r'^    '+tier+r':\s*([-+\d.eE]+)',block[1],re.M) if block else None
             if not match:raise ValueError(f'Missing {unit["UnitId"]} {field}/{tier}')
             value=float(match[1]);row[column]=int(value) if column=='MaxDroneCount' else value
+        # Required UnitBaseStats columns. Match UnitData's scalar defaults and
+        # GetSelfDestructCoefficient fallback when the per-tier value is zero.
+        def scalar(field, default):
+            match=re.search(r'^  '+field+r':\s*([-+\d.eE]+)',data,re.M)
+            return float(match[1]) if match else float(default)
+        def per_tier(field):
+            block=re.search(r'^  '+field+r':\s*\n((?:    [^\n]*\n?)+)',data,re.M)
+            match=re.search(r'^    '+tier+r':\s*([-+\d.eE]+)',block[1],re.M) if block else None
+            return float(match[1]) if match else 0.0
+        self_destruct=per_tier('SelfDestructCoefficients')
+        row['SelfDestructCoefficient']=self_destruct if self_destruct>0 else scalar('SelfDestructAttackCoefficient',0)
+        row['CombatDroneAttackCoefficient']=scalar('CombatDroneAttackCoefficient',1)
+        row['FleetFoodPerDrone']=per_tier('fleetFoodPerDrone')
         rows.append(row)
     block=re.search(r'^  LevelBonuses:\s*\n(.*?)(?=^  [A-Za-z_]|\Z)',data,re.M|re.S)
     if block:

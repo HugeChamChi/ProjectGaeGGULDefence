@@ -97,6 +97,11 @@
   $('backendPrepare').onclick = prepare;
   $('backendVerify').onclick = verify;
   $('backendReveal').onclick = () => report(() => call('contentBackendFile', { releaseKey: prepared.releaseKey }));
+  const upload=document.createElement('button');upload.id='backendUpload';upload.className='button primary';upload.textContent='준비한 차트 업로드…';$('backendReveal').after(upload);
+  upload.onclick=()=>report(async()=>{
+    const record=await call('contentBackendRestore',{releaseKey:prepared.releaseKey});
+    window.ChartUploadUI.open([...(record.eventFile?[{file:record.eventFile,chart:record.targetEventChartName.replace(/^DEV_/,'')}]:[]),{file:record.file,chart:record.targetChartName.replace(/^DEV_/,'')}]);
+  });
   $('backendConsole').onclick = () => report(() => call('backendConsole'));
   $('backendExternalConsole').onclick = () => report(() => call('openConsole'));
   $('backendProject').onclick = () => report(async () => {

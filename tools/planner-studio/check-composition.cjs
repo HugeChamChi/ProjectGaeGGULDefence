@@ -7,7 +7,7 @@ const excel = require('./app/content-workbook.cjs');
 const scripts = path.join(__dirname, 'app/ui/content');
 function load(features) {
   const context = vm.createContext({TextEncoder, TextDecoder, Uint8Array, Uint32Array, DataView, ArrayBuffer});
-  for (const name of ['seed', 'schemas', 'core', 'studio-core', 'unit-base-seed', 'event-catalog', ...features, 'studio-compose']) {
+  for (const name of ['seed', 'schemas', 'core', 'studio-core', 'unit-base-seed', 'event-catalog', ...features, 'item-catalog', 'outgame-economy', 'studio-compose']) {
     vm.runInContext(fs.readFileSync(path.join(scripts, name + '.js'), 'utf8'), context);
   }
   return context;

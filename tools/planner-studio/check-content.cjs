@@ -36,7 +36,7 @@ assert.equal(Studio.shape(p).tables.ResearchNode[0].MaxLevel,null);assert(errors
 const tables=Studio.tables(fresh());assert(tables.MissionEvents&&tables.Missions);
 assert(!('RewardGroup' in tables));assert(!tables.AttendanceRewards&&!tables.AttendanceEvents);
 for(const name of ['GachaPool','GachaEntry','Event','EventMission','IAPProduct','ChiefArtifact','CouponPlan','MailTemplate','ShopOffer','Character','UserSchema'])assert(!(name in tables),name);
-assert(!tables.ResearchNode[0].includes('BaseCost'));
+assert(tables.ResearchNode[0].includes('BaseCost'));
 assert(!tables.Tutorial[0].includes('RewardGroupId'));
 assert.equal(STUDIO_NAV.find(n=>n.id==='research').label,'영구강화');
 const legacy=fresh();legacy.tables.GachaPool.push(Studio.newRecord('GachaPool',legacy));

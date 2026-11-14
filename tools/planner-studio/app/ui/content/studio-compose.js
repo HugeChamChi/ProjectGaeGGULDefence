@@ -4,6 +4,7 @@
   const studio = {...core};
   // Feature installation and execution order live here for both the browser and workbook engine.
   const features = [PlannerScopeFeature, UnitKeysFeature,...(typeof DroneOnlyFeature==='function'?[DroneOnlyFeature]:[]), AttendanceEventsFeature, MissionEventsFeature, ...(typeof BonusEditorFeature==='function'?[BonusEditorFeature]:[]),...(typeof ItemCatalogFeature==='function'?[ItemCatalogFeature]:[]),...(typeof ShopCatalogFeature==='function'?[ShopCatalogFeature]:[])]
+    .concat(typeof OutgameEconomyFeature==='function'?[OutgameEconomyFeature]:[])
     .map(install => install({core, studio}));
   const transform = (value, hook, reverse = false) =>
     (reverse ? [...features].reverse() : features).reduce((result, feature) => feature[hook] ? feature[hook](result) : result, value);

@@ -71,12 +71,12 @@ module.exports=async({window,app,store,workspace,resultPath,atomic})=>{
     await run(`document.getElementById('backendClose').click()`);
     checks.push('deployment history survives UI reload and restores exact release without claiming server verification');
     await run(`document.getElementById('enhancementWorkspaceButton').click()`);
-    await until(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]').length===2`);
+    await until(`document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]').length===3`);
     assert(await run(`!document.querySelector('iframe').contentWindow.STUDIO_NAV.some(n=>n.id==='account')`));
     assert(await run(`!document.querySelector('#contentSubnav [data-section="account"]')`));
     checks.push('duplicate account editor absent; game-backed account editor retained');
     const tabs=await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('[data-workspace-section]')).map(b=>b.textContent)`);
-    assert.deepEqual(tabs,['유닛','영구강화']);checks.push('Enhancement balance has Unit / Permanent tabs');
+    assert.deepEqual(tabs,['유닛','영구강화','체력 연동 경제']);checks.push('Enhancement balance has Unit / Permanent / HP economy tabs');
     const unitKeys=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot().tables.Unit.map(u=>u.UnitKey||u.UnitId).sort()`);
     assert.deepEqual(unitKeys,['AlphanChief','UnitData_Betan','UnitData_Deltan','UnitData_Disigman','UnitData_Gamman','UnitData_Zeltan'].sort());
     checks.push('unit editor contains only five drones and Alphan; no Frog units');
