@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using VContainer;
 
 /// <summary>
@@ -14,6 +14,34 @@ public class Drone_Zeltan : UnitBase
     private UnitResourceComponent _foodResource;
     private UnitDependencies _dependencies;
     private int _payoutCount;
+    private float _burstCheckElapsed;
+    private float _burstRemaining;
+    public bool IsLevelFoodBurstActive => _burstRemaining > 0f && LevelStat(UnitBonusStat.FoodBurstChance) > 0f;
+    private void RefreshLevelFoodBurst()
+    {
+        if (LevelStat(UnitBonusStat.FoodBurstChance) > 0f) return;
+        _burstCheckElapsed = _burstRemaining = 0f;
+    }
+    /// <summary>Split actual production at proc/expiry boundaries, including batched payout.</summary>
+    public void TickLevelFoodProduction(float seconds, System.Action<float> produce)
+    {
+        if (seconds <= 0f || currentCell == null || IsStunned || IsCellSealed || Combat?.AttacksHeld == true) return;
+        if (LevelStat(UnitBonusStat.FoodBurstChance) <= 0f) { produce(seconds); return; }
+        while (seconds > 0f)
+        {
+            float step = Mathf.Min(seconds, 10f - _burstCheckElapsed);
+            if (_burstRemaining > 0f) step = Mathf.Min(step, _burstRemaining);
+            produce(step);
+            seconds -= step;
+            _burstCheckElapsed += step;
+            _burstRemaining = Mathf.Max(0f, _burstRemaining - step);
+            if (_burstCheckElapsed >= 10f)
+            {
+                _burstCheckElapsed = 0f;
+                if (Random.value < LevelStat(UnitBonusStat.FoodBurstChance)) _burstRemaining = 5f;
+            }
+        }
+    }
     public override float NextFoodPayoutMultiplier()
     {
         _payoutCount++;
@@ -65,14 +93,26 @@ public class Drone_Zeltan : UnitBase
         base.OnInitialized(dependencies);
         _dependencies = dependencies;
         _payoutCount = 0;
+        _burstCheckElapsed = _burstRemaining = 0f;
+        OnLevelChanged -= RefreshLevelFoodBurst;
+        OnLevelChanged += RefreshLevelFoodBurst;
         _foodResource = GetComponent<UnitResourceComponent>();
     }
 
     /// <summary>자체·군단 생산량을 공통 정산 컴포넌트에 전달한다. 이 유닛은 지급 상태를 소유하지 않는다.</summary>
     public void TickBatchedFoodPayout(float deltaTime)
     {
-        float own = CurrentFoodProductionPerSecond;
-        _foodResource?.TickBatchedFoodProduction(deltaTime, own + FleetFoodPerSecond, own);
+        if (UsesExternalFoodPayout)
+        {
+            // A stunned producer still earns fleet food; only its own production/proc clock pauses.
+            if (IsStunned) _foodResource?.TickBatchedFoodProduction(deltaTime, FleetFoodPerSecond);
+            else TickLevelFoodProduction(deltaTime, step =>
+            {
+                float own = CurrentFoodProductionPerSecond;
+                _foodResource?.TickBatchedFoodProduction(step, own + FleetFoodPerSecond, own);
+            });
+        }
+        else _foodResource?.TickBatchedFoodProduction(deltaTime, 0f);
     }
 
     protected override void OnUnitPlaced()
@@ -119,6 +159,6 @@ public class Drone_Zeltan : UnitBase
     public override float GetBaseFoodPerSecond()
     {
         return unitData != null ? base.GetBaseFoodPerSecond()
-            * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) : 0f;
+            * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) * (IsLevelFoodBurstActive ? 2f : 1f) : 0f;
     }
 }

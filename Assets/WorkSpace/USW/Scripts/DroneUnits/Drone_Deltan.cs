@@ -4,6 +4,17 @@ using UnityEngine;
 public class Drone_Deltan : HackingDroneSpawner
 {
     private int _attackCount;
+    private long _levelBasicAttacks;
+    public float LevelBasicDamageCoefficient => LevelStat(UnitBonusStat.HackingBasicDamagePerStack)
+        * (_droneManager?.Hacking.Ledger.Available ?? 0);
+    /// <summary>Only original drone attacks advance this counter; extra projectiles do not charge mana.</summary>
+    public int CompleteLevelBasicAttack()
+    {
+        _levelBasicAttacks++;
+        int every = CurrentLevel >= 15 ? 3 : 10;
+        return _levelBasicAttacks % every == 0
+            ? (CurrentLevel >= 15 ? 1 : Mathf.RoundToInt(LevelStat(UnitBonusStat.ExtraProjectileCount))) : 0;
+    }
     private float _productionRemainder;
     private double _postHackingRemaining;
     private bool _postHackingExpiryPending;
@@ -71,7 +82,7 @@ public class Drone_Deltan : HackingDroneSpawner
     }
     protected override void OnUnitPlaced()
     {
-        if (IsFirstPlacement) { _attackCount = 0; _productionRemainder = 0; }
+        if (IsFirstPlacement) { _attackCount = 0; _productionRemainder = 0; _levelBasicAttacks = 0; }
         if (Combat != null) { Combat.OnBasicAttackStarted -= Charge; Combat.OnBasicAttackStarted += Charge; }
         base.OnUnitPlaced();
         OnLevelChanged -= RefreshLevelCapacity;

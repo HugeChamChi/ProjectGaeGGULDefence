@@ -4,6 +4,16 @@ using UnityEngine;
 public class Drone_Gamman : HackingDroneSpawner
 {
     private float _pendingResidue;
+    private float _pendingRefund;
+    private float _refundRemainder;
+    private void RefundConsumedStacks(DroneHackingRuntime runtime, BossBase target, float amount)
+    {
+        if (amount <= 0f || target == null || target.IsDead || runtime.Target != target) return;
+        float exact = amount + _refundRemainder;
+        int stacks = Mathf.FloorToInt(exact + .00001f);
+        _refundRemainder = exact - stacks;
+        runtime.Add(target, stacks);
+    }
     private int _deliveryLifetime;
     private SelfDestructDrone _delivery;
     private bool HasActiveDelivery => _delivery != null && _delivery.IsDeliveryFrom(this, _deliveryLifetime);
@@ -46,6 +56,7 @@ public class Drone_Gamman : HackingDroneSpawner
         var data = unitData.Hacking;
         var reservation = runtime.Reserve(target, MaximumStacksConsumed);
         if (reservation == null) return;
+        _pendingRefund = reservation.Amount * LevelStat(UnitBonusStat.HackingRefundPercent);
         float coefficient = data.GetBaseCoefficient(currentTier)
             + reservation.DamageAmount * data.GetCoefficientPerStack(currentTier) * StackDamageMultiplier;
         float skillDamage = SkillDamageMultiplier;
@@ -64,8 +75,10 @@ public class Drone_Gamman : HackingDroneSpawner
             _delivery = bomb;
             float residue = _pendingResidue; _pendingResidue = 0f;
             var source = unitData;
+            float refund = _pendingRefund; _pendingRefund = 0f;
             bomb.InitializeDelivery(damage, critical, target, source, runtime, reservation, () =>
             {
+                RefundConsumedStacks(runtime, target, refund);
                 if (residue > 0f) runtime.AddResidue(target, residue, effects.GammanResidueDuration, effects.GammanResidueTicks, source);
             }, this);
         }
@@ -76,6 +89,8 @@ public class Drone_Gamman : HackingDroneSpawner
     {
         float residue = _pendingResidue;
         _pendingResidue = 0f;
+        float refund = _pendingRefund; _pendingRefund = 0f;
+        RefundConsumedStacks(runtime, target, refund);
         var effects = DroneEffects;
         if (residue > 0f && effects != null)
             runtime.AddResidue(target, residue, effects.GammanResidueDuration, effects.GammanResidueTicks, unitData);

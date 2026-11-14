@@ -7,43 +7,43 @@ public static class PrototypeLevelBonuses
     {
         if (unit is Disigman) return new()
         {
-            S(3,"공격력 +5%",UnitBonusStat.AttackPercent,.05f),
-            S(6,"회복 후 다음 일반공격 피해 +30%",UnitBonusStat.RecoveryNextBasicPercent,.3f),
-            S(9,"공격속도 +5%",UnitBonusStat.BasicAttackFrequencyPercent,.05f),
-            S(12,"시간 회복 +10%",UnitBonusStat.TimeRecoveryPercent,.1f),
-            S(15,"일반공격 피해 +15%",UnitBonusStat.BasicDamagePercent,.15f)
+            S(3,"공격속도 +10%",UnitBonusStat.BasicAttackFrequencyPercent,.1f),
+            S(6,"스킬 피해 +20%",UnitBonusStat.SkillDamagePercent,.2f),
+            S(9,"스킬 피해 +20%",UnitBonusStat.SkillDamagePercent,.2f),
+            S(12,"공격속도 +10%",UnitBonusStat.BasicAttackFrequencyPercent,.1f),
+            S(15,"스킬 충전 필요 일반공격 -1회 (6→5)",UnitBonusStat.ChargeAttackReductionFlat,1f)
         };
         if (unit is Drone_Betan) return new()
         {
-            S(3,"공격력 +5%",UnitBonusStat.AttackPercent,.05f),
-            Cycle(6,"매 2번째 기본 자폭 피해 +40%",.4f,1f),
-            S(9,"공격속도 +5%",UnitBonusStat.BasicAttackFrequencyPercent,.05f),
-            Cycle(12,"매 2번째 기본 자폭 충전 -30%",0f,.7f),
-            S(15,"치명타 피해 +50%",UnitBonusStat.CriticalDamagePoints,.5f)
+            S(3,"공격력 +10%, 전투 드론 +1기",UnitBonusStat.AttackPercent,.1f,UnitBonusStat.DroneCountFlat,1f),
+            S(6,"자폭 피해 +10%, 전투 드론 +1기",UnitBonusStat.BombDamagePercent,.1f,UnitBonusStat.DroneCountFlat,1f),
+            S(9,"스킬 쿨타임 -15%, 전투 드론 +1기",UnitBonusStat.SkillCooldownPercent,.15f,UnitBonusStat.DroneCountFlat,1f),
+            S(12,"자폭 피해 +15%, 전투 드론 +1기",UnitBonusStat.BombDamagePercent,.15f,UnitBonusStat.DroneCountFlat,1f),
+            S(15,"매 3번째 기본 스킬 자폭 드론 +1기",UnitBonusStat.ThirdSkillExtraBomb,1f)
         };
         if (unit is Drone_Deltan) return new()
         {
-            S(3,"공격속도 +10%",UnitBonusStat.BasicAttackFrequencyPercent,.1f),
-            S(6,"충전 필요 공격 -1",UnitBonusStat.ChargeAttackReductionFlat,1f),
-            S(9,"공유 해킹 최대 스택 +10",UnitBonusStat.HackingCapacityFlat,10f),
-            S(12,"해킹 생산 +1",UnitBonusStat.HackingProducedNormal,1f),
-            S(15,"해킹 후 2초간 공격속도 +15%",UnitBonusStat.HackingPostSpeedPercent,.15f,UnitBonusStat.HackingPostDuration,2f)
+            S(3,"공격속도 +5%",UnitBonusStat.BasicAttackFrequencyPercent,.05f),
+            S(6,"공격 10회마다 추가 투사체 +1발",UnitBonusStat.ExtraProjectileCount,1f),
+            S(9,"공격 10회마다 추가 투사체 +1발",UnitBonusStat.ExtraProjectileCount,1f),
+            S(12,"공격 시 현재 해킹 스택당 공격력 0.5% 추가 피해",UnitBonusStat.HackingBasicDamagePerStack,.005f),
+            S(15,"해킹 최대 스택 +15, 추가 투사체 주기 3회로 변경",UnitBonusStat.HackingCapacityFlat,15f)
         };
         if (unit is Drone_Gamman) return new()
         {
-            S(3,"공격력 +10%",UnitBonusStat.AttackPercent,.1f),
-            S(6,"해킹 스택 피해 +20%",UnitBonusStat.HackingStackDamagePercent,.2f),
-            S(9,"스킬 쿨타임 -10%",UnitBonusStat.SkillCooldownPercent,.1f),
-            S(12,"해킹 소모 한도 +1",UnitBonusStat.HackingConsumedNormal,1f),
-            S(15,"치명타 확률 +10%",UnitBonusStat.CriticalChancePoints,.1f)
+            S(3,"기폭 피해 +10%",UnitBonusStat.SkillDamagePercent,.1f),
+            S(6,"기폭 쿨타임 -10%",UnitBonusStat.SkillCooldownPercent,.1f),
+            S(9,"기폭 피해 +20%",UnitBonusStat.SkillDamagePercent,.2f),
+            S(12,"기폭 쿨타임 -20%",UnitBonusStat.SkillCooldownPercent,.2f),
+            S(15,"기폭으로 소비한 해킹 스택 20% 환급",UnitBonusStat.HackingRefundPercent,.2f)
         };
         return new()
         {
-            S(3,"자체 생산속도 +10%",UnitBonusStat.FoodSpeedPercent,.1f),
-            S(6,"보스 처치 시 자체 식량 5초분",UnitBonusStat.BossFoodSeconds,5f),
-            S(9,"자체 생산량 +15%",UnitBonusStat.FoodPercent,.15f),
-            S(12,"매 5번째 자체 생산 2배",UnitBonusStat.FoodFifthMultiplier,2f),
-            S(15,"매 5번째 자체 생산 2.5배로 교체",UnitBonusStat.FoodFifthMultiplier,2.5f)
+            S(3,"식량 생산량 +10%",UnitBonusStat.FoodPercent,.1f),
+            S(6,"식량 생산량 +20%",UnitBonusStat.FoodPercent,.2f),
+            S(9,"식량 생산속도 +10%",UnitBonusStat.FoodSpeedPercent,.1f),
+            S(12,"식량 생산속도 +20%",UnitBonusStat.FoodSpeedPercent,.2f),
+            S(15,"10초마다 50% 확률로 5초간 식량 생산량 2배",UnitBonusStat.FoodBurstChance,.5f)
         };
     }
     private static UnitLevelBonusDefinition S(int level,string description,UnitBonusStat stat,float value,UnitBonusStat? second=null,float extra=0f)
@@ -53,6 +53,4 @@ public static class PrototypeLevelBonuses
         if (second.HasValue) definition.Parts.Add(new StatModifierBonus { Stat=second.Value,Value=extra });
         return definition;
     }
-    private static UnitLevelBonusDefinition Cycle(int level,string description,float damage,float charge)
-        => new() { Level=level,Description=description,Parts=new() { new EveryNthCycleBonus { CycleId=UnitLevelBonusController.BasicSkillCycle,Every=2,DamageBonusRatio=damage,ChargeTimeMultiplier=charge } } };
 }
