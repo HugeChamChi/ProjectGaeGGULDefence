@@ -16,7 +16,7 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
     [SerializeField] private string[] _holdIdleBonePrefixes = { "tail_", "frill_", "pupil_" };
     private const string BoardLayer = "Default";
     private const string FrontLayer = "Unit";
-    private const int BurrowPartsOrder = -10;
+    private const int BurrowPartsOrder = -9; // Keep hands and face details above the body (-10), below the battlefield (0).
     private const int BarrierPartsOrder = -9; // In front of the body (-10), behind the battlefield (0) and grid (1)
     private const float HoldOverlayFade = 0.25f;
     private const int RingSegments = 40;
@@ -170,7 +170,7 @@ public sealed class LizardBossPresentation : MonoBehaviour, IPauseIdleVisual
 
     /// <param name="behindBoardOrder">
     /// Moves hands/spikes behind the battlefield so the arena edge and grid cover their base:
-    /// burrow sinks with the body, the thorn barrier rises from under the board without covering cells.
+    /// Both patterns keep these parts above the body, including face details in the same separated mesh.
     /// </param>
     private void ApplyPose(bool hidden, bool spikes, int? behindBoardOrder)
     {

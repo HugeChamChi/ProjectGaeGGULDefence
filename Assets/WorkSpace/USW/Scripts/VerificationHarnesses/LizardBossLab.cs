@@ -1,6 +1,7 @@
 using UnityEngine;
 
 /// <summary>Explicit offline preview of authored Lizard patterns. No login, account writes or production boss-roster changes.</summary>
+[DefaultExecutionOrder(-1000)]
 public sealed class LizardBossLab : MonoBehaviour
 {
     [SerializeField] private BossLizard _boss;
@@ -13,6 +14,13 @@ public sealed class LizardBossLab : MonoBehaviour
     [SerializeField] private Camera _previewCamera;
     private bool _paused;
     private GUIStyle _buttonStyle, _labelStyle;
+
+    private void Awake()
+    {
+        // Spine 4.3 separates renderer and animation initialization; prepare child renderers before the boss presentation awakens.
+        foreach (var renderer in _boss.GetComponentsInChildren<Spine.Unity.SkeletonRenderer>(true)) renderer.Initialize(false);
+        foreach (var animation in _boss.GetComponentsInChildren<Spine.Unity.SkeletonAnimation>(true)) animation.Initialize(false);
+    }
 
     private void Start()
     {
@@ -56,6 +64,23 @@ public sealed class LizardBossLab : MonoBehaviour
         _controller.RegisterBoss(_boss, _boss.Patterns);
     }
 
+    /// <summary>Replays one authored skill through the combat scheduler, including its entry and return.</summary>
+    public void PreviewPattern(BossPatternType type)
+    {
+        _controller.UnregisterBoss(_boss);
+        _boss.Init(_data.MaxHp);
+        // Leave room to see the burrow heal before registering HP phase triggers.
+        if (type == BossPatternType.LizardBurrow) _boss.TakeDamage(_boss.MaxHp * .2m);
+        _controller.RegisterBoss(_boss, _boss.Patterns);
+        for (int i = 0; i < _boss.Patterns.Length; i++)
+            if (_boss.Patterns[i].patternType == type)
+            {
+                _controller.TryRequestPattern(_boss, i);
+                break;
+            }
+        _paused = false;
+    }
+
     private void DamageTo(decimal fraction)
     {
         decimal desired = _boss.MaxHp * fraction;
@@ -72,8 +97,11 @@ public sealed class LizardBossLab : MonoBehaviour
         float height = Screen.height / scale;
         GUI.Box(new Rect(30,35,1020,125),GUIContent.none);
         GUI.Label(new Rect(40,45,1000,45),"LIZARD  |  " + (_boss.CastingPattern != null ? _boss.CastingPattern.patternName : "Idle"),_labelStyle);
-        GUI.Label(new Rect(40,93,1000,45),$"HP {_boss.CurrentHp:0} / {_boss.MaxHp:0}   |   Slow {_boss.ThreatRemaining:0.0}s",_labelStyle);
+        GUI.Label(new Rect(40,93,1000,45),$"HP {_boss.CurrentHp:0} / {_boss.MaxHp:0}   |   Shield {_boss.Shield:0}   |   Slow {_boss.ThreatRemaining:0.0}s",_labelStyle);
         float y=height-185f;
+        if(GUI.Button(new Rect(30,y-80,330,65),"1. Threat",_buttonStyle)) PreviewPattern(BossPatternType.LizardThreat);
+        if(GUI.Button(new Rect(375,y-80,330,65),"2. Thorn Barrier",_buttonStyle)) PreviewPattern(BossPatternType.LizardThornBarrier);
+        if(GUI.Button(new Rect(720,y-80,330,65),"3. Burrow",_buttonStyle)) PreviewPattern(BossPatternType.LizardBurrow);
         if(GUI.Button(new Rect(30,y,195,65),"+20s",_buttonStyle)) _controller.AdvanceCombat(20f);
         if(GUI.Button(new Rect(235,y,195,65),"HP 70%",_buttonStyle)) DamageTo(.7m);
         if(GUI.Button(new Rect(440,y,195,65),"HP 30%",_buttonStyle)) DamageTo(.3m);
