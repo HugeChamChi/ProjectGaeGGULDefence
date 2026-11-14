@@ -27,6 +27,8 @@ public class ResearchNodeData
     public List<string> Parents = new List<string>();
     [Tooltip("true면 부모 중 하나만 최대여도 열린다 (택1 합류). 동시에 찍을 수 있는 두 갈래 합류는 양쪽 1레벨 조건 우선")]
     public bool RequireAnyParent;
+    [Tooltip("두 갈래 1레벨 합류 규칙보다 우선하여 모든 부모 MAX를 요구한다")]
+    public bool RequireAllParentsMax;
     [Tooltip("트리 전체 강화 횟수(모든 노드 레벨 합)가 이 값 이상이어야 열린다. 관문 노드용, 0이면 조건 없음")]
     [Min(0)] public int RequiredTotalLevel;
     [Tooltip("같은 그룹 이름끼리는 하나만 고를 수 있다 (택1). 비우면 택1 아님")]

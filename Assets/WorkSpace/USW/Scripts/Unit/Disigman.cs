@@ -8,6 +8,7 @@ public sealed class Disigman : UnitBase
     private int _chargedAttacks;
     private BossBase _recoveryShotTarget;
     public bool RecoveryShotReady => _recoveryShotTarget != null && !_recoveryShotTarget.IsDead;
+    private void ClearLockedRecoveryShot() { if (CurrentLevel < 6) ClearRecoveryShot(); }
     private void ClearRecoveryShot()
     {
         if (_recoveryShotTarget != null) _recoveryShotTarget.OnDeath -= ClearRecoveryShot;
@@ -46,6 +47,7 @@ public sealed class Disigman : UnitBase
     protected override void OnInitialized(UnitDependencies dependencies)
     {
         _dependencies = dependencies;
+        OnLevelChanged += ClearLockedRecoveryShot;
         _chargedAttacks = 0;
         Subscribe();
     }

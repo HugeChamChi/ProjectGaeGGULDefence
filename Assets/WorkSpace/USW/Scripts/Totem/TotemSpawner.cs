@@ -49,7 +49,7 @@ public class TotemSpawner : MonoBehaviour
     public async Cysharp.Threading.Tasks.UniTask<bool> SpawnTotemByData(TotemData data)
     {
         if (!CanPlaceTotems) return false;
-        if (data == null)
+        if (data == null || !data.IsLevelTotem)
         {
             Debug.LogError("TotemSpawner: data null");
             return false;
@@ -76,7 +76,7 @@ public class TotemSpawner : MonoBehaviour
     /// <summary>Places a stored totem in the requested empty cell; never chooses a random cell.</summary>
     public async UniTask<bool> PlaceTotemAtCellAsync(TotemData data, GridCell cell, CancellationToken token)
     {
-        if (!CanPlaceTotems || data == null || cell == null || !cell.IsAvailable) return false;
+        if (!CanPlaceTotems || data == null || !data.IsLevelTotem || cell == null || !cell.IsAvailable) return false;
         await data.LoadAssetsAsync().AttachExternalCancellation(token);
         token.ThrowIfCancellationRequested();
         if (!CanPlaceTotems || cell == null || !cell.IsAvailable) return false;
@@ -90,7 +90,7 @@ public class TotemSpawner : MonoBehaviour
         TotemBase expected, System.Func<bool> canCommit, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        if (!CanPlaceTotems || data == null || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
+        if (!CanPlaceTotems || data == null || !data.IsLevelTotem || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;
         await data.LoadAssetsAsync().AttachExternalCancellation(token);
         token.ThrowIfCancellationRequested();
         if (!CanPlaceTotems || !CanExchange(cell, expected) || canCommit?.Invoke() == false) return false;

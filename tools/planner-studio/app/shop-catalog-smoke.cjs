@@ -28,30 +28,24 @@ module.exports=async({run,window,store,checks})=>{
     let exported;
     for(let i=0;i<80;i++){
       const names=fs.existsSync(store.exportFolder())?fs.readdirSync(store.exportFolder()):[];
-      const folder=names.filter(n=>n.startsWith('콘텐츠-')).sort().reverse().find(n=>fs.existsSync(path.join(store.exportFolder(),n,'ShopCatalog_Editing.editor-preview.json')));
+      const folder=names.filter(n=>n.startsWith('콘텐츠-')).sort().reverse().find(n=>fs.existsSync(path.join(store.exportFolder(),n,'ShopWeeklyList.backend.xlsx')));
       if(folder){exported=path.join(store.exportFolder(),folder);break;}await new Promise(r=>setTimeout(r,50));
     }
     assert(exported,'shop workbook export completed');
-    const excel=require('./content-workbook.cjs');
-    const parsed=excel.inspect(fs.readFileSync(path.join(exported,'ShopCatalog_Editing.xlsx')));
-    assert.equal(parsed.tables.ShopCatalog.length,26);assert.equal(parsed.tables.ShopCatalog[0].Amount,777);
-    const preview=JSON.parse(fs.readFileSync(path.join(exported,'ShopCatalog_Editing.editor-preview.json'),'utf8'));
-    assert.equal(preview[0].RewardCurrency,'Diamond');assert.equal(preview[9].Amount,888);
-    assert.equal(preview[10].Weight,333);
     const {open}=require('./workbook.cjs');
     for(const name of ['ShopDailyProbability','ShopWeeklyProbability']){
-      const book=open(fs.readFileSync(path.join(exported,name+'.xlsx')));assert.equal(book.sheets.size,1);
+      const book=open(fs.readFileSync(path.join(exported,name+'.backend.xlsx')));assert.equal(book.sheets.size,1);
       assert.equal(book.get(name,'B1').value,'percent');
       let sum=0;for(let i=2;i<=9;i++)sum+=Math.round(Number(book.get(name,'B'+i).value)*10000000);
       assert.equal(sum,1000000000);
       if(name==='ShopWeeklyProbability')assert(Number(book.get(name,'B2').value)>60);
     }
-    const weeklyList=open(fs.readFileSync(path.join(exported,'ShopWeeklyList.xlsx')));
+    const weeklyList=open(fs.readFileSync(path.join(exported,'ShopWeeklyList.backend.xlsx')));
     assert.equal(weeklyList.get('ShopWeeklyList','A3').value,'2002');
     assert.equal(weeklyList.get('ShopWeeklyList','E3').value,'333');
     const output=path.dirname(store.exportFolder());fs.mkdirSync(output,{recursive:true});
     fs.writeFileSync(path.join(output,'planner-shop.png'),await (await window.webContents.capturePage()).toPNG());
-    checks.push('editable weights/free rewards; Excel and preview export; BACKND probability files include edited weight and exactly 100 percent');
+    checks.push('editable weights/free rewards; backend-only Excel export; BACKND probability files include edited weight and exactly 100 percent');
     return path.join(output,'planner-shop.png');
   }finally{await run(`${frame}.StudioUI.loadProject(${JSON.stringify(saved)},['ShopCatalog'])`);}
 };

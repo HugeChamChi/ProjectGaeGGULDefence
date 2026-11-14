@@ -149,9 +149,31 @@ Shader "GGD/UI/UnitStatusBadge"
                 return length(p - ba * h) * sign(p.y * ba.x - p.x * ba.y);
             }
 
-            // Tag symbol: numbers 1-4, 5 filled star, 6 outlined star.
+            float sdLevelDigit(float2 p, int n)
+            {
+                if (n >= 1 && n <= 4) return sdDigit(p, n);
+                float d = 1e3;
+                if (n != 1 && n != 4) d = min(d, sdSegment(p, float2(-0.34, 0.6), float2(0.34, 0.6)));
+                if (n != 0 && n != 1 && n != 7) d = min(d, sdSegment(p, float2(-0.34, 0.0), float2(0.34, 0.0)));
+                if (n != 1 && n != 4 && n != 7) d = min(d, sdSegment(p, float2(-0.34, -0.6), float2(0.34, -0.6)));
+                if (n == 0 || n == 4 || n == 5 || n == 6 || n == 8 || n == 9) d = min(d, sdSegment(p, float2(-0.34, 0.6), float2(-0.34, 0.0)));
+                if (n != 5 && n != 6) d = min(d, sdSegment(p, float2(0.34, 0.6), float2(0.34, 0.0)));
+                if (n == 0 || n == 2 || n == 6 || n == 8) d = min(d, sdSegment(p, float2(-0.34, 0.0), float2(-0.34, -0.6)));
+                if (n != 2) d = min(d, sdSegment(p, float2(0.34, 0.0), float2(0.34, -0.6)));
+                return d - 0.13;
+            }
+
+            // 21-35 encode battlefield levels 1-15, separate from legacy tier/star symbols.
             float sdSymbol(float2 p, int n)
             {
+                if (n >= 21 && n <= 35)
+                {
+                    int level = n - 20;
+                    if (level < 10) return sdLevelDigit(p, level);
+                    float left = sdLevelDigit((p + float2(0.4, 0.0)) / float2(0.52, 0.85), 1) * 0.52;
+                    float right = sdLevelDigit((p - float2(0.4, 0.0)) / float2(0.52, 0.85), level - 10) * 0.52;
+                    return min(left, right);
+                }
                 if (n == 5) return sdStar5(p + float2(0.0, 0.05), 0.78, 0.48) - 0.04;
                 if (n == 6) return abs(sdStar5(p + float2(0.0, 0.05), 0.72, 0.48) - 0.02) - 0.08;
                 return sdDigit(p, n);

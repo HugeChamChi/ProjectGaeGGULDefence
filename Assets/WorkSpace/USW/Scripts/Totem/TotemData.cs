@@ -16,6 +16,9 @@ public enum TotemType
 [CreateAssetMenu(fileName = "TotemData", menuName = "Game/TotemData")]
 public partial class TotemData : ScriptableObject, ILoadableAsset, IDebuffSource
 {
+    [Header("레벨 토템")]
+    [Range(0, 3)] public int LevelIncrease;
+    public bool IsLevelTotem => LevelIncrease > 0;
     /// <summary>GenericBuffTotem groups replace shared functions/ranges when populated.</summary>
     [Header("효과별 설명 · 색상 · 기능 · 범위 (GenericBuffTotem)")]
     public List<TotemEffectGroup> EffectGroups = new List<TotemEffectGroup>();

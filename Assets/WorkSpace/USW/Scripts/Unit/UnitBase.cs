@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -22,6 +22,21 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     protected BossBase SkillDebuffTarget => _deps?.BossManager?.CurrentBoss;
     public UnitData unitData;
     public UnitLevelBonusController LevelBonuses { get; private set; }
+    public int CurrentLevel => LevelBonuses?.Level ?? 1;
+    public bool UsesTotemLevels => this is Disigman || this is Drone_Betan || this is Drone_Deltan || this is Drone_Gamman || this is Drone_Zeltan;
+    public float LevelGrowthMultiplier => 1f + (CurrentLevel - 1) * (this is Drone_Deltan ? .01f : .02f);
+    public float LevelAttackGrowth => UsesTotemLevels && !(this is Drone_Deltan) && !(this is Drone_Zeltan) ? LevelGrowthMultiplier : 1f;
+    public float LevelSpeedGrowth => this is Drone_Deltan ? LevelGrowthMultiplier : 1f;
+    public float LevelFoodGrowth => this is Drone_Zeltan ? LevelGrowthMultiplier : 1f;
+    public event Action OnLevelChanged;
+    public void SetTotemLevelBonus(int amount)
+    {
+        if (!UsesTotemLevels || LevelBonuses == null) return;
+        int level = Mathf.Clamp(1 + amount, 1, 15);
+        if (CurrentLevel == level) return;
+        LevelBonuses.SetLevel(level);
+        OnLevelChanged?.Invoke();
+    }
     public float LevelStat(UnitBonusStat stat) => LevelBonuses?.GetStat(stat) ?? 0f;
     public virtual float LevelAttackSpeedBonus => 0f;
     public virtual float NextFoodPayoutMultiplier() => 1f;
@@ -204,12 +219,13 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     {
         unitData = UnitBalanceRuntime.Resolve(unitData);
         _deps = deps;
+        if (UsesTotemLevels) currentTier = Tier.Normal;
         var characterId = unitData != null ? PlayerCharacterManager.UnitId(unitData.characterId.Get(Tier.Normal)) : null;
         int level = Player.Characters.IsReady ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
         AccountUpgradeMultiplier = 1f + (level - 1) * GaeGGUL.DeckUpgrade.DeckUpgradeProgress.CurrentMultiplierPerLevel;
         LevelBonuses = new UnitLevelBonusController(
-            UnitBonusChart.Resolve(UnitBalanceRuntime.GetUnitKey(unitData.name), unitData.LevelBonuses),
-            deps.UnitLevels?.GetLevel(characterId) ?? 1);
+            UsesTotemLevels ? PrototypeLevelBonuses.For(this) : UnitBonusChart.Resolve(UnitBalanceRuntime.GetUnitKey(unitData.name), unitData.LevelBonuses),
+            UsesTotemLevels ? 1 : Mathf.Clamp(deps.UnitLevels?.GetLevel(characterId) ?? 1, 1, 15));
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();
         _resource = gameObject.AddComponent<UnitResourceComponent>();
@@ -272,6 +288,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         _combat.StopLoops();
         RemoveTemporaryTier(_temporaryTierSource);
         currentCell = null;
+        SetTotemLevelBonus(0);
         OnAnyUnitChanged?.Invoke();
     }
 
@@ -336,7 +353,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     }
 
     public virtual float CurrentFoodProductionPerSecond => _resource?.CurrentFoodProductionPerSecond ?? 0f;
-    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
+    public virtual float GetBaseFoodPerSecond() => unitData != null ? (unitData.foodProduction.Get(currentTier) * AccountUpgradeMultiplier * LevelFoodGrowth + (LevelBonuses?.GetStat(UnitBonusStat.FoodFlat) ?? 0f)) * (1f + (LevelBonuses?.GetStat(UnitBonusStat.FoodPercent) ?? 0f)) : 0f;
     
     public int GetAttackDamage() => _stats?.GetAttackDamage() ?? 0;
     /// <summary>GetAttackDamage와 같고, 치명타 여부도 알려준다 (데미지 표시용).</summary>

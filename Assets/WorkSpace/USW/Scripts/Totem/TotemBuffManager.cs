@@ -389,6 +389,20 @@ public class TotemBuffManager : MonoBehaviour
         }
 
         // 3) 보스 등장 조건이 끝나는 다음 시점에 다시 계산하도록 예약
+        var levels = new Dictionary<GridCell, int>();
+        foreach (var totem in _activeTotem)
+        {
+            if (totem == null || !totem.IsActive || totem.Data == null || !totem.Data.IsLevelTotem) continue;
+            foreach (var cell in new HashSet<GridCell>(totem.GetAffectedCells()))
+            {
+                if (cell == null) continue;
+                levels.TryGetValue(cell, out int amount);
+                levels[cell] = amount + totem.Data.LevelIncrease;
+            }
+        }
+        foreach (var cell in _gridManager.AllCells())
+            if (cell != null && cell.OccupyingUnit != null)
+                cell.OccupyingUnit.SetTotemLevelBonus(levels.TryGetValue(cell, out int amount) ? amount : 0);
         _nextEncounterThreshold = FindNextEncounterThreshold();
         completed = !_rebuildRequested;
         }

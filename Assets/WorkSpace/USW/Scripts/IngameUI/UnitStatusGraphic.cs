@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-/// <summary>성급 배지와 셰이더 게이지를 한 프리팹으로 표시합니다.</summary>
+/// <summary>유닛 레벨 배지와 셰이더 게이지를 한 프리팹으로 표시합니다.</summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public sealed class UnitStatusGraphic : MaskableGraphic
 {
@@ -21,9 +21,14 @@ public sealed class UnitStatusGraphic : MaskableGraphic
     [SerializeField] private Tier _previewTier = Tier.Legend;
     [SerializeField, Range(0f, 1f)] private float _previewProgress = 0.65f;
     [SerializeField] private bool _previewPassive;
-    private static readonly string[] Digits = { "010110010010111", "111001111100111", "111001111001111" };
+    private static readonly string[] Digits =
+    {
+        "111101101101111", "010110010010111", "111001111100111", "111001111001111", "101101111001001",
+        "111100111001111", "111100111101111", "111001001001001", "111101111101111", "111101111001111"
+    };
     private Vector3 _authoredScale;
     private Tier _tier;
+    private int _level;
     private float _progress;
     private bool _passive;
     private bool _bound;
@@ -70,8 +75,10 @@ public sealed class UnitStatusGraphic : MaskableGraphic
         float progress = passive ? 0f : Unit.SkillGaugeProgress;
         if (float.IsNaN(progress) || float.IsInfinity(progress)) progress = 0f;
         progress = Mathf.Clamp01(progress);
-        bool stateChanged = _tier != Unit.currentTier || _passive != passive;
+        int level = Unit.UsesTotemLevels ? Unit.CurrentLevel : 0;
+        bool stateChanged = _tier != Unit.currentTier || _level != level || _passive != passive;
         _tier = Unit.currentTier;
+        _level = level;
         _passive = passive;
         AnimateProgress(progress, passive);
         if (stateChanged) SetVerticesDirty();
@@ -151,16 +158,32 @@ public sealed class UnitStatusGraphic : MaskableGraphic
         Box(mesh, badge, _frame);
         Box(mesh, new Rect(badge.x + 2f, badge.y + 2f, Mathf.Max(0f,badge.width - 4f), Mathf.Max(0f,badge.height - 4f)), _badge);
         float scale = badgeSize / 20f;
-        if (tier == Tier.Legend) Star(mesh, badge.center, scale);
+        if (_bound && Unit != null && Unit.UsesTotemLevels)
+        {
+            int level = Mathf.Clamp(_level, 1, 15);
+            if (level < 10) Digit(mesh, badge, level, 6.4f, 2.4f, scale);
+            else
+            {
+                Digit(mesh, badge, 1, 3f, 2f, scale);
+                Digit(mesh, badge, level % 10, 11f, 2f, scale);
+            }
+        }
+        else if (tier == Tier.Legend) Star(mesh, badge.center, scale);
         else if (tier == Tier.Chieftain) Crown(mesh, badge.position, scale);
         else
         {
-            string pixels = Digits[Mathf.Clamp((int)tier, 0, 2)];
-            for (int row = 0; row < 5; row++)
-            for (int col = 0; col < 3; col++)
-                if (pixels[row * 3 + col] == '1')
-                    Box(mesh, new Rect(badge.x + (6.4f + col * 2.4f) * scale, badge.y + (4f + (4 - row) * 2.4f) * scale, 2.4f * scale, 2.4f * scale), Color.white);
+            Digit(mesh, badge, Mathf.Clamp((int)tier + 1, 1, 3), 6.4f, 2.4f, scale);
         }
+    }
+
+    private void Digit(VertexHelper mesh, Rect badge, int digit, float left, float pixelWidth, float scale)
+    {
+        string pixels = Digits[digit];
+        for (int row = 0; row < 5; row++)
+        for (int col = 0; col < 3; col++)
+            if (pixels[row * 3 + col] == '1')
+                Box(mesh, new Rect(badge.x + (left + col * pixelWidth) * scale,
+                    badge.y + (4f + (4 - row) * 2.4f) * scale, pixelWidth * scale, 2.4f * scale), Color.white);
     }
 
     private void Star(VertexHelper mesh, Vector2 center, float scale)

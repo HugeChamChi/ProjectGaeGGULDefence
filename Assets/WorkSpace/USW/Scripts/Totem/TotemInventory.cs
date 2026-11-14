@@ -19,15 +19,14 @@ public sealed class TotemInventory
     /// <summary>Oldest entry first; view places it at the right edge.</summary>
     public IReadOnlyList<TotemData> Items => _view;
     /// <summary>Configured capacity, at most five.</summary>
-    /// <summary>Inventory size: RunBalance chart value when installed, otherwise the bundled settings value (always 1 to 5).</summary>
-    public int Capacity => UnityEngine.Mathf.Clamp(UnityEngine.Mathf.RoundToInt(GGD.BackendCharts.RunBalance.Number(GGD.BackendCharts.RunBalance.TotemCapacity, _settings.Capacity)), 1, 5);
+    public int Capacity => 5;
     /// <summary>Receives the scene placement service.</summary>
     public TotemInventory(TotemSpawner spawner, TotemInteractionSettings settings)
     { _spawner = spawner; _settings = settings; _view = _items.AsReadOnly(); }
     /// <summary>Adds a reward, or returns false when full.</summary>
     public bool TryAdd(TotemData data)
     {
-        if (data == null || _items.Count >= Capacity) return false;
+        if (data == null || !data.IsLevelTotem || _items.Count >= Capacity) return false;
         _items.Add(data);
         _rotations.Add(0);
         OnChanged?.Invoke();

@@ -1,7 +1,18 @@
 'use strict';
 function table(config,kind){
  let rows;
- if(kind==='roundRewards'){
+ if(kind==='research'){
+  rows=[];
+  for(const t of config.tables.ResearchTree){
+   for(const n of config.tables.ResearchNode.filter(n=>n.TreeKey===t.TreeKey)){
+    const {Parents,IconKey,CostItemId,BaseCost,CostStep,...node}=n;
+    rows.push({RecordType:'Node',TreeName:t.Name,LegacySaveName:t.LegacySaveName||(t.TreeKey==='BASIC'?'UpgradeTree_Basic':''),ShowLanes:t.ShowLanes,ColumnSpacing:t.ColumnSpacing,...node});
+    Parents.forEach((id,index)=>rows.push({RecordType:'Parent',TreeKey:t.TreeKey,NodeId:n.NodeId,ParentIndex:index,ParentNodeId:id}));
+   }
+   t.LaneNames.forEach((name,index)=>rows.push({RecordType:'Lane',TreeKey:t.TreeKey,LaneIndex:index,LaneName:name}));
+  }
+ }
+ else if(kind==='roundRewards'){
   const rows=config.tables.RoundRewards;
   const headers=['RewardKey','Round','Currency','Amount'];
   return [headers,...rows.map(r=>headers.map(k=>r[k]))];

@@ -47,6 +47,7 @@ public static class ResearchChartParser
                     MaxLevel = Int(row, "MaxLevel", 1, 1000), ValuePerLevel = Number(row, "ValuePerLevel"),
                     Row = Int(row, "Row", 0, 200), Column = Int(row, "Column", -1, 2),
                     Parents = Strings(row, "Parents"), RequireAnyParent = Bool(row, "RequireAnyParent"),
+                    RequireAllParentsMax = row.ContainsKey("RequireAllParentsMax") && !string.IsNullOrWhiteSpace(Text(row, "RequireAllParentsMax")) && Bool(row, "RequireAllParentsMax"),
                     RequiredTotalLevel = Int(row, "RequiredTotalLevel", 0, 20000000),
                     ExclusiveGroup = Text(row, "ExclusiveGroup"), RecommendOrder = Int(row, "RecommendOrder", 0, 20000000)
                 };

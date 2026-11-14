@@ -1,39 +1,25 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class UnitStatsModifier : MonoBehaviour
 {
     private UnitBase _unit;
     private UnitDependencies _deps;
-    private const int DefaultRows = 4;
-    private const float ProjectileSizeStep = .1f;
-    private int Rows => _deps?.GridManager?.Rows ?? DefaultRows;
-    
-    // 레벨업 스킬 특수 효과
+    private StatModifierProvider _provider;
+    public StatModifierRegistry AdditionalModifiers { get; } = new StatModifierRegistry();
+    private StatModifierSnapshot WithAdditional(StatModifierSnapshot snapshot) =>
+        StatModifierSnapshot.Combine(snapshot, AdditionalModifiers.Capture());
+    private void OnDisable() => AdditionalModifiers.Clear();
     public float BurstEndTime { get; set; }
-
     public void Init(UnitBase unit, UnitDependencies deps)
     {
         _unit = unit;
         _deps = deps;
+        _provider = new StatModifierProvider(unit, deps);
+        AdditionalModifiers.Clear();
     }
-
-    private float AtkUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetAtkUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
-        : 1f;
-
-    private float AttackSpeedUpgradeMultiplier => _deps?.UpgradeManager != null && _deps.UpgradeManager.IsLoaded
-        ? _deps.UpgradeManager.GetAttackSpeedUpgradeMultiplier(_unit.unitData.characterId.Get(_unit.currentTier))
-        : 1f;
-
-    private float LevelAttackMultiplier => (1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.AttackPercent) ?? 0f)) * (1f + (_deps?.Alphan?.GlobalAttackBonus ?? 0f));
-    private float BasicDamageMultiplier => (1f + LevelStat(UnitBonusStat.BasicDamagePercent)) * (_unit.Combat?.RegularBasicDamageMultiplier ?? 1f);
-    private float LevelStat(UnitBonusStat stat) => _unit.LevelBonuses?.GetStat(stat) ?? 0f;
-    private float LevelBaseAtk => (_unit.unitData.atk.Get(_unit.currentTier) * _unit.AccountUpgradeMultiplier + LevelStat(UnitBonusStat.AttackFlat)) * LevelAttackMultiplier;
-    private float UpgradedAtk => LevelBaseAtk * AtkUpgradeMultiplier;
-
-    // UnitData.attackSpeed is attacks per second; upgrades increase frequency.
-    private float UpgradedAttackFrequency => (_unit.unitData != null ? _unit.unitData.attackSpeed.Get(_unit.currentTier) : 1.0f)
-        * Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
+    private float BasicDamageMultiplier => UnitStatCalculator.BasicMultiplier(WithAdditional(_provider.CaptureBasic()));
+    private float LevelBaseAtk => UnitStatCalculator.Attack(_unit.unitData.atk.Get(_unit.currentTier), WithAdditional(_provider.CaptureAttack()), false);
+    private float UpgradedAtk => UnitStatCalculator.Attack(_unit.unitData.atk.Get(_unit.currentTier), WithAdditional(_provider.CaptureAttack()), true);
 
     public int GetAttackDamage() => ComputeDamage(UpgradedAtk, 1f, true, out _, true, BasicDamageMultiplier);
 
@@ -74,70 +60,19 @@ public class UnitStatsModifier : MonoBehaviour
         critical = false;
         if (_unit.unitData == null) return 0;
 
-        float cellModifier = _unit.currentCell != null
-            ? (_unit.currentCell.Model.NullifyDamageDebuff ? 1f : _unit.currentCell.Model.DamageModifier)
-            : 1f;
-        float totemModifier = _unit.currentCell?.Model.TotemAttackModifier ?? 1f;
-        int row = _unit.currentCell?.GridPosition.y ?? 0;
-        var lu = _deps?.SelectionCombat;
-        float rowModifier = lu?.GetRowAttackMultiplier(row, Rows) ?? 1f;
-
-        float unitProjSizeMult = _unit.Buffs?.GetStatMultiplier(StatKind.ProjectileSize) ?? 1f;
-        float projAtk = 1f + (GetProjectileSizeAtkBonus(unitProjSizeMult)) * projAtkBonusMultiplier;
-
-        float burstAtk = (Time.time < BurstEndTime && lu != null)
-            ? (1f + lu.BurstAttackBonus)
-            : 1f;
-
-        float cellAttackBonus = _unit.GetStatBonus(StatKind.AttackPercent, projAtkBonusMultiplier);
-        float flatAttackBonus = _unit.GetStatBonus(StatKind.AttackFlat, projAtkBonusMultiplier);
-
-        float damage = (baseDamage + flatAttackBonus)
-                     * (1f + cellAttackBonus)
-                     * (attackBased && _unit is Drone_Betan ? 1f - (_deps?.DroneEffects?.BetanAttackReductionRatio ?? 0f) : 1f)
-                     * cellModifier
-                     * totemModifier
-                     * rowModifier
-                     * projAtk
-                     * burstAtk * damageMultiplier;
-
-        // 실제 타격만 편차를 준다 (표시용 GetNonCriticalAttackDamage는 rollCritical = false라 고정값).
-        // 정수화/남은 HP 제한 전 평균은 보존한다. 반올림·막타·처치 타격 수는 달라질 수 있다.
-        if (rollCritical) damage *= DamageCalculator.Spread(_deps?.CombatSettings?.DamageVariance ?? 0f);
-
-        float cellCritChance = _unit.GetStatBonus(StatKind.CritChance);
-        float critChance = Mathf.Clamp01((lu?.CritChance ?? 0f) + cellCritChance + (_deps?.Research?.Get(ResearchStat.CritChance) ?? 0f) + LevelStat(UnitBonusStat.CriticalChancePoints));
-        if (rollCritical && UnityEngine.Random.value < critChance)
+        try
         {
-            float critMultiplier = lu != null ? lu.CritDamageMultiplier
-                : _deps?.CombatSettings?.BaseCritDamageMultiplier ?? CombatSettings.DefaultBaseCritDamageMultiplier;
-            float cellCritDamage = _unit.GetStatBonus(StatKind.CritDamage)
-                + (_unit.LevelBonuses?.GetStat(UnitBonusStat.CriticalDamagePoints) ?? 0f);
-            damage *= (critMultiplier + cellCritDamage + (_deps?.Research?.Get(ResearchStat.CritDamage) ?? 0f)) * DamageCalculator.Spread(_deps?.CombatSettings?.CritDamageVariance ?? 0f);
-            critical = true;
+            return UnitStatCalculator.Damage(baseDamage,
+                WithAdditional(_provider.CaptureDamage(projAtkBonusMultiplier, BurstEndTime, attackBased, damageMultiplier)),
+                rollCritical, attackBased, _deps?.CombatSettings?.DamageVariance ?? 0f,
+                _deps?.CombatSettings?.CritDamageVariance ?? 0f, _deps?.RunStatModifiers?.AttackMultiplier ?? 1d,
+                _deps?.RunStatModifiers != null, out critical);
         }
-
-        if (attackBased) damage *= 1f + (_deps?.GlitchEffects?.GlitchAttackBonus ?? 0f)
-            + ((_deps?.GlitchEffects as IOverdriveEffectReader)?.SacrificeAttackBonus ?? 0f);
-        if (attackBased) damage *= 1f + (_deps?.Research?.Get(ResearchStat.AttackPercent) ?? 0f);
-        if (attackBased && _deps?.RunStatModifiers != null)
+        catch (System.OverflowException error)
         {
-            try { damage = RunStatMath.ScaleAttack(damage, _deps.RunStatModifiers.AttackMultiplier); }
-            catch (System.OverflowException error)
-            {
-                _deps.ReportRunStatFailure?.Invoke(error.Message);
-                return 0;
-            }
+            _deps?.ReportRunStatFailure?.Invoke(error.Message);
+            return 0;
         }
-        return Mathf.Max(rollCritical ? 1 : 0, DamageCalculator.ApplyRounding(damage));
-    }
-
-    private float GetProjectileSizeAtkBonus(float unitSizeMultiplier)
-    {
-        var effects = _deps?.SelectionCombat;
-        if (effects?.HasProjectileSizeScalesAtk != true) return 0f;
-        float multiplier = (_deps?.TotemBuffManager?.ProjectileSizeMultiplier ?? 1f) * unitSizeMultiplier;
-        return Mathf.Max(0f, (multiplier - 1f) / ProjectileSizeStep * effects.ProjectileSizeAtkPerUnit);
     }
 
     public float GetCurrentAttackInterval() => GetCurrentAttackInterval(true);
@@ -148,36 +83,16 @@ public class UnitStatsModifier : MonoBehaviour
         if (_unit.IsTimeVaultAttackSpeedActive && CappedAttackInterval() > 0f)
             return GetMinimumAttackInterval();
 
-        int row = _unit.currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult   = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
-        
-        float frequency = _unit.unitData.attackSpeed.Get(_unit.currentTier) + LevelStat(UnitBonusStat.BasicAttackFrequencyFlat);
-        if (includeUpgrade) frequency *= Mathf.Max(AttackSpeedUpgradeMultiplier, 0.01f);
-        frequency *= 1f + (_unit.LevelBonuses?.GetStat(UnitBonusStat.BasicAttackFrequencyPercent) ?? 0f);
-        frequency *= 1f + _unit.LevelAttackSpeedBonus;
-        frequency *= 1f + (_deps?.Alphan?.AttackSpeedBonus ?? 0f);
-        frequency *= 1f + ((_deps?.GlitchEffects as IOverdriveEffectReader)?.AcceleratedAttackSpeedBonus ?? 0f);
-        float baseInterval = 1.0f / Mathf.Max(frequency, 0.01f);
-        float cellSpeedBonusMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.Speed));
-
-        float cellModifier = _unit.currentCell?.Model.SpeedModifier ?? 1f;
-        float interval = baseInterval
-                       * cellSpeedBonusMult
-                       * Mathf.Min(1f, cellModifier)
-                       * (_unit.currentCell?.Model.TotemSpeedModifier ?? 1f)
-                       / rowSpeedMult;
-        interval /= 1f + (_deps?.Research?.Get(ResearchStat.AttackSpeedPercent) ?? 0f);
-        float baseline = Mathf.Max(interval, 0.05f);
         try
         {
-            float scaled = RunStatMath.ScaleAttackInterval(baseline, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d);
-            // Boss slows apply after the cap so a capped unit still feels them.
-            return Mathf.Max(scaled, CappedAttackInterval()) * BossSlowFactor();
+            return UnitStatCalculator.AttackInterval(_unit.unitData.attackSpeed.Get(_unit.currentTier),
+                WithAdditional(_provider.CaptureIntervals()), includeUpgrade, _deps?.RunStatModifiers?.AttackFrequencyMultiplier ?? 1d,
+                maximumSpeedMultiplier: _deps?.CombatSettings?.MaxAttackSpeedMultiplier ?? CombatSettings.DefaultMaxAttackSpeedMultiplier);
         }
         catch (System.OverflowException error)
         {
             _deps?.ReportRunStatFailure?.Invoke(error.Message);
-            return float.PositiveInfinity; // Diagnostic sentinel; the progression owner stops/pauses the run.
+            return float.PositiveInfinity;
         }
     }
 
@@ -200,18 +115,42 @@ public class UnitStatsModifier : MonoBehaviour
     private float BossSlowFactor() => Mathf.Max(1f, _unit.currentCell?.Model.SpeedModifier ?? 1f)
         / Mathf.Max(0.01f, _unit.PatternAttackSpeedMultiplier);
 
-    public float GetCurrentSkillInterval()
+    public float GetCurrentSkillInterval() => UnitStatCalculator.SkillInterval(
+        _unit.unitData.skillCooldown.Get(_unit.currentTier), WithAdditional(_provider.CaptureIntervals()));
+
+    /// <summary>특정 효과의 표시 또는 실제 타격 상세. rollCritical=true는 실제 타격에서 한 번만 호출한다.</summary>
+    public StatEvaluation EvaluateDamage(float baseDamage, bool attackBased, bool rollCritical = false,
+        float passiveScale = 1f, float damageMultiplier = 1f)
     {
-        int row = _unit.currentCell?.GridPosition.y ?? 0;
-        float rowSpeedMult = Mathf.Max(_deps?.SelectionCombat?.GetRowSpeedMultiplier(row, Rows) ?? 1f, 0.01f);
-        float cellGaugeSpeedMult = 1f / Mathf.Max(0.1f, 1f + _unit.GetStatBonus(StatKind.GaugeSpeed));
-        float interval = Mathf.Max(0f, _unit.unitData.skillCooldown.Get(_unit.currentTier) - LevelStat(UnitBonusStat.SkillCooldownFlat))
-                       * Mathf.Max(0f, 1f - LevelStat(UnitBonusStat.SkillCooldownPercent))
-                       * _unit.SkillCooldownMultiplier
-                       * cellGaugeSpeedMult
-                       * (_unit.currentCell?.Model.SpeedModifier ?? 1f)
-                       / rowSpeedMult;
-        interval *= Mathf.Max(0f, 1f - (_deps?.Research?.Get(ResearchStat.SkillCooldownReduction) ?? 0f));
-        return Mathf.Max(interval, 0.05f);
+        var trace = new System.Collections.Generic.List<StatEvaluationStep>();
+        var snapshot = WithAdditional(_provider.CaptureDamage(passiveScale, BurstEndTime, attackBased, damageMultiplier));
+        try
+        {
+            int value = UnitStatCalculator.Damage(baseDamage, snapshot, rollCritical, attackBased,
+                _deps?.CombatSettings?.DamageVariance ?? 0f, _deps?.CombatSettings?.CritDamageVariance ?? 0f,
+                _deps?.RunStatModifiers?.AttackMultiplier ?? 1d, _deps?.RunStatModifiers != null, out bool critical, trace);
+            return new StatEvaluation(value, critical, snapshot, trace);
+        }
+        catch (System.OverflowException error)
+        {
+            _deps?.ReportRunStatFailure?.Invoke(error.Message);
+            return new StatEvaluation(0, false, snapshot, trace);
+        }
+    }
+
+    /// <summary>정보창의 기존 기준 공격력과 동일한 계산 및 상세 내역. 난수를 소비하지 않는다.</summary>
+    public int GetDisplayDamageDetails(System.Collections.Generic.List<StatEvaluationStep> trace, bool includeUpgrade = true, bool regularBasic = false)
+    {
+        float basis = UnitStatCalculator.Attack(_unit.unitData.atk.Get(_unit.currentTier), WithAdditional(_provider.CaptureAttack()), includeUpgrade, trace);
+        try
+        {
+            return UnitStatCalculator.Damage(basis, WithAdditional(_provider.CaptureDamage(1f, BurstEndTime, true, regularBasic ? BasicDamageMultiplier : 1f)),
+                false, true, 0f, 0f, _deps?.RunStatModifiers?.AttackMultiplier ?? 1d, _deps?.RunStatModifiers != null, out _, trace);
+        }
+        catch (System.OverflowException error)
+        {
+            _deps?.ReportRunStatFailure?.Invoke(error.Message);
+            return 0;
+        }
     }
 }

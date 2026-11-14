@@ -63,11 +63,19 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <inheritdoc />
     protected override bool ApplySkillDebuff() => false;
     /// <inheritdoc />
+    private void RefreshLevelCapacity()
+    {
+        if (_droneManager != null && currentCell != null)
+            _droneManager.Hacking.SetCapacityBonus(this, Mathf.RoundToInt(LevelStat(UnitBonusStat.HackingCapacityFlat)));
+        if (CurrentLevel < 15) { _postHackingRemaining = 0; }
+    }
     protected override void OnUnitPlaced()
     {
         if (IsFirstPlacement) { _attackCount = 0; _productionRemainder = 0; }
         if (Combat != null) { Combat.OnBasicAttackStarted -= Charge; Combat.OnBasicAttackStarted += Charge; }
         base.OnUnitPlaced();
+        OnLevelChanged -= RefreshLevelCapacity;
+        OnLevelChanged += RefreshLevelCapacity;
         if (unitData?.Hacking != null && _droneManager != null) { _droneManager.Hacking.Configure(unitData.Hacking); _droneManager.Hacking.SetCapacityBonus(this, Mathf.RoundToInt(LevelStat(UnitBonusStat.HackingCapacityFlat))); }
     }
     protected override void OnDisable() { if (_droneManager != null) _droneManager.Hacking.SetCapacityBonus(this, 0); base.OnDisable(); }
@@ -98,6 +106,7 @@ public class Drone_Deltan : HackingDroneSpawner
     /// <inheritdoc />
     protected override void OnUnitRemoved()
     {
+        OnLevelChanged -= RefreshLevelCapacity;
         if (Combat != null) Combat.OnBasicAttackStarted -= Charge;
         if (_droneManager != null) _droneManager.Hacking.SetCapacityBonus(this, 0);
         base.OnUnitRemoved();

@@ -47,7 +47,7 @@ function inspect(bytes){
     // Accept the previous workbook layout while exporting only direct attendance rewards.
     if(name==='Attendance'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.export!==false);
     if(name==='UnitMilestone')fields=fields.filter(f=>!['EffectStatus','EffectId','EffectParams'].includes(f.key)||[...headers.values()].includes(f.key));
-    if(name==='ResearchNode')fields=fields.filter(f=>f.key!=='IconAddress'||[...headers.values()].includes(f.key));
+    if(name==='ResearchNode')fields=fields.filter(f=>!['IconAddress','RequireAllParentsMax'].includes(f.key)||[...headers.values()].includes(f.key));
     if(fields.some(f=>![...headers.values()].includes(f.key))||new Set(headers.values()).size!==headers.size)throw Error(`${name}: 열 이름이 양식과 다릅니다.`);
     const rowNumbers=[...new Set([...sheet.cells.keys()].map(a=>Number(a.match(/\d+$/)[0])).filter(n=>n>1))].sort((a,b)=>a-b);
     tables[name]=rowNumbers.map(n=>{

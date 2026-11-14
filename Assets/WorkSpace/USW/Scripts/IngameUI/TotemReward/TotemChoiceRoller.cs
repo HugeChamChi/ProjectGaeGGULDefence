@@ -4,20 +4,21 @@ using UnityEngine;
 /// <summary>
 /// 보스 처치 보상 토템 선택지 뽑기 (TotemRewardUI).
 /// 등급 하나를 후보 수에 비례해 고른 뒤 그 등급에서 먼저 뽑고, 모자라면 나머지 후보에서 채운다.
-/// 이미 고른 토템(exclude)과 TotemBalance 차트에서 끈 토템(Enabled 0)은 나오지 않는다.
+/// 레벨 토템 중 TotemBalance 차트에서 켜진 후보를 뽑는다. 보유 토템과 같은 종류도 나올 수 있다.
 /// </summary>
 public static class TotemChoiceRoller
 {
-    /// <summary>풀에서 exclude를 뺀 후보 중 최대 count개를 뽑는다. 풀이 비면 빈 목록.</summary>
+    /// <summary>레벨 토템 후보 중 최대 count개를 뽑는다. 풀이 비면 빈 목록.</summary>
     public static List<TotemData> Roll(IReadOnlyList<TotemData> pool, ICollection<int> exclude, int count)
     {
         var result = new List<TotemData>();
-        if (pool == null || pool.Count == 0) return result;
+        pool = LevelTotemCatalog.All;
+        if (pool.Count == 0) return result;
 
         var filtered = new List<TotemData>();
         foreach (var data in pool)
         {
-            if (data != null && (exclude == null || !exclude.Contains(data.totemId)) && GGD.BackendCharts.TotemBalance.IsEnabled(data.totemId))
+            if (data != null && data.IsLevelTotem && GGD.BackendCharts.TotemBalance.IsEnabled(data.totemId))
                 filtered.Add(data);
         }
 

@@ -207,13 +207,40 @@ public static class ResearchUpgradeChecks
             var main = root.transform.Find("ActionRow/MainButton0").GetComponent<Button>();
             var recommend = root.transform.Find("ActionRow/RecommendButton").GetComponent<Button>();
             Assert(!main.interactable && main.GetComponentInChildren<TMPro.TMP_Text>().text == settings.MaxLabel,
-                "Completed selected node must retain the blue button with a noninteractive MAX label.");
+                "Completed selected node must show a noninteractive MAX label.");
+            Assert(!main.GetComponent<Image>().enabled, "MAX must have no button background or border.");
+            Assert(main.GetComponentInChildren<TMPro.TMP_Text>().fontSizeMax == 88f, "MAX must use large text.");
             Assert(recommend.gameObject.activeSelf && recommend.interactable,
                 "Recommendation remains available beside MAX while other nodes can be upgraded.");
             Assert(root.transform.Find("FollowToggle") == null && root.transform.Find("Dot0") == null,
                 "Fixed panel must not create mode controls or page dots.");
             panel.Show(tree.Find("2-1"));
-            Assert(main.gameObject.activeSelf, "Selecting an unfinished node keeps the fixed button row.");
+            Assert(main.gameObject.activeSelf && main.GetComponent<Image>().enabled, "Selecting an unfinished node restores the button background.");
+            Assert(((RectTransform)main.transform).offsetMin.x == 296f,
+                "Upgrade left edge must align with stat content at panel x330.");
+            Assert(((RectTransform)main.transform).offsetMax.x == -20f,
+                "Upgrade right edge must align with value at panel right54.");
+            Assert(((RectTransform)recommend.transform).sizeDelta.y == ((RectTransform)main.transform).sizeDelta.y,
+                "Both action buttons must retain equal heights.");
+            var recommendRect = (RectTransform)recommend.transform;
+            Assert(Mathf.Approximately(34f + (recommendRect.offsetMin.x + recommendRect.offsetMax.x) * 0.5f, 172f),
+                "Recommendation must share the icon center at panel x172.");
+            var arrowRect = (RectTransform)recommend.transform.Find("UpgradeArrow");
+            Assert(arrowRect.anchorMin == Vector2.one && arrowRect.sizeDelta == new Vector2(48f, 54f),
+                "Recommendation arrow must be enlarged at the top right.");
+            var stat = root.transform.Find("StatName/Text").GetComponent<TMPro.TMP_Text>();
+            var value = root.transform.Find("Value/Text").GetComponent<TMPro.TMP_Text>();
+            Assert(stat.alignment == TMPro.TextAlignmentOptions.MidlineLeft && value.alignment == TMPro.TextAlignmentOptions.MidlineRight,
+                "Stat and values must center their visible glyphs on the same horizontal line.");
+            var statRect = (RectTransform)stat.transform.parent;
+            var valueRect = (RectTransform)value.transform.parent;
+            Assert(Mathf.Approximately((statRect.offsetMin.y + statRect.offsetMax.y) * 0.5f, -263.5f)
+                && Mathf.Approximately(valueRect.anchoredPosition.y - valueRect.sizeDelta.y * 0.5f, -263.5f),
+                "Content line must sit at the artwork area center, y263.5 between y203 and y324.");
+            Assert(((RectTransform)stat.transform.parent).offsetMin.x == 358f,
+                "Stat must have left padding inside the upgrade area.");
+            Assert(((RectTransform)value.transform.parent).anchoredPosition.x == -82f,
+                "Value must have right padding inside the upgrade area.");
             var view = ResearchNodeView.Create((RectTransform)root.transform, tree.Find("1-1"), settings, settings.NodeSize, null);
             view.Refresh(tree.Find("1-1").MaxLevel, ResearchNodeState.Maxed);
             Assert(view.transform.Find("Node_Max") == null, "Completed nodes must not add MAX labels.");

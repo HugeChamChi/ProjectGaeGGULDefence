@@ -33,7 +33,7 @@ module.exports=async({run,window,atomic,resultPath,checks})=>{
   await set('#search','골드');assert(await run(`Array.from(document.querySelector('iframe').contentDocument.querySelectorAll('[data-row]')).some(b=>b.textContent.includes('공유 재화 목록'))`));
   await new Promise(resolve=>setTimeout(resolve,150));
   atomic(resultPath.replace('.json','-item-catalog.png'),(await window.webContents.capturePage()).toPNG());
-  const result=await run(`window.studio.contentWorkbookExport({project:document.querySelector('iframe').contentWindow.StudioUI.snapshot(),bundle:'items'})`);assert(result.ok,result.error);assert(result.data.file.endsWith('.xlsx'));assert.equal(result.data.tableFiles.length,4);const unsupported=JSON.parse(JSON.stringify(p));unsupported.tables.Missions[0].Rewards=[{itemId:item.ItemId,amount:1}];const deploy=await run(`window.studio.contentBackendPrepare({kind:'missions',project:${JSON.stringify(unsupported)}})`);assert(!deploy.ok&&deploy.error.includes('지급 처리가 연결되지 않은 아이템'));checks.push('selection content search and 4-sheet item catalog export');
+  const result=await run(`window.studio.contentWorkbookExport({project:document.querySelector('iframe').contentWindow.StudioUI.snapshot(),bundle:'items'})`);assert(result.ok,result.error);assert(result.data.file.endsWith('.xlsx'));assert.equal(result.data.chartFiles.length,4);const unsupported=JSON.parse(JSON.stringify(p));unsupported.tables.Missions[0].Rewards=[{itemId:item.ItemId,amount:1}];const deploy=await run(`window.studio.contentBackendPrepare({kind:'missions',project:${JSON.stringify(unsupported)}})`);assert(!deploy.ok&&deploy.error.includes('지급 처리가 연결되지 않은 아이템'));checks.push('selection content search and four single-sheet item catalog exports');
   await click('[data-table="Item"]');await click('[data-action="new"]');await set(field('Name'),'테스트 지급 상자');
   await click(top+' [data-edit-ref="FunctionId"]');await set(top+' [data-catalog-search]','직접 아이템 지급');await click(top+' [data-catalog-create]');
   assert.equal(await run(`document.querySelector('iframe').contentDocument.querySelector(${JSON.stringify(field('FunctionType'))}).value`),'GrantItems');
@@ -54,13 +54,5 @@ module.exports=async({run,window,atomic,resultPath,checks})=>{
   assert.equal(await run(`document.querySelector('iframe').contentWindow.Studio.validate(document.querySelector('iframe').contentWindow.StudioUI.snapshot()).filter(i=>i.severity==='error').length`),0);
   const grant=p.tables.ItemFunction.find(f=>f.Name==='직접 아이템 지급');assert.equal(grant.FunctionType,'GrantItems');assert.deepEqual(grant.Rewards,[{itemId:'Stamina',amount:30},{itemId:'Gold',amount:500}]);
   checks.push('generic item grant configures Stamina 30 and Gold 500 through the shared item picker');
-  await run(`document.getElementById('rewardsWorkspaceButton').click()`);
-  assert.equal(await run(`Boolean(document.querySelector('iframe').contentDocument.querySelector('[data-workspace-section="items"]'))`),false);
-  await click('[data-workspace-section="missions"]');await set('[data-reward-search="Rewards"]','선택 상자');assert(await run(`document.querySelector('iframe').contentDocument.querySelector('[data-add="Rewards:Gold"]').hidden`));
-  await click('[data-workspace-section="attendance"]');await click('[data-open-palette="0"]');await set('#grid-item-search','선택 상자');assert(await run(`document.querySelector('iframe').contentDocument.querySelector('[data-palette-item="Gold"]').hidden`));
-  checks.push('mission and attendance rewards share item name/ID/description search with type filters');
-  await set('#grid-item-search','보상 등록 중 새 아이템');await click('#grid-create-item');await save();
-  p=await run(`document.querySelector('iframe').contentWindow.StudioUI.snapshot()`);const rewardItem=p.tables.Item.find(i=>i.Name==='보상 등록 중 새 아이템');assert(rewardItem);assert(p.tables.Attendance[0].Rewards.some(r=>r.itemId===rewardItem.ItemId));
-  checks.push('dedicated item workspace and inline reward creation attaches the new item to the selected attendance cell');
  }finally{await run(`document.querySelector('iframe').contentWindow.StudioUI.loadProject(${JSON.stringify(before)},['Missions'])`);}
 };

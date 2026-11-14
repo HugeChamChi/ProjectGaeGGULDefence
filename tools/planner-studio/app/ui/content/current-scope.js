@@ -81,7 +81,7 @@ globalThis.PlannerScopeFeature = ({studio: Studio}) => {
   const statuses = {
     ResearchNode:'영구강화 · 노드 배치 / 수치 / 선행 조건. BASIC은 전투 연결, CHOICE·LANES는 기존 시안입니다.',
     Unit:'유닛강화 · 현재 시안의 유닛·족장 기본값입니다.',
-    UnitUpgrade:'유닛강화 · 시안의 비용과 성장 수치를 레벨별로 편집합니다.',
+    UnitUpgrade:'유닛강화 · 게임에 반영되는 강화 비용을 레벨별로 편집합니다.',
     UnitMilestone:'유닛강화 · 현재 화면에 표시되는 레벨 보너스 설명입니다.',
     RewardGroup:'보상 · 현재 출석 보상에서 가져온 묶음입니다. 아이콘과 수량으로 구성하세요.',
     Item:'보상에 사용하는 재화 목록 · 골드 / 다이아 / 스태미나',

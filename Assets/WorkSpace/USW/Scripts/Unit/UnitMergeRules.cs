@@ -6,6 +6,7 @@ public static class UnitMergeRules
     {
         if (first == null || second == null || first == second ||
             first.OriginalData == null || second.OriginalData == null) return false;
+        if (first.UsesTotemLevels || second.UsesTotemLevels) return false;
         var tier = first.OriginalTier;
         if (tier < Tier.Normal || tier >= Tier.Legend || second.OriginalTier != tier) return false;
         if (first.IsWildcardMergeUnit || second.IsWildcardMergeUnit)

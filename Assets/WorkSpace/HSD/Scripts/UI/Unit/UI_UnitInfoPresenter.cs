@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 
 namespace GaeGGUL.UI.Unit
@@ -13,6 +14,7 @@ namespace GaeGGUL.UI.Unit
         private float _attack, _interval, _cooldown;
         private bool _detailed = true;
         private string _firstStat, _secondStat;
+        private int _levelProgressLevel = -1;
 
         /// <summary>기존 정보 패널을 표시 대상으로 사용한다.</summary>
         public UI_UnitInfoPresenter(UI_UnitInfoPanel view) => _view = view;
@@ -61,6 +63,7 @@ namespace GaeGGUL.UI.Unit
             _unit = null; _displayedData = null;
             _hasStats = _wasPlaced = _trackingUnit = false;
             _firstStat = _secondStat = null;
+            _levelProgressLevel = -1;
         }
 
         private string GetAuthoredDescription(UnitData data, Tier tier)
@@ -70,6 +73,30 @@ namespace GaeGGUL.UI.Unit
             return _detailed ? detailed ?? brief : !string.IsNullOrWhiteSpace(brief) ? brief : detailed ?? string.Empty;
         }
         private static float Frequency(float interval) => interval > 0f && !float.IsInfinity(interval) ? 1f / interval : 0f;
+
+        private void UpdateSkillInfo(string name, string description, string cooldown, DebuffBinding binding = default)
+        {
+            _view.UpdateSkillInfo(name, description, cooldown, binding);
+            int level = _unit != null && _unit.UsesTotemLevels ? _unit.CurrentLevel : 0;
+            if (_levelProgressLevel == level) return;
+            _levelProgressLevel = level;
+            if (level == 0)
+            {
+                _view.UpdateLevelProgress(null);
+                return;
+            }
+            var progression = new StringBuilder("<line-height=30>");
+            bool first = true;
+            foreach (var milestone in _unit.LevelBonuses.Milestones)
+            {
+                if (!first) progression.Append('\n');
+                first = false;
+                string color = level >= milestone.Level ? "#F2F2F2" : "#85858D";
+                progression.Append($"<color={color}><b>{milestone.Level}</b><pos=44>{milestone.Description}</color>");
+            }
+            progression.Append("</line-height>");
+            _view.UpdateLevelProgress(progression.ToString());
+        }
 
         private static string FormatSplit(float baseline, float total, string suffix = "")
         {
@@ -89,13 +116,18 @@ namespace GaeGGUL.UI.Unit
         private void Show(UnitData data, Tier tier, float attack, float interval, float cooldown)
         {
             bool identityChanged = _displayedData != data || _displayedTier != tier;
-            if (identityChanged) _view.UpdateBasicInfo(data.unitName, data.icon, tier);
+            if (_unit != null && _unit.UsesTotemLevels)
+            {
+                int level = _unit.CurrentLevel;
+                _view.UpdateBasicInfo($"{data.unitName} Lv.{level} / 15", data.icon, Tier.Normal);
+            }
+            else if (identityChanged) _view.UpdateBasicInfo(data.unitName, data.icon, tier);
             bool betan = _unit is Drone_Betan || data.prefabAddress == "DroneUnit_Betan";
             if (betan)
             {
                 var effects = _unit?.DroneEffects;
                 bool conversion = effects?.HasBombHacking == true;
-                _view.UpdateSkillInfo(data.SkillDisplayName,
+                UpdateSkillInfo(data.SkillDisplayName,
                     conversion ? (_detailed
                         ? $"자폭 드론이 폭발 피해 대신 보스 적중 시 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다. 기본 스킬과 추가 자폭 모두 전환되며 수리 키트가 발동합니다."
                         : $"자폭 드론이 보스에게 해킹 스택 {effects.HackingStacksPerBomb}개를 추가합니다.")
@@ -111,7 +143,7 @@ namespace GaeGGUL.UI.Unit
                     : $"매초 {FormatAddition(own, zeltan != null ? zeltan.GetBaseFoodPerSecond() : own)}의 식량을 생산하고, "
                         + $"전장에 있는 전투 드론 1기당 매초 {FormatAddition(perDrone, zeltan != null ? zeltan.FoodPerDronePerSecond : perDrone)}의 식량을 추가로 생산합니다. "
                         + "여러 젤탕의 효과는 중첩됩니다.";
-                _view.UpdateSkillInfo(data.SkillDisplayName, description, "패시브");
+                UpdateSkillInfo(data.SkillDisplayName, description, "패시브");
             }
             else if (data.Disigman != null)
             {
@@ -121,7 +153,7 @@ namespace GaeGGUL.UI.Unit
                     : Mathf.Max(0f, data.Disigman.GetSecondsRecovered(tier));
                 var damage = data.skillData?.hitEffects?.Find(effect => effect is AtkCoefficientDamage) as AtkCoefficientDamage;
                 float coefficient = damage?.coefficient?.Get(tier) ?? 0f;
-                _view.UpdateSkillInfo(data.SkillDisplayName,
+                UpdateSkillInfo(data.SkillDisplayName,
                     _detailed ? $"본체 일반공격 {attacks}회마다 공격력 ×{coefficient:0.##}의 한 발을 발사하고 즉시 남은 시간을 {seconds:0.##}초 회복합니다. 드론을 생성하지 않습니다."
                     : $"일반공격 {attacks}회마다 강력한 한 발을 쏘고 시간을 {seconds:0.##}초 회복합니다.",
                     $"공격 {attacks}회 충전");
@@ -139,11 +171,11 @@ namespace GaeGGUL.UI.Unit
                     : producer
                     ? $"소유 드론 일반공격 {attacks}회마다 해킹 스킬을 사용합니다. 다음 생산 {production}스택. 보스 공유 상한 {(_unit is HackingDroneSpawner spawner ? spawner.SharedStackCapacity : hacking.Capacity)}."
                     : $"기본 피해 계수 {hacking.GetBaseCoefficient(tier):0.##} + 소비 스택당 {perStack:0.##}. 최대 {(_unit is Drone_Gamman consumerDetail ? consumerDetail.MaximumStacksConsumed : hacking.GetMaxStacksConsumed(tier))}스택 소비. 부족하면 남은 만큼만 소비하며 스택0에서도 공격합니다.";
-                _view.UpdateSkillInfo(producer ? "해킹" : "해킹 기폭", description,
+                UpdateSkillInfo(producer ? "해킹" : "해킹 기폭", description,
                     producer ? $"공격 {attacks}회 충전" : $"{cooldown:F1}초");
             }
             else if (identityChanged || !_hasStats || _cooldown != cooldown)
-                _view.UpdateSkillInfo(data.SkillDisplayName,
+                UpdateSkillInfo(data.SkillDisplayName,
                     GetAuthoredDescription(data, tier),
                     cooldown > 0f ? $"{cooldown:F1}초" : string.Empty, data.DebuffBindings.Get(tier));
             bool food = _unit is Drone_Zeltan || data.prefabAddress == "DroneUnit_Zeltan";

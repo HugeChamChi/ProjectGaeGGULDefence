@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d5d7d0a2876644d8f99c405a0db84c, type: 3}
+  m_Name: LT2005
+  m_EditorClassIdentifier: Assembly-CSharp::TotemData
+  LevelIncrease: 2
+  EffectGroups: []
+  descriptionHighlightColor: {r: 1, g: 0.5, b: 0.05, a: 1}
+  ShadowAttack:
+    DelaySeconds: 0.2
+    VisualSeconds: 0.35
+    FadeSeconds: 0.08
+    Tint: {r: 0.35, g: 0.25, b: 0.5, a: 0.45}
+    VisualOffset: {x: 0.15, y: 0.1, z: 0}
+  BonusProjectile:
+    Chance: 0.33
+    AttackCoefficient: 0.5
+    Projectile: {fileID: 0}
+  GrowthStages: []
+  GrowthHarvestSeconds: 60
+  GrowthHarvestFood: 60
+  WildcardSpawn:
+    IntervalSeconds: 40
+    Unit: {fileID: 0}
+  TierUpgrades: []
+  _debuffBinding:
+    _debuffId: 0
+    _trigger: 0
+    _stacksPerApply: 0
+  _debuffFireInterval: 0
+  _debuffImpactDamage: 0
+  _debuffProjectile: {fileID: 0}
+  totemType: 0
+  tier: 0
+  totemName: "\uB300\uAC01 +2"
+  iconAddress: SPR_TD1005
+  prefabAddress: 
+  rotationSpriteAddresses:
+  - SPR_TD1005
+  - SPR_TD1005
+  - SPR_TD1005
+  - SPR_TD1005
+  icon: {fileID: 0}
+  prefab: {fileID: 0}
+  rotationSprites:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  description: "\uBC94\uC704 \uC548 \uC720\uB2DB \uB808\uBCA8 [+2]\n90\uB3C4 \uD68C\uC804
+    \xB7 \uD569\uC0B0 \xB7 \uCD5C\uB300 15"
+  DetailedDescription: "\uBC94\uC704 \uC548 \uC720\uB2DB \uB808\uBCA8 [+2]\n90\uB3C4
+    \uD68C\uC804 \xB7 \uD569\uC0B0 \xB7 \uCD5C\uB300 15\n\uBC94\uC704\uB97C \uBC97\uC5B4\uB098\uBA74
+    \uB808\uBCA8\uACFC \uBBF8\uB2EC \uD574\uAE08 \uD6A8\uACFC\uAC00 \uC989\uC2DC
+    \uBCF5\uAD6C\uB429\uB2C8\uB2E4."
+  functions: []
+  effectRanges:
+  - rid: 7066212996507500644
+  attackDisabledRanges: []
+  totemId: 2005
+  isRotatable: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 7066212996507500644
+      type: {class: TotemRelativeOffsetRange, ns: , asm: Assembly-CSharp}
+      data:
+        offsets:
+        - {x: 1, y: -1}

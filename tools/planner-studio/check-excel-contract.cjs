@@ -60,8 +60,8 @@ for (const kind of ['missions', 'unitBaseStats']) {
   const expectedTable = pair ? pair.Missions : require('./app/readable-chart.cjs').table(unitRuntime(project), kind);
   const col=i=>{let s='';for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s;};
   expectedTable.forEach((row,r)=>row.forEach((value,c)=>assert.equal(readableBook.get(readableSheet,col(c)+(r+1)).value,String(value),'readable chart cell')));
-  const authoringBytes = fs.readFileSync(readable.authoringFile);
-  assert.equal(crypto.createHash('sha256').update(authoringBytes).digest('hex'), readable.authoringSha256);
+  const authoringBytes = fs.readFileSync(readable.sourceFile);
+  assert.equal(crypto.createHash('sha256').update(authoringBytes).digest('hex'), readable.sourceSha256);
   assert.equal(readable.remoteApplied, false);
 }
 console.log('PASS: all worksheet contracts, frequency units and legacy import, shared item cells, deployment/review snapshot equivalence');

@@ -70,7 +70,7 @@ public class TotemRewardUI : MonoBehaviour
     [Header("토템 풀 (랜덤 3개 대상)")]
     [SerializeField] private TotemData[] _totemPool;
     /// <summary>Authored reward pool, also used by the debug menu's totem catalog.</summary>
-    public IReadOnlyList<TotemData> TotemPool => _totemPool;
+    public IReadOnlyList<TotemData> TotemPool => LevelTotemCatalog.All;
     [Header("인벤토리 가득 찼을 때 대체 식량")]
     [SerializeField] private float _fallbackFood = 500f;
 
@@ -120,7 +120,7 @@ public class TotemRewardUI : MonoBehaviour
         foreach (var dot in _dots) dot.gameObject.SetActive(_swipeArea.SwipeEnabled);
     }
     private RectTransform _confirmationArea;
-    private bool HasRequiredChoice => _tutorialSettings != null && _tutorialSettings.RequiredTotem != null;
+    private bool HasRequiredChoice => _tutorialSettings != null && _tutorialSettings.RequiredTotem != null && _tutorialSettings.RequiredTotem.IsLevelTotem;
 
     private sealed class BandView
     {
@@ -131,6 +131,8 @@ public class TotemRewardUI : MonoBehaviour
         public TextMeshProUGUI Name;
         public GameObject DescriptionPanel;
         public TextMeshProUGUI Description;
+        public UI_TotemRangeGrid Range;
+        public LayoutElement RangeLayout;
         public RectTransform TextBlock;
         public CanvasGroup Group;
         public CanvasGroup SpeedLines;
@@ -209,7 +211,7 @@ public class TotemRewardUI : MonoBehaviour
             return;
         }
 
-        var choices = _tutorialSettings != null
+        var choices = _tutorialSettings != null && _tutorialSettings.RequiredTotem != null && _tutorialSettings.RequiredTotem.IsLevelTotem
             ? new List<TotemData>(_tutorialSettings.TotemChoices)
             : TotemChoiceRoller.Roll(_totemPool, _chosenTotems, _runPenalties?.GetChoiceCount(ChoiceCount) ?? ChoiceCount);
         if (choices.Count == 0)
@@ -297,7 +299,7 @@ public class TotemRewardUI : MonoBehaviour
 
     // ── 연출 ───────────────────────────────────────────────────
 
-    private async UniTask PlayEntranceAsync(CancellationToken token)
+    private UniTask PlayEntranceAsync(CancellationToken token)
     {
         _container.gameObject.SetActive(true);
         _rootGroup.alpha = 1f;
@@ -305,28 +307,19 @@ public class TotemRewardUI : MonoBehaviour
         _detail.gameObject.SetActive(false);
         _overview.gameObject.SetActive(true);
         _overviewGroup.alpha = 1f;
-
+        _dim.color = new Color(0f, 0f, 0f, _settings.DimAlpha);
         for (int i = 0; i < _bands.Length; i++)
         {
-            bool visible = i < _choices.Count;
-            _bands[i].Root.gameObject.SetActive(visible);
             var band = _bands[i];
-            band.Root.anchoredPosition = SlashDirection(i) * SlashDistance * SlashScale;
+            band.Root.gameObject.SetActive(i < _choices.Count);
+            band.Root.anchoredPosition = Vector2.zero;
             band.Root.localScale = Vector3.one;
-            band.Group.alpha = 0f;
+            band.Group.alpha = 1f;
             band.SpeedLines.alpha = 0f;
-            band.Icon.transform.localScale = Vector3.one * 0.68f;
-            band.TextBlock.anchoredPosition = band.CopyHome + new Vector2(SlideSign(i) * SlashCopyOffset * SlashScale, 0f);
+            band.Icon.transform.localScale = Vector3.one;
+            band.TextBlock.anchoredPosition = band.CopyHome;
         }
-
-        var dimColor = Color.black; dimColor.a = 0f;
-        _dim.color = dimColor;
-        await AwaitTween(_dim.DOFade(_settings.DimAlpha, _settings.DimSeconds).SetUpdate(true), token);
-
-        var slides = new List<UniTask>();
-        for (int i = 0; i < _choices.Count; i++)
-            slides.Add(SlideBandInAsync(_bands[i], i, token));
-        await UniTask.WhenAll(slides);
+        return UniTask.CompletedTask;
     }
 
     private UniTask SlideBandInAsync(BandView band, int slot, CancellationToken token)
@@ -365,8 +358,9 @@ public class TotemRewardUI : MonoBehaviour
             band.RotateBadge?.SetData(data);
             band.Name.text = data.totemName;
             band.Description.text = data.GetDisplayDescription(detailed: false);
-            band.DescriptionPanel.SetActive(ShowDescriptionOnOverview && !string.IsNullOrWhiteSpace(band.Description.text));
+            band.DescriptionPanel.SetActive(!string.IsNullOrWhiteSpace(band.Description.text));
             LayoutRebuilder.ForceRebuildLayoutImmediate(band.TextBlock);
+            band.Range?.SetData(data);
         }
     }
 
@@ -389,13 +383,6 @@ public class TotemRewardUI : MonoBehaviour
         _busy = true;
         try
         {
-            // The lab's selection feedback finishes before the existing detail step opens.
-            var selected = DOTween.Sequence().SetUpdate(true);
-            for (int i = 0; i < _choices.Count; i++)
-                selected.Insert(0f, _bands[i].Group.DOFade(i == slot ? 1f : .3f, .14f));
-            selected.Insert(0f, _bands[slot].Icon.transform.DOPunchScale(Vector3.one * .18f, .30f, 5, .5f));
-            selected.Insert(0f, _bands[slot].TextBlock.DOPunchAnchorPos(new Vector2(0f, 12f), .24f, 4, .5f));
-            await AwaitTween(selected, token);
             _overview.gameObject.SetActive(false);
             _detail.gameObject.SetActive(true);
             _detailGroup.alpha = 1f;
@@ -407,10 +394,8 @@ public class TotemRewardUI : MonoBehaviour
             ShowDetail(slot);
             _detailBackground.color = BandColor(slot);
             _detailContent.anchoredPosition = Vector2.zero;
-            _detailContentGroup.alpha = 0f;
-            _detailIcon.transform.localScale = Vector3.one * 0.6f;
-            OwnTween(_detailIcon.transform.DOScale(1f, _settings.SwitchSeconds * 1.5f).SetEase(Ease.OutBack).SetUpdate(true));
-            await AwaitTween(_detailContentGroup.DOFade(1f, _settings.SwitchSeconds).SetUpdate(true), token);
+            _detailContentGroup.alpha = 1f;
+            _detailIcon.transform.localScale = Vector3.one;
         }
         catch (OperationCanceledException) { }
         finally { if (OwnsSelection(token)) _busy = false; }
@@ -792,6 +777,21 @@ public class TotemRewardUI : MonoBehaviour
 
         band.Description = NewPanelText(band.TextBlock, _settings.OverviewDescriptionSize, align, out band.DescriptionPanel);
         band.DescriptionPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, .19f);
+        if (_settings.RangeDisplaySettings != null && _settings.RangeCellPrefab != null)
+        {
+            var holder = NewRect("OverviewRange", band.TextBlock);
+            band.RangeLayout = holder.gameObject.AddComponent<LayoutElement>();
+            band.RangeLayout.preferredHeight = 210f;
+            holder.gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
+            var box = NewImage("Grid_List", holder, new Color(0f, 0f, 0f, .19f));
+            box.raycastTarget = false;
+            Stretch(box.rectTransform);
+            var rangeLayout = box.gameObject.AddComponent<UIGridLayout>();
+            rangeLayout.paddingLeft = rangeLayout.paddingRight = rangeLayout.paddingTop = rangeLayout.paddingBottom = RangeBoxPadding;
+            rangeLayout.spacing = Vector2.one * RangeBoxSpacing;
+            band.Range = holder.gameObject.AddComponent<UI_TotemRangeGrid>();
+            band.Range.Configure(_settings.RangeDisplaySettings, _settings.RangeCellPrefab, rangeLayout);
+        }
         band.CopyHome = band.TextBlock.anchoredPosition;
         var lines = NewRect("Impact Speed Lines", band.Root);
         Stretch(lines);
@@ -834,6 +834,7 @@ public class TotemRewardUI : MonoBehaviour
             band.Icon.rectTransform.sizeDelta = Vector2.one * _settings.OverviewIconSize * contentScale;
             band.Name.fontSize = Mathf.Max(UiTypography.BodySize, _settings.OverviewNameSize * contentScale);
             band.Description.fontSize = Mathf.Max(UiTypography.BodySize, _settings.OverviewDescriptionSize * contentScale);
+            if (band.RangeLayout != null) band.RangeLayout.preferredHeight = 210f * contentScale;
             band.CopyHome = new Vector2(textX * _overviewSize.x, textY * _overviewSize.y);
             band.TextBlock.anchoredPosition = band.CopyHome;
             band.TextBlock.sizeDelta = new Vector2(TextBlockWidth * _overviewSize.x, 0f);

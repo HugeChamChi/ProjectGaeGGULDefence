@@ -209,6 +209,8 @@ public class ResearchViewSettings : ScriptableObject
     /// <summary>스탯 표시 정보. 등록이 없으면 enum 이름을 쓴다.</summary>
     public StatInfo GetStat(ResearchStat stat)
     {
+        if (stat == ResearchStat.BattleGoldGain) return new StatInfo { Stat = stat, DisplayName = "전투 보상 골드 획득", IsPercent = true };
+        if (stat == ResearchStat.BattleUpgradeTokenGain) return new StatInfo { Stat = stat, DisplayName = "전투 보상 강화석 획득", IsPercent = true };
         foreach (var info in Stats)
             if (info != null && info.Stat == stat) return info;
         return new StatInfo { Stat = stat, DisplayName = stat.ToString(), IsPercent = true };

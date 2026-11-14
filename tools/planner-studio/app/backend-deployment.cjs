@@ -8,6 +8,11 @@ const { unitRuntime } = require('./unit-runtime.cjs');
 function serializeTarget(project, kind) {
   project=excel.engine().Studio.shape(project);
   switch (kind) {
+    case 'research': {
+      const errors=excel.engine().Studio.validate(project).filter(x=>x.severity==='error'&&['ResearchNode','ResearchTree'].includes(x.table));
+      if(errors.length)throw Error(errors[0].message);
+      return {chart:'ResearchBalance',authoring:'ResearchBalance',tables:['ResearchTree','ResearchNode'],config:project};
+    }
     case 'roundRewards':
       excel.write(project, ['RoundRewards']);
       return {chart:'RoundRewards',authoring:'RoundRewards',tables:['RoundRewards'],config:project};
@@ -30,12 +35,22 @@ function serializeTarget(project, kind) {
 exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject }) => {
   const prepared = new Map();
   const historyFile = path.join(workspace, 'deployment-history.json');
-  const history = fs.existsSync(historyFile) ? JSON.parse(fs.readFileSync(historyFile, 'utf8')) : [];
+  let history = [];
+  if (fs.existsSync(historyFile)) {
+    try {
+      const loaded = JSON.parse(fs.readFileSync(historyFile, 'utf8'));
+      if (!Array.isArray(loaded) || loaded.some(record => !record || typeof record !== 'object' || typeof record.releaseKey !== 'string')) throw Error('Invalid deployment history');
+      history = loaded;
+    } catch (error) {
+      fs.copyFileSync(historyFile, historyFile + '.corrupt-' + crypto.randomBytes(8).toString('hex'));
+      console.error('배포 이력 손상: 사본을 보존하고 빈 이력으로 시작합니다.', error.message);
+    }
+  }
   const digest = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   function getPrepared(releaseKey) {
     const record = prepared.get(releaseKey) || history.find(r => r.releaseKey === releaseKey);
     if (!record) throw Error('먼저 적용 파일을 준비하세요.');
-    for (const [file, hash] of [[record.file, record.sha256], [record.authoringFile, record.authoringSha256], [record.sourceFile, record.sourceSha256]]) {
+    for (const [file, hash] of [[record.file, record.sha256], ...(record.authoringFile ? [[record.authoringFile, record.authoringSha256]] : []), [record.sourceFile, record.sourceSha256]]) {
       if (!file || !hash || digest(file) !== hash) throw Error('배포 원본 또는 준비 파일이 변경되었습니다. 다시 준비하세요.');
     }
     if(record.eventFile && digest(record.eventFile)!==record.eventSha256)throw Error('Event file changed. Prepare both files again.');
@@ -50,7 +65,7 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
   handler('content-backend-prepare', payload => {
     const project = excel.engine().Studio.shape(payload.project || getCurrentProject());
     const { chart, config, authoring, tables } = serializeTarget(project, payload.kind);
-    const authoringBytes = excel.write(project, tables);
+
     const releaseKey = 'dev-' + crypto.randomBytes(12).toString('hex');
     const encoding = 'Table';
     const pair = payload.kind==='missions' ? require('./event-tables.cjs').tables(project) : null;
@@ -60,18 +75,12 @@ exports.register = ({ handler, workspace, atomic, exportFile, getCurrentProject 
     const { file } = exportFile((pair?'Missions':chart) + '_' + date + '.backend.xlsx', pair?Buffer.from(excel.engine().RewardCore.xlsx('Missions', rows)):bytes);
     let eventFile;
     if(pair){eventFile=path.join(path.dirname(file),'Events_'+date+'.backend.xlsx');atomic(eventFile,Buffer.from(excel.engine().RewardCore.xlsx('Events',pair.Events)));}
-    const authoringFile = path.join(path.dirname(file), authoring + '.xlsx');
-    const schemaFile = path.join(path.dirname(file), authoring + '.schema.json');
-    atomic(authoringFile, authoringBytes);
-    atomic(schemaFile, JSON.stringify(excel.contract(tables), null, 2));
     const sourceFile = path.join(path.dirname(file), 'source-project.json');
     atomic(sourceFile, JSON.stringify(project, null, 2));
     const record = {
       sourceFile, sourceSha256: digest(sourceFile), createdAt: new Date().toISOString(),
       file, releaseKey, encoding, targetChartName: pair ? 'DEV_Missions' : 'DEV_' + chart, eventFile, eventSha256:eventFile?digest(eventFile):undefined, targetEventChartName:pair?'DEV_Events':undefined, eventTable:pair?.Events, kind: payload.kind,
       ...(encoding==='Table'?{expectedTable:rows}:{}),
-      authoringFile, schemaFile,
-      authoringSha256: crypto.createHash('sha256').update(authoringBytes).digest('hex'),
       sha256: digest(file),
        status: 'prepared', remoteApplied: false,
     };
