@@ -11,9 +11,11 @@ public class Drone_Deltan : HackingDroneSpawner
     public int CompleteLevelBasicAttack()
     {
         _levelBasicAttacks++;
-        int every = CurrentLevel >= 15 ? 3 : 10;
-        return _levelBasicAttacks % every == 0
-            ? (CurrentLevel >= 15 ? 1 : Mathf.RoundToInt(LevelStat(UnitBonusStat.ExtraProjectileCount))) : 0;
+        // Count and period come from the level table; both keep the highest unlocked level's value (not summed).
+        int count = Mathf.RoundToInt(LevelStat(UnitBonusStat.ExtraProjectileCount));
+        if (count <= 0) return 0;
+        int every = Mathf.Max(1, Mathf.RoundToInt(LevelStat(UnitBonusStat.ExtraProjectileEvery)));
+        return _levelBasicAttacks % every == 0 ? count : 0;
     }
     private float _productionRemainder;
     private double _postHackingRemaining;

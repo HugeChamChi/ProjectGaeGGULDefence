@@ -41,7 +41,9 @@ public class Drone_Betan : DroneSpawnerBase
         // A completed charge owns its ordinal even if the following animation is interrupted.
         float damageMultiplier = LevelBonuses?.CompleteCycle(UnitLevelBonusController.BasicSkillCycle).DamageMultiplier ?? 1f;
         int bombs = TakeBasicSkillBombCount();
-        if ((LevelBonuses?.PeekCycle(UnitLevelBonusController.BasicSkillCycle).Number - 1) % 3 == 0)
+        // Every Nth committed basic skill (BombCycleEvery from the level table) launches extra bombs.
+        int bombEvery = Mathf.Max(1, Mathf.RoundToInt(LevelStat(UnitBonusStat.BombCycleEvery)));
+        if ((LevelBonuses?.PeekCycle(UnitLevelBonusController.BasicSkillCycle).Number - 1) % bombEvery == 0)
             bombs += Mathf.RoundToInt(LevelStat(UnitBonusStat.ThirdSkillExtraBomb));
         if (_skillVisual != null && _skillVisual.HasSkillLaunchEvent)
         {

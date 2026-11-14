@@ -5,6 +5,16 @@ using System.Collections.Generic;
 public sealed class UnitLevelBonusController
 {
     public const string BasicSkillCycle = "basic_skill";
+    /// <summary>
+    /// Stats where the highest unlocked level's value replaces lower ones instead of adding to them
+    /// (multipliers, periods, durations and the Deltan extra-projectile count).
+    /// </summary>
+    public static readonly HashSet<UnitBonusStat> ReplacedStats = new()
+    {
+        UnitBonusStat.FoodFifthMultiplier, UnitBonusStat.ExtraProjectileCount, UnitBonusStat.ExtraProjectileEvery,
+        UnitBonusStat.BombCycleEvery, UnitBonusStat.FoodBurstIntervalSeconds, UnitBonusStat.FoodBurstDurationSeconds,
+        UnitBonusStat.FoodBurstMultiplier
+    };
     private readonly Dictionary<UnitBonusStat, float> stats = new();
     private readonly List<EveryNthCycleBonus> cycles = new();
     private readonly Dictionary<string, long> completed = new();
@@ -38,7 +48,7 @@ public sealed class UnitLevelBonusController
         stats.Clear();
         cycles.Clear();
         if (definitions == null) return;
-        int foodMultiplierLevel = -1;
+        var replacedAt = new Dictionary<UnitBonusStat, int>();
         foreach (var definition in definitions)
         {
             if (definition == null || definition.Level < 1) throw new ArgumentException("Invalid milestone.");
@@ -49,10 +59,10 @@ public sealed class UnitLevelBonusController
                 {
                     if (!Enum.IsDefined(typeof(UnitBonusStat), stat.Stat) || !Finite(stat.Value) || stat.Value < 0f)
                         throw new ArgumentException("Invalid stat bonus.");
-                    if (stat.Stat == UnitBonusStat.FoodFifthMultiplier)
+                    if (ReplacedStats.Contains(stat.Stat))
                     {
-                        if (definition.Level >= foodMultiplierLevel)
-                        { stats[stat.Stat] = stat.Value; foodMultiplierLevel = definition.Level; }
+                        if (!replacedAt.TryGetValue(stat.Stat, out int at) || definition.Level >= at)
+                        { stats[stat.Stat] = stat.Value; replacedAt[stat.Stat] = definition.Level; }
                     }
                     else stats[stat.Stat] = GetStat(stat.Stat) + stat.Value;
                 }

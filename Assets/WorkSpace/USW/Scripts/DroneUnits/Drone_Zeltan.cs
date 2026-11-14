@@ -26,19 +26,22 @@ public class Drone_Zeltan : UnitBase
     public void TickLevelFoodProduction(float seconds, System.Action<float> produce)
     {
         if (seconds <= 0f || currentCell == null || IsStunned || IsCellSealed || Combat?.AttacksHeld == true) return;
-        if (LevelStat(UnitBonusStat.FoodBurstChance) <= 0f) { produce(seconds); return; }
+        // Interval, duration and multiplier come from the level table (highest unlocked level wins).
+        float interval = LevelStat(UnitBonusStat.FoodBurstIntervalSeconds);
+        float duration = LevelStat(UnitBonusStat.FoodBurstDurationSeconds);
+        if (LevelStat(UnitBonusStat.FoodBurstChance) <= 0f || interval <= 0f || duration <= 0f) { produce(seconds); return; }
         while (seconds > 0f)
         {
-            float step = Mathf.Min(seconds, 10f - _burstCheckElapsed);
+            float step = Mathf.Min(seconds, interval - _burstCheckElapsed);
             if (_burstRemaining > 0f) step = Mathf.Min(step, _burstRemaining);
             produce(step);
             seconds -= step;
             _burstCheckElapsed += step;
             _burstRemaining = Mathf.Max(0f, _burstRemaining - step);
-            if (_burstCheckElapsed >= 10f)
+            if (_burstCheckElapsed >= interval)
             {
                 _burstCheckElapsed = 0f;
-                if (Random.value < LevelStat(UnitBonusStat.FoodBurstChance)) _burstRemaining = 5f;
+                if (Random.value < LevelStat(UnitBonusStat.FoodBurstChance)) _burstRemaining = duration;
             }
         }
     }
@@ -159,6 +162,6 @@ public class Drone_Zeltan : UnitBase
     public override float GetBaseFoodPerSecond()
     {
         return unitData != null ? base.GetBaseFoodPerSecond()
-            * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) * (IsLevelFoodBurstActive ? 2f : 1f) : 0f;
+            * (1f + (DroneEffects?.FoodProductionBonus ?? 0f)) * (IsLevelFoodBurstActive ? Mathf.Max(1f, LevelStat(UnitBonusStat.FoodBurstMultiplier)) : 1f) : 0f;
     }
 }

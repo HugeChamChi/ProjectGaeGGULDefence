@@ -255,7 +255,7 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
         int level = Player.Characters.IsReady ? Player.Characters.Data.Characters.Find(x => x.Id == characterId)?.Level ?? 1 : 1;
         AccountUpgradeMultiplier = 1f + (level - 1) * GaeGGUL.DeckUpgrade.DeckUpgradeProgress.CurrentMultiplierPerLevel;
         LevelBonuses = new UnitLevelBonusController(
-            UsesTotemLevels ? PrototypeLevelBonuses.For(this) : UnitBonusChart.Resolve(UnitBalanceRuntime.GetUnitKey(unitData.name), unitData.LevelBonuses),
+            UsesTotemLevels ? GGD.BackendCharts.UnitTotemLevelBonusChart.For(this) : UnitBonusChart.Resolve(UnitBalanceRuntime.GetUnitKey(unitData.name), unitData.LevelBonuses),
             UsesTotemLevels ? 1 : Mathf.Clamp(deps.UnitLevels?.GetLevel(characterId) ?? 1, 1, 15));
         
         _stats = gameObject.AddComponent<UnitStatsModifier>();

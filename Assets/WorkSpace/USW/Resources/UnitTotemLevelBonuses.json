@@ -1,0 +1,298 @@
+[
+ {
+  "UnitKey": "Disigman",
+  "Level": "3",
+  "PartIndex": "0",
+  "Stat": "BasicAttackFrequencyPercent",
+  "Value": "0.1",
+  "Description": "공격속도 +10%"
+ },
+ {
+  "UnitKey": "Disigman",
+  "Level": "6",
+  "PartIndex": "0",
+  "Stat": "SkillDamagePercent",
+  "Value": "0.2",
+  "Description": "스킬 피해 +20%"
+ },
+ {
+  "UnitKey": "Disigman",
+  "Level": "9",
+  "PartIndex": "0",
+  "Stat": "SkillDamagePercent",
+  "Value": "0.2",
+  "Description": "스킬 피해 +20%"
+ },
+ {
+  "UnitKey": "Disigman",
+  "Level": "12",
+  "PartIndex": "0",
+  "Stat": "BasicAttackFrequencyPercent",
+  "Value": "0.1",
+  "Description": "공격속도 +10%"
+ },
+ {
+  "UnitKey": "Disigman",
+  "Level": "15",
+  "PartIndex": "0",
+  "Stat": "ChargeAttackReductionFlat",
+  "Value": "1",
+  "Description": "스킬 충전 필요 일반공격 -1회 (6→5)"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "3",
+  "PartIndex": "0",
+  "Stat": "AttackPercent",
+  "Value": "0.1",
+  "Description": "공격력 +10%, 전투 드론 +1기"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "3",
+  "PartIndex": "1",
+  "Stat": "DroneCountFlat",
+  "Value": "1",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "6",
+  "PartIndex": "0",
+  "Stat": "BombDamagePercent",
+  "Value": "0.1",
+  "Description": "자폭 피해 +10%, 전투 드론 +1기"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "6",
+  "PartIndex": "1",
+  "Stat": "DroneCountFlat",
+  "Value": "1",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "9",
+  "PartIndex": "0",
+  "Stat": "SkillCooldownPercent",
+  "Value": "0.15",
+  "Description": "스킬 쿨타임 -15%, 전투 드론 +1기"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "9",
+  "PartIndex": "1",
+  "Stat": "DroneCountFlat",
+  "Value": "1",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "12",
+  "PartIndex": "0",
+  "Stat": "BombDamagePercent",
+  "Value": "0.15",
+  "Description": "자폭 피해 +15%, 전투 드론 +1기"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "12",
+  "PartIndex": "1",
+  "Stat": "DroneCountFlat",
+  "Value": "1",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "15",
+  "PartIndex": "0",
+  "Stat": "ThirdSkillExtraBomb",
+  "Value": "1",
+  "Description": "매 3번째 기본 스킬 자폭 드론 +1기"
+ },
+ {
+  "UnitKey": "Betan",
+  "Level": "15",
+  "PartIndex": "1",
+  "Stat": "BombCycleEvery",
+  "Value": "3",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "3",
+  "PartIndex": "0",
+  "Stat": "BasicAttackFrequencyPercent",
+  "Value": "0.05",
+  "Description": "공격속도 +5%"
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "6",
+  "PartIndex": "0",
+  "Stat": "ExtraProjectileCount",
+  "Value": "1",
+  "Description": "공격 10회마다 추가 투사체 +1발"
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "6",
+  "PartIndex": "1",
+  "Stat": "ExtraProjectileEvery",
+  "Value": "10",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "9",
+  "PartIndex": "0",
+  "Stat": "ExtraProjectileCount",
+  "Value": "2",
+  "Description": "공격 10회마다 추가 투사체 +1발"
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "9",
+  "PartIndex": "1",
+  "Stat": "ExtraProjectileEvery",
+  "Value": "10",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "12",
+  "PartIndex": "0",
+  "Stat": "HackingBasicDamagePerStack",
+  "Value": "0.005",
+  "Description": "공격 시 현재 해킹 스택당 공격력 0.5% 추가 피해"
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "15",
+  "PartIndex": "0",
+  "Stat": "HackingCapacityFlat",
+  "Value": "15",
+  "Description": "해킹 최대 스택 +15, 추가 투사체 주기 3회로 변경"
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "15",
+  "PartIndex": "1",
+  "Stat": "ExtraProjectileEvery",
+  "Value": "3",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Deltan",
+  "Level": "15",
+  "PartIndex": "2",
+  "Stat": "ExtraProjectileCount",
+  "Value": "1",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Gamman",
+  "Level": "3",
+  "PartIndex": "0",
+  "Stat": "SkillDamagePercent",
+  "Value": "0.1",
+  "Description": "기폭 피해 +10%"
+ },
+ {
+  "UnitKey": "Gamman",
+  "Level": "6",
+  "PartIndex": "0",
+  "Stat": "SkillCooldownPercent",
+  "Value": "0.1",
+  "Description": "기폭 쿨타임 -10%"
+ },
+ {
+  "UnitKey": "Gamman",
+  "Level": "9",
+  "PartIndex": "0",
+  "Stat": "SkillDamagePercent",
+  "Value": "0.2",
+  "Description": "기폭 피해 +20%"
+ },
+ {
+  "UnitKey": "Gamman",
+  "Level": "12",
+  "PartIndex": "0",
+  "Stat": "SkillCooldownPercent",
+  "Value": "0.2",
+  "Description": "기폭 쿨타임 -20%"
+ },
+ {
+  "UnitKey": "Gamman",
+  "Level": "15",
+  "PartIndex": "0",
+  "Stat": "HackingRefundPercent",
+  "Value": "0.2",
+  "Description": "기폭으로 소비한 해킹 스택 20% 환급"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "3",
+  "PartIndex": "0",
+  "Stat": "FoodPercent",
+  "Value": "0.1",
+  "Description": "식량 생산량 +10%"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "6",
+  "PartIndex": "0",
+  "Stat": "FoodPercent",
+  "Value": "0.2",
+  "Description": "식량 생산량 +20%"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "9",
+  "PartIndex": "0",
+  "Stat": "FoodSpeedPercent",
+  "Value": "0.1",
+  "Description": "식량 생산속도 +10%"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "12",
+  "PartIndex": "0",
+  "Stat": "FoodSpeedPercent",
+  "Value": "0.2",
+  "Description": "식량 생산속도 +20%"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "15",
+  "PartIndex": "0",
+  "Stat": "FoodBurstChance",
+  "Value": "0.5",
+  "Description": "10초마다 50% 확률로 5초간 식량 생산량 2배"
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "15",
+  "PartIndex": "1",
+  "Stat": "FoodBurstIntervalSeconds",
+  "Value": "10",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "15",
+  "PartIndex": "2",
+  "Stat": "FoodBurstDurationSeconds",
+  "Value": "5",
+  "Description": ""
+ },
+ {
+  "UnitKey": "Zeltan",
+  "Level": "15",
+  "PartIndex": "3",
+  "Stat": "FoodBurstMultiplier",
+  "Value": "2",
+  "Description": ""
+ }
+]
