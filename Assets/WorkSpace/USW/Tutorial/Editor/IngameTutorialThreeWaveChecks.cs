@@ -149,6 +149,15 @@ public static class IngameTutorialThreeWaveChecks
             var firstBoss = bosses.CurrentBoss;
             await UniTask.WaitUntil(() => wave.CurrentWave == 1 && bosses.CurrentBoss != null && bosses.CurrentBoss != firstBoss, cancellationToken: token);
             Check(timer.RemainingTime > 55f && timer.RemainingTime <= 60.5f, "Wave 1 kill resets the countdown to 60 seconds (" + timer.RemainingTime.ToString("F1") + ")");
+            await UniTask.WaitUntil(() => dialogue.gameObject.activeInHierarchy && overlay.gameObject.activeInHierarchy, cancellationToken: token);
+            await FocusReady();
+            float heldTime = timer.RemainingTime;
+            await UniTask.Delay(500, DelayType.Realtime, cancellationToken: token);
+            Check(director.CurrentStage == IngameTutorialStage.SecondWave && dialogue.gameObject.activeInHierarchy,
+                "Timer reset lesson waits for a tap instead of auto-advancing");
+            Check(Mathf.Abs(timer.RemainingTime - heldTime) < 0.01f, "Countdown stays paused while the reset is explained");
+            await Snapshot("00-timer-reset");
+            await Acknowledge();
             await Stage(IngameTutorialStage.EarthquakeTelegraph);
             var patterns = Get<BossPatternController>(director, "_patterns");
             await UniTask.WaitUntil(() => patterns.IsCounterablePattern(bosses.CurrentBoss), cancellationToken: token);

@@ -55,8 +55,11 @@ namespace GaeGGUL.Tutorial
             await CombatGapAsync(token);
             _guidedBoss.PreventDeath = false;
             await Until(() => _wave.CurrentWave == 1 && _guidedBoss != null && !_guidedBoss.IsDead, token);
-            _dialogue.ShowText("보스를 물리치고 다음 보스가 등장하면 제한 시간이 다시 채워져요.", _lessonIndex, _lessonCount, false);
-            await Delay(_settings.FocusSeconds, token);
+            // 초기화된 제한 시간을 강조하고 아무 곳이나 터치해야 넘어간다.
+            _dialogue.ShowText("보스를 물리치고 다음 보스가 등장하면 제한 시간이 다시 채워져요.", _lessonIndex, _lessonCount, true);
+            await AwarenessAsync(Ui(_timerTarget), token);
+            _overlay.Hide();
+            _time.Release(this);
         }
 
         private async UniTask TelegraphAsync(CancellationToken token)
