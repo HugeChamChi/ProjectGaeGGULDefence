@@ -52,6 +52,8 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private Transform     cardContainer;
     [SerializeField] private LevelUpCardUI cardPrefab;
     [SerializeField] private LevelUpFieldView _fieldView;
+    /// <summary>Field-view footer bound to this level-up screen (may live outside its hierarchy).</summary>
+    public LevelUpFieldView FieldView => _fieldView;
     private UI_Peekthrough _peekthrough;
 
     [Header("Selection Timer")]
@@ -145,7 +147,6 @@ public class LevelUpUI : MonoBehaviour
             card.Setup(data, OnCardClicked, FormatDescription(snapshot, data));
             card.ConfigureDescription(id => OpenDescriptionTerm(card, id), () => !IsReadyForSelection || DescriptionBlocksInput || FieldPreviewBlocksInput ||
                 _spawnedCards.Any(other => other != null && other != card && other.HasActivePress));
-            if (_peek != null) card.OnPeekChanged += OnCardPeekChanged;
             _spawnedCards.Add(card);
         }
         // 튜토리얼은 고정 카드라 추천 배지를 붙이지 않는다.
@@ -179,13 +180,6 @@ public class LevelUpUI : MonoBehaviour
         }
 
         OpenAsync(layout, fromGauge).Forget();
-    }
-
-    /// <summary>카드를 꾹 눌러 필드보기 중일 때 그 카드의 대상 유닛을 강조한다.</summary>
-    private void OnCardPeekChanged(LevelUpCardUI card, bool peeking)
-    {
-        if (peeking) _peek.Show(card.GetData());
-        else _peek.Clear();
     }
 
     /// <summary>완전히 멈춘 뒤: 화면(대기 모션·드론·보스 대기·이펙트)은 실제 시간으로 유지.</summary>

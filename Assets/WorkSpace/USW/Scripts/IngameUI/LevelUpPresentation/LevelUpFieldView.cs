@@ -20,6 +20,8 @@ public sealed class LevelUpFieldView : MonoBehaviour
 
     /// <summary>True while choices are hidden by the explicit footer button.</summary>
     public bool ViewingField { get; private set; }
+    /// <summary>Explicit field-view button, also used by the guided first battle.</summary>
+    public Button ToggleButton => _button;
     /// <summary>Hidden choices and the return gesture cannot select cards or advance their timer.</summary>
     public bool BlocksSelection => _open && (ViewingField || _transitioning);
 

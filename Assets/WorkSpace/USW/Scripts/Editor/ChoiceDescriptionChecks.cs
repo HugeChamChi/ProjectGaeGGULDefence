@@ -202,12 +202,12 @@ public static class ChoiceDescriptionChecks
         card.OnPointerDown(pointer);
         await UniTask.Delay(450, DelayType.Realtime);
         var peek = harness.GetComponentInChildren<UI_Peekthrough>();
-        Assert(peek.OwnsPeek(card), "PreviewOnly term area follows real field hold input.");
+        Assert(!peek.OwnsPeek(card) && !peek.BlocksSelection, "PreviewOnly long press cannot open the retired card field preview.");
         card.OnPointerUp(pointer); card.OnPointerClick(pointer);
         Assert(harness.SelectionCount == selections && harness.TermOpenCount == opens, "PreviewOnly release never selects or opens terms.");
         card.SetTutorialPreviewOnly(false);
         await UniTask.Delay(300, DelayType.Realtime);
-        Debug.Log("[Descriptions] PASS standalone Play checks: term tap/long press/drag/second pointer, tooltip timer/shield/resume, and PreviewOnly field hold. Physical touch and small-screen layout remain visual QA.");
+        Debug.Log("[Descriptions] PASS standalone Play checks: term tap/long press/drag/second pointer, tooltip timer/shield/resume, and retired PreviewOnly hold stays inactive. Physical touch and small-screen layout remain visual QA.");
     }
     private static PointerEventData TermPointer(LevelUpCardUI card, int pointerId)
     {

@@ -92,6 +92,8 @@ public static class TotemInventoryChecks
             check(totem.RotationStep == 1, "Right release commits clockwise rotation");
             check(!grid.IsPreviewingTotem(totem), "Committed rotation release hides range");
             check(TotemRotationUI.ResolveDirection(Vector2.up * 100, 24) == 0 && TotemRotationUI.ResolveDirection(Vector2.down * 100, 24) == 2 && TotemRotationUI.ResolveDirection(Vector2.left * 100, 24) == 3, "All four cardinal directions quantized");
+            var frontTotem = Resources.Load<TotemData>("LevelTotems/LT2001");
+            check(frontTotem != null && TotemRotationUI.BaseFacing(frontTotem) == 2 && TotemRotationUI.StepToward(0, 2) == 2 && TotemRotationUI.StepToward(1, 2) == 3 && TotemRotationUI.StepToward(-1, 2) == -1 && TotemRotationUI.StepToward(3, 0) == 3, "Dragging aims a down-facing level totem toward the drag direction");
             check(totem.RotateOffset(Vector2Int.right) == Vector2Int.down, "Effect offsets follow committed direction");
             var drag = totem.GetComponent<DragHandler>();
             var oldPosition = totem.transform.position;

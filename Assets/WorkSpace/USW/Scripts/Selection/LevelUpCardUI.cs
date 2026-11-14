@@ -50,7 +50,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     private LevelUpData           _data;
     private Action<LevelUpCardUI> _onCardClicked;
     private CancellationTokenSource _animCts;
-    [Header("Hold to view field")]
+    [Header("Long press cancellation")]
     [SerializeField, Min(0.1f)] private float _holdSeconds = 0.4f;
     private UI_Peekthrough _peek;
     private int? _pointerId;
@@ -79,7 +79,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     /// <summary>Scene guides may require a field preview before permitting selection.</summary>
     public bool AllowSelection { get; set; } = true;
 
-    /// <summary>카드가 길게 눌렸을 때 사용할 레벨업 창의 필드 보기를 연결한다.</summary>
+    /// <summary>필드 보기 버튼의 전환 중에는 카드 선택을 차단한다.</summary>
     public void ConfigurePeek(UI_Peekthrough peek) => _peek = peek;
 
     /// <summary>이 카드로 필드보기가 시작(true)/종료(false)될 때 — 대상 유닛 강조 연출용.</summary>
@@ -93,7 +93,7 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         OnPeekChanged?.Invoke(this, peeking);
     }
 
-    /// <summary>짧은 선택과 긴 필드 보기를 구분하는 입력을 시작한다.</summary>
+    /// <summary>카드 선택과 용어 링크 입력을 시작한다. 긴 누름은 선택을 취소한다.</summary>
     public void OnPointerDown(PointerEventData eventData)
     {
         if (Input.touchCount > 1) { CancelPress(); return; }
@@ -124,11 +124,10 @@ public class LevelUpCardUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             Time.unscaledTime - _pressedAt >= _holdSeconds)
         {
             _suppressClick = true;
-            if (_peek.TryBeginPeek(this)) SetPeeking(true);
         }
     }
 
-    /// <summary>긴 누름의 해제는 카드를 선택하지 않고 필드 보기만 종료한다.</summary>
+    /// <summary>긴 누름은 카드를 선택하지 않는다. 필드 보기는 전용 버튼으로만 연다.</summary>
     public void OnPointerUp(PointerEventData eventData)
     {
         if (_pointerId != eventData.pointerId) return;
