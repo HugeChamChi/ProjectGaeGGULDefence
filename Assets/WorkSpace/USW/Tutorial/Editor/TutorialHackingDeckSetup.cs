@@ -33,7 +33,7 @@ public static class TutorialHackingDeckSetup
         var totem = AssetDatabase.LoadAssetAtPath<TotemData>(totemPath);
         if (totem == null)
         {
-            AssetDatabase.CopyAsset("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1008Data.asset", totemPath);
+            AssetDatabase.CopyAsset("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1008Data.asset", totemPath);
             totem = AssetDatabase.LoadAssetAtPath<TotemData>(totemPath);
             totem.totemId = 99003;
             totem.totemName = "가속 토템";
@@ -47,11 +47,11 @@ public static class TutorialHackingDeckSetup
             EditorUtility.SetDirty(totem);
         }
         settings.TotemChoices = new[] { totem,
-            AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1001Data.asset"),
-            AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1005Data.asset") };
+            AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1001Data.asset"),
+            AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1005Data.asset") };
         settings.RequiredTotem = totem;
         if (settings.NonRotatableExample == null)
-            settings.NonRotatableExample = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Playable/TD1002Data.asset");
+            settings.NonRotatableExample = AssetDatabase.LoadAssetAtPath<TotemData>("Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD1002Data.asset");
         EditorUtility.SetDirty(settings);
     }
 

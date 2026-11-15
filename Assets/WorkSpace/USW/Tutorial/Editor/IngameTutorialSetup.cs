@@ -151,7 +151,7 @@ public static class IngameTutorialSetup
         var pool = rewardSo.FindProperty("_totemPool"); pool.arraySize = 3;
         var ids = new[] {1001,1005,1006};
         for(int i=0;i<ids.Length;i++) pool.GetArrayElementAtIndex(i).objectReferenceValue =
-            AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Playable/TD{ids[i]}Data.asset");
+            AssetDatabase.LoadAssetAtPath<TotemData>($"Assets/WorkSpace/USW/Data/TotemData/Legacy/Playable/TD{ids[i]}Data.asset");
         rewardSo.ApplyModifiedPropertiesWithoutUndo();
         var director = All<IngameTutorialDirector>(scene).FirstOrDefault();
         if (director == null) director = new GameObject("IngameTutorial").AddComponent<IngameTutorialDirector>();
