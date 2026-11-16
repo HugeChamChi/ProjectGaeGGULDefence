@@ -22,6 +22,7 @@ public class RailgunProjectile : Projectile
     [SerializeField] private bool _showHackLink;
     private DisigmanGlitchLinkPresentation _hackLink;
     private float _hackSeconds;
+    private Transform _followMuzzle;
 
     [Inject]
     private void ConfigureHackLink(IObjectResolver resolver) => resolver.TryResolve(out _hackLink);
@@ -31,6 +32,8 @@ public class RailgunProjectile : Projectile
         UnitBase sourceUnit = null, float sizeMultiplier = 1f)
     {
         _hackSeconds = _showHackLink && sourceUnit is Disigman disigman ? disigman.SecondsRecovered : 0f;
+        // 애니메이션되는 총 끝을 충전 동안 따라간다(스킬은 총을 들어 올리는 중에 발사가 시작된다).
+        _followMuzzle = sourceUnit is Disigman shooter ? shooter.Muzzle : null;
         base.Launch(from, to, onComplete, data, sourceUnit, sizeMultiplier);
     }
 
@@ -46,11 +49,12 @@ public class RailgunProjectile : Projectile
         {
             _audioManager?.PlayOwnedCue(_chargeCue, this);
             Vector3 from = transform.position + (Vector3)_muzzleOffset;
-            if (_hackSeconds > 0f) _hackLink?.Begin(this, from, _chargeSeconds, _hackSeconds);
+            if (_hackSeconds > 0f) _hackLink?.Begin(this, from, _chargeSeconds, _hackSeconds, _followMuzzle);
             float scale = BaseScale.x > 1e-4f ? transform.localScale.x / BaseScale.x : 1f;
             if (_fx != null)
             {
                 _fx.Play(transform, from, target, _chargeSeconds, scale);
+                if (_followMuzzle != null) _fx.FollowOrigin(_followMuzzle, _muzzleOffset);
                 _fx = null; // 분리된 연출은 스스로 정리한다. 이 투사체는 한 발만 쓴다.
             }
 
@@ -59,8 +63,10 @@ public class RailgunProjectile : Projectile
 
             _audioManager?.StopOwnedCue(this);
             _audioManager?.PlayCue(_shotCue);
+            // 빔이 실제로 나간 총구 위치(충전 동안 총이 움직였을 수 있음)
+            Vector3 muzzle = _followMuzzle != null ? _followMuzzle.position + (Vector3)_muzzleOffset : from;
             transform.position = target;
-            _hackLink?.Impact(this, target);
+            _hackLink?.Impact(this, target, muzzle);
             OnHit(target);
             _onComplete?.Invoke(this);
         }

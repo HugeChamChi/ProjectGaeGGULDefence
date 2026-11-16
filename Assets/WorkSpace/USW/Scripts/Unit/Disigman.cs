@@ -22,7 +22,9 @@ public sealed class Disigman : UnitBase
     }
     private void OnDisable() => ClearRecoveryShot();
 
-    /// <summary>Single authored muzzle follows the body's cell facing and breathing scale.</summary>
+    /// <summary>Gun-tip transform; it follows the Spine gun bone, so the railgun charge can stay on it.</summary>
+    public Transform Muzzle => _muzzle;
+    /// <summary>Single authored muzzle follows the gun bone and the body's cell facing.</summary>
     public override Vector3 ProjectileOrigin => _muzzle != null ? _muzzle.position : base.ProjectileOrigin;
 
     /// <summary>Current tier's authored attack requirement, clamped to at least one.</summary>

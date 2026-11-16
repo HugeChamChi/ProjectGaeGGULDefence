@@ -110,6 +110,8 @@ public class RailgunBeamFx : MonoBehaviour
     private MaterialPropertyBlock _mpb;
     private Transform _owner;
     private Vector3 _from, _to;
+    private Transform _followOrigin;
+    private Vector3 _followOffset;
     private float _scale = 1f, _chargeSeconds, _time, _seed;
     private bool _playing, _fired;
 
@@ -182,6 +184,14 @@ public class RailgunBeamFx : MonoBehaviour
         Tick();
     }
 
+    /// <summary>While charging, keep the muzzle end on this transform (e.g. an animated gun tip). The beam fires from where it is at that moment.</summary>
+    public void FollowOrigin(Transform origin, Vector3 offset)
+    {
+        _followOrigin = origin;
+        _followOffset = offset;
+        Tick();
+    }
+
     private void Update()
     {
         if (!_playing) return;
@@ -195,6 +205,13 @@ public class RailgunBeamFx : MonoBehaviour
         {
             Destroy(gameObject); // 차지 중 투사체가 사라짐 (씬 종료·풀 정리 등) — 쏘지 않는다
             return;
+        }
+
+        if (!_fired && _followOrigin != null)
+        {
+            _from = _followOrigin.position + _followOffset;
+            _chargeGlow.transform.position = _chargeCore.transform.position = _chargeRing.transform.position = _from;
+            _muzzleFlash.transform.position = _from;
         }
 
         if (_time < _chargeSeconds)

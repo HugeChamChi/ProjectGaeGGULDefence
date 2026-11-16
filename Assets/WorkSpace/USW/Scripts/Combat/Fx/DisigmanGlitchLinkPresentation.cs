@@ -31,6 +31,7 @@ public sealed class DisigmanGlitchLinkPresentation : MonoBehaviour
     {
         public RailgunProjectile Owner;
         public Vector3 From;
+        public Transform Follow;
         public BossBase Boss;
         public float Seconds;
         public float Charge;
@@ -58,15 +59,17 @@ public sealed class DisigmanGlitchLinkPresentation : MonoBehaviour
     }
 
     /// <summary>Tracks the actual skill projectile; basic shots never call this path.</summary>
-    public void Begin(RailgunProjectile owner, Vector3 from, float charge, float seconds)
+    /// <param name="follow">Optional animated muzzle; charge blocks appear where it is when they spawn (the gun can rise while charging).</param>
+    public void Begin(RailgunProjectile owner, Vector3 from, float charge, float seconds, Transform follow = null)
     {
         if (!IsConfigured || owner == null || seconds <= 0f) return;
         EnsureResources();
-        _shots.Add(new Shot { Owner = owner, From = from, Boss = _bosses != null ? _bosses.CurrentBoss : null, Seconds = seconds, Charge = charge });
+        _shots.Add(new Shot { Owner = owner, From = from, Follow = follow, Boss = _bosses != null ? _bosses.CurrentBoss : null, Seconds = seconds, Charge = charge });
     }
 
     /// <summary>Called by the real projectile at impact. The authoritative time was already added by TryCast.</summary>
-    public void Impact(RailgunProjectile owner, Vector3 target)
+    /// <param name="from">Where the beam actually left the muzzle (the gun can move during the charge). Null keeps the cast position.</param>
+    public void Impact(RailgunProjectile owner, Vector3 target, Vector3? from = null)
     {
         for (int i = _shots.Count - 1; i >= 0; i--)
         {
@@ -77,7 +80,7 @@ public sealed class DisigmanGlitchLinkPresentation : MonoBehaviour
             var random = Random.state;
             try
             {
-                BeamGlitch(shot.From, target);
+                BeamGlitch(from ?? shot.From, target);
                 ImpactBlocks(target);
                 GlitchBoss(shot.Boss);
                 Shards(target, shot.Seconds, _generation);
@@ -186,7 +189,7 @@ public sealed class DisigmanGlitchLinkPresentation : MonoBehaviour
             {
                 shot.Charged = true;
                 var random = Random.state;
-                try { ChargeBlocks(shot.From, Mathf.Max(0f, shot.Charge - shot.Elapsed)); }
+                try { ChargeBlocks(shot.Follow != null ? shot.Follow.position : shot.From, Mathf.Max(0f, shot.Charge - shot.Elapsed)); }
                 finally { Random.state = random; }
             }
         }

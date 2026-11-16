@@ -18,6 +18,9 @@ public sealed class SpineAttackSpeedSync : MonoBehaviour
     private float _authoredTimeScale;
     private bool _pauseIdle;
 
+    /// <summary>A track whose speed the owner visual sets itself (e.g. a stretched wind-up); left untouched here.</summary>
+    public TrackEntry ExternallyTimed { get; set; }
+
     /// <summary>Connects the existing visual and caches local components; drone ownership is read after pool initialization.</summary>
     public void Initialize(SkeletonAnimation skeleton, UnitBase unit, DroneUnit drone, DragHandler drag, string idle)
     {
@@ -97,6 +100,7 @@ public sealed class SpineAttackSpeedSync : MonoBehaviour
 
     private void Apply(TrackEntry entry, float baseline, float interval)
     {
+        if (entry == ExternallyTimed) return;
         string name = entry.Animation.Name;
         bool attack = _attackDurations.TryGetValue(name, out float duration);
         // Skills (notably Betan's event-driven bomb launch), drag and other animations keep authored timing.

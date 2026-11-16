@@ -54,7 +54,7 @@ MonoBehaviour:
       type: {class: SkillBalanceFloat, ns: , asm: Assembly-CSharp}
       data:
         key: Disigman.BasicCoefficient
-        normal: 1
-        rare: 1
-        epic: 1
-        legend: 1
+        normal: 0.66
+        rare: 0.66
+        epic: 0.66
+        legend: 0.66

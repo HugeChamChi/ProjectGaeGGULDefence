@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Disigman
   m_EditorClassIdentifier: Assembly-CSharp::DisigmanData
   AttacksToCharge:
-    normal: 6
-    rare: 6
-    epic: 6
-    legend: 6
+    normal: 9
+    rare: 9
+    epic: 9
+    legend: 9
   SecondsRecovered:
     normal: 0.3
     rare: 0.3
