@@ -16,6 +16,7 @@ public class ResultScreenView : MonoBehaviour
     // 연출 시작 시각(초). HP·빌드·보상 구간은 앞 구간 길이에 따라 이어 붙는다.
     private const int BuildPopupSortingOffset = 20;
     private const int AccountExperienceIconIndex = 1;
+    private const int GoldIconIndex = 0;
     private const float HeaderInTime = 0.15f;
     private const float ChiefInTime = 0.55f;
     private const float RoundInTime = 0.45f;
@@ -23,6 +24,8 @@ public class ResultScreenView : MonoBehaviour
 
     [Header("공통")]
     [SerializeField] private Image _dim;
+    [Tooltip("결과창 뒤 어둡게 덮는 정도. 1이면 전장이 완전히 가려진다.")]
+    [SerializeField, Range(0f, 1f)] private float _dimAlpha = 0.72f;
     [SerializeField] private Button _skipCatcher;
 
     [Header("헤더")]
@@ -162,7 +165,17 @@ public class ResultScreenView : MonoBehaviour
     private Vector2 _homeBasePosition;
     private ResultScreenData _data;
     private ResultReward[] _shownRewards = Array.Empty<ResultReward>();
+
+    /// <summary>지금 표시 중인 보상(골드, 정수 순서, 계정 경험치가 있으면 마지막). 로비 보상 연출에 넘긴다.</summary>
+    public ResultReward[] ShownRewards => _shownRewards;
     private Color _rewardLabelColor;
+    private int _currencyRewardCount;
+    private bool _adBonusApplied;
+    private Sprite _adIcon;
+    private Image _adIconImage;
+    private Vector4 _adLabelMargin;
+    private const float AdIconHeightRatio = 0.7f;
+    private const float AdIconGapRatio = 0.15f;
     private SafeAreaContentFrame _contentFrame;
     private Image _chiefImage;
     private RawImage _carriedBoss;
@@ -190,6 +203,71 @@ public class ResultScreenView : MonoBehaviour
 
     private void OnDestroy() => ReleaseBossSnapshot();
 
+    /// <summary>보상 더 받기 글자 왼쪽에 둘 광고 아이콘(상점 광고 상품과 같은 아이콘)을 정한다.</summary>
+    public void SetAdIcon(Sprite sprite)
+    {
+        _adIcon = sprite;
+        if (isActiveAndEnabled) LayoutAdIcon();
+    }
+
+    /// <summary>광고를 보는 동안 보상 더 받기 버튼을 잠근다.</summary>
+    public void SetAdRewardBusy(bool busy)
+    {
+        if (_adRewardButton != null) _adRewardButton.interactable = !busy && !_adBonusApplied;
+    }
+
+    /// <summary>
+    /// 광고 보상으로 더 받은 골드, 정수, 계정 경험치(결과 보상 순서)를 표시에 더하고 버튼을 끈다. 로비 보상 연출도 늘어난 값을 쓴다.
+    /// </summary>
+    public void ApplyAdBonus(int[] bonus)
+    {
+        if (bonus == null || _adBonusApplied) return;
+        _adBonusApplied = true;
+        if (_adRewardButton != null) _adRewardButton.interactable = false;
+        int rewardIndex = 0;
+        foreach (var go in _spawned)
+        {
+            if (go == null || go.transform.Find("Icon") == null) continue;
+            int index = rewardIndex++;
+            // bonus는 결과 보상 순서(골드, 정수, 계정 경험치)다.
+            if (index >= bonus.Length || index >= _shownRewards.Length || bonus[index] <= 0) continue;
+            int from = _shownRewards[index].Amount;
+            _shownRewards[index].Amount = from + bonus[index];
+            var amount = go.GetComponentInChildren<TextMeshProUGUI>();
+            int shown = from;
+            if (amount != null)
+                DOTween.To(() => shown, v => { shown = v; amount.text = v.ToString("N0"); }, _shownRewards[index].Amount, 0.6f)
+                    .SetEase(Ease.OutCubic).SetUpdate(true).SetLink(go);
+            go.transform.DOPunchScale(Vector3.one * 0.18f, 0.4f, 8, 0.6f).SetUpdate(true).SetLink(go);
+        }
+    }
+
+    private void LayoutAdIcon()
+    {
+        if (_adRewardButton == null || _adIcon == null) return;
+        var label = _adRewardButton.GetComponentInChildren<TMP_Text>(true);
+        if (label == null) return;
+        if (_adIconImage == null)
+        {
+            _adLabelMargin = label.margin;
+            var go = new GameObject("AdIcon", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(label.transform, false);
+            _adIconImage = go.GetComponent<Image>();
+            _adIconImage.preserveAspect = true;
+            _adIconImage.raycastTarget = false;
+        }
+        _adIconImage.sprite = _adIcon;
+        float size = ((RectTransform)_adRewardButton.transform).rect.height * AdIconHeightRatio;
+        float gap = size * AdIconGapRatio;
+        // 글자를 오른쪽으로 밀고 그 왼쪽에 아이콘을 붙여 둘을 한 덩어리로 가운데 정렬한다.
+        label.margin = _adLabelMargin + new Vector4(size + gap, 0f, 0f, 0f);
+        float textWidth = label.GetPreferredValues(label.text).x;
+        var rect = _adIconImage.rectTransform;
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(size, size);
+        rect.anchoredPosition = new Vector2(-(textWidth + gap) * 0.5f, 0f);
+    }
+
     /// <summary>결과 화면을 처음부터 재생한다.</summary>
     public void Show(ResultScreenData data, ResultScreenTone tone, bool showBuild, bool isWin = false)
     {
@@ -200,6 +278,10 @@ public class ResultScreenView : MonoBehaviour
         var otherRewards = data.Rewards ?? Array.Empty<ResultReward>();
         _shownRewards = new ResultReward[otherRewards.Length + (data.HasAccountExperience ? 1 : 0)];
         Array.Copy(otherRewards, _shownRewards, otherRewards.Length);
+        // 보상 카탈로그의 골드 아이콘이 비어 있으면 결과창의 골드 아이콘을 쓴다.
+        for (int i = 0; i < otherRewards.Length; i++)
+            if (_shownRewards[i].Icon == null && _unavailableRewardIcons != null && _unavailableRewardIcons.Length > GoldIconIndex)
+                _shownRewards[i].Icon = _unavailableRewardIcons[GoldIconIndex];
         if (data.HasAccountExperience)
         {
             var experienceIcon = _unavailableRewardIcons != null && _unavailableRewardIcons.Length > AccountExperienceIconIndex
@@ -215,7 +297,7 @@ public class ResultScreenView : MonoBehaviour
         if (_emptyBuildLabel != null) _emptyBuildLabel.gameObject.SetActive(showBuild && !hasBuild);
 
         var s = DOTween.Sequence().SetUpdate(_useUnscaledTime).SetLink(gameObject);
-        s.Insert(0f, _dim.DOFade(1f, 0.65f));
+        s.Insert(0f, _dim.DOFade(_dimAlpha, 0.65f));
         var headerRt = (RectTransform)_header.transform;
         headerRt.anchoredPosition = _headerBasePos + Vector2.up * _headerDropDistance;
         s.Insert(HeaderInTime, _header.DOFade(1f, 0.25f));
@@ -297,8 +379,11 @@ public class ResultScreenView : MonoBehaviour
             }
             t += 0.15f;
         }
+        _currencyRewardCount = otherRewards.Length;
+        _adBonusApplied = false;
         bool canAdvertise = AdRewardRequested != null && otherRewards.Length > 0;
         _adSlot.gameObject.SetActive(!_lobbyInAdSlot);
+        LayoutAdIcon();
         _adRewardButton.interactable = canAdvertise;
         s.Insert(t, _adSlot.DOFade(canAdvertise ? _adSlotAlpha : 0.5f, 0.2f));
         s.Insert(t, _adSlot.transform.DOScale(1f, 0.28f).SetEase(Ease.OutBack));
@@ -310,7 +395,7 @@ public class ResultScreenView : MonoBehaviour
     private void FinishEntrance(bool showBuild, bool canAdvertise)
     {
         // 첫 활성화 프레임에 건너뛰어도 숨겨진 그룹·정적 글자까지 끝 상태를 확정한다.
-        _dim.color = new Color(_dim.color.r, _dim.color.g, _dim.color.b, 1f);
+        _dim.color = new Color(_dim.color.r, _dim.color.g, _dim.color.b, _dimAlpha);
         _header.alpha = _recordBlock.alpha = _rewardBlock.alpha = _buttons.alpha = 1f;
         ((RectTransform)_header.transform).anchoredPosition = _headerBasePos;
         _chief.localScale = Vector3.one;
@@ -552,7 +637,7 @@ public class ResultScreenView : MonoBehaviour
         {
             _rewardUnavailableLabel.gameObject.SetActive(data.HasAccountExperience || data.Rewards == null || data.Rewards.Length == 0);
             _rewardUnavailableLabel.text = data.HasAccountExperience
-                ? "계정 경험치" : "보상 준비 중";
+                ? (data.Rewards != null && data.Rewards.Length > 0 ? "획득 보상" : "계정 경험치") : "보상 준비 중";
             _rewardUnavailableLabel.color = data.HasAccountExperience ? Color.white : _rewardLabelColor;
         }
         _adSlot.alpha = 0f;

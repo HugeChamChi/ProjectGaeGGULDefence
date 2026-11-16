@@ -80,6 +80,7 @@ public class UIManager : MonoBehaviour
     private HackingHud _hackingHud;
     private bool _navigationStarted;
     private System.Action _resultHomeRequested;
+    private ResultScreenData _resultData;
     private CenterToast _navigationToast;
 
     /// <summary>Uses scene-specific lobby preparation without replacing the shared battle result.
@@ -186,6 +187,8 @@ public class UIManager : MonoBehaviour
             _resultScreen.RetryRequested += OnRetryButtonPressed;
             _resultScreen.HomeRequested += OnHomeButtonPressed;
             _resultScreen.DamageChartRequested += OnResultDamageChartRequested;
+            _resultScreen.AdRewardRequested += OnResultAdRewardRequested;
+            _resultScreen.SetAdIcon(Resources.Load<BattleCurrencyRewardConfig>(BattleCurrencyRewardConfig.ResourcePath)?.ShopSettings?.AdIcon);
         }
     }
 
@@ -430,6 +433,7 @@ public class UIManager : MonoBehaviour
     {
         if (_resultShown) return;
         _resultShown = true;
+        _resultData = data;
         _timeScale.Pause(this);
         // 해킹 스택 링은 전투 HUD라 결과 화면 위에 남기지 않는다.
         _hackingHud?.Hide();
@@ -452,6 +456,35 @@ public class UIManager : MonoBehaviour
     {
         if (VContainer.IObjectResolverExtensions.TryResolve(_resolver, out IngameDamageChart chart))
             chart.OpenFinal(_resultScreen.GetComponentInParent<Canvas>(true));
+    }
+
+    private bool _adRewardBusy;
+
+    private void OnResultAdRewardRequested() => WatchAdForBonusAsync().Forget();
+
+    /// <summary>보상 더 받기: 보상형 광고를 끝까지 보면(광고 제거 구매자는 바로) 골드와 정수를 한 번 더 받는다.</summary>
+    private async UniTaskVoid WatchAdForBonusAsync()
+    {
+        if (_adRewardBusy || _gameManager == null || _resultScreen == null) return;
+        _adRewardBusy = true;
+        _resultScreen.SetAdRewardBusy(true);
+        try
+        {
+            if (!Player.PlayerData.HasRemoveAds)
+            {
+                var settings = Resources.Load<BattleCurrencyRewardConfig>(BattleCurrencyRewardConfig.ResourcePath)?.ShopSettings;
+                bool watched = settings != null && await GaeGGUL.Shop.ShopAds.ShowAsync(settings.RewardedAdUnitIdAndroid,
+                    this.GetCancellationTokenOnDestroy());
+                if (!watched) return;
+            }
+            if (this == null) return;
+            _resultScreen.ApplyAdBonus(_gameManager.GrantAdBonusReward());
+        }
+        finally
+        {
+            _adRewardBusy = false;
+            if (this != null && _resultScreen != null) _resultScreen.SetAdRewardBusy(false);
+        }
     }
 
     private void OnRetryButtonPressed()
@@ -529,9 +562,46 @@ public class UIManager : MonoBehaviour
             return;
         }
         _navigationStarted = true;
+        HandOffRewardsToLobby();
         _gameManager.CancelEndPresentation();
         _timeScale.ReleaseAll();
-        Addressables.LoadSceneAsync("LobbyScene");
+        // 결과창 → 로딩창 → 로비. 로비는 로딩창이 걷힌 뒤 받은 보상을 상단으로 날린다(LobbyRewardFlight).
+        if (VContainer.IObjectResolverExtensions.TryResolve(_resolver, out SceneChangeManager scenes))
+        {
+            VContainer.IObjectResolverExtensions.TryResolve(_resolver, out GlobalUIManager loading);
+            scenes.TransitionToSceneAsync("LobbyScene", afterLoad: () => HoldLobbyLoadingAsync(loading)).Forget();
+        }
+        else
+            Addressables.LoadSceneAsync("LobbyScene");
+    }
+
+    /// <summary>로비는 금방 불러와져 드론 4기 로딩창이 한순간만 보인다. 결과에서 돌아갈 때는 진행 바가 차오르는 동안 최소 시간 보여 준다.</summary>
+    private static async UniTask HoldLobbyLoadingAsync(GlobalUIManager loading)
+    {
+        const float holdSeconds = 1.4f;
+        var token = Application.exitCancellationToken;
+        for (float elapsed = 0f; elapsed < holdSeconds; elapsed += Time.unscaledDeltaTime)
+        {
+            loading?.ReportLoadingProgress(Mathf.Lerp(0.6f, 0.95f, elapsed / holdSeconds), "로비 준비 중");
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+        }
+    }
+
+    /// <summary>결과창에 표시한 실제 지급량(골드, 정수, 계정 경험치)을 로비 연출에 넘긴다.</summary>
+    private void HandOffRewardsToLobby()
+    {
+        var shown = _resultScreen != null ? _resultScreen.ShownRewards : null;
+        if (_resultData == null || shown == null || shown.Length == 0) { BattleRewardHandoff.Set(null); return; }
+        int currencyCount = _resultData.Rewards?.Length ?? 0;
+        var entries = new System.Collections.Generic.List<BattleRewardHandoff.Entry>(shown.Length);
+        for (int i = 0; i < shown.Length; i++)
+        {
+            // GameManager가 골드, 정수 순서로 채우고 결과창이 계정 경험치를 마지막에 붙인다.
+            var target = i >= currencyCount ? BattleRewardHandoff.Target.Experience
+                : i == 0 ? BattleRewardHandoff.Target.Gold : BattleRewardHandoff.Target.Essence;
+            entries.Add(new BattleRewardHandoff.Entry(target, shown[i].Icon, shown[i].Amount));
+        }
+        BattleRewardHandoff.Set(entries);
     }
 
     private void OnDestroy()
@@ -541,6 +611,7 @@ public class UIManager : MonoBehaviour
             _resultScreen.RetryRequested -= OnRetryButtonPressed;
             _resultScreen.HomeRequested -= OnHomeButtonPressed;
             _resultScreen.DamageChartRequested -= OnResultDamageChartRequested;
+            _resultScreen.AdRewardRequested -= OnResultAdRewardRequested;
         }
         if (_endInputShield != null) Destroy(_endInputShield);
         _timeScale?.Release(this);

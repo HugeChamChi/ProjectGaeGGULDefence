@@ -73,7 +73,8 @@ public class SceneChangeManager
     private async UniTask LoadSceneInternalAsync(string sceneName)
     {
         var progress = Progress.Create<float>(value =>
-            _globalUIManager.ReportLoadingProgress(0.15f + value * 0.4f, "전장 불러오는 중"));
+            _globalUIManager.ReportLoadingProgress(0.15f + value * 0.4f,
+                sceneName.Contains("Lobby") ? "로비 불러오는 중" : "전장 불러오는 중"));
         // 시작 씬은 일반 Player 씬으로 포함한다. Addressables 씬과 중복 등록하지 않는다.
         for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
         {

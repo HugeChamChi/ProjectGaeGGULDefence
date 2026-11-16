@@ -214,6 +214,9 @@ public class GameManager : MonoBehaviour
         var accountReceipt = _accountExperience.Finish(isWin);
         _resultSnapshot.AccountExperience = accountReceipt?.Experience ?? 0;
         _resultSnapshot.HasAccountExperience = accountReceipt != null;
+        // Gold and essence follow the EXP policy: same reserved run, same boss progress, nothing without a receipt.
+        if (accountReceipt != null)
+            _resultSnapshot.Rewards = GrantBattleCurrency(accountReceipt.RunId, _accountExperience.Progress);
         if (IsProductionBattle)
         {
             Player.RoundRecords.Record(_recordAccount, _recordMode, _resultSnapshot.Round);
@@ -248,6 +251,82 @@ public class GameManager : MonoBehaviour
         // Pause first, then clean up owners/units. No normal-speed frame during the handoff.
         _uiManager.ShowResult(isWin, _resultSnapshot);
         StopAllUnits();
+    }
+
+    private const int GoldRewardId = 10001;
+    private const int EssenceRewardId = 10004;
+
+    /// <summary>
+    /// 보스 진행량 비례 골드와 정수를 이 판의 실행 ID로 한 번 지급하고, 실제로 늘어난 양(영구 강화 보너스 포함)을 결과 보상으로 돌려준다.
+    /// 지급 함수는 저장을 기다리기 전에 잔고를 바꾸므로 호출 직후 잔고 차이가 실제 지급량이다.
+    /// </summary>
+    private ResultReward[] GrantBattleCurrency(string runId, decimal progress)
+    {
+        var config = Resources.Load<BattleCurrencyRewardConfig>(BattleCurrencyRewardConfig.ResourcePath);
+        var catalog = Resources.Load<RewardCatalog>("RewardCatalog");
+        // 계정 경험치(AccountExperienceRun)와 같은 주입 계정에 지급한다.
+        if (!_resolver.TryResolve<PlayerDataController>(out var player)) player = Player.PlayerData;
+        if (config == null || catalog == null || player?.Data == null)
+        {
+            Debug.LogError("[GameManager] 전투 골드/정수 지급 설정 누락");
+            return Array.Empty<ResultReward>();
+        }
+        int gold = config.Gold(progress), essence = config.Essence(progress);
+        var amounts = new System.Collections.Generic.List<RewardAmount>(2);
+        if (gold > 0) amounts.Add(new RewardAmount { RewardId = GoldRewardId, Amount = gold });
+        if (essence > 0) amounts.Add(new RewardAmount { RewardId = EssenceRewardId, Amount = essence });
+        if (amounts.Count == 0) return Array.Empty<ResultReward>();
+
+        const string token = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Token;
+        int goldBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold");
+        int essenceBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token);
+        player.GrantBattleRewardAsync(catalog, runId, amounts.ToArray(), _research).Forget();
+        int goldGained = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold") - goldBefore;
+        int essenceGained = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token) - essenceBefore;
+        _battleRewardRunId = runId;
+        _battleGoldGained = goldGained;
+        _battleEssenceGained = essenceGained;
+        if (goldGained <= 0 && essenceGained <= 0)
+        {
+            Debug.LogWarning($"[GameManager] 전투 골드/정수 지급 안 됨 (진행량 {progress:0.##}, 계산 골드 {gold}, 정수 {essence})");
+            return Array.Empty<ResultReward>();
+        }
+        return new[]
+        {
+            new ResultReward(catalog.Find(GoldRewardId)?.Icon, goldGained),
+            new ResultReward(catalog.Find(EssenceRewardId)?.Icon, essenceGained),
+        };
+    }
+
+    private string _battleRewardRunId;
+    private int _battleGoldGained;
+    private int _battleEssenceGained;
+
+    /// <summary>
+    /// 결과창 보상 더 받기: 광고를 끝까지 본 뒤 이번 판에 실제로 늘어난 골드와 정수를 같은 양만큼 한 번 더 지급한다(보상 2배).
+    /// 계정 경험치도 결과창 표시량만큼 한 번 더 준다. 실행 ID당 한 번만 들어간다(지급 영수증 "battle-ad:").
+    /// </summary>
+    /// <returns>실제로 더 늘어난 골드, 정수, 계정 경험치(결과 보상 순서). 이미 받았거나 지급할 것이 없으면 null.</returns>
+    public int[] GrantAdBonusReward()
+    {
+        if (string.IsNullOrEmpty(_battleRewardRunId) || _battleGoldGained <= 0 && _battleEssenceGained <= 0) return null;
+        var catalog = Resources.Load<RewardCatalog>("RewardCatalog");
+        if (!_resolver.TryResolve<PlayerDataController>(out var player)) player = Player.PlayerData;
+        if (catalog == null || player?.Data == null) return null;
+        var amounts = new System.Collections.Generic.List<RewardAmount>(2);
+        if (_battleGoldGained > 0) amounts.Add(new RewardAmount { RewardId = GoldRewardId, Amount = _battleGoldGained });
+        if (_battleEssenceGained > 0) amounts.Add(new RewardAmount { RewardId = EssenceRewardId, Amount = _battleEssenceGained });
+        const string token = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Token;
+        string grantId = "battle-ad:" + _battleRewardRunId;
+        // 경험치를 먼저 준다. 바로 아래 골드/정수 지급이 같은 grantId 영수증을 남겨 두 번째 시도를 막는다.
+        int experience = _accountExperience.GrantBonus(grantId, _resultSnapshot?.AccountExperience ?? 0);
+        int goldBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold");
+        int essenceBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token);
+        // 결과 지급량에 영구 강화 보너스가 이미 들어 있으므로 보너스 없이 같은 양을 준다. 잔고는 저장을 기다리기 전에 바뀐다.
+        player.GrantRewardAsync(catalog, grantId, amounts.ToArray()).Forget();
+        int gold = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold") - goldBefore;
+        int essence = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token) - essenceBefore;
+        return gold > 0 || essence > 0 || experience > 0 ? new[] { gold, essence, experience } : null;
     }
 
     private ResultScreenData CaptureResult()

@@ -23,6 +23,10 @@ public sealed class AccountExperienceRun
     private bool _grantLose;
     private AccountExperienceReceipt _receipt;
 
+    /// <summary>Boss progress of the finished run (sum of highest HP reduction ratios, 1 per full kill).
+    /// Gold and essence battle rewards use the same basis as EXP (currency design 2026-11-07 A).</summary>
+    public decimal Progress { get; private set; }
+
     /// <summary>Uses root account data and an authored SO, with no workbook access at runtime.</summary>
     public AccountExperienceRun(PlayerDataController player, AccountProgressionConfig config)
     { _player = player; _config = config; }
@@ -30,7 +34,7 @@ public sealed class AccountExperienceRun
     /// <summary>Starts only production play; tutorial/labs never reserve a reward.</summary>
     public void Begin(bool production)
     {
-        Cancel(); _bosses.Clear(); _tracked.Clear(); _receipt = null;
+        Cancel(); _bosses.Clear(); _tracked.Clear(); _receipt = null; Progress = 0;
         if (!production) return;
         _config.Validate();
         _ticket = _player.BeginAccountExperienceRun();
@@ -67,13 +71,18 @@ public sealed class AccountExperienceRun
         bool owned = OwnsRun;
         _closed = true;
         if (!owned) return null;
-        decimal sum = 0;
+        decimal sum = 0, progress = 0;
+        foreach (var boss in _bosses.Values) progress += boss.HighestRatio;
+        Progress = progress;
         if (win ? _grantWin : _grantLose)
             foreach (var boss in _bosses.Values) sum += boss.HighestRatio * (win ? _winExperience : _loseExperience);
         int grant = (int)Math.Min(int.MaxValue, decimal.Floor(sum));
         if (_player.TryApplyAccountExperience(_ticket, _config, grant, out var receipt)) _receipt = receipt;
         return _receipt;
     }
+
+    /// <summary>결과창 보상 더 받기의 추가 경험치. 같은 지급 ID의 영수증이 이미 있으면 주지 않는다. 실제로 들어간 양을 돌려준다.</summary>
+    public int GrantBonus(string grantId, int experience) => _player?.ApplyBonusAccountExperience(grantId, _config, experience) ?? 0;
 
     /// <summary>Retries the owning controller's absolute snapshot, never recalculating a reward.</summary>
     public UniTask<bool> SaveAsync() => _player.TrySaveAsync();
