@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6fa69ec1088a8540a8f0e550ae0bc6a, type: 3}
+  m_Name: ChiefStackBurstSettings
+  m_EditorClassIdentifier: Assembly-CSharp::ChiefStackBurstSettings
+  Style: 1
+  GlowMaterial: {fileID: 2100000, guid: 5b350729f11fcf54bbd714a24d193900, type: 2}
+  RingMaterial: {fileID: 2100000, guid: f2998c87212275a4d98481258ffd0130, type: 2}
+  LineMaterial: {fileID: 2100000, guid: 0f145a51257c53448aca6a300e4428d6, type: 2}
+  Tint: {r: 0.38, g: 0.86, b: 1, a: 1}
+  HotTint: {r: 0.62, g: 0.5, b: 1, a: 1}
+  CoreColor: {r: 1, g: 1, b: 1, a: 1}
+  MarkGlowSize: 0.75
+  MarkCoreSize: 0.22
+  FallbackRadius: 0.9
+  StacksPerMark: 5
+  SiphonStagger: 0.035
+  SiphonTravel: 0.24
+  SiphonCurve: 0.35
+  ChainSpacing: 0.055
+  ChainLinkSeconds: 0.12
+  VolleyDelay: 0.14
+  PopSeconds: 0.3
+  PopRing: 1.4
+  ImpactBurst: 0
+  BurstSeconds: 0.55
+  BurstRing: 4.6
+  BurstFlash: 5.6
+  SparkCount: 18
+  SparkReach: 2.8
+  ShowCount: 0
+  Font: {fileID: 11400000, guid: 8b7c6f6cea804344589d5103c21cf11c, type: 2}
+  Label: HACK
+  TextSize: 9
+  TextOffset: {x: 0, y: 1.6, z: 0}
+  TextHoldSeconds: 0.55
+  SortingLayer: FX
+  SortingOrder: 60

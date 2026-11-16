@@ -57,8 +57,11 @@ public sealed class HackingBossVisual : MonoBehaviour
         }
     }
 
-    /// <summary>소비로 사라진 묶음만 차례로 터뜨리고 나머지 빛점은 유지한다.</summary>
-    public void Detonate(int remaining, int capacity, int consumed)
+    /// <summary>
+    /// 소비로 사라진 묶음만 차례로 터뜨리고 나머지 빛점은 유지한다.
+    /// <paramref name="handOff"/>를 주면 그 자리에서 터뜨리지 않고 위치만 넘긴다(별도 연출이 이어받는다).
+    /// </summary>
+    public void Detonate(int remaining, int capacity, int consumed, System.Collections.Generic.List<Vector3> handOff = null)
     {
         RefreshSpriteFrame();
         int before = _visible;
@@ -68,6 +71,13 @@ public sealed class HackingBossVisual : MonoBehaviour
         {
             var mark = _marks[i];
             if (!mark.Attached) continue;
+            if (handOff != null)
+            {
+                handOff.Add(Position(mark));
+                mark.Attached = false; mark.PopAt = -1f;
+                Hide(mark);
+                continue;
+            }
             mark.Attached = false;
             mark.PopAt = Time.time + (i - _visible) * PopSpacing;
             mark.PopPosition = Position(mark);
