@@ -222,7 +222,8 @@ public abstract class UnitBase : MonoBehaviour, IDebuffSource
     public float GetStatBonus(StatKind kind, float leaderPassiveBonusScale = 1f)
     {
         float globalBonus = _deps?.TotemBuffManager?.GetGlobalStatBonus(kind) ?? 0f;
-        float cellBonus = currentCell?.Model.GetTotemCellBonus(kind) ?? 0f;
+        // Visual callbacks can run before cell initialization or after its Unity object is destroyed.
+        float cellBonus = currentCell != null ? currentCell.Model?.GetTotemCellBonus(kind) ?? 0f : 0f;
         float buffBonus = Buffs != null ? Buffs.GetStatMultiplier(kind) - 1f : 0f;
 
         float selfPassiveBonus = unitData?.passive != null
