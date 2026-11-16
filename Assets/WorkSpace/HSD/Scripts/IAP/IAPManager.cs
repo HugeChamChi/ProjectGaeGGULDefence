@@ -21,6 +21,12 @@ namespace GaeGGUL.IAP
 
         private StoreController _store;
         private readonly Dictionary<string, int> _diamondPayouts = new();
+        private readonly Dictionary<string, PackagePayout> _packagePayouts = new();
+        /// <summary>What the store grants for a package (catalog payouts), for display consistency checks.</summary>
+        public bool TryGetPackagePayout(string productId, out PackagePayout payout) => _packagePayouts.TryGetValue(productId, out payout);
+        private bool _sellsRemoveAds;
+        private bool Sells(string productId) => _diamondPayouts.ContainsKey(productId) || _packagePayouts.ContainsKey(productId)
+            || (_sellsRemoveAds && RemoveAdsIap.IsRemoveAds(productId));
         private readonly List<Button> _spawnedButtons = new();
         private DiamondPurchaseService _purchases;
         private string _owner;
@@ -63,7 +69,7 @@ namespace GaeGGUL.IAP
         public bool TryGetProductListing(string productId, out string price, out bool available)
         {
             price = null; available = false;
-            if (!_connected || _store == null || !_diamondPayouts.ContainsKey(productId)) return false;
+            if (!_connected || _store == null || !Sells(productId)) return false;
             var product = _store.GetProductById(productId);
             if (product == null || string.IsNullOrEmpty(product.metadata.localizedPriceString)) return false;
             price = product.metadata.localizedPriceString;
@@ -71,11 +77,21 @@ namespace GaeGGUL.IAP
             return true;
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Editor only: Unity IAP's fake store (purchase dialog, "$0.01" prices) stands in for Google Play so
+        /// package, diamond and remove-ads grants can be checked on the DEV_ test account. Receipts are not verified.
+        /// </summary>
+        private static bool EditorFakeStore => Application.isEditor;
+#else
+        private static bool EditorFakeStore => false;
+#endif
+
         private void Awake()
         {
             productButtonTemplate?.gameObject.SetActive(false);
             restoreButton?.onClick.AddListener(OnRestoreClicked);
-            if (Application.platform != RuntimePlatform.Android || Application.isEditor)
+            if (!EditorFakeStore && (Application.platform != RuntimePlatform.Android || Application.isEditor))
             {
                 SetListingStatus("기기 테스트 필요", "에디터 또는 Android 이외 환경에서는 Google Play 연결을 실행하지 않습니다.");
                 SetStatus("Google Play 기기 테스트 필요");
@@ -93,7 +109,9 @@ namespace GaeGGUL.IAP
         private void InitializeStore()
         {
             _owner = BackEnd.Backend.UserInDate;
-            _purchases = new DiamondPurchaseService(Player.PlayerData);
+            _purchases = EditorFakeStore
+                ? new DiamondPurchaseService(Player.PlayerData, (_, _) => UniTask.FromResult(true))
+                : new DiamondPurchaseService(Player.PlayerData);
 
             _store = UnityIAPServices.StoreController();
             _store.GooglePlayStoreExtendedService?.SetObfuscatedAccountId(DiamondPurchaseService.AccountHash(_owner));
@@ -132,9 +150,20 @@ namespace GaeGGUL.IAP
 
             try
             {
-                var definitions = DiamondIapCatalog.Build(ProductCatalog.LoadDefaultCatalog(), GooglePlay.Name, out var amounts);
+                var catalog = ProductCatalog.LoadDefaultCatalog();
+                var definitions = DiamondIapCatalog.Build(catalog, GooglePlay.Name, out var amounts);
                 _diamondPayouts.Clear();
                 foreach (var entry in amounts) _diamondPayouts.Add(entry.Key, entry.Value);
+                definitions.AddRange(PackageIapCatalog.Build(catalog, GooglePlay.Name, out var packages));
+                _packagePayouts.Clear();
+                foreach (var entry in packages) _packagePayouts.Add(entry.Key, entry.Value);
+                var removeAds = catalog.allProducts.FirstOrDefault(p => RemoveAdsIap.IsRemoveAds(p.id));
+                _sellsRemoveAds = removeAds != null;
+                if (_sellsRemoveAds)
+                {
+                    if (removeAds.type != ProductType.NonConsumable) throw new InvalidOperationException("remove_ads must be non-consumable.");
+                    definitions.Add(new ProductDefinition(removeAds.id, removeAds.GetStoreID(GooglePlay.Name) ?? removeAds.id, ProductType.NonConsumable));
+                }
                 SetListingStatus("가격 조회 중", "연결 성공 · Google Play 상품/현지 가격 응답 대기");
                 _store.FetchProducts(definitions);
             }
@@ -180,7 +209,8 @@ namespace GaeGGUL.IAP
                 button.gameObject.SetActive(true);
 
                 var label = button.GetComponentInChildren<TextMeshProUGUI>();
-                if (label != null) label.text = $"다이아 {_diamondPayouts[product.definition.id]:N0}개 - {product.metadata.localizedPriceString}";
+                if (label != null) label.text = _diamondPayouts.TryGetValue(product.definition.id, out int dia)
+                    ? $"다이아 {dia:N0}개 - {product.metadata.localizedPriceString}" : $"{product.definition.id} - {product.metadata.localizedPriceString}";
 
                 string productId = product.definition.id;
                 button.onClick.AddListener(() => PurchaseProduct(productId));
@@ -192,7 +222,7 @@ namespace GaeGGUL.IAP
 
         public void PurchaseProduct(string productId)
         {
-            if (!_connected || _store == null || !IsCurrentAccount() || _busy || _pending.Count > 0 || !_diamondPayouts.ContainsKey(productId)) return;
+            if (!_connected || _store == null || !IsCurrentAccount() || _busy || _pending.Count > 0 || !Sells(productId)) return;
             var product = _store.GetProductById(productId);
             if (product == null || !product.availableToPurchase)
             {
@@ -221,20 +251,33 @@ namespace GaeGGUL.IAP
                 var items = order?.CartOrdered?.Items().ToArray();
                 if (items == null || items.Length != 1 || items[0].Quantity != 1) throw new InvalidOperationException("Unexpected purchase cart.");
                 var product = items[0].Product;
-                if (!_diamondPayouts.TryGetValue(product.definition.id, out int amount)) throw new InvalidOperationException("Unknown diamond product.");
-                string id = DiamondPurchaseService.GoogleReceiptId(order.Info.Receipt, product.definition.storeSpecificId,
-                    order.Info.TransactionID, DiamondPurchaseService.AccountHash(_owner), Application.identifier);
+                bool isPackage = _packagePayouts.TryGetValue(product.definition.id, out var package);
+                bool isRemoveAds = _sellsRemoveAds && RemoveAdsIap.IsRemoveAds(product.definition.id);
+                if (!isPackage && !isRemoveAds && !_diamondPayouts.ContainsKey(product.definition.id)) throw new InvalidOperationException("Unknown store product.");
+                string id = EditorFakeStore
+                    ? "Editor:" + order.Info.TransactionID
+                    : DiamondPurchaseService.GoogleReceiptId(order.Info.Receipt, product.definition.storeSpecificId,
+                        order.Info.TransactionID, DiamondPurchaseService.AccountHash(_owner), Application.identifier);
                 _pending[id] = order;
-                if (!await _purchases.FulfillAsync(id, product.definition.id, amount, order.Info.Receipt) || !IsCurrentAccount())
+                // A paid order is always granted, even past a shop display limit; limits are enforced before purchase.
+                bool granted = isRemoveAds
+                    ? await _purchases.FulfillRemoveAdsAsync(id, order.Info.Receipt)
+                    : isPackage
+                    ? await _purchases.FulfillPackageAsync(id, product.definition.id, package, PackagePeriodKey(), order.Info.Receipt)
+                    : await _purchases.FulfillAsync(id, product.definition.id, _diamondPayouts[product.definition.id], order.Info.Receipt);
+                if (!granted || !IsCurrentAccount())
                 { SetStatus("지급 확인 대기 · 구매 복구로 재시도"); return; }
                 RefreshDiamondText();
                 _store.ConfirmPurchase(order);
-                SetStatus("다이아 지급 저장 완료");
+                SetStatus(isRemoveAds ? "광고 제거 저장 완료" : isPackage ? "패키지 지급 저장 완료" : "다이아 지급 저장 완료");
             }
             catch (Exception) { SetStatus("결제 확인 대기 · 자동 지급하지 않았습니다"); }
             finally { _busyProcessing = false; _busy = false; RefreshButtons(); }
         }
         private bool _busyProcessing;
+
+        /// <summary>Weekly period key stamped on package receipts ("주마다 1회").</summary>
+        public static string PackagePeriodKey() => GaeGGUL.Shop.DailyShopManager.GetPeriodKey(ServerClock.UtcNow, weekly: true);
 
         private void OnPurchaseConfirmed(Order order)
         {

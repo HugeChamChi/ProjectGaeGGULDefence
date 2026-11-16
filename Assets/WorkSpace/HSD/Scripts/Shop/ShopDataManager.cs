@@ -22,9 +22,9 @@ public class ShopDataManager : Global.IClearable
 
     public async Cysharp.Threading.Tasks.UniTask InitializeAsync()
     {
-        // Both periods share one server row; create/read it in order to avoid duplicate inserts.
+        // Weekly stock is no longer sold (2026-11-15: replaced by the weekly package). Its saved
+        // columns stay untouched in the shared row; only the daily list is read and written.
         await Daily.InitializeAsync();
-        if (Daily.IsReady) await Weekly.InitializeAsync();
         await Dynamic.InitializeAsync();
         IsInitialized = true;
     }

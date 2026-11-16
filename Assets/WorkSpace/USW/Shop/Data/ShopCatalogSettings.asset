@@ -24,3 +24,20 @@ MonoBehaviour:
   - ShopId: 3003
     GoldAmount: 0
     DiamondPrice: 0
+  EssenceName: "\uC815\uC218"
+  EssenceIcon: {fileID: 21300000, guid: d1700b56351decc4a8e3ccc8d2e462d2, type: 3}
+  GoldPiles:
+  - {fileID: 21300000, guid: 5521007c6cb42024492350517f67f00e, type: 3}
+  - {fileID: 21300000, guid: a5ad6634c98fc6a4f9781f59020df5dd, type: 3}
+  - {fileID: 21300000, guid: 913de0ef2aa1b8e45b9ba658558340a5, type: 3}
+  DiamondPiles:
+  - {fileID: 21300000, guid: 0d3baff96a299a645aafd7c7bafc3bea, type: 3}
+  - {fileID: 21300000, guid: e53feab8f0fcfef4da938f00f692f6ff, type: 3}
+  - {fileID: 21300000, guid: df7944cda29aa2146894f2272bba31d5, type: 3}
+  EssencePiles:
+  - {fileID: 21300000, guid: d1700b56351decc4a8e3ccc8d2e462d2, type: 3}
+  - {fileID: 21300000, guid: afd10c90ae5f49d4194032af9ea5e24c, type: 3}
+  - {fileID: 21300000, guid: a9d11667bf102674899aebfac7ba33d7, type: 3}
+  GoldCostIcon: {fileID: 21300000, guid: 5521007c6cb42024492350517f67f00e, type: 3}
+  DiamondCostIcon: {fileID: 21300000, guid: 0d3baff96a299a645aafd7c7bafc3bea, type: 3}
+  AdIcon: {fileID: 21300000, guid: 23bda90afcc08064684bca8b6d155142, type: 3}

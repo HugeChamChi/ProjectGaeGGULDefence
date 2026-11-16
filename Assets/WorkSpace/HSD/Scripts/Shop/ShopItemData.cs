@@ -5,7 +5,11 @@ public enum CurrencyType
     Diamond,
     Gold,
     Cash,
-    Free
+    Free,
+    /// <summary>Character upgrade token (UpgradeTokenA, shown as 정수). Shop reward only.</summary>
+    Essence,
+    /// <summary>Rewarded ad. Display only until the ad SDK is connected (TODO R07).</summary>
+    Ad
 }
 
 public enum ItemType

@@ -38,11 +38,14 @@ namespace GaeGGUL.Shop
         }
 
         protected virtual IEnumerable<ShopItemData> ItemPool => Table.Shop.Catalog.IsReady
-            ? Table.Shop.Catalog.Products(_weekly ? ShopCategory.Weekly : ShopCategory.Daily).Select(p => p.Item)
+            ? Table.Shop.Catalog.Products(ShopCategory.Daily).Select(p => p.Item)
             : throw new InvalidOperationException("ShopCatalog chart is not available.");
 
         private List<ShopItemData> _dailyItems = new List<ShopItemData>();
+        // Sold-out IDs (count reached the chart Limit) and per-item purchase counts for this period.
+        // The saved PurchasedItemIDs column repeats an ID once per purchase (ad rewards allow 2 a day).
         private HashSet<int> _purchasedItemIDs = new HashSet<int>();
+        private readonly Dictionary<int, int> _purchaseCounts = new Dictionary<int, int>();
         private string _inDate = string.Empty;
         private string _owner;
         private int _generation;
@@ -60,6 +63,20 @@ namespace GaeGGUL.Shop
 
         public List<ShopItemData> DailyItems => _dailyItems;
         public HashSet<int> PurchasedItemIDs => _purchasedItemIDs;
+        /// <summary>Purchases of an item in the current period.</summary>
+        public int PurchaseCount(int shopID) => _purchaseCounts.TryGetValue(shopID, out int n) ? n : 0;
+        /// <summary>Purchases allowed per period from the chart (at least 1).</summary>
+        public static int LimitOf(int shopID)
+        {
+            var product = Table.Shop.Catalog.IsReady ? Table.Shop.Catalog.Products(ShopCategory.Daily).FirstOrDefault(p => p.Item.ShopID == shopID) : null;
+            return Math.Max(1, product?.Limit ?? 1);
+        }
+        private void SetCount(int shopID, int count)
+        {
+            if (count <= 0) { _purchaseCounts.Remove(shopID); _purchasedItemIDs.Remove(shopID); return; }
+            _purchaseCounts[shopID] = count;
+            if (count >= LimitOf(shopID)) _purchasedItemIDs.Add(shopID); else _purchasedItemIDs.Remove(shopID);
+        }
         public bool IsReady => _ready;
 
         public void Clear()
@@ -67,6 +84,7 @@ namespace GaeGGUL.Shop
             _generation++; _owner = null; _ready = false; _buying = false;
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
+            _purchaseCounts.Clear();
             _inDate = string.Empty;
             _periodKey = null;
         }
@@ -119,25 +137,37 @@ namespace GaeGGUL.Shop
                             var item = id == 1001
                                 ? new ShopItemData(1001, ItemType.Currency, (int)CurrencyType.Diamond, 10, CurrencyType.Free, 0)
                                 : FindItem(id);
-                            if (item == null) throw new InvalidOperationException("Saved shop item is missing from chart.");
-                            _dailyItems.Add(item);
+                            // An id the current chart no longer sells makes the list differ; it is regenerated below.
+                            if (item != null) _dailyItems.Add(item);
                         }
                     }
 
-                    _purchasedItemIDs.Clear();
+                    _purchasedItemIDs.Clear(); _purchaseCounts.Clear();
                     JsonData purchasedIds = row[PurchasedColumn];
                     for (int i = 0; i < purchasedIds.Count; i++)
                     {
-                        _purchasedItemIDs.Add(int.Parse(purchasedIds[i].ToString()));
+                        int id = int.Parse(purchasedIds[i].ToString());
+                        SetCount(id, PurchaseCount(id) + 1);
                     }
                     _periodKey = period;
+                    // Daily stock is the fixed chart list. A row saved from an older list (random draw era or a chart
+                    // edit) is replaced now; purchases are kept per ShopID and recovered from the account below.
+                    // Compare the full terms, not only IDs: a saved snapshot must never charge an old price or cost.
+                    bool listChanged = !_dailyItems.Select(Terms).SequenceEqual(ChartItems().Select(Terms));
+                    if (listChanged)
+                    {
+                        var kept = new Dictionary<int, int>(_purchaseCounts);
+                        await GenerateDailyItemsAsync(timeout.Token);
+                        RequireCurrent(generation);
+                        foreach (var item in _dailyItems) if (kept.TryGetValue(item.ShopID, out int n)) SetCount(item.ShopID, n);
+                    }
                     // Preserve legacy purchases while adding an independent period stamp and item snapshot.
-                    if (!hasPeriod || !row.ContainsKey(ItemsColumn)) await SaveAsync();
+                    if (listChanged || !hasPeriod || !row.ContainsKey(ItemsColumn)) await SaveAsync();
                 }
                 RequireCurrent(generation);
                 // Recover a purchase whose account save succeeded before the stock row write.
                 foreach (var item in _dailyItems)
-                    if (Balances.IsShopPurchased(_periodKey, item.ShopID, _weekly)) _purchasedItemIDs.Add(item.ShopID);
+                    SetCount(item.ShopID, Math.Max(PurchaseCount(item.ShopID), Balances.ShopPurchaseCount(_periodKey, item.ShopID, _weekly)));
                 _ready = true;
             }
             catch (Exception error)
@@ -179,7 +209,9 @@ namespace GaeGGUL.Shop
             for (int i = 0; i < rows.Count; i++)
             {
                 var row = rows[i];
-                bool emptyLegacy = row.ContainsKey("DailyItemIDs") && row["DailyItemIDs"].IsArray && row["DailyItemIDs"].Count == 0 &&
+                // Legacy rows without a period stamp and without purchases carry nothing to protect, even when they
+                // hold an old stock list (2026-10 duplicate inserts, TODO V06). Rows with purchases stay ambiguous.
+                bool emptyLegacy = row.ContainsKey("DailyItemIDs") && row["DailyItemIDs"].IsArray &&
                     row.ContainsKey("PurchasedItemIDs") && row["PurchasedItemIDs"].IsArray && row["PurchasedItemIDs"].Count == 0 &&
                     !row.ContainsKey("DailyPeriodKey") && !row.ContainsKey("WeeklyPeriodKey") &&
                     !row.ContainsKey("DailyItemsJson") && !row.ContainsKey("WeeklyItemsJson") &&
@@ -201,16 +233,21 @@ namespace GaeGGUL.Shop
         protected virtual ShopItemData FindItem(int id) => ItemPool.FirstOrDefault(item => item.ShopID == id);
 
         /// <summary>Creates the authored daily selection after a confirmed read.</summary>
-        protected virtual async UniTask GenerateDailyItemsAsync(CancellationToken token)
+        protected virtual UniTask GenerateDailyItemsAsync(CancellationToken token)
         {
-            if (!Table.Shop.Catalog.IsReady) throw new InvalidOperationException("ShopCatalog chart is not available.");
-            var items = await ShopStockSelection.DrawAsync(Table.Shop.Catalog.Products(_weekly ? ShopCategory.Weekly : ShopCategory.Daily),
-                _weekly ? ShopCategory.Weekly : ShopCategory.Daily, token);
+            token.ThrowIfCancellationRequested();
             _dailyItems.Clear();
             _purchasedItemIDs.Clear();
-            foreach (var item in items)
+            _purchaseCounts.Clear();
+            foreach (var item in ChartItems())
                 _dailyItems.Add(new ShopItemData(item.ShopID, item.Type, item.ItemID, item.Amount, item.CurrencyType, item.Price));
+            return UniTask.CompletedTask;
         }
+
+        private static string Terms(ShopItemData item) => $"{item.ShopID}:{item.Type}:{item.ItemID}:{item.Amount}:{item.CurrencyType}:{item.Price}";
+
+        /// <summary>The fixed authored list for this period kind (weekly stock is no longer sold and stays empty).</summary>
+        protected virtual IEnumerable<ShopItemData> ChartItems() => _weekly ? Enumerable.Empty<ShopItemData>() : ItemPool;
 
         public async UniTask SaveAsync()
         {
@@ -224,7 +261,7 @@ namespace GaeGGUL.Shop
             param.Add(PeriodColumn, _periodKey);
             param.Add(ItemsColumn, JsonMapper.ToJson(_dailyItems));
 
-            List<int> purchasedIds = new List<int>(_purchasedItemIDs);
+            List<int> purchasedIds = _purchaseCounts.SelectMany(pair => Enumerable.Repeat(pair.Key, pair.Value)).ToList();
             param.Add(PurchasedColumn, purchasedIds);
 
             using var timeout = new CancellationTokenSource();
@@ -256,15 +293,16 @@ namespace GaeGGUL.Shop
             if (_periodKey != CurrentPeriodKey) { await InitializeAsync(); return false; }
             var item = _dailyItems.Find(value => value.ShopID == shopID);
             if (item == null) return false;
-            if (_purchasedItemIDs.Contains(shopID)) return false;
+            int limit = LimitOf(shopID);
+            if (PurchaseCount(shopID) >= limit) return false;
             _buying = true;
             int generation = _generation;
             var balances = Balances;
             try
             {
                 // Payment, reward and deduplication receipt share the same account snapshot.
-                if (!balances.TryPurchaseShopItem(item, _periodKey, _weekly)) return false;
-                _purchasedItemIDs.Add(shopID);
+                if (!balances.TryPurchaseShopItem(item, _periodKey, _weekly, limit: limit)) return false;
+                SetCount(shopID, PurchaseCount(shopID) + 1);
                 if (!await balances.TrySaveAsync()) { _ready = false; return false; }
                 RequireCurrent(generation);
                 await SaveAsync();

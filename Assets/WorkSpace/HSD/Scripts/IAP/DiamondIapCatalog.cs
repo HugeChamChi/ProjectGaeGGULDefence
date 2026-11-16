@@ -14,6 +14,8 @@ namespace GaeGGUL.IAP
             var storeIds = new HashSet<string>();
             foreach (var item in catalog.allProducts)
             {
+                if (PackageIapCatalog.IsPackage(item.id)) continue; // Multi-currency packages: PackageIapCatalog.
+                if (RemoveAdsIap.IsRemoveAds(item.id)) continue; // Non-consumable entitlement: RemoveAdsIap.
                 var payouts = item.Payouts.ToArray();
                 if (string.IsNullOrWhiteSpace(item.id) || item.type != ProductType.Consumable || payouts.Length != 1
                     || payouts[0].type != ProductCatalogPayout.ProductCatalogPayoutType.Currency || payouts[0].subtype != "Diamond"

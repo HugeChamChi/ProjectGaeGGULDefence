@@ -127,6 +127,116 @@
           "d": ""
         }
       ]
+    },
+    {
+      "id": "package_first_adventure",
+      "type": 0,
+      "storeIDs": [],
+      "defaultDescription": {
+        "googleLocale": 46,
+        "title": "첫 모험 패키지",
+        "description": "다이아 500개, 정수 60개, 골드 20,000개 (계정당 1회)"
+      },
+      "screenshotPath": "",
+      "applePriceTier": 0,
+      "googlePrice": {
+        "data": [
+          99,
+          0,
+          0,
+          131072
+        ],
+        "num": 0.99
+      },
+      "pricingTemplateID": "",
+      "descriptions": [],
+      "payouts": [
+        {
+          "t": "Currency",
+          "st": "Diamond",
+          "q": 500.0,
+          "d": ""
+        },
+        {
+          "t": "Currency",
+          "st": "Essence",
+          "q": 60.0,
+          "d": ""
+        },
+        {
+          "t": "Currency",
+          "st": "Gold",
+          "q": 20000.0,
+          "d": ""
+        }
+      ]
+    },
+    {
+      "id": "package_weekly_growth",
+      "type": 0,
+      "storeIDs": [],
+      "defaultDescription": {
+        "googleLocale": 46,
+        "title": "주간 성장 보급",
+        "description": "다이아 300개, 정수 30개, 골드 100,000개 (주마다 1회)"
+      },
+      "screenshotPath": "",
+      "applePriceTier": 0,
+      "googlePrice": {
+        "data": [
+          1099,
+          0,
+          0,
+          131072
+        ],
+        "num": 10.99
+      },
+      "pricingTemplateID": "",
+      "descriptions": [],
+      "payouts": [
+        {
+          "t": "Currency",
+          "st": "Diamond",
+          "q": 300.0,
+          "d": ""
+        },
+        {
+          "t": "Currency",
+          "st": "Essence",
+          "q": 30.0,
+          "d": ""
+        },
+        {
+          "t": "Currency",
+          "st": "Gold",
+          "q": 100000.0,
+          "d": ""
+        }
+      ]
+    },
+    {
+      "id": "remove_ads",
+      "type": 1,
+      "storeIDs": [],
+      "defaultDescription": {
+        "googleLocale": 46,
+        "title": "광고 제거",
+        "description": "상점 광고 보상을 광고 시청 없이 바로 받습니다. (계정당 1회, 영구)"
+      },
+      "screenshotPath": "",
+      "applePriceTier": 0,
+      "googlePrice": {
+        "data": [
+          499,
+          0,
+          0,
+          131072
+        ],
+        "num": 4.99
+      },
+      "pricingTemplateID": "",
+      "descriptions": [],
+      "payouts": []
     }
   ]
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -8,24 +9,44 @@ using LitJson;
 
 namespace GaeGGUL.Shop
 {
-    public enum ShopCategory { Daily, Weekly, Gold, InApp }
+    /// <summary>Chart section. Reserved values are kept so saved data and old rows never renumber.</summary>
+    public enum ShopCategory { Daily, Weekly, Gold, InApp, Package, Essence }
+
+    /// <summary>One extra reward shown inside a package banner.</summary>
+    public sealed class ShopReward
+    {
+        public CurrencyType Currency;
+        public int Amount;
+    }
 
     public sealed class ShopCatalogProduct
     {
         public ShopCategory Section;
+        public string Name;
         public int SortOrder;
-        public bool FixedFree;
-        public int Weight;
         public string StoreId;
+        /// <summary>Purchases allowed per period (daily rows: per day). 0 means unlimited.</summary>
+        public int Limit;
+        /// <summary>Display tag such as "계정당 1회" (packages).</summary>
+        public string Tag;
+        /// <summary>Package limit window: Account (once ever) or Weekly. Empty for other sections.</summary>
+        public string LimitPeriod;
+        /// <summary>Main reward first, then package extras, in display order.</summary>
+        public List<ShopReward> Rewards = new List<ShopReward>();
         public ShopItemData Item;
     }
 
-    /// <summary>One applied backend chart owns stock. Store prices and receipts remain with Unity IAP.</summary>
+    /// <summary>
+    /// Shop stock from two applied backend charts: ShopDailyList (fixed daily products) and
+    /// ShopCatalog (packages, gold, essence, in-app diamonds). Store prices and receipts remain with Unity IAP.
+    /// </summary>
     public sealed class ShopCatalogTable
     {
         public const string ChartName = ChartEnvironment.Prefix + "ShopCatalog";
         public const string DailyChartName = ChartEnvironment.Prefix + "ShopDailyList";
-        public const string WeeklyChartName = ChartEnvironment.Prefix + "ShopWeeklyList";
+        /// <summary>Products shown per section; the lobby shop layout has exactly these slots.</summary>
+        public static int Capacity(ShopCategory section) => section == ShopCategory.Package ? 2 : section == ShopCategory.Weekly ? 0 : 3;
+
         private List<ShopCatalogProduct> _products = new List<ShopCatalogProduct>();
         public bool IsReady { get; private set; }
         public IEnumerable<ShopCatalogProduct> Products(ShopCategory section) => _products.Where(p => p.Section == section);
@@ -39,16 +60,15 @@ namespace GaeGGUL.Shop
             try
             {
                 var combined = new JsonData(); combined.SetJsonType(JsonType.Array);
-                var names = new[] { DailyChartName, WeeklyChartName, ChartName };
+                var names = new[] { DailyChartName, ChartName };
                 var charts = await BackendChartReader.ReadManyAsync(names, timeout.Token);
                 foreach (string name in names)
                 {
                     var rows = charts[name];
                     for (int i = 0; i < rows.Count; i++)
                     {
-                        string section = rows[i]["Section"].ToString();
-                        if (name == DailyChartName ? section != "Daily" : name == WeeklyChartName ? section != "Weekly" : section != "Gold" && section != "InApp")
-                            throw new FormatException("Wrong shop section in chart: " + name);
+                        bool daily = rows[i]["Section"].ToString() == nameof(ShopCategory.Daily);
+                        if (name == DailyChartName != daily) throw new FormatException("Wrong shop section in chart: " + name);
                         combined.Add(rows[i]);
                     }
                 }
@@ -59,6 +79,7 @@ namespace GaeGGUL.Shop
             catch (Exception e) { UnityEngine.Debug.LogWarning("[ShopCatalog] Shop unavailable: " + e.Message); }
         }
 
+        /// <summary>Validates every row (enabled or not) and returns enabled products in display order.</summary>
         public static List<ShopCatalogProduct> Parse(JsonData rows)
         {
             var result = new List<ShopCatalogProduct>();
@@ -67,44 +88,79 @@ namespace GaeGGUL.Shop
             for (int i = 0; i < rows.Count; i++)
             {
                 var r = rows[i];
-                int Number(string key) => int.Parse(r[key].ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                string Text(string key) => r.ContainsKey(key) && r[key] != null ? r[key].ToString().Trim() : "";
+                int Number(string key) => int.Parse(Text(key), NumberStyles.Integer, CultureInfo.InvariantCulture);
                 T Choice<T>(string key) where T : struct
                 {
-                    string value = r[key].ToString();
+                    string value = Text(key);
                     if (!Enum.GetNames(typeof(T)).Contains(value)) throw new FormatException("Invalid " + key + ": " + value);
                     return (T)Enum.Parse(typeof(T), value);
                 }
-                int fixedFree = Number("FixedFree");
-                int weight = Number("Weight");
-                int enabled = Number("Enabled"), id = Number("ShopID"), amount = Number("Amount"), price = Number("Price"), order = Number("SortOrder");
+                int id = Number("ShopID");
+                int enabled = Number("Enabled"), amount = Number("Amount"), price = Number("Price"), order = Number("SortOrder"), limit = Number("Limit");
                 var section = Choice<ShopCategory>("Section");
                 var reward = Choice<CurrencyType>("RewardCurrency");
                 var cost = Choice<CurrencyType>("CurrencyType");
-                bool candidate = (section == ShopCategory.Daily || section == ShopCategory.Weekly) && fixedFree == 0;
-                if (weight < 0 || weight > 1000000 || (candidate ? weight == 0 : weight != 0)) throw new FormatException("Invalid shop weight: " + id);
-                string store = r["StoreID"].ToString();
-                if ((enabled != 0 && enabled != 1) || id <= 0 || !ids.Add(id) || amount <= 0 || price < 0 || order < 0)
-                    throw new FormatException("Invalid shop product: " + id);
-                if ((fixedFree != 0 && fixedFree != 1) || (fixedFree == 1 && ((section != ShopCategory.Daily && section != ShopCategory.Weekly) || cost != CurrencyType.Free || price != 0)))
-                    throw new FormatException("Invalid fixed free product: " + id);
-                if (reward != CurrencyType.Gold && reward != CurrencyType.Diamond) throw new FormatException("Unsupported reward currency: " + reward);
-                if (section == ShopCategory.InApp)
+                string store = Text("StoreID"), tag = Text("Tag"), name = Text("Name"), period = Text("LimitPeriod");
+                string Fail(string why) => $"Invalid shop product {id}: {why}";
+
+                if (id <= 0 || !ids.Add(id)) throw new FormatException(Fail("duplicate or non-positive ShopID"));
+                if ((enabled != 0 && enabled != 1) || amount <= 0 || price < 0 || order < 0 || limit < 0) throw new FormatException(Fail("range"));
+                if (reward != CurrencyType.Gold && reward != CurrencyType.Diamond && reward != CurrencyType.Essence) throw new FormatException(Fail("reward currency"));
+                if (store != "" && !stores.Add(store)) throw new FormatException(Fail("duplicate StoreID"));
+                bool freeLike = cost == CurrencyType.Free || cost == CurrencyType.Ad;
+                switch (section)
                 {
-                    if (reward != CurrencyType.Diamond || cost != CurrencyType.Cash || price != 0 || string.IsNullOrWhiteSpace(store) || !stores.Add(store))
-                        throw new FormatException("Invalid IAP product: " + id);
+                    case ShopCategory.Daily:
+                        if (store != "" || cost == CurrencyType.Cash || cost == CurrencyType.Essence || (freeLike ? price != 0 : price <= 0) || limit < 1)
+                            throw new FormatException(Fail("daily rows need Free/Ad (price 0) or Gold/Diamond cost and Limit >= 1"));
+                        break;
+                    case ShopCategory.Gold:
+                    case ShopCategory.Essence:
+                        var expected = section == ShopCategory.Gold ? CurrencyType.Gold : CurrencyType.Essence;
+                        if (reward != expected || cost != CurrencyType.Diamond || price <= 0 || store != "" || limit != 0)
+                            throw new FormatException(Fail(section + " exchange requires " + expected + " for diamonds"));
+                        break;
+                    case ShopCategory.InApp:
+                        if (reward != CurrencyType.Diamond || cost != CurrencyType.Cash || price != 0 || store == "" || limit != 0)
+                            throw new FormatException(Fail("in-app rows grant diamonds through a StoreID"));
+                        break;
+                    case ShopCategory.Package:
+                        // Price is the displayed KRW amount until the store product exists (purchase not connected).
+                        if (cost != CurrencyType.Cash || price <= 0 || limit < 1 || tag == "" || (period != "Account" && period != "Weekly"))
+                            throw new FormatException(Fail("package rows need Cash price, Limit, Tag and LimitPeriod Account/Weekly"));
+                        break;
+                    default: throw new FormatException(Fail("section " + section + " is no longer sold"));
                 }
-                else if (store != "" || cost == CurrencyType.Cash || (cost == CurrencyType.Free ? price != 0 : price <= 0))
-                    throw new FormatException("Invalid shop price: " + id);
-                if (section == ShopCategory.Gold && (reward != CurrencyType.Gold || cost != CurrencyType.Diamond))
-                    throw new FormatException("Gold exchange requires diamonds: " + id);
-                if (enabled == 1) result.Add(new ShopCatalogProduct { Section = section, FixedFree = fixedFree == 1, Weight = weight, SortOrder = order, StoreId = store,
-                    Item = new ShopItemData(id, ItemType.Currency, (int)reward, amount, cost, price) });
+                var product = new ShopCatalogProduct
+                {
+                    Section = section, Name = name, SortOrder = order, StoreId = store, Limit = limit, Tag = tag, LimitPeriod = period,
+                    Item = new ShopItemData(id, ItemType.Currency, (int)reward, amount, cost, price)
+                };
+                product.Rewards.Add(new ShopReward { Currency = reward, Amount = amount });
+                product.Rewards.AddRange(ParseExtras(Text("ExtraRewards"), id));
+                if (section != ShopCategory.Package && (product.Rewards.Count > 1 || period != "")) throw new FormatException(Fail("ExtraRewards and LimitPeriod are for packages only"));
+                if (product.Rewards.Count > 3) throw new FormatException(Fail("a package shows at most three rewards"));
+                if (enabled == 1) result.Add(product);
             }
-            foreach (var section in new[] { ShopCategory.Gold, ShopCategory.InApp })
-                if (result.Count(p => p.Section == section) > 6) throw new FormatException("More than six products: " + section);
-            foreach (var section in new[] { ShopCategory.Daily, ShopCategory.Weekly })
-                if (result.Count(p => p.Section == section && p.FixedFree) > 1) throw new FormatException("Duplicate fixed free product: " + section);
-            return result.OrderBy(p => p.Section).ThenByDescending(p => p.FixedFree).ThenBy(p => p.SortOrder).ThenBy(p => p.Item.ShopID).ToList();
+            foreach (ShopCategory section in Enum.GetValues(typeof(ShopCategory)))
+                if (result.Count(p => p.Section == section) > Capacity(section)) throw new FormatException($"More than {Capacity(section)} enabled products: {section}");
+            return result.OrderBy(p => p.Section).ThenBy(p => p.SortOrder).ThenBy(p => p.Item.ShopID).ToList();
+        }
+
+        /// <summary>Parses "Essence:60;Gold:20000".</summary>
+        private static IEnumerable<ShopReward> ParseExtras(string text, int id)
+        {
+            if (text == "") yield break;
+            foreach (string part in text.Split(';'))
+            {
+                var pair = part.Split(':');
+                if (pair.Length != 2 || !Enum.TryParse(pair[0].Trim(), out CurrencyType currency) ||
+                    (currency != CurrencyType.Gold && currency != CurrencyType.Diamond && currency != CurrencyType.Essence) ||
+                    !int.TryParse(pair[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int amount) || amount <= 0)
+                    throw new FormatException($"Invalid ExtraRewards in shop product {id}: {text}");
+                yield return new ShopReward { Currency = currency, Amount = amount };
+            }
         }
     }
 }

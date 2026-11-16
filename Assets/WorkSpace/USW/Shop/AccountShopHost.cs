@@ -8,28 +8,38 @@ using UnityEngine;
 
 namespace GaeGGUL.Shop.UI
 {
+    /// <summary>Lobby shop: binds chart/account products to the authored page and runs purchases.</summary>
     public sealed class AccountShopHost : MonoBehaviour
     {
         public ShopPageView page;
         public ShopCatalogSettings settings;
         public TMP_Text feedback;
+        [Tooltip("Optional backdrop shown while a feedback message is visible.")]
+        public GameObject feedbackRoot;
+        [Tooltip("Seconds a feedback message stays visible.")]
+        public float feedbackSeconds = 2.5f;
+        private float _feedbackUntil;
+        [Tooltip("Optional store status text. Shown only in non-editor debug builds while store prices are missing.")]
+        public TMP_Text storeDiagnostics;
         private IAPManager _iap;
         private bool _buying;
         private bool _purchaseUncertain;
         private CancellationTokenSource _visible;
         private float _nextStockRetry;
-        private TMP_Text _storeDiagnostics;
 
         private void OnEnable()
         {
             page.PurchaseRequested += Purchase;
+            page.RemoveAdsRequested += BuyRemoveAds;
             if (_iap != null) _iap.ProductsChanged += Refresh;
+            Say("", 0f);
             _visible = new CancellationTokenSource();
             RefreshLoop(_visible.Token).Forget();
         }
         private void OnDisable()
         {
             page.PurchaseRequested -= Purchase;
+            page.RemoveAdsRequested -= BuyRemoveAds;
             _visible?.Cancel(); _visible?.Dispose(); _visible = null;
             if (_iap != null) _iap.ProductsChanged -= Refresh;
         }
@@ -48,11 +58,9 @@ namespace GaeGGUL.Shop.UI
                             _iap.ProductsChanged += Refresh;
                         }
                         if (!_buying && Player.Shop.IsInitialized &&
-                            (Time.realtimeSinceStartup >= _nextStockRetry || Player.Shop.Daily.IsReady && Player.Shop.Weekly.IsReady))
+                            (Time.realtimeSinceStartup >= _nextStockRetry || Player.Shop.Daily.IsReady))
                         {
                             await Player.Shop.Daily.RefreshIfNeededAsync();
-                            if (token.IsCancellationRequested) return;
-                            await Player.Shop.Weekly.RefreshIfNeededAsync();
                             _nextStockRetry = Time.realtimeSinceStartup + 30f;
                         }
                     }
@@ -67,49 +75,74 @@ namespace GaeGGUL.Shop.UI
         {
             if (this == null || !isActiveAndEnabled) return;
             page.SetSource(new AccountShopProductSource(settings, _iap));
+            if (ServerClock.IsSynced) page.SetDailyReset(TimeUntilDailyReset(ServerClock.UtcNow));
             RefreshStoreDiagnostics();
+            RefreshRemoveAds();
+            if (!_buying && _feedbackUntil > 0f && Time.realtimeSinceStartup >= _feedbackUntil) Say("", 0f);
             if (_buying || _purchaseUncertain)
                 foreach (var section in page.sections)
                     foreach (var slot in section.Slots) slot.buyButton.interactable = false;
         }
+
+        private void RefreshRemoveAds()
+        {
+            if (Player.PlayerData.IsReady && Player.PlayerData.HasRemoveAds) { page.SetRemoveAds("광고 제거됨", false); return; }
+            if (_iap != null && _iap.TryGetProductListing(RemoveAdsIap.ProductId, out string price, out bool available))
+                page.SetRemoveAds("광고 제거 " + price, available && !_buying && !_purchaseUncertain);
+            else page.SetRemoveAds("광고 제거", true); // Not listed yet: a tap explains it is not ready.
+        }
+
+        private void BuyRemoveAds()
+        {
+            if (!Player.PlayerData.IsReady || Player.PlayerData.HasRemoveAds || _buying || _purchaseUncertain) return;
+            if (_iap == null || !_iap.TryGetProductListing(RemoveAdsIap.ProductId, out _, out bool available) || !available) { Say("준비 중이에요"); return; }
+            _iap.PurchaseProduct(RemoveAdsIap.ProductId);
+        }
+
+        /// <summary>Daily stock resets at 05:00 KST (DailyShopManager.GetPeriodKey).</summary>
+        public static TimeSpan TimeUntilDailyReset(DateTime utc)
+        {
+            var local = utc.AddHours(9 - 5);
+            return local.Date.AddDays(1) - local;
+        }
+
         private void RefreshStoreDiagnostics()
         {
-            var section = Array.Find(page.sections, s => s.Kind == ShopSection.Diamond);
-            if (_storeDiagnostics == null)
-            {
-                var go = new GameObject("StoreDiagnostics", typeof(RectTransform), typeof(UnityEngine.UI.LayoutElement), typeof(TextMeshProUGUI));
-                go.transform.SetParent(section.Root, false); go.transform.SetSiblingIndex(1);
-                _storeDiagnostics = go.GetComponent<TMP_Text>();
-                _storeDiagnostics.font = section.Slots[0].price.font;
-                _storeDiagnostics.fontSize = 23; _storeDiagnostics.color = new Color(1f, .82f, .45f);
-                _storeDiagnostics.richText = false; _storeDiagnostics.raycastTarget = false;
-                _storeDiagnostics.textWrappingMode = TextWrappingModes.Normal;
-            }
-            string details = _iap != null ? _iap.GetListingDiagnostics() : "Google Play: 스토어 초기화 대기\n계정·재화 데이터 로드를 기다리고 있습니다.";
-            _storeDiagnostics.gameObject.SetActive(!string.IsNullOrEmpty(details));
-            if (_storeDiagnostics.text == details) return;
-            _storeDiagnostics.text = details;
-            float width = Mathf.Max(300, section.Root.rect.width - 24);
-            _storeDiagnostics.GetComponent<UnityEngine.UI.LayoutElement>().preferredHeight = _storeDiagnostics.GetPreferredValues(details, width, 0).y + 24;
-            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(page.scroll.content);
+            if (storeDiagnostics == null) return;
+            string details = Debug.isDebugBuild && !Application.isEditor && _iap != null ? _iap.GetListingDiagnostics() : "";
+            storeDiagnostics.gameObject.SetActive(!string.IsNullOrEmpty(details));
+            if (storeDiagnostics.text != details) storeDiagnostics.text = details;
         }
+
+        private void Say(string text) => Say(text, feedbackSeconds);
+        private void Say(string text, float seconds)
+        {
+            if (this == null) return;
+            if (feedback != null) feedback.text = text;
+            if (feedbackRoot != null) feedbackRoot.SetActive(!string.IsNullOrEmpty(text));
+            _feedbackUntil = string.IsNullOrEmpty(text) ? 0f : Time.realtimeSinceStartup + seconds;
+        }
+
         private void Purchase(ShopSection section, ShopProductSlot slot) => PurchaseAsync(section, slot.product).Forget();
         private async UniTaskVoid PurchaseAsync(ShopSection section, ShopProductViewData product)
         {
+            if (product.ComingSoon) { Say("준비 중이에요"); return; }
+            if (product.Locked) { Say((product.CostCurrency == CurrencyType.Gold ? "골드" : "다이아") + "가 부족해요"); return; }
             if (_buying || _purchaseUncertain || !Player.PlayerData.IsReady) return;
-            if (section == ShopSection.Diamond)
+            if (section == ShopSection.Diamond || section == ShopSection.Package)
             {
                 _iap?.PurchaseProduct(product.StoreId);
                 return;
             }
             _buying = true; Refresh();
-            if (feedback != null) feedback.text = "구매 확인 중…";
+            Say("구매 확인 중…");
             try
             {
                 bool success;
-                if (section == ShopSection.Gold)
+                if (section == ShopSection.Gold || section == ShopSection.Essence)
                 {
-                    var item = Table.Shop.Catalog.Products(ShopCategory.Gold).FirstOrDefault(p => p.Item.ShopID == product.ShopId);
+                    var category = section == ShopSection.Gold ? ShopCategory.Gold : ShopCategory.Essence;
+                    var item = Table.Shop.Catalog.Products(category).FirstOrDefault(p => p.Item.ShopID == product.ShopId);
                     success = item != null && Player.PlayerData.TryPurchaseShopItem(item.Item, "exchange", repeatable: true);
                     if (success)
                     {
@@ -117,18 +150,27 @@ namespace GaeGGUL.Shop.UI
                         _purchaseUncertain = !success;
                     }
                 }
-                else success = await (section == ShopSection.Daily ? Player.Shop.Daily : Player.Shop.Weekly).BuyItem(product.ShopId);
-                bool uncertain = _purchaseUncertain ||
-                    section == ShopSection.Daily && !Player.Shop.Daily.IsReady ||
-                    section == ShopSection.Weekly && !Player.Shop.Weekly.IsReady;
-                if (this != null && feedback != null) feedback.text = success ? "구매 완료" : uncertain
-                    ? "구매 결과를 확인해야 합니다. 재접속해 주세요."
-                    : "구매하지 못했어요. 잔액을 확인해 주세요.";
+                else if (section == ShopSection.Daily && product.CostCurrency == CurrencyType.Ad)
+                {
+                    // Remove-ads owners get the reward without watching; the daily limit still applies.
+                    if (!Player.PlayerData.HasRemoveAds)
+                    {
+                        Say("광고 불러오는 중…");
+                        // The reward is granted only after the SDK reports an earned reward.
+                        bool watched = await ShopAds.ShowAsync(settings.RewardedAdUnitIdAndroid, this.GetCancellationTokenOnDestroy());
+                        if (!watched) { Say("광고를 끝까지 보면 받을 수 있어요"); return; }
+                    }
+                    success = await Player.Shop.Daily.BuyItem(product.ShopId);
+                }
+                else if (section == ShopSection.Daily) success = await Player.Shop.Daily.BuyItem(product.ShopId);
+                else success = false;
+                bool uncertain = _purchaseUncertain || section == ShopSection.Daily && !Player.Shop.Daily.IsReady;
+                Say(success ? "구매 완료" : uncertain ? "구매 결과를 확인해야 합니다. 재접속해 주세요." : "구매하지 못했어요. 잔액을 확인해 주세요.");
             }
             catch (Exception error)
             {
                 Debug.LogWarning("Shop purchase failed: " + error.GetType().Name);
-                if (this != null && feedback != null) feedback.text = "구매 결과를 확인해야 합니다. 재접속해 주세요.";
+                Say("구매 결과를 확인해야 합니다. 재접속해 주세요.");
             }
             finally { _buying = false; if (this != null) Refresh(); }
         }

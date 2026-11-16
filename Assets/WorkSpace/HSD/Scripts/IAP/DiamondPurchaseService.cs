@@ -68,6 +68,60 @@ namespace GaeGGUL.IAP
             finally { _busy = false; }
         }
 
+        /// <summary>Same contract as <see cref="FulfillAsync"/> for multi-currency packages.</summary>
+        public async UniTask<bool> FulfillPackageAsync(string id, string productId, PackagePayout payout, string period, string receipt)
+        {
+            if (_busy || !_balances.IsReady || string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(productId) || payout == null || payout.Diamond <= 0) return false;
+            _busy = true;
+            var snapshot = _balances.Data;
+            try
+            {
+                var previous = snapshot.DiamondPurchases?.Find(value => value.Id == id);
+                if (previous != null)
+                {
+                    if (previous.ProductId != productId) return false;
+                }
+                else
+                {
+                    if (!await _verify(receipt, productId) || !_balances.IsReady || !ReferenceEquals(snapshot, _balances.Data)) return false;
+                    if (!_balances.TryApplyPackagePurchase(new DiamondPurchaseReceipt
+                        { Id = id, ProductId = productId, Diamond = payout.Diamond, Gold = payout.Gold, Essence = payout.Essence, Period = period })) return false;
+                }
+                // TryApplyPackagePurchase replaces the data snapshot; compare against the current one from here.
+                snapshot = _balances.Data;
+                bool saved = await _balances.TrySaveAsync();
+                if (saved && _balances.IsDirty) saved = await _balances.TrySaveAsync();
+                return saved && !_balances.IsDirty && _balances.IsReady && ReferenceEquals(snapshot, _balances.Data);
+            }
+            finally { _busy = false; }
+        }
+
+        /// <summary>Records the non-consumable "remove ads" receipt. Confirm the store order only when true is returned.</summary>
+        public async UniTask<bool> FulfillRemoveAdsAsync(string id, string receipt)
+        {
+            if (_busy || !_balances.IsReady || string.IsNullOrWhiteSpace(id)) return false;
+            _busy = true;
+            var snapshot = _balances.Data;
+            try
+            {
+                var previous = snapshot.DiamondPurchases?.Find(value => value.Id == id);
+                if (previous != null)
+                {
+                    if (!RemoveAdsIap.IsRemoveAds(previous.ProductId)) return false;
+                }
+                else if (!_balances.HasRemoveAds)
+                {
+                    if (!await _verify(receipt, RemoveAdsIap.ProductId) || !_balances.IsReady || !ReferenceEquals(snapshot, _balances.Data)) return false;
+                    if (!_balances.TryApplyRemoveAdsPurchase(id)) return false;
+                }
+                snapshot = _balances.Data;
+                bool saved = await _balances.TrySaveAsync();
+                if (saved && _balances.IsDirty) saved = await _balances.TrySaveAsync();
+                return saved && !_balances.IsDirty && _balances.IsReady && ReferenceEquals(snapshot, _balances.Data);
+            }
+            finally { _busy = false; }
+        }
+
         private static async UniTask<bool> VerifyGoogleAsync(string receipt, string productId)
         {
             if (!Backend.IsLogin) return false;

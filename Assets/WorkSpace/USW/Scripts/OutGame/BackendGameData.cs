@@ -420,7 +420,7 @@ public class BackendGameData
         var ids = new System.Collections.Generic.HashSet<string>();
         foreach (var receipt in history)
             if (receipt == null || string.IsNullOrWhiteSpace(receipt.Id) || string.IsNullOrWhiteSpace(receipt.ProductId)
-                || receipt.Diamond <= 0 || !ids.Add(receipt.Id))
+                || (receipt.Diamond <= 0 && !GaeGGUL.IAP.RemoveAdsIap.IsRemoveAds(receipt.ProductId)) || receipt.Diamond < 0 || !ids.Add(receipt.Id))
                 throw new FormatException("Invalid diamond purchase history; existing grants must be preserved.");
         return history;
     }

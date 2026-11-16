@@ -249,6 +249,46 @@ public class PlayerDataController : IDisposable, Global.IClearable
         SaveAndRefresh(); return true;
     }
 
+    /// <summary>Grants a verified package receipt (diamonds, gold, essence) once per receipt id.</summary>
+    public bool TryApplyPackagePurchase(GaeGGUL.IAP.DiamondPurchaseReceipt receipt)
+    {
+        if (!IsReady || receipt == null || string.IsNullOrWhiteSpace(receipt.Id) || string.IsNullOrWhiteSpace(receipt.ProductId)
+            || receipt.Diamond <= 0 || receipt.Gold < 0 || receipt.Essence < 0) return false;
+        _data.DiamondPurchases ??= new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>();
+        var previous = _data.DiamondPurchases.Find(value => value.Id == receipt.Id);
+        if (previous != null) return previous.ProductId == receipt.ProductId && previous.Diamond == receipt.Diamond
+            && previous.Gold == receipt.Gold && previous.Essence == receipt.Essence;
+        if (!CanAdd(_data.Diamond, receipt.Diamond) || (receipt.Gold > 0 && !CanAdd(_data.Gold, receipt.Gold))) return false;
+        var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
+        try { next.Diamond += receipt.Diamond; next.Gold += receipt.Gold; if (receipt.Essence > 0) AddEssence(next, receipt.Essence); }
+        catch (OverflowException) { return false; }
+        next.DiamondPurchases.Add(new GaeGGUL.IAP.DiamondPurchaseReceipt
+        {
+            Id = receipt.Id, ProductId = receipt.ProductId, Diamond = receipt.Diamond,
+            Gold = receipt.Gold, Essence = receipt.Essence, Period = receipt.Period
+        });
+        _data = next; SaveAndRefresh(); return true;
+    }
+
+    /// <summary>Records the verified non-consumable "remove ads" receipt (no currency) once per account.</summary>
+    public bool TryApplyRemoveAdsPurchase(string receiptId)
+    {
+        if (!IsReady || string.IsNullOrWhiteSpace(receiptId)) return false;
+        _data.DiamondPurchases ??= new System.Collections.Generic.List<GaeGGUL.IAP.DiamondPurchaseReceipt>();
+        var previous = _data.DiamondPurchases.Find(value => value.Id == receiptId);
+        if (previous != null) return GaeGGUL.IAP.RemoveAdsIap.IsRemoveAds(previous.ProductId);
+        if (HasRemoveAds) return true; // Already owned through another receipt; nothing more to record.
+        _data.DiamondPurchases.Add(new GaeGGUL.IAP.DiamondPurchaseReceipt { Id = receiptId, ProductId = GaeGGUL.IAP.RemoveAdsIap.ProductId });
+        SaveAndRefresh(); return true;
+    }
+
+    /// <summary>True once this account owns "remove ads": shop ad rewards are granted without watching.</summary>
+    public bool HasRemoveAds => StorePurchaseCount(GaeGGUL.IAP.RemoveAdsIap.ProductId) > 0;
+
+    /// <summary>Granted purchases of a store product; with a period key, only those in that period.</summary>
+    public int StorePurchaseCount(string productId, string period = null) => !IsReady || _data.DiamondPurchases == null ? 0
+        : System.Linq.Enumerable.Count(_data.DiamondPurchases, r => r.ProductId == productId && (period == null || r.Period == period));
+
     /// <summary>Claims today's attendance reward and records the day in the same durable snapshot.</summary>
     /// <returns>The claimed day (1-7), or 0 when nothing was granted.</returns>
     public void VisitEventMissions(DateTimeOffset now) { if(IsReady && GGD.Events.EventMissions.Visit(_data,now))SaveAndRefresh(); }
@@ -350,6 +390,22 @@ public class PlayerDataController : IDisposable, Global.IClearable
         SaveAndRefresh();
         return true;
     }
+    /// <summary>
+    /// 결과창 보상 더 받기(광고)의 추가 계정 경험치. 같은 판의 광고 보상 영수증(grantId, 골드/정수 지급이 남김)이 있으면 주지 않는다.
+    /// 호출자는 이 직후 같은 grantId로 골드/정수를 지급해 영수증을 남긴다.
+    /// </summary>
+    /// <returns>최대 레벨 제한을 거쳐 실제로 들어간 경험치.</returns>
+    public int ApplyBonusAccountExperience(string grantId, AccountProgressionConfig config, int experience)
+    {
+        if (!IsReady || config == null || experience <= 0 || string.IsNullOrWhiteSpace(grantId)) return 0;
+        if (_data.RewardInventory.Receipts.Exists(x => x.GrantId == grantId)) return 0;
+        int actual = config.Apply(_data.PlayerLevel, _data.PlayerExp, experience, out int level, out int remaining);
+        if (actual <= 0) return 0;
+        _data.PlayerLevel = level; _data.PlayerExp = remaining;
+        _data.MaxExp = config.CurrentRequiredExperience[level - 1];
+        SaveAndRefresh();
+        return actual;
+    }
     /// <summary>Updates the authenticated nickname's PlayerData mirror.</summary>
     public void SetNickname(string name) { if (!IsReady || _data.PlayerName == name) return; _data.PlayerName = name; SaveAndRefresh(); }
     /// <summary>Persists damage-number preference.</summary>
@@ -419,16 +475,19 @@ public class PlayerDataController : IDisposable, Global.IClearable
         SaveAndRefresh();
     }
 
-    public bool IsShopPurchased(string day, int id, bool weekly = false) => IsReady && (weekly
-        ? _data.WeeklyShopPurchasePeriod == day && _data.WeeklyShopPurchases.Contains(id)
-        : _data.ShopPurchaseDay == day && _data.ShopPurchases.Contains(id));
+    public bool IsShopPurchased(string day, int id, bool weekly = false) => ShopPurchaseCount(day, id, weekly) > 0;
+
+    /// <summary>Times an item was bought in the period; the receipt list repeats an ID per purchase.</summary>
+    public int ShopPurchaseCount(string day, int id, bool weekly = false) => !IsReady ? 0 : weekly
+        ? (_data.WeeklyShopPurchasePeriod == day ? System.Linq.Enumerable.Count(_data.WeeklyShopPurchases, x => x == id) : 0)
+        : (_data.ShopPurchaseDay == day ? System.Linq.Enumerable.Count(_data.ShopPurchases, x => x == id) : 0);
 
     /// <summary>Price, reward and period receipt commit in one durable/account snapshot.</summary>
-    public bool TryPurchaseShopItem(ShopItemData item, string day, bool weekly = false, bool repeatable = false)
+    public bool TryPurchaseShopItem(ShopItemData item, string day, bool weekly = false, bool repeatable = false, int limit = 1)
     {
         if (!IsReady || item == null || item.ItemID < 0 || string.IsNullOrEmpty(day)) return false;
         if (item.Type == ItemType.Character && item.ItemID == 0) return false;
-        if (!repeatable && IsShopPurchased(day, item.ShopID, weekly)) return true;
+        if (!repeatable && ShopPurchaseCount(day, item.ShopID, weekly) >= Math.Max(1, limit)) return limit <= 1; // single-purchase receipt is idempotent
         var next = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(_data));
         if (!DeductPurchase(next, item.CurrencyType, item.Price) || item.Amount <= 0) return false;
         try
@@ -436,6 +495,7 @@ public class PlayerDataController : IDisposable, Global.IClearable
             if (item.Type == ItemType.Character) AddPurchasedUnit(next, item.ItemID, item.Amount);
             else if (item.Type == ItemType.Currency && (CurrencyType)item.ItemID == CurrencyType.Gold) next.Gold = checked(next.Gold + item.Amount);
             else if (item.Type == ItemType.Currency && (CurrencyType)item.ItemID == CurrencyType.Diamond) next.Diamond = checked(next.Diamond + item.Amount);
+            else if (item.Type == ItemType.Currency && (CurrencyType)item.ItemID == CurrencyType.Essence) AddEssence(next, item.Amount);
             else return false; // Unsupported legacy item rewards must never charge the player.
         }
         catch (OverflowException) { return false; }
@@ -458,10 +518,20 @@ public class PlayerDataController : IDisposable, Global.IClearable
     private static bool DeductPurchase(PlayerData next, CurrencyType currency, int price)
     {
         if (price < 0) return false;
-        if (currency == CurrencyType.Free) return price == 0;
+        // Ad rewards are granted by the shop host only after a completed ad view (ShopAds).
+        if (currency == CurrencyType.Free || currency == CurrencyType.Ad) return price == 0;
         if (currency == CurrencyType.Gold && next.Gold >= price) { next.Gold -= price; return true; }
         if (currency == CurrencyType.Diamond && next.Diamond >= price) { next.Diamond -= price; return true; }
         return false;
+    }
+
+    /// <summary>정수 is the character upgrade token (RewardInventory currency 4, DeckUpgradeCurrency.Token).</summary>
+    private const int EssenceCurrencyId = 4;
+    private static void AddEssence(PlayerData next, int amount)
+    {
+        var owned = next.RewardInventory.Owned.Find(x => x.Type == RewardType.Currency && x.TargetId == EssenceCurrencyId);
+        if (owned == null) { owned = new RewardOwnedEntry { Type = RewardType.Currency, TargetId = EssenceCurrencyId }; next.RewardInventory.Owned.Add(owned); }
+        owned.Count = checked(owned.Count + amount);
     }
 
     private static void AddPurchasedUnit(PlayerData next, int id, int amount)
