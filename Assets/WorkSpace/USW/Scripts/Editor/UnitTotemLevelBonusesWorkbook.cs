@@ -93,7 +93,27 @@ public static class UnitTotemLevelBonusesWorkbook
 
     private static string RowKey(JsonData row) => row["UnitKey"] + " Lv" + row["Level"] + " #" + row["PartIndex"];
 
-    private static string Quote(string text) => JsonMapper.ToJson(text);
+    // LitJson cannot write a bare string as a whole document ("Can't add a value here"), so escape by hand.
+    private static string Quote(string text)
+    {
+        var builder = new StringBuilder("\"");
+        foreach (char ch in text)
+        {
+            switch (ch)
+            {
+                case '"': builder.Append("\\\""); break;
+                case '\\': builder.Append("\\\\"); break;
+                case '\n': builder.Append("\\n"); break;
+                case '\r': builder.Append("\\r"); break;
+                case '\t': builder.Append("\\t"); break;
+                default:
+                    if (ch < ' ') builder.Append("\\u").Append(((int)ch).ToString("x4"));
+                    else builder.Append(ch);
+                    break;
+            }
+        }
+        return builder.Append('"').ToString();
+    }
 
     // Numbers compare by value so "0.1" and "0.10" count as equal.
     private static string Normal(string text, string column)

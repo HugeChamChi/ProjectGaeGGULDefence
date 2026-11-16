@@ -36,17 +36,17 @@ public static class UnitTotemLevelBonusChecks
             Check(E(S("Disigman", 11, UnitBonusStat.SkillDamagePercent), .4f), "Disigman skill damage +20%+20%");
             Check(E(S("Disigman", 15, UnitBonusStat.ChargeAttackReductionFlat), 1), "Disigman charge -1");
             Check(E(S("Betan", 3, UnitBonusStat.AttackPercent), .1f), "Betan attack +10%");
-            Check(E(S("Betan", 15, UnitBonusStat.DroneCountFlat), 4), "Betan drones +4");
+            Check(E(S("Betan", 15, UnitBonusStat.DroneCountFlat), 0), "Betan drones follow the arm table, no level-effect drones (11-15 decision)");
             Check(E(S("Betan", 12, UnitBonusStat.BombDamagePercent), .25f), "Betan bomb +10%+15%");
             Check(E(S("Betan", 9, UnitBonusStat.SkillCooldownPercent), .15f), "Betan cooldown -15%");
             Check(E(S("Betan", 14, UnitBonusStat.ThirdSkillExtraBomb), 0), "Betan no extra bomb before 15");
             Check(E(S("Betan", 15, UnitBonusStat.ThirdSkillExtraBomb), 1) && E(S("Betan", 15, UnitBonusStat.BombCycleEvery), 3), "Betan Lv15 every 3rd skill +1 bomb");
-            // Old code: before 6 none, 6-8 one per 10, 9-14 two per 10, 15 one per 3.
+            // Before 6 none, 6-8 one per 10, 9-14 two per 10, 15 two per 3 (11-15 user decision; old code was one per 3).
             (int, int) D(int level) => ((int)S("Deltan", level, UnitBonusStat.ExtraProjectileCount), (int)S("Deltan", level, UnitBonusStat.ExtraProjectileEvery));
             Check(D(5).Item1 == 0, "Deltan no extra projectile before 6");
             Check(D(6) == (1, 10) && D(8) == (1, 10), "Deltan 6-8: 1 per 10");
             Check(D(9) == (2, 10) && D(14) == (2, 10), "Deltan 9-14: 2 per 10");
-            Check(D(15) == (1, 3), "Deltan 15: 1 per 3");
+            Check(D(15) == (2, 3), "Deltan 15: 2 per 3 (11-15 decision)");
             Check(E(S("Deltan", 3, UnitBonusStat.BasicAttackFrequencyPercent), .05f), "Deltan attack speed +5%");
             Check(E(S("Deltan", 12, UnitBonusStat.HackingBasicDamagePerStack), .005f), "Deltan 0.5% per stack");
             Check(E(S("Deltan", 15, UnitBonusStat.HackingCapacityFlat), 15), "Deltan capacity +15");
@@ -81,9 +81,9 @@ public static class UnitTotemLevelBonusChecks
             Check(Rejects("unknown stat", rows => { rows[0]["Stat"] = "Nope"; return rows; }), "rejects unknown stat");
             Check(Rejects("numeric stat", rows => { rows[0]["Stat"] = "3"; return rows; }), "rejects numeric stat");
             Check(Rejects("negative", rows => { rows[0]["Value"] = "-1"; return rows; }), "rejects negative value");
-            Check(Rejects("fraction", rows => { First(rows, "DroneCountFlat")["Value"] = "1.5"; return rows; }), "rejects fractional drone count");
+            Check(Rejects("fraction", rows => { First(rows, "HackingCapacityFlat")["Value"] = "1.5"; return rows; }), "rejects fractional whole-number stat");
             Check(Rejects("cooldown", rows => { First(rows, "SkillCooldownPercent")["Value"] = "1"; return rows; }), "rejects cooldown 100%");
-            Check(Rejects("gap", rows => { First(rows, "DroneCountFlat")["PartIndex"] = "2"; return rows; }), "rejects PartIndex gap");
+            Check(Rejects("gap", rows => { First(rows, "ExtraProjectileEvery")["PartIndex"] = "2"; return rows; }), "rejects PartIndex gap");
             Check(Rejects("description", rows => { rows[0]["Description"] = ""; return rows; }), "rejects empty description");
             Check(Rejects("period", rows => { First(rows, "ExtraProjectileEvery")["Value"] = "0"; return rows; }), "rejects period 0");
             Check(Rejects("unknown unit", rows => { rows[0]["UnitKey"] = "Frog"; return rows; }), "rejects unknown unit");
