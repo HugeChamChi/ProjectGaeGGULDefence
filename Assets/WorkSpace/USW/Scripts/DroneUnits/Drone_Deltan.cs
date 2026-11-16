@@ -44,7 +44,7 @@ public class Drone_Deltan : HackingDroneSpawner
         _postHackingExpiryPending = false;
         return true;
     }
-    public int LevelProductionBonus => Mathf.RoundToInt(LevelStat(currentTier switch { Tier.Normal => UnitBonusStat.HackingProducedNormal, Tier.Rare => UnitBonusStat.HackingProducedRare, Tier.Epic => UnitBonusStat.HackingProducedEpic, _ => UnitBonusStat.HackingProducedLegend }));
+    public int LevelProductionBonus => Mathf.RoundToInt(LevelStat(GrowthTier switch { Tier.Normal => UnitBonusStat.HackingProducedNormal, Tier.Rare => UnitBonusStat.HackingProducedRare, Tier.Epic => UnitBonusStat.HackingProducedEpic, _ => UnitBonusStat.HackingProducedLegend }));
     /// <summary>마나 카드까지 반영한 필요 공격 횟수.</summary>
     public int RequiredAttacks
     {
@@ -61,7 +61,7 @@ public class Drone_Deltan : HackingDroneSpawner
     public int ChargedAttacks => Mathf.Min(_attackCount, RequiredAttacks);
     /// <summary>선택지와 이월 소수량을 포함한 다음 시전의 생산량. 조회는 상태를 바꾸지 않는다.</summary>
     public int NextProduction => Mathf.FloorToInt(ExactProduction);
-    private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.GetStacksProduced(currentTier) : 0)
+    private float ExactProduction => ((unitData?.Hacking != null ? unitData.Hacking.GetStacksProduced(GrowthTier) : 0)
         + LevelProductionBonus + (DroneEffects?.HackingProductionFlat ?? 0))
         * (DroneEffects?.HackingCompressionMultiplier ?? 1)
         * (1f + (DroneEffects?.HackingProductionBonus ?? 0f)) + _productionRemainder;

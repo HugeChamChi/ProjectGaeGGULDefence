@@ -41,7 +41,7 @@ public class Drone_Zeltan : UnitBase
             if (_burstCheckElapsed >= interval)
             {
                 _burstCheckElapsed = 0f;
-                if (Random.value < LevelStat(UnitBonusStat.FoodBurstChance)) _burstRemaining = duration;
+                if (Random.value < LevelStat(UnitBonusStat.FoodBurstChance)) { _burstRemaining = duration; PlayLevelBurstVisual(); }
             }
         }
     }
@@ -139,6 +139,12 @@ public class Drone_Zeltan : UnitBase
     }
 
     private void OnDisable() => BossBase.OnAnyBossDied -= OnBossKilled;
+
+    /// <summary>The level food-doubling window has no own effect; the Spine skill motion shows that it started.</summary>
+    private void PlayLevelBurstVisual()
+    {
+        if (_spineVisual != null && _spineVisual.isActiveAndEnabled) _spineVisual.PlaySkill();
+    }
 
     private void PlayFoodPayoutVisual()
     {

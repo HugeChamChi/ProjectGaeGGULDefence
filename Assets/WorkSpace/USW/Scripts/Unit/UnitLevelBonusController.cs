@@ -7,13 +7,13 @@ public sealed class UnitLevelBonusController
     public const string BasicSkillCycle = "basic_skill";
     /// <summary>
     /// Stats where the highest unlocked level's value replaces lower ones instead of adding to them
-    /// (multipliers, periods, durations and the Deltan extra-projectile count).
+    /// (multipliers, periods, durations, the Deltan extra-projectile count and the Disigman repeat period).
     /// </summary>
     public static readonly HashSet<UnitBonusStat> ReplacedStats = new()
     {
         UnitBonusStat.FoodFifthMultiplier, UnitBonusStat.ExtraProjectileCount, UnitBonusStat.ExtraProjectileEvery,
         UnitBonusStat.BombCycleEvery, UnitBonusStat.FoodBurstIntervalSeconds, UnitBonusStat.FoodBurstDurationSeconds,
-        UnitBonusStat.FoodBurstMultiplier
+        UnitBonusStat.FoodBurstMultiplier, UnitBonusStat.SkillRepeatEvery
     };
     private readonly Dictionary<UnitBonusStat, float> stats = new();
     private readonly List<EveryNthCycleBonus> cycles = new();

@@ -36,7 +36,7 @@ namespace GGD.BackendCharts
         {
             UnitBonusStat.DroneCountFlat, UnitBonusStat.ChargeAttackReductionFlat, UnitBonusStat.HackingCapacityFlat,
             UnitBonusStat.ThirdSkillExtraBomb, UnitBonusStat.ExtraProjectileCount, UnitBonusStat.ExtraProjectileEvery,
-            UnitBonusStat.BombCycleEvery
+            UnitBonusStat.BombCycleEvery, UnitBonusStat.SkillRepeatEvery, UnitBonusStat.HackingSaveFlat
         };
 
         /// <summary>Ratios that must stay below 1 (100%).</summary>
@@ -54,7 +54,7 @@ namespace GGD.BackendCharts
         /// <summary>Periods and durations: when present they must be at least this.</summary>
         private static readonly Dictionary<UnitBonusStat, float> Minimums = new()
         {
-            { UnitBonusStat.ExtraProjectileEvery, 1f }, { UnitBonusStat.BombCycleEvery, 1f },
+            { UnitBonusStat.ExtraProjectileEvery, 1f }, { UnitBonusStat.BombCycleEvery, 1f }, { UnitBonusStat.SkillRepeatEvery, 1f },
             { UnitBonusStat.FoodBurstIntervalSeconds, 0.1f }, { UnitBonusStat.FoodBurstDurationSeconds, 0.1f },
             { UnitBonusStat.FoodBurstMultiplier, 1f }
         };

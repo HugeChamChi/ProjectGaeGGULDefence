@@ -125,7 +125,7 @@ public class Drone_Betan : DroneSpawnerBase
         if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Playing) return;
         var target = SkillDebuffTarget;
         if (target == null || target.IsDead || expectedTarget is not null && target != expectedTarget) return;
-        float coefficient = unitData.GetSelfDestructCoefficient(currentTier);
+        float coefficient = unitData.GetSelfDestructCoefficient(GrowthTier);
         if (!(coefficient > 0f) || float.IsInfinity(coefficient))
         {
             Debug.LogError("[Drone_Betan] A finite positive self-destruct coefficient must be authored on UnitData.");

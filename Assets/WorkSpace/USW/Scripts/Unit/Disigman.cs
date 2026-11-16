@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>A direct-fire unit that restores time after charging with its own basic attacks.</summary>
@@ -6,6 +7,8 @@ public sealed class Disigman : UnitBase
     [SerializeField] private Transform _muzzle;
     private UnitDependencies _dependencies;
     private int _chargedAttacks;
+    private int _acceptedCasts;
+    private bool _repeatQueued;
     private BossBase _recoveryShotTarget;
     public bool RecoveryShotReady => _recoveryShotTarget != null && !_recoveryShotTarget.IsDead;
     private void ClearLockedRecoveryShot() { if (CurrentLevel < 6) ClearRecoveryShot(); }
@@ -51,6 +54,8 @@ public sealed class Disigman : UnitBase
         _dependencies = dependencies;
         OnLevelChanged += ClearLockedRecoveryShot;
         _chargedAttacks = 0;
+        _acceptedCasts = 0;
+        _repeatQueued = false;
         Subscribe();
     }
 
@@ -87,6 +92,31 @@ public sealed class Disigman : UnitBase
         ClearRecoveryShot();
         if (LevelStat(UnitBonusStat.RecoveryNextBasicPercent) > 0f)
         { _recoveryShotTarget = target; target.OnDeath += ClearRecoveryShot; }
+        QueueLevelRepeat();
         return true;
+    }
+
+    /// <summary>
+    /// Level milestone SkillRepeatEvery: every Nth normal cast refills the charge so the same skill (shot, time
+    /// recovery and presentation) runs once more right after. The repeat itself does not count toward the cycle.
+    /// </summary>
+    private void QueueLevelRepeat()
+    {
+        if (_repeatQueued) { _repeatQueued = false; return; }
+        _acceptedCasts++;
+        int every = Mathf.RoundToInt(LevelStat(UnitBonusStat.SkillRepeatEvery));
+        if (every <= 0 || _acceptedCasts % every != 0) return;
+        _repeatQueued = true;
+        RefillForRepeatAsync(this.GetCancellationTokenOnDestroy()).Forget();
+    }
+
+    /// <summary>Gap between the cast and its level repeat so the two shots read as two (scaled time, so pauses hold it).</summary>
+    private const float RepeatGapSeconds = 0.4f;
+
+    private async Cysharp.Threading.Tasks.UniTaskVoid RefillForRepeatAsync(System.Threading.CancellationToken token)
+    {
+        if (await Cysharp.Threading.Tasks.UniTask.Delay(System.TimeSpan.FromSeconds(RepeatGapSeconds), cancellationToken: token)
+            .SuppressCancellationThrow()) return;
+        if (_repeatQueued) _chargedAttacks = RequiredAttacks;
     }
 }

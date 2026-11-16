@@ -7,8 +7,8 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Edit-mode checks for the in-game level table (TODO VC8-LT): bundled rows match the confirmed table that used to live
-/// in PrototypeLevelBonuses.cs (c051b018), the workbook matches the bundled rows, and malformed charts are rejected.
+/// Edit-mode checks for the in-game level table (TODO VC8-LT, LV-REDESIGN 2026-11-16): bundled rows match the confirmed
+/// table, the workbook matches the bundled rows, and malformed charts are rejected.
 /// </summary>
 public static class UnitTotemLevelBonusChecks
 {
@@ -32,34 +32,34 @@ public static class UnitTotemLevelBonusChecks
             float S(string key, int level, UnitBonusStat stat) => new UnitLevelBonusController(table[key], level).GetStat(stat);
             bool E(float actual, float expected) => Math.Abs(actual - expected) < 1e-5f;
 
-            Check(E(S("Disigman", 15, UnitBonusStat.BasicAttackFrequencyPercent), .2f), "Disigman attack speed +10%+10%");
-            Check(E(S("Disigman", 11, UnitBonusStat.SkillDamagePercent), .4f), "Disigman skill damage +20%+20%");
-            Check(E(S("Disigman", 15, UnitBonusStat.ChargeAttackReductionFlat), 1), "Disigman charge -1");
-            Check(E(S("Betan", 3, UnitBonusStat.AttackPercent), .1f), "Betan attack +10%");
+            // 2026-11-16 LV-REDESIGN table (outputs/level-effects-redesign-20261116/DESIGN.md).
+            Check(E(S("Disigman", 15, UnitBonusStat.BasicAttackFrequencyPercent), .2f), "Disigman attack speed +10% at 3 and 9");
+            Check(E(S("Disigman", 5, UnitBonusStat.SkillRepeatEvery), 0) && E(S("Disigman", 6, UnitBonusStat.SkillRepeatEvery), 3), "Disigman 6: every 3rd skill repeats");
+            Check(E(S("Disigman", 11, UnitBonusStat.ChargeAttackReductionFlat), 0) && E(S("Disigman", 12, UnitBonusStat.ChargeAttackReductionFlat), 1), "Disigman 12: charge -1");
+            Check(E(S("Disigman", 15, UnitBonusStat.AttackPercent), .3f) && E(S("Disigman", 15, UnitBonusStat.SkillDamagePercent), 0), "Disigman 15: attack +30%, no skill damage rows");
+            Check(E(S("Betan", 15, UnitBonusStat.AttackPercent), .3f), "Betan attack +10% (3) +20% (15)");
             Check(E(S("Betan", 15, UnitBonusStat.DroneCountFlat), 0), "Betan drones follow the arm table, no level-effect drones (11-15 decision)");
-            Check(E(S("Betan", 12, UnitBonusStat.BombDamagePercent), .25f), "Betan bomb +10%+15%");
+            Check(E(S("Betan", 15, UnitBonusStat.BombDamagePercent), .1f), "Betan bomb +10% only at 6");
             Check(E(S("Betan", 9, UnitBonusStat.SkillCooldownPercent), .15f), "Betan cooldown -15%");
-            Check(E(S("Betan", 14, UnitBonusStat.ThirdSkillExtraBomb), 0), "Betan no extra bomb before 15");
-            Check(E(S("Betan", 15, UnitBonusStat.ThirdSkillExtraBomb), 1) && E(S("Betan", 15, UnitBonusStat.BombCycleEvery), 3), "Betan Lv15 every 3rd skill +1 bomb");
-            // Before 6 none, 6-8 one per 10, 9-14 two per 10, 15 two per 3 (11-15 user decision; old code was one per 3).
-            (int, int) D(int level) => ((int)S("Deltan", level, UnitBonusStat.ExtraProjectileCount), (int)S("Deltan", level, UnitBonusStat.ExtraProjectileEvery));
-            Check(D(5).Item1 == 0, "Deltan no extra projectile before 6");
-            Check(D(6) == (1, 10) && D(8) == (1, 10), "Deltan 6-8: 1 per 10");
-            Check(D(9) == (2, 10) && D(14) == (2, 10), "Deltan 9-14: 2 per 10");
-            Check(D(15) == (2, 3), "Deltan 15: 2 per 3 (11-15 decision)");
-            Check(E(S("Deltan", 3, UnitBonusStat.BasicAttackFrequencyPercent), .05f), "Deltan attack speed +5%");
-            Check(E(S("Deltan", 12, UnitBonusStat.HackingBasicDamagePerStack), .005f), "Deltan 0.5% per stack");
-            Check(E(S("Deltan", 15, UnitBonusStat.HackingCapacityFlat), 15), "Deltan capacity +15");
+            Check(E(S("Betan", 11, UnitBonusStat.ThirdSkillExtraBomb), 0), "Betan no extra bomb before 12");
+            Check(E(S("Betan", 12, UnitBonusStat.ThirdSkillExtraBomb), 1) && E(S("Betan", 12, UnitBonusStat.BombCycleEvery), 3), "Betan 12: every 3rd skill +1 bomb");
+            Check(E(S("Deltan", 15, UnitBonusStat.ExtraProjectileCount), 0), "Deltan has no extra projectiles (11-16 decision)");
+            Check(E(S("Deltan", 15, UnitBonusStat.BasicAttackFrequencyPercent), .15f), "Deltan attack speed +5% (3) +10% (15)");
+            Check(E(S("Deltan", 5, UnitBonusStat.HackingCapacityFlat), 0) && E(S("Deltan", 6, UnitBonusStat.HackingCapacityFlat), 5), "Deltan 6: capacity +5");
+            Check(E(S("Deltan", 9, UnitBonusStat.AttackPercent), .15f), "Deltan 9: attack +15%");
+            Check(E(S("Deltan", 11, UnitBonusStat.HackingBasicDamagePerStack), 0) && E(S("Deltan", 12, UnitBonusStat.HackingBasicDamagePerStack), .005f), "Deltan 12: 0.5% per stack");
             Check(E(S("Gamman", 15, UnitBonusStat.SkillDamagePercent), .3f), "Gamman detonation damage +10%+20%");
             Check(E(S("Gamman", 15, UnitBonusStat.SkillCooldownPercent), .3f), "Gamman cooldown -10%-20%");
-            Check(E(S("Gamman", 15, UnitBonusStat.HackingRefundPercent), .2f), "Gamman refund 20%");
-            Check(E(S("Zeltan", 15, UnitBonusStat.FoodPercent), .3f), "Zeltan food +10%+20%");
-            Check(E(S("Zeltan", 15, UnitBonusStat.FoodSpeedPercent), .3f), "Zeltan food speed +10%+20%");
-            Check(E(S("Zeltan", 14, UnitBonusStat.FoodBurstChance), 0), "Zeltan no burst before 15");
-            Check(E(S("Zeltan", 15, UnitBonusStat.FoodBurstChance), .5f) && E(S("Zeltan", 15, UnitBonusStat.FoodBurstIntervalSeconds), 10)
-                && E(S("Zeltan", 15, UnitBonusStat.FoodBurstDurationSeconds), 5) && E(S("Zeltan", 15, UnitBonusStat.FoodBurstMultiplier), 2),
-                "Zeltan Lv15 50% every 10s, 5s, x2");
-            Check(table["Betan"][0].Description == "공격력 +10%, 전투 드론 +1기", "description text kept");
+            Check(E(S("Gamman", 11, UnitBonusStat.HackingSaveFlat), 0) && E(S("Gamman", 12, UnitBonusStat.HackingSaveFlat), 3), "Gamman 12: 3 stacks saved");
+            Check(E(S("Gamman", 15, UnitBonusStat.HackingRefundPercent), 0), "Gamman no percent refund");
+            Check(E(S("Zeltan", 15, UnitBonusStat.FoodPercent), .3f), "Zeltan food +10% (3) +20% (15)");
+            Check(E(S("Zeltan", 15, UnitBonusStat.FoodSpeedPercent), .1f), "Zeltan food speed +10% at 9");
+            Check(E(S("Zeltan", 5, UnitBonusStat.BossFoodSeconds), 0) && E(S("Zeltan", 6, UnitBonusStat.BossFoodSeconds), 5), "Zeltan 6: boss kill 5s food");
+            Check(E(S("Zeltan", 11, UnitBonusStat.FoodBurstChance), 0), "Zeltan no burst before 12");
+            Check(E(S("Zeltan", 12, UnitBonusStat.FoodBurstChance), .5f) && E(S("Zeltan", 12, UnitBonusStat.FoodBurstIntervalSeconds), 10)
+                && E(S("Zeltan", 12, UnitBonusStat.FoodBurstDurationSeconds), 5) && E(S("Zeltan", 12, UnitBonusStat.FoodBurstMultiplier), 2),
+                "Zeltan 12: 50% every 10s, 5s, x2");
+            Check(table["Betan"][0].Description == "공격력 +10%", "description text kept");
             Check(!ReferenceEquals(UnitTotemLevelBonusChart.Bundled()["Betan"][0], new List<UnitLevelBonusDefinition>()), "bundled table cached");
 
             string workbook = UnitTotemLevelBonusesWorkbook.Check(UnitTotemLevelBonusesWorkbook.SourcePath);
@@ -83,9 +83,9 @@ public static class UnitTotemLevelBonusChecks
             Check(Rejects("negative", rows => { rows[0]["Value"] = "-1"; return rows; }), "rejects negative value");
             Check(Rejects("fraction", rows => { First(rows, "HackingCapacityFlat")["Value"] = "1.5"; return rows; }), "rejects fractional whole-number stat");
             Check(Rejects("cooldown", rows => { First(rows, "SkillCooldownPercent")["Value"] = "1"; return rows; }), "rejects cooldown 100%");
-            Check(Rejects("gap", rows => { First(rows, "ExtraProjectileEvery")["PartIndex"] = "2"; return rows; }), "rejects PartIndex gap");
+            Check(Rejects("gap", rows => { First(rows, "BombCycleEvery")["PartIndex"] = "2"; return rows; }), "rejects PartIndex gap");
             Check(Rejects("description", rows => { rows[0]["Description"] = ""; return rows; }), "rejects empty description");
-            Check(Rejects("period", rows => { First(rows, "ExtraProjectileEvery")["Value"] = "0"; return rows; }), "rejects period 0");
+            Check(Rejects("period", rows => { First(rows, "SkillRepeatEvery")["Value"] = "0"; return rows; }), "rejects period 0");
             Check(Rejects("unknown unit", rows => { rows[0]["UnitKey"] = "Frog"; return rows; }), "rejects unknown unit");
             Check(Rejects("column", rows => { ((System.Collections.IDictionary)rows[0]).Remove("Value"); return rows; }), "rejects missing column");
         }
