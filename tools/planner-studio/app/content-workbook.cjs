@@ -25,19 +25,23 @@ function write(project,names){
 function column(address){return address.replace(/[0-9]+$/,'');}
 function inspect(bytes){
   const book=open(bytes);if(book.sheets.has('Events')){book.sheets.set('MissionEvents',book.sheets.get('Events'));book.sheets.delete('Events');}
-  const e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]||n==='BonusDescription');
+  const e=engine(),names=[...book.sheets.keys()].filter(n=>e.PlannerScope.active.has(n)||n==='ShopDailyList'||n==='RewardGroup'||e.UnitKeys.headers[n]||e.AttendanceEvents.headers[n]||n==='BonusDescription');
   if(!names.length)throw Error('기획작업실의 콘텐츠 Excel 양식이 아닙니다.');
   let count=0;
   const tables={};
   for(const name of names){
-    const sheet=book.sheets.get(name),headers=new Map();let schema=e.STUDIO_SCHEMAS[name]||e.BonusModel.legacySchemas[name]||{label:name,fields:e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]};
+    const sheet=book.sheets.get(name),headers=new Map();let schema=(name==='ShopDailyList'&&e.STUDIO_SCHEMAS.ShopCatalog)||e.STUDIO_SCHEMAS[name]||e.BonusModel.legacySchemas[name]||{label:name,fields:e.UnitKeys.fields[name]||e.AttendanceEvents.fields[name]};
     for(const address of sheet.cells.keys())if(/^[A-Z]+1$/.test(address))headers.set(column(address),book.get(name,address).value);
     if(name==='BonusEffect'&&[...headers.values()].includes('UnitKey'))schema=e.BonusModel.legacySchemas.BonusEffect;
     else if(name==='BonusEffect'&&[...headers.values()].includes('Every'))schema=e.BonusModel.legacySchemas.BonusEffectV2;
     // Normalize old column names before validating, including ambiguous old/new duplicates.
     for(const [col,key]of headers){const field=schema.fields.find(f=>f.legacyAliases?.includes(key));if(field)headers.set(col,field.key);}
     let fields=schema.fields.filter(f=>!f.hidden&&f.export!==false);
-    if(name==='ShopCatalog'&&![...headers.values()].includes('Weight'))fields=fields.filter(f=>f.key!=='Weight');
+    // Shop: the game workbooks (Data/Balance/ShopCatalog.xlsx, ShopDailyList.xlsx) have no memo column and the daily one has no LimitPeriod.
+    if(name==='ShopCatalog'||name==='ShopDailyList'){
+      if([...headers.values()].includes('FixedFree')||[...headers.values()].includes('Weight'))throw Error(name+': 옛 추첨형 상점 양식(FixedFree/Weight)입니다. 지금 양식은 Data/Balance/ShopCatalog.xlsx, ShopDailyList.xlsx 열입니다.');
+      fields=fields.filter(f=>f.key!=='LimitPeriod'||[...headers.values()].includes('LimitPeriod'));
+    }
     if(name==='Missions'&&![...headers.values()].includes('MissionType'))fields=fields.filter(f=>f.key!=='MissionType');
     if(name==='MissionEvents'&&![...headers.values()].includes('ClaimEndAt'))fields=fields.filter(f=>f.key!=='ClaimEndAt');
     if(name==='ItemFunction'&&![...headers.values()].includes('Rewards'))fields=schema.fields.filter(f=>f.key!=='Rewards'&&f.key!=='FunctionDrafts');
@@ -66,11 +70,21 @@ function inspect(bytes){
       }return result;
     });count+=tables[name].length;
   }
-  return {tables,names,count,sha256:hash(bytes),label:names.map(n=>e.STUDIO_SCHEMAS[n]?.label||({Units:'유닛',BaseStats:'기본 스탯',UpgradeStats:'강화 증가량',LevelBonuses:'레벨 보너스'}[n])).join(' · ')};
+  return {tables,names,count,sha256:hash(bytes),label:names.map(n=>e.STUDIO_SCHEMAS[n]?.label||({ShopDailyList:'일일 상점',Units:'유닛',BaseStats:'기본 스탯',UpgradeStats:'강화 증가량',LevelBonuses:'레벨 보너스'}[n])).join(' · ')};
 }
 function read(bytes,project){
   const e=engine(),parsed=inspect(bytes),p=e.Studio.shape(project);
-  for(const r of parsed.tables.ShopCatalog||[])if(!Object.hasOwn(r,'Weight'))r.Weight=['Daily','Weekly'].includes(r.Section)&&r.FixedFree===0?1:0;
+  // Shop: a game chart file holds only part of the sections; keep the other part from the open project.
+  if(parsed.tables.ShopCatalog||parsed.tables.ShopDailyList){
+    const current=p.tables.ShopCatalog||[],catalog=parsed.tables.ShopCatalog,daily=parsed.tables.ShopDailyList;
+    if(daily?.some(r=>r.Section!=='Daily'))throw Error('ShopDailyList: 일일(Daily) 상품만 넣을 수 있습니다.');
+    // A planner sheet holds every section (it has Daily rows); a game ShopCatalog chart has none.
+    const fullSheet=catalog?.some(r=>r.Section==='Daily');
+    const dailyRows=fullSheet?[]:daily||current.filter(r=>r.Section==='Daily');
+    const otherRows=catalog||current.filter(r=>r.Section!=='Daily');
+    parsed.tables.ShopCatalog=[...dailyRows,...otherRows].map(r=>({LimitPeriod:'',...r}));
+    delete parsed.tables.ShopDailyList;parsed.names=[...new Set(parsed.names.map(n=>n==='ShopDailyList'?'ShopCatalog':n))];
+  }
   for(const mission of parsed.tables.Missions||[])if(!Object.hasOwn(mission,'MissionType'))mission.MissionType=mission.EventKey?'Event':'Normal';
   if(parsed.names.some(n=>e.MissionEvents.names.includes(n))){
     for(const name of ['MissionEvents','Missions'])if(!parsed.tables[name])throw Error('??? Excel?? Events? Missions ??? ?? ?????.');

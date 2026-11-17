@@ -5,7 +5,8 @@ const path = require('node:path');
 const { unzipSync, zipSync, strFromU8, strToU8 } = require('fflate');
 const { XMLParser } = require('fast-xml-parser');
 const schema = require('./schema.cjs');
-const parser = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true, parseTagValue: false, parseAttributeValue: false,
+// htmlEntities: decode numeric character references (&#47924;) that openpyxl writes for non-ASCII inline strings.
+const parser = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true, parseTagValue: false, parseAttributeValue: false, htmlEntities: true,
   isArray: name => ['sheet', 'Relationship', 'row', 'c', 'si'].includes(name) });
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const content = value => value && typeof value === 'object' ? content(value['#text'] ?? value.t ?? '') : String(value ?? '');

@@ -12,4 +12,5 @@ for(const name of fs.readdirSync(path.dirname(result.file))) {
   const source=path.join(path.dirname(result.file),name);
   if(fs.statSync(source).isFile())fs.copyFileSync(source,path.join(target,name));
 }
-console.log(JSON.stringify({folder:target,files:[result.file,...result.chartFiles,...result.probabilityFiles].map(f=>path.join(target,path.basename(f))),preview:path.join(target,path.basename(result.previewFile))},null,2));
+// 2026-11-17: the shop exports ShopDailyList and ShopCatalog only (no probability or preview files).
+console.log(JSON.stringify({folder:target,files:[...new Set([result.file,...result.chartFiles])].map(f=>path.join(target,path.basename(f)))},null,2));

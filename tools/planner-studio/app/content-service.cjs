@@ -24,7 +24,7 @@ exports.register = ({ handler, workspace, store, atomic }) => {
     else if(p.bundle==='missions'||p.bundle==='rewards')tables=require('./event-tables.cjs').tables(project);
     else if(p.bundle==='bonuses')tables={UnitLevelBonuses:readable(project,'unitBonuses')};
     else if(['Unit','UnitUpgrade','UnitBaseStat','UnitMilestone'].includes(p.table))tables={UnitBaseStats:readable(require('./unit-runtime.cjs').unitRuntime(project),'unitBaseStats')};
-    else if(p.table==='ShopCatalog')tables={...e.ShopCatalogTools.listTables(project),...e.ShopCatalogTools.probabilityTables(project)};
+    else if(p.table==='ShopCatalog')tables=e.ShopCatalogTools.listTables(project);
     else {
       const all=e.Studio.tables(project);
       const names=p.bundle==='items'?excel.bundles.items:['ResearchTree','ResearchNode'].includes(p.table)?['ResearchTree','ResearchNode','ResearchLevel']:[p.table];
