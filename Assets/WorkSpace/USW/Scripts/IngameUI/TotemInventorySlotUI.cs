@@ -41,8 +41,11 @@ public sealed class TotemInventorySlotUI : MonoBehaviour, IBeginDragHandler, IDr
         _dragging = false;
         _owner.EndDrag(eventData);
     }
-    /// <summary>A tap keeps the inventory open and does not activate an ancestor button.</summary>
-    public void OnPointerClick(PointerEventData eventData) { }
+    /// <summary>A tap keeps the inventory open, does not activate an ancestor button, and reports the item for info display.</summary>
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (!_dragging) _owner?.NotifySlotTapped(_index);
+    }
 
     private void OnDisable() => _dragging = false;
 }

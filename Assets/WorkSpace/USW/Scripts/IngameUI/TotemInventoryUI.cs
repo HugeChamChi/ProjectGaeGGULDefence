@@ -51,6 +51,17 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     /// <summary>Returns the visual for an inventory item, in inventory order.</summary>
     public RectTransform GetSlotRect(int index) => index >= 0 && index < _slots.Length ? _slots[index].transform as RectTransform : null;
+    /// <summary>The drawer is playing its close animation.</summary>
+    public bool IsClosing => _closing;
+    /// <summary>Closes the drawer as an outside tap would (respects <see cref="AllowClose"/> and active drags).</summary>
+    public void RequestClose() => CloseInventory();
+    /// <summary>A stored item was tapped (not dragged). Argument is the inventory index.</summary>
+    public event System.Action<int> OnSlotTapped;
+    /// <summary>Called by a slot on a plain tap; ignored while a drag or placement is in progress.</summary>
+    public void NotifySlotTapped(int index)
+    {
+        if (!IsDraggingOrPlacing && index >= 0 && index < _inventory.Items.Count) OnSlotTapped?.Invoke(index);
+    }
     private GameObject _previewHost;
     private TotemBase _placementPreview;
     private GridCell _hoverCell;
@@ -78,6 +89,8 @@ public sealed class TotemInventoryUI : MonoBehaviour
         }
         _panel.SetActive(false);
         _dragImage.gameObject.SetActive(false);
+        // Sephiria-style bag above the drawer (user decision 2026-11-17, outputs/totem-bag-ingame-20261117/RESULT.md).
+        TotemBagController.Attach(this, _inventory, _gridManager, _background != null ? _background : (RectTransform)_panel.transform);
         Refresh();
     }
     private void OnDestroy()

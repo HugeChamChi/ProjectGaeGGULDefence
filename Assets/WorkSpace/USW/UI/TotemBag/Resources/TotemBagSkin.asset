@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30e3fcddb362d1648987d79eb1325e81, type: 3}
+  m_Name: TotemBagSkin
+  m_EditorClassIdentifier: Assembly-CSharp::TotemBagSkin
+  PanelBody: {fileID: 21300000, guid: c9833fade0a322540a346fe810778a6a, type: 3}
+  TitleBanner: {fileID: 21300000, guid: f8d81943be2cc814ab8dea8f1c550058, type: 3}
+  CloseButton: {fileID: 21300000, guid: f8ce74de01d60754397dca78a3f38d71, type: 3}
+  GridBg: {fileID: 21300000, guid: e190dd662cd974341bc3488c9459c6a5, type: 3}
+  UnitFrames:
+  - {fileID: 21300000, guid: 69752b98a86779742b593cc570f10fc0, type: 3}
+  - {fileID: 21300000, guid: 678620c1e312ff640a2db2d69b696f24, type: 3}
+  - {fileID: 21300000, guid: e5da07723cdf8c44398179308d84d193, type: 3}
+  - {fileID: 21300000, guid: ca02f1b0aeaca254992e21c9a14ed565, type: 3}
+  TotemFrame: {fileID: 21300000, guid: 93bc00a8e94b8064eb7bacd51ad03945, type: 3}
+  EmptyCell: {fileID: 21300000, guid: f4bd849c2eca7274c9e8ea2621e4bdfc, type: 3}
+  LevelBadge: {fileID: 21300000, guid: b11de019cbcd93a4bb4257432ba08779, type: 3}
+  InfoCard: {fileID: 21300000, guid: 5306268cf08fbaf45b4d85bf8b74dd61, type: 3}
+  PopupCard: {fileID: 21300000, guid: fb72a3a9dd5b05f44b4ee43812149211, type: 3}
+  RangeCellEmpty: {fileID: 21300000, guid: f4bd849c2eca7274c9e8ea2621e4bdfc, type: 3}
+  RangeCellOrigin: {fileID: 21300000, guid: 6e8c0cf04d0cd2642aeb056187f2b11b, type: 3}
+  RowBg: {fileID: 21300000, guid: 308385c9c90d3694e848ed64081f9e12, type: 3}
+  TitleFont: {fileID: 11400000, guid: 8863727b6c787ba4a910762f78e8fd55, type: 2}
+  BodyFont: {fileID: 11400000, guid: 34571da45f3f3d8419493b418172203f, type: 2}
+  HeadingFont: {fileID: 11400000, guid: 539691cd3e821c14aa56931f7ccafef9, type: 2}
+  NumberFont: {fileID: 11400000, guid: aaa65b78c16511f488c948aa019d2c6e, type: 2}
+  DisplayMaxLevel: 15
