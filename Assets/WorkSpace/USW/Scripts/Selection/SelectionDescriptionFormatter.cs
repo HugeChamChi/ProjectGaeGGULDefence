@@ -35,6 +35,13 @@ public sealed class SelectionDescriptionFormatter
     public static void ValidateTemplate(string template, SelectionCardDefinition definition)
         => FormatTemplate(template, definition);
 
+    /// <summary>
+    /// Fills a card's number tokens (e.g. {weight}) into another text, such as a glossary term body, with the same
+    /// chart-applied copy the card effect and card description read.
+    /// </summary>
+    public static string FormatCardValues(string template, LevelUpData card)
+        => card == null ? template : FormatTemplate(template, SelectionDefinitionReader.CopyDefinition(card));
+
     private static string FormatTemplate(string template, SelectionCardDefinition definition)
     {
         string text = (template ?? string.Empty).Replace("[1~10%]", "{value}%");

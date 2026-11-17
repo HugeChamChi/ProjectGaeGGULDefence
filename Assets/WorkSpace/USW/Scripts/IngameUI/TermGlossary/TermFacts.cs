@@ -11,6 +11,9 @@ public static class TermFacts
             template = template.Replace("{coefficient}", BombCoefficients(unit));
         if (source is DroneHackingData hacking)
             template = template.Replace("{capacity}", hacking.CurrentCapacity.ToString(CultureInfo.InvariantCulture));
+        // A term owned by one card (e.g. overheat, 9137) reads that card's numbers, chart values included.
+        if (source is LevelUpData card)
+            template = SelectionDescriptionFormatter.FormatCardValues(template, card);
         return template;
     }
 

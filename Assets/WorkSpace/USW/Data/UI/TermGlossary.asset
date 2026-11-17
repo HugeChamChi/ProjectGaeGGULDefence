@@ -227,3 +227,21 @@ MonoBehaviour:
     FactSource: {fileID: 0}
     Clip: {fileID: 0}
     ClipCaption: 
+  - Id: overheat
+    DisplayName: "\uACFC\uC5F4"
+    Aliases:
+    - "\uACFC\uC5F4"
+    RelatedTerms: []
+    Kind: "\uC790\uC6D0"
+    KindColor: {r: 0.16, g: 0.55, b: 0.75, a: 1}
+    Body: "\uAC10\uB9DD \uD53C\uD574\uAC00 \uC77C\uBC18 \uD574\uD0B9 \uC2A4\uD0DD\uC758
+      {weight}\uBC30\uC778 \uD574\uD0B9 \uC2A4\uD0DD\uC785\uB2C8\uB2E4."
+    BriefBody: "\uAC10\uB9DD \uD53C\uD574\uAC00 \uC77C\uBC18 \uD574\uD0B9 \uC2A4\uD0DD\uC758
+      {weight}\uBC30\uC778 \uD574\uD0B9 \uC2A4\uD0DD\uC785\uB2C8\uB2E4."
+    DetailedBody: "\uC77C\uBC18 \uC2A4\uD0DD\uCC98\uB7FC 1\uCE78\uC744 \uCC28\uC9C0\uD558\uC9C0\uB9CC,
+      \uAC10\uB9DD \uD53C\uD574\uC5D0\uC11C\uB294 \uC77C\uBC18 \uD574\uD0B9 \uC2A4\uD0DD
+      {weight}\uAC1C\uB85C \uACC4\uC0B0\uD569\uB2C8\uB2E4."
+    FactKind: 0
+    FactSource: {fileID: 11400000, guid: 82180fd2cbda34a439c07d83cf4ae76d, type: 2}
+    Clip: {fileID: 0}
+    ClipCaption: 
