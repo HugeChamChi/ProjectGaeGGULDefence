@@ -34,6 +34,7 @@ namespace GaeGGUL.UI.Unit
         {
             Clear();
             if (data == null) return;
+            data = UnitBalanceRuntime.Resolve(data);
             float attackSpeed = data.attackSpeed.Get(Tier.Normal);
             Show(data, Tier.Normal, data.atk.Get(Tier.Normal),
                 attackSpeed > 0f ? 1f / Mathf.Max(attackSpeed, 0.01f) : 0f, data.skillCooldown.Get(Tier.Normal));

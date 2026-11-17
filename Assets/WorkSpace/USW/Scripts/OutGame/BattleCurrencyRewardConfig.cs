@@ -20,9 +20,9 @@ public sealed class BattleCurrencyRewardConfig : ScriptableObject
     public GaeGGUL.Shop.UI.ShopCatalogSettings ShopSettings;
 
     /// <summary>진행량에 단가를 곱하고 재화별로 한 번 내린다. 영구 강화 보너스는 지급 경로(RewardInventory)가 더한다.</summary>
-    public int Gold(decimal progress) => Floor(GoldPerBoss, progress);
+    public int Gold(decimal progress) => Floor(GGD.BackendCharts.OutgameBalance.Number(GGD.BackendCharts.OutgameBalance.BattleGoldPerBoss, GoldPerBoss), progress);
     /// <inheritdoc cref="Gold"/>
-    public int Essence(decimal progress) => Floor(EssencePerBoss, progress);
+    public int Essence(decimal progress) => Floor(GGD.BackendCharts.OutgameBalance.Number(GGD.BackendCharts.OutgameBalance.BattleEssencePerBoss, EssencePerBoss), progress);
 
     private static int Floor(float perBoss, decimal progress)
     {

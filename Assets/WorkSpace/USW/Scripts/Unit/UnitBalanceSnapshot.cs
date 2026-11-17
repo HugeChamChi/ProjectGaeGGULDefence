@@ -26,6 +26,19 @@ public sealed class UnitBalanceSnapshot : IDisposable
     private readonly Dictionary<UnitData, UnitData> copies = new();
     private readonly HashSet<UnitData> resolved = new();
     public int Count => definitions.Count;
+    /// <summary>Rejects incomplete remote prices before the snapshot can be installed.</summary>
+    public void ValidateUpgradeCosts(int maxLevel)
+    {
+        if (maxLevel < 1) throw new ArgumentOutOfRangeException(nameof(maxLevel));
+        if (prices.Count == 0) throw new ArgumentException("Missing remote upgrade costs");
+        var characterIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var price in prices.Values) characterIds.Add(price.Id);
+        // Costs use account character IDs (unit:1000 / chief:0), never UnitData asset keys.
+        foreach (string id in characterIds)
+            for (int level = 2; level <= maxLevel; level++)
+                if (!prices.ContainsKey(id + "/" + level))
+                    throw new ArgumentException("Missing upgrade cost: " + id + "/" + level);
+    }
     public string GetUnitKey(string assetKey) => definitions.TryGetValue(assetKey,out var value) ? value.UnitKey : assetKey;
 
     public static Config ParseConfig(string json)

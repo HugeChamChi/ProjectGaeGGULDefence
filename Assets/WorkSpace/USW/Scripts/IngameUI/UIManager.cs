@@ -466,6 +466,8 @@ public class UIManager : MonoBehaviour
     private async UniTaskVoid WatchAdForBonusAsync()
     {
         if (_adRewardBusy || _gameManager == null || _resultScreen == null) return;
+        string account = BackEnd.Backend.UserInDate;
+        if (string.IsNullOrEmpty(account) || Player.PlayerData?.IsReady != true || !_gameManager.CanGrantAdBonusReward) return;
         _adRewardBusy = true;
         _resultScreen.SetAdRewardBusy(true);
         try
@@ -477,7 +479,8 @@ public class UIManager : MonoBehaviour
                     this.GetCancellationTokenOnDestroy());
                 if (!watched) return;
             }
-            if (this == null) return;
+            if (this == null || BackEnd.Backend.UserInDate != account || Player.PlayerData?.IsReady != true
+                || !_gameManager.CanGrantAdBonusReward) return;
             _resultScreen.ApplyAdBonus(_gameManager.GrantAdBonusReward());
         }
         finally

@@ -391,18 +391,26 @@ public class PlayerDataController : IDisposable, Global.IClearable
         return true;
     }
     /// <summary>
-    /// 결과창 보상 더 받기(광고)의 추가 계정 경험치. 같은 판의 광고 보상 영수증(grantId, 골드/정수 지급이 남김)이 있으면 주지 않는다.
-    /// 호출자는 이 직후 같은 grantId로 골드/정수를 지급해 영수증을 남긴다.
+    /// Checks the finished run's account and session before accepting an advertisement callback.
     /// </summary>
-    /// <returns>최대 레벨 제한을 거쳐 실제로 들어간 경험치.</returns>
-    public int ApplyBonusAccountExperience(string grantId, AccountProgressionConfig config, int experience)
+    public bool OwnsFinishedAccountExperienceRun(AccountExperienceTicket ticket) => IsReady && ticket != null
+        && ticket.Account == _account && ticket.Generation == _generation
+        && ticket.Sequence == _data.AccountExperienceSequence
+        && _data.AccountExperienceReceipt?.RunId == ticket.RunId
+        && _data.AccountExperienceReceipt.Sequence == ticket.Sequence;
+
+    /// <summary>Commits advertisement EXP, currency and receipt in one detached snapshot and one journal revision.</summary>
+    /// <returns>Actual EXP granted, or zero when rejected or already claimed.</returns>
+    public int ApplyBattleAdBonus(AccountExperienceTicket ticket, AccountProgressionConfig config,
+        RewardCatalog catalog, RewardAmount[] rewards, int experience)
     {
-        if (!IsReady || config == null || experience <= 0 || string.IsNullOrWhiteSpace(grantId)) return 0;
-        if (_data.RewardInventory.Receipts.Exists(x => x.GrantId == grantId)) return 0;
-        int actual = config.Apply(_data.PlayerLevel, _data.PlayerExp, experience, out int level, out int remaining);
-        if (actual <= 0) return 0;
-        _data.PlayerLevel = level; _data.PlayerExp = remaining;
-        _data.MaxExp = config.CurrentRequiredExperience[level - 1];
+        if (!OwnsFinishedAccountExperienceRun(ticket) || config == null || catalog == null || experience < 0) return 0;
+        var next = RewardInventory.Apply(_data, catalog, "battle-ad:" + ticket.RunId, rewards);
+        if (next == null) return 0;
+        int actual = config.Apply(next.PlayerLevel, next.PlayerExp, experience, out int level, out int remaining);
+        next.PlayerLevel = level; next.PlayerExp = remaining;
+        next.MaxExp = config.CurrentRequiredExperience[level - 1];
+        _data = next;
         SaveAndRefresh();
         return actual;
     }

@@ -77,7 +77,7 @@ public class GameManager : MonoBehaviour
         _gridManager = _resolver.Resolve<GridManager>();
         _run.OnFailed += HandleRunFailed;
         _waveManager.OnBossDefeated += HandleBossKilled;
-        _waveManager.OnRunStopped += _accountExperience.Cancel;
+        _waveManager.OnRunStopped += CancelUnfinishedAccountRun;
     }
 
     public event Action OnLevelUpStateEntered;
@@ -302,6 +302,9 @@ public class GameManager : MonoBehaviour
     private int _battleGoldGained;
     private int _battleEssenceGained;
 
+    /// <summary>Rejects advertisement rewards after logout, account replacement or a later run.</summary>
+    public bool CanGrantAdBonusReward => _accountExperience != null && _accountExperience.CanGrantAdBonus;
+
     /// <summary>
     /// 결과창 보상 더 받기: 광고를 끝까지 본 뒤 이번 판에 실제로 늘어난 골드와 정수를 같은 양만큼 한 번 더 지급한다(보상 2배).
     /// 계정 경험치도 결과창 표시량만큼 한 번 더 준다. 실행 ID당 한 번만 들어간다(지급 영수증 "battle-ad:").
@@ -309,7 +312,7 @@ public class GameManager : MonoBehaviour
     /// <returns>실제로 더 늘어난 골드, 정수, 계정 경험치(결과 보상 순서). 이미 받았거나 지급할 것이 없으면 null.</returns>
     public int[] GrantAdBonusReward()
     {
-        if (string.IsNullOrEmpty(_battleRewardRunId) || _battleGoldGained <= 0 && _battleEssenceGained <= 0) return null;
+        if (!CanGrantAdBonusReward || string.IsNullOrEmpty(_battleRewardRunId) || _battleGoldGained <= 0 && _battleEssenceGained <= 0) return null;
         var catalog = Resources.Load<RewardCatalog>("RewardCatalog");
         if (!_resolver.TryResolve<PlayerDataController>(out var player)) player = Player.PlayerData;
         if (catalog == null || player?.Data == null) return null;
@@ -317,13 +320,11 @@ public class GameManager : MonoBehaviour
         if (_battleGoldGained > 0) amounts.Add(new RewardAmount { RewardId = GoldRewardId, Amount = _battleGoldGained });
         if (_battleEssenceGained > 0) amounts.Add(new RewardAmount { RewardId = EssenceRewardId, Amount = _battleEssenceGained });
         const string token = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Token;
-        string grantId = "battle-ad:" + _battleRewardRunId;
-        // 경험치를 먼저 준다. 바로 아래 골드/정수 지급이 같은 grantId 영수증을 남겨 두 번째 시도를 막는다.
-        int experience = _accountExperience.GrantBonus(grantId, _resultSnapshot?.AccountExperience ?? 0);
         int goldBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold");
         int essenceBefore = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token);
         // 결과 지급량에 영구 강화 보너스가 이미 들어 있으므로 보너스 없이 같은 양을 준다. 잔고는 저장을 기다리기 전에 바뀐다.
-        player.GrantRewardAsync(catalog, grantId, amounts.ToArray()).Forget();
+        int experience = _accountExperience.GrantAdBonus(catalog, amounts.ToArray(), _resultSnapshot?.AccountExperience ?? 0);
+        _accountExperience.SaveAsync().Forget();
         int gold = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, "Gold") - goldBefore;
         int essence = GaeGGUL.DeckUpgrade.DeckUpgradeCurrency.Balance(player.Data, token) - essenceBefore;
         return gold > 0 || essence > 0 || experience > 0 ? new[] { gold, essence, experience } : null;
@@ -345,6 +346,12 @@ public class GameManager : MonoBehaviour
             BossProgressStyle = ResultBossProgressStyle.HpSettlement
         };
     }
+
+    /// <summary>
+    /// A stopped run grants nothing, but EndGame also stops the run after Finish: keep the finished run's ticket so the
+    /// result screen's ad bonus can still prove ownership (scene destruction and failures cancel it explicitly).
+    /// </summary>
+    private void CancelUnfinishedAccountRun() { if (!IsFinished) _accountExperience?.Cancel(); }
 
     /// <summary>Scene navigation cancels the pending result before releasing time owners.</summary>
     public void CancelEndPresentation()
@@ -389,7 +396,7 @@ public class GameManager : MonoBehaviour
         if (IsProductionBattle) Player.EndBattle();
         if (_run != null) { _run.OnFailed -= HandleRunFailed; _run.Stop(); }
         if (_waveManager != null) _waveManager.OnBossDefeated -= HandleBossKilled;
-        if (_waveManager != null) _waveManager.OnRunStopped -= _accountExperience.Cancel;
+        if (_waveManager != null) _waveManager.OnRunStopped -= CancelUnfinishedAccountRun;
         CancelEndPresentation();
         UnsubscribeGameplay();
         _timeScale?.Release(this);

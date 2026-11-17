@@ -23,11 +23,25 @@ public static class UnitBalanceChartLoader
         var owner = Backend.UserInDate;
         var rows = await BackendChartReader.ReadAsync(ChartName, token);
         var json = ChartSnapshotPayload.Decode(rows.ToJson());
-        var next = new UnitBalanceSnapshot(UnitBalanceSnapshot.ParseConfig(json));
+        if (!OutgameBalance.IsLoaded) throw new InvalidOperationException("OutgameBalance must load before unit prices");
+        var next = ParseAndValidate(json, OutgameBalance.Integer(OutgameBalance.DeckUpgradeMaxLevel, GaeGGUL.DeckUpgrade.DeckUpgradeProgress.MaxLevel));
         if (session != generation || !Backend.IsLogin || Backend.UserInDate != owner || token.IsCancellationRequested) { next.Dispose(); throw new OperationCanceledException(); }
         if (UnitBalanceRuntime.IsLoaded) { next.Dispose(); return; }
         UnitBalanceRuntime.Install(next);
         Debug.Log("[UnitBalance] Loaded " + ChartName + ": " + next.Count + " units");
+    }
+
+    private static UnitBalanceSnapshot ParseAndValidate(string json, int maxLevel)
+    {
+        var next = new UnitBalanceSnapshot(UnitBalanceSnapshot.ParseConfig(json));
+        try
+        {
+            // Validate IDs actually authored in the cost rows. Table.Character contains legacy test data,
+            // not the UnitData/ChieftainData used by the account upgrade screen.
+            next.ValidateUpgradeCosts(maxLevel);
+            return next;
+        }
+        catch { next.Dispose(); throw; }
     }
 
     public static void Clear() { generation++; UnitBalanceRuntime.Clear(); }

@@ -25,6 +25,8 @@ namespace GGD.BackendCharts
         public const string AccountRequiredExperience = "Account.RequiredExperience";
         public const string AccountWinBossExperience = "Account.WinBossExperience";
         public const string AccountLoseBossExperience = "Account.LoseBossExperience";
+        public const string BattleGoldPerBoss = "Battle.GoldPerBoss";
+        public const string BattleEssencePerBoss = "Battle.EssencePerBoss";
 
         public static readonly BalanceChart Chart = new BalanceChart("OutgameBalance", "OutgameBalanceChartSettings", new Dictionary<string, BalanceRule>
         {
@@ -40,6 +42,8 @@ namespace GGD.BackendCharts
             { AccountRequiredExperience, new BalanceRule(0f, 10000000f, BalanceShape.List, true) },
             { AccountWinBossExperience, new BalanceRule(0f, 10000000f, wholeNumber: true) },
             { AccountLoseBossExperience, new BalanceRule(0f, 10000000f, wholeNumber: true) },
+            { BattleGoldPerBoss, new BalanceRule(0f, 10000000f) },
+            { BattleEssencePerBoss, new BalanceRule(0f, 10000000f) },
         }, bundledBeforeLoad: true, extraCheck: CheckAccountCurve);
 
         // Same shape AccountProgressionConfig.Validate requires: every level needs positive EXP except the last (the cap), which is 0.

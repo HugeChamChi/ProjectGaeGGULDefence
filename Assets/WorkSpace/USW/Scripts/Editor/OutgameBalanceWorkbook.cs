@@ -21,6 +21,7 @@ public static class OutgameBalanceWorkbook
     private const string StaminaPath = "Assets/WorkSpace/HSD/Data/StaminaConfig.asset";
     private const string EconomyPath = "Assets/WorkSpace/USW/Resources/PlayerEconomyConfig.asset";
     private const string AccountPath = "Assets/WorkSpace/USW/Resources/AccountProgressionConfig.asset";
+    private const string BattlePath = "Assets/WorkSpace/USW/Resources/BattleCurrencyRewardConfig.asset";
 
     [MenuItem("Tools/Balance/OutgameBalance.xlsx 검사 (업로드 전)")]
     public static void CheckMenu() => Debug.Log(Check(SourcePath));
@@ -67,7 +68,10 @@ public static class OutgameBalanceWorkbook
         var stamina = Load<StaminaConfig>(StaminaPath);
         var economy = Load<PlayerEconomyConfig>(EconomyPath);
         var account = Load<AccountProgressionConfig>(AccountPath);
-        Undo.RecordObjects(new UnityEngine.Object[] { stamina, economy, account }, "Import OutgameBalance.xlsx");
+        var battle = Load<BattleCurrencyRewardConfig>(BattlePath);
+        Undo.RecordObjects(new UnityEngine.Object[] { stamina, economy, account, battle }, "Import OutgameBalance.xlsx");
+        battle.GoldPerBoss = workbook[OutgameBalance.BattleGoldPerBoss][0];
+        battle.EssencePerBoss = workbook[OutgameBalance.BattleEssencePerBoss][0];
         stamina.recoveryIntervalSeconds = One(OutgameBalance.StaminaRecoveryIntervalSeconds);
         stamina.defaultMaxStamina = One(OutgameBalance.StaminaDefaultMax);
         stamina.refillAmount = One(OutgameBalance.StaminaRefillAmount);
@@ -78,7 +82,7 @@ public static class OutgameBalanceWorkbook
         account.RequiredExperience = workbook[OutgameBalance.AccountRequiredExperience].Select(value => Mathf.RoundToInt(value)).ToArray();
         account.WinBossExperience = One(OutgameBalance.AccountWinBossExperience);
         account.LoseBossExperience = One(OutgameBalance.AccountLoseBossExperience);
-        foreach (var asset in new UnityEngine.Object[] { stamina, economy, account }) { EditorUtility.SetDirty(asset); AssetDatabase.SaveAssetIfDirty(asset); }
+        foreach (var asset in new UnityEngine.Object[] { stamina, economy, account, battle }) { EditorUtility.SetDirty(asset); AssetDatabase.SaveAssetIfDirty(asset); }
 
         var notes = new List<string>();
         if (One(OutgameBalance.DeckUpgradeMaxLevel) != DeckUpgradeProgress.MaxLevel)
@@ -97,6 +101,8 @@ public static class OutgameBalanceWorkbook
         var account = Load<AccountProgressionConfig>(AccountPath);
         return new Dictionary<string, string>
         {
+            { OutgameBalance.BattleGoldPerBoss, N(Load<BattleCurrencyRewardConfig>(BattlePath).GoldPerBoss) },
+            { OutgameBalance.BattleEssencePerBoss, N(Load<BattleCurrencyRewardConfig>(BattlePath).EssencePerBoss) },
             { OutgameBalance.StaminaRecoveryIntervalSeconds, N(stamina.recoveryIntervalSeconds) },
             { OutgameBalance.StaminaDefaultMax, N(stamina.defaultMaxStamina) },
             { OutgameBalance.StaminaRefillAmount, N(stamina.refillAmount) },

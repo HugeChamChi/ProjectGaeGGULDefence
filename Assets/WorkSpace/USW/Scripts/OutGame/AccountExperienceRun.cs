@@ -81,8 +81,12 @@ public sealed class AccountExperienceRun
         return _receipt;
     }
 
-    /// <summary>결과창 보상 더 받기의 추가 경험치. 같은 지급 ID의 영수증이 이미 있으면 주지 않는다. 실제로 들어간 양을 돌려준다.</summary>
-    public int GrantBonus(string grantId, int experience) => _player?.ApplyBonusAccountExperience(grantId, _config, experience) ?? 0;
+    /// <summary>The finished run still belongs to the current authenticated session.</summary>
+    public bool CanGrantAdBonus => _closed && _receipt != null && _player.OwnsFinishedAccountExperienceRun(_ticket);
+
+    /// <summary>Atomically applies all advertisement rewards and their receipt for this finished run.</summary>
+    public int GrantAdBonus(RewardCatalog catalog, RewardAmount[] rewards, int experience)
+        => CanGrantAdBonus ? _player.ApplyBattleAdBonus(_ticket, _config, catalog, rewards, experience) : 0;
 
     /// <summary>Retries the owning controller's absolute snapshot, never recalculating a reward.</summary>
     public UniTask<bool> SaveAsync() => _player.TrySaveAsync();
