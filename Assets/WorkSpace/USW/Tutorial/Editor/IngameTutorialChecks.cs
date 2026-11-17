@@ -19,7 +19,8 @@ public static class IngameTutorialChecks
     private const string Report = "outputs/tutorial-qa/checks.txt";
 
     /// <summary>Runs only in a fresh TutorialScene Play session; does not write persistent player state.</summary>
-    [MenuItem("Tools/USW/Tutorial/Run Play Checks")]
+    // Legacy 16-lesson expectations (before the 2026-11-14 3WAVE flow). Use "Run 3WAVE Play Checks" for the current tutorial.
+    [MenuItem("Tools/USW/Tutorial/Legacy/Run 16-Lesson Play Checks (outdated)")]
     public static void Run() => RunAsync().Forget();
 
     [MenuItem("Tools/USW/Tutorial/Run First Boss Balance Check")]
