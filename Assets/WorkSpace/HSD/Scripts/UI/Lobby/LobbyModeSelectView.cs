@@ -14,7 +14,11 @@ public sealed class LobbyModeSelectView : MonoBehaviour
     private void Awake()
     {
         _normalButton.onClick.AddListener(SelectNormal);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || INTERNAL_TEST_BUILD
         _testButton.onClick.AddListener(SelectTest);
+#else
+        _testButton.interactable = false;
+#endif
         _closeButton.onClick.AddListener(Hide);
         Hide();
     }
