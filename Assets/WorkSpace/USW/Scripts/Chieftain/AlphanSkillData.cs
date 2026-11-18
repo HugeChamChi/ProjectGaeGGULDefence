@@ -18,4 +18,6 @@ public sealed class AlphanSkillData : ScriptableObject
     // which return the DEV_/LIVE_SkillBalance chart values once the chart is installed (TODO G12).
     public float CurrentCooldownSeconds => GGD.BackendCharts.SkillBalance.Number(GGD.BackendCharts.SkillBalance.AlphanCooldownSeconds, CooldownSeconds);
     public float CurrentRallyAttackCoefficient => GGD.BackendCharts.SkillBalance.Number(GGD.BackendCharts.SkillBalance.AlphanRallyAttackCoefficient, RallyAttackCoefficient);
+    [Tooltip("9105 긴급 교신으로 해킹 스택을 소모하는 순간의 폭발 연출 프리팹. 비어 있으면 표식만 그 자리에서 작게 터진다")]
+    public ChiefStackBurstFx StackBurstFx;
 }

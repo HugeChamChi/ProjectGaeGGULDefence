@@ -197,13 +197,14 @@ public sealed class DroneHackingRuntime : MonoBehaviour
         return Ledger.Reserve(maximum);
     }
     /// <summary>접촉 시 한 번 소비하고 표식의 실제 소비분만 연쇄 기폭한다.</summary>
-    public bool Commit(BossBase target, HackingStackLedger.Reservation reservation)
+    /// <param name="burstMarks">주면 보스 표식을 그 자리에서 터뜨리지 않고 위치를 담아 돌려준다(9105 스택 폭발 연출용).</param>
+    public bool Commit(BossBase target, HackingStackLedger.Reservation reservation, System.Collections.Generic.List<Vector3> burstMarks = null)
     {
         if (target == null || Target != target || !Ledger.Commit(reservation)) return false;
         LastConsumed = reservation.Amount;
         TotalConsumed += reservation.Amount;
         ConsumptionVersion++;
-        _visual?.Detonate(Ledger.Available + Ledger.Reserved, Ledger.Capacity, reservation.Amount);
+        _visual?.Detonate(Ledger.Available + Ledger.Reserved, Ledger.Capacity, reservation.Amount, burstMarks);
         _visual?.SetOverheated(Ledger.Overheated + Ledger.ReservedOverheated);
         return true;
     }

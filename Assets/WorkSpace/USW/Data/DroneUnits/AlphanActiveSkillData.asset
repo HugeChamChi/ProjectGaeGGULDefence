@@ -18,3 +18,5 @@ MonoBehaviour:
   Icon: {fileID: 21300000, guid: b8b20d5a65522d044bebe30dffaed771, type: 3}
   SoundAddress: 05.Leader_Skill_Effect
   BeamFx: {fileID: 8399594263479315199, guid: a090af15987be984d8f43c0e71e7b529, type: 3}
+  StackBurstFx: {fileID: 2103305666394870816, guid: 4fdd519c2bc01924f8ae07afbe77fd1e,
+    type: 3}

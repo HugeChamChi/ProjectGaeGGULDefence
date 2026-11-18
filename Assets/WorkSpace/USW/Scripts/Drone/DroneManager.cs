@@ -489,7 +489,11 @@ public class DroneManager : MonoBehaviour
                         {
                             if (chiefReservation?.Amount > 0)
                             {
-                                chiefCommitted = chiefHacking.Commit(boss, chiefReservation);
+                                var burstMarks = chiefData.StackBurstFx != null ? _stackBurstMarks : null;
+                                burstMarks?.Clear();
+                                chiefCommitted = chiefHacking.Commit(boss, chiefReservation, burstMarks);
+                                if (chiefCommitted && burstMarks != null)
+                                    StackBurst(chiefData.StackBurstFx).Play(boss.transform.position, burstMarks, chiefReservation.Amount);
                                 if (!chiefCommitted) units = boss.CalculateFinalDamageUnits(baseDamage);
                             }
                             decimal previousHp = boss.CurrentHp;
@@ -575,6 +579,25 @@ public class DroneManager : MonoBehaviour
         float angle = Mathf.Lerp(-_rallyFanDegrees * 0.5f, _rallyFanDegrees * 0.5f, u);
         float radius = _rallyFanRadius * (twoRows && row == 0 ? _rallyInnerRowRatio : 1f);
         return center + Quaternion.Euler(0f, 0f, angle) * -dir * radius;
+    }
+
+    // 9105 긴급 교신 스택 폭발 연출: 프리팹이 바뀌면 새로 만든다(씬 루트, 씬과 함께 사라진다).
+    private ChiefStackBurstFx _stackBurst;
+    private ChiefStackBurstFx _stackBurstSource;
+    private readonly List<Vector3> _stackBurstMarks = new List<Vector3>(16);
+
+    /// <summary>현재 족장 스택 폭발 연출 인스턴스. 없으면 null.</summary>
+    public ChiefStackBurstFx StackBurstInstance => _stackBurst;
+
+    private ChiefStackBurstFx StackBurst(ChiefStackBurstFx prefab)
+    {
+        if (_stackBurst == null || _stackBurstSource != prefab)
+        {
+            if (_stackBurst != null) Destroy(_stackBurst.gameObject);
+            _stackBurst = Instantiate(prefab);
+            _stackBurstSource = prefab;
+        }
+        return _stackBurst;
     }
 
     private ChiefConvergeBeamFx PlayConvergeBeam(DroneUnit[] drones, Transform target, int[] lifetimes)
