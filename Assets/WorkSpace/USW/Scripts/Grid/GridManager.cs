@@ -275,7 +275,16 @@ public class GridManager : MonoBehaviour
     {
         ClearTotemRangePreview();
         if (preview == null || preview.CurrentCell == null || preview.Data == null) return;
-        PaintTotemPreview(preview);
+        var bonusColor = new Color(0.36f, 0.95f, 0.26f);
+        var penaltyColor = new Color(1f, 0.24f, 0.24f);
+        var placementColor = new Color(1f, 0.49f, 0.08f);
+        var data = preview.Data;
+        var rangeColor = data.LevelIncrease < 0 ? penaltyColor : bonusColor;
+        foreach (var cell in preview.GetAffectedCells())
+            cell?.Model?.SetTotemRangePreview(true, false, rangeColor);
+        foreach (var cell in data.GetAttackDisabledCells(preview, this))
+            cell?.Model?.SetTotemRangePreview(true, false, penaltyColor);
+        preview.CurrentCell.Model.SetTotemRangePreview(true, false, placementColor);
     }
 
     private void PaintTotemPreview(TotemBase totem, float opacity = 1f)

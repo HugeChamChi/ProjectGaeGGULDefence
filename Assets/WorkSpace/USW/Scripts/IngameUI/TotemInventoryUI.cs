@@ -10,6 +10,7 @@ using VContainer;
 public sealed class TotemInventoryUI : MonoBehaviour
 {
     [Inject] private TotemInventory _inventory;
+    [Inject] private TotemSpawner _totemSpawner;
     [Inject] private TimerController _vaultTimer;
     [Inject] private GridManager _gridManager;
     [Inject] private WorldInteractionSettings _interactionSettings;
@@ -31,6 +32,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     private Vector2Int _lastScreenSize;
     private Camera _camera;
     private CanvasGroup _panelGroup;
+    public TotemBagController BagController { private get; set; }
     private int _dragIndex = -1;
     private int _pointerId;
     private bool _placing;
@@ -64,6 +66,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     }
     private GameObject _previewHost;
     private TotemBase _placementPreview;
+    private SpriteRenderer _placementSilhouette;
     private GridCell _hoverCell;
     private readonly System.Collections.Generic.List<RaycastResult> _raycastResults = new System.Collections.Generic.List<RaycastResult>();
 
@@ -150,6 +153,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
         if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(true);
         if (_panelAnim != null) _panelAnim.PlayIn().Forget();
     }
+
     private void LateUpdate()
     {
         if (_panel != null && _panel.activeSelf && !_closing && _dragIndex < 0 &&
@@ -199,7 +203,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
     {
         if (_fieldDragTotem != null) return;
         if (!AllowClose) return;
-        if (_closing || !_panel.activeSelf) return;
+        if (_placing || _closing || !_panel.activeSelf) return;
         CloseAnimatedAsync().Forget();
     }
     private async UniTaskVoid CloseAnimatedAsync()
@@ -239,13 +243,14 @@ public sealed class TotemInventoryUI : MonoBehaviour
     {
         if (_placing || _closing || _fieldDragTotem != null || _dragIndex >= 0 || index < 0 || index >= _inventory.Items.Count) return;
         _dragIndex = index; _pointerId = pointer.pointerId;
-        // Keep the slot active until EndDrag so UGUI retains the initiating pointer.
-        // Hide its panel and remove UI raycasts immediately; the drag ghost is a sibling.
-        _panelGroup.alpha = 0f;
+        // Keep the drawer visible and the slot active so UGUI retains the pointer.
+        // Guided placement keeps its existing hide-on-drag behavior.
+        if (!AllowClose) _panelGroup.alpha = 0f;
         _panelGroup.blocksRaycasts = false;
         _panelGroup.interactable = false;
         // Backdrop is a sibling, not under _panelGroup, so it needs its own raycast pass-through.
         if (_backgroundCloseButton != null) _backgroundCloseButton.gameObject.SetActive(false);
+        BagController?.HideForStoredDrag();
         _gridManager.ClearTotemRangePreview();
         var data = _inventory.Items[index];
         _previewHost = new GameObject("TotemPlacementPreview");
@@ -255,6 +260,7 @@ public sealed class TotemInventoryUI : MonoBehaviour
             _placementPreview = Instantiate(data.prefab, _previewHost.transform).GetComponent<TotemBase>();
         else
             _placementPreview = _previewHost.AddComponent<GenericBuffTotem>();
+        _placementSilhouette = _totemSpawner.CreatePlacementSilhouette(data, sprite);
         _dragImage.sprite = sprite;
         _dragImage.gameObject.SetActive(true);
         Drag(pointer);
@@ -273,11 +279,24 @@ public sealed class TotemInventoryUI : MonoBehaviour
         if (cell != _hoverCell)
         {
             _hoverCell = cell;
+            ShowPlacementSilhouette(cell);
             if (cell != null && _placementPreview != null)
                 _placementPreview.PreviewPlacement(_inventory.Items[_dragIndex], cell, _gridManager, _inventory.GetRotationStep(_dragIndex));
             else _gridManager.ClearTotemRangePreview();
         }
     }
+    private void ShowPlacementSilhouette(GridCell cell)
+    {
+        if (_placementSilhouette == null) return;
+        var root = _placementSilhouette.transform.parent;
+        if (cell != null)
+        {
+            root.SetParent(cell.transform, false);
+            _placementSilhouette.sortingOrder = Mathf.RoundToInt(-root.position.y * 100f) + 1;
+        }
+        root.gameObject.SetActive(cell != null);
+    }
+
     /// <summary>Places into an empty cell or exchanges with its totem; units and sealed cells remain blocked.</summary>
     public void EndDrag(PointerEventData pointer)
     {
@@ -285,15 +304,21 @@ public sealed class TotemInventoryUI : MonoBehaviour
         for (int i = 0; i < Input.touchCount; i++)
             if (Input.GetTouch(i).fingerId == pointer.pointerId && Input.GetTouch(i).phase == TouchPhase.Canceled) { CancelDrag(); return; }
         int index = _dragIndex;
-        // Hide the drawer while resolving the board so its backdrop cannot mask the drop.
-        CancelDrag(keepOpen: false);
         var target = GetDropCell(pointer);
-        if (!_inventory.CanPlaceAt(index, target)) { OpenInventory(); return; }
+        bool canPlace = _inventory.CanPlaceAt(index, target);
+        CancelDrag(keepOpen: !canPlace || AllowClose);
+        if (!canPlace) return;
         PlaceAsync(index, target).Forget();
     }
 
     private GridCell GetDropCell(PointerEventData pointer)
     {
+        // The visible strip is still a UI drop target while its raycasts are disabled.
+        var strip = _background != null ? _background : (RectTransform)_panel.transform;
+        var canvas = _dragImage.canvas;
+        var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        if (AllowClose && RectTransformUtility.RectangleContainsScreenPoint(strip, pointer.position, uiCamera))
+            return null;
         // UI over the board must not receive a placement through it.
         _raycastResults.Clear();
         EventSystem.current?.RaycastAll(pointer, _raycastResults);
@@ -376,7 +401,11 @@ public sealed class TotemInventoryUI : MonoBehaviour
         finally
         {
             _placing = false;
-            if (!placed && isActiveAndEnabled) OpenInventory();
+            if (isActiveAndEnabled)
+            {
+                if (placed) CloseInventory();
+                else OpenInventory();
+            }
         }
     }
     private void CancelDrag(bool keepOpen = true)
@@ -393,6 +422,12 @@ public sealed class TotemInventoryUI : MonoBehaviour
         _dragIndex = -1;
         _hoverCell = null;
         _placementPreview = null;
+        if (_placementSilhouette != null)
+        {
+            ShowPlacementSilhouette(null);
+            Destroy(_placementSilhouette.transform.parent.gameObject);
+        }
+        _placementSilhouette = null;
         if (_previewHost != null) Destroy(_previewHost);
         _previewHost = null;
         if (_dragImage != null) _dragImage.gameObject.SetActive(false);
