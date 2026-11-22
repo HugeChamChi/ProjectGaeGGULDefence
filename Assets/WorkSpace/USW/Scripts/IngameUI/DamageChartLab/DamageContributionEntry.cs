@@ -5,6 +5,7 @@ public sealed class DamageContributionEntry
 {
     private readonly Queue<Hit> _recent = new Queue<Hit>();
     private decimal _recentDamage;
+    private readonly UnityEngine.Sprite _portraitOverride;
 
     /// <summary>종류를 대표하는 유닛 데이터.</summary>
     public UnitData Unit => Source as UnitData;
@@ -21,7 +22,7 @@ public sealed class DamageContributionEntry
     /// <summary>공격 출처의 현재 아이콘.</summary>
     public UnityEngine.Sprite Portrait => Source switch
     {
-        UnitData unit => unit.icon,
+        UnitData unit => _portraitOverride != null ? _portraitOverride : unit.icon,
         TotemData totem => totem.icon,
         ChieftainData chief => chief.Icon,
         _ => null
@@ -31,7 +32,12 @@ public sealed class DamageContributionEntry
     /// <summary>누적 최종 피해. decimal 정확도를 유지한다.</summary>
     public decimal TotalDamage { get; private set; }
 
-    internal DamageContributionEntry(UnityEngine.Object source) => Source = source;
+    internal DamageContributionEntry(UnityEngine.Object source)
+    {
+        Source = source;
+        if (source is UnitData unit && unit.Disigman != null)
+            _portraitOverride = UnityEngine.Resources.Load<UnityEngine.Sprite>("TotemBagArt/Disigmang_1");
+    }
     internal void Add(decimal damage, double time)
     {
         TotalDamage += damage;
