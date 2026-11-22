@@ -18113,7 +18113,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   genericPrefab: {fileID: 2617104415731177961, guid: 446217f04c6e8924d9ee8662a72c368d,
     type: 3}
-  spawnScale: {x: 0.6, y: 0.6, z: 0.6}
+  spawnScale: {x: 1, y: 1, z: 1}
 --- !u!4 &1594926370
 Transform:
   m_ObjectHideFlags: 0

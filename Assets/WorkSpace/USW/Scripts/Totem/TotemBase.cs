@@ -27,6 +27,9 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
 
     [SerializeField] protected TotemData     totemData;
     [SerializeField] private   SpriteRenderer _spriteRenderer;
+    [SerializeField] private bool _normalizeSpriteSize;
+    internal bool NormalizeSpriteSize => _normalizeSpriteSize;
+    private const float NormalizedSpriteSize = 1.17f;
 
     private bool _isDataCloned = false;
     private TotemData _authoredData;
@@ -166,9 +169,14 @@ public abstract class TotemBase : MonoBehaviour, IDebuffSource
         if (arr != null && arr.Length > RotationStep) s = arr[RotationStep];
         if (s == null) return;
 
-        if (_spriteRenderer != null)
-            _spriteRenderer.sprite = s;
+        if (_spriteRenderer == null) return;
+        _spriteRenderer.sprite = s;
+        if (NormalizeSpriteSize)
+            _spriteRenderer.transform.localScale = Vector3.one * NormalizedVisualScale(s);
     }
+
+    internal static float NormalizedVisualScale(Sprite sprite)
+        => NormalizedSpriteSize * sprite.pixelsPerUnit / Mathf.Max(sprite.rect.width, sprite.rect.height);
 
     /// <summary>effectRange 오프셋에 현재 RotationStep만큼 90° CW 회전 적용.</summary>
     public Vector2Int RotateOffset(Vector2Int offset)
