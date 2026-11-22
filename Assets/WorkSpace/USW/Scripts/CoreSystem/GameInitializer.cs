@@ -35,13 +35,19 @@ public class GameInitializer : IInitializable, IAsyncStartable
     [Inject] private CurrencyFloaterManager _currencyFloaterManager;
     [Inject] private ResearchRunBonuses _research;
     [Inject] private EndlessBalanceService _endlessBalance;
+#if UNITY_EDITOR
+    [Inject] private TotemInventory _totemInventory;
+    private bool _isTotemTest;
+#endif
 
     public void Initialize()
     {
         Debug.Log("[GameInitializer] 시작");
 #if UNITY_EDITOR
         // Direct Play is an explicit development preview. Lobby transitions retain production preflight.
-        if (_gameManager.gameObject.scene.name == "IngameScene" && !_sceneChangeManager.IsTransitioning)
+        string sceneName = _gameManager.gameObject.scene.name;
+        _isTotemTest = sceneName == IngameEditorPreview.TotemTestScene && !_sceneChangeManager.IsTransitioning;
+        if (_isTotemTest || (sceneName == "IngameScene" && !_sceneChangeManager.IsTransitioning))
         {
             _gameManager.gameObject.AddComponent<IngameEditorPreview>().Configure(_waveManager);
             _gameManager.EnableEditorPreview();
@@ -94,6 +100,13 @@ public class GameInitializer : IInitializable, IAsyncStartable
             await _globalUIManager.FadeOutAsync();
         cancellation.ThrowIfCancellationRequested();
         IsReady = true;
+#if UNITY_EDITOR
+        if (_isTotemTest)
+        {
+            _gameManager.StartGame(false);
+            return;
+        }
+#endif
         if (_gameManager.gameObject.scene.name == "IngameScene" || _gameManager.gameObject.scene.name == "HardIngameScene")
             _gameManager.StartGame(true);
     }
@@ -110,6 +123,10 @@ public class GameInitializer : IInitializable, IAsyncStartable
         _globalUIManager.ReportLoadingProgress(0.85f, "사운드 준비 중");
         // Prepare only the app-owned approved palette; scene cancellation owns this wait.
         if (_audioManager != null) await _audioManager.PreloadPaletteAsync(cancellation);
+#if UNITY_EDITOR
+        if (_isTotemTest)
+            await IngameEditorPreview.SeedTotemTestInventoryAsync(_totemInventory, cancellation);
+#endif
         _globalUIManager.ReportLoadingProgress(0.95f, "출격 준비 중");
 
         // Finish scene Start callbacks before starting combat and publishing initial HUD events.
