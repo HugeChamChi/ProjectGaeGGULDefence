@@ -25,6 +25,7 @@ public sealed class TotemBagController : MonoBehaviour
         SceneManager.MoveGameObjectToScene(go, drawer.gameObject.scene);
         var controller = go.AddComponent<TotemBagController>();
         controller._drawer = drawer; controller._inventory = inventory; controller._grid = grid; controller._strip = strip;
+        drawer.BagController = controller;
         drawer.OnSlotTapped += controller.HandleSlotTapped;
         return controller;
     }
@@ -50,13 +51,21 @@ public sealed class TotemBagController : MonoBehaviour
         host.transform.SetParent(transform, false);
         _popup = host.AddComponent<TotemBagPopup>();
         _popup.Bind(_grid, skin, _strip);
+        _popup.RemovePlaced = _inventory.TryDeletePlaced;
         _popup.OnOutsideTapped += _drawer.RequestClose;
         return true;
     }
 
+    internal void HideForStoredDrag()
+    {
+        if (!_shown) return;
+        _shown = false;
+        _popup.Close();
+    }
+
     private void HandleSlotTapped(int index)
     {
-        if (_popup == null || !_shown || index < 0 || index >= _inventory.Items.Count) return;
+        if (!_shown || index < 0 || index >= _inventory.Items.Count) return;
         _popup.ShowStored(_inventory.Items[index], _drawer.GetSlotRect(index));
     }
 

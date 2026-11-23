@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
@@ -27,7 +28,6 @@ public sealed class TotemBagPopup : UI_Base
     private static readonly Color BodyColor = new(0.23f, 0.21f, 0.47f);
     private static readonly Color GridColor = new(0.13f, 0.12f, 0.29f);
     private static readonly Color EmptyColor = new(0.27f, 0.25f, 0.52f);
-    private static readonly Color EmptyRangeColor = new(0.20f, 0.36f, 0.24f);
     private static readonly Color CardColor = new(1f, 0.965f, 0.88f);
     private static readonly Color MiniBg = new(0.88f, 0.83f, 0.72f);
     private static readonly Color MiniCellColor = new(0.97f, 0.93f, 0.84f);
@@ -44,15 +44,39 @@ public sealed class TotemBagPopup : UI_Base
     private static readonly Color Ink = new(0.16f, 0.10f, 0.07f);
     private static readonly Color InkSoft = new(0.36f, 0.25f, 0.18f);
     private static readonly Color Lime = new(0.55f, 0.98f, 0.42f);
-    private static readonly Color RangeTint = new(0.55f, 1f, 0.5f);
+    private static readonly Color LevelPenalty = new(1f, 0.36f, 0.36f);
+    private static readonly Color UnitBackground = new Color32(36, 33, 63, 255);
+    private static readonly Color TotemBackground = new Color32(51, 56, 106, 255);
+    private static readonly Color EmptyBorder = new Color32(52, 48, 122, 255);
+    private static readonly Color UnitBorder = new Color32(195, 201, 214, 255);
+    private static readonly Color TotemBorder = new Color32(215, 182, 122, 255);
+    private const string ArtPath = "TotemBagArt/";
     private static readonly Color SelectTint = new(1f, 0.85f, 0.25f);
     private static readonly Color Dim = new(0f, 0f, 0f, 0.62f);
 
     private sealed class CellView
     {
         public GridCell Cell;
-        public Image Frame, Icon, Badge, Select;
-        public TMP_Text Level, Plus;
+        public Image Background, Border, UnitIcon, TotemIcon, Select;
+        public TMP_Text Level;
+    }
+
+    private readonly Dictionary<string, Sprite> _portraits = new();
+    private RectTransform _actions;
+    private Tween _resize;
+    private Sprite _cellBackground, _cellBorder;
+
+    public Func<TotemBase, bool> RemovePlaced { get; set; }
+
+    private Sprite Portrait(UnitData data)
+    {
+        if (string.IsNullOrEmpty(data.iconAddress)) return data.icon;
+        if (!_portraits.TryGetValue(data.iconAddress, out var sprite))
+        {
+            sprite = Resources.Load<Sprite>(ArtPath + data.iconAddress);
+            _portraits[data.iconAddress] = sprite;
+        }
+        return sprite != null ? sprite : data.icon;
     }
 
     private GridManager _grid;
@@ -87,8 +111,15 @@ public sealed class TotemBagPopup : UI_Base
     /// <summary>Selects a board cell (unit or totem). Null or an empty cell clears the info.</summary>
     public void Select(GridCell cell)
     {
+        if (cell != null && cell == _selected && cell.OccupyingTotem != null)
+        {
+            _actions.gameObject.SetActive(!_actions.gameObject.activeSelf);
+            RefreshInfo();
+            return;
+        }
+        _actions.gameObject.SetActive(false);
         _storedSelection = null; _storedSlot = null;
-        _selected = cell != null && cell.IsOccupied && _selected != cell ? cell : null;
+        _selected = cell != null && cell.IsOccupied ? cell : null;
         RefreshInfo();
     }
 
@@ -98,6 +129,7 @@ public sealed class TotemBagPopup : UI_Base
     /// </summary>
     public void ShowStored(TotemData data, RectTransform slot = null)
     {
+        _actions.gameObject.SetActive(false);
         bool same = slot != null && slot == _storedSlot && data == _storedSelection;
         _selected = null;
         _storedSelection = same ? null : data;
@@ -108,6 +140,7 @@ public sealed class TotemBagPopup : UI_Base
     /// <inheritdoc/>
     public override async UniTask CloseAsync()
     {
+        _actions.gameObject.SetActive(false);
         _selected = null; _storedSelection = null; _storedSlot = null; RefreshInfo();
         await base.CloseAsync();
     }
@@ -155,15 +188,18 @@ public sealed class TotemBagPopup : UI_Base
         _panel = NewRect("Bag", _root);
         _panel.anchorMin = _panel.anchorMax = new Vector2(0.5f, 1); _panel.pivot = new Vector2(0.5f, 1);
         _panel.anchoredPosition = new Vector2(0, -PanelTop);
-        _panel.gameObject.AddComponent<Image>().color = Color.clear; // swallow taps inside the bag
+        _panel.gameObject.AddComponent<Image>().color = Color.clear;
+        _panel.gameObject.AddComponent<Button>().onClick.AddListener(() => Select(null));
 
         var body = NewRound("Body", _panel, true, BodyColor, 0.8f);
         Stretch(body.rectTransform, 0, BodyTopInset, 0, 0);
 
-        var banner = NewImage("TitleBanner", _panel, _skin.TitleBanner, Color.white);
-        banner.type = Image.Type.Sliced; Place(banner.rectTransform, 0, 0, PanelWidth, BannerHeight);
+        var banner = NewImage("TitleBanner", _panel, Resources.Load<Sprite>(ArtPath + "SPR_TotemBag_TitleBanner"), Color.white);
+        banner.preserveAspect = true;
+        banner.raycastTarget = false;
+        Place(banner.rectTransform, 40, -65, 480, 258);
         var title = NewText("Title", banner.rectTransform, "토템 가방", _skin.TitleFont, 68, Color.white, TextAlignmentOptions.Center);
-        Place(title.rectTransform, 200, 30, PanelWidth - 400, BannerHeight - 50); Outline(title, 0.28f);
+        Place(title.rectTransform, 64, 130, 346, 88); Outline(title, 0.28f);
 
         var close = NewImage("Close", _panel, _skin.CloseButton, Color.white);
         Place(close.rectTransform, PanelWidth - 120, 20, 110, 110);
@@ -174,6 +210,8 @@ public sealed class TotemBagPopup : UI_Base
         float gridX = (PanelWidth - gridW) / 2, gridY = BannerHeight + 14;
         var gridBg = NewRound("Grid", _panel, false, GridColor, 1f);
         Place(gridBg.rectTransform, gridX, gridY, gridW, gridH);
+        _cellBackground = Resources.Load<Sprite>(ArtPath + "SPR_TotemBag_CellBackground");
+        _cellBorder = Resources.Load<Sprite>(ArtPath + "SPR_TotemBag_CellBorder");
         for (int r = 0; r < rows; r++)
         for (int c = 0; c < cols; c++)
         {
@@ -183,19 +221,19 @@ public sealed class TotemBagPopup : UI_Base
             // sibling behind the frame so the glow rims it instead of covering it
             view.Select = NewRound("Select_" + c + "_" + z, gridBg.rectTransform, false, SelectTint, 1.3f);
             Place(view.Select.rectTransform, cx - 8, cy - 8, Cell + 16, Cell + 16); view.Select.raycastTarget = false;
-            var frame = NewRound("Cell_" + c + "_" + z, gridBg.rectTransform, false, EmptyColor, 1.6f);
-            Place(frame.rectTransform, cx, cy, Cell, Cell);
+            var background = NewImage("Cell_" + c + "_" + z, gridBg.rectTransform, _cellBackground, EmptyColor);
+            Place(background.rectTransform, cx, cy, Cell, Cell);
             var captured = view.Cell;
-            frame.gameObject.AddComponent<Button>().onClick.AddListener(() => Select(captured));
-            view.Frame = frame;
-            view.Icon = NewImage("Icon", frame.rectTransform, null, Color.white);
-            Place(view.Icon.rectTransform, 14, 18, Cell - 28, Cell - 28); view.Icon.preserveAspect = true; view.Icon.raycastTarget = false;
-            view.Badge = NewImage("LevelBadge", frame.rectTransform, _skin.LevelBadge, Color.white);
-            Place(view.Badge.rectTransform, -8, -10, 108, 52); view.Badge.raycastTarget = false;
-            view.Level = NewText("Level", view.Badge.rectTransform, "", _skin.NumberFont, 40, Color.white, TextAlignmentOptions.Center);
-            Stretch(view.Level.rectTransform, 0, 0, 0, 2); Outline(view.Level, 0.3f);
-            view.Plus = NewText("Plus", frame.rectTransform, "", _skin.NumberFont, 40, Lime, TextAlignmentOptions.BottomRight);
-            Place(view.Plus.rectTransform, 0, 0, Cell, Cell); view.Plus.margin = new Vector4(0, 0, 10, 4); Outline(view.Plus, 0.32f);
+            background.gameObject.AddComponent<Button>().onClick.AddListener(() => Select(captured));
+            view.Background = background;
+            view.UnitIcon = NewCellIcon("UnitIcon", background.rectTransform, 8);
+            view.TotemIcon = NewCellIcon("TotemIcon", background.rectTransform, 12);
+            view.Border = NewImage("Border", background.rectTransform, _cellBorder, EmptyBorder);
+            Stretch(view.Border.rectTransform, 0, 0, 0, 0);
+            view.Border.raycastTarget = false;
+            view.Level = NewText("Level", background.rectTransform, "", _skin.NumberFont, 48, Color.white, TextAlignmentOptions.Right);
+            Place(view.Level.rectTransform, Cell - 98, Cell - 63, 86, 56);
+            Outline(view.Level, 0.3f);
             _cells.Add(view);
         }
         _gridBottom = gridY + gridH;
@@ -203,7 +241,32 @@ public sealed class TotemBagPopup : UI_Base
         _drawerHost = NewRect("DrawerInfo", _panel);
         _slotHighlight = NewRound("StoredSlotHighlight", _root, false, new Color(SelectTint.r, SelectTint.g, SelectTint.b, 0.4f), 1.3f);
         _slotHighlight.raycastTarget = false; _slotHighlight.enabled = false;
+        _actions = NewRect("PlacedTotemActions", _panel);
+        Place(_actions, 36, _gridBottom+InfoGap, PanelWidth-72, 90);
+        AddAction("Rotate", "\uD68C\uC804", 0, () => { _selected?.OccupyingTotem?.Rotate(); RefreshInfo(); });
+        AddAction("Remove", "\uC0AD\uC81C", PanelWidth-250, () =>
+        {
+            if (_selected?.OccupyingTotem != null && RemovePlaced?.Invoke(_selected.OccupyingTotem) == true) Select(null);
+        });
+        _actions.gameObject.SetActive(false);
         RefreshInfo();
+    }
+
+    private static Image NewCellIcon(string name, RectTransform parent, float inset)
+    {
+        var image = NewImage(name, parent, null, Color.white);
+        Stretch(image.rectTransform, inset, inset, inset, inset);
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+        return image;
+    }
+
+    private void AddAction(string id, string label, float x, UnityEngine.Events.UnityAction action)
+    {
+        var bg = NewRound(id, _actions, true, BodyColor, 1f);
+        Place(bg.rectTransform, x, 0, 176, 84);
+        bg.gameObject.AddComponent<Button>().onClick.AddListener(action);
+        Stretch(NewText("Label", bg.rectTransform, label, Heading, 38, Color.white, TextAlignmentOptions.Center).rectTransform,0,0,0,0);
     }
 
     // ---------- runtime ----------
@@ -230,54 +293,56 @@ public sealed class TotemBagPopup : UI_Base
     private void FitPanel()
     {
         float bottomLimit = _root.rect.height - _reserve - BottomGap, height = _panel.sizeDelta.y;
-        float top = Mathf.Clamp(bottomLimit - height, MinPanelTop, PanelTop);
+        float top = Mathf.Max(MinPanelTop, (bottomLimit - height) * 0.5f);
         _fitScale = Mathf.Clamp01((bottomLimit - top) / Mathf.Max(1f, height));
-        _panel.anchoredPosition = new Vector2(0, -top);
+        _panel.pivot = new Vector2(0.5f, 0.5f);
+        _panel.anchoredPosition = new Vector2(0, -top-height*_fitScale*0.5f);
         if (!DOTween.IsTweening(_panel)) _panel.localScale = new Vector3(_fitScale, _fitScale, 1f);
     }
 
     private void RefreshCells()
     {
-        var range = new HashSet<GridCell>();
-        var rangeTotem = _selected != null ? _selected.OccupyingTotem : null;
-        if (rangeTotem != null) foreach (var c in rangeTotem.GetAffectedCells()) range.Add(c);
         var bonus = BonusByCell();
         foreach (var v in _cells)
         {
             var unit = v.Cell.OccupyingUnit; var totem = v.Cell.OccupyingTotem;
-            bool inRange = range.Contains(v.Cell);
             v.Select.enabled = _selected == v.Cell;
+            v.UnitIcon.sprite = unit != null ? Portrait(unit.unitData) : null;
+            v.UnitIcon.enabled = v.UnitIcon.sprite != null;
+            v.TotemIcon.enabled = false;
+            bonus.TryGetValue(v.Cell, out int levelBonus);
+            v.Level.color = Lime;
             if (unit != null)
             {
-                int tier = Mathf.Clamp((int)unit.GrowthTier, 0, _skin.UnitFrames.Length - 1);
-                SetFrame(v.Frame, _skin.UnitFrames[tier]);
-                v.Icon.sprite = unit.unitData.icon; v.Icon.enabled = v.Icon.sprite != null;
-                v.Badge.enabled = true; v.Level.enabled = true;
-                bool boosted = unit.CurrentLevel > unit.BaseLevel;
-                v.Level.text = unit.CurrentLevel + "<size=55%>/" + _skin.DisplayMaxLevel + "</size>";
-                v.Level.color = boosted ? Lime : Color.white;
-                v.Plus.text = inRange && rangeTotem != null ? "+" + rangeTotem.Data.LevelIncrease : "";
-                v.Plus.alignment = TextAlignmentOptions.BottomRight; v.Plus.fontSize = 40;
+                bool maxLevel = unit.CurrentLevel >= _skin.DisplayMaxLevel;
+                v.Background.color = UnitBackground;
+                v.Border.color = maxLevel ? Gold : UnitBorder;
+                v.Level.text = unit.CurrentLevel.ToString();
+                v.Level.color = UnitLevelColor(unit);
             }
             else if (totem != null)
             {
-                SetFrame(v.Frame, _skin.TotemFrame);
-                v.Icon.sprite = totem.Data.DisplaySprite; v.Icon.enabled = v.Icon.sprite != null;
-                v.Badge.enabled = false; v.Level.enabled = false;
-                v.Plus.text = totem.Data.IsLevelTotem ? "+" + totem.Data.LevelIncrease : "";
-                v.Plus.alignment = TextAlignmentOptions.BottomRight; v.Plus.fontSize = 40;
+                v.Background.color = TotemBackground;
+                v.Border.color = TotemBorder;
+                var directions = totem.Data.rotationSprites;
+                v.TotemIcon.sprite = directions != null && totem.RotationStep < directions.Length && directions[totem.RotationStep] != null
+                    ? directions[totem.RotationStep] : totem.Data.DisplaySprite;
+                v.TotemIcon.enabled = v.TotemIcon.sprite != null;
+                v.Level.text = "";
             }
             else
             {
-                SetRound(v.Frame, false, 1.6f); v.Icon.enabled = false; v.Badge.enabled = false; v.Level.enabled = false;
-                bonus.TryGetValue(v.Cell, out int b);
-                v.Plus.text = b > 0 ? "+" + b : "";
-                v.Plus.alignment = TextAlignmentOptions.Center; v.Plus.fontSize = 52;
+                v.Background.color = EmptyColor;
+                v.Border.color = EmptyBorder;
+                v.Level.text = levelBonus > 0 ? levelBonus.ToString() : "";
             }
-            bool empty = unit == null && totem == null;
-            v.Frame.color = empty ? (inRange || v.Plus.text.Length > 0 ? EmptyRangeColor : EmptyColor) : inRange ? RangeTint : Color.white;
+            v.Level.enabled = v.Level.text.Length > 0;
         }
     }
+
+    private Color UnitLevelColor(UnitBase unit) => unit.CurrentLevel >= _skin.DisplayMaxLevel
+        ? Gold : unit.CurrentLevel > unit.BaseLevel ? Lime
+        : unit.CurrentLevel < unit.BaseLevel ? LevelPenalty : Color.white;
 
     private Dictionary<GridCell, int> BonusByCell()
     {
@@ -294,17 +359,30 @@ public sealed class TotemBagPopup : UI_Base
     private void RefreshInfo()
     {
         if (_drawerHost == null) return;
-        Clear(_drawerHost);
+        _resize?.Kill();
         bool has = (_selected != null && _selected.IsOccupied) || _storedSelection != null;
+        float infoTop = _gridBottom + InfoGap + (_actions.gameObject.activeSelf ? 98 : 0);
         float panelHeight = _gridBottom + GridPad + 20;
         if (has)
         {
             // Drawer: the info card hangs under the grid inside the bag (user decision 2026-11-17).
+            _drawerHost.gameObject.SetActive(true);
+            Clear(_drawerHost);
             float h = BuildInfo(_drawerHost, PanelWidth - 72);
-            Place(_drawerHost, 36, _gridBottom + InfoGap, PanelWidth - 72, h);
-            panelHeight = _gridBottom + InfoGap + h + 40;
+            Place(_drawerHost, 36, infoTop, PanelWidth - 72, h);
+            panelHeight = infoTop + h + 40;
         }
-        _panel.sizeDelta = new Vector2(PanelWidth, panelHeight);
+        _drawerHost.gameObject.SetActive(has || _drawerHost.childCount > 0);
+        if (_drawerHost.GetComponent<RectMask2D>() == null) _drawerHost.gameObject.AddComponent<RectMask2D>();
+        float start = _panel.sizeDelta.y;
+        void Resize(float height)
+        {
+            _panel.sizeDelta = new Vector2(PanelWidth,height);
+            _drawerHost.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(0,height-infoTop-40));
+        }
+        if (start <= 0 || !GetComponent<Canvas>().enabled) Resize(panelHeight);
+        else _resize = DOTween.To(()=>start, Resize, panelHeight, 0.18f).SetUpdate(true).SetLink(gameObject);
+
     }
 
     /// <returns>Height used.</returns>
@@ -323,9 +401,13 @@ public sealed class TotemBagPopup : UI_Base
     private float BuildUnit(RectTransform card, UnitBase unit, float inner, float y)
     {
         const float icon = 136f, levelW = 150f;
-        int tier = Mathf.Clamp((int)unit.GrowthTier, 0, _skin.UnitFrames.Length - 1);
-        var frame = NewImage("UnitFrame", card, _skin.UnitFrames[tier], Color.white); Place(frame.rectTransform, InfoPad, y, icon, icon);
-        var img = NewImage("UnitIcon", frame.rectTransform, unit.unitData.icon, Color.white); Place(img.rectTransform, 12, 14, icon - 24, icon - 24); img.preserveAspect = true;
+        var background = NewImage("UnitBackground", card, _cellBackground, UnitBackground);
+        Place(background.rectTransform, InfoPad, y, icon, icon);
+        NewCellIcon("UnitIcon", background.rectTransform, 8).sprite = Portrait(unit.unitData);
+        var border = NewImage("UnitBorder", background.rectTransform, _cellBorder,
+            unit.CurrentLevel >= _skin.DisplayMaxLevel ? Gold : UnitBorder);
+        Stretch(border.rectTransform, 0, 0, 0, 0);
+        border.raycastTarget = false;
 
         float textX = InfoPad + icon + 22, textW = inner - icon - 22 - levelW;
         var name = NewText("Name", card, unit.unitData.unitName, Heading, 50, Ink, TextAlignmentOptions.TopLeft);
@@ -336,12 +418,12 @@ public sealed class TotemBagPopup : UI_Base
         Place(desc.rectTransform, textX, y + 64, textW, descH);
 
         var level = NewText("Level", card, unit.CurrentLevel + "<size=45%>/" + _skin.DisplayMaxLevel + "</size>", _skin.NumberFont, 92,
-            unit.CurrentLevel > unit.BaseLevel ? Lime : Color.white, TextAlignmentOptions.TopRight);
+            UnitLevelColor(unit), TextAlignmentOptions.TopRight);
         Place(level.rectTransform, InfoPad + inner - levelW, y - 8, levelW, 110); Outline(level, 0.3f);
 
         y += Mathf.Max(icon, 64 + descH) + 22;
-        var steps = unit.unitData.LevelBonuses;
-        if (steps == null || steps.Count == 0)
+        var steps = unit.LevelBonuses?.Milestones;
+        if (steps == null || !steps.Any())
         {
             var none = NewText("NoSteps", card, "레벨 효과 없음", _skin.BodyFont, 28, InkSoft, TextAlignmentOptions.Left);
             Place(none.rectTransform, InfoPad, y, inner, 44);
@@ -355,7 +437,9 @@ public sealed class TotemBagPopup : UI_Base
             var row = NewRound("Step_" + s.Level, card, false, on ? StepOn : isNext ? StepNext : StepLocked, 1.5f);
             Place(row.rectTransform, InfoPad, y, inner, RowHeight);
             var badge = NewImage("Lv", row.rectTransform, _skin.LevelBadge, on || isNext ? Color.white : new Color(0.72f, 0.68f, 0.62f));
-            Place(badge.rectTransform, 10, 8, 110, RowHeight - 16);
+            // The badge sprite includes transparent padding above and below the artwork.
+            const float badgeHeight = 80f;
+            Place(badge.rectTransform, 10, (RowHeight - badgeHeight) / 2, 110, badgeHeight);
             var lv = NewText("LvText", badge.rectTransform, "Lv " + s.Level, _skin.NumberFont, 30, Color.white, TextAlignmentOptions.Center);
             Stretch(lv.rectTransform, 0, 0, 0, 2); Outline(lv, 0.3f);
             var txt = NewText("Desc", row.rectTransform, (s.Description ?? "").Replace("\n", " "), _skin.BodyFont, 28,
@@ -394,15 +478,15 @@ public sealed class TotemBagPopup : UI_Base
             }
             else if (hit && data.IsLevelTotem)
             {
-                var plus = NewText("Plus", cell.rectTransform, "+" + data.LevelIncrease, _skin.NumberFont, 32, Color.white, TextAlignmentOptions.Center);
-                Stretch(plus.rectTransform, 0, 0, 0, 2); Outline(plus, 0.3f);
+                var bonus = NewText("Bonus", cell.rectTransform, data.LevelIncrease.ToString(), _skin.NumberFont, 32, Lime, TextAlignmentOptions.Center);
+                Stretch(bonus.rectTransform, 0, 0, 0, 2); Outline(bonus, 0.3f);
             }
         }
         float textX = InfoPad + gridW + 30, textW = inner - gridW - 30;
         var name = NewText("Name", card, data.totemName, Heading, 56, Ink, TextAlignmentOptions.TopLeft);
         Place(name.rectTransform, textX, y + 14, textW, 72);
         string effect = data.IsLevelTotem
-            ? "범위 안 유닛 레벨 <color=#2f9a25>+" + data.LevelIncrease + "</color>"
+            ? "범위 안 유닛 레벨 <color=#2f9a25>" + data.LevelIncrease + "</color>"
             : data.GetDisplayDescription(false);
         var line = NewText("Effect", card, effect, _skin.BodyFont, 34, InkSoft, TextAlignmentOptions.TopLeft);
         line.enableWordWrapping = true; Place(line.rectTransform, textX, y + 98, textW, 100);
@@ -450,8 +534,6 @@ public sealed class TotemBagPopup : UI_Base
         return img;
     }
 
-    private static void SetRound(Image img, bool rim, float corner) { img.sprite = Round(rim); img.type = Image.Type.Sliced; img.pixelsPerUnitMultiplier = corner; }
-    private static void SetFrame(Image img, Sprite frame) { img.sprite = frame; img.type = Image.Type.Simple; img.pixelsPerUnitMultiplier = 1f; }
 
     private static void Clear(RectTransform t) { for (int i = t.childCount - 1; i >= 0; i--) Destroy(t.GetChild(i).gameObject); }
 

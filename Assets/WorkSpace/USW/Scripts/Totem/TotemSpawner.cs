@@ -39,7 +39,7 @@ public class TotemSpawner : MonoBehaviour
     [SerializeField] private GameObject genericPrefab;
 
     [Header("Totem Settings")]
-    [SerializeField] private Vector3 spawnScale = new Vector3(0.6f, 0.6f, 0.6f);
+    [SerializeField] private Vector3 spawnScale = Vector3.one;
 
     /// <summary>
     /// TotemData SO를 기반으로 토템을 소환하고 빈 셀에 배치한다.
@@ -157,6 +157,39 @@ public class TotemSpawner : MonoBehaviour
 
         FinishPlacement(totem, cell, 0);
         return true;
+    }
+
+    internal SpriteRenderer CreatePlacementSilhouette(TotemData data, Sprite sprite)
+    {
+        var prefab = data.prefab != null ? data.prefab : genericPrefab;
+        var source = prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>(true) : null;
+        if (source == null || sprite == null) return null;
+
+        // Copy the sprite only; the preview must have no collider or placement behaviour.
+        var root = new GameObject("TotemPlacementSilhouette");
+        root.transform.SetParent(transform, false);
+        root.transform.localScale = spawnScale;
+        root.SetActive(false);
+
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(root.transform, false);
+        visual.transform.localPosition = prefab.transform.InverseTransformPoint(source.transform.position);
+        visual.transform.localRotation = Quaternion.Inverse(prefab.transform.rotation) * source.transform.rotation;
+        var prefabScale = prefab.transform.lossyScale;
+        var visualScale = source.transform.lossyScale;
+        visual.transform.localScale = new Vector3(visualScale.x / prefabScale.x, visualScale.y / prefabScale.y, visualScale.z / prefabScale.z);
+
+        if (prefab.GetComponent<TotemBase>().NormalizeSpriteSize)
+            visual.transform.localScale *= TotemBase.NormalizedVisualScale(sprite);
+
+        var renderer = visual.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.sharedMaterial = source.sharedMaterial;
+        renderer.flipX = source.flipX;
+        renderer.flipY = source.flipY;
+        renderer.sortingLayerID = source.sortingLayerID;
+        renderer.color = new Color(1f, 1f, 1f, 0.55f);
+        return renderer;
     }
 
     private void FinishPlacement(TotemBase totem, GridCell cell, int rotation)

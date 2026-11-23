@@ -43,6 +43,9 @@ public sealed class TotemInventory
                 cell.OccupyingTotem.IsPlaced && cell.OccupyingTotem.CurrentCell == cell)
             && (CanPlace == null || CanPlace(index, cell));
 
+    public bool TryDeletePlaced(TotemBase totem)
+        => !_placing && CanPlace == null && _spawner.CanPlaceTotems && _spawner.RemoveTotemFromField(totem);
+
     /// <summary>Recalls to storage without currency. Full storage and guided placement leave the field unchanged.</summary>
     public bool TryRecall(TotemBase totem)
     {
