@@ -10,6 +10,7 @@ public sealed class LobbyModeSelectView : MonoBehaviour
     [SerializeField] private Button _testButton;
     [SerializeField] private Button _closeButton;
     private Action<bool> _selected;
+    private const float LockedTestAlpha = 0.45f;
 
     private void Awake()
     {
@@ -18,6 +19,9 @@ public sealed class LobbyModeSelectView : MonoBehaviour
         _testButton.onClick.AddListener(SelectTest);
 #else
         _testButton.interactable = false;
+        // The sprite-swap button art has no disabled sprite, so fade the locked choice.
+        var lockedGroup = _testButton.gameObject.AddComponent<CanvasGroup>();
+        lockedGroup.alpha = LockedTestAlpha;
 #endif
         _closeButton.onClick.AddListener(Hide);
         Hide();
