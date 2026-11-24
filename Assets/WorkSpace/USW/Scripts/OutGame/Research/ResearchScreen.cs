@@ -198,8 +198,11 @@ public sealed class ResearchScreen : MonoBehaviour
         if (_status == null || _retry == null) return;
         bool failed = false;
         if (_sessions != null) foreach (var session in _sessions) failed |= session.SaveError != null;
-        _status.text = failed ? "저장에 실패했습니다. 다시 시도해 주세요." : Player.PlayerData.SaveStatus;
-        _retry.gameObject.SetActive(failed || (Player.PlayerData.IsDirty && !string.IsNullOrEmpty(Player.PlayerData.SaveStatus)));
+        var saveStatus = Player.PlayerData.SaveStatus;
+        if (saveStatus == "저장 대기") saveStatus = string.Empty;
+
+        _status.text = failed ? "저장에 실패했습니다. 다시 시도해 주세요." : saveStatus;
+        _retry.gameObject.SetActive(failed || (Player.PlayerData.IsDirty && !string.IsNullOrEmpty(saveStatus)));
     }
 
     private void ReleaseViews()
