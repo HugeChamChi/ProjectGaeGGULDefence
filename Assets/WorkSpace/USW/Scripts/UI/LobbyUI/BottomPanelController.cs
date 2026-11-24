@@ -83,9 +83,10 @@ public class BottomPanelController : MonoBehaviour
         float width = ((RectTransform)next.Rect.parent).rect.width;
         previous.Group.blocksRaycasts = previous.Group.interactable = false;
         next.Group.blocksRaycasts = next.Group.interactable = false;
-        next.Rect.anchoredPosition = next.Origin + Vector2.right * (direction * width);
         next.Group.alpha = 1f;
+        // SafeAreaBleed measures the screen edges on enable, while the page is at rest.
         next._panel.SetActive(true);
+        next.Rect.anchoredPosition = next.Origin + Vector2.right * (direction * width);
         _currentIndex = index;
         _transition = DOTween.Sequence().SetUpdate(true);
         _transition.Join(previous.Rect.DOAnchorPos(previous.Origin - Vector2.right * (direction * width), _slideSeconds).SetEase(Ease.OutCubic));
