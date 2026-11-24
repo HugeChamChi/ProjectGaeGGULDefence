@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CenterToastSettings
   Style: 6
   AnchorY: 240
-  Scale: 1.1
+  Scale: 1.6
   Lifetime: 0.9
   MaxVisible: 6
   PushedLifetime: 0.35
