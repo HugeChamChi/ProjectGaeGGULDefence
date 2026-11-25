@@ -30,7 +30,7 @@ public static class StatusPopupLabBuilder
     // 퇴장 타이밍 비교용 변형 (사용자 요청 2026-10-23): A 이전 0.44초 / B 현재 0.3초 / C 상승 0.3초 + 흐려짐 0.44초.
     private const string BeforeStylePath = DataFolder + "/StatusPopupStyle_A_Before.asset";
     private const string MixStylePath = DataFolder + "/StatusPopupStyle_C_Mix.asset";
-    private const string UnitSpritePath = "Assets/WorkSpace/USW/Sprites/Unit/Betang_SpinePortrait.png";
+    private const string UnitSpritePath = "Assets/Imports/GGD_ArtWork/LHH_Artwork/Drone_Deck/Character_Designs/Betang_SpinePortrait.png";
 
     // 본게임 시연 실험실 (사용자 요청 2026-10-23): IngameScene 복사본 + "상태 팝업 시연" 버튼 1개.
     /// <summary>본게임 시연 실험실 씬 경로.</summary>

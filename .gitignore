@@ -88,6 +88,8 @@ GEMINI.md
 /Assets/Imports/**
 !/Assets/Imports/**/
 !/Assets/Imports/**/*.meta
+!/Assets/Imports/GGD_ArtWork/LHH_Artwork/Drone_Deck/Character_Designs/Betang_SpinePortrait.png
+!/Assets/Imports/GGD_ArtWork/LHH_Artwork/Drone_Deck/Character_Designs/Disigman_SpinePortrait.png
 /Assets/Imports/**/production/session-logs/
 /.gemini
 Assets/GEMINI.md
