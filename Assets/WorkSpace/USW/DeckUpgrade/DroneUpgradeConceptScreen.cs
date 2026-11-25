@@ -21,9 +21,18 @@ namespace GaeGGUL.DeckUpgrade
         public ChieftainData chief;
         public SkeletonDataAsset chiefSpine;
         public string chiefIdle;
-        public SkeletonDataAsset[] spineData;
-        public string[] idleAnimations;
-        public string[] attackAnimations;
+        [System.Serializable]
+        private sealed class UnitPreview
+        {
+            public UnitData Unit;
+            public Sprite CardPortrait;
+            public SkeletonDataAsset Spine;
+            public string IdleAnimation;
+            public string AttackAnimation;
+            public bool AnimateDetailPortrait;
+        }
+
+        [SerializeField] private UnitPreview[] _unitPreviews;
         public Material spineMaterial;
         public Material[] spineBlendMaterials;
 
@@ -224,7 +233,9 @@ namespace GaeGGUL.DeckUpgrade
             var edge = Box("ColoredEdge", frame, CardColor, style.RoundedFill); Place(edge, 5, 5, 222, 282);
             var inset = Box("PortraitInset", edge, C("493E32"), style.RoundedFill); Place(inset, 7, 7, 208, 266);
             var topLight = Box("CardLight", inset, new Color(1, 1, 1, .08f), style.RoundedFill); Place(topLight, 0, 0, 208, 122);
-            var icon = Box("Portrait", inset, Color.white, units[index].icon); Place(icon, 14, 15, 180, 184);
+            var unit = units[index];
+            var portrait = FindUnitPreview(unit)?.CardPortrait;
+            var icon = Box("Portrait", inset, Color.white, portrait != null ? portrait : unit.icon); Place(icon, 14, 15, 180, 184);
             icon.GetComponent<Image>().type = Image.Type.Simple; icon.GetComponent<Image>().preserveAspect = true;
             var level = Text("Level", "", frame, 7, 204, 218, 42, 30, Color.white, TextAlignmentOptions.Center);
             OutlineText(level, 1.5f); levels.Add(level);
@@ -401,7 +412,7 @@ namespace GaeGGUL.DeckUpgrade
             int upgrading = selected;
             if (!await _presenter.TryUpgradeAsync(upgrading) || this == null || selected != upgrading) return;
             _statsTabs?.ShowUpgradeResult();
-            if (selected >= 0) popupPreview.PlayAction(attackAnimations[selected]);
+            if (selected >= 0) popupPreview.PlayAction(FindUnitPreview(units[selected])?.AttackAnimation);
 
             if (punchMotion != null) StopCoroutine(punchMotion);
             punchMotion = StartCoroutine(UpgradePunch());
@@ -495,10 +506,26 @@ namespace GaeGGUL.DeckUpgrade
             }
         }
 
-        private void ShowPreview(DroneSpinePreview preview, int index)
+        private UnitPreview FindUnitPreview(UnitData unit)
+        {
+            if (_unitPreviews == null) return null;
+            foreach (var preview in _unitPreviews)
+                if (preview != null && preview.Unit == unit) return preview;
+            return null;
+        }
+
+        internal bool UsesSpinePortrait(int index)
+        {
+            var preview = FindUnitPreview(units[index]);
+            return preview != null && preview.AnimateDetailPortrait && preview.Spine != null;
+        }
+
+        internal void ShowPreview(DroneSpinePreview preview, int index)
         {
             if (index < 0) { preview.Show(chiefSpine, chiefIdle, spineMaterial, spineBlendMaterials, chief.Icon); return; }
-            preview.Show(spineData[index], idleAnimations[index], spineMaterial, spineBlendMaterials, units[index].icon);
+            var unit = units[index];
+            var configuration = FindUnitPreview(unit);
+            preview.Show(configuration?.Spine, configuration?.IdleAnimation, spineMaterial, spineBlendMaterials, unit.icon);
         }
 
         public void ToggleDeck()

@@ -31924,24 +31924,37 @@ MonoBehaviour:
   chief: {fileID: 11400000, guid: 7b4f0ca078aad5646a1f33e7cb4281fa, type: 2}
   chiefSpine: {fileID: 11400000, guid: 84e2d83c7ecb29f4b9c163f9c7d47fea, type: 2}
   chiefIdle: idle
-  spineData:
-  - {fileID: 11400000, guid: 59d3c52e61529774e9a22e4e836acda2, type: 2}
-  - {fileID: 11400000, guid: 61f6d5947aa654c4b898e28804dc5fcb, type: 2}
-  - {fileID: 11400000, guid: ad2bbe132c1b858489f76d119f7f8dc3, type: 2}
-  - {fileID: 11400000, guid: 41516c19c1eec5d41853ee54ed13ec6d, type: 2}
-  - {fileID: 0}
-  idleAnimations:
-  - idle
-  - idle
-  - idle
-  - idle
-  - 
-  attackAnimations:
-  - attack
-  - attack
-  - skill
-  - attack_01
-  - 
+  _unitPreviews:
+  - Unit: {fileID: 11400000, guid: 8ff5f3f4c238125409999a555e201aad, type: 2}
+    CardPortrait: {fileID: 0}
+    Spine: {fileID: 11400000, guid: 59d3c52e61529774e9a22e4e836acda2, type: 2}
+    IdleAnimation: idle
+    AttackAnimation: attack
+    AnimateDetailPortrait: 0
+  - Unit: {fileID: 11400000, guid: f9c5a8b28895a8f47aabc2aa2a5bab5f, type: 2}
+    CardPortrait: {fileID: 0}
+    Spine: {fileID: 11400000, guid: 61f6d5947aa654c4b898e28804dc5fcb, type: 2}
+    IdleAnimation: idle
+    AttackAnimation: attack
+    AnimateDetailPortrait: 0
+  - Unit: {fileID: 11400000, guid: 2f40525318db12d43b1a7603e71c9029, type: 2}
+    CardPortrait: {fileID: 0}
+    Spine: {fileID: 11400000, guid: ad2bbe132c1b858489f76d119f7f8dc3, type: 2}
+    IdleAnimation: idle
+    AttackAnimation: skill
+    AnimateDetailPortrait: 0
+  - Unit: {fileID: 11400000, guid: ae86a677bf70a6643b6895c15d70c469, type: 2}
+    CardPortrait: {fileID: 0}
+    Spine: {fileID: 11400000, guid: 41516c19c1eec5d41853ee54ed13ec6d, type: 2}
+    IdleAnimation: idle
+    AttackAnimation: attack_01
+    AnimateDetailPortrait: 0
+  - Unit: {fileID: 11400000, guid: c43d032030445f34ab10bea018e47e3d, type: 2}
+    CardPortrait: {fileID: 21300000, guid: 79ea7a4866e9a2e47a2991e679c15d5d, type: 3}
+    Spine: {fileID: 0}
+    IdleAnimation:
+    AttackAnimation:
+    AnimateDetailPortrait: 0
   spineMaterial: {fileID: 2100000, guid: 9c6ec24bca5fc42489fe47358fef0d4a, type: 2}
   spineBlendMaterials:
   - {fileID: 2100000, guid: cad8f402683e18141a860042c37d6242, type: 2}

@@ -15,7 +15,8 @@ namespace GaeGGUL.DeckUpgrade
 
         public void Show(SkeletonDataAsset data, string idle, Material material, Material[] blendMaterials, Sprite fallback)
         {
-            if ((Graphic != null && current == data) || (data == null && currentSprite == fallback && transform.childCount > 0)) return;
+            if (Graphic != null && current == data && currentIdle == idle) return;
+            if (data == null && current == null && currentSprite == fallback && transform.childCount > 0) return;
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var child = transform.GetChild(i).gameObject; child.SetActive(false);

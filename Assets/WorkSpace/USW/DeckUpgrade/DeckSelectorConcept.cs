@@ -16,6 +16,7 @@ namespace GaeGGUL.DeckUpgrade
         public bool IsOwnedCard(Transform card) { int index = unitCards.FindIndex(x => x == card); return index >= 0 && screen.IsOwned(index - 1); }
         private RectTransform detailChiefFrame, detailUnitFrame;
         private Image detailChiefPortrait, detailUnitPortrait;
+        private DroneSpinePreview detailUnitPreview;
         private TMP_Text detailName, detailLevel, requiredCost;
         private Image detailSkillTab, detailBonusTab;
         private TMP_Text chiefCardLevel;
@@ -147,7 +148,14 @@ namespace GaeGGUL.DeckUpgrade
             requiredCost.text = !selected.IsOwned ? "미보유" : !string.IsNullOrEmpty(selected.UpgradeStatus) ? selected.UpgradeStatus : selected.IsMaxLevel ? "MAX" : selected.Cost.ToString("N0");
             detailChiefFrame.gameObject.SetActive(selected.IsChief);
             detailUnitFrame.gameObject.SetActive(!selected.IsChief);
-            if (!selected.IsChief) detailUnitPortrait.sprite = screen.units[selected.Index].icon;
+            if (!selected.IsChief)
+            {
+                bool showSpine = screen.UsesSpinePortrait(selected.Index);
+                detailUnitPortrait.enabled = !showSpine;
+                detailUnitPreview.gameObject.SetActive(showSpine);
+                if (showSpine) screen.ShowPreview(detailUnitPreview, selected.Index);
+                else detailUnitPortrait.sprite = screen.units[selected.Index].icon;
+            }
             FilterUnits(_ownedOnly);
         }
         private void ConfigureDetails()
@@ -164,6 +172,9 @@ namespace GaeGGUL.DeckUpgrade
             var slot = Box("SelectedUnitSlot", stats, Color.clear, 12, 12, 226, 286);
             detailChiefFrame = BuildDetailFrame(slot, true, out detailChiefPortrait);
             detailUnitFrame = BuildDetailFrame(slot, false, out detailUnitPortrait);
+            var portraitHost = Box("SlotSpinePreview", detailUnitPortrait.transform, Color.clear, 0, 0, 204, 242);
+            detailUnitPreview = portraitHost.gameObject.AddComponent<DroneSpinePreview>();
+            portraitHost.gameObject.SetActive(false);
             detailUnitFrame.gameObject.SetActive(false);
             foreach (var frame in new[] { detailChiefFrame, detailUnitFrame }) { frame.localScale = Vector3.one * .95f; frame.anchoredPosition = new Vector2(0, -4); }
             Remove(dialog.Find("SelectedName").gameObject);
