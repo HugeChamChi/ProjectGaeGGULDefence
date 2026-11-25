@@ -5057,34 +5057,6 @@ MonoBehaviour:
         isBuiltIn: 0
         script: {fileID: 11500000, guid: ee158225ee1e59f4791627785501d950, type: 3}
         hasToggle: 1
-      - displayName: DebugLogManager
-        name: IngameDebugConsole.DebugLogManager, IngameDebugConsole.Runtime, Version=0.0.0.0,
-          Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: DebugLogManager
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: DebugLogManager
-          m_TextWithWhitespace: "DebugLogManager\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 0
-        script: {fileID: 11500000, guid: 6a4f16ed905adcd4ab0d7c8c11f0d72c, type: 3}
-        hasToggle: 1
-      - displayName: EventSystemHandler
-        name: IngameDebugConsole.EventSystemHandler, IngameDebugConsole.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-        content:
-          m_Text: EventSystemHandler
-          m_Image: {fileID: -8204150473280056172, guid: 0000000000000000d000000000000000,
-            type: 0}
-          m_Tooltip: EventSystemHandler
-          m_TextWithWhitespace: "EventSystemHandler\u200B"
-        shown: 0
-        excluded: 0
-        isBuiltIn: 0
-        script: {fileID: 11500000, guid: c3cc1b407f337e641ad32a2e91d5b478, type: 3}
-        hasToggle: 1
       - displayName: TitleView
         name: TitleView, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
         content:
