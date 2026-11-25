@@ -135,7 +135,12 @@ namespace GaeGGUL.DeckUpgrade
             tabs.UseLobbyStyle(580);
             foreach (var image in scroll.GetComponentsInChildren<Image>(true))
             {
-                if (image.name == "SkillNamePanel" || image.name == "RequiredLevel") image.color = LobbyUtilityVisuals.CardFeatured;
+                if (image.name == "RequiredLevel")
+                {
+                    image.color = LobbyUtilityVisuals.CardFeatured;
+                    image.transform.Find("LevelLabel").GetComponent<TMP_Text>().color = Color.white;
+                }
+                else if (image.name == "SkillNamePanel") image.color = LobbyUtilityVisuals.CardFeatured;
                 else if (image.name.StartsWith("LevelBonus_") || image.name.EndsWith("CurrentStat")) image.color = LobbyUtilityVisuals.Card;
                 else if (image.name == "IconSlot") image.color = LobbyUtilityVisuals.Sheet;
             }
